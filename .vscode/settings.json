@@ -1,0 +1,7 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "css.lint.unknownAtRules": "ignore",
+  "[html, javascript, javascriptreact, typescript, typescriptreact, json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
