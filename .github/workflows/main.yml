@@ -1,11 +1,12 @@
 name: Marina CI
 
-# On each pull request and on every push on master
 on:
   push:
     branches:
       - master
   pull_request:
+    branches:
+      - master
 
 jobs:
   build:
