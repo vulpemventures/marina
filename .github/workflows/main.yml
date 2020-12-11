@@ -1,0 +1,47 @@
+name: Marina CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node-version:
+          - 15
+        os:
+          - macos-latest
+          - ubuntu-latest
+
+    name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Bundle app
+        run: yarn build
+      - name: Package the extension
+        run: yarn web-ext:build
+
+      - name: Lint
+        run: |
+          yarn lint
+          yarn prettier:check
+          yarn web-ext:lint
+
+      - name: Test
+        run: yarn test
+        env:
+          CI: true
