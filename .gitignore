@@ -3,12 +3,7 @@
 # IDE
 ## JetBrains
 .idea
-## VisualStudioCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode
 
 # dependencies
 /node_modules
