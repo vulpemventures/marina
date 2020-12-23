@@ -5,9 +5,9 @@
   "scripts": {
     "build": "npm run clean && npm run copy-assets && run-p build:**",
     "build:html": "parcel build --no-cache public/*.html",
-    "build:scripts": "parcel build --no-cache src/application/**/*.ts",
+    "build:scripts": "parcel build --no-cache src/application/background_script.ts",
     "clean": "rimraf dist",
-    "copy-assets": "mkdir -p dist && cp -r public/{manifest.json,assets} dist/",
+    "copy-assets": "mkdir -p dist && cp public/manifest.json dist/ && cp -r public/assets dist/",
     "lint": "eslint --ext .ts,.tsx src __test__",
     "lint:fix": "eslint --fix --ext .ts,.tsx src __test__",
     "prettier": "prettier --write src __test__",
