@@ -2,9 +2,6 @@
   "name": "marina",
   "version": "0.0.1",
   "private": true,
-  "engines": {
-    "node": ">=15"
-  },
   "scripts": {
     "build": "npm run clean && npm run copy-assets && run-p build:**",
     "build:html": "parcel build --no-cache public/*.html",
