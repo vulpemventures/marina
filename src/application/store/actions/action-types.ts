@@ -1,0 +1,4 @@
+// Wallet
+export const WALLET_CREATED = 'WALLET_CREATED';
+// Preferences
+export const ONBOARDING_COMPLETETED = 'ONBOARDING_COMPLETETED';

@@ -1,0 +1,6 @@
+body {
+  min-width: 360px;
+  width: 360px;
+  height: 600px;
+  overflow: hidden;
+}

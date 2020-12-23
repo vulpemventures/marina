@@ -5,49 +5,48 @@ Liquid Wallet browser extension
 == Testing out the extension
 
 .Build, watch and temporarily install the extension on Firefox
- yarn start
+ npm run start
 
 .Or choose your platform
- yarn start:brave-linux
- yarn start:chrome-linux
- yarn start:brave-mac
- yarn start:chrome-mac
+ npm run start:brave-linux
+ npm run start:chrome-linux
+ npm run start:brave-mac
+ npm run start:chrome-mac
 
 
 == Packaging the extension
 
 .Turn the extesion into a package for submitting to addons.mozilla.org
- yarn web-ext:build
+ npm run web-ext:build
 
 
 == Tech Stack
 
 * Typescript
-* Parcel bundler v1
+* Parcel bundler v2
 * React.js
 * Tailwind CSS framework
-* https://github.com/gcanti/fp-ts[fp-ts] and https://github.com/gcanti/io-ts[io-ts] for functional programming constructs
 
 
 == Browser support
- 
+
 === webextension-polyfill-ts
- 
+
 This is a TypeScript ready "wrapper" for the WebExtension browser API Polyfill by Mozilla.
 Chrome and Firefox are officially supported. Opera and Edge are unofficially supported as a Chrome-compatible target.
 
 * https://github.com/Lusito/webextension-polyfill-ts
 * https://github.com/mozilla/webextension-polyfill
- 
+
 === Safari
- 
+
 The easiest and most cost-efficient way to support Safari is to convert an existing web extension using Xcode’s command-line tool safari-web-extension-converter.
 Simply run: xcrun safari-web-extension-converter /path/to/extension
- 
+
 Safari web extensions are available in macOS 11 (Big Sur) and later, and in macOS 10.14.6 (Mojave) or 10.15.6 (Catalina) with Safari 14 installed.
 
-* https://developer.apple.com/documentation/safariservices/safari_web_extensions 
-* https://developer.apple.com/documentation/safariservices/safari_web_extensions/converting_a_web_extension_for_safari 
+* https://developer.apple.com/documentation/safariservices/safari_web_extensions
+* https://developer.apple.com/documentation/safariservices/safari_web_extensions/converting_a_web_extension_for_safari
 * https://developer.apple.com/videos/play/wwdc2020/10665/
 
 
@@ -63,10 +62,24 @@ Safari web extensions are available in macOS 11 (Big Sur) and later, and in macO
 * ESLint
 ** https://www.npmjs.com/package/eslint-config-react-app
 * Prettier
-** https://github.com/Acidic9/prettier-plugin-tailwind
+** https://github.com/marcosvega91/prettier-tailwind
+* https://tsdoc.org[TSDoc]
 
 .Lint and auto-fix the extension source
- yarn lint
+ npm run lint
 
 .Validate the extension compiled source with web-ext
- yarn web-ext:lint
+ npm run web-ext:lint
+
+
+== Create a Firefox profile to persist preferences
+
+. Launch Firefox this way (on Mac)
+
+ /Applications/Firefox\ Developer\ Edition.app/Contents/MacOS/firefox-bin -P
+
+. Create a dev profile
+
+. Change preferences at url about:config
+
+.. Make Parcel hot reload not blocked by CSP policy: "security.csp.enable" == false
