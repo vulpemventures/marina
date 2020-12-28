@@ -1,18 +1,12 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
 const colors = require('tailwindcss/colors');
 
-// Bug: NODE_ENV always 'production'
-// https://github.com/parcel-bundler/parcel/issues/4550
-// https://github.com/parcel-bundler/parcel/issues/5029
-console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
-
-const isDev = process.env['npm_lifecycle_event'] === 'watch:html';
-
 module.exports = {
-  purge: {
-    enabled: !isDev,
-    content: ['./public/**/*.html', './src/**/*.tsx'],
-  },
+  // TODO: PostCSS plugin postcss-purgecss requires PostCSS 8
+  // purge: {
+  //   enabled: !isDev,
+  //   content: ['./public/**/*.html', './src/**/*.tsx'],
+  // },
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {

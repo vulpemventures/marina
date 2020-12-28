@@ -13,11 +13,14 @@ const MnemonicDnd: React.FC = () => {
 
   return (
     <div className="border-primary grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md">
-      {mnemonic.map((word: string, i: number) => (
-        <Button className="text-grayDark" key={i} isOutline={true} roundedMd={true}>
-          {word}
-        </Button>
-      ))}
+      {mnemonic
+        .trim()
+        .split(' ')
+        .map((word: string, i: number) => (
+          <Button className="text-grayDark" key={i} isOutline={true} roundedMd={true}>
+            {word}
+          </Button>
+        ))}
     </div>
   );
 };
