@@ -13,6 +13,9 @@ Liquid Wallet browser extension
  npm run start:brave-mac
  npm run start:chrome-mac
 
+.Development environment
+image::webext-parcel_watch.png[development environment]
+
 
 == Packaging the extension
 
@@ -23,9 +26,9 @@ Liquid Wallet browser extension
 == Tech Stack
 
 * Typescript
-* Parcel bundler v2
+* Parcel bundler v1
 * React.js
-* Tailwind CSS framework
+* Tailwind CSS v2
 
 
 == Browser support
