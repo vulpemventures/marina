@@ -7,7 +7,7 @@ interface Props {
   hasBackBtn?: boolean;
 }
 
-const Shell: React.FC<Props> = ({ children, className, hasBackBtn = true }: Props) => {
+const Shell: React.FC<Props> = ({ children, className = '', hasBackBtn = true }: Props) => {
   const history = useHistory();
   const goToPreviousPath = () => history.goBack();
   return (
@@ -15,7 +15,7 @@ const Shell: React.FC<Props> = ({ children, className, hasBackBtn = true }: Prop
       <div
         className="h-screen bg-bottom bg-no-repeat bg-contain"
         style={{
-          backgroundImage: "url('/assets/images/onboarding/bg-wave-bottom.svg')",
+          backgroundImage: "url('/assets/images/onboarding/bg-onboarding.png')",
         }}
       >
         {hasBackBtn ? (

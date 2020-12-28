@@ -30,6 +30,7 @@
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
+    "formik": "^2.2.6",
     "postcss-cli": "^7.1.2",
     "react": "^17.0.1",
     "react-combine-reducers": "^1.0.4",
@@ -38,7 +39,8 @@
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.1",
     "tdex-sdk": "^1.2.5",
     "uuid": "^8.3.2",
-    "webextension-polyfill-ts": "^0.22.0"
+    "webextension-polyfill-ts": "^0.22.0",
+    "yup": "^0.32.8"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.2.1",
@@ -50,6 +52,7 @@
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "^5.1.6",
     "@types/uuid": "^8.3.0",
+    "@types/yup": "^0.29.11",
     "@typescript-eslint/eslint-plugin": "^4.11.0",
     "@typescript-eslint/parser": "^4.11.0",
     "autoprefixer": "^9.8.6",

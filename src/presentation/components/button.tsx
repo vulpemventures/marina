@@ -3,11 +3,12 @@ import cx from 'classnames';
 
 interface Props {
   children: React.ReactNode;
-  type?: 'submit' | 'button' | 'reset';
-  onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   className?: string;
+  disabled?: boolean;
   isOutline?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   roundedMd?: boolean;
+  type?: 'submit' | 'button' | 'reset';
 }
 
 const Button: React.FC<Props> = ({
@@ -15,6 +16,7 @@ const Button: React.FC<Props> = ({
   children,
   onClick,
   className = '',
+  disabled = false,
   isOutline = false,
   roundedMd = false,
 }: Props) => {
@@ -28,7 +30,7 @@ const Button: React.FC<Props> = ({
   );
 
   return (
-    <button className={classes} type={type} onClick={onClick}>
+    <button className={classes} disabled={disabled} type={type} onClick={onClick}>
       {children}
     </button>
   );
