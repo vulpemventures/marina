@@ -39,6 +39,10 @@ module.exports = {
       fontFamily: {
         sans: ['Poppins', ...defaultTheme.fontFamily.sans],
       },
+      gridTemplateRows: {
+        // https://web.dev/one-line-layouts/#04.-pancake-stack:-grid-template-rows:-auto-1fr-auto
+        pancakeStack: 'auto 1fr auto',
+      },
     },
   },
   variants: {
