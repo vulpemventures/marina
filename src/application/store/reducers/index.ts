@@ -6,21 +6,7 @@ import { IPreferences } from '../../../domain/preferences/preferences';
 
 const walletInitStateDev: IWallet[] = [
   {
-    entropy: '182301471f6892728ae56bb95b54396e',
-    mnemonic: [
-      'glass',
-      'snow',
-      'rock',
-      'kitchen',
-      'black',
-      'big',
-      'yellow',
-      'hand',
-      'fog',
-      'tree',
-      'green',
-      'window',
-    ],
+    mnemonic: '',
   },
 ];
 

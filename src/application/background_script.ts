@@ -34,7 +34,6 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
 });
 
 // Create store
-//type appState = IWallets & IPreferences;
 interface appState {
   wallets: IWallet[];
   prefs: IPreferences;

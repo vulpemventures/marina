@@ -1,3 +1,4 @@
+import { IError } from '../common/common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
 import { WalletId } from './walletId';
@@ -7,8 +8,8 @@ export interface IWallets {
 }
 
 export interface IWallet {
-  entropy: string;
-  mnemonic: string[];
+  mnemonic: string;
+  errors?: Record<string, IError>;
 }
 
 /**
@@ -25,11 +26,7 @@ export class Wallet extends Entity<IWallet> {
     return WalletId.create(this._id);
   }
 
-  get entropy(): string {
-    return this.props.entropy;
-  }
-
-  get mnemonic(): string[] {
+  get mnemonic(): string {
     return this.props.mnemonic;
   }
 
@@ -54,7 +51,6 @@ export class Wallet extends Entity<IWallet> {
   public static createWallet(props: IWallet, id?: UniqueEntityID): Wallet {
     const walletProps = {
       mnemonic: props.mnemonic,
-      entropy: props.entropy,
     };
     return new Wallet(walletProps, id);
   }
