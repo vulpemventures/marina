@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
-import { INITIALIZE_END_OF_FLOW_ROUTE } from '../routes/constants';
+import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
 import { AppContext } from '../../../application/background_script';
@@ -10,7 +10,7 @@ const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const handleConfirm = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   const appCtx = useContext(AppContext);
-  const mnemonic = appCtx?.[0]?.wallets?.[0]?.mnemonic;
+  const mnemonic: string[] = appCtx?.[0]?.wallets?.[0]?.mnemonic.trim().split(' ');
   const mnemonicRandomized = [...mnemonic];
   // Defining function returning random value from i to N
   const getRandomValue = (i: number, N: number) => Math.floor(Math.random() * (N - i) + i);

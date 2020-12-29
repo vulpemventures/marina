@@ -1,7 +1,7 @@
 import React from 'react';
 import { appInitialState } from './store/reducers';
 import { browser } from 'webextension-polyfill-ts';
-import { INITIALIZE_WELCOME_ROUTE } from '../presentation/onboarding/routes/constants';
+import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { IWallet } from '../domain/wallet/wallet';
 import { IPreferences } from '../domain/preferences/preferences';
 
@@ -17,7 +17,7 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
     //On first install, open new tab for onboarding
     case 'install':
       {
-        const url = browser.runtime.getURL(`onboarding.html#${INITIALIZE_WELCOME_ROUTE}`);
+        const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
         browser.tabs
           .create({ url })
           .catch((err) => console.log(`Error in tab creation on install. ${err}`));

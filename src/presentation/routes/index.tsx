@@ -8,28 +8,24 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
   INITIALIZE_SEED_PHRASE_ROUTE,
   INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
+  DEFAULT_ROUTE,
 } from './constants';
-import Welcome from '../welcome';
-import SelectAction from '../select-action';
-import WalletRestore from '../wallet-restore';
-import WalletCreate from '../wallet-create';
-import EndOfFlow from '../end-of-flow';
-import SeedReveal from '../seed-reveal';
-import SeedConfirm from '../seed-confirm';
-//import AppProvider from '../../providers/app';
+
+// Onboarding
+import Welcome from '../onboarding/welcome';
+import SelectAction from '../onboarding/select-action';
+import WalletRestore from '../onboarding/wallet-restore';
+import WalletCreate from '../onboarding/wallet-create';
+import EndOfFlow from '../onboarding/end-of-flow';
+import SeedReveal from '../onboarding/seed-reveal';
+import SeedConfirm from '../onboarding/seed-confirm';
+// Wallet
+import Home from '../wallet/home';
 
 export default function App(): React.ReactElement {
   return (
     <Switch>
-      {/* <Route
-        exact
-        path={INITIALIZE_WELCOME_ROUTE}
-        render={(props) => (
-          <AppProvider>
-            <Welcome {...props} />
-          </AppProvider>
-        )}
-      /> */}
+      {/*Onboarding*/}
       <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />
       <Route exact path={INITIALIZE_SELECT_ACTION_ROUTE} component={SelectAction} />
       <Route exact path={RESTORE_VAULT_ROUTE} component={WalletRestore} />
@@ -37,6 +33,8 @@ export default function App(): React.ReactElement {
       <Route exact path={INITIALIZE_SEED_PHRASE_ROUTE} component={SeedReveal} />
       <Route exact path={INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE} component={SeedConfirm} />
       <Route exact path={INITIALIZE_END_OF_FLOW_ROUTE} component={EndOfFlow} />
+      {/*Wallet*/}
+      <Route exact path={DEFAULT_ROUTE} component={Home} />
     </Switch>
   );
 }

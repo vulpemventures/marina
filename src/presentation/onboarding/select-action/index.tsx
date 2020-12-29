@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHistory } from 'react-router';
-import { INITIALIZE_CREATE_PASSWORD_ROUTE, RESTORE_VAULT_ROUTE } from '../routes/constants';
+import { INITIALIZE_CREATE_PASSWORD_ROUTE, RESTORE_VAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 
 const SelectAction: React.FC = () => {

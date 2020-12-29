@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { INITIALIZE_SEED_PHRASE_ROUTE } from '../routes/constants';
+import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 
 const WalletCreate: React.FC = () => {
   const history = useHistory();

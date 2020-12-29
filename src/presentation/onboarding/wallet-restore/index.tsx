@@ -24,9 +24,6 @@ interface WalletRestoreFormProps {
 
 const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
   const { values, touched, errors, isSubmitting, handleChange, handleBlur, handleSubmit } = props;
-  //console.log('values ctxErrors', values?.ctxErrors);
-  console.log('errors', errors);
-  console.log('t', touched);
 
   return (
     <form onSubmit={handleSubmit} className="mt-10">

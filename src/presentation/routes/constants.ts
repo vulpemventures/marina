@@ -1,3 +1,4 @@
+// Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
 // const INITIALIZE_UNLOCK_ROUTE = '/initialize/unlock';
 const INITIALIZE_CREATE_PASSWORD_ROUTE = '/initialize/create-password';
@@ -12,7 +13,11 @@ const INITIALIZE_END_OF_FLOW_ROUTE = '/initialize/end-of-flow';
 // During first onboarding or accessed from popup anytime
 const RESTORE_VAULT_ROUTE = '/restore-vault';
 
+// Wallet
+const DEFAULT_ROUTE = '/';
+
 export {
+  // Onboarding
   INITIALIZE_WELCOME_ROUTE,
   // INITIALIZE_UNLOCK_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
@@ -23,4 +28,6 @@ export {
   INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
   INITIALIZE_END_OF_FLOW_ROUTE,
   RESTORE_VAULT_ROUTE,
+  // Wallet
+  DEFAULT_ROUTE,
 };

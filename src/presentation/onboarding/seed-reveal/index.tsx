@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 import {
   INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
   INITIALIZE_END_OF_FLOW_ROUTE,
-} from '../routes/constants';
+} from '../../routes/constants';
 import Shell from '../../components/shell';
 
 const SeedReveal: React.FC = () => {

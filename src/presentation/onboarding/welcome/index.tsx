@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
-import { INITIALIZE_SELECT_ACTION_ROUTE } from '../routes/constants';
+import { INITIALIZE_SELECT_ACTION_ROUTE } from '../../routes/constants';
 
 const Welcome: React.FC = () => {
   const history = useHistory();
