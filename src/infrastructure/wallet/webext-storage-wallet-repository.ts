@@ -9,12 +9,8 @@ export class WebExtStorageWalletRepo implements IWalletRepository {
     const id = wallet.walletId.id.toValue();
     return id === walletId;
   }
-  async get(): Promise<Wallet> {
+  async getOrCreateWallet(): Promise<Wallet> {
     const wallet = (await browser.storage.local.get('wallet')) as Wallet;
     return WalletMap.toDomain(wallet);
-  }
-
-  async set(wallet: Wallet): Promise<void> {
-    await browser.storage.local.set({ wallet });
   }
 }

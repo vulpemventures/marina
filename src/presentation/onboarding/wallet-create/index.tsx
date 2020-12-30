@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 import { FormikProps, withFormik } from 'formik';
-// import { useHistory } from 'react-router';
-// import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import * as Yup from 'yup';
-import * as ACTIONS from '../../../application/store/actions/action-types';
 import cx from 'classnames';
 import { AppContext } from '../../../application/background_script';
+import { setPassword } from '../../../application/store/actions';
+import { RouteComponentProps, useHistory } from 'react-router-dom';
+import { Thunk } from '../../../application/store/reducers/use-thunk-reducer';
 
 interface WalletCreateFormValues {
   password: string;
@@ -16,7 +16,12 @@ interface WalletCreateFormValues {
 }
 
 interface WalletCreateFormProps {
-  dispatch: React.Dispatch<[string, Record<string, unknown>]>;
+  dispatch(
+    p:
+      | React.Dispatch<[string, Record<string, unknown>]>
+      | Thunk<never, [string, Record<string, unknown>]>
+  ): any;
+  history: RouteComponentProps['history'];
 }
 
 const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
@@ -108,6 +113,7 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
     password: '',
     acceptTerms: false,
   }),
+
   validationSchema: Yup.object().shape({
     password: Yup.string()
       .required('Please input password')
@@ -118,18 +124,21 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
       .oneOf([Yup.ref('password'), null], 'Passwords must match'),
     acceptTerms: Yup.bool().oneOf([true], 'Accepting Terms & Conditions is required'),
   }),
+
   handleSubmit: (values, { props }) => {
-    props.dispatch([ACTIONS.WALLET_CREATE_REQUEST, { password: values.password }]);
+    props.dispatch(setPassword(values.password, props.history));
   },
+
   displayName: 'WalletCreateForm',
 })(WalletCreateForm);
 
 const WalletCreate: React.FC<WalletCreateFormProps> = () => {
+  const history = useHistory();
   const [, dispatch] = useContext(AppContext);
   return (
     <Shell className="space-y-10">
       <h1 className="mb-5 text-3xl font-medium">Create password</h1>
-      <WalletCreateEnhancedForm dispatch={dispatch} />
+      <WalletCreateEnhancedForm dispatch={dispatch} history={history} />
     </Shell>
   );
 };

@@ -1,4 +1,4 @@
-import { IError } from '../common/common';
+import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
 import { WalletId } from './walletId';
@@ -8,8 +8,8 @@ export interface IWallets {
 }
 
 export interface IWallet {
-  mnemonic: string;
   errors?: Record<string, IError>;
+  mnemonic: string;
 }
 
 /**

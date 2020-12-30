@@ -2,8 +2,7 @@ import React from 'react';
 import { appInitialState } from './store/reducers';
 import { browser } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { IWallet } from '../domain/wallet/wallet';
-import { IPreferences } from '../domain/preferences/preferences';
+import { IAppState } from '../domain/common';
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -34,9 +33,5 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
 });
 
 // Create store
-interface appState {
-  wallets: IWallet[];
-  prefs: IPreferences;
-}
-type ctx = [appState, React.Dispatch<unknown>];
+type ctx = [IAppState, React.Dispatch<unknown>];
 export const AppContext = React.createContext<ctx>(appInitialState);

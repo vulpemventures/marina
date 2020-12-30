@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
+import { useHistory, RouteComponentProps } from 'react-router-dom';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-//import { useHistory } from 'react-router';
-// import { INITIALIZE_END_OF_FLOW_ROUTE } from '../routes/constants';
 import { AppContext } from '../../../application/background_script';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import * as ACTIONS from '../../../application/store/actions/action-types';
-import { IError } from '../../../domain/common/common';
+import { IError } from '../../../domain/common';
+import { restoreWallet } from '../../../application/store/actions';
+import { Thunk } from '../../../application/store/reducers/use-thunk-reducer';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -19,7 +19,12 @@ interface WalletRestoreFormValues {
 
 interface WalletRestoreFormProps {
   ctxErrors?: Record<string, IError>;
-  dispatch: React.Dispatch<[string, Record<string, unknown>]>;
+  dispatch(
+    p:
+      | React.Dispatch<[string, Record<string, unknown>]>
+      | Thunk<never, [string, Record<string, unknown>]>
+  ): any;
+  history: RouteComponentProps['history'];
 }
 
 const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
@@ -118,10 +123,10 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   enableReinitialize: true,
 
   mapPropsToValues: (props: WalletRestoreFormProps): WalletRestoreFormValues => ({
-    mnemonic: '',
-    password: '',
     confirmPassword: '',
     ctxErrors: props.ctxErrors,
+    mnemonic: '',
+    password: '',
   }),
 
   validationSchema: Yup.object().shape({
@@ -144,15 +149,14 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch([ACTIONS.WALLET_RESTORE_REQUEST, { mnemonic: values.mnemonic }]);
-    //history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+    props.dispatch(restoreWallet(values.mnemonic, props.history));
   },
 
   displayName: 'WalletRestoreForm',
 })(WalletRestoreForm);
 
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
-  // const history = useHistory();
+  const history = useHistory();
   const [{ wallets }, dispatch] = useContext(AppContext);
   const { errors } = wallets[0];
 
@@ -160,7 +164,7 @@ const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
     <Shell>
       <h2 className="mb-4 text-3xl font-medium">{'Restore a wallet from a mnemonic phrase'}</h2>
       <p>{'Enter your secret twelve words of your mnemonic phrase to Restore your wallet'}</p>
-      <WalletRestoreEnhancedForm dispatch={dispatch} ctxErrors={errors} />
+      <WalletRestoreEnhancedForm ctxErrors={errors} dispatch={dispatch} history={history} />
     </Shell>
   );
 };

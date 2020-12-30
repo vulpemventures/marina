@@ -4,19 +4,19 @@ import { preferencesReducer } from './preferences-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { IPreferences } from '../../../domain/preferences/preferences';
 
-const walletInitStateDev: IWallet[] = [
+const walletInitState: IWallet[] = [
   {
     mnemonic: '',
   },
 ];
 
-const preferencesInitStateDev: IPreferences = {
+const preferencesInitState: IPreferences = {
   isOnboardingCompleted: false,
 };
 
 const [appReducer, appInitialState] = combineReducers({
-  wallets: [walletReducer, walletInitStateDev],
-  prefs: [preferencesReducer, preferencesInitStateDev],
+  wallets: [walletReducer, walletInitState],
+  prefs: [preferencesReducer, preferencesInitState],
 });
 
 export { appReducer, appInitialState };
