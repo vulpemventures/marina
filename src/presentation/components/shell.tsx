@@ -20,7 +20,7 @@ const Shell: React.FC<Props> = ({ children, className = '', hasBackBtn = true }:
             className="md:ml-24 lg:ml-40 flex items-center h-32 ml-10"
             onClick={goToPreviousPath}
           >
-            <img src="/assets/images/chevron-left.png" alt="chevron-left" />
+            <img src="/assets/images/chevron-left.svg" alt="chevron-left" />
             {'Back'}
           </button>
         ) : (

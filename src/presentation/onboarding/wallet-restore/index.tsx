@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import classnames from 'classnames';
+import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 //import { useHistory } from 'react-router';
@@ -28,7 +28,7 @@ const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
   return (
     <form onSubmit={handleSubmit} className="mt-10">
       <div
-        className={classnames({
+        className={cx({
           'mb-12': !values.ctxErrors && (!errors.mnemonic || !touched.mnemonic),
         })}
       >
@@ -38,7 +38,7 @@ const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
           onChange={handleChange}
           onBlur={handleBlur}
           rows={5}
-          className={classnames(
+          className={cx(
             'border-2 focus:ring-primary focus:border-primary sm:text-sm placeholder-grayLight block w-3/5 rounded-md shadow-sm',
             {
               'border-red': errors.mnemonic && touched.mnemonic,
@@ -49,20 +49,18 @@ const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
           value={values.mnemonic}
         />
         {(errors.mnemonic && touched.mnemonic && (
-          <p className="text-red flex flex-col justify-center h-12">{errors.mnemonic}</p>
+          <p className="text-red h-10 mt-2 text-xs">{errors.mnemonic}</p>
         )) ||
           (values.ctxErrors && (
-            <p className="text-red flex flex-col justify-center h-12">
-              {values.ctxErrors.mnemonic.message}
-            </p>
+            <p className="text-red h-10 mt-2 text-xs">{values.ctxErrors.mnemonic.message}</p>
           ))}
       </div>
 
-      <div className={classnames({ 'mb-12': !errors.password || !touched.password })}>
+      <div className={cx({ 'mb-12': !errors.password || !touched.password })}>
         <label className="block">
-          <span>{'Password'}</span>
+          <p className="mb-2 font-medium">Password</p>
           <input
-            className={classnames(
+            className={cx(
               'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-2/5 rounded-md',
               {
                 'border-red': errors.password && touched.password,
@@ -79,15 +77,15 @@ const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
           />
         </label>
         {errors.password && touched.password && (
-          <p className="text-red flex flex-col justify-center h-12">{errors.password}</p>
+          <p className="text-red h-10 mt-2 text-xs">{errors.password}</p>
         )}
       </div>
 
-      <div className={classnames({ 'mb-12': !errors.confirmPassword || !touched.confirmPassword })}>
+      <div className={cx({ 'mb-12': !errors.confirmPassword || !touched.confirmPassword })}>
         <label className="block">
-          <span>{'Confirm Password'}</span>
+          <p className="mb-2 font-medium">Confirm Password</p>
           <input
-            className={classnames(
+            className={cx(
               'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-2/5 rounded-md',
               {
                 'border-red': errors.confirmPassword && touched.confirmPassword,
@@ -104,12 +102,12 @@ const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
           />
         </label>
         {errors.confirmPassword && touched.confirmPassword && (
-          <p className="text-red flex flex-col justify-center h-12">{errors.confirmPassword}</p>
+          <p className="text-red h-10 mt-2 text-xs">{errors.confirmPassword}</p>
         )}
       </div>
 
       <Button className="w-1/5 text-base" disabled={isSubmitting} type="submit">
-        {'Restore'}
+        Restore
       </Button>
     </form>
   );
