@@ -1,5 +1,6 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
+import { ProtectedRoute } from './guards';
 import {
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_SELECT_ACTION_ROUTE,
@@ -9,6 +10,7 @@ import {
   INITIALIZE_SEED_PHRASE_ROUTE,
   INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
   DEFAULT_ROUTE,
+  LOGIN_ROUTE,
 } from './constants';
 
 // Onboarding
@@ -21,8 +23,9 @@ import SeedReveal from '../onboarding/seed-reveal';
 import SeedConfirm from '../onboarding/seed-confirm';
 // Wallet
 import Home from '../wallet/home';
+import LogIn from '../wallet/log-in';
 
-export default function App(): React.ReactElement {
+const Routes: React.FC = () => {
   return (
     <Switch>
       {/*Onboarding*/}
@@ -34,7 +37,10 @@ export default function App(): React.ReactElement {
       <Route exact path={INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE} component={SeedConfirm} />
       <Route exact path={INITIALIZE_END_OF_FLOW_ROUTE} component={EndOfFlow} />
       {/*Wallet*/}
-      <Route exact path={DEFAULT_ROUTE} component={Home} />
+      <ProtectedRoute exact path={DEFAULT_ROUTE} comp={Home} />
+      <Route exact path={LOGIN_ROUTE} component={LogIn} />
     </Switch>
   );
-}
+};
+
+export default Routes;

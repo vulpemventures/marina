@@ -1,9 +1,6 @@
 // Credits: https://github.com/nathanbuchar/react-hook-thunk-reducer
 import { Dispatch, Reducer, useCallback, useRef, useState } from 'react';
-
-export interface Thunk<S, A> {
-  (dispatch: Dispatch<A | Thunk<S, A>>, getState: () => S): void;
-}
+import { Thunk } from '../../../domain/common';
 
 /**
  * Augments React's useReducer() hook so that the action

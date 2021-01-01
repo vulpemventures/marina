@@ -1,12 +1,16 @@
 import { RouteComponentProps } from 'react-router-dom';
 import { IdentityOpts, IdentityType, Mnemonic } from 'tdex-sdk';
-import { WALLET_RESTORE_FAILURE, WALLET_RESTORE_SUCCESS } from './action-types';
-import { Thunk } from '../reducers/use-thunk-reducer';
 import {
+  AUTHENTICATION_SUCCESS,
+  WALLET_RESTORE_FAILURE,
+  WALLET_RESTORE_SUCCESS,
+} from './action-types';
+import {
+  DEFAULT_ROUTE,
   INITIALIZE_END_OF_FLOW_ROUTE,
   INITIALIZE_SEED_PHRASE_ROUTE,
 } from '../../../presentation/routes/constants';
-import { IAppState } from '../../../domain/common';
+import { IAppState, Thunk } from '../../../domain/common';
 
 // TDex Wallet instance
 export let tdexWallet: Mnemonic;
@@ -14,7 +18,7 @@ export let tdexWallet: Mnemonic;
 export function restoreWallet(
   mnemonic: string,
   history: RouteComponentProps['history']
-): Thunk<IAppState, [string, Record<string, unknown>]> {
+): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState) => {
     // Check if mnemonic already exists
     const { wallets } = getState();
@@ -40,9 +44,22 @@ export function restoreWallet(
 export function setPassword(
   password: string,
   history: RouteComponentProps['history']
-): Thunk<IAppState, [string, Record<string, unknown>]> {
+): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return () => {
     console.log('password', password);
     history.push(INITIALIZE_SEED_PHRASE_ROUTE);
+  };
+}
+
+export function logIn(
+  password: string,
+  history: RouteComponentProps['history']
+): Thunk<IAppState, [string, Record<string, unknown>?]> {
+  return (dispatch, getState) => {
+    // TODO: Check password
+    console.log('Check password', password);
+    // Success
+    dispatch([AUTHENTICATION_SUCCESS]);
+    history.push(DEFAULT_ROUTE);
   };
 }

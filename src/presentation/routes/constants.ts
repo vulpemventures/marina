@@ -1,6 +1,5 @@
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
-// const INITIALIZE_UNLOCK_ROUTE = '/initialize/unlock';
 const INITIALIZE_CREATE_PASSWORD_ROUTE = '/initialize/create-password';
 const INITIALIZE_IMPORT_WITH_SEED_PHRASE_ROUTE =
   '/initialize/create-password/import-with-seed-phrase';
@@ -14,12 +13,12 @@ const INITIALIZE_END_OF_FLOW_ROUTE = '/initialize/end-of-flow';
 const RESTORE_VAULT_ROUTE = '/restore-vault';
 
 // Wallet
+const LOGIN_ROUTE = '/login';
 const DEFAULT_ROUTE = '/';
 
 export {
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
-  // INITIALIZE_UNLOCK_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
   INITIALIZE_IMPORT_WITH_SEED_PHRASE_ROUTE,
   INITIALIZE_SELECT_ACTION_ROUTE,
@@ -29,5 +28,6 @@ export {
   INITIALIZE_END_OF_FLOW_ROUTE,
   RESTORE_VAULT_ROUTE,
   // Wallet
+  LOGIN_ROUTE,
   DEFAULT_ROUTE,
 };
