@@ -37,6 +37,10 @@ module.exports = {
         // https://web.dev/one-line-layouts/#04.-pancake-stack:-grid-template-rows:-auto-1fr-auto
         pancakeStack: 'auto 1fr auto',
       },
+      scale: {
+        // Mirror transform with scaleX(-1). 1 is not used by Tailwind
+        1: '-1',
+      },
     },
   },
   variants: {

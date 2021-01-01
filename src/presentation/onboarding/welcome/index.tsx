@@ -16,7 +16,7 @@ const Welcome: React.FC = () => {
       }}
     >
       <div className="self-center">
-        <img className="w-28 m-auto" src="assets/images/marina_logo.svg" alt="marina logo" />
+        <img className="w-28 m-auto" src="assets/images/marina-logo.svg" alt="marina logo" />
         <h2 className="my-5 text-4xl text-white">Welcome to Marina</h2>
       </div>
       <div className="self-center">

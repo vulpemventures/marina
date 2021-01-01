@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
+import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
-import Button from '../../components/button';
-import Shell from '../../components/shell';
 import * as Yup from 'yup';
 import cx from 'classnames';
+import Button from '../../components/button';
+import Shell from '../../components/shell';
 import { AppContext } from '../../../application/background_script';
 import { setPassword } from '../../../application/store/actions';
-import { RouteComponentProps, useHistory } from 'react-router-dom';
-import { Thunk } from '../../../application/store/reducers/use-thunk-reducer';
+import { DispatchOrThunk } from '../../../domain/common';
 
 interface WalletCreateFormValues {
   password: string;
@@ -16,11 +16,7 @@ interface WalletCreateFormValues {
 }
 
 interface WalletCreateFormProps {
-  dispatch(
-    p:
-      | React.Dispatch<[string, Record<string, unknown>]>
-      | Thunk<never, [string, Record<string, unknown>]>
-  ): any;
+  dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
 }
 
@@ -90,7 +86,8 @@ const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
             onBlur={handleBlur}
             type="checkbox"
           />
-          I’ve read and accept the{' '}
+          {'I’ve read and accept the '}
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
           <a className="text-primary" href="#">
             terms and conditions
           </a>

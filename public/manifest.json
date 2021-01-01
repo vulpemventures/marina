@@ -8,11 +8,11 @@
     "scripts": ["background_script.js"]
   },
   "icons": {
-    "192": "assets/images/marina_logo_verde.svg"
+    "192": "assets/images/marina-logo-green.svg"
   },
   "web_accessible_resources": [],
   "browser_action": {
-    "default_icon": "assets/images/marina_logo_verde.svg",
+    "default_icon": "assets/images/marina-logo-green.svg",
     "default_popup": "popup.html"
   }
 }

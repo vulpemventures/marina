@@ -9,8 +9,8 @@ import { AppContext } from '../../../application/background_script';
 const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const handleConfirm = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE);
-  const appCtx = useContext(AppContext);
-  const mnemonic: string[] = appCtx?.[0]?.wallets?.[0]?.mnemonic.trim().split(' ');
+  const [{ wallets }] = useContext(AppContext);
+  const mnemonic: string[] = wallets?.[0]?.mnemonic.trim().split(' ');
   const mnemonicRandomized = [...mnemonic];
   // Defining function returning random value from i to N
   const getRandomValue = (i: number, N: number) => Math.floor(Math.random() * (N - i) + i);

@@ -4,11 +4,10 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { AppContext } from '../../../application/background_script';
+import { restoreWallet } from '../../../application/store/actions';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { IError } from '../../../domain/common';
-import { restoreWallet } from '../../../application/store/actions';
-import { Thunk } from '../../../application/store/reducers/use-thunk-reducer';
+import { DispatchOrThunk, IError } from '../../../domain/common';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -19,11 +18,7 @@ interface WalletRestoreFormValues {
 
 interface WalletRestoreFormProps {
   ctxErrors?: Record<string, IError>;
-  dispatch(
-    p:
-      | React.Dispatch<[string, Record<string, unknown>]>
-      | Thunk<never, [string, Record<string, unknown>]>
-  ): any;
+  dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
 }
 
