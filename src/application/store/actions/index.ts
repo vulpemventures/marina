@@ -12,8 +12,8 @@ import {
 } from '../../../presentation/routes/constants';
 import { IAppState, Thunk } from '../../../domain/common';
 
-// TDex Wallet instance
-export let tdexWallet: Mnemonic;
+// Wallet instance
+export let wallet: Mnemonic;
 
 export function restoreWallet(
   mnemonic: string,
@@ -25,7 +25,7 @@ export function restoreWallet(
     if (wallets[0].mnemonic) throw new Error('This wallet already exists');
     // Restore wallet from mnemonic
     try {
-      tdexWallet = new Mnemonic({
+      wallet = new Mnemonic({
         chain: 'regtest',
         type: IdentityType.Mnemonic,
         value: { mnemonic },
