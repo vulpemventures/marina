@@ -20,11 +20,7 @@ const SelectAction: React.FC = () => {
         <div className="grid grid-flow-row grid-cols-2 gap-20">
           <div className="rounded-3xl flex flex-col justify-around object-contain w-64 h-64 pt-10 pb-6 pl-6 pr-6 text-center bg-white">
             <h2 className="text-xl font-normal">{'Restore a wallet'}</h2>
-            <img
-              className="w-16 h-16 m-auto"
-              src="/assets/images/save.png"
-              alt="save"
-            ></img>
+            <img className="w-16 h-16 m-auto" src="/assets/images/save.png" alt="save" />
             <Button className="text-md w-40 mx-auto" onClick={handleClickRestore}>
               {'Restore'}
             </Button>
@@ -35,11 +31,7 @@ const SelectAction: React.FC = () => {
             }
           >
             <h2 className="text-xl font-normal">{'Create a new wallet'}</h2>
-            <img
-              className="w-16 h-16 m-auto"
-              src="/assets/images/plus.png"
-              alt="plus"
-            ></img>
+            <img className="w-16 h-16 m-auto" src="/assets/images/plus.png" alt="plus" />
             <Button className="text-md w-40 mx-auto" onClick={handleClickCreate}>
               {'Create'}
             </Button>
