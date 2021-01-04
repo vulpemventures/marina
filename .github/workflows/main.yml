@@ -24,24 +24,24 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm install --ci
 
       - name: Bundle app
-        run: yarn build
+        run: npm run build
       - name: Package the extension
-        run: yarn web-ext:build
+        run: npm run web-ext:build
 
       - name: Lint
         run: |
-          yarn lint
-          yarn prettier:check
-          yarn web-ext:lint
+          npm run lint
+          npm run prettier:check
+          npm run web-ext:lint
 
       - name: Test
-        run: yarn test
+        run: npm run test
         env:
           CI: true

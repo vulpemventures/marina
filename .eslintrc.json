@@ -9,10 +9,10 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "prettier/@typescript-eslint",
-    "plugin:prettier/recommended",
     "plugin:import/warnings",
     "plugin:import/errors",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "prettier"
   ],
   "plugins": ["@typescript-eslint", "jest", "prettier", "import"],
   "env": {
@@ -26,5 +26,17 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "rules": {}
+  "rules": {
+    "no-debugger": "off",
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/restrict-template-expressions": "off"
+  }
 }
