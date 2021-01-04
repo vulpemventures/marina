@@ -20,7 +20,7 @@ const Shell: React.FC<Props> = ({ children, className = '', hasBackBtn = true }:
             className="md:ml-24 lg:ml-40 flex items-center h-32 ml-10"
             onClick={goToPreviousPath}
           >
-            <img src="/assets/images/chevron-left.svg" alt="chevron-left" />
+            <img src="/assets/images/arrow-back.svg" alt="navigate back" />
             {'Back'}
           </button>
         ) : (
@@ -31,7 +31,7 @@ const Shell: React.FC<Props> = ({ children, className = '', hasBackBtn = true }:
       <main className={`container mx-auto ${className}`}>{children}</main>
 
       <footer>
-        <img src="/assets/images/onboarding/bg-onboarding.png" alt="background bottom" />
+        <img src="/assets/images/fullscreen/bg-onboarding.png" alt="background bottom" />
       </footer>
     </div>
   );

@@ -13,7 +13,7 @@ const SelectAction: React.FC = () => {
       <div
         className="justify-items-center h-5/6 grid w-screen bg-bottom bg-no-repeat bg-cover"
         style={{
-          backgroundImage: "url('/assets/images/onboarding/bg-wave-top.svg')",
+          backgroundImage: "url('/assets/images/fullscreen/bg-wave-top.svg')",
         }}
       >
         <h1 className="self-center text-4xl font-medium">{'What do you want to do?'}</h1>
@@ -22,7 +22,7 @@ const SelectAction: React.FC = () => {
             <h2 className="text-xl font-normal">{'Restore a wallet'}</h2>
             <img
               className="w-16 h-16 m-auto"
-              src="/assets/images/onboarding/save.png"
+              src="/assets/images/save.png"
               alt="save"
             ></img>
             <Button className="text-md w-40 mx-auto" onClick={handleClickRestore}>
@@ -37,7 +37,7 @@ const SelectAction: React.FC = () => {
             <h2 className="text-xl font-normal">{'Create a new wallet'}</h2>
             <img
               className="w-16 h-16 m-auto"
-              src="/assets/images/onboarding/plus.png"
+              src="/assets/images/plus.png"
               alt="plus"
             ></img>
             <Button className="text-md w-40 mx-auto" onClick={handleClickCreate}>

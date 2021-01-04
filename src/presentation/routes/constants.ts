@@ -15,6 +15,7 @@ const RESTORE_VAULT_ROUTE = '/restore-vault';
 // Wallet
 const LOGIN_ROUTE = '/login';
 const DEFAULT_ROUTE = '/';
+const TRANSACTIONS_ROUTE = '/transactions';
 
 export {
   // Onboarding
@@ -30,4 +31,5 @@ export {
   // Wallet
   LOGIN_ROUTE,
   DEFAULT_ROUTE,
+  TRANSACTIONS_ROUTE,
 };
