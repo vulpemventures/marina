@@ -42,7 +42,7 @@ const ShellPopUp: React.FC<Props> = ({ children, hasBackBtn = true, currentPage 
       </header>
 
       <main
-        className="container mx-auto text-center bg-bottom bg-no-repeat divide-y divide-white"
+        className="container mx-auto text-center bg-bottom bg-no-repeat"
         style={{
           backgroundImage: "url('/assets/images/popup/bg-home.png')",
         }}

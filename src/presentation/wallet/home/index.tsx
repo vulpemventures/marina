@@ -1,9 +1,12 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import ButtonAsset from '../../components/button-asset';
+import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import { TRANSACTIONS_ROUTE } from '../../routes/constants';
 import BalanceSendReceive from '../components/balance-send-receive';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorFallback from '../../components/error-fallback';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -20,9 +23,9 @@ const Home: React.FC = () => {
     <ShellPopUp hasBackBtn={false}>
       <BalanceSendReceive liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" />
 
-      <div>
-        <h2 className="my-2 text-lg font-medium text-left text-white">Assets</h2>
-        <div className="h-64 space-y-4 overflow-y-scroll">
+      <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5"></div>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <ButtonList title="Assets" type="assets">
           <ButtonAsset
             assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
             assetName="Liquid Bitcoin"
@@ -58,8 +61,8 @@ const Home: React.FC = () => {
             quantity={3}
             onClick={() => handleClick('UA')}
           />
-        </div>
-      </div>
+        </ButtonList>
+      </ErrorBoundary>
     </ShellPopUp>
   );
 };

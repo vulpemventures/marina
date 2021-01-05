@@ -31,6 +31,9 @@ module.exports = {
       },
     },
     extend: {
+      borderWidth: {
+        0.5: '0.5px',
+      },
       fontFamily: {
         sans: ['Poppins', ...defaultTheme.fontFamily.sans],
       },
