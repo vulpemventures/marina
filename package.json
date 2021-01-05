@@ -14,7 +14,7 @@
     "prettier:check": "prettier --check src __test__",
     "run:firefox": "web-ext run --verbose --browser-console --firefox=firefoxdeveloperedition --firefox-profile=dev --source-dir dist",
     "run:brave-linux": "web-ext run --target chromium --chromium-binary '/usr/bin/brave' --source-dir dist",
-    "run:chrome-linux": "web-ext run --target chromium --chromium-binary '/usr/bin/google-chrome-stable' --source-dir dist",
+    "run:chrome-linux": "web-ext run --target chromium --chromium-binary chromium --source-dir dist",
     "run:brave-mac": "web-ext run --target chromium --chromium-binary '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser' --source-dir dist",
     "run:chrome-mac": "web-ext run --target chromium --chromium-binary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --source-dir dist",
     "start": "(sleep 10 && npm run run:firefox) & npm run watch",
