@@ -12,7 +12,7 @@ const Welcome: React.FC = () => {
       className="justify-items-center bg-primary grid h-screen grid-flow-col grid-rows-2 gap-10 bg-bottom bg-no-repeat bg-contain"
       style={{
         backgroundImage:
-          "url('/assets/images/onboarding/bg-wave-bottom.svg'), url('/assets/images/onboarding/bg-wave-middle.svg')",
+          "url('/assets/images/fullscreen/bg-wave-bottom.svg'), url('/assets/images/fullscreen/bg-wave-middle.svg')",
       }}
     >
       <div className="self-center">

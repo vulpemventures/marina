@@ -16,6 +16,8 @@ module.exports = {
       white: '#fefefe',
       black: '#000000',
       red: colors.red[500],
+      grayNavBar: colors.gray[50],
+      graySuperLight: colors.gray[200],
       grayLight: colors.gray[400],
       gray: colors.gray[500],
       grayDark: colors.gray[900],
@@ -26,10 +28,12 @@ module.exports = {
         sm: '4rem',
         lg: '6rem',
         xl: '12rem',
-        '2xl': '6rem',
       },
     },
     extend: {
+      borderWidth: {
+        0.5: '0.5px',
+      },
       fontFamily: {
         sans: ['Poppins', ...defaultTheme.fontFamily.sans],
       },
