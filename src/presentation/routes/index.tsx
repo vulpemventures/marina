@@ -12,6 +12,7 @@ import {
   DEFAULT_ROUTE,
   LOGIN_ROUTE,
   TRANSACTIONS_ROUTE,
+  RECEIVE_ROUTE,
 } from './constants';
 
 // Onboarding
@@ -26,6 +27,7 @@ import SeedConfirm from '../onboarding/seed-confirm';
 import Home from '../wallet/home';
 import LogIn from '../wallet/log-in';
 import Transactions from '../wallet/transactions';
+import Receive from '../wallet/receive';
 
 const Routes: React.FC = () => {
   return (
@@ -41,6 +43,7 @@ const Routes: React.FC = () => {
       {/*Wallet*/}
       <ProtectedRoute exact path={DEFAULT_ROUTE} comp={Home} />
       <ProtectedRoute exact path={TRANSACTIONS_ROUTE} comp={Transactions} />
+      <ProtectedRoute exact path={RECEIVE_ROUTE} comp={Receive} />
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
     </Switch>
   );

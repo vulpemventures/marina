@@ -13,7 +13,11 @@ const Transactions: React.FC = () => {
   const { state } = useLocation<LocationState>();
 
   return (
-    <ShellPopUp currentPage="Transactions">
+    <ShellPopUp
+      backgroundImagePath="/assets/images/popup/bg-home.png"
+      className="container mx-auto text-center bg-bottom bg-no-repeat"
+      currentPage="Transactions"
+    >
       <BalanceSendReceive liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" />
 
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5"></div>
