@@ -21,7 +21,7 @@ const Button: React.FC<Props> = ({
   roundedMd = false,
 }: Props) => {
   const classes = cx(
-    'font-medium tracking-wide py-2 px-4 focus:outline-none focus:shadow-outline',
+    'text-lg antialiased font-bold tracking-wide py-2 px-4 focus:outline-none focus:shadow-outline',
     className,
     { 'bg-primary text-white': !isOutline },
     { 'border-primary border-2 text-primary': isOutline },

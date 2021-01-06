@@ -10,17 +10,18 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {
-      transparent: 'transparent',
-      primary: '#56aeaa',
       secondary: '#83d7bc',
-      white: '#fefefe',
       black: '#000000',
-      red: colors.red[500],
       grayNavBar: colors.gray[50],
       graySuperLight: colors.gray[200],
       grayLight: colors.gray[400],
       gray: colors.gray[500],
       grayDark: colors.gray[900],
+      primary: '#56aeaa',
+      red: colors.red[500],
+      smokeLight: 'rgba(0, 0, 0, 0.3)',
+      transparent: 'transparent',
+      white: '#fefefe',
     },
     container: {
       padding: {
@@ -31,6 +32,9 @@ module.exports = {
       },
     },
     extend: {
+      borderRadius: {
+        '4xl': '2rem',
+      },
       borderWidth: {
         0.5: '0.5px',
       },
@@ -40,6 +44,10 @@ module.exports = {
       gridTemplateRows: {
         // https://web.dev/one-line-layouts/#04.-pancake-stack:-grid-template-rows:-auto-1fr-auto
         pancakeStack: 'auto 1fr auto',
+      },
+      height: {
+        // Popup screen height minus header
+        popupContent: 'calc(100vh - 5rem)',
       },
       scale: {
         // Mirror transform with scaleX(-1). 1 is not used by Tailwind

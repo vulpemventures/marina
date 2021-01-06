@@ -20,7 +20,11 @@ const Home: React.FC = () => {
   };
 
   return (
-    <ShellPopUp hasBackBtn={false}>
+    <ShellPopUp
+      backgroundImagePath="/assets/images/popup/bg-home.png"
+      className="container mx-auto text-center bg-bottom bg-no-repeat"
+      hasBackBtn={false}
+    >
       <BalanceSendReceive liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" />
 
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5"></div>
