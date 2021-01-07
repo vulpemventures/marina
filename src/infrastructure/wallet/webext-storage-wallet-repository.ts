@@ -9,14 +9,14 @@ export class WebExtStorageWalletRepo implements IWalletRepository {
     const wallets = (await browser.storage.local.get('wallets')) as WalletDTO[];
 
     if (wallet !== undefined) {
-      const w = Wallet.createWallet(wallet)
-      wallets.push(WalletMap.toDTO(w))
-      await browser.storage.local.set({ wallets })
-      return w
+      const w = Wallet.createWallet(wallet);
+      wallets.push(WalletMap.toDTO(w));
+      await browser.storage.local.set({ wallets });
+      return w;
     }
 
     if (wallets.length <= 0) {
-      throw new Error("wallet not found")
+      throw new Error('wallet not found');
     }
 
     return WalletMap.toDomain(wallets[0]);

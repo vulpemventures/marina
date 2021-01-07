@@ -1,10 +1,5 @@
 import { RouteComponentProps } from 'react-router-dom';
-import {
-  IdentityOpts,
-  IdentityType,
-  Mnemonic,
-  EsploraIdentityRestorer,
-} from 'tdex-sdk';
+import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'tdex-sdk';
 import {
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
@@ -33,22 +28,22 @@ export function createWallet(
     // Check if mnemonic already exists
     // Should we source the wallets state from repo for those actions that persist part of it?
     const { wallets } = getState();
-    if (wallets.length > 0 && wallets[0].encryptedMnemonic){ 
+    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error('This wallet already exists');
     }
 
-    try {
+    try {
       const mnemonicWallet = new Mnemonic({
         chain,
         type: IdentityType.Mnemonic,
         value: { mnemonic },
       } as IdentityOpts);
 
-      const masterXPub = mnemonicWallet.masterPrivateKeyNode.neutered().toBase58()
-      const masterBlindKey = mnemonicWallet.masterBlindingKeyNode.masterKey()
-      const encryptedMnemonic = encrypt(mnemonic, password)
+      const masterXPub = mnemonicWallet.masterPrivateKeyNode.neutered().toBase58();
+      const masterBlindKey = mnemonicWallet.masterBlindingKeyNode.masterKey();
+      const encryptedMnemonic = encrypt(mnemonic, password);
 
-      await repo.getOrCreateWallet({masterXPub, masterBlindKey, encryptedMnemonic})
+      await repo.getOrCreateWallet({ masterXPub, masterBlindKey, encryptedMnemonic });
 
       // Update React state
       dispatch([
@@ -57,7 +52,7 @@ export function createWallet(
           masterXPub,
           masterBlindKey,
           encryptedMnemonic,
-        }
+        },
       ]);
 
       // Navigate
@@ -65,7 +60,7 @@ export function createWallet(
     } catch (error) {
       dispatch([WALLET_CREATE_FAILURE, { error }]);
     }
-  }
+  };
 }
 
 export function restoreWallet(
@@ -77,13 +72,13 @@ export function restoreWallet(
   return async (dispatch, getState) => {
     // Check if mnemonic already exists
     const { wallets } = getState();
-    if (wallets.length > 0 && wallets[0].encryptedMnemonic){ 
+    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error('This wallet already exists');
     }
 
-    let restorer = Mnemonic.DEFAULT_RESTORER
-    if (chain == 'regtest') {
-      restorer = new EsploraIdentityRestorer('http://localhost:3001')
+    let restorer = Mnemonic.DEFAULT_RESTORER;
+    if (chain === 'regtest') {
+      restorer = new EsploraIdentityRestorer('http://localhost:3001');
     }
 
     // Restore wallet from mnemonic
@@ -96,11 +91,11 @@ export function restoreWallet(
         initializeFromRestorer: true,
       } as IdentityOpts);
 
-      const masterXPub = mnemonicWallet.masterPrivateKeyNode.neutered().toBase58()
-      const masterBlindKey = mnemonicWallet.masterBlindingKeyNode.masterKey()
-      const encryptedMnemonic = encrypt(mnemonic, password)
+      const masterXPub = mnemonicWallet.masterPrivateKeyNode.neutered().toBase58();
+      const masterBlindKey = mnemonicWallet.masterBlindingKeyNode.masterKey();
+      const encryptedMnemonic = encrypt(mnemonic, password);
 
-      await repo.getOrCreateWallet({masterXPub, masterBlindKey, encryptedMnemonic})
+      await repo.getOrCreateWallet({ masterXPub, masterBlindKey, encryptedMnemonic });
 
       dispatch([
         WALLET_CREATE_SUCCESS,
@@ -108,13 +103,12 @@ export function restoreWallet(
           masterXPub,
           masterBlindKey,
           encryptedMnemonic,
-        }
+        },
       ]);
 
-
-      const isRestored = await mnemonicWallet.isRestored
+      const isRestored = await mnemonicWallet.isRestored;
       if (!isRestored) {
-        throw new Error('Failed to restore wallet')
+        throw new Error('Failed to restore wallet');
       }
 
       // Update React state
@@ -133,18 +127,18 @@ export function logIn(
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState) => {
     const { wallets } = getState();
-    if (wallets.length <= 0 || wallets[0].encryptedMnemonic === undefined){ 
+    if (wallets.length <= 0 || wallets[0].encryptedMnemonic === undefined) {
       throw new Error('The wallet does not exist');
     }
 
-    const wallet = wallets[0]
+    const wallet = wallets[0];
     try {
       // TODO: maybe just check password hash?
-      decrypt(wallet.encryptedMnemonic, password)
+      decrypt(wallet.encryptedMnemonic, password);
       // Success
       dispatch([AUTHENTICATION_SUCCESS]);
       history.push(DEFAULT_ROUTE);
-    } catch(error) {
+    } catch (error) {
       dispatch([AUTHENTICATION_FAILURE, { error }]);
     }
   };
