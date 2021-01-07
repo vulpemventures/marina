@@ -38,7 +38,7 @@
       url('../../../public/assets/fonts/poppins/Poppins-Bold.woff2') format('woff2'),
       url('../../../public/assets/fonts/poppins/Poppins-Bold.woff') format('woff'),
       url('../../../public/assets/fonts/poppins/Poppins-Bold.ttf') format('truetype');
-    font-weight: bold;
+    font-weight: 600 700;
     font-style: normal;
     font-stretch: normal;
   }

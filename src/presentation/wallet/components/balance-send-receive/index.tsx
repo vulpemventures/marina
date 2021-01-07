@@ -41,13 +41,13 @@ const BalanceSendReceive: React.FC<Props> = ({
         <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p>
       </div>
       <div className="mb-11 flex flex-row justify-center space-x-4">
-        <Button className="flex flex-row justify-center w-2/5" onClick={handleReceive}>
-          <img className="w-4 mr-2" src="assets/images/receive.svg" alt="receive" />
-          <span className="text-base antialiased font-bold">Receive</span>
+        <Button className="flex flex-row items-center justify-center w-2/5" onClick={handleReceive}>
+          <img className="mr-1" src="assets/images/receive.svg" alt="receive" />
+          <span>Receive</span>
         </Button>
-        <Button className="flex flex-row justify-center w-2/5">
-          <img className="w-4 mr-2" src="assets/images/send.svg" alt="send" />
-          <span className="text-base antialiased font-bold">Send</span>
+        <Button className="flex flex-row items-center justify-center w-2/5">
+          <img className="mr-1" src="assets/images/send.svg" alt="send" />
+          <span>Send</span>
         </Button>
       </div>
     </div>

@@ -10,17 +10,18 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {
-      transparent: 'transparent',
-      primary: '#56aeaa',
       secondary: '#83d7bc',
-      white: '#fefefe',
       black: '#000000',
-      red: colors.red[500],
       grayNavBar: colors.gray[50],
       graySuperLight: colors.gray[200],
       grayLight: colors.gray[400],
       gray: colors.gray[500],
       grayDark: colors.gray[900],
+      primary: '#56aeaa',
+      red: colors.red[500],
+      smokeLight: 'rgba(0, 0, 0, 0.3)',
+      transparent: 'transparent',
+      white: '#fefefe',
     },
     container: {
       padding: {
