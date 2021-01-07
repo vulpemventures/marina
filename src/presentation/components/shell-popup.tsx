@@ -4,11 +4,19 @@ import { DEFAULT_ROUTE } from '../routes/constants';
 
 interface Props {
   children: React.ReactNode;
+  className?: string;
   hasBackBtn?: boolean;
   currentPage?: string;
+  backgroundImagePath: string;
 }
 
-const ShellPopUp: React.FC<Props> = ({ children, hasBackBtn = true, currentPage }: Props) => {
+const ShellPopUp: React.FC<Props> = ({
+  backgroundImagePath,
+  children,
+  className = '',
+  currentPage,
+  hasBackBtn = true,
+}: Props) => {
   const history = useHistory();
   const goToPreviousPath = () => history.goBack();
   const goToHome = () => history.push(DEFAULT_ROUTE);
@@ -42,9 +50,9 @@ const ShellPopUp: React.FC<Props> = ({ children, hasBackBtn = true, currentPage 
       </header>
 
       <main
-        className="container mx-auto text-center bg-bottom bg-no-repeat"
+        className={className}
         style={{
-          backgroundImage: "url('/assets/images/popup/bg-home.png')",
+          backgroundImage: `url(${backgroundImagePath})`,
         }}
       >
         {children}

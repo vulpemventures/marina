@@ -31,6 +31,9 @@ module.exports = {
       },
     },
     extend: {
+      borderRadius: {
+        '4xl': '2rem',
+      },
       borderWidth: {
         0.5: '0.5px',
       },
@@ -40,6 +43,10 @@ module.exports = {
       gridTemplateRows: {
         // https://web.dev/one-line-layouts/#04.-pancake-stack:-grid-template-rows:-auto-1fr-auto
         pancakeStack: 'auto 1fr auto',
+      },
+      height: {
+        // Popup screen height minus header
+        popupContent: 'calc(100vh - 5rem)',
       },
       scale: {
         // Mirror transform with scaleX(-1). 1 is not used by Tailwind

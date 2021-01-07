@@ -1,5 +1,7 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import Button from '../../../components/button';
+import { RECEIVE_ROUTE } from '../../../routes/constants';
 
 interface Props {
   liquidBitcoinBalance: number;
@@ -15,12 +17,17 @@ const BalanceSendReceive: React.FC<Props> = ({
   fiatBalance,
   fiatCurrency,
 }) => {
+  //
   let formattedFiatBalance;
   if (fiatCurrency === '$') {
     formattedFiatBalance = `$${fiatBalance} USD`;
   } else if (fiatCurrency === '€') {
     formattedFiatBalance = `${fiatBalance} EUR`;
   }
+
+  //
+  const history = useHistory();
+  const handleReceive = () => history.push(RECEIVE_ROUTE);
 
   return (
     <div>
@@ -34,7 +41,7 @@ const BalanceSendReceive: React.FC<Props> = ({
         <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p>
       </div>
       <div className="mb-11 flex flex-row justify-center space-x-4">
-        <Button className="flex flex-row justify-center w-2/5">
+        <Button className="flex flex-row justify-center w-2/5" onClick={handleReceive}>
           <img className="w-4 mr-2" src="assets/images/receive.svg" alt="receive" />
           <span className="text-base antialiased font-bold">Receive</span>
         </Button>
