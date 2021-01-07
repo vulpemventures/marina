@@ -13,7 +13,7 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../../presentation/routes/constants';
 import { IAppState, Thunk } from '../../../domain/common';
-import { encrypt, decrypt } from '../../utils/crypto';
+import { encrypt, hash } from '../../utils/crypto';
 import { WebExtStorageWalletRepo } from '../../../infrastructure/wallet/webext-storage-wallet-repository';
 
 const repo: WebExtStorageWalletRepo = new WebExtStorageWalletRepo();
@@ -29,7 +29,9 @@ export function createWallet(
     // Should we source the wallets state from repo for those actions that persist part of it?
     const { wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-      throw new Error('Wallet already exists. Remove the extension from the browser first to create a new one');
+      throw new Error(
+        'Wallet already exists. Remove the extension from the browser first to create a new one'
+      );
     }
 
     try {
@@ -42,8 +44,14 @@ export function createWallet(
       const masterXPub = mnemonicWallet.masterPublicKey;
       const masterBlindKey = mnemonicWallet.masterBlindingKey;
       const encryptedMnemonic = encrypt(mnemonic, password);
+      const passwordHash = hash(password);
 
-      await repo.getOrCreateWallet({ masterXPub, masterBlindKey, encryptedMnemonic });
+      await repo.getOrCreateWallet({
+        masterXPub,
+        masterBlindKey,
+        encryptedMnemonic,
+        passwordHash,
+      });
 
       // Update React state
       dispatch([
@@ -94,8 +102,14 @@ export function restoreWallet(
       const masterXPub = mnemonicWallet.masterPublicKey;
       const masterBlindKey = mnemonicWallet.masterBlindingKey;
       const encryptedMnemonic = encrypt(mnemonic, password);
+      const passwordHash = hash(password);
 
-      await repo.getOrCreateWallet({ masterXPub, masterBlindKey, encryptedMnemonic });
+      await repo.getOrCreateWallet({
+        masterXPub,
+        masterBlindKey,
+        encryptedMnemonic,
+        passwordHash,
+      });
 
       dispatch([
         WALLET_CREATE_SUCCESS,
@@ -103,6 +117,7 @@ export function restoreWallet(
           masterXPub,
           masterBlindKey,
           encryptedMnemonic,
+          passwordHash,
         },
       ]);
 
@@ -133,8 +148,9 @@ export function logIn(
 
     const wallet = wallets[0];
     try {
-      // TODO: maybe just check password hash?
-      decrypt(wallet.encryptedMnemonic, password);
+      if (wallet.passwordHash !== hash(password)) {
+        throw new Error('Invalid password');
+      }
       // Success
       dispatch([AUTHENTICATION_SUCCESS]);
       history.push(DEFAULT_ROUTE);

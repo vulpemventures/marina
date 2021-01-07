@@ -9,6 +9,7 @@ export class WalletMap {
       masterXPub: wallet.masterXPub,
       masterBlindKey: wallet.masterBlindKey,
       encryptedMnemonic: wallet.encryptedMnemonic,
+      passwordHash: wallet.passwordHash,
     };
   }
 
@@ -18,6 +19,7 @@ export class WalletMap {
         masterXPub: raw.masterXPub,
         masterBlindKey: raw.masterBlindKey,
         encryptedMnemonic: raw.encryptedMnemonic,
+        passwordHash: raw.passwordHash,
       },
       new UniqueEntityID(raw.walletId)
     );

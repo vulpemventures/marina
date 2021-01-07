@@ -3,4 +3,5 @@ export interface WalletDTO {
   masterXPub: string;
   masterBlindKey: string;
   encryptedMnemonic: string;
+  passwordHash: string;
 }

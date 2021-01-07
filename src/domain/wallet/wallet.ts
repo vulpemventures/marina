@@ -12,6 +12,7 @@ export interface IWallet {
   masterXPub: string;
   masterBlindKey: string;
   encryptedMnemonic: string;
+  passwordHash: string;
   restored?: boolean;
 }
 
@@ -41,6 +42,10 @@ export class Wallet extends Entity<IWallet> {
     return this.encryptedMnemonic;
   }
 
+  get passwordHash(): string {
+    return this.passwordHash;
+  }
+
   /**
    * @param props - Wallet props
    * @param id - When the id is known we can pass it in, or we create one
@@ -64,6 +69,7 @@ export class Wallet extends Entity<IWallet> {
       masterXPub: props.masterXPub,
       masterBlindKey: props.masterBlindKey,
       encryptedMnemonic: props.encryptedMnemonic,
+      passwordHash: props.passwordHash,
     };
     return new Wallet(walletProps, id);
   }

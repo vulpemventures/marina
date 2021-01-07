@@ -11,6 +11,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         masterXPub: payload.masterXPub,
         masterBlindKey: payload.masterBlindKey,
         encryptedMnemonic: payload.encryptedMnemonic,
+        passwordHash: payload.passwordHash,
       };
       return Object.assign([], state, [firstWallet]);
     }
