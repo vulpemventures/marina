@@ -29,7 +29,7 @@ export function createWallet(
     // Should we source the wallets state from repo for those actions that persist part of it?
     const { wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-      throw new Error('This wallet already exists');
+      throw new Error('Wallet already exists. Remove the extension from the browser first to create a new one');
     }
 
     try {
