@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
+import { DEFAULT_ROUTE } from '../../routes/constants';
 
 const Receive: React.FC = () => {
   const [buttonText, setButtonText] = useState('Copy');
@@ -19,8 +21,12 @@ const Receive: React.FC = () => {
     );
   };
 
+  const history = useHistory();
+  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-receive.png"
       className="h-popupContent flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Receive"

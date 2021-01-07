@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Button from '../../../components/button';
+import ModalConfirm from '../../../components/modal-confirm';
 import { RECEIVE_ROUTE } from '../../../routes/constants';
 
 interface Props {
@@ -25,9 +26,15 @@ const BalanceSendReceive: React.FC<Props> = ({
     formattedFiatBalance = `${fiatBalance} EUR`;
   }
 
-  //
+  // TODO: Show modal conditionnaly base on state
+  // blocked by https://github.com/vulpemventures/marina/issues/15
   const history = useHistory();
-  const handleReceive = () => history.push(RECEIVE_ROUTE);
+  const handleReceive = () => showModal(true);
+
+  //
+  const [isModalOpen, showModal] = useState(false);
+  const handleClose = () => showModal(false);
+  const handleConfirm = () => history.push(RECEIVE_ROUTE);
 
   return (
     <div>
@@ -50,6 +57,16 @@ const BalanceSendReceive: React.FC<Props> = ({
           <span>Send</span>
         </Button>
       </div>
+      <ModalConfirm
+        btnTextClose="Cancel"
+        btnTextConfirm="Save"
+        isOpen={isModalOpen}
+        onClose={handleClose}
+        onConfirm={handleConfirm}
+        title="Save your mnemonic"
+      >
+        <p className="text-base text-left">Save your mnemonic phrase to receive or send funds</p>
+      </ModalConfirm>
     </div>
   );
 };
