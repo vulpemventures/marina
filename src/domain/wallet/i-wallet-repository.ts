@@ -1,9 +1,5 @@
-import { Wallet } from './wallet';
+import { IWallet, Wallet } from './wallet';
 
 export interface IWalletRepository {
-  exists(walletId: string): Promise<boolean>;
-  getOrCreateWallet({
-    mnemonic,
-    passphrase,
-  }?: Record<'mnemonic' | 'passphrase', string>): Promise<Wallet>;
+  getOrCreateWallet(wallet?: IWallet): Promise<Wallet>;
 }

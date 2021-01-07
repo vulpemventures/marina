@@ -4,11 +4,7 @@ import { preferencesReducer } from './preferences-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { IPreferences } from '../../../domain/preferences/preferences';
 
-const walletInitState: IWallet[] = [
-  {
-    mnemonic: '',
-  },
-];
+const walletInitState: IWallet[] = [];
 
 const preferencesInitState: IPreferences = {
   isOnboardingCompleted: false,

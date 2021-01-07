@@ -1,3 +1,6 @@
 export interface WalletDTO {
-  mnemonic?: string;
+  walletId: string;
+  masterXPub: string;
+  masterBlindKey: string;
+  encryptedMnemonic: string;
 }
