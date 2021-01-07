@@ -3,14 +3,16 @@ import { useHistory } from 'react-router-dom';
 import { DEFAULT_ROUTE } from '../routes/constants';
 
 interface Props {
+  backBtnCb?: () => void;
+  backgroundImagePath: string;
   children: React.ReactNode;
   className?: string;
-  hasBackBtn?: boolean;
   currentPage?: string;
-  backgroundImagePath: string;
+  hasBackBtn?: boolean;
 }
 
 const ShellPopUp: React.FC<Props> = ({
+  backBtnCb,
   backgroundImagePath,
   children,
   className = '',
@@ -20,6 +22,13 @@ const ShellPopUp: React.FC<Props> = ({
   const history = useHistory();
   const goToPreviousPath = () => history.goBack();
   const goToHome = () => history.push(DEFAULT_ROUTE);
+  const handleBackBtn = () => {
+    if (backBtnCb) {
+      backBtnCb();
+    } else {
+      goToPreviousPath();
+    }
+  };
 
   return (
     <div id="shell-popup" className="grid h-screen">
@@ -33,10 +42,7 @@ const ShellPopUp: React.FC<Props> = ({
           </button>
         </div>
         {hasBackBtn ? (
-          <button
-            className="flex items-center justify-center w-full h-8"
-            onClick={goToPreviousPath}
-          >
+          <button className="flex items-center justify-center w-full h-8" onClick={handleBackBtn}>
             <img
               className="absolute left-0 mx-4"
               src="assets/images/chevron-left.svg"

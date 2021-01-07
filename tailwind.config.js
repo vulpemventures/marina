@@ -38,6 +38,9 @@ module.exports = {
       borderWidth: {
         0.5: '0.5px',
       },
+      boxShadow: (theme) => ({
+        innerBtnBorder: `inset 0 0 0 3px ${theme('colors.primary')}`,
+      }),
       fontFamily: {
         sans: ['Poppins', ...defaultTheme.fontFamily.sans],
       },
@@ -48,6 +51,9 @@ module.exports = {
       height: {
         // Popup screen height minus header
         popupContent: 'calc(100vh - 5rem)',
+      },
+      minHeight: {
+        80: '80%',
       },
       scale: {
         // Mirror transform with scaleX(-1). 1 is not used by Tailwind
