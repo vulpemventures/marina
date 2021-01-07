@@ -39,8 +39,8 @@ export function createWallet(
         value: { mnemonic },
       } as IdentityOpts);
 
-      const masterXPub = mnemonicWallet.masterPrivateKeyNode.neutered().toBase58();
-      const masterBlindKey = mnemonicWallet.masterBlindingKeyNode.masterKey();
+      const masterXPub = mnemonicWallet.masterPublicKey;
+      const masterBlindKey = mnemonicWallet.masterBlindingKey;
       const encryptedMnemonic = encrypt(mnemonic, password);
 
       await repo.getOrCreateWallet({ masterXPub, masterBlindKey, encryptedMnemonic });
@@ -91,8 +91,8 @@ export function restoreWallet(
         initializeFromRestorer: true,
       } as IdentityOpts);
 
-      const masterXPub = mnemonicWallet.masterPrivateKeyNode.neutered().toBase58();
-      const masterBlindKey = mnemonicWallet.masterBlindingKeyNode.masterKey();
+      const masterXPub = mnemonicWallet.masterPublicKey;
+      const masterBlindKey = mnemonicWallet.masterBlindingKey;
       const encryptedMnemonic = encrypt(mnemonic, password);
 
       await repo.getOrCreateWallet({ masterXPub, masterBlindKey, encryptedMnemonic });
