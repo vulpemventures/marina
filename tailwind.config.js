@@ -51,6 +51,8 @@ module.exports = {
       height: {
         // Popup screen height minus header
         popupContent: 'calc(100vh - 5rem)',
+        // Hack for Select Asset screen
+        25.75: '25.75rem',
       },
       minHeight: {
         80: '80%',
@@ -62,7 +64,9 @@ module.exports = {
     },
   },
   variants: {
-    extend: {},
+    extend: {
+      //outline: ['focus'],
+    },
   },
   plugins: [require('@tailwindcss/forms')],
 };

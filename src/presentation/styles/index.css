@@ -2,3 +2,114 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Customise Chrome cancel icon on inputs of type search */
+input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 1em;
+  width: 1em;
+  border-radius: 50em;
+  background: url(../../../public/assets/images/cancel-filled.svg) no-repeat 50% 50%;
+  background-size: contain;
+  opacity: 0;
+  pointer-events: none;
+}
+input[type='search']:focus::-webkit-search-cancel-button {
+  opacity: 0.3;
+  pointer-events: all;
+}
+/**/
+
+/* Hide the spin-button on inputs of type number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+/**/
+
+/* Custom input of type range (fee slider) */
+[type='range'] {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font: 2em/1 arial, sans-serif;
+}
+[type='range'],
+[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+}
+.track-50 [type='range']::-webkit-slider-runnable-track {
+  background: linear-gradient(#56aeaa, #56aeaa) 0 / 50% 100% no-repeat #e4e4e7 !important;
+}
+.track-100 [type='range']::-webkit-slider-runnable-track {
+  background: linear-gradient(#56aeaa, #56aeaa) 0 / 100% 100% no-repeat #e4e4e7 !important;
+}
+[type='range']::-webkit-slider-runnable-track {
+  box-sizing: border-box;
+  border: none;
+  border-radius: 1em;
+  cursor: pointer;
+  height: 0.25em;
+  background: #e4e4e7;
+}
+[type='range']::-moz-range-track {
+  box-sizing: border-box;
+  border: none;
+  border-radius: 1em;
+  cursor: pointer;
+  height: 0.25em;
+  background: #e4e4e7;
+}
+[type='range']::-ms-track {
+  box-sizing: border-box;
+  border: none;
+  cursor: pointer;
+  height: 0.25em;
+  background: #e4e4e7;
+}
+[type='range']::-moz-range-progress {
+  background: #56aeaa;
+  border-radius: 1em;
+  height: 0.25em;
+}
+[type='range']::-ms-fill-lower {
+  height: 0.25em;
+  background: #56aeaa;
+}
+[type='range']::-webkit-slider-thumb {
+  margin-top: -5px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 50%;
+  background: #56aeaa;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+[type='range']::-moz-range-thumb {
+  box-sizing: border-box;
+  border: none;
+  border-radius: 50%;
+  background: #56aeaa;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+[type='range']::-ms-thumb {
+  margin-top: 0;
+  border-radius: 50%;
+  background: #56aeaa;
+  box-sizing: border-box;
+  border: none;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+[type='range']::-ms-tooltip {
+  display: none;
+}
+/**/

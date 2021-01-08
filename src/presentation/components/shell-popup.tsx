@@ -42,7 +42,10 @@ const ShellPopUp: React.FC<Props> = ({
           </button>
         </div>
         {hasBackBtn ? (
-          <button className="flex items-center justify-center w-full h-8" onClick={handleBackBtn}>
+          <button
+            className="focus:outline-none flex items-center justify-center w-full h-8"
+            onClick={handleBackBtn}
+          >
             <img
               className="absolute left-0 mx-4"
               src="assets/images/chevron-left.svg"
