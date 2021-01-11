@@ -5,7 +5,7 @@ import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
 import { AppContext } from '../../../application/background_script';
 import { logIn } from '../../../application/store/actions';
-import { RESTORE_VAULT_ROUTE } from '../../routes/constants';
+import { DEFAULT_ROUTE, RESTORE_VAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import { DispatchOrThunk } from '../../../domain/common';
 
@@ -61,7 +61,9 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(logIn(values.password, props.history));
+    const onSuccess = () => props.history.push(DEFAULT_ROUTE);
+    const onError = (err: Error) => console.log(err);
+    props.dispatch(logIn(values.password, onSuccess, onError));
   },
 
   displayName: 'LogInForm',

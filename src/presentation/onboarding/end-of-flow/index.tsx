@@ -1,12 +1,40 @@
 import React, { useContext } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 import { AppContext } from '../../../application/background_script';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
+import { createWallet } from '../../../application/store/actions';
 import * as ACTIONS from '../../../application/store/actions/action-types';
+import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { DEFAULT_ROUTE } from '../../routes/constants';
+import { propTypes } from 'qrcode.react';
+
+interface LocationState {
+  password: string;
+  mnemonic: string;
+}
 
 const EndOfFlow: React.FC = () => {
+  const history = useHistory();
+  const { state } = useLocation<LocationState>();
   const [, dispatch] = useContext(AppContext);
-  const handleClick = () => dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
+
+  let handleClick = () => {
+    dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
+    history.push(DEFAULT_ROUTE);
+  }
+  if (state && state.password && state.mnemonic) {
+    const repo = new BrowserStorageWalletRepo();
+
+    const onSuccess = () => {
+      dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
+      history.push(DEFAULT_ROUTE);
+    };
+    const onError = (err: Error) => console.log(err); 
+    handleClick = () =>
+      dispatch(createWallet(state.password, state.mnemonic, 'regtest', repo, onSuccess, onError));
+  }
+
 
   return (
     <Shell hasBackBtn={false}>

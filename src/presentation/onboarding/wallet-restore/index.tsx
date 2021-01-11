@@ -8,6 +8,9 @@ import { restoreWallet } from '../../../application/store/actions';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
+import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { string } from 'yup/lib/locale';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -144,7 +147,22 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(restoreWallet(values.mnemonic, props.history));
+    const repo = new BrowserStorageWalletRepo();
+    const onSuccess = () => {
+      props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+    };
+    const onError = (err:Error) => {
+      console.log(err);
+    };
+
+    props.dispatch(restoreWallet(
+      values.password,
+      values.mnemonic,
+      'regtest',
+      repo,
+      onSuccess,
+      onError,
+    ));
   },
 
   displayName: 'WalletRestoreForm',
@@ -153,7 +171,7 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
   const history = useHistory();
   const [{ wallets }, dispatch] = useContext(AppContext);
-  const { errors } = wallets[0];
+  const errors = wallets.length > 0 ? wallets[0].errors : undefined;
 
   return (
     <Shell>
