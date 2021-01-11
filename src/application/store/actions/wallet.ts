@@ -1,4 +1,3 @@
-import { RouteComponentProps } from 'react-router-dom';
 import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'tdex-sdk';
 import {
   AUTHENTICATION_SUCCESS,
@@ -8,25 +7,20 @@ import {
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
 } from './action-types';
-import {
-  DEFAULT_ROUTE,
-  INITIALIZE_END_OF_FLOW_ROUTE,
-} from '../../../presentation/routes/constants';
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
-import { WebExtStorageWalletRepo } from '../../../infrastructure/wallet/webext-storage-wallet-repository';
-
-const repo: WebExtStorageWalletRepo = new WebExtStorageWalletRepo();
+import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 
 export function createWallet(
   password: string,
   mnemonic: string,
   chain: string,
-  history: RouteComponentProps['history']
+  repo: IWalletRepository,
+  onSuccess: () => void,
+  onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
     // Check if mnemonic already exists
-    // Should we source the wallets state from repo for those actions that persist part of it?
     const { wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
@@ -60,13 +54,14 @@ export function createWallet(
           masterXPub,
           masterBlindKey,
           encryptedMnemonic,
+          passwordHash,
         },
       ]);
 
-      // Navigate
-      history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+      onSuccess();
     } catch (error) {
       dispatch([WALLET_CREATE_FAILURE, { error }]);
+      onError(error);
     }
   };
 }
@@ -75,7 +70,9 @@ export function restoreWallet(
   password: string,
   mnemonic: string,
   chain: string,
-  history: RouteComponentProps['history']
+  repo: IWalletRepository,
+  onSuccess: () => void,
+  onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
     // Check if mnemonic already exists
@@ -128,17 +125,18 @@ export function restoreWallet(
 
       // Update React state
       dispatch([WALLET_RESTORE_SUCCESS, {}]);
-      // Navigate
-      history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+      onSuccess();
     } catch (error) {
       dispatch([WALLET_RESTORE_FAILURE, { error }]);
+      onError(error);
     }
   };
 }
 
 export function logIn(
   password: string,
-  history: RouteComponentProps['history']
+  onSuccess: () => void,
+  onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState) => {
     const { wallets } = getState();
@@ -153,9 +151,10 @@ export function logIn(
       }
       // Success
       dispatch([AUTHENTICATION_SUCCESS]);
-      history.push(DEFAULT_ROUTE);
+      onSuccess();
     } catch (error) {
       dispatch([AUTHENTICATION_FAILURE, { error }]);
+      onError(error);
     }
   };
 }
