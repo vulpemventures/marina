@@ -7,7 +7,6 @@ import { createWallet } from '../../../application/store/actions';
 import * as ACTIONS from '../../../application/store/actions/action-types';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { propTypes } from 'qrcode.react';
 
 interface LocationState {
   password: string;
@@ -22,7 +21,7 @@ const EndOfFlow: React.FC = () => {
   let handleClick = () => {
     dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
     history.push(DEFAULT_ROUTE);
-  }
+  };
   if (state && state.password && state.mnemonic) {
     const repo = new BrowserStorageWalletRepo();
 
@@ -30,11 +29,10 @@ const EndOfFlow: React.FC = () => {
       dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
       history.push(DEFAULT_ROUTE);
     };
-    const onError = (err: Error) => console.log(err); 
+    const onError = (err: Error) => console.log(err);
     handleClick = () =>
       dispatch(createWallet(state.password, state.mnemonic, 'regtest', repo, onSuccess, onError));
   }
-
 
   return (
     <Shell hasBackBtn={false}>

@@ -10,7 +10,6 @@ import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { string } from 'yup/lib/locale';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -151,18 +150,13 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
     const onSuccess = () => {
       props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     };
-    const onError = (err:Error) => {
+    const onError = (err: Error) => {
       console.log(err);
     };
 
-    props.dispatch(restoreWallet(
-      values.password,
-      values.mnemonic,
-      'regtest',
-      repo,
-      onSuccess,
-      onError,
-    ));
+    props.dispatch(
+      restoreWallet(values.password, values.mnemonic, 'regtest', repo, onSuccess, onError)
+    );
   },
 
   displayName: 'WalletRestoreForm',
