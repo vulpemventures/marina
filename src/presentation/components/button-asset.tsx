@@ -22,7 +22,7 @@ const ButtonAsset: React.FC<Props> = ({
   return (
     <button
       disabled={disabled}
-      className="flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full"
+      className="focus:outline-none flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
       onClick={onClick}
       type={type}
     >

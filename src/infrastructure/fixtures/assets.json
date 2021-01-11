@@ -1,0 +1,44 @@
+[
+  {
+    "assetImgPath": "assets/images/liquid-assets/liquid-btc.svg",
+    "assetName": "Liquid Bitcoin",
+    "assetTicker": "L-BTC",
+    "quantity": 21
+  },
+  {
+    "assetImgPath": "assets/images/liquid-assets/liquid-cad.png",
+    "assetName": "Liquid CAD",
+    "assetTicker": "LCAD",
+    "quantity": 10
+  },
+  {
+    "assetImgPath": "assets/images/liquid-assets/liquid-tether.png",
+    "assetName": "Tether",
+    "assetTicker": "USDt",
+    "quantity": 150000
+  },
+  {
+    "assetImgPath": "assets/images/liquid-assets/question-mark.svg",
+    "assetName": "Vulpem",
+    "assetTicker": "VLP",
+    "quantity": 5600
+  },
+  {
+    "assetImgPath": "assets/images/liquid-assets/question-mark.svg",
+    "assetName": "Ithirium",
+    "assetTicker": "ITH",
+    "quantity": 2100
+  },
+  {
+    "assetImgPath": "assets/images/liquid-assets/question-mark.svg",
+    "assetName": "Rapple",
+    "assetTicker": "XRPP",
+    "quantity": 343434
+  },
+  {
+    "assetImgPath": "assets/images/liquid-assets/question-mark.svg",
+    "assetName": "Unregistered Asset",
+    "assetTicker": "UA",
+    "quantity": 3
+  }
+]

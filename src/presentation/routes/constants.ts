@@ -17,6 +17,10 @@ const LOGIN_ROUTE = '/login';
 const DEFAULT_ROUTE = '/';
 const TRANSACTIONS_ROUTE = '/transactions';
 const RECEIVE_ROUTE = '/receive';
+const SELECT_ASSET_ROUTE = '/select-asset';
+const SEND_ADDRESS_AMOUNT_ROUTE = '/send';
+const SEND_CHOOSE_FEE_ROUTE = '/send/choose-fee';
+const SEND_CONFIRMATION_ROUTE = '/send/confirmation';
 
 export {
   // Onboarding
@@ -34,4 +38,8 @@ export {
   DEFAULT_ROUTE,
   TRANSACTIONS_ROUTE,
   RECEIVE_ROUTE,
+  SELECT_ASSET_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+  SEND_CHOOSE_FEE_ROUTE,
+  SEND_CONFIRMATION_ROUTE,
 };

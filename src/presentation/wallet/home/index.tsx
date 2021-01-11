@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router';
+import { ErrorBoundary } from 'react-error-boundary';
+import { RECEIVE_ROUTE, SELECT_ASSET_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
+import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
-import ShellPopUp from '../../components/shell-popup';
-import { TRANSACTIONS_ROUTE } from '../../routes/constants';
-import BalanceSendReceive from '../components/balance-send-receive';
-import { ErrorBoundary } from 'react-error-boundary';
 import ErrorFallback from '../../components/error-fallback';
+import ModalConfirm from '../../components/modal-confirm';
+import ShellPopUp from '../../components/shell-popup';
+import ButtonsSendReceive from '../../components/buttons-send-receive';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -19,15 +21,33 @@ const Home: React.FC = () => {
     });
   };
 
+  // Save mnemonic modal
+  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+  const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
+
+  // TODO: Show modal conditionnaly base on state
+  // blocked by https://github.com/vulpemventures/marina/issues/15
+  const handleReceive = () => showSaveMnemonicModal(true);
+  const handleSend = () => history.push(SELECT_ASSET_ROUTE);
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-home.png"
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       hasBackBtn={false}
     >
-      <BalanceSendReceive liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" />
+      <Balance
+        bigBalanceText={true}
+        liquidBitcoinBalance={0.005}
+        fiatBalance={120}
+        fiatCurrency="$"
+      />
+
+      <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
 
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5"></div>
+
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <ButtonList title="Assets" type="assets">
           <ButtonAsset
@@ -67,6 +87,17 @@ const Home: React.FC = () => {
           />
         </ButtonList>
       </ErrorBoundary>
+
+      <ModalConfirm
+        btnTextClose="Cancel"
+        btnTextConfirm="Save"
+        isOpen={isSaveMnemonicModalOpen}
+        onClose={handleSaveMnemonicClose}
+        onConfirm={handleSaveMnemonicConfirm}
+        title="Save your mnemonic"
+      >
+        <p className="text-base text-left">Save your mnemonic phrase to receive or send funds</p>
+      </ModalConfirm>
     </ShellPopUp>
   );
 };

@@ -13,6 +13,10 @@ import {
   LOGIN_ROUTE,
   TRANSACTIONS_ROUTE,
   RECEIVE_ROUTE,
+  SELECT_ASSET_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+  SEND_CHOOSE_FEE_ROUTE,
+  SEND_CONFIRMATION_ROUTE,
 } from './constants';
 
 // Onboarding
@@ -28,6 +32,10 @@ import Home from '../wallet/home';
 import LogIn from '../wallet/log-in';
 import Transactions from '../wallet/transactions';
 import Receive from '../wallet/receive';
+import SelectAsset from '../wallet/send/select-asset';
+import AddressAmount from '../wallet/send/address-amount';
+import ChooseFee from '../wallet/send/choose-fee';
+import Confirmation from '../wallet/send/confirmation';
 
 const Routes: React.FC = () => {
   return (
@@ -44,6 +52,10 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={DEFAULT_ROUTE} comp={Home} />
       <ProtectedRoute exact path={TRANSACTIONS_ROUTE} comp={Transactions} />
       <ProtectedRoute exact path={RECEIVE_ROUTE} comp={Receive} />
+      <ProtectedRoute exact path={SELECT_ASSET_ROUTE} comp={SelectAsset} />
+      <ProtectedRoute exact path={SEND_ADDRESS_AMOUNT_ROUTE} comp={AddressAmount} />
+      <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} comp={ChooseFee} />
+      <ProtectedRoute exact path={SEND_CONFIRMATION_ROUTE} comp={Confirmation} />
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
     </Switch>
   );
