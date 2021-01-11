@@ -10,6 +10,7 @@ import {
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
+import { Wallet } from '../../../domain/wallet/wallet';
 
 export function createWallet(
   password: string,
@@ -20,9 +21,8 @@ export function createWallet(
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
-    // Check if mnemonic already exists
-    const { wallets } = getState();
-    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
+    //TODO: use getState and rehydrate persisted storage in App presentational component
+    if (await walletExists(repo)) {
       throw new Error(
         'Wallet already exists. Remove the extension from the browser first to create a new one'
       );
@@ -75,10 +75,14 @@ export function restoreWallet(
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
-    // Check if mnemonic already exists
-    const { wallets } = getState();
-    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-      throw new Error('This wallet already exists');
+    // const { wallets } = getState();
+    // if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
+    //   throw new Error('This wallet already exists');
+    // }
+    if (await walletExists(repo)) {
+      throw new Error(
+        'Wallet already exists. Remove the extension from the browser first to create a new one'
+      );
     }
 
     let restorer = Mnemonic.DEFAULT_RESTORER;
@@ -135,16 +139,18 @@ export function restoreWallet(
 
 export function logIn(
   password: string,
+  repo: IWalletRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return (dispatch, getState) => {
-    const { wallets } = getState();
-    if (wallets.length <= 0 || wallets[0].encryptedMnemonic === undefined) {
+  return async (dispatch, getState) => {
+    let wallet: Wallet;
+    try {
+      wallet = await repo.getOrCreateWallet();
+    } catch (ignore) {
       throw new Error('The wallet does not exist');
     }
 
-    const wallet = wallets[0];
     try {
       if (wallet.passwordHash !== hash(password)) {
         throw new Error('Invalid password');
@@ -157,4 +163,13 @@ export function logIn(
       onError(error);
     }
   };
+}
+
+async function walletExists(repo: IWalletRepository): Promise<boolean> {
+  try {
+    await repo.getOrCreateWallet();
+    return true;
+  } catch (ignore) {
+    return false;
+  }
 }
