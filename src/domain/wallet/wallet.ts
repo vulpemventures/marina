@@ -31,19 +31,19 @@ export class Wallet extends Entity<IWallet> {
   }
 
   get masterXPub(): string {
-    return this.masterXPub;
+    return this.props.masterXPub;
   }
 
   get masterBlindKey(): string {
-    return this.masterBlindKey;
+    return this.props.masterBlindKey;
   }
 
   get encryptedMnemonic(): string {
-    return this.encryptedMnemonic;
+    return this.props.encryptedMnemonic;
   }
 
   get passwordHash(): string {
-    return this.passwordHash;
+    return this.props.passwordHash;
   }
 
   /**
