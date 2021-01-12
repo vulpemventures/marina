@@ -12,8 +12,13 @@ export const preferencesReducer = (
         isAuthenticated: true,
       };
     }
+    case ACTION_TYPES.VERIFICATION_SUCCESS: {
+      return {
+        ...state,
+        isWalletVerified: true,
+      };
+    }
     case ACTION_TYPES.ONBOARDING_COMPLETETED: {
-      console.log('isOnboardingCompleted to true');
       return {
         ...state,
         isOnboardingCompleted: true,
