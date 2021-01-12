@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import * as bip39 from 'bip39';
-import Button from '../../components/button';
 import { useHistory, useLocation } from 'react-router-dom';
+import { AppContext } from '../../../application/background_script';
+import { createWallet } from '../../../application/store/actions';
+import Button from '../../components/button';
 import {
   INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
+import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 
 interface LocationState {
   password: string;
@@ -16,17 +19,30 @@ const SeedReveal: React.FC = () => {
   const history = useHistory();
   const mnemonic = bip39.generateMnemonic();
   const { state } = useLocation<LocationState>();
-  const nextState = { mnemonic: mnemonic, password: state.password };
-  const handleRemindMe = () =>
-    history.push({
-      pathname: INITIALIZE_END_OF_FLOW_ROUTE,
-      state: nextState,
-    });
-  const handleNext = () =>
-    history.push({
-      pathname: INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
-      state: nextState,
-    });
+  const repo = new BrowserStorageWalletRepo();
+  const [, dispatch] = useContext(AppContext);
+
+  const handleRemindMe = () => {
+    dispatch(createWallet(
+      state.password,
+      mnemonic,
+      'regtest',
+      repo,
+      () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
+      (err: Error) => console.log(err),
+    ));
+  }
+
+  const handleNext = () => {
+    dispatch(createWallet(
+      state.password,
+      mnemonic,
+      'regtest',
+      repo,
+      () => history.push({ pathname: INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE, state: { mnemonic }}),
+      (err: Error) => console.log(err),
+    ));
+  }
 
   return (
     <Shell className="space-y-10">

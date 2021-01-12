@@ -1,38 +1,13 @@
-import React, { useContext } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
-import { AppContext } from '../../../application/background_script';
+import React from 'react';
+import { useHistory, } from 'react-router-dom';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { createWallet } from '../../../application/store/actions';
-import * as ACTIONS from '../../../application/store/actions/action-types';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 
-interface LocationState {
-  password: string;
-  mnemonic: string;
-}
-
+// TODO: remove DONE button, for now it's ok to redirect to home if clicked.
 const EndOfFlow: React.FC = () => {
   const history = useHistory();
-  const { state } = useLocation<LocationState>();
-  const [, dispatch] = useContext(AppContext);
-
-  let handleClick = () => {
-    dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
-    history.push(DEFAULT_ROUTE);
-  };
-  if (state && state.password && state.mnemonic) {
-    const repo = new BrowserStorageWalletRepo();
-
-    const onSuccess = () => {
-      dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
-      history.push(DEFAULT_ROUTE);
-    };
-    const onError = (err: Error) => console.log(err);
-    handleClick = () =>
-      dispatch(createWallet(state.password, state.mnemonic, 'regtest', repo, onSuccess, onError));
-  }
+  const handleClick = () => history.push(DEFAULT_ROUTE);
 
   return (
     <Shell hasBackBtn={false}>

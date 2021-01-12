@@ -4,12 +4,13 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { AppContext } from '../../../application/background_script';
-import { restoreWallet } from '../../../application/store/actions';
+import { onboardingComplete, restoreWallet } from '../../../application/store/actions';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { BrowserStoragePreferencestRepo } from '../../../infrastructure/preferences/browser/browser-storage-preferences-repository';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -146,17 +147,23 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    const repo = new BrowserStorageWalletRepo();
-    const onSuccess = () => {
-      props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
-    };
-    const onError = (err: Error) => {
-      console.log(err);
-    };
+    const walletRepo = new BrowserStorageWalletRepo();
+    const prefRepo = new BrowserStoragePreferencestRepo();
+    const onError = (err: Error) => console.log(err);
+    const onSuccess = () => props.dispatch(onboardingComplete(
+      prefRepo,
+      () => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE),
+      onError,
+    ));
 
-    props.dispatch(
-      restoreWallet(values.password, values.mnemonic, 'regtest', repo, onSuccess, onError)
-    );
+    props.dispatch(restoreWallet(
+      values.password,
+      values.mnemonic,
+      'regtest',
+      walletRepo,
+      onSuccess,
+      onError,
+    ));
   },
 
   displayName: 'WalletRestoreForm',

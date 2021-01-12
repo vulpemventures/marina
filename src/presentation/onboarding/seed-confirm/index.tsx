@@ -1,20 +1,30 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Button from '../../components/button';
 import { useHistory, useLocation } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
+import { AppContext } from '../../../application/background_script';
+import { onboardingComplete, verifyWallet } from '../../../application/store/actions';
+import { BrowserStoragePreferencestRepo } from '../../../infrastructure/preferences/browser/browser-storage-preferences-repository';
 
 interface LocationState {
-  password: string;
   mnemonic: string;
 }
 
 const SeedConfirm: React.FC = () => {
   const history = useHistory();
+  const [, dispatch] = useContext(AppContext);
   const { state } = useLocation<LocationState>();
-
-  const handleConfirm = () => history.push({ pathname: INITIALIZE_END_OF_FLOW_ROUTE, state });
+  const repo = new BrowserStoragePreferencestRepo();
+  
+  const onError = (err:Error) => console.log(err);
+  const onSuccess = () => dispatch(onboardingComplete(
+    repo,
+    () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
+    onError,
+  ));
+  const handleConfirm = () => dispatch(verifyWallet(repo, onSuccess, onError));
 
   const mnemonic: string[] = state.mnemonic.trim().split(' ');
   const mnemonicRandomized = [...mnemonic];
