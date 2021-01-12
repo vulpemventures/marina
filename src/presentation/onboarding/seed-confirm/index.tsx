@@ -6,7 +6,7 @@ import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
 import { AppContext } from '../../../application/background_script';
 import { onboardingComplete, verifyWallet } from '../../../application/store/actions';
-import { BrowserStoragePreferencestRepo } from '../../../infrastructure/preferences/browser/browser-storage-preferences-repository';
+import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 
 interface LocationState {
   mnemonic: string;
@@ -16,7 +16,7 @@ const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const [, dispatch] = useContext(AppContext);
   const { state } = useLocation<LocationState>();
-  const repo = new BrowserStoragePreferencestRepo();
+  const repo = new BrowserStorageAppRepo();
 
   const onError = (err: Error) => console.log(err);
   const onSuccess = () =>

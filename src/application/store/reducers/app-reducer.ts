@@ -1,11 +1,11 @@
-import { IPreferences } from '../../../domain/preferences/preferences';
+import { IApp } from '../../../domain/app/app';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IError } from '../../../domain/common';
 
-export const preferencesReducer = (
-  state: IPreferences,
+export const appReducer = (
+  state: IApp,
   [type, payload]: [string, any]
-): IPreferences => {
+): IApp => {
   switch (type) {
     case ACTION_TYPES.AUTHENTICATION_SUCCESS: {
       return {

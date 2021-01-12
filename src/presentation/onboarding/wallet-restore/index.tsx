@@ -10,7 +10,7 @@ import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { BrowserStoragePreferencestRepo } from '../../../infrastructure/preferences/browser/browser-storage-preferences-repository';
+import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -148,7 +148,7 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 
   handleSubmit: (values, { props }) => {
     const walletRepo = new BrowserStorageWalletRepo();
-    const prefRepo = new BrowserStoragePreferencestRepo();
+    const prefRepo = new BrowserStorageAppRepo();
     const onError = (err: Error) => console.log(err);
     const onSuccess = () =>
       props.dispatch(

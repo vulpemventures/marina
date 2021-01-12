@@ -7,22 +7,22 @@ import {
   ONBOARDING_FAILURE,
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
-import { IPreferencesRepository } from '../../../domain/preferences/i-preferences-repository';
+import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
-import { IPreferences } from '../../../domain/preferences/preferences';
+import { App } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
 
 export function verifyWallet(
-  repo: IPreferencesRepository,
+  repo: IAppRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
     try {
-      await repo.updatePreferences(
-        (pref: IPreferences): IPreferences => {
-          pref.isWalletVerified = true;
-          return pref;
+      await repo.updateApp(
+        (app: App): App => {
+          app.props.isWalletVerified = true;
+          return app;
         }
       );
 
@@ -36,16 +36,16 @@ export function verifyWallet(
 }
 
 export function onboardingComplete(
-  repo: IPreferencesRepository,
+  repo: IAppRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
     try {
-      await repo.updatePreferences(
-        (pref: IPreferences): IPreferences => {
-          pref.isOnboardingCompleted = true;
-          return pref;
+      await repo.updateApp(
+        (app: App): App => {
+          app.props.isOnboardingCompleted = true;
+          return app;
         }
       );
 
@@ -61,7 +61,7 @@ export function onboardingComplete(
 export function logIn(
   password: string,
   walletRepo: IWalletRepository,
-  prefRepo: IPreferencesRepository,
+  appRepo: IAppRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
@@ -72,10 +72,10 @@ export function logIn(
         throw new Error('Invalid password');
       }
 
-      await prefRepo.updatePreferences(
-        (pref: IPreferences): IPreferences => {
-          pref.isAuthenticated = true;
-          return pref;
+      await appRepo.updateApp(
+        (app: App): App => {
+          app.props.isAuthenticated = true;
+          return app;
         }
       );
 

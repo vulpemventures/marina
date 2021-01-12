@@ -1,2 +1,2 @@
 export * from './wallet';
-export * from './preferences';
+export * from './app';

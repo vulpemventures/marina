@@ -1,9 +1,9 @@
 import { IWallet } from '../wallet/wallet';
-import { IPreferences } from '../preferences/preferences';
+import { IApp } from '../app/app';
 
 export interface IAppState {
   wallets: IWallet[];
-  prefs: IPreferences;
+  app: IApp;
 }
 
 export interface IError {

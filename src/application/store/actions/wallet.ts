@@ -1,7 +1,5 @@
 import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'tdex-sdk';
 import {
-  AUTHENTICATION_SUCCESS,
-  AUTHENTICATION_FAILURE,
   WALLET_CREATE_FAILURE,
   WALLET_CREATE_SUCCESS,
   WALLET_RESTORE_FAILURE,
@@ -10,7 +8,6 @@ import {
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
-import { Wallet } from '../../../domain/wallet/wallet';
 
 export function createWallet(
   password: string,
