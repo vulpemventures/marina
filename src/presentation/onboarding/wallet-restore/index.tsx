@@ -152,11 +152,7 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
     const onError = (err: Error) => console.log(err);
     const onSuccess = () =>
       props.dispatch(
-        onboardingComplete(
-          appRepo,
-          () => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE),
-          onError
-        )
+        onboardingComplete(appRepo, () => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError)
       );
 
     props.dispatch(
