@@ -9,6 +9,7 @@ const walletInitState: IWallet[] = [];
 const preferencesInitState: IPreferences = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
+  isWalletVerified: false,
 };
 
 const [appReducer, appInitialState] = combineReducers({
