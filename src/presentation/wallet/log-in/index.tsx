@@ -9,6 +9,7 @@ import { DEFAULT_ROUTE, RESTORE_VAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import { DispatchOrThunk } from '../../../domain/common';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { BrowserStoragePreferencestRepo } from '../../../infrastructure/preferences/browser/browser-storage-preferences-repository';
 
 interface LogInFormValues {
   password: string;
@@ -62,10 +63,17 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   }),
 
   handleSubmit: (values, { props }) => {
-    const repo = new BrowserStorageWalletRepo();
+    const walletRepo = new BrowserStorageWalletRepo();
+    const prefRepo = new BrowserStoragePreferencestRepo();
     const onSuccess = () => props.history.push(DEFAULT_ROUTE);
     const onError = (err: Error) => console.log(err);
-    props.dispatch(logIn(values.password, repo, onSuccess, onError));
+    props.dispatch(logIn(
+      values.password,
+      walletRepo,
+      prefRepo,
+      onSuccess,
+      onError,
+    ));
   },
 
   displayName: 'LogInForm',
