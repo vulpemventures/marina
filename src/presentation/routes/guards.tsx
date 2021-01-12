@@ -18,7 +18,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ comp: Component,
   console.log('rest', rest);
   const appCtx = useContext(AppContext);
   console.log('appCtx', appCtx);
-  const isAuthenticated = appCtx?.[0]?.prefs.isAuthenticated;
+  const isAuthenticated = appCtx?.[0]?.app.isAuthenticated;
   console.log('isAuthenticated', isAuthenticated);
 
   return (

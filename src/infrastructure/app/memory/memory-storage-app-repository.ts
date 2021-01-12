@@ -13,7 +13,7 @@ export class MemoryStorageAppRepo implements IAppRepository {
   getApp(): Promise<App> {
     return Promise.resolve(AppMap.toDomain(storage.app));
   }
-  updateApp(cb: (pref: App) => App): Promise<void> {
+  updateApp(cb: (app: App) => App): Promise<void> {
     const updatedApp = cb(AppMap.toDomain(storage.app));
     storage.app = AppMap.toDTO(updatedApp);
     return Promise.resolve();

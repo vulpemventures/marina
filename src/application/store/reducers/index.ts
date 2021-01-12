@@ -14,7 +14,7 @@ const appInitState: IApp = {
 
 const [appReducer, appInitialState] = combineReducers({
   wallets: [walletReducer, walletInitState],
-  prefs: [reducer, appInitState],
+  app: [reducer, appInitState],
 });
 
 export { appReducer, appInitialState };
