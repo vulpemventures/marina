@@ -137,34 +137,6 @@ export function restoreWallet(
   };
 }
 
-export function logIn(
-  password: string,
-  repo: IWalletRepository,
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return async (dispatch, getState) => {
-    let wallet: Wallet;
-    try {
-      wallet = await repo.getOrCreateWallet();
-    } catch (ignore) {
-      throw new Error('The wallet does not exist');
-    }
-
-    try {
-      if (wallet.passwordHash !== hash(password)) {
-        throw new Error('Invalid password');
-      }
-      // Success
-      dispatch([AUTHENTICATION_SUCCESS]);
-      onSuccess();
-    } catch (error) {
-      dispatch([AUTHENTICATION_FAILURE, { error }]);
-      onError(error);
-    }
-  };
-}
-
 async function walletExists(repo: IWalletRepository): Promise<boolean> {
   try {
     await repo.getOrCreateWallet();
