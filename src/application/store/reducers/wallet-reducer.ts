@@ -37,27 +37,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
-    case ACTION_TYPES.AUTHENTICATION_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
-        errors: { auth: { message: payload.error.message } as IError },
-      };
-      return Object.assign([], state, [firstWallet]);
-    }
-    case ACTION_TYPES.VERIFICATION_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
-        errors: { verify: { message: payload.error.message } as IError },
-      };
-      return Object.assign([], state, [firstWallet]);
-    }
-    case ACTION_TYPES.ONBOARDING_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
-        errors: { onboarding: { message: payload.error.message } as IError },
-      };
-      return Object.assign([], state, [firstWallet]);
-    }
     default: {
       return state;
     }
