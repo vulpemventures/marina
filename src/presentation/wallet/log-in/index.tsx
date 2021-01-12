@@ -67,13 +67,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
     const appRepo = new BrowserStorageAppRepo();
     const onSuccess = () => props.history.push(DEFAULT_ROUTE);
     const onError = (err: Error) => console.log(err);
-    props.dispatch(logIn(
-      values.password,
-      walletRepo,
-      appRepo,
-      onSuccess,
-      onError,
-    ));
+    props.dispatch(logIn(values.password, walletRepo, appRepo, onSuccess, onError));
   },
 
   displayName: 'LogInForm',

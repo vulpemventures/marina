@@ -2,10 +2,7 @@ import { IApp } from '../../../domain/app/app';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IError } from '../../../domain/common';
 
-export const appReducer = (
-  state: IApp,
-  [type, payload]: [string, any]
-): IApp => {
+export const appReducer = (state: IApp, [type, payload]: [string, any]): IApp => {
   switch (type) {
     case ACTION_TYPES.AUTHENTICATION_SUCCESS: {
       return {
