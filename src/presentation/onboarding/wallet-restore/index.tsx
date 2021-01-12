@@ -150,20 +150,18 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
     const walletRepo = new BrowserStorageWalletRepo();
     const prefRepo = new BrowserStoragePreferencestRepo();
     const onError = (err: Error) => console.log(err);
-    const onSuccess = () => props.dispatch(onboardingComplete(
-      prefRepo,
-      () => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE),
-      onError,
-    ));
+    const onSuccess = () =>
+      props.dispatch(
+        onboardingComplete(
+          prefRepo,
+          () => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE),
+          onError
+        )
+      );
 
-    props.dispatch(restoreWallet(
-      values.password,
-      values.mnemonic,
-      'regtest',
-      walletRepo,
-      onSuccess,
-      onError,
-    ));
+    props.dispatch(
+      restoreWallet(values.password, values.mnemonic, 'regtest', walletRepo, onSuccess, onError)
+    );
   },
 
   displayName: 'WalletRestoreForm',

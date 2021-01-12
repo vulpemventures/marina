@@ -1,4 +1,4 @@
-import { IPreferences } from "./preferences";
+import { IPreferences } from './preferences';
 
 type CallbackType = (preferences: IPreferences) => IPreferences;
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useHistory, } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DEFAULT_ROUTE } from '../../routes/constants';

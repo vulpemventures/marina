@@ -11,8 +11,9 @@ export class MemoryStorageWalletRepo implements IPreferencesRepository {
   getPreferences(): Promise<IPreferences> {
     return Promise.resolve(storage.preferences);
   }
-  async updatePreferences(cb: (pref: IPreferences) => IPreferences): Promise<void> {
+  updatePreferences(cb: (pref: IPreferences) => IPreferences): Promise<void> {
     const updatedPref = cb(storage.preferences);
     storage.preferences = updatedPref;
+    return Promise.resolve();
   }
 }

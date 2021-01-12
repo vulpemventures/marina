@@ -15,18 +15,20 @@ export function verifyWallet(
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
     try {
-      await repo.updatePreferences((pref: IPreferences): IPreferences => {
-        pref.isWalletVerified = true;
-        return pref
-      })
+      await repo.updatePreferences(
+        (pref: IPreferences): IPreferences => {
+          pref.isWalletVerified = true;
+          return pref;
+        }
+      );
 
-      dispatch([VERIFICATION_SUCCESS, {isWalletVerified: true}]);
+      dispatch([VERIFICATION_SUCCESS, { isWalletVerified: true }]);
       onSuccess();
-    } catch(error) {
+    } catch (error) {
       dispatch([VERIFICATION_FAILURE, { error }]);
       onError(error);
     }
-  }
+  };
 }
 
 export function onboardingComplete(
@@ -36,16 +38,18 @@ export function onboardingComplete(
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState) => {
     try {
-      await repo.updatePreferences((pref: IPreferences): IPreferences => {
-        pref.isOnboardingCompleted = true;
-        return pref
-      })
+      await repo.updatePreferences(
+        (pref: IPreferences): IPreferences => {
+          pref.isOnboardingCompleted = true;
+          return pref;
+        }
+      );
 
-      dispatch([ONBOARDING_COMPLETETED, {isWalletVerified: true}]);
+      dispatch([ONBOARDING_COMPLETETED, { isWalletVerified: true }]);
       onSuccess();
-    } catch(error) {
+    } catch (error) {
       dispatch([ONBOARDING_FAILURE, { error }]);
       onError(error);
     }
-  }
+  };
 }

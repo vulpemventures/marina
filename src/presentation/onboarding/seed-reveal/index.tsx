@@ -23,26 +23,30 @@ const SeedReveal: React.FC = () => {
   const [, dispatch] = useContext(AppContext);
 
   const handleRemindMe = () => {
-    dispatch(createWallet(
-      state.password,
-      mnemonic,
-      'regtest',
-      repo,
-      () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
-      (err: Error) => console.log(err),
-    ));
-  }
+    dispatch(
+      createWallet(
+        state.password,
+        mnemonic,
+        'regtest',
+        repo,
+        () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
+        (err: Error) => console.log(err)
+      )
+    );
+  };
 
   const handleNext = () => {
-    dispatch(createWallet(
-      state.password,
-      mnemonic,
-      'regtest',
-      repo,
-      () => history.push({ pathname: INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE, state: { mnemonic }}),
-      (err: Error) => console.log(err),
-    ));
-  }
+    dispatch(
+      createWallet(
+        state.password,
+        mnemonic,
+        'regtest',
+        repo,
+        () => history.push({ pathname: INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE, state: { mnemonic } }),
+        (err: Error) => console.log(err)
+      )
+    );
+  };
 
   return (
     <Shell className="space-y-10">

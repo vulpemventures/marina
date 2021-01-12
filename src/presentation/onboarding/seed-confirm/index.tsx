@@ -17,13 +17,10 @@ const SeedConfirm: React.FC = () => {
   const [, dispatch] = useContext(AppContext);
   const { state } = useLocation<LocationState>();
   const repo = new BrowserStoragePreferencestRepo();
-  
-  const onError = (err:Error) => console.log(err);
-  const onSuccess = () => dispatch(onboardingComplete(
-    repo,
-    () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
-    onError,
-  ));
+
+  const onError = (err: Error) => console.log(err);
+  const onSuccess = () =>
+    dispatch(onboardingComplete(repo, () => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
   const handleConfirm = () => dispatch(verifyWallet(repo, onSuccess, onError));
 
   const mnemonic: string[] = state.mnemonic.trim().split(' ');
