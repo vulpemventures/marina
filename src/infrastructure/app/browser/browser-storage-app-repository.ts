@@ -6,9 +6,9 @@ import { AppDTO } from '../../../application/dtos/app-dto';
 
 export class BrowserStorageAppRepo implements IAppRepository {
   async getApp(): Promise<App> {
-    const store = await browser.storage.local.get('app');
-    if (store && store.App) {
-      return AppMap.toDomain(store.App as AppDTO);
+    const { app } = (await browser.storage.local.get('app')) as { app: AppDTO };
+    if (app) {
+      return AppMap.toDomain(app);
     }
     return App.createApp({
       isAuthenticated: false,
