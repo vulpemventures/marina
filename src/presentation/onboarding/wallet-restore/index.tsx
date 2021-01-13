@@ -166,7 +166,7 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
   const history = useHistory();
   const [{ wallets }, dispatch] = useContext(AppContext);
-  const errors = wallets.length > 0 ? wallets[0].errors : undefined;
+  const errors = wallets?.[0]?.errors;
 
   return (
     <Shell>
