@@ -1,29 +1,28 @@
 import { Wallet } from '../../domain/wallet/wallet';
 import { WalletDTO } from '../dtos/wallet-dto';
 import { UniqueEntityID } from '../../domain/core/UniqueEntityID';
-import { WalletId } from '../../domain/wallet/walletId';
 
 export class WalletMap {
   public static toDTO(wallet: Wallet): WalletDTO {
     return {
-      mnemonic: wallet.mnemonic,
+      walletId: wallet.walletId.id.toString(),
+      masterXPub: wallet.masterXPub,
+      masterBlindKey: wallet.masterBlindKey,
+      encryptedMnemonic: wallet.encryptedMnemonic,
+      passwordHash: wallet.passwordHash,
     };
   }
 
-  public static toDomain(raw: { mnemonic: string; walletId: WalletId }): Wallet {
+  public static toDomain(raw: WalletDTO): Wallet {
     const wallet = Wallet.createWallet(
       {
-        mnemonic: raw.mnemonic,
+        masterXPub: raw.masterXPub,
+        masterBlindKey: raw.masterBlindKey,
+        encryptedMnemonic: raw.encryptedMnemonic,
+        passwordHash: raw.passwordHash,
       },
-      new UniqueEntityID(raw.walletId.id.toString())
+      new UniqueEntityID(raw.walletId)
     );
     return wallet;
-  }
-
-  public static toPersistence({ mnemonic, walletId }: Wallet) {
-    return {
-      mnemonic: mnemonic,
-      walletId: walletId.id.toString(),
-    };
   }
 }

@@ -1,9 +1,11 @@
 import { IWallet } from '../wallet/wallet';
-import { IPreferences } from '../preferences/preferences';
+import { IApp } from '../app/app';
+import { IAppRepository } from '../app/i-app-repository';
+import { IWalletRepository } from '../wallet/i-wallet-repository';
 
 export interface IAppState {
   wallets: IWallet[];
-  prefs: IPreferences;
+  app: IApp;
 }
 
 export interface IError {
@@ -15,7 +17,14 @@ export interface IError {
 export type Dispatch<A> = (value: A) => void;
 
 export interface Thunk<S, A> {
-  (dispatch: Dispatch<A | Thunk<S, A>>, getState: () => S): void;
+  (
+    dispatch: Dispatch<A | Thunk<S, A>>,
+    getState: () => S,
+    repositories: {
+      app: IAppRepository;
+      wallet: IWalletRepository;
+    }
+  ): void;
 }
 
 export type DispatchOrThunk =

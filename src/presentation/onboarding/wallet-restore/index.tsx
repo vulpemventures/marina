@@ -4,10 +4,11 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { AppContext } from '../../../application/background_script';
-import { restoreWallet } from '../../../application/store/actions';
+import { onboardingComplete, restoreWallet } from '../../../application/store/actions';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
+import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -144,7 +145,13 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(restoreWallet(values.mnemonic, props.history));
+    const onError = (err: Error) => console.log(err);
+    const onSuccess = () =>
+      props.dispatch(
+        onboardingComplete(() => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError)
+      );
+
+    props.dispatch(restoreWallet(values.password, values.mnemonic, 'regtest', onSuccess, onError));
   },
 
   displayName: 'WalletRestoreForm',
@@ -153,7 +160,7 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
   const history = useHistory();
   const [{ wallets }, dispatch] = useContext(AppContext);
-  const { errors } = wallets[0];
+  const errors = wallets?.[0]?.errors;
 
   return (
     <Shell>

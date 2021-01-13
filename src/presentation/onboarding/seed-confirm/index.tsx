@@ -1,16 +1,27 @@
 import React, { useContext } from 'react';
 import Button from '../../components/button';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
 import { AppContext } from '../../../application/background_script';
+import { onboardingComplete, verifyWallet } from '../../../application/store/actions';
+
+interface LocationState {
+  mnemonic: string;
+}
 
 const SeedConfirm: React.FC = () => {
   const history = useHistory();
-  const handleConfirm = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE);
-  const [{ wallets }] = useContext(AppContext);
-  const mnemonic: string[] = wallets?.[0]?.mnemonic.trim().split(' ');
+  const [, dispatch] = useContext(AppContext);
+  const { state } = useLocation<LocationState>();
+
+  const onError = (err: Error) => console.log(err);
+  const onSuccess = () =>
+    dispatch(onboardingComplete(() => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
+  const handleConfirm = () => dispatch(verifyWallet(onSuccess, onError));
+
+  const mnemonic: string[] = state.mnemonic.trim().split(' ');
   const mnemonicRandomized = [...mnemonic];
   // Defining function returning random value from i to N
   const getRandomValue = (i: number, N: number) => Math.floor(Math.random() * (N - i) + i);
@@ -26,7 +37,7 @@ const SeedConfirm: React.FC = () => {
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}
       </p>
 
-      <MnemonicDnd />
+      <MnemonicDnd mnemonic={state.mnemonic} />
 
       <div className="grid w-4/5 grid-cols-4 grid-rows-3 gap-2">
         {mnemonicRandomized.map((word, i) => {

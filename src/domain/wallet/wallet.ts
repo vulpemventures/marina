@@ -9,7 +9,11 @@ export interface IWallets {
 
 export interface IWallet {
   errors?: Record<string, IError>;
-  mnemonic: string;
+  masterXPub: string;
+  masterBlindKey: string;
+  encryptedMnemonic: string;
+  passwordHash: string;
+  restored?: boolean;
 }
 
 /**
@@ -26,8 +30,20 @@ export class Wallet extends Entity<IWallet> {
     return WalletId.create(this._id);
   }
 
-  get mnemonic(): string {
-    return this.props.mnemonic;
+  get masterXPub(): string {
+    return this.props.masterXPub;
+  }
+
+  get masterBlindKey(): string {
+    return this.props.masterBlindKey;
+  }
+
+  get encryptedMnemonic(): string {
+    return this.props.encryptedMnemonic;
+  }
+
+  get passwordHash(): string {
+    return this.props.passwordHash;
   }
 
   /**
@@ -50,14 +66,11 @@ export class Wallet extends Entity<IWallet> {
    */
   public static createWallet(props: IWallet, id?: UniqueEntityID): Wallet {
     const walletProps = {
-      mnemonic: props.mnemonic,
+      masterXPub: props.masterXPub,
+      masterBlindKey: props.masterBlindKey,
+      encryptedMnemonic: props.encryptedMnemonic,
+      passwordHash: props.passwordHash,
     };
     return new Wallet(walletProps, id);
   }
-
-  // TODO: Generate wallet from entropy/seed/...
-  // public static generateWallet(props: IWallet['entropy'], id?: UniqueEntityID): Wallet {
-  // derive addresses and everyhting from entropy
-  // return new Wallet(walletProps, id);
-  // }
 }

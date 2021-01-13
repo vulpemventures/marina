@@ -1,12 +1,13 @@
-import React, { useContext } from 'react';
-import { AppContext } from '../../../application/background_script';
+import React from 'react';
+import { useHistory } from 'react-router-dom';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import * as ACTIONS from '../../../application/store/actions/action-types';
+import { DEFAULT_ROUTE } from '../../routes/constants';
 
+// TODO: remove DONE button, for now it's ok to redirect to home if clicked.
 const EndOfFlow: React.FC = () => {
-  const [, dispatch] = useContext(AppContext);
-  const handleClick = () => dispatch([ACTIONS.ONBOARDING_COMPLETETED]);
+  const history = useHistory();
+  const handleClick = () => history.push(DEFAULT_ROUTE);
 
   return (
     <Shell hasBackBtn={false}>
