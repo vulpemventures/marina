@@ -6,7 +6,6 @@ import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
 import { AppContext } from '../../../application/background_script';
 import { onboardingComplete, verifyWallet } from '../../../application/store/actions';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 
 interface LocationState {
   mnemonic: string;
@@ -16,12 +15,11 @@ const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const [, dispatch] = useContext(AppContext);
   const { state } = useLocation<LocationState>();
-  const repo = new BrowserStorageAppRepo();
 
   const onError = (err: Error) => console.log(err);
   const onSuccess = () =>
-    dispatch(onboardingComplete(repo, () => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
-  const handleConfirm = () => dispatch(verifyWallet(repo, onSuccess, onError));
+    dispatch(onboardingComplete(() => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
+  const handleConfirm = () => dispatch(verifyWallet(onSuccess, onError));
 
   const mnemonic: string[] = state.mnemonic.trim().split(' ');
   const mnemonicRandomized = [...mnemonic];

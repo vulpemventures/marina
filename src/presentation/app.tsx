@@ -5,8 +5,16 @@ import { AppContext } from '../application/background_script';
 import Routes from './routes';
 import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
 
+import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
+import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
+
 const App: React.FC = () => {
-  const [state, dispatch] = useThunkReducer(appReducer, appInitialState);
+  const repos = {
+    app: new BrowserStorageAppRepo(),
+    wallet: new BrowserStorageWalletRepo(),
+  };
+
+  const [state, dispatch] = useThunkReducer(appReducer, appInitialState, undefined, repos);
 
   return (
     <HashRouter hashType="noslash">

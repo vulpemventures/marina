@@ -9,7 +9,6 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 
 interface LocationState {
   password: string;
@@ -19,7 +18,6 @@ const SeedReveal: React.FC = () => {
   const history = useHistory();
   const mnemonic = bip39.generateMnemonic();
   const { state } = useLocation<LocationState>();
-  const repo = new BrowserStorageWalletRepo();
   const [, dispatch] = useContext(AppContext);
 
   const handleRemindMe = () => {
@@ -28,7 +26,6 @@ const SeedReveal: React.FC = () => {
         state.password,
         mnemonic,
         'regtest',
-        repo,
         () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
         (err: Error) => console.log(err)
       )
@@ -41,7 +38,6 @@ const SeedReveal: React.FC = () => {
         state.password,
         mnemonic,
         'regtest',
-        repo,
         () => history.push({ pathname: INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE, state: { mnemonic } }),
         (err: Error) => console.log(err)
       )

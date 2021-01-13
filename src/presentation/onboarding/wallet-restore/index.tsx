@@ -8,9 +8,7 @@ import { onboardingComplete, restoreWallet } from '../../../application/store/ac
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -147,17 +145,13 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    const walletRepo = new BrowserStorageWalletRepo();
-    const appRepo = new BrowserStorageAppRepo();
     const onError = (err: Error) => console.log(err);
     const onSuccess = () =>
       props.dispatch(
-        onboardingComplete(appRepo, () => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError)
+        onboardingComplete(() => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError)
       );
 
-    props.dispatch(
-      restoreWallet(values.password, values.mnemonic, 'regtest', walletRepo, onSuccess, onError)
-    );
+    props.dispatch(restoreWallet(values.password, values.mnemonic, 'regtest', onSuccess, onError));
   },
 
   displayName: 'WalletRestoreForm',
