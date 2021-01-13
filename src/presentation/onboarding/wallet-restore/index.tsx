@@ -9,6 +9,7 @@ import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -53,7 +54,7 @@ const WalletRestoreForm = (props: FormikProps<WalletRestoreFormValues>) => {
           <p className="text-red h-10 mt-2 text-xs">{errors.mnemonic}</p>
         )) ||
           (values.ctxErrors && (
-            <p className="text-red h-10 mt-2 text-xs">{values.ctxErrors.mnemonic.message}</p>
+            <p className="text-red h-10 mt-2 text-xs">{values.ctxErrors?.restore?.message}</p>
           ))}
       </div>
 
@@ -151,7 +152,15 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
         onboardingComplete(() => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError)
       );
 
-    props.dispatch(restoreWallet(values.password, values.mnemonic, 'regtest', onSuccess, onError));
+    props.dispatch(
+      restoreWallet(
+        Password.create(values.password),
+        Mnemonic.create(values.mnemonic),
+        'regtest',
+        onSuccess,
+        onError
+      )
+    );
   },
 
   displayName: 'WalletRestoreForm',

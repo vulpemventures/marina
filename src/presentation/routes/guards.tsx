@@ -15,11 +15,8 @@ interface ProtectedRouteProps extends RouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ comp: Component, ...rest }) => {
-  console.log('rest', rest);
   const appCtx = useContext(AppContext);
-  console.log('appCtx', appCtx);
   const isAuthenticated = appCtx?.[0]?.app.isAuthenticated;
-  console.log('isAuthenticated', isAuthenticated);
 
   return (
     <Route

@@ -8,10 +8,10 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,
-        masterXPub: payload.masterXPub,
-        masterBlindKey: payload.masterBlindKey,
-        encryptedMnemonic: payload.encryptedMnemonic,
-        passwordHash: payload.passwordHash,
+        masterXPub: payload.masterXPub.value,
+        masterBlindingKey: payload.masterBlindingKey.value,
+        encryptedMnemonic: payload.encryptedMnemonic.value,
+        passwordHash: payload.passwordHash.value,
       };
       return Object.assign([], state, [firstWallet]);
     }

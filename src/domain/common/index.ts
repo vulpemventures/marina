@@ -1,3 +1,4 @@
+import React from 'react';
 import { IWallet } from '../wallet/wallet';
 import { IApp } from '../app/app';
 import { IAppRepository } from '../app/i-app-repository';

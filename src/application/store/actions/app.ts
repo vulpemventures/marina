@@ -9,6 +9,7 @@ import {
 import { IAppState, Thunk } from '../../../domain/common';
 import { App } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
+import { Password } from '../../../domain/wallet/value-objects';
 
 export function verifyWallet(
   onSuccess: () => void,
@@ -62,7 +63,8 @@ export function logIn(
   return async (dispatch, getState, repos) => {
     try {
       const wallet = await repos.wallet.getOrCreateWallet();
-      if (wallet.passwordHash !== hash(password)) {
+      const h = hash(Password.create(password));
+      if (wallet.passwordHash.value !== h.value) {
         throw new Error('Invalid password');
       }
 
