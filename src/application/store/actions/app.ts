@@ -7,19 +7,16 @@ import {
   ONBOARDING_FAILURE,
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { App } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
 
 export function verifyWallet(
-  repo: IAppRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return async (dispatch, getState) => {
+  return async (dispatch, getState, repos) => {
     try {
-      await repo.updateApp(
+      await repos.app.updateApp(
         (app: App): App => {
           app.props.isWalletVerified = true;
           return app;
@@ -36,13 +33,12 @@ export function verifyWallet(
 }
 
 export function onboardingComplete(
-  repo: IAppRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return async (dispatch, getState) => {
+  return async (dispatch, getState, repos) => {
     try {
-      await repo.updateApp(
+      await repos.app.updateApp(
         (app: App): App => {
           app.props.isOnboardingCompleted = true;
           return app;
@@ -60,19 +56,17 @@ export function onboardingComplete(
 
 export function logIn(
   password: string,
-  walletRepo: IWalletRepository,
-  appRepo: IAppRepository,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return async (dispatch, getState) => {
+  return async (dispatch, getState, repos) => {
     try {
-      const wallet = await walletRepo.getOrCreateWallet();
+      const wallet = await repos.wallet.getOrCreateWallet();
       if (wallet.passwordHash !== hash(password)) {
         throw new Error('Invalid password');
       }
 
-      await appRepo.updateApp(
+      await repos.app.updateApp(
         (app: App): App => {
           app.props.isAuthenticated = true;
           return app;

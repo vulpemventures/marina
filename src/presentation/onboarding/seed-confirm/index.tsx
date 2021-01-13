@@ -20,8 +20,8 @@ const SeedConfirm: React.FC = () => {
 
   const onError = (err: Error) => console.log(err);
   const onSuccess = () =>
-    dispatch(onboardingComplete(repo, () => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
-  const handleConfirm = () => dispatch(verifyWallet(repo, onSuccess, onError));
+    dispatch(onboardingComplete(() => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
+  const handleConfirm = () => dispatch(verifyWallet(onSuccess, onError));
 
   const mnemonic: string[] = state.mnemonic.trim().split(' ');
   const mnemonicRandomized = [...mnemonic];
