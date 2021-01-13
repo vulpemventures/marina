@@ -8,9 +8,7 @@ import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 
-
 const App: React.FC = () => {
-
   const repos = {
     app: new BrowserStorageAppRepo(),
     wallet: new BrowserStorageWalletRepo(),

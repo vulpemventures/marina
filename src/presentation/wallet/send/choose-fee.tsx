@@ -10,7 +10,7 @@ const ChooseFee: React.FC = () => {
   const history = useHistory();
   const [feeCurrency, setFeeCurrency] = useState<'L-BTC' | 'USDt'>('L-BTC');
   const [feeLevel, setFeeLevel] = useState<string>('50');
-  const [isWarningFee, setWarningFee] = useState<boolean>(true);
+  const [isWarningFee] = useState<boolean>(true);
   const handleConfirm = () => {
     history.push({
       pathname: SEND_CONFIRMATION_ROUTE,

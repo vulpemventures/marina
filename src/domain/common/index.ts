@@ -17,10 +17,14 @@ export interface IError {
 export type Dispatch<A> = (value: A) => void;
 
 export interface Thunk<S, A> {
-  (dispatch: Dispatch<A | Thunk<S, A>>, getState: () => S, repositories: {
-    app: IAppRepository,
-    wallet: IWalletRepository,
-  }): void;
+  (
+    dispatch: Dispatch<A | Thunk<S, A>>,
+    getState: () => S,
+    repositories: {
+      app: IAppRepository;
+      wallet: IWalletRepository;
+    }
+  ): void;
 }
 
 export type DispatchOrThunk =
