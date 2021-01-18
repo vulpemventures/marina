@@ -1,6 +1,7 @@
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
+import { EncryptedMnemonic, MasterXPub, MasterBlindingKey, PasswordHash } from './value-objects';
 import { WalletId } from './walletId';
 
 export interface IWallets {
@@ -9,18 +10,15 @@ export interface IWallets {
 
 export interface IWallet {
   errors?: Record<string, IError>;
-  masterXPub: string;
-  masterBlindKey: string;
-  encryptedMnemonic: string;
-  passwordHash: string;
+  masterXPub: MasterXPub;
+  masterBlindingKey: MasterBlindingKey;
+  encryptedMnemonic: EncryptedMnemonic;
+  passwordHash: PasswordHash;
   restored?: boolean;
 }
 
 /**
  * Entity Wallet
- *
- * TODO: Should conform to Identity
- * https://github.com/TDex-network/tdex-sdk/blob/beta/src/identity.ts
  *
  * @member createWallet factory method to create wallet
  */
@@ -30,19 +28,19 @@ export class Wallet extends Entity<IWallet> {
     return WalletId.create(this._id);
   }
 
-  get masterXPub(): string {
+  get masterXPub(): MasterXPub {
     return this.props.masterXPub;
   }
 
-  get masterBlindKey(): string {
-    return this.props.masterBlindKey;
+  get masterBlindingKey(): MasterBlindingKey {
+    return this.props.masterBlindingKey;
   }
 
-  get encryptedMnemonic(): string {
+  get encryptedMnemonic(): EncryptedMnemonic {
     return this.props.encryptedMnemonic;
   }
 
-  get passwordHash(): string {
+  get passwordHash(): PasswordHash {
     return this.props.passwordHash;
   }
 
@@ -67,7 +65,7 @@ export class Wallet extends Entity<IWallet> {
   public static createWallet(props: IWallet, id?: UniqueEntityID): Wallet {
     const walletProps = {
       masterXPub: props.masterXPub,
-      masterBlindKey: props.masterBlindKey,
+      masterBlindingKey: props.masterBlindingKey,
       encryptedMnemonic: props.encryptedMnemonic,
       passwordHash: props.passwordHash,
     };
