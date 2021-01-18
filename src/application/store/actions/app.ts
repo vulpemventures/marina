@@ -62,11 +62,11 @@ export function logIn(
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
     try {
-      // const wallet = await repos.wallet.getOrCreateWallet();
-      // const h = hash(Password.create(password));
-      // if (wallet.passwordHash.value !== h.value) {
-      //   throw new Error('Invalid password');
-      // }
+      const wallet = await repos.wallet.getOrCreateWallet();
+      const h = hash(Password.create(password));
+      if (wallet.passwordHash.value !== h.value) {
+        throw new Error('Invalid password');
+      }
 
       await repos.app.updateApp(
         (app: App): App => {
