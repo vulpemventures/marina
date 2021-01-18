@@ -10,6 +10,7 @@ import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
  *
  * @param {Function} reducer
  * @param {*} initialArg
+ * @param {Object} repositories
  * @param {Function} [init]
  * @returns {[*, Dispatch]}
  */
