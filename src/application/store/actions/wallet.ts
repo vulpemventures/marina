@@ -7,7 +7,6 @@ import {
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 
 export function createWallet(
   password: string,
@@ -18,7 +17,8 @@ export function createWallet(
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
     //TODO: use getState and rehydrate persisted storage in App presentational component
-    if (await walletExists(repos.wallet)) {
+    const { wallets } = getState();
+    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
         'Wallet already exists. Remove the extension from the browser first to create a new one'
       );
@@ -70,11 +70,8 @@ export function restoreWallet(
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
-    // const { wallets } = getState();
-    // if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-    //   throw new Error('This wallet already exists');
-    // }
-    if (await walletExists(repos.wallet)) {
+    const { wallets } = getState();
+    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
         'Wallet already exists. Remove the extension from the browser first to create a new one'
       );
@@ -130,13 +127,4 @@ export function restoreWallet(
       onError(error);
     }
   };
-}
-
-async function walletExists(repo: IWalletRepository): Promise<boolean> {
-  try {
-    await repo.getOrCreateWallet();
-    return true;
-  } catch (ignore) {
-    return false;
-  }
 }

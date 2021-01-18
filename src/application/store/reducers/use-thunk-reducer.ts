@@ -22,10 +22,13 @@ function useThunkReducer<S, A>(
     wallet: IWalletRepository;
   }
 ): [S, Dispatch<A | Thunk<S, A>>] {
+  console.log('INITIAL ARG', initialArg);
   const [hookState, setHookState] = useState(init(initialArg));
+  console.log('HOOK STATE', hookState);
 
   // State management.
   const state = useRef(hookState);
+  console.log('STATE', state);
   const getState = useCallback(() => state.current, [state]);
   const setState = useCallback(
     (newState) => {

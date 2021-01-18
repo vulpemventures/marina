@@ -23,7 +23,7 @@ export function verifyWallet(
         }
       );
 
-      dispatch([VERIFICATION_SUCCESS, { isWalletVerified: true }]);
+      dispatch([VERIFICATION_SUCCESS]);
       onSuccess();
     } catch (error) {
       dispatch([VERIFICATION_FAILURE, { error }]);
@@ -45,7 +45,7 @@ export function onboardingComplete(
         }
       );
 
-      dispatch([ONBOARDING_COMPLETETED, { isWalletVerified: true }]);
+      dispatch([ONBOARDING_COMPLETETED]);
       onSuccess();
     } catch (error) {
       dispatch([ONBOARDING_FAILURE, { error }]);
@@ -61,7 +61,11 @@ export function logIn(
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
     try {
-      const wallet = await repos.wallet.getOrCreateWallet();
+      const { wallets } = getState();
+      if (wallets.length <= 0) {
+        throw new Error('Wallet does not exist');
+      }
+      const wallet = wallets[0];
       if (wallet.passwordHash !== hash(password)) {
         throw new Error('Invalid password');
       }
