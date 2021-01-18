@@ -4,9 +4,9 @@ import { appReducer as reducer } from './app-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { IApp } from '../../../domain/app/app';
 
-const walletInitState: IWallet[] = [];
+export const walletInitState: IWallet[] = [];
 
-const appInitState: IApp = {
+export const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
   isWalletVerified: false,
