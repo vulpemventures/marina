@@ -3,6 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .settings-list-item {
+    @apply border-grayLight flex flex-row items-center gap-2 pl-12 pr-10 py-3 border-b-0.5 justify-between;
+  }
+}
+
 /* Customise Chrome cancel icon on inputs of type search */
 input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;

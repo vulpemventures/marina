@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 
 interface Props {
   backBtnCb?: () => void;
-  backgroundImagePath: string;
+  backgroundImagePath?: string;
   children: React.ReactNode;
   className?: string;
   currentPage?: string;
@@ -20,6 +21,11 @@ const ShellPopUp: React.FC<Props> = ({
   hasBackBtn = true,
 }: Props) => {
   const history = useHistory();
+  // Menu modal
+  const [isMenuModalOpen, showMenuModal] = useState(false);
+  const openMenuModal = () => showMenuModal(true);
+  const closeMenuModal = () => showMenuModal(false);
+  //
   const goToPreviousPath = () => history.goBack();
   const goToHome = () => history.push(DEFAULT_ROUTE);
   const handleBackBtn = () => {
@@ -37,7 +43,7 @@ const ShellPopUp: React.FC<Props> = ({
           <button onClick={goToHome}>
             <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
           </button>
-          <button onClick={() => console.log('clicked!')}>
+          <button onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>
         </div>
@@ -58,14 +64,20 @@ const ShellPopUp: React.FC<Props> = ({
         )}
       </header>
 
-      <main
-        className={className}
-        style={{
-          backgroundImage: `url(${backgroundImagePath})`,
-        }}
-      >
-        {children}
-      </main>
+      {backgroundImagePath ? (
+        <main
+          className={className}
+          style={{
+            backgroundImage: `url(${backgroundImagePath})`,
+          }}
+        >
+          {children}
+        </main>
+      ) : (
+        <main className={className}>{children}</main>
+      )}
+
+      <ModalMenu isOpen={isMenuModalOpen} handleClose={closeMenuModal} />
     </div>
   );
 };

@@ -17,6 +17,17 @@ import {
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
+  SETTINGS_MENU_SECURITY_ROUTE,
+  SETTINGS_MENU_SETTINGS_ROUTE,
+  SETTINGS_MENU_INFO_ROUTE,
+  SETTINGS_SHOW_MNEMONIC_ROUTE,
+  SETTINGS_CHANGE_PASSWORD_ROUTE,
+  SETTINGS_CURRENCY_ROUTE,
+  SETTINGS_EXPLORER_ROUTE,
+  SETTINGS_NETWORKS_ROUTE,
+  SETTINGS_ABOUT_ROUTE,
+  SETTINGS_CREDITS_ROUTE,
+  SETTINGS_TERMS_ROUTE,
 } from './constants';
 
 // Onboarding
@@ -36,6 +47,18 @@ import SelectAsset from '../wallet/send/select-asset';
 import AddressAmount from '../wallet/send/address-amount';
 import ChooseFee from '../wallet/send/choose-fee';
 import Confirmation from '../wallet/send/confirmation';
+// Settings
+import SettingsMenuSecurity from '../settings/menu-security';
+import SettingsMenuSettings from '../settings/menu-settings';
+import SettingsMenuInfo from '../settings/menu-info';
+import SettingsShowMnemonic from '../settings/show-mnemonic';
+import SettingsChangePassword from '../settings/change-password';
+import SettingsCurrency from '../settings/currency';
+import SettingsExplorer from '../settings/explorer';
+import SettingsNetworks from '../settings/networks';
+import SettingsAbout from '../settings/about';
+import SettingsCredits from '../settings/credits';
+import SettingsTerms from '../settings/terms';
 
 const Routes: React.FC = () => {
   return (
@@ -56,6 +79,19 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SEND_ADDRESS_AMOUNT_ROUTE} comp={AddressAmount} />
       <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} comp={ChooseFee} />
       <ProtectedRoute exact path={SEND_CONFIRMATION_ROUTE} comp={Confirmation} />
+      {/*Settings*/}
+      <ProtectedRoute exact path={SETTINGS_MENU_SECURITY_ROUTE} comp={SettingsMenuSecurity} />
+      <ProtectedRoute exact path={SETTINGS_MENU_SETTINGS_ROUTE} comp={SettingsMenuSettings} />
+      <ProtectedRoute exact path={SETTINGS_MENU_INFO_ROUTE} comp={SettingsMenuInfo} />
+      <ProtectedRoute exact path={SETTINGS_SHOW_MNEMONIC_ROUTE} comp={SettingsShowMnemonic} />
+      <ProtectedRoute exact path={SETTINGS_CHANGE_PASSWORD_ROUTE} comp={SettingsChangePassword} />
+      <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} comp={SettingsCurrency} />
+      <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
+      <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
+      <ProtectedRoute exact path={SETTINGS_ABOUT_ROUTE} comp={SettingsAbout} />
+      <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
+      <ProtectedRoute exact path={SETTINGS_TERMS_ROUTE} comp={SettingsTerms} />
+      {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
     </Switch>
   );

@@ -57,7 +57,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   validationSchema: Yup.object().shape({
     password: Yup.string()
       .required('Please input password')
-      .min(8, 'Password is too short - should be 8 chars minimum.'),
+      .min(8, 'Password should be 8 characters minimum.'),
   }),
 
   handleSubmit: (values, { props }) => {
