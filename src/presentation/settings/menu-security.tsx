@@ -1,23 +1,12 @@
-import React, { useContext, useState } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router';
-import { AppContext } from '../../application/background_script';
-import ModalUnlock from '../components/modal-unlock';
 import ShellPopUp from '../components/shell-popup';
 import { SETTINGS_CHANGE_PASSWORD_ROUTE, SETTINGS_SHOW_MNEMONIC_ROUTE } from '../routes/constants';
 
 const SettingsMenuSecurity: React.FC = () => {
   const history = useHistory();
   const handleChangePassword = () => history.push(SETTINGS_CHANGE_PASSWORD_ROUTE);
-  // Show mnemonic
-  const [, dispatch] = useContext(AppContext);
-  const [isModalUnlockOpen, showUnlockModal] = useState(false);
-  const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleShowMnemonic = () => {
-    showUnlockModal(true);
-    // If password is valid set isWalletUnlocked state to true
-    // Push if isWalletUnlocked is true
-    //history.push(SETTINGS_SHOW_MNEMONIC_ROUTE);
-  };
+  const handleShowMnemonic = () => history.push(SETTINGS_SHOW_MNEMONIC_ROUTE);
 
   return (
     <ShellPopUp className="h-popupContent" currentPage="Security">
@@ -36,12 +25,6 @@ const SettingsMenuSecurity: React.FC = () => {
           </li>
         </button>
       </ul>
-
-      <ModalUnlock
-        dispatch={dispatch}
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockClose}
-      />
     </ShellPopUp>
   );
 };

@@ -1,7 +1,6 @@
 import { FormikProps, withFormik } from 'formik';
 import React from 'react';
 import * as Yup from 'yup';
-import { DispatchOrThunk } from '../../domain/common';
 import Button from './button';
 import Input from './input';
 import Modal from './modal';
@@ -12,8 +11,8 @@ interface ModalUnlockFormValues {
 }
 
 interface ModalUnlockFormProps {
-  dispatch(param: DispatchOrThunk): any;
   handleModalUnlockClose(): void;
+  handleShowMnemonic(password: string): Promise<boolean>;
   isModalUnlockOpen: boolean;
 }
 
@@ -56,19 +55,18 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: (values, { props }) => {
-    //props.dispatch(validatePassword())
-    console.log('check password validity');
-    props.handleModalUnlockClose();
+  handleSubmit: async (values, { props }) => {
+    const isSuccess = await props.handleShowMnemonic(values.password);
+    isSuccess && props.handleModalUnlockClose();
   },
 
   displayName: 'ModalUnlockForm',
 })(ModalUnlockForm);
 
 const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
-  dispatch,
   isModalUnlockOpen,
   handleModalUnlockClose,
+  handleShowMnemonic,
 }) => {
   if (!isModalUnlockOpen) {
     return <></>;
@@ -77,9 +75,9 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   return (
     <Modal isOpen={isModalUnlockOpen} onClose={handleModalUnlockClose}>
       <ModalUnlockEnhancedForm
-        dispatch={dispatch}
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
+        handleShowMnemonic={handleShowMnemonic}
       />
     </Modal>
   );
