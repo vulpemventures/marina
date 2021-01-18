@@ -13,7 +13,7 @@ export class BrowserStorageAppRepo implements IAppRepository {
 
   async getApp(): Promise<App> {
     const { app } = (await browser.storage.local.get('app')) as { app: AppDTO };
-    if (app === undefined) {
+    if (!app) {
       throw new Error('app not found');
     }
     return AppMap.toDomain(app);

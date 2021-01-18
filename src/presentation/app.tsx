@@ -27,6 +27,8 @@ const App: React.FC = () => {
           ]);
           dispatch(initApp(appState.props));
           dispatch(initWallet(walletState.props));
+        } catch (error) {
+          console.log(error);
         } finally {
           setFetchedFromRepo(true);
         }

@@ -26,15 +26,11 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
           app: new BrowserStorageAppRepo(),
           wallet: new BrowserStorageWalletRepo(),
         };
-
-        initPersistentStore(repos).catch((err) =>
-          console.log(`Error in initialization of storage on install. ${err}`)
-        );
-
         const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
-        browser.tabs
-          .create({ url })
-          .catch((err) => console.log(`Error in tab creation on install. ${err}`));
+
+        initPersistentStore(repos)
+          .then(() => browser.tabs.create({ url }))
+          .catch((err) => console.log(err));
       }
       break;
     // TODO: on update, open new tab to tell users about the new features and any fixed issues
