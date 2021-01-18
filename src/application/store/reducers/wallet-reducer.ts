@@ -4,14 +4,15 @@ import { IError } from '../../../domain/common';
 
 export const walletReducer = (state: IWallet[], [type, payload]: [string, any]): IWallet[] => {
   switch (type) {
-    case (ACTION_TYPES.WALLET_CREATE_SUCCESS, ACTION_TYPES.INIT_WALLET): {
+    case ACTION_TYPES.INIT_WALLET:
+    case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,
-        masterXPub: payload.masterXPub.value,
-        masterBlindingKey: payload.masterBlindingKey.value,
-        encryptedMnemonic: payload.encryptedMnemonic.value,
-        passwordHash: payload.passwordHash.value,
+        masterXPub: payload.masterXPub,
+        masterBlindingKey: payload.masterBlindingKey,
+        encryptedMnemonic: payload.encryptedMnemonic,
+        passwordHash: payload.passwordHash,
       };
       return Object.assign([], state, [firstWallet]);
     }

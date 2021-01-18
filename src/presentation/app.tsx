@@ -10,7 +10,7 @@ import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/brows
 import { initApp, initWallet } from '../application/store/actions';
 
 const App: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
 
   const app = new BrowserStorageAppRepo();
   const wallet = new BrowserStorageWalletRepo();
@@ -19,7 +19,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     void (async (): Promise<void> => {
-      if (isLoading) {
+      if (!fetchedFromRepo) {
         try {
           const [appState, walletState] = await Promise.all([
             app.getApp(),
@@ -28,14 +28,14 @@ const App: React.FC = () => {
           dispatch(initApp(appState.props));
           dispatch(initWallet(walletState.props));
         } finally {
-          setIsLoading(false);
+          setFetchedFromRepo(true);
         }
       }
     })();
   });
 
-  // TODO: render something better.. like a spinner?
-  if (isLoading) {
+  // TODO: render something better like a spinner?
+  if (!fetchedFromRepo) {
     return <div>Loading...</div>;
   }
 

@@ -19,12 +19,9 @@ import {
 export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState, repos) => {
     const { wallets } = getState();
-    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-      throw new Error(
-        'Wallet already exists. Remove the extension from the browser first to create a new one'
-      );
+    if (wallets.length <= 0) {
+      dispatch([INIT_WALLET, { ...wallet }]);
     }
-    dispatch([INIT_WALLET, { ...wallet }]);
   };
 }
 
