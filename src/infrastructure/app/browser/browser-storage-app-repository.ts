@@ -8,7 +8,7 @@ export class BrowserStorageAppRepo implements IAppRepository {
   async init(app: App): Promise<void> {
     await browser.storage.local.set({
       app: AppMap.toDTO(app),
-    })
+    });
   }
 
   async getApp(): Promise<App> {

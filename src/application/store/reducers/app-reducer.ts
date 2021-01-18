@@ -8,7 +8,7 @@ export const appReducer = (state: IApp, [type, payload]: [string, any]): IApp =>
       return {
         ...state,
         ...payload,
-      }
+      };
     }
     case ACTION_TYPES.AUTHENTICATION_SUCCESS: {
       return {

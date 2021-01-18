@@ -24,15 +24,7 @@ const SeedReveal: React.FC = () => {
     const onError = (err: Error) => console.log(err);
     const onSuccess = () =>
       dispatch(onboardingComplete(() => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
-    dispatch(
-      createWallet(
-        state.password,
-        mnemonic,
-        'regtest',
-        onSuccess,
-        onError,
-      )
-    );
+    dispatch(createWallet(state.password, mnemonic, 'regtest', onSuccess, onError));
   };
 
   const handleNext = () => {

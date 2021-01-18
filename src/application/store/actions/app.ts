@@ -14,7 +14,7 @@ import { hash } from '../../utils/crypto';
 export function initApp(app: IApp): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState, repos) => {
     dispatch([INIT_APP, { ...app }]);
-  }
+  };
 }
 
 export function verifyWallet(

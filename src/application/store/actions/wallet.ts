@@ -19,7 +19,7 @@ export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<st
       );
     }
     dispatch([INIT_WALLET, { ...wallet }]);
-  }
+  };
 }
 
 export function createWallet(
@@ -27,7 +27,7 @@ export function createWallet(
   mnemonic: string,
   chain: string,
   onSuccess: () => void,
-  onError: (err: Error) => void,
+  onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
     const { wallets } = getState();
@@ -80,7 +80,7 @@ export function restoreWallet(
   mnemonic: string,
   chain: string,
   onSuccess: () => void,
-  onError: (err: Error) => void,
+  onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
     const { wallets } = getState();

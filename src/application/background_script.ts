@@ -25,9 +25,11 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
         const repos = {
           app: new BrowserStorageAppRepo(),
           wallet: new BrowserStorageWalletRepo(),
-        }
+        };
 
-        initPersistentStore(repos);
+        initPersistentStore(repos).catch((err) =>
+          console.log(`Error in initialization of storage on install. ${err}`)
+        );
 
         const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
         browser.tabs
@@ -49,7 +51,10 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
 type ctx = [IAppState, React.Dispatch<unknown>];
 export const AppContext = React.createContext<ctx>(appInitialState);
 
-async function initPersistentStore(repos: {app:IAppRepository, wallet: IWalletRepository}): Promise<void> {
+async function initPersistentStore(repos: {
+  app: IAppRepository;
+  wallet: IWalletRepository;
+}): Promise<void> {
   const app = App.createApp(appInitState);
   const wallets = walletInitState.map((w: IWallet) => Wallet.createWallet(w));
   await Promise.all([repos.app.init(app), repos.wallet.init(wallets)]);
