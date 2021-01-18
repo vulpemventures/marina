@@ -9,6 +9,12 @@ import {
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
 import { IWallet } from '../../../domain/wallet/wallet';
+import {
+  MasterBlindingKey,
+  MasterXPub,
+  Mnemonic as Mnemo,
+  Password,
+} from '../../../domain/wallet/value-objects';
 
 export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState, repos) => {
@@ -23,8 +29,8 @@ export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<st
 }
 
 export function createWallet(
-  password: string,
-  mnemonic: string,
+  password: Password,
+  mnemonic: Mnemo,
   chain: string,
   onSuccess: () => void,
   onError: (err: Error) => void
@@ -41,17 +47,17 @@ export function createWallet(
       const mnemonicWallet = new Mnemonic({
         chain,
         type: IdentityType.Mnemonic,
-        value: { mnemonic },
+        value: { mnemonic: mnemonic.value },
       } as IdentityOpts);
 
-      const masterXPub = mnemonicWallet.masterPublicKey;
-      const masterBlindKey = mnemonicWallet.masterBlindingKey;
+      const masterXPub = MasterXPub.create(mnemonicWallet.masterPublicKey);
+      const masterBlindingKey = MasterBlindingKey.create(mnemonicWallet.masterBlindingKey);
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
-        masterBlindKey,
+        masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
       });
@@ -61,7 +67,7 @@ export function createWallet(
         WALLET_CREATE_SUCCESS,
         {
           masterXPub,
-          masterBlindKey,
+          masterBlindingKey,
           encryptedMnemonic,
           passwordHash,
         },
@@ -76,8 +82,8 @@ export function createWallet(
 }
 
 export function restoreWallet(
-  password: string,
-  mnemonic: string,
+  password: Password,
+  mnemonic: Mnemo,
   chain: string,
   onSuccess: () => void,
   onError: (err: Error) => void
@@ -101,18 +107,18 @@ export function restoreWallet(
         chain,
         restorer,
         type: IdentityType.Mnemonic,
-        value: { mnemonic },
+        value: { mnemonic: mnemonic.value },
         initializeFromRestorer: true,
       } as IdentityOpts);
 
-      const masterXPub = mnemonicWallet.masterPublicKey;
-      const masterBlindKey = mnemonicWallet.masterBlindingKey;
+      const masterXPub = MasterXPub.create(mnemonicWallet.masterPublicKey);
+      const masterBlindingKey = MasterBlindingKey.create(mnemonicWallet.masterBlindingKey);
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
-        masterBlindKey,
+        masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
       });
@@ -121,7 +127,7 @@ export function restoreWallet(
         WALLET_CREATE_SUCCESS,
         {
           masterXPub,
-          masterBlindKey,
+          masterBlindingKey,
           encryptedMnemonic,
           passwordHash,
         },

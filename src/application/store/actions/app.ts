@@ -10,6 +10,7 @@ import {
 import { IAppState, Thunk } from '../../../domain/common';
 import { App, IApp } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
+import { Password } from '../../../domain/wallet/value-objects';
 
 export function initApp(app: IApp): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState, repos) => {
@@ -73,7 +74,9 @@ export function logIn(
         throw new Error('Wallet does not exist');
       }
       const wallet = wallets[0];
-      if (wallet.passwordHash !== hash(password)) {
+
+      const h = hash(Password.create(password));
+      if (wallet.passwordHash.value !== h.value) {
         throw new Error('Invalid password');
       }
 

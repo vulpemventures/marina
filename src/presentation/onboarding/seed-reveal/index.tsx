@@ -9,6 +9,7 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
+import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 
 interface LocationState {
   password: string;
@@ -24,14 +25,22 @@ const SeedReveal: React.FC = () => {
     const onError = (err: Error) => console.log(err);
     const onSuccess = () =>
       dispatch(onboardingComplete(() => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
-    dispatch(createWallet(state.password, mnemonic, 'regtest', onSuccess, onError));
+    dispatch(
+      createWallet(
+        Password.create(state.password),
+        Mnemonic.create(mnemonic),
+        'regtest',
+        onSuccess,
+        onError
+      )
+    );
   };
 
   const handleNext = () => {
     dispatch(
       createWallet(
-        state.password,
-        mnemonic,
+        Password.create(state.password),
+        Mnemonic.create(mnemonic),
         'regtest',
         () => history.push({ pathname: INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE, state: { mnemonic } }),
         (err: Error) => console.log(err)

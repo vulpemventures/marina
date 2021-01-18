@@ -23,13 +23,6 @@ interface AddressAmountFormProps {
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
   const { errors, handleChange, handleBlur, handleSubmit, isSubmitting, touched, values } = props;
 
-  console.log('isSubmitting', isSubmitting);
-
-  console.log(
-    '!!(errors.address && touched.address && errors.amount && touched.amount)',
-    !!(errors.address && touched.address && errors.amount && touched.amount)
-  );
-
   return (
     <form onSubmit={handleSubmit} className="mt-10">
       <div className={cx({ 'mb-12': !errors.address || !touched.address })}>
