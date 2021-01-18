@@ -1,5 +1,6 @@
 import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'tdex-sdk';
 import {
+  INIT_WALLET,
   WALLET_CREATE_FAILURE,
   WALLET_CREATE_SUCCESS,
   WALLET_RESTORE_FAILURE,
@@ -7,16 +8,28 @@ import {
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
+import { IWallet } from '../../../domain/wallet/wallet';
+
+export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<string, unknown>?]> {
+  return (dispatch, getState, repos) => {
+    const { wallets } = getState();
+    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
+      throw new Error(
+        'Wallet already exists. Remove the extension from the browser first to create a new one'
+      );
+    }
+    dispatch([INIT_WALLET, { ...wallet }]);
+  }
+}
 
 export function createWallet(
   password: string,
   mnemonic: string,
   chain: string,
   onSuccess: () => void,
-  onError: (err: Error) => void
+  onError: (err: Error) => void,
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
-    //TODO: use getState and rehydrate persisted storage in App presentational component
     const { wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
@@ -67,7 +80,7 @@ export function restoreWallet(
   mnemonic: string,
   chain: string,
   onSuccess: () => void,
-  onError: (err: Error) => void
+  onError: (err: Error) => void,
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
     const { wallets } = getState();

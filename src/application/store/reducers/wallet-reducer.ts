@@ -4,7 +4,7 @@ import { IError } from '../../../domain/common';
 
 export const walletReducer = (state: IWallet[], [type, payload]: [string, any]): IWallet[] => {
   switch (type) {
-    case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
+    case ACTION_TYPES.WALLET_CREATE_SUCCESS, ACTION_TYPES.INIT_WALLET: {
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,

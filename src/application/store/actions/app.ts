@@ -1,4 +1,5 @@
 import {
+  INIT_APP,
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
   VERIFICATION_SUCCESS,
@@ -7,8 +8,14 @@ import {
   ONBOARDING_FAILURE,
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
-import { App } from '../../../domain/app/app';
+import { App, IApp } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
+
+export function initApp(app: IApp): Thunk<IAppState, [string, Record<string, unknown>?]> {
+  return (dispatch, getState, repos) => {
+    dispatch([INIT_APP, { ...app }]);
+  }
+}
 
 export function verifyWallet(
   onSuccess: () => void,

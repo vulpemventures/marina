@@ -4,6 +4,12 @@ import { IError } from '../../../domain/common';
 
 export const appReducer = (state: IApp, [type, payload]: [string, any]): IApp => {
   switch (type) {
+    case ACTION_TYPES.INIT_APP: {
+      return {
+        ...state,
+        ...payload,
+      }
+    }
     case ACTION_TYPES.AUTHENTICATION_SUCCESS: {
       return {
         ...state,
