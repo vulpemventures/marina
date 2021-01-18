@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const app = new BrowserStorageAppRepo();
   const wallet = new BrowserStorageWalletRepo();
   const repos = { app, wallet };
-  const [state, dispatch] = useThunkReducer(appReducer, appInitialState, undefined, repos);
+  const [state, dispatch] = useThunkReducer(appReducer, appInitialState, repos);
 
   useEffect(() => {
     void (async (): Promise<void> => {
