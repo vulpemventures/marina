@@ -1,4 +1,4 @@
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { appReducer } from '../application/store/reducers';
 import { AppContext } from '../application/background_script';
@@ -11,37 +11,35 @@ import { App as AppDomain } from '../domain/app/app';
 import { Wallet } from '../domain/wallet/wallet';
 import { browser } from 'webextension-polyfill-ts';
 import { IAppState } from '../domain/common';
+import { initApp, initWallet } from '../application/store/actions';
 
 const App: React.FC = () => {
-  const [{appState, fetchedFromRepo}, setAppState] = useState({
-    appState: (appInitialState as IAppState),
-    fetchedFromRepo: false,
-  });
+  const [isLoading, setIsLoading] = useState(true);
   
   const app = new BrowserStorageAppRepo();
   const wallet = new BrowserStorageWalletRepo();
   const repos = { app, wallet };
+  const [state, dispatch] = useThunkReducer<IAppState, unknown>(appReducer, appInitialState, undefined, repos);
 
   useEffect(() => {
     (async (): Promise<void> => {
-      console.log('fetched from repo already?',fetchedFromRepo);
-      if (!fetchedFromRepo) {
+      if (isLoading) {
         try {
-          const state = await Promise.all([app.getApp(), wallet.getOrCreateWallet()]);
-          setAppState({
-            appState: {
-              app: (state[0] ).props,
-              wallets: [(state[1] ).props],
-            },
-            fetchedFromRepo: true,
-          });
-        } catch (ignore) {
-          setAppState({ appState, fetchedFromRepo: true });
+          const [appState, walletState] = await Promise.all([app.getApp(), wallet.getOrCreateWallet()]);
+          dispatch(initApp(appState.props));
+          dispatch(initWallet(walletState.props));
+        } catch(ignore) {
+        } finally {
+          setIsLoading(false);
         }
       }
     })();
   });
-  const [state, dispatch] = useThunkReducer<IAppState, unknown>(appReducer, appState, undefined, repos);
+
+  // TODO: render something better.. like a spinner?
+  if (isLoading) {
+    return (<div>Loading...</div>);
+  }
 
   return (
     <HashRouter hashType="noslash">
