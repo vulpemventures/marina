@@ -31,8 +31,9 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
         initPersistentStore(repos)
           .then(() => browser.tabs.create({ url }))
           .catch((err) => console.log(err));
+        
+        break;
       }
-      break;
     // TODO: on update, open new tab to tell users about the new features and any fixed issues
     // case 'update':
     //   {
