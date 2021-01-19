@@ -1,4 +1,4 @@
-import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'tdex-sdk';
+import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'ldk';
 import {
   INIT_WALLET,
   WALLET_CREATE_FAILURE,
