@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 
 const SettingsNetworks: React.FC = () => {
+  const networks = ['Liquid', 'Regtest'];
+  const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -9,10 +13,11 @@ const SettingsNetworks: React.FC = () => {
       currentPage="Networks"
     >
       <p className="font-regular my-8 text-base text-left">Select the network</p>
-      <select className="border-primary ring-primary focus:ring-primary focus:border-primary w-full border-2 rounded-md">
-        <option>Liquid</option>
-        <option>Regtest</option>
-      </select>
+      <Select
+        data={networks}
+        selectedValue={selectedNetwork}
+        setSelectedValue={setSelectedNetwork}
+      />
     </ShellPopUp>
   );
 };

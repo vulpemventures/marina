@@ -13,6 +13,7 @@ interface InputProps<FormValues> extends FormikProps<FormValues> {
  */
 export default function Input<FormValues>({
   errors,
+  status,
   name,
   placeholder = '',
   title,
@@ -47,8 +48,11 @@ export default function Input<FormValues>({
           value={String(values[name])}
         />
       </label>
-      {errors[name] && touched[name] && (
-        <p className="text-red h-10 mt-2 text-xs text-left">{errors[name]}</p>
+      {status?.[name] ? (
+        <p className="text-red h-10 mt-2 text-xs text-left">{status[name]}</p>
+      ) : (
+        errors[name] &&
+        touched[name] && <p className="text-red h-10 mt-2 text-xs text-left">{errors[name]}</p>
       )}
     </div>
   );

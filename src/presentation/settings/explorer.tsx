@@ -1,11 +1,10 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
 import ShellPopUp from '../components/shell-popup';
 import Input from '../components/input';
 import { DispatchOrThunk } from '../../domain/common';
-import { DEFAULT_ROUTE } from '../routes/constants';
 import { AppContext } from '../../application/background_script';
 import Button from '../components/button';
 

@@ -30,7 +30,9 @@
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
+    "@headlessui/react": "^0.2.0",
     "formik": "^2.2.6",
+    "ldk": "^0.1.2",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.1",
@@ -39,7 +41,6 @@
     "react-error-boundary": "^3.1.0",
     "react-router-dom": "^5.2.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@2.0.2",
-    "ldk": "^0.1.2",
     "uuid": "^8.3.2",
     "webextension-polyfill-ts": "^0.22.0",
     "yup": "^0.32.8"

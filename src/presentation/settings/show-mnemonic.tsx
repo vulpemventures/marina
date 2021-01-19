@@ -6,14 +6,14 @@ import ModalUnlock from '../components/modal-unlock';
 import ShellPopUp from '../components/shell-popup';
 
 const SettingsShowMnemonic: React.FC = () => {
-  let mnemonic = '';
+  const [mnemonic, setMnemonic] = useState('');
   const [{ wallets }] = useContext(AppContext);
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);
   const handleModalUnlockCancel = () => showUnlockModal(false);
   const handleShowMnemonic = (password: string) => {
-    mnemonic = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
-    return Promise.resolve(true);
+    const mnemo = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
+    setMnemonic(mnemo);
   };
 
   return (

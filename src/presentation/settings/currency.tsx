@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ShellPopUp from '../components/shell-popup';
+import Select from '../components/select';
 
 const SettingsCurrency: React.FC = () => {
+  const currencies = ['Dollar - USD', 'Euro - EUR', 'British Pound - GBP'];
+  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -9,11 +13,11 @@ const SettingsCurrency: React.FC = () => {
       currentPage="Change currency"
     >
       <p className="font-regular my-8 text-base text-left">Choose the currency conversion</p>
-      <select className="border-primary ring-primary focus:ring-primary focus:border-primary w-full border-2 rounded-md">
-        <option>Euro - EUR</option>
-        <option>Dollar - USD</option>
-        <option>British Pound - GBP</option>
-      </select>
+      <Select
+        data={currencies}
+        selectedValue={selectedCurrency}
+        setSelectedValue={setSelectedCurrency}
+      />
     </ShellPopUp>
   );
 };
