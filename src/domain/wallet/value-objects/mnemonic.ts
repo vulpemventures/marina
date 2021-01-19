@@ -1,5 +1,5 @@
 import { ValueObject } from '../../core/ValueObject';
-import { IdentityOpts, IdentityType, Mnemonic as MnemonicTdex } from 'tdex-sdk';
+import { IdentityOpts, IdentityType, Mnemonic as MnemonicTdex } from 'ldk';
 
 interface MnemonicProps {
   [key: string]: any;
