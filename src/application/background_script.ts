@@ -20,20 +20,19 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   // if (temporary) return;
   switch (reason) {
     //On first install, open new tab for onboarding
-    case 'install':
-      {
-        const repos = {
-          app: new BrowserStorageAppRepo(),
-          wallet: new BrowserStorageWalletRepo(),
-        };
-        const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
+    case 'install': {
+      const repos = {
+        app: new BrowserStorageAppRepo(),
+        wallet: new BrowserStorageWalletRepo(),
+      };
+      const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
 
-        initPersistentStore(repos)
-          .then(() => browser.tabs.create({ url }))
-          .catch((err) => console.log(err));
-        
-        break;
-      }
+      initPersistentStore(repos)
+        .then(() => browser.tabs.create({ url }))
+        .catch((err) => console.log(err));
+
+      break;
+    }
     // TODO: on update, open new tab to tell users about the new features and any fixed issues
     // case 'update':
     //   {
