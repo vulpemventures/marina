@@ -31,7 +31,7 @@ const ModalConfirm: React.FC<Props> = ({
         <div className="py-5">{children}</div>
       </div>
       <div className="flex justify-end">
-        <div className="p-1">
+        <div className="pr-1">
           <Button
             isOutline={true}
             onClick={() => onClose()}
@@ -40,7 +40,7 @@ const ModalConfirm: React.FC<Props> = ({
             {btnTextClose}
           </Button>
         </div>
-        <div className="p-1">
+        <div>
           <Button
             onClick={() => {
               onClose();

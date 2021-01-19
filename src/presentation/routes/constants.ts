@@ -22,6 +22,21 @@ const SEND_ADDRESS_AMOUNT_ROUTE = '/send';
 const SEND_CHOOSE_FEE_ROUTE = '/send/choose-fee';
 const SEND_CONFIRMATION_ROUTE = '/send/confirmation';
 
+// Settings
+const SETTINGS_MENU_SECURITY_ROUTE = '/settings/security';
+const SETTINGS_SHOW_MNEMONIC_ROUTE = '/settings/security/show-mnemonic';
+const SETTINGS_CHANGE_PASSWORD_ROUTE = '/settings/security/change-password';
+//
+const SETTINGS_MENU_SETTINGS_ROUTE = '/settings/settings';
+const SETTINGS_CURRENCY_ROUTE = '/settings/settings/currency';
+const SETTINGS_EXPLORER_ROUTE = '/settings/settings/explorer';
+const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
+//
+const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
+const SETTINGS_ABOUT_ROUTE = '/settings/info/about';
+const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
+const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
+
 export {
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
@@ -42,4 +57,16 @@ export {
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
+  // Settings
+  SETTINGS_MENU_SECURITY_ROUTE,
+  SETTINGS_MENU_SETTINGS_ROUTE,
+  SETTINGS_MENU_INFO_ROUTE,
+  SETTINGS_SHOW_MNEMONIC_ROUTE,
+  SETTINGS_CHANGE_PASSWORD_ROUTE,
+  SETTINGS_CURRENCY_ROUTE,
+  SETTINGS_EXPLORER_ROUTE,
+  SETTINGS_NETWORKS_ROUTE,
+  SETTINGS_ABOUT_ROUTE,
+  SETTINGS_CREDITS_ROUTE,
+  SETTINGS_TERMS_ROUTE,
 };

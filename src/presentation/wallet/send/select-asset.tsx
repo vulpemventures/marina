@@ -45,7 +45,13 @@ const SelectAsset: React.FC = () => {
       className="h-popupContent bg-primary container mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Select asset"
     >
-      <InputIcon className="my-8" imgIconPath="assets/images/search.svg" onChange={handleChange} />
+      <InputIcon
+        className="my-8"
+        imgIconPath="assets/images/search.svg"
+        imgIconAlt="search"
+        onChange={handleChange}
+        type="search"
+      />
 
       <div className="h-25.75 overflow-y-scroll">
         <div className="pb-4 space-y-4">
