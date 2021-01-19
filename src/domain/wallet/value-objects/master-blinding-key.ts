@@ -1,5 +1,5 @@
 import { ValueObject } from '../../core/ValueObject';
-import { isValidExtendedBlindKey } from 'tdex-sdk';
+import { isValidExtendedBlindKey } from 'ldk';
 
 interface MasterBlindingKeyProps {
   [key: string]: any;

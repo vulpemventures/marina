@@ -10,17 +10,18 @@ import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
  *
  * @param {Function} reducer
  * @param {*} initialArg
+ * @param {Object} repositories
  * @param {Function} [init]
  * @returns {[*, Dispatch]}
  */
 function useThunkReducer<S, A>(
   reducer: Reducer<S, A>,
   initialArg: S,
-  init: (s: S) => S = (a) => a,
   repositories: {
     app: IAppRepository;
     wallet: IWalletRepository;
-  }
+  },
+  init: (s: S) => S = (a) => a
 ): [S, Dispatch<A | Thunk<S, A>>] {
   const [hookState, setHookState] = useState(init(initialArg));
 

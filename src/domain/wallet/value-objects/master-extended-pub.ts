@@ -1,5 +1,5 @@
 import { ValueObject } from '../../core/ValueObject';
-import { isValidXpub, toXpub } from 'tdex-sdk';
+import { isValidXpub, toXpub } from 'ldk';
 
 interface MasterXPubProps {
   [key: string]: any;

@@ -1,5 +1,5 @@
 import { ValueObject } from '../../core/ValueObject';
-import { address as addressLiquidJs } from 'liquidjs-lib';
+import { address as addressLDK } from 'ldk';
 
 interface AddressProps {
   [key: string]: any;
@@ -34,13 +34,13 @@ export class Address extends ValueObject<AddressProps> {
     try {
       // Non Confidential
       if (address.startsWith('ert') || address.startsWith('ex')) {
-        addressLiquidJs.fromBech32(address);
+        addressLDK.fromBech32(address);
         return new Address({
           value: address,
         });
       } else {
         // Confidential
-        const { blindingKey, unconfidentialAddress } = addressLiquidJs.fromConfidential(address);
+        const { blindingKey, unconfidentialAddress } = addressLDK.fromConfidential(address);
         return new Address({
           value: address,
           blindingKey: blindingKey,

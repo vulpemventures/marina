@@ -39,7 +39,6 @@ jobs:
         run: |
           npm run lint
           npm run prettier:check
-          npm run web-ext:lint
 
       - name: Test
         run: npm run test

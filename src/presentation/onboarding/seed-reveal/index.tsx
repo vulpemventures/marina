@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import * as bip39 from 'bip39';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AppContext } from '../../../application/background_script';
-import { createWallet } from '../../../application/store/actions';
+import { createWallet, onboardingComplete } from '../../../application/store/actions';
 import Button from '../../components/button';
 import {
   INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE,
@@ -22,13 +22,16 @@ const SeedReveal: React.FC = () => {
   const [, dispatch] = useContext(AppContext);
 
   const handleRemindMe = () => {
+    const onError = (err: Error) => console.log(err);
+    const onSuccess = () =>
+      dispatch(onboardingComplete(() => history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError));
     dispatch(
       createWallet(
         Password.create(state.password),
         Mnemonic.create(mnemonic),
         'regtest',
-        () => history.push(INITIALIZE_END_OF_FLOW_ROUTE),
-        (err: Error) => console.log(err)
+        onSuccess,
+        onError
       )
     );
   };
