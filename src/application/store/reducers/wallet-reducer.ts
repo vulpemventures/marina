@@ -15,6 +15,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -26,18 +27,19 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+    case ACTION_TYPES.WALLET_CREATE_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { create: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+
     case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,
         restored: true,
-      };
-      return Object.assign([], state, [firstWallet]);
-    }
-    case ACTION_TYPES.WALLET_CREATE_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
-        errors: { create: { message: payload.error.message } as IError },
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -48,6 +50,23 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
+    case ACTION_TYPES.WALLET_DERIVE_ADDRESS_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: undefined,
+        confidentialAddress: payload.confidentialAddress,
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_DERIVE_ADDRESS_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { address: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+
     default: {
       return state;
     }

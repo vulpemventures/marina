@@ -1,8 +1,17 @@
-import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'ldk';
+import {
+  IdentityOpts,
+  IdentityType,
+  Mnemonic,
+  EsploraIdentityRestorer,
+  MasterPublicKey,
+  fromXpub,
+} from 'ldk';
 import {
   INIT_WALLET,
   WALLET_CREATE_FAILURE,
   WALLET_CREATE_SUCCESS,
+  WALLET_DERIVE_ADDRESS_FAILURE,
+  WALLET_DERIVE_ADDRESS_SUCCESS,
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
 } from './action-types';
@@ -17,7 +26,7 @@ import {
 } from '../../../domain/wallet/value-objects';
 
 export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return (dispatch, getState, repos) => {
+  return (dispatch, getState) => {
     const { wallets } = getState();
     if (wallets.length <= 0) {
       dispatch([INIT_WALLET, { ...wallet }]);
@@ -140,6 +149,52 @@ export function restoreWallet(
       onSuccess();
     } catch (error) {
       dispatch([WALLET_RESTORE_FAILURE, { error }]);
+      onError(error);
+    }
+  };
+}
+
+export function deriveNewAddress(
+  chain: string,
+  onSuccess: (confidentialAddress: string) => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, [string, Record<string, unknown>?]> {
+  return async (dispatch, getState, repos) => {
+    const { wallets } = getState();
+    if (!wallets?.[0].masterXPub || !wallets?.[0].masterBlindingKey) {
+      throw new Error('Cannot derive new address');
+    }
+    let restorer = MasterPublicKey.DEFAULT_RESTORER;
+    if (chain === 'regtest') {
+      restorer = new EsploraIdentityRestorer('http://localhost:3001');
+    }
+    // Restore wallet from MasterPublicKey
+    try {
+      const pubKeyWallet = new MasterPublicKey({
+        chain,
+        restorer,
+        type: IdentityType.MasterPublicKey,
+        value: {
+          masterPublicKey: fromXpub(wallets[0].masterXPub.value, chain),
+          masterBlindingKey: wallets[0].masterBlindingKey.value,
+        },
+        initializeFromRestorer: true,
+      });
+      const isRestored = await pubKeyWallet.isRestored;
+      if (!isRestored) {
+        throw new Error('Failed to restore wallet');
+      }
+      const { confidentialAddress } = pubKeyWallet.getNextAddress();
+      // Update React state
+      dispatch([
+        WALLET_DERIVE_ADDRESS_SUCCESS,
+        {
+          confidentialAddress,
+        },
+      ]);
+      onSuccess(confidentialAddress);
+    } catch (error) {
+      dispatch([WALLET_DERIVE_ADDRESS_FAILURE, { error }]);
       onError(error);
     }
   };
