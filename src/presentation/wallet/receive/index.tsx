@@ -1,28 +1,33 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
-import ShellPopUp from '../../components/shell-popup';
-import Button from '../../components/button';
 import { DEFAULT_ROUTE } from '../../routes/constants';
+import { AppContext } from '../../../application/background_script';
+import { deriveNewAddress } from '../../../application/store/actions';
+import Button from '../../components/button';
+import ShellPopUp from '../../components/shell-popup';
 
 const Receive: React.FC = () => {
+  const history = useHistory();
+  const [, dispatch] = useContext(AppContext);
+  const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
-  const address =
-    'lq1qq0jpr2frfkwsav5qlsduncnmcvqk43yj8w0q0krx2w484kmh9cevz7szanffvcrys05dkcgql6klmyj2q52hzvrwgyrqz6u2p';
-
+  const [isAddressExpanded, setAddressExpanded] = useState(false);
+  const handleExpand = () => setAddressExpanded(true);
+  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
   const handleCopy = () => {
-    navigator.clipboard.writeText(address).then(
-      function () {
-        setButtonText('Copied');
-      },
-      function (err) {
-        console.error('Async: Could not copy text: ', err);
-      }
+    navigator.clipboard.writeText(confidentialAddress).then(
+      () => setButtonText('Copied'),
+      (err) => console.error('Could not copy text: ', err)
     );
   };
 
-  const history = useHistory();
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  useEffect(() => {
+    const onError = (err: Error) => console.log(err);
+    const onSuccess = (address: string) => setConfidentialAddress(address);
+    dispatch(deriveNewAddress('regtest', onSuccess, onError));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ShellPopUp
@@ -31,23 +36,33 @@ const Receive: React.FC = () => {
       className="h-popupContent flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Receive"
     >
-      <div className="w-80 h-96 rounded-4xl text-center bg-white">
-        <h1 className="text-2xl font-medium my-2.5">Liquid Bitcoin</h1>
-        <img
-          className="w-11 mt-0.5 block mx-auto mb-4"
-          src="assets/images/liquid-assets/liquid-btc.svg"
-          alt="liquid bitcoin logo"
-        />
+      <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-between p-10 bg-white">
         <div className="flex flex-col items-center">
-          <QRCode size={144} value={address.toUpperCase()} />
-          <p className="mt-2 mb-8 text-xs">
-            {`${address.substring(0, 9)}...${address.substring(
-              address.length - 9,
-              address.length
-            )}`}
-          </p>
+          {confidentialAddress ? (
+            <QRCode size={176} value={confidentialAddress.toUpperCase()} />
+          ) : (
+            <div className="w-44 h-44"></div>
+          )}
+          {isAddressExpanded ? (
+            <p className="mt-2.5 text-xs font-medium break-all">{confidentialAddress}</p>
+          ) : (
+            <>
+              <p className="font-regular mt-2.5 text-lg">
+                {`${confidentialAddress.substring(0, 9)}...${confidentialAddress.substring(
+                  confidentialAddress.length - 9,
+                  confidentialAddress.length
+                )}`}
+              </p>
+              <button
+                className="mt-1.5 text-xs font-medium text-primary focus:outline-none"
+                onClick={handleExpand}
+              >
+                Expand
+              </button>
+            </>
+          )}
         </div>
-        <Button onClick={handleCopy}>
+        <Button className="w-3/5" onClick={handleCopy}>
           <span className="text-base antialiased font-bold">{buttonText}</span>
         </Button>
       </div>
