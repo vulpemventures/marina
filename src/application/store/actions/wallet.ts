@@ -17,8 +17,10 @@ import {
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
+import IdentityRestorerFromState from '../../utils/restorer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import {
+  Address,
   MasterBlindingKey,
   MasterXPub,
   Mnemonic as Mnemo,
@@ -60,12 +62,14 @@ export function createWallet(
       const masterBlindingKey = MasterBlindingKey.create(mnemonicWallet.masterBlindingKey);
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
+      const derivedAddresses: Address[] = [];
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
         masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
+        derivedAddresses,
       });
 
       // Update React state
@@ -76,6 +80,7 @@ export function createWallet(
           masterBlindingKey,
           encryptedMnemonic,
           passwordHash,
+          derivedAddresses,
         },
       ]);
 
@@ -121,31 +126,32 @@ export function restoreWallet(
       const masterBlindingKey = MasterBlindingKey.create(mnemonicWallet.masterBlindingKey);
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
+      const isRestored = await mnemonicWallet.isRestored;
+      if (!isRestored) {
+        throw new Error('Failed to restore wallet');
+      }
+      const derivedAddresses: Address[] = mnemonicWallet.getAddresses().map(
+        ({confidentialAddress}) => Address.create(confidentialAddress),
+      );
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
         masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
+        derivedAddresses,
       });
 
       dispatch([
-        WALLET_CREATE_SUCCESS,
+        WALLET_RESTORE_SUCCESS,
         {
           masterXPub,
           masterBlindingKey,
           encryptedMnemonic,
           passwordHash,
+          derivedAddresses,
         },
       ]);
-
-      const isRestored = await mnemonicWallet.isRestored;
-      if (!isRestored) {
-        throw new Error('Failed to restore wallet');
-      }
-
-      // Update React state
-      dispatch([WALLET_RESTORE_SUCCESS, {}]);
       onSuccess();
     } catch (error) {
       dispatch([WALLET_RESTORE_FAILURE, { error }]);
@@ -156,6 +162,7 @@ export function restoreWallet(
 
 export function deriveNewAddress(
   chain: string,
+  change: boolean,
   onSuccess: (confidentialAddress: string) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
@@ -164,10 +171,9 @@ export function deriveNewAddress(
     if (!wallets?.[0].masterXPub || !wallets?.[0].masterBlindingKey) {
       throw new Error('Cannot derive new address');
     }
-    let restorer = MasterPublicKey.DEFAULT_RESTORER;
-    if (chain === 'regtest') {
-      restorer = new EsploraIdentityRestorer('http://localhost:3001');
-    }
+
+    const { derivedAddresses, masterBlindingKey, masterXPub } = wallets[0];
+    const restorer = new IdentityRestorerFromState(derivedAddresses.map(addr => addr.value));
     // Restore wallet from MasterPublicKey
     try {
       const pubKeyWallet = new MasterPublicKey({
@@ -175,8 +181,8 @@ export function deriveNewAddress(
         restorer,
         type: IdentityType.MasterPublicKey,
         value: {
-          masterPublicKey: fromXpub(wallets[0].masterXPub.value, chain),
-          masterBlindingKey: wallets[0].masterBlindingKey.value,
+          masterPublicKey: fromXpub(masterXPub.value, chain),
+          masterBlindingKey: masterBlindingKey.value,
         },
         initializeFromRestorer: true,
       });
@@ -184,15 +190,20 @@ export function deriveNewAddress(
       if (!isRestored) {
         throw new Error('Failed to restore wallet');
       }
-      const { confidentialAddress } = pubKeyWallet.getNextAddress();
+
+      let nextAddress: string;
+      if (change) {
+        nextAddress = pubKeyWallet.getNextChangeAddress().confidentialAddress;
+      } else {
+        nextAddress = pubKeyWallet.getNextAddress().confidentialAddress;
+      }
+
+      const address = Address.create(nextAddress)
+      await repos.wallet.addDerivedAddress(address);
+
       // Update React state
-      dispatch([
-        WALLET_DERIVE_ADDRESS_SUCCESS,
-        {
-          confidentialAddress,
-        },
-      ]);
-      onSuccess(confidentialAddress);
+      dispatch([WALLET_DERIVE_ADDRESS_SUCCESS, { address }]);
+      onSuccess(address.value);
     } catch (error) {
       dispatch([WALLET_DERIVE_ADDRESS_FAILURE, { error }]);
       onError(error);

@@ -12,6 +12,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
+        derivedAddresses: payload.derivedAddresses,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -24,6 +25,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
+        derivedAddresses: payload.derivedAddresses,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -40,6 +42,11 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         ...state[0],
         errors: undefined,
         restored: true,
+        masterXPub: payload.masterXPub,
+        masterBlindingKey: payload.masterBlindingKey,
+        encryptedMnemonic: payload.encryptedMnemonic,
+        passwordHash: payload.passwordHash,
+        derivedAddresses: payload.derivedAddresses,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -55,7 +62,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,
-        confidentialAddress: payload.confidentialAddress,
+        derivedAddresses: state[0].derivedAddresses.concat([payload.address]),
       };
       return Object.assign([], state, [firstWallet]);
     }

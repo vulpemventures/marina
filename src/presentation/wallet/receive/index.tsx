@@ -25,7 +25,7 @@ const Receive: React.FC = () => {
   useEffect(() => {
     const onError = (err: Error) => console.log(err);
     const onSuccess = (address: string) => setConfidentialAddress(address);
-    dispatch(deriveNewAddress('regtest', onSuccess, onError));
+    dispatch(deriveNewAddress('regtest', false, onSuccess, onError));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

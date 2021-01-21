@@ -21,6 +21,7 @@ export interface IWallet {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
+  derivedAddresses: Address[];
   restored?: boolean;
 }
 
@@ -50,6 +51,10 @@ export class Wallet extends Entity<IWallet> {
   get passwordHash(): PasswordHash {
     return this.props.passwordHash;
   }
+  
+  get derivedAddresses(): Address[] {
+    return this.props.derivedAddresses;
+  }
 
   /**
    * @param props - Wallet props
@@ -75,6 +80,7 @@ export class Wallet extends Entity<IWallet> {
       masterBlindingKey: props.masterBlindingKey,
       encryptedMnemonic: props.encryptedMnemonic,
       passwordHash: props.passwordHash,
+      derivedAddresses: props.derivedAddresses,
     };
     return new Wallet(walletProps, id);
   }

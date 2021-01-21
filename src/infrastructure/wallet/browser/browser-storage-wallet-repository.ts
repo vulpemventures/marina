@@ -3,6 +3,7 @@ import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
+import { Address } from '../../../domain/wallet/value-objects';
 
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
@@ -29,5 +30,17 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
     }
 
     return WalletMap.toDomain(store.wallets[0]);
+  }
+
+  async addDerivedAddress(address: Address): Promise<void> {
+    const wallet = await this.getOrCreateWallet();
+    const isAlreadyDerived = wallet.derivedAddresses.find(
+      ({value}) => value === address.value
+    ) !== undefined;
+    
+    if (!isAlreadyDerived) {
+      wallet.derivedAddresses.push(address);
+      await browser.storage.local.set({ wallets: [ WalletMap.toDTO(wallet) ] });
+    }
   }
 }
