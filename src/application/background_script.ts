@@ -1,14 +1,11 @@
 import React from 'react';
-import { appInitialState, appInitState, walletInitState } from './store/reducers';
+import { appInitialState } from './store/reducers';
 import { browser } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { IAppState } from '../domain/common';
-import { IAppRepository } from '../domain/app/i-app-repository';
-import { IWalletRepository } from '../domain/wallet/i-wallet-repository';
-import { App } from '../domain/app/app';
-import { IWallet, Wallet } from '../domain/wallet/wallet';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { initPersistentStore } from '../infrastructure/init-persistent-store';
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -46,12 +43,3 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
 // Create store
 type ctx = [IAppState, React.Dispatch<unknown>];
 export const AppContext = React.createContext<ctx>(appInitialState);
-
-async function initPersistentStore(repos: {
-  app: IAppRepository;
-  wallet: IWalletRepository;
-}): Promise<void> {
-  const app = App.createApp(appInitState);
-  const wallets = walletInitState.map((w: IWallet) => Wallet.createWallet(w));
-  await Promise.all([repos.app.init(app), repos.wallet.init(wallets)]);
-}

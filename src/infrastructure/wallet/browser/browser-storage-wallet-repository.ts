@@ -12,23 +12,25 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
   }
 
   async getOrCreateWallet(wallet?: IWallet): Promise<Wallet> {
-    const store = await browser.storage.local.get('wallets');
+    const store = (await browser.storage.local.get('wallets')) as { wallets: WalletDTO[] };
 
+    // Create
     if (wallet !== undefined) {
-      let wallets: WalletDTO[] = [];
-      if (store && store.wallets !== undefined) {
-        wallets = store.wallets;
-      }
       const w = Wallet.createWallet(wallet);
-      wallets.push(WalletMap.toDTO(w));
-      await browser.storage.local.set({ wallets });
+      // If wallet doesn't already exist in storage, merge newly created wallet with existing wallets in storage
+      const newStorageWallets: WalletDTO[] = [
+        ...store.wallets,
+        ...store.wallets.filter((storeWallet) => storeWallet.walletId !== w.walletId.id.toString()),
+      ];
+      await browser.storage.local.set({ wallets: newStorageWallets });
       return w;
     }
 
+    // Get the first wallet
+    // Check if wallet exists in storage
     if (store.wallets === undefined || store.wallets.length <= 0) {
       throw new Error('wallet not found');
     }
-
     return WalletMap.toDomain(store.wallets[0]);
   }
 
