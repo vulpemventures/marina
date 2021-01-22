@@ -11,6 +11,7 @@ import {
   MasterXPub,
   PasswordHash,
 } from '../domain/wallet/value-objects';
+import { Network } from '../domain/app/value-objects';
 import {
   addresses,
   encryptedMnemonic,
@@ -44,24 +45,28 @@ describe('Repositories', () => {
         isAuthenticated: false,
         isOnboardingCompleted: false,
         isWalletVerified: false,
+        network: 'regtest',
       };
 
       testAppDTOOnboarded = {
         isAuthenticated: false,
         isOnboardingCompleted: true,
         isWalletVerified: false,
+        network: 'regtest',
       };
 
       testApp = App.createApp({
         isAuthenticated: false,
         isOnboardingCompleted: false,
         isWalletVerified: false,
+        network: Network.create('regtest'),
       });
 
       testAppOnboarded = App.createApp({
         isAuthenticated: false,
         isOnboardingCompleted: true,
         isWalletVerified: false,
+        network: Network.create('regtest'),
       });
     });
 
