@@ -130,9 +130,9 @@ export function restoreWallet(
       if (!isRestored) {
         throw new Error('Failed to restore wallet');
       }
-      const derivedAddresses: Address[] = mnemonicWallet.getAddresses().map(
-        ({confidentialAddress}) => Address.create(confidentialAddress),
-      );
+      const derivedAddresses: Address[] = mnemonicWallet
+        .getAddresses()
+        .map(({ confidentialAddress }) => Address.create(confidentialAddress));
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
@@ -173,7 +173,7 @@ export function deriveNewAddress(
     }
 
     const { derivedAddresses, masterBlindingKey, masterXPub } = wallets[0];
-    const restorer = new IdentityRestorerFromState(derivedAddresses.map(addr => addr.value));
+    const restorer = new IdentityRestorerFromState(derivedAddresses.map((addr) => addr.value));
     // Restore wallet from MasterPublicKey
     try {
       const pubKeyWallet = new MasterPublicKey({
@@ -198,7 +198,7 @@ export function deriveNewAddress(
         nextAddress = pubKeyWallet.getNextAddress().confidentialAddress;
       }
 
-      const address = Address.create(nextAddress)
+      const address = Address.create(nextAddress);
       await repos.wallet.addDerivedAddress(address);
 
       // Update React state

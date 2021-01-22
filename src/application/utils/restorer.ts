@@ -1,14 +1,14 @@
-import { IdentityRestorerInterface } from "ldk";
+import { IdentityRestorerInterface } from 'ldk';
 
 export default class IdentityRestorerFromState implements IdentityRestorerInterface {
-  private addresses: string[]
+  private addresses: string[];
 
   constructor(addresses: string[]) {
     this.addresses = addresses;
   }
 
   async addressHasBeenUsed(address: string): Promise<boolean> {
-    return this.addresses.includes(address);
+    return Promise.resolve(this.addresses.includes(address));
   }
 
   async addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]> {

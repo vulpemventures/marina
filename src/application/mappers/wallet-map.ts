@@ -17,7 +17,7 @@ export class WalletMap {
       masterBlindingKey: wallet.masterBlindingKey.value,
       encryptedMnemonic: wallet.encryptedMnemonic.value,
       passwordHash: wallet.passwordHash.value,
-      derivedAddresses: wallet.derivedAddresses.map(d => d.value),
+      derivedAddresses: wallet.derivedAddresses.map((d) => d.value),
     };
   }
 

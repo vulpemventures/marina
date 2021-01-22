@@ -51,7 +51,7 @@ export class Wallet extends Entity<IWallet> {
   get passwordHash(): PasswordHash {
     return this.props.passwordHash;
   }
-  
+
   get derivedAddresses(): Address[] {
     return this.props.derivedAddresses;
   }
