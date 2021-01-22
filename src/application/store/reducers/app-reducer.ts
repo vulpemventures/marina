@@ -46,6 +46,30 @@ export const appReducer = (state: IApp, [type, payload]: [string, any]): IApp =>
         errors: { onboarding: { message: payload.error.message } as IError },
       };
     }
+    case ACTION_TYPES.LOGOUT_SUCCESS: {
+      return {
+        ...state,
+        isAuthenticated: false,
+      };
+    }
+    case ACTION_TYPES.LOGOUT_FAILURE: {
+      return {
+        ...state,
+        errors: { auth: { message: payload.error.message } as IError },
+      };
+    }
+    case ACTION_TYPES.CHANGE_NETWORK_SUCCESS: {
+      return {
+        ...state,
+        network: payload.network,
+      };
+    }
+    case ACTION_TYPES.CHANGE_NETWORK_FAILURE: {
+      return {
+        ...state,
+        errors: { settings: { message: payload.error.message } as IError },
+      };
+    }
     default:
       return state;
   }

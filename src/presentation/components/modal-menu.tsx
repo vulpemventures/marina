@@ -1,7 +1,10 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useContext, useRef } from 'react';
 import { useHistory } from 'react-router';
+import { AppContext } from '../../application/background_script';
+import { logOut } from '../../application/store/actions';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
+  DEFAULT_ROUTE,
   SETTINGS_MENU_INFO_ROUTE,
   SETTINGS_MENU_SECURITY_ROUTE,
   SETTINGS_MENU_SETTINGS_ROUTE,
@@ -13,12 +16,19 @@ interface Props {
 }
 const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const history = useHistory();
+  const [, dispatch] = useContext(AppContext);
   const ref = useRef<HTMLDivElement | null>(null);
   useOnClickOutside(ref, useCallback(handleClose, [ref, handleClose]));
   const handleSecurity = () => history.push(SETTINGS_MENU_SECURITY_ROUTE);
   const handleSettings = () => history.push(SETTINGS_MENU_SETTINGS_ROUTE);
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
-  const handleLogOut = () => console.log('log out');
+  const handleLogOut = () =>
+    dispatch(
+      logOut(
+        () => history.push(DEFAULT_ROUTE),
+        (err: Error) => console.log(err)
+      )
+    );
 
   if (!isOpen) {
     return <></>;

@@ -1,4 +1,5 @@
 import { App } from '../../domain/app/app';
+import { Network } from '../../domain/app/value-objects/network';
 import { AppDTO } from '../dtos/app-dto';
 
 export class AppMap {
@@ -7,6 +8,7 @@ export class AppMap {
       isAuthenticated: app.isAuthenticated,
       isWalletVerified: app.isWalletVerified,
       isOnboardingCompleted: app.isOnboardingCompleted,
+      network: app.network.value,
     };
   }
 
@@ -15,6 +17,7 @@ export class AppMap {
       isAuthenticated: raw.isAuthenticated,
       isWalletVerified: raw.isWalletVerified,
       isOnboardingCompleted: raw.isOnboardingCompleted,
+      network: Network.create(raw.network),
     });
   }
 }

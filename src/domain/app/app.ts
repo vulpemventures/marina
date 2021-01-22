@@ -1,11 +1,13 @@
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
+import { Network } from './value-objects/network';
 
 export interface IApp {
   errors?: Record<string, IError>;
   isAuthenticated: boolean;
   isWalletVerified: boolean;
   isOnboardingCompleted: boolean;
+  network: Network;
 }
 
 /**
@@ -26,6 +28,10 @@ export class App extends Entity<IApp> {
 
   get isOnboardingCompleted(): boolean {
     return this.props.isOnboardingCompleted;
+  }
+
+  get network(): Network {
+    return this.props.network;
   }
 
   /**
@@ -49,6 +55,7 @@ export class App extends Entity<IApp> {
       isAuthenticated: props.isAuthenticated,
       isWalletVerified: props.isWalletVerified,
       isOnboardingCompleted: props.isOnboardingCompleted,
+      network: props.network,
     };
     return new App(appProps);
   }

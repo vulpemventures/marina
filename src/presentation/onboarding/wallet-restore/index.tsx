@@ -156,7 +156,6 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
       restoreWallet(
         Password.create(values.password),
         Mnemonic.create(values.mnemonic),
-        'regtest',
         onSuccess,
         onError
       )
