@@ -1,7 +1,13 @@
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
-import { EncryptedMnemonic, MasterXPub, MasterBlindingKey, PasswordHash } from './value-objects';
+import {
+  Address,
+  EncryptedMnemonic,
+  MasterXPub,
+  MasterBlindingKey,
+  PasswordHash,
+} from './value-objects';
 import { WalletId } from './walletId';
 
 export interface IWallets {
@@ -9,10 +15,11 @@ export interface IWallets {
 }
 
 export interface IWallet {
+  confidentialAddresses: Address[];
+  encryptedMnemonic: EncryptedMnemonic;
   errors?: Record<string, IError>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
-  encryptedMnemonic: EncryptedMnemonic;
   passwordHash: PasswordHash;
   restored?: boolean;
 }
@@ -44,6 +51,10 @@ export class Wallet extends Entity<IWallet> {
     return this.props.passwordHash;
   }
 
+  get confidentialAddresses(): Address[] {
+    return this.props.confidentialAddresses;
+  }
+
   /**
    * @param props - Wallet props
    * @param id - When the id is known we can pass it in, or we create one
@@ -68,6 +79,7 @@ export class Wallet extends Entity<IWallet> {
       masterBlindingKey: props.masterBlindingKey,
       encryptedMnemonic: props.encryptedMnemonic,
       passwordHash: props.passwordHash,
+      confidentialAddresses: props.confidentialAddresses,
     };
     return new Wallet(walletProps, id);
   }

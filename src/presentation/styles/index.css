@@ -9,6 +9,12 @@
   }
 }
 
+/* Remove blue border from buttons when clicked (default Chrome behavior) */
+button:focus {
+  outline: none;
+}
+/**/
+
 /* Customise Chrome cancel icon on inputs of type search */
 input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;

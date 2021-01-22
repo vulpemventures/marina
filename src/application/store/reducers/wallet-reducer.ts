@@ -12,9 +12,11 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
+        confidentialAddresses: payload.confidentialAddresses,
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -23,14 +25,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
-      };
-      return Object.assign([], state, [firstWallet]);
-    }
-    case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
-        errors: undefined,
-        restored: true,
+        confidentialAddresses: payload.confidentialAddresses,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -41,6 +36,20 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
+    case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: undefined,
+        restored: true,
+        masterXPub: payload.masterXPub,
+        masterBlindingKey: payload.masterBlindingKey,
+        encryptedMnemonic: payload.encryptedMnemonic,
+        passwordHash: payload.passwordHash,
+        confidentialAddresses: payload.confidentialAddresses,
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
     case ACTION_TYPES.WALLET_RESTORE_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -48,6 +57,23 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
+    case ACTION_TYPES.WALLET_DERIVE_ADDRESS_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: undefined,
+        confidentialAddresses: state[0].confidentialAddresses.concat([payload.address]),
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_DERIVE_ADDRESS_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { address: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+
     default: {
       return state;
     }
