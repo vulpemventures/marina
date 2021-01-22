@@ -48,9 +48,7 @@ const Receive: React.FC = () => {
             <p className="mt-2.5 text-xs font-medium break-all">{confidentialAddress}</p>
           ) : (
             <>
-              <p className="font-regular mt-2.5 text-lg">
-                {formatAddress(confidentialAddress)}
-              </p>
+              <p className="font-regular mt-2.5 text-lg">{formatAddress(confidentialAddress)}</p>
               <button
                 className="mt-1.5 text-xs font-medium text-primary focus:outline-none"
                 onClick={handleExpand}
