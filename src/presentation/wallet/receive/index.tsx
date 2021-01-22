@@ -6,6 +6,7 @@ import { AppContext } from '../../../application/background_script';
 import { deriveNewAddress } from '../../../application/store/actions';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
+import { formatAddress } from '../../utils';
 
 const Receive: React.FC = () => {
   const history = useHistory();
@@ -48,10 +49,7 @@ const Receive: React.FC = () => {
           ) : (
             <>
               <p className="font-regular mt-2.5 text-lg">
-                {`${confidentialAddress.substring(0, 9)}...${confidentialAddress.substring(
-                  confidentialAddress.length - 9,
-                  confidentialAddress.length
-                )}`}
+                {formatAddress(confidentialAddress)}
               </p>
               <button
                 className="mt-1.5 text-xs font-medium text-primary focus:outline-none"

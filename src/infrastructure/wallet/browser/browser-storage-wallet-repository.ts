@@ -34,8 +34,9 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
 
   async addDerivedAddress(address: Address): Promise<void> {
     const wallet = await this.getOrCreateWallet();
-    const isAlreadyDerived =
-      wallet.derivedAddresses.find(({ value }) => value === address.value) !== undefined;
+    const isAlreadyDerived = wallet.derivedAddresses
+      .map(({ value }) => value)
+      .includes(address.value);
 
     if (!isAlreadyDerived) {
       wallet.derivedAddresses.push(address);
