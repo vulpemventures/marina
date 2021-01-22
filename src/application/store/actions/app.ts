@@ -6,11 +6,16 @@ import {
   VERIFICATION_FAILURE,
   ONBOARDING_COMPLETETED,
   ONBOARDING_FAILURE,
+  LOGOUT_SUCCESS,
+  LOGOUT_FAILURE,
+  CHANGE_NETWORK_SUCCESS,
+  CHANGE_NETWORK_FAILURE,
 } from './action-types';
 import { IAppState, Thunk } from '../../../domain/common';
 import { App, IApp } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
+import { Network } from '../../../domain/app/value-objects/network';
 
 export function initApp(app: IApp): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return (dispatch, getState, repos) => {
@@ -91,6 +96,51 @@ export function logIn(
       onSuccess();
     } catch (error) {
       dispatch([AUTHENTICATION_FAILURE, { error }]);
+      onError(error);
+    }
+  };
+}
+
+export function logOut(
+  onSuccess: () => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, [string, Record<string, unknown>?]> {
+  return async (dispatch, _, repos) => {
+    try {
+      await repos.app.updateApp(
+        (app: App): App => {
+          app.props.isAuthenticated = false;
+          return app;
+        }
+      );
+
+      dispatch([LOGOUT_SUCCESS]);
+      onSuccess();
+    } catch (error) {
+      dispatch([LOGOUT_FAILURE, { error }]);
+      onError(error);
+    }
+  };
+}
+
+export function changeNetwork(
+  network: Network,
+  onSuccess: () => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, [string, Record<string, unknown>?]> {
+  return async (dispatch, _, repos) => {
+    try {
+      await repos.app.updateApp(
+        (app: App): App => {
+          app.props.network = network;
+          return app;
+        }
+      );
+
+      dispatch([CHANGE_NETWORK_SUCCESS, { network }]);
+      onSuccess();
+    } catch (error) {
+      dispatch([CHANGE_NETWORK_FAILURE, { error }]);
       onError(error);
     }
   };

@@ -1,10 +1,9 @@
-import { Dispatch, SetStateAction } from 'react';
 import { Listbox } from '@headlessui/react';
 
 interface Props {
   data: string[];
   selectedValue: string;
-  setSelectedValue: Dispatch<SetStateAction<string>>;
+  setSelectedValue: (v: string) => void;
 }
 
 const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue }) => {

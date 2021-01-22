@@ -39,12 +39,11 @@ export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<st
 export function createWallet(
   password: Password,
   mnemonic: Mnemo,
-  chain: string,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
-    const { wallets } = getState();
+    const { app, wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
         'Wallet already exists. Remove the extension from the browser first to create a new one'
@@ -52,6 +51,7 @@ export function createWallet(
     }
 
     try {
+      const chain = app.network.value;
       const mnemonicWallet = new Mnemonic({
         chain,
         type: IdentityType.Mnemonic,
@@ -95,18 +95,18 @@ export function createWallet(
 export function restoreWallet(
   password: Password,
   mnemonic: Mnemo,
-  chain: string,
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
-    const { wallets } = getState();
+    const { app, wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
         'Wallet already exists. Remove the extension from the browser first to create a new one'
       );
     }
 
+    const chain = app.network.value;
     let restorer = Mnemonic.DEFAULT_RESTORER;
     if (chain === 'regtest') {
       restorer = new EsploraIdentityRestorer('http://localhost:3001');
@@ -161,17 +161,17 @@ export function restoreWallet(
 }
 
 export function deriveNewAddress(
-  chain: string,
   change: boolean,
   onSuccess: (confidentialAddress: string) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, [string, Record<string, unknown>?]> {
   return async (dispatch, getState, repos) => {
-    const { wallets } = getState();
+    const { app, wallets } = getState();
     if (!wallets?.[0].masterXPub || !wallets?.[0].masterBlindingKey) {
       throw new Error('Cannot derive new address');
     }
 
+    const chain = app.network.value;
     const { confidentialAddresses, masterBlindingKey, masterXPub } = wallets[0];
     const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
     // Restore wallet from MasterPublicKey
