@@ -4,5 +4,5 @@ export interface WalletDTO {
   masterBlindingKey: string;
   encryptedMnemonic: string;
   passwordHash: string;
-  derivedAddresses: string[];
+  confidentialAddresses: string[];
 }

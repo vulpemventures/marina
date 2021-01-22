@@ -62,14 +62,14 @@ export function createWallet(
       const masterBlindingKey = MasterBlindingKey.create(mnemonicWallet.masterBlindingKey);
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
-      const derivedAddresses: Address[] = [];
+      const confidentialAddresses: Address[] = [];
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
         masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
-        derivedAddresses,
+        confidentialAddresses,
       });
 
       // Update React state
@@ -80,7 +80,7 @@ export function createWallet(
           masterBlindingKey,
           encryptedMnemonic,
           passwordHash,
-          derivedAddresses,
+          confidentialAddresses,
         },
       ]);
 
@@ -130,7 +130,7 @@ export function restoreWallet(
       if (!isRestored) {
         throw new Error('Failed to restore wallet');
       }
-      const derivedAddresses: Address[] = mnemonicWallet
+      const confidentialAddresses: Address[] = mnemonicWallet
         .getAddresses()
         .map(({ confidentialAddress }) => Address.create(confidentialAddress));
 
@@ -139,7 +139,7 @@ export function restoreWallet(
         masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
-        derivedAddresses,
+        confidentialAddresses,
       });
 
       dispatch([
@@ -149,7 +149,7 @@ export function restoreWallet(
           masterBlindingKey,
           encryptedMnemonic,
           passwordHash,
-          derivedAddresses,
+          confidentialAddresses,
         },
       ]);
       onSuccess();
@@ -172,8 +172,8 @@ export function deriveNewAddress(
       throw new Error('Cannot derive new address');
     }
 
-    const { derivedAddresses, masterBlindingKey, masterXPub } = wallets[0];
-    const restorer = new IdentityRestorerFromState(derivedAddresses.map((addr) => addr.value));
+    const { confidentialAddresses, masterBlindingKey, masterXPub } = wallets[0];
+    const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
     // Restore wallet from MasterPublicKey
     try {
       const pubKeyWallet = new MasterPublicKey({

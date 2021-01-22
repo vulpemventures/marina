@@ -34,12 +34,12 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
 
   async addDerivedAddress(address: Address): Promise<void> {
     const wallet = await this.getOrCreateWallet();
-    const isAlreadyDerived = wallet.derivedAddresses
+    const isAlreadyDerived = wallet.confidentialAddresses
       .map(({ value }) => value)
       .includes(address.value);
 
     if (!isAlreadyDerived) {
-      wallet.derivedAddresses.push(address);
+      wallet.confidentialAddresses.push(address);
       await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
     }
   }

@@ -15,13 +15,12 @@ export interface IWallets {
 }
 
 export interface IWallet {
-  confidentialAddress?: Address;
+  confidentialAddresses: Address[];
   encryptedMnemonic: EncryptedMnemonic;
   errors?: Record<string, IError>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
-  derivedAddresses: Address[];
   restored?: boolean;
 }
 
@@ -52,8 +51,8 @@ export class Wallet extends Entity<IWallet> {
     return this.props.passwordHash;
   }
 
-  get derivedAddresses(): Address[] {
-    return this.props.derivedAddresses;
+  get confidentialAddresses(): Address[] {
+    return this.props.confidentialAddresses;
   }
 
   /**
@@ -80,7 +79,7 @@ export class Wallet extends Entity<IWallet> {
       masterBlindingKey: props.masterBlindingKey,
       encryptedMnemonic: props.encryptedMnemonic,
       passwordHash: props.passwordHash,
-      derivedAddresses: props.derivedAddresses,
+      confidentialAddresses: props.confidentialAddresses,
     };
     return new Wallet(walletProps, id);
   }
