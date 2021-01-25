@@ -11,14 +11,14 @@ import {
   CHANGE_NETWORK_SUCCESS,
   CHANGE_NETWORK_FAILURE,
 } from './action-types';
-import { IAppState, Thunk } from '../../../domain/common';
+import { Action, IAppState, Thunk } from '../../../domain/common';
 import { App, IApp } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
-import { Network } from '../../../domain/app/value-objects/network';
+import { Network } from '../../../domain/app/value-objects';
 
-export function initApp(app: IApp): Thunk<IAppState, [string, Record<string, unknown>?]> {
-  return (dispatch, getState, repos) => {
+export function initApp(app: IApp): Thunk<IAppState, Action> {
+  return (dispatch) => {
     dispatch([INIT_APP, { ...app }]);
   };
 }
@@ -26,7 +26,7 @@ export function initApp(app: IApp): Thunk<IAppState, [string, Record<string, unk
 export function verifyWallet(
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
       await repos.app.updateApp(
@@ -48,7 +48,7 @@ export function verifyWallet(
 export function onboardingComplete(
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
       await repos.app.updateApp(
@@ -71,7 +71,7 @@ export function logIn(
   password: string,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
       const { wallets } = getState();
@@ -104,7 +104,7 @@ export function logIn(
 export function logOut(
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, _, repos) => {
     try {
       await repos.app.updateApp(
@@ -127,7 +127,7 @@ export function changeNetwork(
   network: Network,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, _, repos) => {
     try {
       await repos.app.updateApp(

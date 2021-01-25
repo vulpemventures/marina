@@ -15,7 +15,7 @@ import {
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
 } from './action-types';
-import { IAppState, Thunk } from '../../../domain/common';
+import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
 import IdentityRestorerFromState from '../../utils/restorer';
 import { IWallet } from '../../../domain/wallet/wallet';
@@ -27,7 +27,7 @@ import {
   Password,
 } from '../../../domain/wallet/value-objects';
 
-export function initWallet(wallet: IWallet): Thunk<IAppState, [string, Record<string, unknown>?]> {
+export function initWallet(wallet: IWallet): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
     const { wallets } = getState();
     if (wallets.length <= 0) {
@@ -41,7 +41,7 @@ export function createWallet(
   mnemonic: Mnemo,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     const { app, wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
@@ -97,7 +97,7 @@ export function restoreWallet(
   mnemonic: Mnemo,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     const { app, wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
@@ -164,7 +164,7 @@ export function deriveNewAddress(
   change: boolean,
   onSuccess: (confidentialAddress: string) => void,
   onError: (err: Error) => void
-): Thunk<IAppState, [string, Record<string, unknown>?]> {
+): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     const { app, wallets } = getState();
     if (!wallets?.[0].masterXPub || !wallets?.[0].masterBlindingKey) {
