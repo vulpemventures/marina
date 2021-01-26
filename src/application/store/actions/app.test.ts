@@ -106,7 +106,7 @@ describe('App Actions', () => {
     store.setState({
       wallets: [testWallet],
       app: testAppProps,
-      onboarding: onboardingInitState
+      onboarding: onboardingInitState,
     });
 
     const logInAction = function () {
@@ -124,7 +124,7 @@ describe('App Actions', () => {
     return expect(logInAction()).resolves.toStrictEqual({
       wallets: [testWallet],
       app: testAppAuthenticatedProps,
-      onboarding: onboardingInitState
+      onboarding: onboardingInitState,
     });
   });
 

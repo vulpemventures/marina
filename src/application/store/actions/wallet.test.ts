@@ -106,7 +106,7 @@ describe('Wallet Actions', () => {
     store.setState({
       wallets: [testWalletProps],
       app: testAppProps,
-      onboarding: onboardingInitState
+      onboarding: onboardingInitState,
     });
 
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
@@ -140,7 +140,7 @@ describe('Wallet Actions', () => {
     store.setState({
       wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
-      onboarding: onboardingInitState
+      onboarding: onboardingInitState,
     });
 
     mockBrowser.storage.local.get
