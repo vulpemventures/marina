@@ -3,7 +3,7 @@ import { Link, RouteComponentProps, useHistory } from 'react-router-dom';
 import cx from 'classnames';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { logIn } from '../../../application/store/actions';
 import { DEFAULT_ROUTE, RESTORE_VAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';

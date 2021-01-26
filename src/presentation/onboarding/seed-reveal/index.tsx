@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import * as bip39 from 'bip39';
 import { useHistory, useLocation } from 'react-router-dom';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { createWallet, onboardingComplete } from '../../../application/store/actions';
 import Button from '../../components/button';
 import {

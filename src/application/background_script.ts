@@ -1,8 +1,5 @@
-import React from 'react';
-import { appInitialState } from './store/reducers';
 import { browser } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { IAppState } from '../domain/common';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
@@ -39,7 +36,3 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
     //   break;
   }
 });
-
-// Create store
-type ctx = [IAppState, React.Dispatch<unknown>];
-export const AppContext = React.createContext<ctx>(appInitialState);

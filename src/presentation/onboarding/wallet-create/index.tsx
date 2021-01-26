@@ -5,7 +5,7 @@ import * as Yup from 'yup';
 import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import { DispatchOrThunk } from '../../../domain/common';
 

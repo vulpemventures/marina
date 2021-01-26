@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { AppContext } from '../../application/background_script';
+import { AppContext } from '../../application/store/context';
 import { decrypt } from '../../application/utils/crypto';
 import { Password } from '../../domain/wallet/value-objects';
 import ModalUnlock from '../components/modal-unlock';

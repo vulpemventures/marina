@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { appReducer, appInitialState } from '../application/store/reducers';
-import { AppContext } from '../application/background_script';
+import { AppContext } from '../application/store/context';
 import Routes from './routes';
 import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';

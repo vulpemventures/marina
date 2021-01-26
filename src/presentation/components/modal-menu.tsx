@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useRef } from 'react';
 import { useHistory } from 'react-router';
-import { AppContext } from '../../application/background_script';
+import { AppContext } from '../../application/store/context';
 import { logOut } from '../../application/store/actions';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {

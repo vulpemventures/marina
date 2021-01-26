@@ -4,7 +4,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { onboardingComplete, verifyWallet } from '../../../application/store/actions';
 
 interface LocationState {

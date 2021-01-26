@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { deriveNewAddress } from '../../../application/store/actions';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
