@@ -19,6 +19,7 @@ import {
   testAppWalletVerifiedDTO,
   testAppWalletVerifiedProps,
 } from '../../../../__test__/fixtures/test-app';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 
 describe('App Actions', () => {
   let repos, store: ReturnType<typeof mockThunkReducer>;
@@ -47,6 +48,7 @@ describe('App Actions', () => {
     return expect(initAppAction()).resolves.toStrictEqual({
       wallets: [],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -69,6 +71,7 @@ describe('App Actions', () => {
     return expect(walletVerifyAction()).resolves.toStrictEqual({
       wallets: [],
       app: testAppWalletVerifiedProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -91,6 +94,7 @@ describe('App Actions', () => {
     return expect(onboardingCompleteAction()).resolves.toStrictEqual({
       wallets: [],
       app: testAppOnboardedProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -102,6 +106,7 @@ describe('App Actions', () => {
     store.setState({
       wallets: [testWallet],
       app: testAppProps,
+      onboarding: onboardingInitState
     });
 
     const logInAction = function () {
@@ -119,6 +124,7 @@ describe('App Actions', () => {
     return expect(logInAction()).resolves.toStrictEqual({
       wallets: [testWallet],
       app: testAppAuthenticatedProps,
+      onboarding: onboardingInitState
     });
   });
 
@@ -162,6 +168,7 @@ describe('App Actions', () => {
     return expect(logOutAction()).resolves.toStrictEqual({
       wallets: [],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -185,6 +192,7 @@ describe('App Actions', () => {
     return expect(changeNetworkAction()).resolves.toStrictEqual({
       wallets: [],
       app: testAppNetworkLiquidProps,
+      onboarding: onboardingInitState,
     });
   });
 });
