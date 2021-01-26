@@ -1,4 +1,3 @@
-import React from 'react';
 import { IWallet } from '../wallet/wallet';
 import { IApp } from '../app/app';
 import { IAppRepository } from '../app/i-app-repository';
@@ -15,6 +14,8 @@ export interface IError {
 }
 
 // State Management
+export type Action = [string, Record<string, unknown>?];
+
 export type Dispatch<A> = (value: A) => void;
 
 export interface Thunk<S, A> {
@@ -28,6 +29,4 @@ export interface Thunk<S, A> {
   ): void;
 }
 
-export type DispatchOrThunk =
-  | React.Dispatch<[string, Record<string, unknown>?]>
-  | Thunk<never, [string, Record<string, unknown>?]>;
+export type DispatchOrThunk = Dispatch<Action> | Thunk<IAppState, Action>;

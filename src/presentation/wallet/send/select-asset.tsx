@@ -4,7 +4,7 @@ import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants
 import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
-import assets from '../../../infrastructure/fixtures/assets.json';
+import assets from '../../../../__test__/fixtures/assets.json';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();

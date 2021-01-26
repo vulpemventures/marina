@@ -1,5 +1,5 @@
 import { PasswordHash } from './password-hash';
-import { passwordHash as p } from '../../../infrastructure/fixtures/wallet.json';
+import { passwordHash as p } from '../../../../__test__/fixtures/wallet.json';
 
 test('Should be able to create a password hash', () => {
   const passwordHash = PasswordHash.create(p);

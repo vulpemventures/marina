@@ -3,24 +3,13 @@ import { BrowserStorageWalletRepo } from './wallet/browser/browser-storage-walle
 import { IAppRepository } from '../domain/app/i-app-repository';
 import { IWalletRepository } from '../domain/wallet/i-wallet-repository';
 import { App } from '../domain/app/app';
-import { IWallet, Wallet } from '../domain/wallet/wallet';
 import {
-  Address,
-  EncryptedMnemonic,
-  MasterBlindingKey,
-  MasterXPub,
-  PasswordHash,
-} from '../domain/wallet/value-objects';
-import { Network } from '../domain/app/value-objects';
-import {
-  addresses,
-  encryptedMnemonic,
-  masterXPub,
-  masterBlindingKey,
-  passwordHash,
-} from './fixtures/wallet.json';
-import { WalletDTO } from '../application/dtos/wallet-dto';
-import { AppDTO } from '../application/dtos/app-dto';
+  testApp,
+  testAppDTO,
+  testAppOnboarded,
+  testAppOnboardedDTO,
+} from '../../__test__/fixtures/test-app';
+import { testWallet, testWalletDTO, testWalletProps } from '../../__test__/fixtures/test-wallet';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -38,41 +27,9 @@ describe('Repositories', () => {
   });
 
   describe('App repository', () => {
-    let testApp: App, testAppOnboarded: App, testAppDTO: AppDTO, testAppDTOOnboarded: AppDTO;
-
-    beforeAll(() => {
-      testAppDTO = {
-        isAuthenticated: false,
-        isOnboardingCompleted: false,
-        isWalletVerified: false,
-        network: 'regtest',
-      };
-
-      testAppDTOOnboarded = {
-        isAuthenticated: false,
-        isOnboardingCompleted: true,
-        isWalletVerified: false,
-        network: 'regtest',
-      };
-
-      testApp = App.createApp({
-        isAuthenticated: false,
-        isOnboardingCompleted: false,
-        isWalletVerified: false,
-        network: Network.create('regtest'),
-      });
-
-      testAppOnboarded = App.createApp({
-        isAuthenticated: false,
-        isOnboardingCompleted: true,
-        isWalletVerified: false,
-        network: Network.create('regtest'),
-      });
-    });
-
     test('Should init app', () => {
       // Call to set() will fail if it doesn't match invocation triggered by init()
-      mockBrowser.storage.local.set.expect({ app: testAppDTOOnboarded }).andResolve();
+      mockBrowser.storage.local.set.expect({ app: testAppOnboardedDTO }).andResolve();
       return expect(repos.app.init(testAppOnboarded)).resolves.toBeUndefined();
     });
 
@@ -89,7 +46,7 @@ describe('Repositories', () => {
     test('Should update app state', () => {
       mockBrowser.storage.local.get.expect('app').andResolve({ app: testAppDTO });
       // Call to set() will fail if it doesn't match invocation triggered by updateApp()
-      mockBrowser.storage.local.set.expect({ app: testAppDTOOnboarded }).andResolve();
+      mockBrowser.storage.local.set.expect({ app: testAppOnboardedDTO }).andResolve();
       return expect(
         repos.app.updateApp(
           (app: App): App => {
@@ -102,29 +59,6 @@ describe('Repositories', () => {
   });
 
   describe('Wallet repository', () => {
-    let testWallet: Wallet, testWalletDTO: WalletDTO, testWalletProps: IWallet;
-
-    beforeAll(() => {
-      testWalletProps = {
-        confidentialAddresses: [Address.create(addresses.liquid.blech32[0])],
-        encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
-        masterXPub: MasterXPub.create(masterXPub),
-        masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
-        passwordHash: PasswordHash.create(passwordHash),
-      };
-
-      testWallet = Wallet.createWallet(testWalletProps);
-
-      testWalletDTO = {
-        confidentialAddresses: [addresses.liquid.blech32[0]],
-        encryptedMnemonic: encryptedMnemonic,
-        masterXPub: masterXPub,
-        masterBlindingKey: masterBlindingKey,
-        passwordHash: passwordHash,
-        walletId: v4(),
-      };
-    });
-
     test('Should init wallet', () => {
       mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
       return expect(repos.wallet.init([testWallet])).resolves.toBeUndefined();
