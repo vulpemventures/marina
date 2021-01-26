@@ -1,11 +1,10 @@
 import React, { useContext } from 'react';
 import Button from '../../components/button';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import MnemonicDnd from '../../components/mnemonic-dnd';
 import { AppContext } from '../../../application/store/context';
-import { SET_VERIFIED } from '../../../application/store/actions/action-types';
 import { setVerified } from '../../../application/store/actions/onboarding';
 
 const SeedConfirm: React.FC = () => {

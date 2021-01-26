@@ -1,5 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { createWallet, onboardingComplete, restoreWallet, verifyWallet } from '../../../application/store/actions';
+import {
+  createWallet,
+  onboardingComplete,
+  restoreWallet,
+  verifyWallet,
+} from '../../../application/store/actions';
 import { flush } from '../../../application/store/actions/onboarding';
 import { AppContext } from '../../../application/store/context';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
@@ -7,42 +12,41 @@ import Shell from '../../components/shell';
 
 // TODO: remove DONE button, for now it's ok to redirect to home if clicked.
 const EndOfFlow: React.FC = () => {
-  const [{wallets, onboarding}, dispatch] = useContext(AppContext);
+  const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (wallets.length <= 0) {
+    if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
-      const dispatchOnboardingCompleted = () => dispatch(onboardingComplete(
-        () => {
-          dispatch(flush());
-          setIsLoading(false);
-        },
-        onError,
-      ))
+      const dispatchOnboardingCompleted = () =>
+        dispatch(
+          onboardingComplete(() => {
+            dispatch(flush());
+            setIsLoading(false);
+          }, onError)
+        );
       let creator = createWallet;
       if (onboarding.restored) {
         creator = restoreWallet;
       }
-      dispatch(creator(
-        Password.create(onboarding.password),
-        Mnemonic.create(onboarding.mnemonic),
-        () => {
-          if (onboarding.verified) {
-            dispatch(verifyWallet(
-              dispatchOnboardingCompleted,
-              onError,
-            ))
-          } else {
-            dispatchOnboardingCompleted()
-          }
-        },
-        onError,
-      ))
+      dispatch(
+        creator(
+          Password.create(onboarding.password),
+          Mnemonic.create(onboarding.mnemonic),
+          () => {
+            if (onboarding.verified) {
+              dispatch(verifyWallet(dispatchOnboardingCompleted, onError));
+            } else {
+              dispatchOnboardingCompleted();
+            }
+          },
+          onError
+        )
+      );
     }
-  })
+  });
 
-  if (isLoading) return <div>Creating wallet...</div>
+  if (isLoading) return <div>Creating wallet...</div>;
 
   return (
     <Shell hasBackBtn={false}>

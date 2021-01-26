@@ -18,10 +18,10 @@ const SeedReveal: React.FC = () => {
     if (onboarding.mnemonic === '') {
       dispatch(setMnemonic(bip39.generateMnemonic()));
     }
-  })
+  });
 
-  const handleRemindMe = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE)
-  const handleNext = () => history.push(INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE)
+  const handleRemindMe = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+  const handleNext = () => history.push(INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE);
 
   return (
     <Shell className="space-y-10">
