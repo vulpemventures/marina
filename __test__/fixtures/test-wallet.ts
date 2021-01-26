@@ -40,7 +40,7 @@ export const testWalletProps: IWallet = {
 };
 export const testWallet: Wallet = Wallet.createWallet(testWalletProps);
 
-// With Confidential Addresses
+// With 1 Confidential Address
 export const testWalletWithConfidentialAddrDTO: WalletDTO = {
   confidentialAddresses: [confidentialAddresses[0].value],
   encryptedMnemonic: encryptedMnemonic,
@@ -59,6 +59,30 @@ export const testWalletWithConfidentialAddrProps: IWallet = {
 };
 export const testWalletWithConfidentialAddr: Wallet = Wallet.createWallet(
   testWalletWithConfidentialAddrProps
+);
+
+// With 2 Confidential Addresses
+export const testWalletWith2ConfidentialAddrDTO: WalletDTO = {
+  confidentialAddresses: [confidentialAddresses[0].value, confidentialAddresses[1].value],
+  encryptedMnemonic: encryptedMnemonic,
+  masterXPub: masterXPub,
+  masterBlindingKey: masterBlindingKey,
+  passwordHash: passwordHash,
+  walletId: v4(),
+};
+export const testWalletWith2ConfidentialAddrProps: IWallet = {
+  confidentialAddresses: [
+    Address.create(confidentialAddresses[0].value),
+    Address.create(confidentialAddresses[1].value),
+  ],
+  encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
+  errors: undefined,
+  masterXPub: MasterXPub.create(masterXPub),
+  masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
+  passwordHash: PasswordHash.create(passwordHash),
+};
+export const testWalletWith2ConfidentialAddr: Wallet = Wallet.createWallet(
+  testWalletWith2ConfidentialAddrProps
 );
 
 // Restored, without generated confidential addresses

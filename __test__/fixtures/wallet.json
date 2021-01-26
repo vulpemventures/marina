@@ -26,6 +26,11 @@
       "value": "el1qqwvvx8garcrdyj5qjsjpqcpreq67dlthdp979uduhln40qanvjaf06jm3caydwqeqjgm220d3ahlj7rvqt82wq3vs4tp6rhqt",
       "blindingKey": "0398c31d1d1e06d24a809424106023c835e6fd77684be2f1bcbfe75783b364ba97",
       "unconfidentialAddress": "ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl"
+    },
+    {
+      "value": "el1qqfm3m2g2glynhmjfcyupd7y980w9lrpwnvun40mq99e5ctrndaaz2axpa8lakz8ap9zrzuu30wcf7qknjgmk5pl0wl0e2dtfv",
+      "blindingKey": "02771da90a47c93bee49c13816f8853bdc5f8c2e9b393abf6029734c2c736f7a25",
+      "unconfidentialAddress": "ert1qwnq7nl7mpr7sj3p3wwghhvylqtfeydm2l75d0f"
     }
   ],
   "encryptedMnemonic": "9c9a4fb15f66d2411f0e44473afdf18c29648e99e4774f9357127253e30db3b504fca5aecdc1edd2533c2d05883c0a1ef7020166b159b2136b9731850a696a81773952e10c0d2b835b74b3a043f1e4c4c86530e7da5516ac6e0fab87be17609e",

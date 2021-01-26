@@ -8,6 +8,8 @@ import {
   testWalletDTO,
   testWalletProps,
   testWalletRestoredProps,
+  testWalletWith2ConfidentialAddrDTO,
+  testWalletWith2ConfidentialAddrProps,
   testWalletWithConfidentialAddrDTO,
   testWalletWithConfidentialAddrProps,
 } from '../../../../__test__/fixtures/test-wallet';
@@ -123,6 +125,40 @@ describe('Wallet Actions', () => {
 
     return expect(deriveNewAddressAction()).resolves.toStrictEqual({
       wallets: [testWalletWithConfidentialAddrProps],
+      app: testAppProps,
+    });
+  });
+
+  test('Should derive a new address when one already exists', () => {
+    // Create wallet with address
+    store.setState({
+      wallets: [testWalletWithConfidentialAddrProps],
+      app: testAppProps,
+    });
+
+    mockBrowser.storage.local.get
+      .expect('wallets')
+      .andResolve({ wallets: [testWalletWithConfidentialAddrDTO] });
+    mockBrowser.storage.local.set
+      .expect({ wallets: [testWalletWith2ConfidentialAddrDTO] })
+      .andResolve();
+
+    const deriveNewAddressAction = function () {
+      return new Promise((resolve, reject) => {
+        store.dispatch(
+          deriveNewAddress(
+            false,
+            (confidentialAddress) => {
+              resolve(store.getState());
+            },
+            (err: Error) => reject(err.message)
+          )
+        );
+      });
+    };
+
+    return expect(deriveNewAddressAction()).resolves.toStrictEqual({
+      wallets: [testWalletWith2ConfidentialAddrProps],
       app: testAppProps,
     });
   });
