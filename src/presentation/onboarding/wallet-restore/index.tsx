@@ -4,12 +4,11 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { AppContext } from '../../../application/store/context';
-import { onboardingComplete, restoreWallet } from '../../../application/store/actions';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { DispatchOrThunk, IError } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
+import { setRestored } from '../../../application/store/actions/onboarding';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -146,20 +145,8 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    const onError = (err: Error) => console.log(err);
-    const onSuccess = () =>
-      props.dispatch(
-        onboardingComplete(() => props.history.push(INITIALIZE_END_OF_FLOW_ROUTE), onError)
-      );
-
-    props.dispatch(
-      restoreWallet(
-        Password.create(values.password),
-        Mnemonic.create(values.mnemonic),
-        onSuccess,
-        onError
-      )
-    );
+    props.dispatch(setRestored(values.password, values.mnemonic));
+    props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   },
 
   displayName: 'WalletRestoreForm',
