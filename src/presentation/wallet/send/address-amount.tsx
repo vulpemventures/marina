@@ -4,7 +4,7 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { DEFAULT_ROUTE, SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { DispatchOrThunk } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';

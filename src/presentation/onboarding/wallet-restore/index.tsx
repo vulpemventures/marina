@@ -3,7 +3,7 @@ import { useHistory, RouteComponentProps } from 'react-router-dom';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../../application/background_script';
+import { AppContext } from '../../../application/store/context';
 import { onboardingComplete, restoreWallet } from '../../../application/store/actions';
 import Button from '../../components/button';
 import Shell from '../../components/shell';

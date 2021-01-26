@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { AppContext } from '../../application/background_script';
+import { AppContext } from '../../application/store/context';
 import { changeNetwork } from '../../application/store/actions';
 import { Network } from '../../domain/app/value-objects/network';
 import Select from '../components/select';

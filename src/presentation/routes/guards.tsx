@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Route, Redirect, RouteProps, RouteComponentProps } from 'react-router-dom';
-import { AppContext } from '../../application/background_script';
+import { AppContext } from '../../application/store/context';
 
 /**
  * A wrapper for <Route> that redirects to the login screen if you're not yet authenticated

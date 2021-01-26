@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../application/background_script';
+import { AppContext } from '../../application/store/context';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
 import Input from '../components/input';

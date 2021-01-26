@@ -5,7 +5,7 @@ import * as Yup from 'yup';
 import ShellPopUp from '../components/shell-popup';
 import Input from '../components/input';
 import { DispatchOrThunk } from '../../domain/common';
-import { AppContext } from '../../application/background_script';
+import { AppContext } from '../../application/store/context';
 import Button from '../components/button';
 
 interface SettingsExplorerFormValues {
