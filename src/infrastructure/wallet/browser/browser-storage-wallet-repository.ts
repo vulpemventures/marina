@@ -17,10 +17,7 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
     // Create
     if (wallet !== undefined) {
       const w = Wallet.createWallet(wallet);
-      const wallets: WalletDTO[] = [
-        ...store.wallets,
-        WalletMap.toDTO(w),
-      ];
+      const wallets: WalletDTO[] = [...store.wallets, WalletMap.toDTO(w)];
       await browser.storage.local.set({ wallets });
       return w;
     }
