@@ -4,7 +4,10 @@ import {
   Mnemonic,
   EsploraIdentityRestorer,
   MasterPublicKey,
+  UtxoInterface,
   fromXpub,
+  fetchAndUnblindUtxosGenerator,
+  AddressWithBlindingKey,
 } from 'ldk';
 import {
   INIT_WALLET,
@@ -12,6 +15,8 @@ import {
   WALLET_CREATE_SUCCESS,
   WALLET_DERIVE_ADDRESS_FAILURE,
   WALLET_DERIVE_ADDRESS_SUCCESS,
+  WALLET_FETCH_BALANCES_FAILURE,
+  WALLET_FETCH_BALANCES_SUCCESS,
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
 } from './action-types';
@@ -206,6 +211,38 @@ export function deriveNewAddress(
       onSuccess(address.value);
     } catch (error) {
       dispatch([WALLET_DERIVE_ADDRESS_FAILURE, { error }]);
+      onError(error);
+    }
+  };
+}
+
+export function fetchBalances(
+  addressesWithBlindingKey: AddressWithBlindingKey[],
+  onSuccess: () => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, getState, repos) => {
+    try {
+      //TODO: cache repo
+      const utxosGenerator = fetchAndUnblindUtxosGenerator(
+        addressesWithBlindingKey,
+        'http://localhost:3001'
+      );
+
+      const utxosArray: UtxoInterface[] = [];
+      let utxoV = await utxosGenerator.next();
+
+      while (!utxoV.done) {
+        utxosArray.push(utxoV.value);
+        utxoV = await utxosGenerator.next();
+      }
+
+      // Update React state
+      dispatch([WALLET_FETCH_BALANCES_SUCCESS, { utxos: utxosArray }]);
+      onSuccess();
+    } catch (error) {
+      console.log('error', error);
+      dispatch([WALLET_FETCH_BALANCES_FAILURE, { error }]);
       onError(error);
     }
   };

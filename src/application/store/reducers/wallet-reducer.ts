@@ -74,6 +74,22 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
+    case ACTION_TYPES.WALLET_FETCH_BALANCES_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: undefined,
+        utxos: payload.utxos,
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_FETCH_BALANCES_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { balances: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+
     default: {
       return state;
     }

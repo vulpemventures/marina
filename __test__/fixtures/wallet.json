@@ -23,13 +23,15 @@
   },
   "confidentialAddresses": [
     {
-      "value": "el1qqwvvx8garcrdyj5qjsjpqcpreq67dlthdp979uduhln40qanvjaf06jm3caydwqeqjgm220d3ahlj7rvqt82wq3vs4tp6rhqt",
+      "address": "el1qqwvvx8garcrdyj5qjsjpqcpreq67dlthdp979uduhln40qanvjaf06jm3caydwqeqjgm220d3ahlj7rvqt82wq3vs4tp6rhqt",
       "blindingKey": "0398c31d1d1e06d24a809424106023c835e6fd77684be2f1bcbfe75783b364ba97",
+      "blindingPrivateKey": "60d4a99f2413d67ad58a66a6e0d108957208f66484c1208a8aacebac4fc148bb",
       "unconfidentialAddress": "ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl"
     },
     {
-      "value": "el1qqfm3m2g2glynhmjfcyupd7y980w9lrpwnvun40mq99e5ctrndaaz2axpa8lakz8ap9zrzuu30wcf7qknjgmk5pl0wl0e2dtfv",
+      "address": "el1qqfm3m2g2glynhmjfcyupd7y980w9lrpwnvun40mq99e5ctrndaaz2axpa8lakz8ap9zrzuu30wcf7qknjgmk5pl0wl0e2dtfv",
       "blindingKey": "02771da90a47c93bee49c13816f8853bdc5f8c2e9b393abf6029734c2c736f7a25",
+      "blindingPrivateKey": "92ae063a8be13fce24b9a7bbdb102ad429a348f131646c691fc661afd4a5fb5c",
       "unconfidentialAddress": "ert1qwnq7nl7mpr7sj3p3wwghhvylqtfeydm2l75d0f"
     }
   ],
@@ -38,5 +40,33 @@
   "masterBlindingKey": "4e93841b59be3ba51252ea175de2e8ff7c05c0f863ad08696d3bcd056f5fe234",
   "mnemonic": "certain leopard cake fox symptom scatter survey kid welcome credit become lonely",
   "password": "testpassword",
-  "passwordHash": "9f735e0df9a1ddc702bf0a1a7b83033f9f7153a00c29de82cedadc9957289b05"
+  "passwordHash": "9f735e0df9a1ddc702bf0a1a7b83033f9f7153a00c29de82cedadc9957289b05",
+  "utxos": [
+    {
+      "txid": "640a497278ad8cf79e6bd9f77c0cdc09270ad407b09f37f7c682389379c72634",
+      "vout": 1,
+      "status": {
+        "confirmed": true,
+        "block_height": 102,
+        "block_hash": "878a8437cc9fa070e5e6e3369ce8b630f57590dc3cb73fc7f79e0c148361bac9",
+        "block_time": 1611674917
+      },
+      "valuecommitment": "08cae0917e7855659b91052d42c683a4212cff764f0acd95f0ea6f0662c5775c70",
+      "assetcommitment": "0a413b92ef8e4093151f8ada897b688637d182b48013441b39d5891aa24c4c8325",
+      "noncecommitment": "02fa38da30076b9b7fa9d07f6a648358b3639062edf72e58497a3d996f89ae106d"
+    },
+    {
+      "txid": "c57c97150977c85d6838f8de98eb2612c5c0645273a2cd7140d3d5a9e976c59b",
+      "vout": 0,
+      "status": {
+        "confirmed": true,
+        "block_height": 103,
+        "block_hash": "758ce118f8ba764d72b9124fb309efe96a360a302dca9ea0a3e00ec7e7f9d693",
+        "block_time": 1611675566
+      },
+      "valuecommitment": "08710879425a5ac89b1404985a243c17057e50fa06cce585c2927a1d51a5b5684c",
+      "assetcommitment": "0b162e4b7d4759e11de4c6fa014fbe6c9a8d5324af9672f850cbd609984db42a8f",
+      "noncecommitment": "02713559c5f04d1c83c710687b8395f7820a60999fc2486eff6f8bbc1149e87966"
+    }
+  ]
 }

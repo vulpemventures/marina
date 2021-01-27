@@ -1,3 +1,4 @@
+import { UtxoInterface } from 'ldk';
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
@@ -22,6 +23,7 @@ export interface IWallet {
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
   restored?: boolean;
+  utxos?: UtxoInterface[];
 }
 
 /**

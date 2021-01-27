@@ -8,14 +8,19 @@ import {
   testWalletDTO,
   testWalletProps,
   testWalletRestoredProps,
+  testWalletUtxosProps,
   testWalletWith2ConfidentialAddrDTO,
   testWalletWith2ConfidentialAddrProps,
   testWalletWithConfidentialAddrDTO,
   testWalletWithConfidentialAddrProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { createWallet, deriveNewAddress, initWallet, restoreWallet } from './wallet';
+import { createWallet, deriveNewAddress, fetchBalances, initWallet, restoreWallet } from './wallet';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { password, mnemonic } from '../../../../__test__/fixtures/wallet.json';
+import {
+  confidentialAddresses,
+  mnemonic,
+  password,
+} from '../../../../__test__/fixtures/wallet.json';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 
 // Mock for UniqueEntityID
@@ -159,6 +164,47 @@ describe('Wallet Actions', () => {
 
     return expect(deriveNewAddressAction()).resolves.toStrictEqual({
       wallets: [testWalletWith2ConfidentialAddrProps],
+      app: testAppProps,
+    });
+  });
+
+  test('Should fetch balances', () => {
+    // mockBrowser.storage.local.get
+    //   .expect('wallets')
+    //   .andResolve({ wallets: [testWalletWithConfidentialAddrDTO] });
+    // mockBrowser.storage.local.set
+    //   .expect({ wallets: [testWalletWith2ConfidentialAddrDTO] })
+    //   .andResolve();
+
+    // Create basic wallet
+    store.setState({
+      wallets: [testWalletProps],
+      app: testAppProps,
+    });
+
+    const fetchBalancesAction = function () {
+      return new Promise((resolve, reject) => {
+        store.dispatch(
+          fetchBalances(
+            [
+              {
+                address: confidentialAddresses[0].address,
+                blindingKey: confidentialAddresses[0].blindingPrivateKey,
+              },
+              {
+                address: confidentialAddresses[1].address,
+                blindingKey: confidentialAddresses[1].blindingPrivateKey,
+              },
+            ],
+            () => resolve(store.getState()),
+            (err: Error) => reject(err.message)
+          )
+        );
+      });
+    };
+
+    return expect(fetchBalancesAction()).resolves.toStrictEqual({
+      wallets: [testWalletUtxosProps],
       app: testAppProps,
     });
   });
