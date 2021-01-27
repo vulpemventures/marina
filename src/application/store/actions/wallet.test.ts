@@ -22,6 +22,8 @@ import {
   password,
 } from '../../../../__test__/fixtures/wallet.json';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
+import { fetchUtxos, mint, sleep } from '../../../../__test__/_regtest';
+import { senderAddress } from '../../../../__test__/fixtures/wallet-keys';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -168,7 +170,9 @@ describe('Wallet Actions', () => {
     });
   });
 
-  test('Should fetch balances', () => {
+  test('Should fetch balances', async () => {
+    jest.setTimeout(20000);
+
     // mockBrowser.storage.local.get
     //   .expect('wallets')
     //   .andResolve({ wallets: [testWalletWithConfidentialAddrDTO] });
@@ -181,6 +185,15 @@ describe('Wallet Actions', () => {
       wallets: [testWalletProps],
       app: testAppProps,
     });
+
+    console.log('senderAddress', senderAddress);
+
+    const minted = await mint(senderAddress, 100000);
+    const utxos = await fetchUtxos(senderAddress);
+
+    await sleep(3000);
+    console.log('minted', minted);
+    console.log('utxos', utxos);
 
     const fetchBalancesAction = function () {
       return new Promise((resolve, reject) => {

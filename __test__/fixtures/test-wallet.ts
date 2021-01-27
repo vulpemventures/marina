@@ -100,7 +100,7 @@ export const testWalletRestoredProps: IWallet = {
   //confidentialAddresses: [],
   confidentialAddresses: [
     Address.create(confidentialAddresses[0].address),
-    Address.create(confidentialAddresses[1].address),
+    //Address.create(confidentialAddresses[1].address),
   ],
   encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
   errors: undefined,
