@@ -10,7 +10,6 @@ import { AppContext } from '../../../application/store/context';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 
-// TODO: remove DONE button, for now it's ok to redirect to home if clicked.
 const EndOfFlow: React.FC = () => {
   const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
