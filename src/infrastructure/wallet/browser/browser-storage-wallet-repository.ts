@@ -17,12 +17,11 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
     // Create
     if (wallet !== undefined) {
       const w = Wallet.createWallet(wallet);
-      // If wallet doesn't already exist in storage, merge newly created wallet with existing wallets in storage
-      const newStorageWallets: WalletDTO[] = [
+      const wallets: WalletDTO[] = [
         ...store.wallets,
-        ...store.wallets.filter((storeWallet) => storeWallet.walletId !== w.walletId.id.toString()),
+        WalletMap.toDTO(w),
       ];
-      await browser.storage.local.set({ wallets: newStorageWallets });
+      await browser.storage.local.set({ wallets });
       return w;
     }
 
