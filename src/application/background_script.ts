@@ -1,8 +1,13 @@
-import { browser } from 'webextension-polyfill-ts';
+import { App } from './../domain/app/app';
+import { IDLE_MESSAGE_TYPE } from './utils/idle';
+import { browser, Idle } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
+
+// MUST be > 15 seconds
+const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -36,3 +41,24 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
     //   break;
   }
 });
+
+try {
+  // set the idle detection interval
+  browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
+  // add listener on Idle API, sending a message if the new state isn't 'active'
+  browser.idle.onStateChanged.addListener(function (newState: Idle.IdleState) {
+    if (newState !== 'active') {
+      browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
+
+      // this will handle the logout when the extension is closed
+      new BrowserStorageAppRepo()
+        .updateApp((app: App) => {
+          app.props.isAuthenticated = false;
+          return app;
+        })
+        .catch(console.error);
+    }
+  });
+} catch (error) {
+  console.error(error);
+}
