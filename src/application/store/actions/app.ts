@@ -16,6 +16,7 @@ import { App, IApp } from '../../../domain/app/app';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
 import { Network } from '../../../domain/app/value-objects';
+import { setIdleAction } from '../../utils/idle';
 
 export function initApp(app: IApp): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -93,6 +94,18 @@ export function logIn(
       );
 
       dispatch([AUTHENTICATION_SUCCESS]);
+
+      setIdleAction(() => {
+        repos.app.updateApp(
+          (app: App): App => {
+            app.props.isAuthenticated = false;
+            return app;
+          }
+        )
+          .then(() => dispatch([LOGOUT_SUCCESS]))
+          .catch(console.error);
+      })
+
       onSuccess();
     } catch (error) {
       dispatch([AUTHENTICATION_FAILURE, { error }]);
