@@ -96,15 +96,16 @@ export function logIn(
       dispatch([AUTHENTICATION_SUCCESS]);
 
       setIdleAction(() => {
-        repos.app.updateApp(
-          (app: App): App => {
-            app.props.isAuthenticated = false;
-            return app;
-          }
-        )
+        repos.app
+          .updateApp(
+            (app: App): App => {
+              app.props.isAuthenticated = false;
+              return app;
+            }
+          )
           .then(() => dispatch([LOGOUT_SUCCESS]))
           .catch(console.error);
-      })
+      });
 
       onSuccess();
     } catch (error) {

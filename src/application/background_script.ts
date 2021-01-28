@@ -7,7 +7,7 @@ import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/brows
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
 
 // MUST be > 15 seconds
-const IDLE_TIMEOUT_IN_SECONDS = 300 // 5 minutes
+const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -44,20 +44,21 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
 
 try {
   // set the idle detection interval
-  browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS)
+  browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
   browser.idle.onStateChanged.addListener(function (newState: Idle.IdleState) {
     if (newState !== 'active') {
-      browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE })
-        .catch(console.error)
+      browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
 
       // this will handle the logout when the extension is closed
-      new BrowserStorageAppRepo().updateApp((app: App) => {
-        app.props.isAuthenticated = false
-        return app
-      }).catch(console.error)
+      new BrowserStorageAppRepo()
+        .updateApp((app: App) => {
+          app.props.isAuthenticated = false;
+          return app;
+        })
+        .catch(console.error);
     }
-  })
+  });
 } catch (error) {
-  console.error(error)
+  console.error(error);
 }
