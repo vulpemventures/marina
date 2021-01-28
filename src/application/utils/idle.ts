@@ -7,10 +7,15 @@ export const IDLE_MESSAGE_TYPE = 'runtime_msg_idle';
  * @param onTimeout the function to launch when the user is inactive or locks the screen
  */
 export function setIdleAction(onTimeout: () => void) {
-  browser.runtime.onMessage.addListener(function ({ type }) {
-    if (type === IDLE_MESSAGE_TYPE) {
-      // this will handle logout until the extension is closed
-      onTimeout();
-    }
-  });
+  try {
+    browser.runtime.onMessage.addListener(function ({ type }) {
+      if (type === IDLE_MESSAGE_TYPE) {
+        // this will handle logout until the extension is closed
+        onTimeout();
+      }
+    });
+    // ignore error in case of environment does not handle runtime message handling
+  } catch (_) {
+    console.info('setIdleAction failed');
+  }
 }
