@@ -17,6 +17,7 @@ import { createWallet, deriveNewAddress, initWallet, restoreWallet } from './wal
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { password, mnemonic } from '../../../../__test__/fixtures/wallet.json';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -48,6 +49,7 @@ describe('Wallet Actions', () => {
     return expect(initWalletAction()).resolves.toStrictEqual({
       wallets: [testWalletProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -71,6 +73,7 @@ describe('Wallet Actions', () => {
     return expect(createWalletAction()).resolves.toStrictEqual({
       wallets: [testWalletProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -94,6 +97,7 @@ describe('Wallet Actions', () => {
     return expect(restoreWalletAction()).resolves.toStrictEqual({
       wallets: [testWalletRestoredProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -102,6 +106,7 @@ describe('Wallet Actions', () => {
     store.setState({
       wallets: [testWalletProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
 
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
@@ -126,6 +131,7 @@ describe('Wallet Actions', () => {
     return expect(deriveNewAddressAction()).resolves.toStrictEqual({
       wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 
@@ -134,6 +140,7 @@ describe('Wallet Actions', () => {
     store.setState({
       wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
 
     mockBrowser.storage.local.get
@@ -160,6 +167,7 @@ describe('Wallet Actions', () => {
     return expect(deriveNewAddressAction()).resolves.toStrictEqual({
       wallets: [testWalletWith2ConfidentialAddrProps],
       app: testAppProps,
+      onboarding: onboardingInitState,
     });
   });
 });

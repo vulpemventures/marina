@@ -8,6 +8,7 @@ import Shell from '../../components/shell';
 import { AppContext } from '../../../application/store/context';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import { DispatchOrThunk } from '../../../domain/common';
+import { setPassword } from '../../../application/store/actions/onboarding';
 
 interface WalletCreateFormValues {
   password: string;
@@ -123,10 +124,8 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
   }),
 
   handleSubmit: (values, { props }) => {
-    props.history.push({
-      pathname: INITIALIZE_SEED_PHRASE_ROUTE,
-      state: { password: values.password },
-    });
+    props.dispatch(setPassword(values.password));
+    props.history.push(INITIALIZE_SEED_PHRASE_ROUTE);
   },
 
   displayName: 'WalletCreateForm',

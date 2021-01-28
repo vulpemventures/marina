@@ -2,10 +2,12 @@ import { IWallet } from '../wallet/wallet';
 import { IApp } from '../app/app';
 import { IAppRepository } from '../app/i-app-repository';
 import { IWalletRepository } from '../wallet/i-wallet-repository';
+import { OnboardingState } from '../../application/store/reducers/onboarding-reducer';
 
 export interface IAppState {
   wallets: IWallet[];
   app: IApp;
+  onboarding: OnboardingState;
 }
 
 export interface IError {
