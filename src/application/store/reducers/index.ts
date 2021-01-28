@@ -4,6 +4,7 @@ import { appReducer as reducer } from './app-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { IApp } from '../../../domain/app/app';
 import { Network } from '../../../domain/app/value-objects/network';
+import { onboardingReducer, onboardingInitState } from './onboarding-reducer';
 
 export const walletInitState: IWallet[] = [];
 
@@ -17,6 +18,7 @@ export const appInitState: IApp = {
 const [appReducer, appInitialState] = combineReducers({
   wallets: [walletReducer, walletInitState],
   app: [reducer, appInitState],
+  onboarding: [onboardingReducer, onboardingInitState],
 });
 
 export { appReducer, appInitialState };
