@@ -7,5 +7,5 @@ export interface WalletDTO {
   encryptedMnemonic: string;
   passwordHash: string;
   confidentialAddresses: string[];
-  utxos?: UtxoInterface[];
+  utxos: UtxoInterface[];
 }

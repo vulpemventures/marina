@@ -1,30 +1,23 @@
+import { createWallet, deriveNewAddress, initWallet, restoreWallet } from './wallet';
+import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { appInitialState, appReducer } from '../reducers';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import {
   testWalletDTO,
   testWalletProps,
   testWalletRestoredProps,
-  testWalletUtxosProps,
   testWalletWith2ConfidentialAddrDTO,
   testWalletWith2ConfidentialAddrProps,
   testWalletWithConfidentialAddrDTO,
   testWalletWithConfidentialAddrProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { createWallet, deriveNewAddress, fetchBalances, initWallet, restoreWallet } from './wallet';
+import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import {
-  confidentialAddresses,
-  mnemonic,
-  password,
-} from '../../../../__test__/fixtures/wallet.json';
-import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { fetchUtxos, mint, sleep } from '../../../../__test__/_regtest';
-import { senderAddress } from '../../../../__test__/fixtures/wallet-keys';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -61,7 +54,7 @@ describe('Wallet Actions', () => {
   });
 
   test('Should create wallet', () => {
-    mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
+    mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
 
     const createWalletAction = function () {
@@ -175,58 +168,6 @@ describe('Wallet Actions', () => {
       wallets: [testWalletWith2ConfidentialAddrProps],
       app: testAppProps,
       onboarding: onboardingInitState,
-    });
-  });
-
-  test('Should fetch balances', async () => {
-    jest.setTimeout(20000);
-
-    // mockBrowser.storage.local.get
-    //   .expect('wallets')
-    //   .andResolve({ wallets: [testWalletWithConfidentialAddrDTO] });
-    // mockBrowser.storage.local.set
-    //   .expect({ wallets: [testWalletWith2ConfidentialAddrDTO] })
-    //   .andResolve();
-
-    // Create basic wallet
-    store.setState({
-      wallets: [testWalletProps],
-      app: testAppProps,
-    });
-
-    console.log('senderAddress', senderAddress);
-
-    const minted = await mint(senderAddress, 100000);
-    const utxos = await fetchUtxos(senderAddress);
-
-    await sleep(3000);
-    console.log('minted', minted);
-    console.log('utxos', utxos);
-
-    const fetchBalancesAction = function () {
-      return new Promise((resolve, reject) => {
-        store.dispatch(
-          fetchBalances(
-            [
-              {
-                address: confidentialAddresses[0].address,
-                blindingKey: confidentialAddresses[0].blindingPrivateKey,
-              },
-              {
-                address: confidentialAddresses[1].address,
-                blindingKey: confidentialAddresses[1].blindingPrivateKey,
-              },
-            ],
-            () => resolve(store.getState()),
-            (err: Error) => reject(err.message)
-          )
-        );
-      });
-    };
-
-    return expect(fetchBalancesAction()).resolves.toStrictEqual({
-      wallets: [testWalletUtxosProps],
-      app: testAppProps,
     });
   });
 });

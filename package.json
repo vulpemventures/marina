@@ -23,7 +23,7 @@
     "start:brave-linux": "(sleep 10 && npm run run:brave-linux) & npm run watch",
     "start:chrome-linux": "(sleep 10 && npm run run:chrome-linux) & npm run watch",
     "test": "jest --no-cache --verbose",
-    "test:report": "jest wallet --no-cache --verbose --reporters default jest-stare",
+    "test:report": "jest --no-cache --verbose --reporters default jest-stare",
     "test:trace": "node --trace-warnings node_modules/.bin/jest --no-cache --verbose",
     "test:watch": "jest --no-cache --verbose --watch",
     "watch": "npm run clean && npm run copy-assets && run-p watch:**",
@@ -35,7 +35,7 @@
   "dependencies": {
     "@headlessui/react": "^0.2.0",
     "formik": "^2.2.6",
-    "ldk": "^0.1.3",
+    "ldk": "^0.1.4",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.1",

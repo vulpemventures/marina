@@ -23,7 +23,7 @@ export interface IWallet {
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
   restored?: boolean;
-  utxos?: UtxoInterface[];
+  utxos: UtxoInterface[];
 }
 
 /**
@@ -57,6 +57,10 @@ export class Wallet extends Entity<IWallet> {
     return this.props.confidentialAddresses;
   }
 
+  get utxos(): UtxoInterface[] {
+    return this.props.utxos;
+  }
+
   /**
    * @param props - Wallet props
    * @param id - When the id is known we can pass it in, or we create one
@@ -77,11 +81,12 @@ export class Wallet extends Entity<IWallet> {
    */
   public static createWallet(props: IWallet, id?: UniqueEntityID): Wallet {
     const walletProps = {
-      masterXPub: props.masterXPub,
-      masterBlindingKey: props.masterBlindingKey,
-      encryptedMnemonic: props.encryptedMnemonic,
-      passwordHash: props.passwordHash,
       confidentialAddresses: props.confidentialAddresses,
+      encryptedMnemonic: props.encryptedMnemonic,
+      masterBlindingKey: props.masterBlindingKey,
+      masterXPub: props.masterXPub,
+      passwordHash: props.passwordHash,
+      utxos: props.utxos,
     };
     return new Wallet(walletProps, id);
   }

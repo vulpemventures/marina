@@ -4,6 +4,7 @@ import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
 import { Address } from '../../../domain/wallet/value-objects';
+import { UtxoInterface } from 'ldk';
 
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
@@ -49,4 +50,26 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
       await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
     }
   }
+
+  async pushUtxo(utxo: UtxoInterface): Promise<void> {
+    let newWallet: Wallet, newUtxos: UtxoInterface[];
+    const currentWallet = await this.getOrCreateWallet();
+    if (currentWallet.utxos) {
+      newUtxos = [...currentWallet.utxos, utxo];
+      newWallet = { ...currentWallet, utxos: newUtxos } as Wallet;
+      await browser.storage.local.set({
+        wallets: [WalletMap.toDTO(newWallet)],
+      });
+    }
+  }
+
+  // async deleteUtxo(utxo: UtxoInterface): Promise<void> {
+  //   //JSON.stringify([...myMap])
+  //   await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
+  // }
+
+  // async getAllUtxos(utxo: UtxoInterface): Promise<void> {
+  //   //JSON.stringify([...myMap])
+  //   await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
+  // }
 }

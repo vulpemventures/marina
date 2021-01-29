@@ -1,13 +1,13 @@
 import {
+  AddressInterface,
+  EsploraIdentityRestorer,
   IdentityOpts,
   IdentityType,
   Mnemonic,
-  EsploraIdentityRestorer,
   MasterPublicKey,
-  UtxoInterface,
   fromXpub,
-  fetchAndUnblindUtxosGenerator,
-  AddressWithBlindingKey,
+  fetchAndUnblindUtxos,
+  UtxoInterface,
 } from 'ldk';
 import {
   INIT_WALLET,
@@ -15,10 +15,10 @@ import {
   WALLET_CREATE_SUCCESS,
   WALLET_DERIVE_ADDRESS_FAILURE,
   WALLET_DERIVE_ADDRESS_SUCCESS,
-  WALLET_FETCH_BALANCES_FAILURE,
-  WALLET_FETCH_BALANCES_SUCCESS,
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
+  WALLET_UPDATE_UTXOS_FAILURE,
+  WALLET_UPDATE_UTXOS_SUCCESS,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
@@ -68,6 +68,7 @@ export function createWallet(
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
       const confidentialAddresses: Address[] = [];
+      const utxos: UtxoInterface[] = [];
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
@@ -75,17 +76,19 @@ export function createWallet(
         encryptedMnemonic,
         passwordHash,
         confidentialAddresses,
+        utxos,
       });
 
       // Update React state
       dispatch([
         WALLET_CREATE_SUCCESS,
         {
+          confidentialAddresses,
+          encryptedMnemonic,
           masterXPub,
           masterBlindingKey,
-          encryptedMnemonic,
           passwordHash,
-          confidentialAddresses,
+          utxos,
         },
       ]);
 
@@ -139,12 +142,15 @@ export function restoreWallet(
         .getAddresses()
         .map(({ confidentialAddress }) => Address.create(confidentialAddress));
 
+      const utxos: UtxoInterface[] = [];
+
       await repos.wallet.getOrCreateWallet({
         masterXPub,
         masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
         confidentialAddresses,
+        utxos,
       });
 
       dispatch([
@@ -155,6 +161,7 @@ export function restoreWallet(
           encryptedMnemonic,
           passwordHash,
           confidentialAddresses,
+          utxos,
         },
       ]);
       onSuccess();
@@ -217,32 +224,38 @@ export function deriveNewAddress(
 }
 
 export function fetchBalances(
-  addressesWithBlindingKey: AddressWithBlindingKey[],
+  onSuccess: (balances: [string, number][]) => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return (dispatch, getState) => {
+    const { wallets } = getState();
+    const balances = wallets[0].utxos.reduce((acc, curr) => {
+      if (!curr.asset || !curr.value) {
+        onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
+        return acc;
+      }
+      acc = [...acc, [curr.asset, curr.value]];
+      return acc;
+    }, [] as [string, number][]);
+    onSuccess(balances);
+  };
+}
+
+export function updateUtxos(
+  addressesWithBlindingKey: AddressInterface[],
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
+      const utxos = await fetchAndUnblindUtxos(addressesWithBlindingKey, 'http://localhost:3001');
       //TODO: cache repo
-      const utxosGenerator = fetchAndUnblindUtxosGenerator(
-        addressesWithBlindingKey,
-        'http://localhost:3001'
-      );
-
-      const utxosArray: UtxoInterface[] = [];
-      let utxoV = await utxosGenerator.next();
-
-      while (!utxoV.done) {
-        utxosArray.push(utxoV.value);
-        utxoV = await utxosGenerator.next();
-      }
 
       // Update React state
-      dispatch([WALLET_FETCH_BALANCES_SUCCESS, { utxos: utxosArray }]);
+      dispatch([WALLET_UPDATE_UTXOS_SUCCESS, { utxos: utxos }]);
       onSuccess();
     } catch (error) {
-      console.log('error', error);
-      dispatch([WALLET_FETCH_BALANCES_FAILURE, { error }]);
+      dispatch([WALLET_UPDATE_UTXOS_FAILURE, { error }]);
       onError(error);
     }
   };

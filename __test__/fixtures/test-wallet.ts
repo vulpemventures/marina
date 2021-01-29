@@ -14,7 +14,6 @@ import {
   masterBlindingKey,
   passwordHash,
 } from './wallet.json';
-import { utxosUnblinded } from './utxos-unblinded.json';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -29,6 +28,7 @@ export const testWalletDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxos: [],
   walletId: v4(),
 };
 export const testWalletProps: IWallet = {
@@ -38,6 +38,7 @@ export const testWalletProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  utxos: [],
 };
 export const testWallet: Wallet = Wallet.createWallet(testWalletProps);
 
@@ -48,6 +49,7 @@ export const testWalletWithConfidentialAddrDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxos: [],
   walletId: v4(),
 };
 export const testWalletWithConfidentialAddrProps: IWallet = {
@@ -57,6 +59,7 @@ export const testWalletWithConfidentialAddrProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  utxos: [],
 };
 export const testWalletWithConfidentialAddr: Wallet = Wallet.createWallet(
   testWalletWithConfidentialAddrProps
@@ -69,6 +72,7 @@ export const testWalletWith2ConfidentialAddrDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxos: [],
   walletId: v4(),
 };
 export const testWalletWith2ConfidentialAddrProps: IWallet = {
@@ -81,6 +85,7 @@ export const testWalletWith2ConfidentialAddrProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  utxos: [],
 };
 export const testWalletWith2ConfidentialAddr: Wallet = Wallet.createWallet(
   testWalletWith2ConfidentialAddrProps
@@ -93,59 +98,17 @@ export const testWalletRestoredDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxos: [],
   walletId: v4(),
 };
 export const testWalletRestoredProps: IWallet = {
-  // TODO: How to make tests resilient?
-  //confidentialAddresses: [],
-  confidentialAddresses: [
-    Address.create(confidentialAddresses[0].address),
-    //Address.create(confidentialAddresses[1].address),
-  ],
+  confidentialAddresses: [],
   encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
   errors: undefined,
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
   restored: true,
+  utxos: [],
 };
 export const testWalletRestored: Wallet = Wallet.createWallet(testWalletRestoredProps);
-
-// UTXOs
-type PrevoutProps = 'asset' | 'value' | 'nonce' | 'script' | 'rangeProof' | 'surjectionProof';
-const convertPrevoutPropsToBuffer = (
-  prevout: Record<PrevoutProps, { type: string; data: number[] }>
-): Record<PrevoutProps, Buffer> => {
-  return Object.entries(prevout).reduce(
-    (acc, curr) => ({ ...acc, [curr[0]]: Buffer.from(curr[1].data) }),
-    {} as Record<PrevoutProps, Buffer>
-  );
-};
-const utxosUnblinded0 = {
-  ...utxosUnblinded[0],
-  prevout: { ...convertPrevoutPropsToBuffer(utxosUnblinded[0].prevout) },
-};
-const utxosUnblinded1 = {
-  ...utxosUnblinded[1],
-  prevout: { ...convertPrevoutPropsToBuffer(utxosUnblinded[1].prevout) },
-};
-
-export const testWalletUtxosDTO: WalletDTO = {
-  confidentialAddresses: [],
-  encryptedMnemonic: encryptedMnemonic,
-  masterXPub: masterXPub,
-  masterBlindingKey: masterBlindingKey,
-  passwordHash: passwordHash,
-  utxos: [utxosUnblinded0, utxosUnblinded1],
-  walletId: v4(),
-};
-export const testWalletUtxosProps: IWallet = {
-  confidentialAddresses: [],
-  encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
-  errors: undefined,
-  masterXPub: MasterXPub.create(masterXPub),
-  masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
-  passwordHash: PasswordHash.create(passwordHash),
-  utxos: [utxosUnblinded0, utxosUnblinded1],
-};
-export const testWalletUtxos: Wallet = Wallet.createWallet(testWalletUtxosProps);

@@ -12,23 +12,25 @@ import {
 export class WalletMap {
   public static toDTO(wallet: Wallet): WalletDTO {
     return {
-      walletId: wallet.walletId.id.toString(),
-      masterXPub: wallet.masterXPub.value,
-      masterBlindingKey: wallet.masterBlindingKey.value,
-      encryptedMnemonic: wallet.encryptedMnemonic.value,
-      passwordHash: wallet.passwordHash.value,
       confidentialAddresses: wallet.confidentialAddresses.map((d) => d.value),
+      encryptedMnemonic: wallet.encryptedMnemonic.value,
+      masterBlindingKey: wallet.masterBlindingKey.value,
+      masterXPub: wallet.masterXPub.value,
+      passwordHash: wallet.passwordHash.value,
+      utxos: wallet.utxos,
+      walletId: wallet.walletId.id.toString(),
     };
   }
 
   public static toDomain(raw: WalletDTO): Wallet {
     const wallet = Wallet.createWallet(
       {
-        masterXPub: MasterXPub.create(raw.masterXPub),
-        masterBlindingKey: MasterBlindingKey.create(raw.masterBlindingKey),
-        encryptedMnemonic: EncryptedMnemonic.create(raw.encryptedMnemonic),
-        passwordHash: PasswordHash.create(raw.passwordHash),
         confidentialAddresses: raw.confidentialAddresses.map((addr) => Address.create(addr)),
+        encryptedMnemonic: EncryptedMnemonic.create(raw.encryptedMnemonic),
+        masterBlindingKey: MasterBlindingKey.create(raw.masterBlindingKey),
+        masterXPub: MasterXPub.create(raw.masterXPub),
+        passwordHash: PasswordHash.create(raw.passwordHash),
+        utxos: raw.utxos,
       },
       new UniqueEntityID(raw.walletId)
     );
