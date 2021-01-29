@@ -1,4 +1,4 @@
-import { UtxoInterface } from 'ldk';
+import { Outpoint, UtxoInterface } from 'ldk';
 
 export interface WalletDTO {
   walletId: string;
@@ -7,5 +7,5 @@ export interface WalletDTO {
   encryptedMnemonic: string;
   passwordHash: string;
   confidentialAddresses: string[];
-  utxos: UtxoInterface[];
+  utxoMap: Map<Outpoint, UtxoInterface>;
 }

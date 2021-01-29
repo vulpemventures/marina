@@ -1,4 +1,4 @@
-import { UtxoInterface } from 'ldk';
+import { Outpoint, UtxoInterface } from 'ldk';
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
@@ -23,7 +23,7 @@ export interface IWallet {
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
   restored?: boolean;
-  utxos: UtxoInterface[];
+  utxoMap: Map<Outpoint, UtxoInterface>;
 }
 
 /**
@@ -57,8 +57,8 @@ export class Wallet extends Entity<IWallet> {
     return this.props.confidentialAddresses;
   }
 
-  get utxos(): UtxoInterface[] {
-    return this.props.utxos;
+  get utxoMap(): Map<Outpoint, UtxoInterface> {
+    return this.props.utxoMap;
   }
 
   /**
@@ -86,7 +86,7 @@ export class Wallet extends Entity<IWallet> {
       masterBlindingKey: props.masterBlindingKey,
       masterXPub: props.masterXPub,
       passwordHash: props.passwordHash,
-      utxos: props.utxos,
+      utxoMap: props.utxoMap,
     };
     return new Wallet(walletProps, id);
   }

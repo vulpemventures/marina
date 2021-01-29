@@ -13,7 +13,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        utxos: payload.utxos,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -28,7 +28,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        utxos: payload.utxos,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -51,7 +51,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        utxos: payload.utxos,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -85,7 +85,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,
-        utxos: payload.utxos,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }

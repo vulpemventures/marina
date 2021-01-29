@@ -17,7 +17,7 @@ export class WalletMap {
       masterBlindingKey: wallet.masterBlindingKey.value,
       masterXPub: wallet.masterXPub.value,
       passwordHash: wallet.passwordHash.value,
-      utxos: wallet.utxos,
+      utxoMap: wallet.utxoMap,
       walletId: wallet.walletId.id.toString(),
     };
   }
@@ -30,7 +30,7 @@ export class WalletMap {
         masterBlindingKey: MasterBlindingKey.create(raw.masterBlindingKey),
         masterXPub: MasterXPub.create(raw.masterXPub),
         passwordHash: PasswordHash.create(raw.passwordHash),
-        utxos: raw.utxos,
+        utxoMap: raw.utxoMap,
       },
       new UniqueEntityID(raw.walletId)
     );

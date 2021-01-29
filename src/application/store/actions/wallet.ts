@@ -8,6 +8,8 @@ import {
   fromXpub,
   fetchAndUnblindUtxos,
   UtxoInterface,
+  Outpoint,
+  toOutpoint,
 } from 'ldk';
 import {
   INIT_WALLET,
@@ -68,7 +70,7 @@ export function createWallet(
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
       const confidentialAddresses: Address[] = [];
-      const utxos: UtxoInterface[] = [];
+      const utxoMap = new Map<Outpoint, UtxoInterface>();
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
@@ -76,7 +78,7 @@ export function createWallet(
         encryptedMnemonic,
         passwordHash,
         confidentialAddresses,
-        utxos,
+        utxoMap,
       });
 
       // Update React state
@@ -88,7 +90,7 @@ export function createWallet(
           masterXPub,
           masterBlindingKey,
           passwordHash,
-          utxos,
+          utxoMap,
         },
       ]);
 
@@ -142,7 +144,7 @@ export function restoreWallet(
         .getAddresses()
         .map(({ confidentialAddress }) => Address.create(confidentialAddress));
 
-      const utxos: UtxoInterface[] = [];
+      const utxoMap = new Map<Outpoint, UtxoInterface>();
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
@@ -150,7 +152,7 @@ export function restoreWallet(
         encryptedMnemonic,
         passwordHash,
         confidentialAddresses,
-        utxos,
+        utxoMap,
       });
 
       dispatch([
@@ -161,7 +163,7 @@ export function restoreWallet(
           encryptedMnemonic,
           passwordHash,
           confidentialAddresses,
-          utxos,
+          utxoMap,
         },
       ]);
       onSuccess();
@@ -229,7 +231,7 @@ export function fetchBalances(
 ): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
     const { wallets } = getState();
-    const balances = wallets[0].utxos.reduce((acc, curr) => {
+    const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
         onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
         return acc;
@@ -249,10 +251,15 @@ export function updateUtxos(
   return async (dispatch, getState, repos) => {
     try {
       const utxos = await fetchAndUnblindUtxos(addressesWithBlindingKey, 'http://localhost:3001');
-      //TODO: cache repo
+      await repos.wallet.updateUtxos(utxos);
 
       // Update React state
-      dispatch([WALLET_UPDATE_UTXOS_SUCCESS, { utxos: utxos }]);
+      const { wallets } = getState();
+      const cloneUtxoMap = new Map(wallets[0].utxoMap);
+      utxos.forEach((newUtxo) => {
+        cloneUtxoMap.set(toOutpoint(newUtxo), newUtxo);
+      });
+      dispatch([WALLET_UPDATE_UTXOS_SUCCESS, { utxoMap: cloneUtxoMap }]);
       onSuccess();
     } catch (error) {
       dispatch([WALLET_UPDATE_UTXOS_FAILURE, { error }]);
