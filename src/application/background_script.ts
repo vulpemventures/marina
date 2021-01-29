@@ -8,6 +8,7 @@ import { initPersistentStore } from '../infrastructure/init-persistent-store';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
+const POPUP = 'popup.html';
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -24,10 +25,9 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
         app: new BrowserStorageAppRepo(),
         wallet: new BrowserStorageWalletRepo(),
       };
-      const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
 
       initPersistentStore(repos)
-        .then(() => browser.tabs.create({ url }))
+        .then(() => openInitializeWelcomeRoute())
         .catch((err) => console.log(err));
 
       break;
@@ -40,6 +40,32 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
     //   }
     //   break;
   }
+});
+
+browser.browserAction.onClicked.addListener(() => {
+  (async () => {
+    // check if the popup is set
+    const isSet = (await browser.browserAction.getPopup({})) === POPUP;
+    if (isSet) {
+      await browser.browserAction.openPopup();
+      return;
+    }
+
+    // check if onboarding complete
+    const app = await new BrowserStorageAppRepo().getApp();
+    if (!app.isOnboardingCompleted) {
+      openInitializeWelcomeRoute();
+      return;
+    }
+
+    try {
+      // set the popup and open (this should run only 1 time)
+      await browser.browserAction.setPopup({ popup: POPUP });
+      await browser.browserAction.openPopup();
+    } catch (error) {
+      console.error(error);
+    }
+  })().catch(console.error);
 });
 
 try {
@@ -61,4 +87,9 @@ try {
   });
 } catch (error) {
   console.error(error);
+}
+
+function openInitializeWelcomeRoute() {
+  const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
+  browser.tabs.create({ url }).catch(console.error);
 }
