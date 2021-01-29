@@ -31,10 +31,17 @@ const SeedConfirm: React.FC = () => {
 
   const [wordsList, setWordsList] = useState(mnemonicRandomized)
   const [selected, setSelected] = useState([] as string[])
+  const [error, setError] = useState("")
 
   const handleConfirm = () => {
-    dispatch(setVerified());
-    history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+    if (selected.join(' ') === mnemonic.join(' ')) {
+      dispatch(setVerified());
+      history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+    }
+
+    setError("Invalid mnemonic! please retry.")
+    setSelected([])
+    setWordsList(mnemonicRandomized)
   };
 
   // select a word among wordsList
@@ -74,10 +81,13 @@ const SeedConfirm: React.FC = () => {
         ))}
       </div>
 
-      <div className="space-x-20">
+      <div className="grid grid-cols-1 grid-rows-2 gap-2">
         <Button className="w-52" disabled={wordsList.length > 0} onClick={handleConfirm}>
           {'Confirm'}
         </Button>
+        <p>
+          {error}
+        </p>
       </div>
     </Shell>
   );
