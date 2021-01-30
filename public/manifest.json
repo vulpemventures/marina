@@ -16,6 +16,7 @@
   "web_accessible_resources": [],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "browser_action": {
-    "default_icon": "assets/images/marina-logo-green-128.png"
+    "default_icon": "assets/images/marina-logo-green-128.png",
+    "default_popup": "popup.html"
   }
 }
