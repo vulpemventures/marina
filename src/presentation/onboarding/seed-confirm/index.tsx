@@ -59,21 +59,21 @@ const SeedConfirm: React.FC = () => {
   }
 
   return (
-    <Shell className="space-y-10">
+    <Shell className="space-y-5">
       <h1 className="text-3xl font-medium">{'Confirm your secret mnemonic phrase'}</h1>
-      <p className="">
+      <p className="text-base">
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}
       </p>
 
-      <div className="border-primary grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md">
+      <div className="border-primary grid w-4/5 h-44 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md">
         {selected.map((word: string, i: number) => (
-          <Button className="text-grayDark transition duration-500 ease-in-out transform hover:-translate-y-1" key={i} isOutline={true} roundedMd={true} onClick={() => deleteSelectedWord(i)}>
+          <Button className="text-grayDark transition duration-300 ease-in-out transform hover:-translate-y-1" key={i} isOutline={true} roundedMd={true} onClick={() => deleteSelectedWord(i)}>
             {word}
           </Button>
         ))}
       </div>
 
-      <div className="grid w-4/5 grid-cols-4 grid-rows-3 gap-2">
+      <div className="grid w-4/5 h-44 grid-cols-4 grid-rows-3 gap-2">
         {wordsList.map((word, i) => (
             <Button className="text-grayDark transition duration-500 ease-in-out transform hover:-translate-y-1" key={i} isOutline={true} roundedMd={true} onClick={() => selectWord(i)}>
               {word}
