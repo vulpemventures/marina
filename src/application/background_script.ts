@@ -42,12 +42,12 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   }
 });
 
-let popupIsSet = false
+let popupIsSet = false;
 
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
     // check if the popup is set
-    if (popupIsSet) return
+    if (popupIsSet) return;
 
     // check if onboarding complete
     const app = await new BrowserStorageAppRepo().getApp();
@@ -60,7 +60,7 @@ browser.browserAction.onClicked.addListener(() => {
       // set the popup and open (this should run only 1 time)
       await browser.browserAction.setPopup({ popup: POPUP });
       await browser.browserAction.openPopup();
-      popupIsSet = true
+      popupIsSet = true;
     } catch (error) {
       console.error(error);
     }

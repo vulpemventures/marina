@@ -14,12 +14,12 @@ function shuffleMnemonic(words: string[]): string[] {
     (_, i, arr, j = getRandomValue(i, arr.length)) => ([arr[i], arr[j]] = [arr[j], arr[i]])
   );
 
-  return words
+  return words;
 }
 
 function drop(words: string[], index: number): string[] {
-  words.splice(index, 1)
-  return words
+  words.splice(index, 1);
+  return words;
 }
 
 const SeedConfirm: React.FC = () => {
@@ -29,9 +29,9 @@ const SeedConfirm: React.FC = () => {
   const mnemonic: string[] = onboarding.mnemonic.trim().split(' ');
   const mnemonicRandomized = shuffleMnemonic([...mnemonic]);
 
-  const [wordsList, setWordsList] = useState(mnemonicRandomized)
-  const [selected, setSelected] = useState([] as string[])
-  const [error, setError] = useState("")
+  const [wordsList, setWordsList] = useState(mnemonicRandomized);
+  const [selected, setSelected] = useState([] as string[]);
+  const [error, setError] = useState('');
 
   const handleConfirm = () => {
     if (selected.join(' ') === mnemonic.join(' ')) {
@@ -39,24 +39,24 @@ const SeedConfirm: React.FC = () => {
       history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     }
 
-    setError("Invalid mnemonic! please retry.")
-    setSelected([])
-    setWordsList(mnemonicRandomized)
+    setError('Invalid mnemonic! please retry.');
+    setSelected([]);
+    setWordsList(mnemonicRandomized);
   };
 
   // select a word among wordsList
   const selectWord = (index: number) => {
-    const word = wordsList[index]
-    setSelected(selected => [...selected, word])
-    setWordsList(drop(wordsList, index))
-  }
+    const word = wordsList[index];
+    setSelected((selected) => [...selected, word]);
+    setWordsList(drop(wordsList, index));
+  };
 
   // delete words from selected array
   const deleteSelectedWord = (index: number) => {
-    const word = selected[index]
-    setWordsList(wordsList => [...wordsList, word])
-    setSelected(drop(selected, index))
-  }
+    const word = selected[index];
+    setWordsList((wordsList) => [...wordsList, word]);
+    setSelected(drop(selected, index));
+  };
 
   return (
     <Shell className="space-y-5">
@@ -65,19 +65,31 @@ const SeedConfirm: React.FC = () => {
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}
       </p>
 
-      <div className="border-primary grid w-4/5 h-44 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md">
+      <div className="border-primary h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md">
         {selected.map((word: string, i: number) => (
-          <Button className="text-grayDark transition duration-300 ease-in-out transform hover:-translate-y-1" key={i} isOutline={true} roundedMd={true} onClick={() => deleteSelectedWord(i)}>
+          <Button
+            className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform"
+            key={i}
+            isOutline={true}
+            roundedMd={true}
+            onClick={() => deleteSelectedWord(i)}
+          >
             {word}
           </Button>
         ))}
       </div>
 
-      <div className="grid w-4/5 h-44 grid-cols-4 grid-rows-3 gap-2">
+      <div className="h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2">
         {wordsList.map((word, i) => (
-            <Button className="text-grayDark transition duration-500 ease-in-out transform hover:-translate-y-1" key={i} isOutline={true} roundedMd={true} onClick={() => selectWord(i)}>
-              {word}
-            </Button>
+          <Button
+            className="text-grayDark hover:-translate-y-1 transition duration-500 ease-in-out transform"
+            key={i}
+            isOutline={true}
+            roundedMd={true}
+            onClick={() => selectWord(i)}
+          >
+            {word}
+          </Button>
         ))}
       </div>
 
@@ -85,9 +97,7 @@ const SeedConfirm: React.FC = () => {
         <Button className="w-52" disabled={wordsList.length > 0} onClick={handleConfirm}>
           {'Confirm'}
         </Button>
-        <p>
-          {error}
-        </p>
+        <p>{error}</p>
       </div>
     </Shell>
   );
