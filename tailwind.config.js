@@ -53,6 +53,11 @@ module.exports = {
         popupContent: 'calc(100vh - 5rem)',
         // Hack for Select Asset screen
         25.75: '25.75rem',
+        // Hack for seed-reveal screen
+        8.6: '8.6rem',
+      },
+      width: {
+        29: '29rem'
       },
       minHeight: {
         80: '80%',
