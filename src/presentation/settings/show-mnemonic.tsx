@@ -3,6 +3,7 @@ import { AppContext } from '../../application/store/context';
 import { decrypt } from '../../application/utils/crypto';
 import { Password } from '../../domain/wallet/value-objects';
 import ModalUnlock from '../components/modal-unlock';
+import RevealMnemonicButton from '../components/reveal-mnemonic-button';
 import ShellPopUp from '../components/shell-popup';
 
 const SettingsShowMnemonic: React.FC = () => {
@@ -30,13 +31,7 @@ const SettingsShowMnemonic: React.FC = () => {
           {mnemonic}
         </div>
       ) : (
-        <button
-          className="opacity-80 flex flex-col items-center justify-center w-4/5 h-24 mx-auto text-white bg-black rounded-md"
-          onClick={handleShowModal}
-        >
-          <img className="w-12 h-12" src="assets/images/lock.svg" alt="lock" />
-          <span>Reveal mnemonic phrase</span>
-        </button>
+        <RevealMnemonicButton onClick={handleShowModal} />
       )}
 
       <ModalUnlock
