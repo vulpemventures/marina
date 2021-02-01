@@ -30,9 +30,11 @@ const SeedReveal: React.FC = () => {
     <Shell className="space-y-10">
       <div className="grid grid-cols-1 grid-rows-4 gap-5">
         <h1 className="text-3xl font-medium">{'Save your mnemonic phrase'}</h1>
-        <div className="max-w-prose row-span-2 bg-gray-600">
+        <div className="max-w-prose row-span-2">
           {revealed ? (
-            <p className="text-sm text-center">{onboarding.mnemonic || 'Loading...'}</p>
+            <p className="font-regular text-base text-center">
+              {onboarding.mnemonic || 'Loading...'}
+            </p>
           ) : (
             <RevealMnemonicButton onClick={handleClickReveal} />
           )}
