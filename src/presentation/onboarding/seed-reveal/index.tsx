@@ -9,6 +9,7 @@ import {
 import Shell from '../../components/shell';
 import { AppContext } from '../../../application/store/context';
 import { setMnemonic } from '../../../application/store/actions/onboarding';
+import RevealMnemonicButton from '../../components/reveal-mnemonic-button';
 
 const SeedReveal: React.FC = () => {
   const history = useHistory();
@@ -29,20 +30,11 @@ const SeedReveal: React.FC = () => {
     <Shell className="space-y-10">
       <div className="grid grid-cols-1 grid-rows-4 gap-5">
         <h1 className="text-3xl font-medium">{'Save your mnemonic phrase'}</h1>
-        <div className="max-w-prose relative row-span-2 bg-gray-600">
-          <div className="absolute inset-0 flex flex-col justify-center">
+        <div className="max-w-prose row-span-2 bg-gray-600">
+          {revealed ? (
             <p className="text-sm text-center">{onboarding.mnemonic || 'Loading...'}</p>
-          </div>
-          {revealed ? null : (
-            <div
-              className="bg-opacity-90 hover:bg-opacity-70 absolute inset-0 flex justify-center transition bg-black rounded cursor-pointer"
-              onClick={handleClickReveal}
-            >
-              <div className="flex flex-col justify-center">
-                <img src="assets/images/lock.svg" alt="closed lock" className="h-14"></img>
-                <p className="text-xl text-white">Reveal mnemonic phrase</p>
-              </div>
-            </div>
+          ) : (
+            <RevealMnemonicButton onClick={handleClickReveal} />
           )}
         </div>
         <div className="flex flex-wrap">
