@@ -32,18 +32,18 @@ const SeedReveal: React.FC = () => {
         <h1 className="text-3xl font-medium">{'Save your mnemonic phrase'}</h1>
         <div className="max-w-prose w-96 flex flex-col justify-center h-32">
           {revealed ? (
-            <div className="border-primary p-4 text-base font-medium text-left border-2 rounded-md">
+            <div className="border-primary p-4 text-base font-medium text-left border-2 rounded-md shadow-md">
               {onboarding.mnemonic || 'Loading...'}
             </div>
           ) : (
-            <RevealMnemonic className="w-96 h-32" onClick={handleClickReveal} />
+            <RevealMnemonic className="w-96 h-32 shadow-md" onClick={handleClickReveal} />
           )}
         </div>
         <div className="flex flex-wrap">
-          <Button className="w-52 mr-5" onClick={handleRemindMe} isOutline={true}>
+          <Button className="w-52 mr-5 shadow-md" onClick={handleRemindMe} isOutline={true}>
             {'Remind me later'}
           </Button>
-          <Button className="w-52" onClick={handleNext}>
+          <Button className="w-52 shadow-md" onClick={handleNext}>
             {'Next'}
           </Button>
         </div>
