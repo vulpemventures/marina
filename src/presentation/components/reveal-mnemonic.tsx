@@ -1,15 +1,17 @@
 import React from 'react';
 
-interface RevealMnemonicButtonProps {
+interface RevealMnemonicProps {
   onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  className?: string;
 }
 
-const RevealMnemonicButton: React.FC<RevealMnemonicButtonProps> = ({
+const RevealMnemonic: React.FC<RevealMnemonicProps> = ({
   onClick,
-}: RevealMnemonicButtonProps) => {
+  className,
+}: RevealMnemonicProps) => {
   return (
     <button
-      className="opacity-80 flex flex-col items-center justify-center w-4/5 h-24 mx-auto text-white bg-black rounded-md"
+      className={`${className} opacity-80 flex flex-col items-center justify-center mx-auto text-white bg-black rounded-md`}
       onClick={onClick}
     >
       <img className="w-12 h-12" src="assets/images/lock.svg" alt="lock" />
@@ -18,4 +20,4 @@ const RevealMnemonicButton: React.FC<RevealMnemonicButtonProps> = ({
   );
 };
 
-export default RevealMnemonicButton;
+export default RevealMnemonic;

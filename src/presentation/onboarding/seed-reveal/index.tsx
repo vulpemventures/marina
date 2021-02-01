@@ -9,7 +9,7 @@ import {
 import Shell from '../../components/shell';
 import { AppContext } from '../../../application/store/context';
 import { setMnemonic } from '../../../application/store/actions/onboarding';
-import RevealMnemonicButton from '../../components/reveal-mnemonic-button';
+import RevealMnemonic from '../../components/reveal-mnemonic';
 
 const SeedReveal: React.FC = () => {
   const history = useHistory();
@@ -27,23 +27,23 @@ const SeedReveal: React.FC = () => {
   const handleClickReveal = () => setRevealed(true);
 
   return (
-    <Shell className="space-y-10">
-      <div className="grid grid-cols-1 grid-rows-4 gap-5">
+    <Shell>
+      <div className="flex flex-col content-start justify-start space-y-10">
         <h1 className="text-3xl font-medium">{'Save your mnemonic phrase'}</h1>
-        <div className="max-w-prose row-span-2">
+        <div className="max-w-prose w-96 flex flex-col justify-center h-32">
           {revealed ? (
-            <p className="font-regular text-base text-center">
+            <p className="font-regular text-base text-left">
               {onboarding.mnemonic || 'Loading...'}
             </p>
           ) : (
-            <RevealMnemonicButton onClick={handleClickReveal} />
+            <RevealMnemonic className="w-96 h-32" onClick={handleClickReveal} />
           )}
         </div>
         <div className="flex flex-wrap">
-          <Button className="w-52 m-2" onClick={handleRemindMe} isOutline={true}>
+          <Button className="w-52 mr-5" onClick={handleRemindMe} isOutline={true}>
             {'Remind me later'}
           </Button>
-          <Button className="w-52 m-2" onClick={handleNext}>
+          <Button className="w-52" onClick={handleNext}>
             {'Next'}
           </Button>
         </div>
@@ -51,5 +51,4 @@ const SeedReveal: React.FC = () => {
     </Shell>
   );
 };
-
 export default SeedReveal;
