@@ -32,9 +32,9 @@ const SeedReveal: React.FC = () => {
         <h1 className="text-3xl font-medium">{'Save your mnemonic phrase'}</h1>
         <div className="max-w-prose w-96 flex flex-col justify-center h-32">
           {revealed ? (
-            <p className="font-regular text-base text-left">
+            <div className="border-primary p-4 text-base font-medium text-left border-2 rounded-md">
               {onboarding.mnemonic || 'Loading...'}
-            </p>
+            </div>
           ) : (
             <RevealMnemonic className="w-96 h-32" onClick={handleClickReveal} />
           )}
