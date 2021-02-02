@@ -9,13 +9,13 @@ import { initPersistentStore } from '../infrastructure/init-persistent-store';
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 
+let welcomeTabID: number | undefined = undefined;
+
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
  * and when the browser is updated to a new version.
  * https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
  */
-let welcomeTabID: number | undefined = undefined;
-
 browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   // skip onboarding
   // if (temporary) return;
@@ -45,12 +45,14 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   }
 });
 
+// this only run IF AND ONLY IF the popup is not set
+// popup is set at the end of onboarding
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
     try {
       const tabs = await browser.tabs.query({ currentWindow: true });
-      for (const { windowId } of tabs) {
-        if (windowId && windowId === welcomeTabID) return;
+      for (const { id } of tabs) {
+        if (id && id === welcomeTabID) return;
       }
       welcomeTabID = await openInitializeWelcomeRoute();
     } catch (error) {
@@ -82,6 +84,6 @@ try {
 
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
-  const { windowId } = await browser.tabs.create({ url });
-  return windowId;
+  const { id } = await browser.tabs.create({ url });
+  return id;
 }
