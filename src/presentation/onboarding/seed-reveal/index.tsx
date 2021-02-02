@@ -40,10 +40,10 @@ const SeedReveal: React.FC = () => {
           )}
         </div>
         <div className="flex flex-wrap">
-          <Button className="w-52 mr-5 shadow-md" onClick={handleRemindMe} isOutline={true}>
+          <Button className="w-52 mr-5" onClick={handleRemindMe} isOutline={true}>
             {'Remind me later'}
           </Button>
-          <Button className="w-52 shadow-md" onClick={handleNext}>
+          <Button className="w-52" onClick={handleNext}>
             {'Next'}
           </Button>
         </div>
