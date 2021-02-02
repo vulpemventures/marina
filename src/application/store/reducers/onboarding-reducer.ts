@@ -16,33 +16,33 @@ export const onboardingInitState: OnboardingState = {
 
 export const onboardingReducer = (state: OnboardingState, [type, payload]: [string, any]): any => {
   switch (type) {
-    case ACTION_TYPES.SET_PASSWORD: {
+    case ACTION_TYPES.ONBOARDING_SET_PASSWORD: {
       return {
         ...state,
         verified: false,
         password: payload.password,
       };
     }
-    case ACTION_TYPES.SET_MNEMONIC: {
+    case ACTION_TYPES.ONBOARDING_SET_MNEMONIC: {
       return {
         ...state,
         verified: false,
         mnemonic: payload.mnemonic,
       };
     }
-    case ACTION_TYPES.SET_VERIFIED: {
+    case ACTION_TYPES.ONBOARDING_SET_VERIFIED: {
       return {
         ...state,
         verified: true,
       };
     }
-    case ACTION_TYPES.SET_RESTORED: {
+    case ACTION_TYPES.ONBOARDING_SET_RESTORED: {
       return {
         ...state,
         restored: true,
       };
     }
-    case ACTION_TYPES.FLUSH: {
+    case ACTION_TYPES.ONBOARDING_FLUSH: {
       return onboardingInitState;
     }
     default:
