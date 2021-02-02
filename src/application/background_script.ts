@@ -8,13 +8,14 @@ import { initPersistentStore } from '../infrastructure/init-persistent-store';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
-const POPUP = 'popup.html';
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
  * and when the browser is updated to a new version.
  * https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
  */
+let welcomeTabID: number | undefined = undefined;
+
 browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   // skip onboarding
   // if (temporary) return;
@@ -27,7 +28,9 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
       };
 
       initPersistentStore(repos)
-        .then(() => openInitializeWelcomeRoute())
+        .then(() =>
+          openInitializeWelcomeRoute().then((id: number | undefined) => (welcomeTabID = id))
+        )
         .catch((err) => console.log(err));
 
       break;
@@ -42,25 +45,14 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   }
 });
 
-let popupIsSet = false;
-
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
-    // check if the popup is set
-    if (popupIsSet) return;
-
-    // check if onboarding complete
-    const app = await new BrowserStorageAppRepo().getApp();
-    if (!app.isOnboardingCompleted) {
-      openInitializeWelcomeRoute();
-      return;
-    }
-
     try {
-      // set the popup and open (this should run only 1 time)
-      await browser.browserAction.setPopup({ popup: POPUP });
-      await browser.browserAction.openPopup();
-      popupIsSet = true;
+      const tabs = await browser.tabs.query({ currentWindow: true });
+      for (const { windowId } of tabs) {
+        if (windowId && windowId === welcomeTabID) return;
+      }
+      welcomeTabID = await openInitializeWelcomeRoute();
     } catch (error) {
       console.error(error);
     }
@@ -88,7 +80,8 @@ try {
   console.error(error);
 }
 
-function openInitializeWelcomeRoute() {
+async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
-  browser.tabs.create({ url }).catch(console.error);
+  const { windowId } = await browser.tabs.create({ url });
+  return windowId;
 }
