@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { browser } from 'webextension-polyfill-ts';
 import {
   createWallet,
   onboardingComplete,
@@ -10,6 +11,8 @@ import { AppContext } from '../../../application/store/context';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 
+const POPUP = 'popup.html';
+
 const EndOfFlow: React.FC = () => {
   const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,13 +20,15 @@ const EndOfFlow: React.FC = () => {
   useEffect(() => {
     if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
-      const dispatchOnboardingCompleted = () =>
-        dispatch(
+      const dispatchOnboardingCompleted = () => {
+        browser.browserAction.setPopup({ popup: POPUP }).catch(console.error);
+        return dispatch(
           onboardingComplete(() => {
             dispatch(flush());
             setIsLoading(false);
           }, onError)
         );
+      };
       let creator = createWallet;
       if (onboarding.restored) {
         creator = restoreWallet;
