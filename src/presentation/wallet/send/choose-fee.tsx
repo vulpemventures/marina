@@ -1,23 +1,173 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import cx from 'classnames';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
 import { useHistory } from 'react-router';
+import { AppContext } from '../../../application/store/context';
+import { setPendingTx } from '../../../application/store/actions';
+import {
+  flush,
+  setFeeAssetAndAmount,
+  setFeeChangeAddress,
+} from '../../../application/store/actions/transaction';
+import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+
+import {
+  AddressInterface,
+  fetchAndUnblindUtxos,
+  address,
+  MasterPublicKey,
+  IdentityType,
+  fromXpub,
+  UtxoInterface,
+  walletFromCoins,
+  greedyCoinSelector,
+  RecipientInterface,
+  EsploraIdentityRestorer,
+} from 'ldk';
+import { IWallet } from '../../../domain/wallet/wallet';
+import { Address } from '../../../domain/wallet/value-objects';
+import { nextAddressForWallet } from '../../../application/utils/restorer';
+import { browser } from 'webextension-polyfill-ts';
+import { feeAmountFromTx } from '../../utils';
+
+const feeLevelToSatsPerByte: { [key: string]: number } = {
+  '0': 0.1,
+  '50': 0.1,
+  '100': 0.1,
+};
+
+const assetTickerByAsset: Record<string, string> = {
+  '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': 'L-BTC',
+  '0000000000000000000000000000000000000000000000000000000000000001': 'USDt',
+};
+
+const assetByAssetTicker: Record<string, string> = {
+  'L-BTC': '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+  USDt: '0000000000000000000000000000000000000000000000000000000000000001',
+};
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
+  const [{ wallets, app, transaction }, dispatch] = useContext(AppContext);
   const [feeCurrency, setFeeCurrency] = useState<'L-BTC' | 'USDt'>('L-BTC');
   const [feeLevel, setFeeLevel] = useState<string>('50');
+  const [satsPerByte, setSatsPerByte] = useState<number>(0);
+  const [unspents, setUnspents] = useState<UtxoInterface[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [isWarningFee] = useState<boolean>(true);
+
+  // TODO: remove this since utxos will be already cached in memory
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      if (isLoading) {
+        try {
+          const unspents = await fetchUtxos(wallets[0], app.network.value);
+          setUnspents(unspents);
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    })();
+  });
+
+  // This sets the fee change address in case it's not of the same type
+  // of the transaction's change address
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      if (
+        feeCurrency !== assetTickerByAsset[transaction.asset] &&
+        transaction.feeChangeAddress === ''
+      ) {
+        try {
+          const wallet = { ...wallets[0] };
+          wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
+          const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
+          dispatch(setFeeChangeAddress(feeChangeAddress));
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    })();
+  });
+
+  useEffect(() => {
+    if (!isLoading) {
+      // this check prevents to build a tx in case the fee change address isn't
+      // yet available but needed for the tx.
+      if (
+        feeCurrency === assetTickerByAsset[transaction.asset] ||
+        transaction.feeChangeAddress !== ''
+      ) {
+        try {
+          const w = walletFromCoins(unspents, app.network.value);
+          const receipients: RecipientInterface[] = [
+            {
+              asset: transaction.asset,
+              value: transaction.amountInSatoshi,
+              address: transaction.receipientAddress,
+            },
+          ];
+          const changeAddressGetter = (asset: string): any => {
+            if (asset == transaction.asset) {
+              return transaction.changeAddress;
+            }
+            return transaction.feeChangeAddress;
+          };
+
+          if (feeCurrency === 'L-BTC') {
+            const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
+
+            if (currentSatsPerByte !== satsPerByte) {
+              const tx: string = w.buildTx(
+                w.createTx(),
+                receipients,
+                greedyCoinSelector(),
+                changeAddressGetter,
+                true,
+                satsPerByte
+              );
+              setUnsignedPendingTx(tx);
+              setSatsPerByte(currentSatsPerByte);
+            }
+          } else {
+            const tx: string = '';
+            setUnsignedPendingTx(tx);
+            // TODO: call taxi
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
+  });
+
   const handleConfirm = () => {
-    history.push({
-      pathname: SEND_CONFIRMATION_ROUTE,
-      state: {
-        feeCurrency,
-      },
-    });
+    const feeAsset = assetByAssetTicker[feeCurrency];
+    const feeAmount = parseFloat(feeAmountFromTx(unsignedPendingTx)) * Math.pow(10, 8);
+    dispatch(
+      setPendingTx(
+        Transaction.create({
+          value: unsignedPendingTx,
+          sendAddress: transaction.receipientAddress,
+          sendAsset: transaction.asset,
+          sendAmount: transaction.amountInSatoshi,
+          feeAsset: feeAsset,
+          feeAmount: feeAmount,
+        }),
+        () => {
+          dispatch(setFeeAssetAndAmount(feeAsset, feeAmount));
+          history.push(SEND_CONFIRMATION_ROUTE);
+          browser.browserAction.setBadgeText({ text: '1' });
+        },
+        (err) => console.log(err)
+      )
+    );
   };
 
   const warningFee = (
@@ -81,7 +231,9 @@ const ChooseFee: React.FC = () => {
             step="50"
             type="range"
           />
-          <p className="text-gray mt-5 text-xs font-medium text-left">0.00000144 L-BTC</p>
+          <p className="text-gray mt-5 text-xs font-medium text-left">
+            {unsignedPendingTx ? `${feeAmountFromTx(unsignedPendingTx)} L-BTC` : 'Loading...'}
+          </p>
           {isWarningFee && warningFee}
         </div>
       )}
@@ -99,10 +251,36 @@ const ChooseFee: React.FC = () => {
         </>
       )}
 
-      <Button className="bottom-20 right-8 absolute" onClick={handleConfirm}>
+      <Button
+        className="bottom-20 right-8 absolute"
+        onClick={handleConfirm}
+        disabled={unsignedPendingTx === ''}
+      >
         Confirm
       </Button>
     </ShellPopUp>
   );
 };
 export default ChooseFee;
+
+const fetchUtxos = (wallet: IWallet, network: string): Promise<UtxoInterface[]> => {
+  const pubKeyWallet = new MasterPublicKey({
+    chain: network,
+    type: IdentityType.MasterPublicKey,
+    value: {
+      masterPublicKey: fromXpub(wallet.masterXPub.value, network),
+      masterBlindingKey: wallet.masterBlindingKey.value,
+    },
+    restorer: new EsploraIdentityRestorer('http://localhost:3001'),
+    initializeFromRestorer: true,
+  });
+  const addresses: AddressInterface[] = wallet.confidentialAddresses.map((addr) => {
+    const script = address.toOutputScript(addr.value);
+    return {
+      confidentialAddress: addr.value,
+      blindingPrivateKey: pubKeyWallet.getBlindingPrivateKey(script.toString('hex')),
+    };
+  });
+
+  return fetchAndUnblindUtxos(addresses, 'http://localhost:3001');
+};
