@@ -34,7 +34,7 @@
   "dependencies": {
     "@headlessui/react": "^0.2.0",
     "formik": "^2.2.6",
-    "ldk": "^0.1.2",
+    "ldk": "^0.1.4",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.1",
