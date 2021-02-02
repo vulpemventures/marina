@@ -1,4 +1,5 @@
-import { createWallet, fetchBalances, updateUtxos } from './wallet';
+import { UtxoInterface } from 'ldk';
+import { compareUtxos, createWallet, fetchBalances, setUtxos } from './wallet';
 import { mint, sleep } from '../../../../__test__/_regtest';
 import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
@@ -33,9 +34,8 @@ describe('Transaction Actions', () => {
     store.clearActions();
   });
 
-  test('Should update utxos', async () => {
+  test('Should set utxos', async () => {
     jest.setTimeout(15000);
-
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -48,7 +48,7 @@ describe('Transaction Actions', () => {
       )
     );
 
-    // Update UTXOs
+    // Set UTXOs
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
     mockBrowser.storage.local.set
       .expect({ wallets: [{ ...testWalletDTO, utxoMap: getUtxoMap(2) }] })
@@ -56,14 +56,14 @@ describe('Transaction Actions', () => {
 
     const wallet = getRandomWallet();
     await mint(wallet.getNextAddress().confidentialAddress, 1);
-    await sleep(1000);
+    await sleep(2000);
     await mint(wallet.getNextAddress().confidentialAddress, 5678);
-    await sleep(1000);
+    await sleep(2000);
 
-    const updateUtxosAction = function () {
+    const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          updateUtxos(
+          setUtxos(
             [
               {
                 confidentialAddress: wallet.getNextAddress().confidentialAddress,
@@ -77,11 +77,102 @@ describe('Transaction Actions', () => {
       });
     };
 
-    return expect(updateUtxosAction()).resolves.toMatchObject({
+    return expect(setUtxosAction()).resolves.toMatchObject({
       app: testAppProps,
       onboarding: onboardingInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(2) }],
     });
+  });
+
+  test('Should not set if same utxo set exists in store', async () => {
+    jest.setTimeout(15000);
+    // Create basic wallet in React state and browser storage
+    mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
+    mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
+    store.dispatch(
+      createWallet(
+        Password.create(password),
+        Mnemonic.create(mnemonic),
+        () => true,
+        (err) => console.log(err)
+      )
+    );
+
+    // Set UTXOs. Should be called once by first setUtxosAction()
+    mockBrowser.storage.local.get
+      .expect('wallets')
+      .andResolve({ wallets: [testWalletDTO] })
+      .times(1);
+    mockBrowser.storage.local.set
+      .expect({ wallets: [{ ...testWalletDTO, utxoMap: getUtxoMap(2) }] })
+      .andResolve()
+      .times(1);
+
+    const wallet = getRandomWallet();
+    await mint(wallet.getNextAddress().confidentialAddress, 1);
+    await sleep(2000);
+    await mint(wallet.getNextAddress().confidentialAddress, 5678);
+    await sleep(2000);
+
+    const setUtxosAction = function () {
+      return new Promise((resolve, reject) => {
+        store.dispatch(
+          setUtxos(
+            [
+              {
+                confidentialAddress: wallet.getNextAddress().confidentialAddress,
+                blindingPrivateKey: wallet.getNextAddress().blindingPrivateKey,
+              },
+            ],
+            () => resolve(store.getState()),
+            (err: Error) => reject(err.message)
+          )
+        );
+      });
+    };
+
+    // Call setUtxosAction twice, second time should not update anything since utxo sets are equal
+    await setUtxosAction();
+    return expect(setUtxosAction()).resolves.toMatchObject({
+      app: testAppProps,
+      onboarding: onboardingInitState,
+      wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(2) }],
+    });
+  });
+
+  test('Should have utxo sets equal', () => {
+    const utxoMapStore = new Map()
+      .set(
+        { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },
+        {
+          txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439',
+          vout: 0,
+        }
+      )
+      .set(
+        { txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8', vout: 1 },
+        {
+          txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
+          vout: 1,
+        }
+      )
+      .set(
+        { txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', vout: 3 },
+        {
+          txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
+          vout: 3,
+        }
+      );
+
+    const fetchedUtxos = [
+      { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },
+      { txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', vout: 3 },
+      { txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8', vout: 1 },
+    ];
+
+    //const res = compareUtxos(utxoMapStore, fetchedUtxos as UtxoInterface[]);
+    //console.log('res', res);
+    return expect(compareUtxos(utxoMapStore, fetchedUtxos as UtxoInterface[])).toBeTruthy();
   });
 
   test('Should fetch balances', async () => {

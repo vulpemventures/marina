@@ -81,7 +81,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
     }
 
     //
-    case ACTION_TYPES.WALLET_UPDATE_UTXOS_SUCCESS: {
+    case ACTION_TYPES.WALLET_SET_UTXOS_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
         errors: undefined,
@@ -89,7 +89,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
-    case ACTION_TYPES.WALLET_UPDATE_UTXOS_FAILURE: {
+    case ACTION_TYPES.WALLET_SET_UTXOS_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
         errors: { utxos: { message: payload.error.message } as IError },

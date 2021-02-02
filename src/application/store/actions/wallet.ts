@@ -19,8 +19,8 @@ import {
   WALLET_DERIVE_ADDRESS_SUCCESS,
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
-  WALLET_UPDATE_UTXOS_FAILURE,
-  WALLET_UPDATE_UTXOS_SUCCESS,
+  WALLET_SET_UTXOS_FAILURE,
+  WALLET_SET_UTXOS_SUCCESS,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
@@ -243,26 +243,50 @@ export function fetchBalances(
   };
 }
 
-export function updateUtxos(
+/**
+ * Check that utxoMapStore and fetchedUtxos have the same set of utxos
+ * @param utxoMapStore
+ * @param fetchedUtxos
+ * @returns boolean - true if utxo sets are equal, false if not
+ */
+export function compareUtxos(
+  utxoMapStore: Map<Outpoint, UtxoInterface>,
+  fetchedUtxos: UtxoInterface[]
+) {
+  if (utxoMapStore?.size !== fetchedUtxos?.length) return false;
+  const arr = [];
+  for (const outpoint of utxoMapStore.keys()) {
+    // At least one outpoint in utxoMapStore is present in fetchedUtxos
+    arr.push(
+      fetchedUtxos.some((utxo) => utxo.txid === outpoint.txid && utxo.vout === outpoint.vout)
+    );
+  }
+  // All utxos should have a match
+  return arr.every((a) => a === true);
+}
+
+export function setUtxos(
   addressesWithBlindingKey: AddressInterface[],
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
-      const utxos = await fetchAndUnblindUtxos(addressesWithBlindingKey, 'http://localhost:3001');
-      await repos.wallet.updateUtxos(utxos);
-
-      // Update React state
+      const fetchedUtxos = await fetchAndUnblindUtxos(
+        addressesWithBlindingKey,
+        'http://localhost:3001'
+      );
       const { wallets } = getState();
-      const cloneUtxoMap = new Map(wallets[0].utxoMap);
-      utxos.forEach((newUtxo) => {
-        cloneUtxoMap.set(toOutpoint(newUtxo), newUtxo);
-      });
-      dispatch([WALLET_UPDATE_UTXOS_SUCCESS, { utxoMap: cloneUtxoMap }]);
+      // If utxo sets not equal, create utxoMap and update stores
+      if (!compareUtxos(wallets[0].utxoMap, fetchedUtxos)) {
+        const utxoMap = new Map<Outpoint, UtxoInterface>();
+        fetchedUtxos.forEach((utxo) => utxoMap.set(toOutpoint(utxo), utxo));
+        await repos.wallet.setUtxos(utxoMap);
+        dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap }]);
+      }
       onSuccess();
     } catch (error) {
-      dispatch([WALLET_UPDATE_UTXOS_FAILURE, { error }]);
+      dispatch([WALLET_SET_UTXOS_FAILURE, { error }]);
       onError(error);
     }
   };

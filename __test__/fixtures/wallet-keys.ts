@@ -1,5 +1,4 @@
-import { IdentityType, PrivateKey } from 'ldk';
-import { ECPair } from 'liquidjs-lib';
+import { ECPair, IdentityType, PrivateKey } from 'ldk';
 import { regtest } from './network';
 
 export const getRandomWallet = () => {
