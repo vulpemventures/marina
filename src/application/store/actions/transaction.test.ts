@@ -166,8 +166,6 @@ describe('Transaction Actions', () => {
       { txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8', vout: 1 },
     ];
 
-    //const res = compareUtxos(utxoMapStore, fetchedUtxos as UtxoInterface[]);
-    //console.log('res', res);
     return expect(compareUtxos(utxoMapStore, fetchedUtxos as UtxoInterface[])).toBeTruthy();
   });
 
