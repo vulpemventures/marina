@@ -22,6 +22,9 @@ function drop(words: string[], index: number): string[] {
   return words;
 }
 
+const NULL_ERROR = '';
+const ERROR_MSG = 'Invalid mnemonic';
+
 const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const [{ onboarding }, dispatch] = useContext(AppContext);
@@ -31,7 +34,7 @@ const SeedConfirm: React.FC = () => {
 
   const [wordsList, setWordsList] = useState(mnemonicRandomized);
   const [selected, setSelected] = useState([] as string[]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(NULL_ERROR);
 
   const handleConfirm = () => {
     if (selected.join(' ') === mnemonic.join(' ')) {
@@ -39,13 +42,14 @@ const SeedConfirm: React.FC = () => {
       history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     }
 
-    setError('Invalid mnemonic! please retry.');
+    setError(ERROR_MSG);
     setSelected([]);
     setWordsList(mnemonicRandomized);
   };
 
   // select a word among wordsList
   const selectWord = (index: number) => {
+    if (error !== NULL_ERROR) setError(NULL_ERROR);
     const word = wordsList[index];
     setSelected((selected) => [...selected, word]);
     setWordsList(drop(wordsList, index));
@@ -58,6 +62,8 @@ const SeedConfirm: React.FC = () => {
     setSelected(drop(selected, index));
   };
 
+  const getBorderColor = () => (error === NULL_ERROR ? 'primary' : 'red');
+
   return (
     <Shell className="space-y-5">
       <h1 className="text-3xl font-medium">{'Confirm your secret mnemonic phrase'}</h1>
@@ -65,10 +71,12 @@ const SeedConfirm: React.FC = () => {
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}
       </p>
 
-      <div className="border-primary h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md">
+      <div
+        className={`border-${getBorderColor()} h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md shadow-md`}
+      >
         {selected.map((word: string, i: number) => (
           <Button
-            className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform"
+            className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
             key={i}
             isOutline={true}
             roundedMd={true}
@@ -79,10 +87,12 @@ const SeedConfirm: React.FC = () => {
         ))}
       </div>
 
-      <div className="h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2">
+      <div className="text-red h-5 m-2 font-medium">{error}</div>
+
+      <div className="h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-3">
         {wordsList.map((word, i) => (
           <Button
-            className="text-grayDark hover:-translate-y-1 transition duration-500 ease-in-out transform"
+            className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
             key={i}
             isOutline={true}
             roundedMd={true}
@@ -93,12 +103,9 @@ const SeedConfirm: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 grid-rows-2 gap-2">
-        <Button className="w-52" disabled={wordsList.length > 0} onClick={handleConfirm}>
-          {'Confirm'}
-        </Button>
-        <p>{error}</p>
-      </div>
+      <Button className="w-52 shadow-md" disabled={wordsList.length > 0} onClick={handleConfirm}>
+        {'Confirm'}
+      </Button>
     </Shell>
   );
 };
