@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import { Link, RouteComponentProps, useHistory } from 'react-router-dom';
-import cx from 'classnames';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
 import { AppContext } from '../../../application/store/context';
@@ -8,6 +7,7 @@ import { logIn } from '../../../application/store/actions';
 import { DEFAULT_ROUTE, RESTORE_VAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import { DispatchOrThunk } from '../../../domain/common';
+import Input from '../../components/input';
 
 interface LogInFormValues {
   password: string;
@@ -19,29 +19,17 @@ interface LogInFormProps {
 }
 
 const LogInForm = (props: FormikProps<LogInFormValues>) => {
-  const { values, touched, errors, isSubmitting, handleChange, handleBlur, handleSubmit } = props;
+  const { isSubmitting, handleSubmit } = props;
 
   return (
     <form onSubmit={handleSubmit} className="mt-10">
-      <label className="block">
-        <p className="mb-2 font-medium text-left">Password</p>
-        <input
-          className={cx(
-            'border-2 focus:ring-primary focus:border-primary placeholder-grayLight w-full mb-5 rounded-md',
-            {
-              'border-red': errors.password && touched.password,
-              'border-grayLight': !errors.password,
-            }
-          )}
-          id="password"
-          name="password"
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder="Enter your password"
-          type="password"
-          value={values.password}
-        />
-      </label>
+      <Input
+        name="password"
+        type="password"
+        placeholder="Enter your password"
+        title="Password"
+        {...props}
+      />
       <Button className="w-full mb-8 text-base" disabled={isSubmitting} type="submit">
         Log in
       </Button>
@@ -60,12 +48,17 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .min(8, 'Password should be 8 characters minimum.'),
   }),
 
-  handleSubmit: (values, { props }) => {
-    const onSuccess = () => props.history.push(DEFAULT_ROUTE);
-    const onError = (err: Error) => console.log(err);
+  handleSubmit: (values, { props, setErrors, setSubmitting }) => {
+    const onSuccess = () => {
+      props.history.push(DEFAULT_ROUTE);
+    };
+    const onError = (err: Error) => {
+      setErrors({ password: err.message });
+      setSubmitting(false);
+      console.log(err);
+    };
     props.dispatch(logIn(values.password, onSuccess, onError));
   },
-
   displayName: 'LogInForm',
 })(LogInForm);
 
