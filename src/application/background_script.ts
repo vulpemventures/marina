@@ -45,8 +45,8 @@ browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   }
 });
 
-// this only run IF AND ONLY IF the popup is not set
-// popup is set at the end of onboarding
+// this listener only run IF AND ONLY IF the popup is not set
+// popup is set at the end of onboarding workflow
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
     try {
