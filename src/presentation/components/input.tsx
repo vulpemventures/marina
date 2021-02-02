@@ -29,7 +29,7 @@ export default function Input<FormValues>({
         'mb-12': !errors[name] || !touched[name],
       })}
     >
-      <label className="block">
+      <label className="block text-left">
         {title && <p className="mb-2 font-medium">{title}</p>}
         <input
           className={cx(
