@@ -1,6 +1,6 @@
 import { UtxoInterface } from 'ldk';
 import { compareUtxos, createWallet, fetchBalances, setUtxos } from './wallet';
-import { mint, sleep } from '../../../../__test__/_regtest';
+import { mint } from '../../../../__test__/_regtest';
 import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
@@ -56,9 +56,7 @@ describe('Transaction Actions', () => {
 
     const wallet = getRandomWallet();
     await mint(wallet.getNextAddress().confidentialAddress, 1);
-    await sleep(2000);
     await mint(wallet.getNextAddress().confidentialAddress, 5678);
-    await sleep(2000);
 
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
@@ -110,9 +108,7 @@ describe('Transaction Actions', () => {
 
     const wallet = getRandomWallet();
     await mint(wallet.getNextAddress().confidentialAddress, 1);
-    await sleep(2000);
     await mint(wallet.getNextAddress().confidentialAddress, 5678);
-    await sleep(2000);
 
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
