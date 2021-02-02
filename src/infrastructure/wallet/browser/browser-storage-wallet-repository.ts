@@ -4,6 +4,7 @@ import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
 import { Address } from '../../../domain/wallet/value-objects';
+import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
@@ -48,5 +49,15 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
       wallet.confidentialAddresses.push(address);
       await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
     }
+  }
+
+  async setPendingTx(tx?: Transaction): Promise<void> {
+    const wallet = await this.getOrCreateWallet();
+    if (tx && wallet.pendingTx) {
+      throw new Error('wallet already has a pending tx');
+    }
+
+    wallet.props.pendingTx = tx;
+    await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
   }
 }

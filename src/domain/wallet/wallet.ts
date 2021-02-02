@@ -8,6 +8,7 @@ import {
   MasterBlindingKey,
   PasswordHash,
 } from './value-objects';
+import { Transaction } from './value-objects/transaction';
 import { WalletId } from './walletId';
 
 export interface IWallets {
@@ -22,6 +23,7 @@ export interface IWallet {
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
   restored?: boolean;
+  pendingTx?: Transaction;
 }
 
 /**
@@ -55,6 +57,10 @@ export class Wallet extends Entity<IWallet> {
     return this.props.confidentialAddresses;
   }
 
+  get pendingTx(): Transaction | undefined {
+    return this.props.pendingTx!;
+  }
+
   /**
    * @param props - Wallet props
    * @param id - When the id is known we can pass it in, or we create one
@@ -80,6 +86,7 @@ export class Wallet extends Entity<IWallet> {
       encryptedMnemonic: props.encryptedMnemonic,
       passwordHash: props.passwordHash,
       confidentialAddresses: props.confidentialAddresses,
+      pedingTx: props.pendingTx,
     };
     return new Wallet(walletProps, id);
   }

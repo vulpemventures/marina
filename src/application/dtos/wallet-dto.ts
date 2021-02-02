@@ -1,3 +1,5 @@
+import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
+
 export interface WalletDTO {
   walletId: string;
   masterXPub: string;
@@ -5,4 +7,5 @@ export interface WalletDTO {
   encryptedMnemonic: string;
   passwordHash: string;
   confidentialAddresses: string[];
+  pendingTx?: TransactionProps;
 }

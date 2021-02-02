@@ -8,6 +8,7 @@ import {
   MasterBlindingKey,
   MasterXPub,
 } from '../../domain/wallet/value-objects';
+import { Transaction } from '../../domain/wallet/value-objects/transaction';
 
 export class WalletMap {
   public static toDTO(wallet: Wallet): WalletDTO {
@@ -18,6 +19,7 @@ export class WalletMap {
       encryptedMnemonic: wallet.encryptedMnemonic.value,
       passwordHash: wallet.passwordHash.value,
       confidentialAddresses: wallet.confidentialAddresses.map((d) => d.value),
+      pendingTx: wallet.pendingTx?.props,
     };
   }
 
@@ -32,6 +34,9 @@ export class WalletMap {
       },
       new UniqueEntityID(raw.walletId)
     );
+    if (raw.pendingTx) {
+      wallet.props.pendingTx = Transaction.create(raw.pendingTx);
+    }
     return wallet;
   }
 }
