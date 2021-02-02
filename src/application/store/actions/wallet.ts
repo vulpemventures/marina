@@ -254,15 +254,14 @@ export function compareUtxos(
   fetchedUtxos: UtxoInterface[]
 ) {
   if (utxoMapStore?.size !== fetchedUtxos?.length) return false;
-  const arr = [];
   for (const outpoint of utxoMapStore.keys()) {
     // At least one outpoint in utxoMapStore is present in fetchedUtxos
-    arr.push(
-      fetchedUtxos.some((utxo) => utxo.txid === outpoint.txid && utxo.vout === outpoint.vout)
+    const isEqual = fetchedUtxos.some(
+      (utxo) => utxo.txid === outpoint.txid && utxo.vout === outpoint.vout
     );
+    if (!isEqual) return false;
   }
-  // All utxos should have a match
-  return arr.every((a) => a === true);
+  return true;
 }
 
 export function setUtxos(
