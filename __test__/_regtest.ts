@@ -50,7 +50,7 @@ export async function mint(
   let ret: any;
   try {
     const response = await axios.post(`${APIURL}/mint`, { address, quantity });
-    await sleep(3000);
+    await sleep(5000);
     ret = response.data;
   } catch (e) {
     console.error(e);
