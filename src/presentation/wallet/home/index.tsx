@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useHistory } from 'react-router';
 import { ErrorBoundary } from 'react-error-boundary';
-import { RECEIVE_ROUTE, SELECT_ASSET_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
+import {
+  RECEIVE_ROUTE,
+  SELECT_ASSET_ROUTE,
+  SEND_CONFIRMATION_ROUTE,
+  TRANSACTIONS_ROUTE,
+} from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
@@ -9,15 +14,22 @@ import ErrorFallback from '../../components/error-fallback';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
+import assets from '../../../../__test__/fixtures/assets.json';
+import { AppContext } from '../../../application/store/context';
 
 const Home: React.FC = () => {
+  const [{ wallets }] = useContext(AppContext);
+
   const history = useHistory();
-  const handleClick = (assetTicker: string) => {
+  if (wallets[0].pendingTx) {
+    history.push(SEND_CONFIRMATION_ROUTE);
+    return <></>;
+  }
+
+  const handleClick = ({ assetTicker }: { [key: string]: string }) => {
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: {
-        assetTicker,
-      },
+      state: { assetTicker },
     });
   };
 
@@ -50,41 +62,34 @@ const Home: React.FC = () => {
 
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <ButtonList title="Assets" type="assets">
-          <ButtonAsset
-            assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
-            assetName="Liquid Bitcoin"
-            assetTicker="L-BTC"
-            quantity={1}
-            onClick={() => handleClick('L-BTC')}
-          />
-          <ButtonAsset
-            assetImgPath="assets/images/liquid-assets/liquid-cad.png"
-            assetName="Liquid CAD"
-            assetTicker="LCAD"
-            quantity={10}
-            onClick={() => handleClick('LCAD')}
-          />
-          <ButtonAsset
-            assetImgPath="assets/images/liquid-assets/liquid-tether.png"
-            assetName="Tether"
-            assetTicker="USDt"
-            quantity={10}
-            onClick={() => handleClick('USDt')}
-          />
-          <ButtonAsset
-            assetImgPath="assets/images/liquid-assets/question-mark.svg"
-            assetName="Vulpem"
-            assetTicker="VLP"
-            quantity={3}
-            onClick={() => handleClick('VLP')}
-          />
-          <ButtonAsset
-            assetImgPath="assets/images/liquid-assets/question-mark.svg"
-            assetName="Unregistered Asset"
-            assetTicker="UA"
-            quantity={3}
-            onClick={() => handleClick('UA')}
-          />
+          {assets.map((asset) => {
+            let imgPath: string;
+            switch (asset.assetTicker) {
+              case 'L-BTC':
+                imgPath = 'assets/images/liquid-assets/liquid-btc.svg';
+                break;
+              case 'LCAD':
+                imgPath = 'assets/images/liquid-assets/liquid-cad.png';
+                break;
+              case 'USDt':
+                imgPath = 'assets/images/liquid-assets/liquid-tether.png';
+                break;
+              default:
+                imgPath = 'assets/images/liquid-assets/question-mark.svg';
+                break;
+            }
+
+            return (
+              <ButtonAsset
+                assetImgPath={imgPath}
+                assetHash={asset.assetHash}
+                assetName={asset.assetName}
+                assetTicker={asset.assetTicker}
+                quantity={asset.quantity}
+                onClick={handleClick}
+              />
+            );
+          })}
         </ButtonList>
       </ErrorBoundary>
 
