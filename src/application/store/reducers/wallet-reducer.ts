@@ -13,7 +13,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        pendingTx: payload.pendingTx,
       };
       return Object.assign([], state, [firstWallet]);
     }

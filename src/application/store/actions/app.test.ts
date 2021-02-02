@@ -20,6 +20,7 @@ import {
   testAppWalletVerifiedProps,
 } from '../../../../__test__/fixtures/test-app';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
+import { transactionInitState } from '../reducers/transaction-reducer';
 
 describe('App Actions', () => {
   let repos, store: ReturnType<typeof mockThunkReducer>;
@@ -49,6 +50,7 @@ describe('App Actions', () => {
       wallets: [],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -72,6 +74,7 @@ describe('App Actions', () => {
       wallets: [],
       app: testAppWalletVerifiedProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -95,6 +98,7 @@ describe('App Actions', () => {
       wallets: [],
       app: testAppOnboardedProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -107,6 +111,7 @@ describe('App Actions', () => {
       wallets: [testWallet],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
 
     const logInAction = function () {
@@ -125,6 +130,7 @@ describe('App Actions', () => {
       wallets: [testWallet],
       app: testAppAuthenticatedProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -169,6 +175,7 @@ describe('App Actions', () => {
       wallets: [],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -193,6 +200,7 @@ describe('App Actions', () => {
       wallets: [],
       app: testAppNetworkLiquidProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 });

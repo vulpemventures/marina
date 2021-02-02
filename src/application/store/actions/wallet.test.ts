@@ -12,12 +12,18 @@ import {
   testWalletWith2ConfidentialAddrProps,
   testWalletWithConfidentialAddrDTO,
   testWalletWithConfidentialAddrProps,
+  testWalletWithoutPendingTxDTO,
+  testWalletWithoutPendingTxProps,
+  testWalletWithPendingTxDTO,
+  testWalletWithPendingTxProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { createWallet, deriveNewAddress, initWallet, restoreWallet } from './wallet';
+import { createWallet, deriveNewAddress, initWallet, restoreWallet, setPendingTx, unsetPendingTx } from './wallet';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { password, mnemonic } from '../../../../__test__/fixtures/wallet.json';
+import { password, mnemonic, pendingTx } from '../../../../__test__/fixtures/wallet.json';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
+import { transactionInitState } from '../reducers/transaction-reducer';
+import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -50,6 +56,7 @@ describe('Wallet Actions', () => {
       wallets: [testWalletProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -74,6 +81,7 @@ describe('Wallet Actions', () => {
       wallets: [testWalletProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -98,6 +106,7 @@ describe('Wallet Actions', () => {
       wallets: [testWalletRestoredProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -107,6 +116,7 @@ describe('Wallet Actions', () => {
       wallets: [testWalletProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
 
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
@@ -132,6 +142,7 @@ describe('Wallet Actions', () => {
       wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 
@@ -141,6 +152,7 @@ describe('Wallet Actions', () => {
       wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
 
     mockBrowser.storage.local.get
@@ -168,6 +180,82 @@ describe('Wallet Actions', () => {
       wallets: [testWalletWith2ConfidentialAddrProps],
       app: testAppProps,
       onboarding: onboardingInitState,
+      transaction: transactionInitState,
+    });
+  });
+
+  test('Should set a pending tx', () => {
+    // Create wallet with address
+    store.setState({
+      wallets: [testWalletProps],
+      app: testAppProps,
+      onboarding: onboardingInitState,
+      transaction: transactionInitState,
+    });
+
+    mockBrowser.storage.local.get
+      .expect('wallets')
+      .andResolve({ wallets: [testWalletDTO] });
+    mockBrowser.storage.local.set
+      .expect({ wallets: [testWalletWithPendingTxDTO] })
+      .andResolve();
+
+    const setPendingTxAction = function () {
+      return new Promise((resolve, reject) => {
+        store.dispatch(
+          setPendingTx(
+            Transaction.create(pendingTx),
+            () => {
+              resolve(store.getState());
+            },
+            (err: Error) => reject(err.message)
+          )
+        );
+      });
+    };
+
+    return expect(setPendingTxAction()).resolves.toStrictEqual({
+      wallets: [testWalletWithPendingTxProps],
+      app: testAppProps,
+      onboarding: onboardingInitState,
+      transaction: transactionInitState,
+    });
+  });
+
+  test('Should unset an already set pending tx', () => {
+    // Create wallet with address
+    store.setState({
+      wallets: [testWalletWithPendingTxProps],
+      app: testAppProps,
+      onboarding: onboardingInitState,
+      transaction: transactionInitState,
+    });
+
+    mockBrowser.storage.local.get
+      .expect('wallets')
+      .andResolve({ wallets: [testWalletWithPendingTxDTO] });
+    mockBrowser.storage.local.set
+      .expect({ wallets: [testWalletWithoutPendingTxDTO] })
+      .andResolve();
+
+    const unsetPendingTxAction = function () {
+      return new Promise((resolve, reject) => {
+        store.dispatch(
+          unsetPendingTx(
+            () => {
+              resolve(store.getState());
+            },
+            (err: Error) => reject(err.message)
+          )
+        );
+      });
+    };
+
+    return expect(unsetPendingTxAction()).resolves.toStrictEqual({
+      wallets: [testWalletWithoutPendingTxProps],
+      app: testAppProps,
+      onboarding: onboardingInitState,
+      transaction: transactionInitState,
     });
   });
 });
