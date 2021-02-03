@@ -147,4 +147,6 @@ export const testWalletWithoutPendingTxProps: IWallet = {
   passwordHash: PasswordHash.create(passwordHash),
   pendingTx: undefined,
 };
-export const testWalletWithoutPendingTx: Wallet = Wallet.createWallet(testWalletWithoutPendingTxProps);
+export const testWalletWithoutPendingTx: Wallet = Wallet.createWallet(
+  testWalletWithoutPendingTxProps
+);

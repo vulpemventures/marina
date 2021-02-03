@@ -1,4 +1,4 @@
-import { transactionInitState } from "../../src/application/store/reducers/transaction-reducer";
+import { transactionInitState } from '../../src/application/store/reducers/transaction-reducer';
 import assets from './assets.json';
 import { confidentialAddresses } from './wallet.json';
 

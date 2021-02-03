@@ -8,7 +8,6 @@ import { useHistory } from 'react-router';
 import { AppContext } from '../../../application/store/context';
 import { setPendingTx } from '../../../application/store/actions';
 import {
-  flush,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
 } from '../../../application/store/actions/transaction';
@@ -41,12 +40,12 @@ const feeLevelToSatsPerByte: { [key: string]: number } = {
 
 const assetTickerByAsset: Record<string, string> = {
   '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': 'L-BTC',
-  '0000000000000000000000000000000000000000000000000000000000000001': 'USDt',
+  '2dc8bb2d1855a87cb0901e7c024830a0baa09c3a1e7987705cb318b6bbc43823': 'USDt',
 };
 
 const assetByAssetTicker: Record<string, string> = {
   'L-BTC': '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-  USDt: '0000000000000000000000000000000000000000000000000000000000000001',
+  USDt: '2dc8bb2d1855a87cb0901e7c024830a0baa09c3a1e7987705cb318b6bbc43823',
 };
 
 const ChooseFee: React.FC = () => {

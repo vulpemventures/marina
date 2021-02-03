@@ -17,7 +17,14 @@ import {
   testWalletWithPendingTxDTO,
   testWalletWithPendingTxProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { createWallet, deriveNewAddress, initWallet, restoreWallet, setPendingTx, unsetPendingTx } from './wallet';
+import {
+  createWallet,
+  deriveNewAddress,
+  initWallet,
+  restoreWallet,
+  setPendingTx,
+  unsetPendingTx,
+} from './wallet';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { password, mnemonic, pendingTx } from '../../../../__test__/fixtures/wallet.json';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
@@ -193,12 +200,8 @@ describe('Wallet Actions', () => {
       transaction: transactionInitState,
     });
 
-    mockBrowser.storage.local.get
-      .expect('wallets')
-      .andResolve({ wallets: [testWalletDTO] });
-    mockBrowser.storage.local.set
-      .expect({ wallets: [testWalletWithPendingTxDTO] })
-      .andResolve();
+    mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
+    mockBrowser.storage.local.set.expect({ wallets: [testWalletWithPendingTxDTO] }).andResolve();
 
     const setPendingTxAction = function () {
       return new Promise((resolve, reject) => {
@@ -234,9 +237,7 @@ describe('Wallet Actions', () => {
     mockBrowser.storage.local.get
       .expect('wallets')
       .andResolve({ wallets: [testWalletWithPendingTxDTO] });
-    mockBrowser.storage.local.set
-      .expect({ wallets: [testWalletWithoutPendingTxDTO] })
-      .andResolve();
+    mockBrowser.storage.local.set.expect({ wallets: [testWalletWithoutPendingTxDTO] }).andResolve();
 
     const unsetPendingTxAction = function () {
       return new Promise((resolve, reject) => {

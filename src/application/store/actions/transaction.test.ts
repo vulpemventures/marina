@@ -6,7 +6,13 @@ import { appInitialState, appReducer } from '../reducers';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
-import { flush, setAddressesAndAmount, setAsset, setFeeAssetAndAmount, setFeeChangeAddress } from './transaction';
+import {
+  flush,
+  setAddressesAndAmount,
+  setAsset,
+  setFeeAssetAndAmount,
+  setFeeChangeAddress,
+} from './transaction';
 import assets from '../../../../__test__/fixtures/assets.json';
 import {
   transactionStateWithAsset,
@@ -37,7 +43,7 @@ describe('Transaction Actions', () => {
   });
 
   test('Should set asset of output to send', () => {
-    store.dispatch(setAsset(assets[0].assetHash))
+    store.dispatch(setAsset(assets[0].assetHash));
     expect(store.getState()).toStrictEqual({
       wallets: [],
       app: testAppProps,
@@ -54,11 +60,13 @@ describe('Transaction Actions', () => {
       transaction: transactionStateWithAsset,
     });
 
-    store.dispatch(setAddressesAndAmount(
-      confidentialAddresses[0].value,
-      confidentialAddresses[1].value,
-      10000000,
-    ))
+    store.dispatch(
+      setAddressesAndAmount(
+        confidentialAddresses[0].value,
+        confidentialAddresses[1].value,
+        10000000
+      )
+    );
     expect(store.getState()).toStrictEqual({
       wallets: [],
       app: testAppProps,
@@ -81,7 +89,7 @@ describe('Transaction Actions', () => {
       app: testAppProps,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFeeChangeAddress,
-    })
+    });
   });
 
   test('Should set fee asset and amount', () => {
@@ -98,7 +106,7 @@ describe('Transaction Actions', () => {
       app: testAppProps,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFees,
-    })
+    });
   });
 
   test('Should unset fees when setting receipient address and amount', () => {
@@ -109,17 +117,19 @@ describe('Transaction Actions', () => {
       transaction: transactionStateWithFees,
     });
 
-    store.dispatch(setAddressesAndAmount(
-      confidentialAddresses[0].value,
-      confidentialAddresses[1].value,
-      10000000,
-    ));
+    store.dispatch(
+      setAddressesAndAmount(
+        confidentialAddresses[0].value,
+        confidentialAddresses[1].value,
+        10000000
+      )
+    );
     expect(store.getState()).toStrictEqual({
       wallets: [],
       app: testAppProps,
       onboarding: onboardingInitState,
       transaction: transactionStateWithReceipient,
-    })
+    });
   });
 
   test('Should unset fees and receipient address and amount when setting receipient asset', () => {
@@ -136,7 +146,7 @@ describe('Transaction Actions', () => {
       app: testAppProps,
       onboarding: onboardingInitState,
       transaction: transactionStateWithAsset,
-    })
+    });
   });
 
   test('Should flush transaction', () => {
@@ -153,6 +163,6 @@ describe('Transaction Actions', () => {
       app: testAppProps,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
-    })
+    });
   });
 });

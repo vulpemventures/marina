@@ -23,7 +23,7 @@ const assetInfoByHash: Record<string, any> = {
     name: 'Liquid Bitcoin',
     imgPath: 'assets/images/liquid-assets/liquid-btc.svg',
   },
-  '0000000000000000000000000000000000000000000000000000000000000001': {
+  '2dc8bb2d1855a87cb0901e7c024830a0baa09c3a1e7987705cb318b6bbc43823': {
     ticker: 'USDt',
     name: 'Tether',
     imgPath: 'assets/images/liquid-assets/liquid-tether.png',
