@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import cx from 'classnames';
 import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
@@ -62,8 +63,6 @@ const SeedConfirm: React.FC = () => {
     setSelected(drop(selected, index));
   };
 
-  const getBorderColor = () => (error === NULL_ERROR ? 'primary' : 'red');
-
   return (
     <Shell className="space-y-5">
       <h1 className="text-3xl font-medium">{'Confirm your secret mnemonic phrase'}</h1>
@@ -72,7 +71,13 @@ const SeedConfirm: React.FC = () => {
       </p>
 
       <div
-        className={`border-${getBorderColor()} h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md shadow-md`}
+        className={cx(
+          'h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md shadow-md',
+          {
+            'border-primary': error === NULL_ERROR,
+            'border-red': error !== NULL_ERROR,
+          }
+        )}
       >
         {selected.map((word: string, i: number) => (
           <Button
@@ -103,7 +108,7 @@ const SeedConfirm: React.FC = () => {
         ))}
       </div>
 
-      <Button className="w-52 shadow-md" disabled={wordsList.length > 0} onClick={handleConfirm}>
+      <Button className="w-52" disabled={wordsList.length > 0} onClick={handleConfirm}>
         {'Confirm'}
       </Button>
     </Shell>
