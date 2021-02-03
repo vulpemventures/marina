@@ -32,12 +32,13 @@ const assetInfoByHash: Record<string, any> = {
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app }, dispatch] = useContext(AppContext);
+  const history = useHistory();
+  const [isModalUnlockOpen, showUnlockModal] = useState(false);
 
   if (!wallets[0].pendingTx) {
     return <>Loading...</>;
   }
 
-  const history = useHistory();
   const {
     sendAddress,
     sendAsset,
@@ -45,8 +46,7 @@ const Confirmation: React.FC = () => {
     feeAsset,
     feeAmount,
     value,
-  } = wallets[0].pendingTx!.props;
-  const [isModalUnlockOpen, showUnlockModal] = useState(false);
+  } = wallets[0].pendingTx.props;
 
   const handleModalUnlockCancel = () => showUnlockModal(false);
   const handleShowMnemonic = async (password: string) => {
@@ -58,7 +58,7 @@ const Confirmation: React.FC = () => {
       throw new Error('Invalid password');
     }
 
-    let outPubkeys: Map<number, string> = new Map();
+    const outPubkeys: Map<number, string> = new Map();
     if (isConfidentialAddress(sendAddress)) {
       const receipientOutIndex = receipientOutIndexFromTx(value, sendAddress);
       const receipientBlindingKey = blindingKeyFromAddress(sendAddress);
@@ -69,7 +69,7 @@ const Confirmation: React.FC = () => {
       mnemonic,
       wallets[0].confidentialAddresses,
       app.network.value,
-      wallets[0].pendingTx!.value,
+      value,
       outPubkeys
     );
 
@@ -84,7 +84,7 @@ const Confirmation: React.FC = () => {
         unsetPendingTx(() => {
           dispatch(flush());
           history.push(DEFAULT_ROUTE);
-          browser.browserAction.setBadgeText({ text: '' });
+          browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
         }, onError)
       );
     };

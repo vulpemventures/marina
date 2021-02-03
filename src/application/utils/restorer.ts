@@ -1,5 +1,5 @@
 import { fromXpub, IdentityRestorerInterface, IdentityType, MasterPublicKey, Mnemonic } from 'ldk';
-import Identity, { IdentityInterface } from 'ldk/dist/identity/identity';
+import { IdentityInterface } from 'ldk/dist/identity/identity';
 import { Address } from '../../domain/wallet/value-objects';
 import { IWallet } from '../../domain/wallet/wallet';
 

@@ -58,7 +58,7 @@ export class Wallet extends Entity<IWallet> {
   }
 
   get pendingTx(): Transaction | undefined {
-    return this.props.pendingTx!;
+    return this.props.pendingTx;
   }
 
   /**

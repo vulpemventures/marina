@@ -93,7 +93,7 @@ const ChooseFee: React.FC = () => {
         }
       }
     })();
-  });
+  }, [dispatch, wallets, isLoading, feeCurrency, transaction, unspents, app, feeLevel, satsPerByte]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -113,7 +113,7 @@ const ChooseFee: React.FC = () => {
             },
           ];
           const changeAddressGetter = (asset: string): any => {
-            if (asset == transaction.asset) {
+            if (asset === transaction.asset) {
               return transaction.changeAddress;
             }
             return transaction.feeChangeAddress;
@@ -135,7 +135,7 @@ const ChooseFee: React.FC = () => {
               setSatsPerByte(currentSatsPerByte);
             }
           } else {
-            const tx: string = '';
+            const tx = '';
             setUnsignedPendingTx(tx);
             // TODO: call taxi
           }
@@ -144,7 +144,7 @@ const ChooseFee: React.FC = () => {
         }
       }
     }
-  });
+  },  [isLoading, feeCurrency, transaction, unspents, app, feeLevel, satsPerByte]);
 
   const handleConfirm = () => {
     const feeAsset = assetByAssetTicker[feeCurrency];
@@ -162,7 +162,7 @@ const ChooseFee: React.FC = () => {
         () => {
           dispatch(setFeeAssetAndAmount(feeAsset, feeAmount));
           history.push(SEND_CONFIRMATION_ROUTE);
-          browser.browserAction.setBadgeText({ text: '1' });
+          browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
         },
         (err) => console.log(err)
       )

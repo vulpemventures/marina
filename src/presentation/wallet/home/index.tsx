@@ -19,8 +19,9 @@ import { AppContext } from '../../../application/store/context';
 
 const Home: React.FC = () => {
   const [{ wallets }] = useContext(AppContext);
-
   const history = useHistory();
+  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+
   if (wallets[0].pendingTx) {
     history.push(SEND_CONFIRMATION_ROUTE);
     return <></>;
@@ -34,8 +35,9 @@ const Home: React.FC = () => {
   };
 
   // Save mnemonic modal
-  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+  const handleSaveMnemonicClose = () => {
+    showSaveMnemonicModal(false)
+  };
   const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
 
   // TODO: Show modal conditionnaly base on state
@@ -62,7 +64,7 @@ const Home: React.FC = () => {
 
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <ButtonList title="Assets" type="assets">
-          {assets.map((asset) => {
+          {assets.map((asset, i) => {
             let imgPath: string;
             switch (asset.assetTicker) {
               case 'L-BTC':
@@ -81,6 +83,7 @@ const Home: React.FC = () => {
 
             return (
               <ButtonAsset
+                key={i}
                 assetImgPath={imgPath}
                 assetHash={asset.assetHash}
                 assetName={asset.assetName}

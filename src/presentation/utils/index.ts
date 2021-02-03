@@ -45,7 +45,7 @@ export const blindAndSignPset = async (
   const mnemonicWallet = await walletFromAddresses(mnemonic, addresses, chain);
 
   const tx = unsignedTxFromPset(psetBase64);
-  let outputsToBlind: number[] = [];
+  const outputsToBlind: number[] = [];
   tx.outs.forEach((out, i) => {
     if (out.script.length > 0) {
       return outputsToBlind.push(i);
