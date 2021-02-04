@@ -22,6 +22,8 @@ import {
   WALLET_RESTORE_SUCCESS,
   WALLET_SET_UTXOS_FAILURE,
   WALLET_SET_UTXOS_SUCCESS,
+  WALLET_GET_ALL_BALANCES_SUCCESS,
+  WALLET_GET_ALL_BALANCES_FAILURE,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
@@ -226,20 +228,27 @@ export function deriveNewAddress(
   };
 }
 
-export function fetchBalances(
-  onSuccess: (balances: { [assetHash: string]: number }[]) => void,
+/**
+ * Extract balances from all unblinded utxos in state
+ * @param onSuccess
+ * @param onError
+ */
+export function getAllBalances(
+  onSuccess: (balances: { [assetHash: string]: number }) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
     const { wallets } = getState();
     const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
+        dispatch([WALLET_GET_ALL_BALANCES_FAILURE]);
         onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
         return acc;
       }
-      acc = [...acc, { [curr.asset]: curr.value }];
+      acc = { ...acc, [curr.asset]: curr.value };
       return acc;
-    }, [] as { [assetHash: string]: number }[]);
+    }, {} as { [assetHash: string]: number });
+    dispatch([WALLET_GET_ALL_BALANCES_SUCCESS]);
     onSuccess(balances);
   };
 }

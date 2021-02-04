@@ -1,5 +1,5 @@
 import { UtxoInterface } from 'ldk';
-import { compareUtxos, createWallet, fetchBalances, setUtxos } from './wallet';
+import { compareUtxos, createWallet, getAllBalances, setUtxos } from './wallet';
 import { mint } from '../../../../__test__/_regtest';
 import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
@@ -10,7 +10,7 @@ import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testWalletDTO, testWalletProps } from '../../../../__test__/fixtures/test-wallet';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
-import { getUtxoMap, testWalletUtxosProps } from '../../../../__test__/fixtures/test-transaction';
+import { getUtxoMap, testWalletUtxosProps } from '../../../../__test__/fixtures/test-utxos';
 import { getRandomWallet } from '../../../../__test__/fixtures/wallet-keys';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
@@ -170,17 +170,17 @@ describe('Utxos Actions', () => {
     return expect(compareUtxos(utxoMapStore, fetchedUtxos as UtxoInterface[])).toBeTruthy();
   });
 
-  test('Should fetch balances', async () => {
-    // Set wallet with 1 utxo in state
+  test('Should get all balances', async () => {
+    // Set wallet with 2 utxos in state
     store.setState({
       app: testAppProps,
       wallets: [testWalletUtxosProps],
     });
 
-    const fetchBalancesAction = function () {
+    const getAllBalancesAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          fetchBalances(
+          getAllBalances(
             (balances) => resolve(balances),
             (err: Error) => reject(err.message)
           )
@@ -188,10 +188,9 @@ describe('Utxos Actions', () => {
       });
     };
 
-    return expect(fetchBalancesAction()).resolves.toMatchObject(
-      expect.arrayContaining([
-        { '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8': 123000000 },
-      ])
-    );
+    return expect(getAllBalancesAction()).resolves.toMatchObject({
+      '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8': 123000000,
+      '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': 42069420,
+    });
   });
 });
