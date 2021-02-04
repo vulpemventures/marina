@@ -18,7 +18,7 @@ import { onboardingInitState } from '../reducers/onboarding-reducer';
 // Mock for UniqueEntityID
 jest.mock('uuid');
 
-describe('Transaction Actions', () => {
+describe('Utxos Actions', () => {
   let repos, store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {

@@ -292,7 +292,7 @@ export function setUtxos(
       const { wallets } = getState();
       // If utxo sets not equal, create utxoMap and update stores
       if (!compareUtxos(wallets[0].utxoMap, allUtxos)) {
-        const unblindedUtxos = await Promise.all(
+        const unblindedOrNotUtxos = await Promise.all(
           fetchedUtxosWithBlindingPrivateKey.map(async (keyPairData) => {
             return await Promise.all(
               keyPairData.utxos.map(
@@ -306,16 +306,12 @@ export function setUtxos(
             );
           })
         );
-
-        // If we have at least one unblindedUtxos array, then update stores
-        if (unblindedUtxos.some((arr) => arr.length)) {
-          const utxoMap = new Map<Outpoint, UtxoInterface>();
-          unblindedUtxos.forEach((keyPairUtxos) =>
-            keyPairUtxos.forEach((utxo) => utxoMap.set(toOutpoint(utxo), utxo))
-          );
-          await repos.wallet.setUtxos(utxoMap);
-          dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap }]);
-        }
+        const utxoMap = new Map<Outpoint, UtxoInterface>();
+        unblindedOrNotUtxos.forEach((keyPairUtxos) =>
+          keyPairUtxos.forEach((utxo) => utxoMap.set(toOutpoint(utxo), utxo))
+        );
+        await repos.wallet.setUtxos(utxoMap);
+        dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap }]);
       }
       onSuccess();
     } catch (error) {
