@@ -3,13 +3,14 @@ import {
   EsploraIdentityRestorer,
   IdentityOpts,
   IdentityType,
+  fetchUtxos,
+  fromXpub,
   Mnemonic,
   MasterPublicKey,
-  fromXpub,
-  fetchAndUnblindUtxos,
-  UtxoInterface,
   Outpoint,
   toOutpoint,
+  tryToUnblindUtxo,
+  UtxoInterface,
 } from 'ldk';
 import {
   INIT_WALLET,
@@ -226,7 +227,7 @@ export function deriveNewAddress(
 }
 
 export function fetchBalances(
-  onSuccess: (balances: [string, number][]) => void,
+  onSuccess: (balances: { [assetHash: string]: number }[]) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
@@ -236,9 +237,9 @@ export function fetchBalances(
         onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
         return acc;
       }
-      acc = [...acc, [curr.asset, curr.value]];
+      acc = [...acc, { [curr.asset]: curr.value }];
       return acc;
-    }, [] as [string, number][]);
+    }, [] as { [assetHash: string]: number }[]);
     onSuccess(balances);
   };
 }
@@ -265,23 +266,56 @@ export function compareUtxos(
 }
 
 export function setUtxos(
-  addressesWithBlindingKey: AddressInterface[],
+  addressesWithBlindingKeys: AddressInterface[],
   onSuccess: () => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
-      const fetchedUtxos = await fetchAndUnblindUtxos(
-        addressesWithBlindingKey,
-        'http://localhost:3001'
+      // Fetch utxos and return with corresponding blinding key
+      const fetchedUtxosWithBlindingPrivateKey = (await Promise.all(
+        addressesWithBlindingKeys.map(async (o) => ({
+          utxos: await fetchUtxos(o.confidentialAddress, 'http://localhost:3001'),
+          blindingPrivateKey: o.blindingPrivateKey,
+        }))
+      )) as {
+        utxos: UtxoInterface[];
+        blindingPrivateKey: AddressInterface['blindingPrivateKey'];
+      }[];
+
+      // Extract utxos of all key pairs in flat array
+      const allUtxos = fetchedUtxosWithBlindingPrivateKey.reduce(
+        (acc, curr) => [...acc, ...curr.utxos],
+        [] as UtxoInterface[]
       );
+
       const { wallets } = getState();
       // If utxo sets not equal, create utxoMap and update stores
-      if (!compareUtxos(wallets[0].utxoMap, fetchedUtxos)) {
-        const utxoMap = new Map<Outpoint, UtxoInterface>();
-        fetchedUtxos.forEach((utxo) => utxoMap.set(toOutpoint(utxo), utxo));
-        await repos.wallet.setUtxos(utxoMap);
-        dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap }]);
+      if (!compareUtxos(wallets[0].utxoMap, allUtxos)) {
+        const unblindedUtxos = await Promise.all(
+          fetchedUtxosWithBlindingPrivateKey.map(async (keyPairData) => {
+            return await Promise.all(
+              keyPairData.utxos.map(
+                async (utxo) =>
+                  await tryToUnblindUtxo(
+                    utxo,
+                    keyPairData.blindingPrivateKey,
+                    'http://localhost:3001'
+                  )
+              )
+            );
+          })
+        );
+
+        // If we have at least one unblindedUtxos array, then update stores
+        if (unblindedUtxos.some((arr) => arr.length)) {
+          const utxoMap = new Map<Outpoint, UtxoInterface>();
+          unblindedUtxos.forEach((keyPairUtxos) =>
+            keyPairUtxos.forEach((utxo) => utxoMap.set(toOutpoint(utxo), utxo))
+          );
+          await repos.wallet.setUtxos(utxoMap);
+          dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap }]);
+        }
       }
       onSuccess();
     } catch (error) {

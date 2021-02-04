@@ -34,8 +34,8 @@ describe('Transaction Actions', () => {
     store.clearActions();
   });
 
-  test('Should set utxos', async () => {
-    jest.setTimeout(15000);
+  test('Should set utxos of 2 different key pairs', async () => {
+    jest.setTimeout(30000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -47,25 +47,30 @@ describe('Transaction Actions', () => {
         (err) => console.log(err)
       )
     );
-
     // Set UTXOs
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
     mockBrowser.storage.local.set
-      .expect({ wallets: [{ ...testWalletDTO, utxoMap: getUtxoMap(2) }] })
+      .expect({ wallets: [{ ...testWalletDTO, utxoMap: getUtxoMap(3) }] })
       .andResolve();
-
-    const wallet = getRandomWallet();
-    await mint(wallet.getNextAddress().confidentialAddress, 1);
-    await mint(wallet.getNextAddress().confidentialAddress, 5678);
-
+    // Mint 2 utxos on this key pair
+    const keyPair1 = getRandomWallet();
+    await mint(keyPair1.getNextAddress().confidentialAddress, 1);
+    await mint(keyPair1.getNextAddress().confidentialAddress, 5678);
+    // Mint 1 utxos on this key pair
+    const keyPair2 = getRandomWallet();
+    await mint(keyPair2.getNextAddress().confidentialAddress, 420);
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
           setUtxos(
             [
               {
-                confidentialAddress: wallet.getNextAddress().confidentialAddress,
-                blindingPrivateKey: wallet.getNextAddress().blindingPrivateKey,
+                confidentialAddress: keyPair1.getNextAddress().confidentialAddress,
+                blindingPrivateKey: keyPair1.getNextAddress().blindingPrivateKey,
+              },
+              {
+                confidentialAddress: keyPair2.getNextAddress().confidentialAddress,
+                blindingPrivateKey: keyPair2.getNextAddress().blindingPrivateKey,
               },
             ],
             () => resolve(store.getState()),
@@ -74,16 +79,15 @@ describe('Transaction Actions', () => {
         );
       });
     };
-
     return expect(setUtxosAction()).resolves.toMatchObject({
       app: testAppProps,
       onboarding: onboardingInitState,
-      wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(2) }],
+      wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(3) }],
     });
   });
 
-  test('Should not set if same utxo set exists in store', async () => {
-    jest.setTimeout(15000);
+  test('Should not set utxos if same utxo set exists in store', async () => {
+    jest.setTimeout(20000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -95,29 +99,25 @@ describe('Transaction Actions', () => {
         (err) => console.log(err)
       )
     );
-
     // Set UTXOs. Should be called once by first setUtxosAction()
     mockBrowser.storage.local.get
       .expect('wallets')
       .andResolve({ wallets: [testWalletDTO] })
       .times(1);
     mockBrowser.storage.local.set
-      .expect({ wallets: [{ ...testWalletDTO, utxoMap: getUtxoMap(2) }] })
+      .expect({ wallets: [{ ...testWalletDTO, utxoMap: getUtxoMap(1) }] })
       .andResolve()
       .times(1);
-
-    const wallet = getRandomWallet();
-    await mint(wallet.getNextAddress().confidentialAddress, 1);
-    await mint(wallet.getNextAddress().confidentialAddress, 5678);
-
+    const keyPair = getRandomWallet();
+    await mint(keyPair.getNextAddress().confidentialAddress, 5678);
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
           setUtxos(
             [
               {
-                confidentialAddress: wallet.getNextAddress().confidentialAddress,
-                blindingPrivateKey: wallet.getNextAddress().blindingPrivateKey,
+                confidentialAddress: keyPair.getNextAddress().confidentialAddress,
+                blindingPrivateKey: keyPair.getNextAddress().blindingPrivateKey,
               },
             ],
             () => resolve(store.getState()),
@@ -126,13 +126,14 @@ describe('Transaction Actions', () => {
         );
       });
     };
-
     // Call setUtxosAction twice, second time should not update anything since utxo sets are equal
     await setUtxosAction();
+    // TODO: Check that no calls to repo methods and dispatch/reducer have been made
+    // In the meantime console.log shows that they are not called
     return expect(setUtxosAction()).resolves.toMatchObject({
       app: testAppProps,
       onboarding: onboardingInitState,
-      wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(2) }],
+      wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(1) }],
     });
   });
 
@@ -189,7 +190,7 @@ describe('Transaction Actions', () => {
 
     return expect(fetchBalancesAction()).resolves.toMatchObject(
       expect.arrayContaining([
-        ['7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8', 123000000],
+        { '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8': 123000000 },
       ])
     );
   });

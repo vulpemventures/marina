@@ -35,10 +35,10 @@ export const getUtxoMap = (num: number) => {
   const utxoMap = new Map();
   [...Array(num)].forEach((_, i) => {
     utxoMap.set(
-      expect.objectContaining({
+      {
         txid: expect.any(String),
         vout: expect.any(Number),
-      }),
+      },
       utxo
     );
   });
