@@ -30,7 +30,7 @@ import { IWallet } from '../../../domain/wallet/wallet';
 import { Address } from '../../../domain/wallet/value-objects';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { browser } from 'webextension-polyfill-ts';
-import { feeAmountFromTx } from '../../utils';
+import { assetInfoByHash, assetInfoByTicker, feeAmountFromTx, fetchTopupFromTaxi, fillTaxiTx } from '../../utils';
 
 const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
@@ -38,26 +38,23 @@ const feeLevelToSatsPerByte: { [key: string]: number } = {
   '100': 0.1,
 };
 
-const assetTickerByAsset: Record<string, string> = {
-  '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': 'L-BTC',
-  '2dc8bb2d1855a87cb0901e7c024830a0baa09c3a1e7987705cb318b6bbc43823': 'USDt',
-};
-
-const assetByAssetTicker: Record<string, string> = {
-  'L-BTC': '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-  USDt: '2dc8bb2d1855a87cb0901e7c024830a0baa09c3a1e7987705cb318b6bbc43823',
-};
+const taxiURL: Record<string, string> = {
+  'regtest': 'http://localhost:8000',
+  'mainnet': 'https://staging.api.liquid.taxi:8000',
+}
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
   const [{ wallets, app, transaction }, dispatch] = useContext(AppContext);
-  const [feeCurrency, setFeeCurrency] = useState<'L-BTC' | 'USDt'>('L-BTC');
+  const [feeCurrency, setFeeCurrency] = useState<string>('L-BTC');
   const [feeLevel, setFeeLevel] = useState<string>('50');
+  const [taxiTopup, setTaxiTopup] = useState<any>(undefined);
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unspents, setUnspents] = useState<UtxoInterface[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [isWarningFee] = useState<boolean>(true);
+  const receipientAssetTicker = assetInfoByHash[transaction.asset].ticker;
 
   // TODO: remove this since utxos will be already cached in memory
   useEffect(() => {
@@ -75,80 +72,84 @@ const ChooseFee: React.FC = () => {
     })();
   });
 
-  // This sets the fee change address in case it's not of the same type
-  // of the transaction's change address
+  // This sets the fee change address in case fees are not of the same asset
+  // type of the one to be sent to the receipient.
   useEffect(() => {
     void (async (): Promise<void> => {
-      if (
-        feeCurrency !== assetTickerByAsset[transaction.asset] &&
-        transaction.feeChangeAddress === ''
-      ) {
-        try {
-          const wallet = { ...wallets[0] };
-          wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
-          const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-          dispatch(setFeeChangeAddress(feeChangeAddress));
-        } catch (error) {
-          console.log(error);
+      if (!isLoading) {
+        if (
+          feeCurrency !== receipientAssetTicker &&
+          transaction.feeChangeAddress === ''
+        ) {
+          try {
+            const wallet = { ...wallets[0] };
+            wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
+            const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
+            dispatch(setFeeChangeAddress(feeChangeAddress));
+          } catch (error) {
+            console.log(error);
+          }
         }
       }
     })();
   }, [dispatch, wallets, isLoading, feeCurrency, transaction, unspents, app, feeLevel, satsPerByte]);
 
   useEffect(() => {
-    if (!isLoading) {
-      // this check prevents to build a tx in case the fee change address isn't
-      // yet available but needed for the tx.
-      if (
-        feeCurrency === assetTickerByAsset[transaction.asset] ||
-        transaction.feeChangeAddress !== ''
-      ) {
-        try {
-          const w = walletFromCoins(unspents, app.network.value);
-          const receipients: RecipientInterface[] = [
-            {
-              asset: transaction.asset,
-              value: transaction.amountInSatoshi,
-              address: transaction.receipientAddress,
-            },
-          ];
-          const changeAddressGetter = (asset: string): any => {
-            if (asset === transaction.asset) {
-              return transaction.changeAddress;
-            }
-            return transaction.feeChangeAddress;
-          };
+    void (async (): Promise<void> => {
+      if (!isLoading) {
+        if (feeCurrency === 'L-BTC') {
+          // this check prevents to build a tx in case the fee change address isn't
+          // yet available but needed for the tx.
+          if (
+            feeCurrency === receipientAssetTicker ||
+            transaction.feeChangeAddress !== ''
+          ) {
+            try {
+              const w = walletFromCoins(unspents, app.network.value);
+              const receipients: RecipientInterface[] = [
+                {
+                  asset: transaction.asset,
+                  value: transaction.amountInSatoshi,
+                  address: transaction.receipientAddress,
+                },
+              ];
+              const changeAddressGetter = (asset: string): any => {
+                if (asset === transaction.asset) {
+                  return transaction.changeAddress;
+                }
+                return transaction.feeChangeAddress;
+              };
 
-          if (feeCurrency === 'L-BTC') {
-            const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
-
-            if (currentSatsPerByte !== satsPerByte) {
-              const tx: string = w.buildTx(
-                w.createTx(),
-                receipients,
-                greedyCoinSelector(),
-                changeAddressGetter,
-                true,
-                satsPerByte
-              );
-              setUnsignedPendingTx(tx);
-              setSatsPerByte(currentSatsPerByte);
+              const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
+              if (currentSatsPerByte !== satsPerByte) {
+                const tx: string = w.buildTx(
+                  w.createTx(),
+                  receipients,
+                  greedyCoinSelector(),
+                  changeAddressGetter,
+                  true,
+                  satsPerByte
+                );
+                setUnsignedPendingTx(tx);
+                setSatsPerByte(currentSatsPerByte);
+              }
+            } catch (error) {
+              console.log(error);
             }
-          } else {
-            const tx = '';
-            setUnsignedPendingTx(tx);
-            // TODO: call taxi
           }
-        } catch (error) {
-          console.log(error);
         }
       }
-    }
+    })();
   },  [isLoading, feeCurrency, transaction, unspents, app, feeLevel, satsPerByte]);
 
   const handleConfirm = () => {
-    const feeAsset = assetByAssetTicker[feeCurrency];
-    const feeAmount = parseFloat(feeAmountFromTx(unsignedPendingTx)) * Math.pow(10, 8);
+    const feeAsset = assetInfoByTicker[feeCurrency].hash;
+    let feeAmount: number;
+    if (feeCurrency === 'L-BTC') {
+      feeAmount = parseFloat(feeAmountFromTx(unsignedPendingTx)) * Math.pow(10, 8);
+    } else {
+      feeAmount = taxiTopup.topup.assetAmount;
+    }
     dispatch(
       setPendingTx(
         Transaction.create({
@@ -168,6 +169,53 @@ const ChooseFee: React.FC = () => {
       )
     );
   };
+
+  const handleUseUSDtFees = async () => {
+    const feeCurrency = 'USDt';
+    setFeeCurrency(feeCurrency);
+    
+    try {
+      const changeAddressGetter = (asset: string): any => {
+        if (asset === transaction.asset) {
+          return transaction.changeAddress;
+        }
+        return transaction.feeChangeAddress;
+      };
+
+      let t = taxiTopup;
+      if (!t) {
+        const feeAsset = assetInfoByTicker[feeCurrency].hash;
+        const topup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeAsset);
+        setTaxiTopup(topup);
+        t = topup;
+      }
+      const taxiPayout = {
+        value: t.topup.assetAmount,
+        asset: t.topup.assetHash,
+        address: '',
+      } as RecipientInterface;
+      const receipients: RecipientInterface[] = [
+        {
+          asset: transaction.asset,
+          value: transaction.amountInSatoshi,
+          address: transaction.receipientAddress,
+        },
+      ];
+
+      const tx = fillTaxiTx(
+        t.topup.partial,
+        unspents,
+        receipients,
+        taxiPayout,
+        greedyCoinSelector(),
+        changeAddressGetter,
+      );
+
+      setUnsignedPendingTx(tx);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
@@ -202,7 +250,7 @@ const ChooseFee: React.FC = () => {
         </Button>
         <Button
           className="flex-1"
-          onClick={() => setFeeCurrency('USDt')}
+          onClick={handleUseUSDtFees}
           roundedMd={true}
           textBase={true}
         >

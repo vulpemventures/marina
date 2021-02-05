@@ -10,25 +10,7 @@ import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import {
-  blindAndSignPset,
-  blindingKeyFromAddress,
-  isConfidentialAddress,
-  receipientOutIndexFromTx,
-} from '../../utils';
-
-const assetInfoByHash: Record<string, any> = {
-  '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
-    ticker: 'L-BTC',
-    name: 'Liquid Bitcoin',
-    imgPath: 'assets/images/liquid-assets/liquid-btc.svg',
-  },
-  '2dc8bb2d1855a87cb0901e7c024830a0baa09c3a1e7987705cb318b6bbc43823': {
-    ticker: 'USDt',
-    name: 'Tether',
-    imgPath: 'assets/images/liquid-assets/liquid-tether.png',
-  },
-};
+import { assetInfoByHash, blindAndSignPset, blindingInfoFromPendingTx } from '../../utils';
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app }, dispatch] = useContext(AppContext);
@@ -58,18 +40,14 @@ const Confirmation: React.FC = () => {
       throw new Error('Invalid password');
     }
 
-    const outPubkeys: Map<number, string> = new Map();
-    if (isConfidentialAddress(sendAddress)) {
-      const receipientOutIndex = receipientOutIndexFromTx(value, sendAddress);
-      const receipientBlindingKey = blindingKeyFromAddress(sendAddress);
-      outPubkeys.set(receipientOutIndex, receipientBlindingKey);
-    }
+    const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(wallets[0].pendingTx!.props, app.network.value);
 
     const tx: string = await blindAndSignPset(
       mnemonic,
       wallets[0].confidentialAddresses,
       app.network.value,
       value,
+      outputsToBlind,
       outPubkeys
     );
 

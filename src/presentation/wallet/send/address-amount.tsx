@@ -11,10 +11,12 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
+import { assetInfoByHash } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
   amount: number;
+  assetTicker: string;
 }
 
 interface AddressAmountFormProps {
@@ -78,7 +80,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
               value={values.amount}
             />
             <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-base font-medium">
-              L-BTC
+              {values.assetTicker}
             </span>
           </div>
         </label>
@@ -109,6 +111,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount: ('' as unknown) as number,
+    assetTicker: assetInfoByHash[props.state.transaction.asset].ticker,
   }),
 
   validationSchema: Yup.object().shape({
