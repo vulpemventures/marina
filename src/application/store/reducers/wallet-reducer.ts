@@ -13,10 +13,12 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }
 
+    //
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -26,6 +28,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -37,6 +40,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
+    //
     case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -47,6 +51,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
+        utxoMap: payload.utxoMap,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -58,6 +63,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
+    //
     case ACTION_TYPES.WALLET_DERIVE_ADDRESS_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -74,6 +80,24 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
+    //
+    case ACTION_TYPES.WALLET_SET_UTXOS_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: undefined,
+        utxoMap: payload.utxoMap,
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_SET_UTXOS_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { utxos: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+
+    //
     default: {
       return state;
     }

@@ -1,3 +1,5 @@
+import { Outpoint, UtxoInterface } from 'ldk';
+
 export interface WalletDTO {
   walletId: string;
   masterXPub: string;
@@ -5,4 +7,5 @@ export interface WalletDTO {
   encryptedMnemonic: string;
   passwordHash: string;
   confidentialAddresses: string[];
+  utxoMap: Map<Outpoint, UtxoInterface>;
 }

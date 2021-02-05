@@ -17,7 +17,6 @@ jobs:
         node-version:
           - 14
         os:
-          - macos-latest
           - ubuntu-latest
 
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
@@ -27,6 +26,13 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+
+      - name: Install Nigiri
+        run: |
+          mkdir -p tmp; cd tmp
+          curl https://travis.nigiri.network | bash; cd ..
+          docker-compose -f  tmp/docker-compose.yml up -d
+
       - name: Install dependencies
         run: npm install --ci
 

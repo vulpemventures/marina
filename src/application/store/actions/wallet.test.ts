@@ -1,8 +1,11 @@
+import { createWallet, deriveNewAddress, initWallet, restoreWallet } from './wallet';
+import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { appInitialState, appReducer } from '../reducers';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import {
   testWalletDTO,
@@ -13,11 +16,8 @@ import {
   testWalletWithConfidentialAddrDTO,
   testWalletWithConfidentialAddrProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { createWallet, deriveNewAddress, initWallet, restoreWallet } from './wallet';
+import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { password, mnemonic } from '../../../../__test__/fixtures/wallet.json';
-import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -54,7 +54,7 @@ describe('Wallet Actions', () => {
   });
 
   test('Should create wallet', () => {
-    mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
+    mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
 
     const createWalletAction = function () {

@@ -1,5 +1,6 @@
-import { IWallet, Wallet } from '../../src/domain/wallet/wallet';
+import { Outpoint, UtxoInterface } from 'ldk';
 import { WalletDTO } from '../../src/application/dtos/wallet-dto';
+import { IWallet, Wallet } from '../../src/domain/wallet/wallet';
 import {
   Address,
   EncryptedMnemonic,
@@ -28,6 +29,7 @@ export const testWalletDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
 export const testWalletProps: IWallet = {
@@ -37,25 +39,28 @@ export const testWalletProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWallet: Wallet = Wallet.createWallet(testWalletProps);
 
 // With 1 Confidential Address
 export const testWalletWithConfidentialAddrDTO: WalletDTO = {
-  confidentialAddresses: [confidentialAddresses[0].value],
+  confidentialAddresses: [confidentialAddresses[0].address],
   encryptedMnemonic: encryptedMnemonic,
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
 export const testWalletWithConfidentialAddrProps: IWallet = {
-  confidentialAddresses: [Address.create(confidentialAddresses[0].value)],
+  confidentialAddresses: [Address.create(confidentialAddresses[0].address)],
   encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
   errors: undefined,
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWithConfidentialAddr: Wallet = Wallet.createWallet(
   testWalletWithConfidentialAddrProps
@@ -63,23 +68,25 @@ export const testWalletWithConfidentialAddr: Wallet = Wallet.createWallet(
 
 // With 2 Confidential Addresses
 export const testWalletWith2ConfidentialAddrDTO: WalletDTO = {
-  confidentialAddresses: [confidentialAddresses[0].value, confidentialAddresses[1].value],
+  confidentialAddresses: [confidentialAddresses[0].address, confidentialAddresses[1].address],
   encryptedMnemonic: encryptedMnemonic,
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
 export const testWalletWith2ConfidentialAddrProps: IWallet = {
   confidentialAddresses: [
-    Address.create(confidentialAddresses[0].value),
-    Address.create(confidentialAddresses[1].value),
+    Address.create(confidentialAddresses[0].address),
+    Address.create(confidentialAddresses[1].address),
   ],
   encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
   errors: undefined,
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWith2ConfidentialAddr: Wallet = Wallet.createWallet(
   testWalletWith2ConfidentialAddrProps
@@ -92,6 +99,7 @@ export const testWalletRestoredDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
 export const testWalletRestoredProps: IWallet = {
@@ -102,5 +110,6 @@ export const testWalletRestoredProps: IWallet = {
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
   restored: true,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletRestored: Wallet = Wallet.createWallet(testWalletRestoredProps);
