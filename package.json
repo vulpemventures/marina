@@ -32,9 +32,11 @@
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.2.5",
     "@headlessui/react": "^0.2.0",
     "formik": "^2.2.6",
-    "ldk": "^0.1.4",
+    "google-protobuf": "^3.14.0",
+    "ldk": "^0.1.6",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.1",
