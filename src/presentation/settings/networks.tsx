@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../../application/store/context';
 import { changeNetwork } from '../../application/store/actions';
-import { Network } from '../../domain/app/value-objects/network';
+import { Network } from '../../domain/app/value-objects';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
@@ -16,10 +16,10 @@ const SettingsNetworks: React.FC = () => {
     dispatch,
   ] = useContext(AppContext);
   const selectedNetwork = formatNetwork(network.value);
-  const setSelectedValue = (net: string) =>
+  const setSelectedValue = (net: Network['value']) =>
     dispatch(
       changeNetwork(
-        Network.create(net.toLowerCase()),
+        Network.create(net.toLowerCase() as Network['value']),
         () => ({}),
         (err: Error) => console.log(err)
       )

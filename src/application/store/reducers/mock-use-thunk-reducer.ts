@@ -1,15 +1,10 @@
 import { Dispatch, Reducer } from 'react';
-import { Thunk } from '../../../domain/common';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
+import { Repositories, Thunk } from '../../../domain/common';
 
 export function mockThunkReducer<S, A>(
   reducer: Reducer<S, A>,
   initialState: S,
-  repositories: {
-    app: IAppRepository;
-    wallet: IWalletRepository;
-  }
+  repositories: Repositories
 ) {
   const mockStore = () => {
     let actions: A[] = [];

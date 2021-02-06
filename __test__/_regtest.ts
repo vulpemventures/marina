@@ -1,30 +1,48 @@
+/* eslint-disable no-empty */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable no-constant-condition */
 import axios from 'axios';
-// Nigiri Chopstick Liquid base URI
-export const APIURL = process.env.EXPLORER || `http://localhost:3001`;
+import { Thunk, IAppState, Action } from '../src/domain/common';
+import { deriveNewAddress, setUtxos } from '../src/application/store/actions';
+import { xpubWalletFromAddresses } from '../src/application/utils/restorer';
+import { Address } from '../src/domain/wallet/value-objects';
+
+const APIURL = process.env.EXPLORER || `http://localhost:3001`;
 
 export function sleep(ms: number): Promise<any> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function fetchUtxos(address: string, txid?: string): Promise<any> {
-  let utxos: any = [];
   try {
-    await sleep(3000);
-    utxos = (await axios.get(`${APIURL}/address/${address}/utxo`)).data;
+    let utxos = (await axios.get(`${APIURL}/address/${address}/utxo`)).data;
     if (txid) {
       utxos = utxos.filter((u: any) => u.txid === txid);
     }
+    return utxos;
   } catch (e) {
     console.error(e);
     throw e;
   }
-  return utxos;
 }
 
-export async function faucet(address: string): Promise<void> {
+export async function faucet(address: string): Promise<any> {
   try {
-    await axios.post(`${APIURL}/faucet`, { address });
-    await sleep(3000);
+    const { status, data } = await axios.post(`${APIURL}/faucet`, { address });
+    if (status !== 200) {
+      throw new Error('Invalid address');
+    }
+    const { txId } = data;
+
+    while (true) {
+      await sleep(1000);
+      try {
+        const utxos = await fetchUtxos(address, txId);
+        if (utxos.length > 0) {
+          return;
+        }
+      } catch (ignore) {}
+    }
   } catch (e) {
     console.error(e);
     throw e;
@@ -32,40 +50,113 @@ export async function faucet(address: string): Promise<void> {
 }
 
 export async function fetchTxHex(txId: string): Promise<string> {
-  let hex: string;
   try {
-    await sleep(3000);
-    hex = (await axios.get(`${APIURL}/tx/${txId}/hex`)).data;
+    return (await axios.get(`${APIURL}/tx/${txId}/hex`)).data;
   } catch (e) {
     console.error(e);
     throw e;
   }
-  return hex;
 }
 
+/**
+ * Mint
+ * @param address
+ * @param quantity
+ * @param name
+ * @param ticker
+ * @returns mint data
+ */
 export async function mint(
   address: string,
-  quantity: number
+  quantity: number,
+  name?: string,
+  ticker?: string,
+  precision?: number
 ): Promise<{ asset: string; txid: string }> {
-  let ret: any;
   try {
-    const response = await axios.post(`${APIURL}/mint`, { address, quantity });
+    const { status, data } = await axios.post(`${APIURL}/mint`, {
+      address,
+      quantity,
+      name,
+      ticker,
+      precision,
+    });
+    if (status !== 200) {
+      throw new Error('Invalid address');
+    }
     await sleep(5000);
-    ret = response.data;
+    return data;
   } catch (e) {
     console.error(e);
     throw e;
   }
-  return ret;
 }
 
 export async function broadcastTx(hex: string): Promise<string> {
   try {
-    const response = await axios.post(`${APIURL}/tx`, hex);
-    await sleep(5000);
-    return response.data;
+    return (await axios.post(`${APIURL}/tx`, hex)).data;
   } catch (err) {
     console.error(err);
     throw err;
   }
+}
+
+export function populateWalletWithFakeTransactions(
+  onSuccess?: () => void,
+  onError?: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, getState) => {
+    const { wallets } = getState();
+    const firstWallet = wallets[0];
+    const deriveNewAddressAction = function (): Promise<string> {
+      return new Promise((resolve, reject) => {
+        dispatch(
+          deriveNewAddress(
+            false,
+            (confidentialAddress) => {
+              resolve(confidentialAddress);
+            },
+            (err: Error) => reject(err.message)
+          )
+        );
+      });
+    };
+    try {
+      //
+      const confidentialAddr1 = await deriveNewAddressAction();
+      const confidentialAddr2 = await deriveNewAddressAction();
+      //
+      const utxosAddr1 = await fetchUtxos(confidentialAddr1);
+      const utxosAddr2 = await fetchUtxos(confidentialAddr2);
+      //
+      if (utxosAddr1.length < 3) {
+        await mint(confidentialAddr1, 21, 'Liquid Bitcoin', 'L-BTC');
+        await mint(confidentialAddr1, 996699, 'Vulpem', 'VLP');
+        await mint(confidentialAddr1, 4200, 'Tether USD', 'USDt');
+      }
+      if (utxosAddr2.length < 1) {
+        await mint(confidentialAddr2, 100, 'Sticker pack', 'STIKR');
+      }
+      //
+      const w = await xpubWalletFromAddresses(
+        firstWallet.masterXPub.value,
+        firstWallet.masterBlindingKey.value,
+        [Address.create(confidentialAddr1), Address.create(confidentialAddr2)],
+        'regtest'
+      );
+      //
+      dispatch(
+        setUtxos(
+          w.getAddresses().map((a) => ({
+            confidentialAddress: a.confidentialAddress,
+            blindingPrivateKey: a.blindingPrivateKey,
+          })),
+          () => onSuccess?.(),
+          (error) => onError?.(error)
+        )
+      );
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 }

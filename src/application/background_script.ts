@@ -1,10 +1,11 @@
-import { App } from './../domain/app/app';
+import { App } from '../domain/app/app';
 import { IDLE_MESSAGE_TYPE } from './utils/idle';
 import { browser, Idle } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
+import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -16,21 +17,27 @@ let welcomeTabID: number | undefined = undefined;
  * and when the browser is updated to a new version.
  * https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
  */
-browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
-  // skip onboarding
-  // if (temporary) return;
+browser.runtime.onInstalled.addListener(({ reason }) => {
   switch (reason) {
     //On first install, open new tab for onboarding
     case 'install': {
       const repos = {
         app: new BrowserStorageAppRepo(),
+        assets: new BrowserStorageAssetsRepo(),
         wallet: new BrowserStorageWalletRepo(),
       };
 
       initPersistentStore(repos)
-        .then(() =>
-          openInitializeWelcomeRoute().then((id: number | undefined) => (welcomeTabID = id))
-        )
+        .then(async () => {
+          // Skip onboarding
+          if (process.env.SKIP_ONBOARDING) {
+            await browser.browserAction.setPopup({ popup: 'popup.html' }).catch(console.error);
+          } else {
+            return openInitializeWelcomeRoute().then(
+              (id: number | undefined) => (welcomeTabID = id)
+            );
+          }
+        })
         .catch((err) => console.log(err));
 
       break;

@@ -5,6 +5,8 @@ import { Network } from '../../../domain/app/value-objects';
 import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { appInitialState, appReducer } from '../reducers';
+import { assetInitState } from '../reducers/asset-reducer';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testWallet } from '../../../../__test__/fixtures/test-wallet';
 import {
@@ -19,7 +21,8 @@ import {
   testAppWalletVerifiedDTO,
   testAppWalletVerifiedProps,
 } from '../../../../__test__/fixtures/test-app';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
+import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
+import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
 
 describe('App Actions', () => {
   let repos, store: ReturnType<typeof mockThunkReducer>;
@@ -27,6 +30,7 @@ describe('App Actions', () => {
   beforeAll(() => {
     repos = {
       app: new BrowserStorageAppRepo() as IAppRepository,
+      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
       wallet: new BrowserStorageWalletRepo() as IWalletRepository,
     };
     store = mockThunkReducer(appReducer, appInitialState, repos);
@@ -46,9 +50,10 @@ describe('App Actions', () => {
     };
 
     return expect(initAppAction()).resolves.toStrictEqual({
-      wallets: [],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [],
     });
   });
 
@@ -69,9 +74,10 @@ describe('App Actions', () => {
     };
 
     return expect(walletVerifyAction()).resolves.toStrictEqual({
-      wallets: [],
       app: testAppWalletVerifiedProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [],
     });
   });
 
@@ -92,9 +98,10 @@ describe('App Actions', () => {
     };
 
     return expect(onboardingCompleteAction()).resolves.toStrictEqual({
-      wallets: [],
       app: testAppOnboardedProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [],
     });
   });
 
@@ -104,9 +111,10 @@ describe('App Actions', () => {
     mockBrowser.storage.local.set.expect({ app: testAppAuthenticatedDTO }).andResolve();
 
     store.setState({
-      wallets: [testWallet],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [testWallet],
     });
 
     const logInAction = function () {
@@ -122,9 +130,10 @@ describe('App Actions', () => {
     };
 
     return expect(logInAction()).resolves.toStrictEqual({
-      wallets: [testWallet],
       app: testAppAuthenticatedProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [testWallet],
     });
   });
 
@@ -166,9 +175,10 @@ describe('App Actions', () => {
     };
 
     return expect(logOutAction()).resolves.toStrictEqual({
-      wallets: [],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [],
     });
   });
 
@@ -190,9 +200,10 @@ describe('App Actions', () => {
     };
 
     return expect(changeNetworkAction()).resolves.toStrictEqual({
-      wallets: [],
       app: testAppNetworkLiquidProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
+      wallets: [],
     });
   });
 });

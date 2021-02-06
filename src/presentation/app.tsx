@@ -5,26 +5,31 @@ import { AppContext } from '../application/store/context';
 import Routes from './routes';
 import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
+import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { initApp, initWallet } from '../application/store/actions';
+import { initAssets } from '../application/store/actions/assets';
 
 const App: React.FC = () => {
   const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
 
   const app = new BrowserStorageAppRepo();
+  const assets = new BrowserStorageAssetsRepo();
   const wallet = new BrowserStorageWalletRepo();
-  const repos = { app, wallet };
+  const repos = { app, assets, wallet };
   const [state, dispatch] = useThunkReducer(appReducer, appInitialState, repos);
 
   useEffect(() => {
     void (async (): Promise<void> => {
       if (!fetchedFromRepo) {
         try {
-          const [appState, walletState] = await Promise.all([
+          const [appState, assetState, walletState] = await Promise.all([
             app.getApp(),
+            assets.getAssets(),
             wallet.getOrCreateWallet(),
           ]);
           dispatch(initApp(appState.props));
+          dispatch(initAssets(assetState));
           dispatch(initWallet(walletState.props));
         } catch (error) {
           console.log(error);

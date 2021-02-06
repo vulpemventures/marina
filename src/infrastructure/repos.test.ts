@@ -1,6 +1,8 @@
 import { BrowserStorageAppRepo } from './app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from './wallet/browser/browser-storage-wallet-repository';
+import { BrowserStorageAssetsRepo } from './assets/browser-storage-assets-repository';
 import { IAppRepository } from '../domain/app/i-app-repository';
+import { IAssetsRepository } from '../domain/asset/i-assets-repository';
 import { IWalletRepository } from '../domain/wallet/i-wallet-repository';
 import { App } from '../domain/app/app';
 import {
@@ -10,6 +12,14 @@ import {
   testAppOnboardedDTO,
 } from '../../__test__/fixtures/test-app';
 import { testWallet, testWalletDTO, testWalletProps } from '../../__test__/fixtures/test-wallet';
+import {
+  testAssets,
+  testAssetsUpdated1,
+  testAssetsUpdated2,
+  testAssetsUpdated3,
+} from '../../__test__/fixtures/test-assets';
+import { assetInitState } from '../application/store/reducers/asset-reducer';
+import { AssetsByNetwork } from '../domain/asset';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -19,6 +29,7 @@ const { v4 } = require('uuid');
 describe('Repositories', () => {
   const repos = {
     app: new BrowserStorageAppRepo() as IAppRepository,
+    assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
     wallet: new BrowserStorageWalletRepo() as IWalletRepository,
   };
 
@@ -82,6 +93,55 @@ describe('Repositories', () => {
       return expect(repos.wallet.getOrCreateWallet(testWalletProps)).resolves.toStrictEqual(
         testWallet
       );
+    });
+  });
+
+  describe('Assets repository', () => {
+    test('Should init assets', () => {
+      // Call to set() will fail if it doesn't match invocation triggered by init()
+      mockBrowser.storage.local.set.expect({ assets: testAssets }).andResolve();
+      return expect(repos.assets.init(testAssets)).resolves.toBeUndefined();
+    });
+
+    test('Should retrieve assetInitState from repo', () => {
+      mockBrowser.storage.local.get.expect('assets').andResolve(testAssets);
+      return expect(repos.assets.getAssets()).resolves.toStrictEqual(assetInitState);
+    });
+
+    test('Should update assets', () => {
+      mockBrowser.storage.local.get.expect('assets').andResolve(testAssets);
+      // Call to set() will fail if it doesn't match invocation triggered by updateAssets()
+      mockBrowser.storage.local.set.expect({ assets: testAssetsUpdated1 }).andResolve();
+      return expect(
+        repos.assets.updateAssets(
+          (assets: AssetsByNetwork): AssetsByNetwork => {
+            assets.regtest['60d4a99f2413d67ad58a66a6e0d108957208f66484c1208a8aacebac4fc148bb'] = {
+              name: 'Random Shitcoin',
+              ticker: 'SHIT',
+              precision: 8,
+            };
+            return assets;
+          }
+        )
+      ).resolves.toBeUndefined();
+    });
+
+    test('Should add regtest assets', async () => {
+      // Set initial state
+      mockBrowser.storage.local.set.expect({ assets: testAssets }).andResolve();
+      await repos.assets.init(testAssets);
+      // Add asset
+      mockBrowser.storage.local.get.expect('assets').andResolve(testAssets);
+      mockBrowser.storage.local.set.expect({ assets: testAssetsUpdated1 }).andResolve();
+      await expect(
+        repos.assets.addAssets(testAssetsUpdated1.regtest, 'regtest')
+      ).resolves.toBeUndefined();
+      // Add another asset (expect testAssetsUpdated1 + testAssetsUpdated2)
+      mockBrowser.storage.local.get.expect('assets').andResolve(testAssetsUpdated1);
+      mockBrowser.storage.local.set.expect({ assets: testAssetsUpdated3 }).andResolve();
+      return expect(
+        repos.assets.addAssets(testAssetsUpdated2.regtest, 'regtest')
+      ).resolves.toBeUndefined();
     });
   });
 });
