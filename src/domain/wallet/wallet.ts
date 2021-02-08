@@ -92,7 +92,7 @@ export class Wallet extends Entity<IWallet> {
       masterBlindingKey: props.masterBlindingKey,
       masterXPub: props.masterXPub,
       passwordHash: props.passwordHash,
-      pedingTx: props.pendingTx,
+      pendingTx: props.pendingTx,
       utxoMap: props.utxoMap,
     };
     return new Wallet(walletProps, id);
