@@ -6,7 +6,7 @@ import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
 import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
-import { flush, setAsset } from '../../../application/store/actions/transaction';
+import { setAsset } from '../../../application/store/actions/transaction';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();
