@@ -19,6 +19,7 @@ import { AppContext } from '../../../application/store/context';
 import { setUtxos } from '../../../application/store/actions';
 import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 import { flush } from '../../../application/store/actions/transaction';
+import { browser } from 'webextension-polyfill-ts';
 
 const Home: React.FC = () => {
   const [{ wallets, app, transaction }, dispatch] = useContext(AppContext);
@@ -43,6 +44,7 @@ const Home: React.FC = () => {
             () => {
               if (transaction.asset !== '') {
                 dispatch(flush());
+                browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
               }
               setIsFetchingUtxos(false);
             },
