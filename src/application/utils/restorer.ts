@@ -36,8 +36,9 @@ export async function nextAddressForWallet(
   return nextAddress;
 }
 
-export async function walletFromAddresses(
+export async function mnemoincWalletFromAddresses(
   mnemonic: string,
+  masterBlindingKey: string,
   addresses: Address[],
   chain: string
 ): Promise<IdentityInterface> {
@@ -46,7 +47,7 @@ export async function walletFromAddresses(
     chain,
     restorer,
     type: IdentityType.Mnemonic,
-    value: { mnemonic },
+    value: { mnemonic, masterBlindingKey },
     initializeFromRestorer: true,
   });
   const isRestored = await mnemonicWallet.isRestored;
@@ -54,6 +55,30 @@ export async function walletFromAddresses(
     throw new Error('Failed to restore wallet');
   }
   return mnemonicWallet;
+}
+
+export async function xpubWalletFromAddresses(
+  masterXPub: string,
+  masterBlindingKey: string,
+  addresses: Address[],
+  chain: string
+): Promise<IdentityInterface> {
+  const restorer = new IdentityRestorerFromState(addresses.map((addr) => addr.value));
+  const xpubWallet = new MasterPublicKey({
+    chain,
+    restorer,
+    type: IdentityType.MasterPublicKey,
+    value: {
+      masterPublicKey: fromXpub(masterXPub, chain),
+      masterBlindingKey,
+    },
+    initializeFromRestorer: true,
+  });
+  const isRestored = await xpubWallet.isRestored;
+  if (!isRestored) {
+    throw new Error('Failed to restore wallet');
+  }
+  return xpubWallet;
 }
 
 class IdentityRestorerFromState implements IdentityRestorerInterface {
