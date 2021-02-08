@@ -1,8 +1,8 @@
-import { decodePset, networks, psetToUnsignedTx, address, UtxoInterface, RecipientInterface, addToTx } from 'ldk';
+import { decodePset, networks, psetToUnsignedTx, address, UtxoInterface, RecipientInterface, addToTx, Outpoint } from 'ldk';
 import { confidential } from 'liquidjs-lib';
 import { TaxiClient } from 'taxi-protobuf/generated/js/TaxiServiceClientPb';
 import { TopupWithAssetReply, TopupWithAssetRequest } from 'taxi-protobuf/generated/js/taxi_pb';
-import { walletFromAddresses } from '../../application/utils/restorer';
+import { mnemoincWalletFromAddresses } from '../../application/utils/restorer';
 import { Address } from '../../domain/wallet/value-objects';
 import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
 
@@ -112,13 +112,14 @@ export const blindingInfoFromPendingTx = ({ value, sendAddress, feeAsset }: Tran
 
 export const blindAndSignPset = async (
   mnemonic: string,
+  masterBlindingKey: string,
   addresses: Address[],
   chain: string,
   psetBase64: string,
   outputsToBlind: number[],
   outPubkeys: Map<number, string>
 ): Promise<string> => {
-  const mnemonicWallet = await walletFromAddresses(mnemonic, addresses, chain);
+  const mnemonicWallet = await mnemoincWalletFromAddresses(mnemonic, masterBlindingKey, addresses, chain);
 
   const blindedPset: string = await mnemonicWallet.blindPset(
     psetBase64,
@@ -169,6 +170,14 @@ export const fillTaxiTx = (
     changeAddressGetter,
   );
   return addToTx(psetBase64, selectedUtxos, receipients.concat(changeOutputs));
+}
+
+export const utxoMapToArray = (utxoMap: Map<Outpoint, UtxoInterface>): UtxoInterface[] => {
+  let utxos: UtxoInterface[] = [];
+  utxoMap.forEach((utxo) => {
+    utxos.push(utxo)
+  })
+  return utxos;
 }
 
 const lbtcAssetByNetwork = (net: string): string => {

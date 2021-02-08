@@ -30,7 +30,7 @@ import { IWallet } from '../../../domain/wallet/wallet';
 import { Address } from '../../../domain/wallet/value-objects';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { browser } from 'webextension-polyfill-ts';
-import { assetInfoByHash, assetInfoByTicker, feeAmountFromTx, fetchTopupFromTaxi, fillTaxiTx } from '../../utils';
+import { assetInfoByHash, assetInfoByTicker, feeAmountFromTx, fetchTopupFromTaxi, fillTaxiTx, utxoMapToArray } from '../../utils';
 
 const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
@@ -50,97 +50,56 @@ const ChooseFee: React.FC = () => {
   const [feeLevel, setFeeLevel] = useState<string>('50');
   const [taxiTopup, setTaxiTopup] = useState<any>(undefined);
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
-  const [unspents, setUnspents] = useState<UtxoInterface[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [isWarningFee] = useState<boolean>(true);
   const receipientAssetTicker = assetInfoByHash[transaction.asset].ticker;
+  const unspents = utxoMapToArray(wallets[0].utxoMap);
 
-  // TODO: remove this since utxos will be already cached in memory
   useEffect(() => {
     void (async (): Promise<void> => {
-      if (isLoading) {
-        try {
-          const unspents = await fetchUtxos(wallets[0], app.network.value);
-          setUnspents(unspents);
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    })();
-  });
-
-  // This sets the fee change address in case fees are not of the same asset
-  // type of the one to be sent to the receipient.
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      if (!isLoading) {
+      if (feeCurrency === 'L-BTC') {
+        // this check prevents to build a tx in case the fee change address isn't
+        // yet available but needed for the tx.
         if (
-          feeCurrency !== receipientAssetTicker &&
-          transaction.feeChangeAddress === ''
+          feeCurrency === receipientAssetTicker ||
+          transaction.feeChangeAddress !== ''
         ) {
           try {
-            const wallet = { ...wallets[0] };
-            wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
-            const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-            dispatch(setFeeChangeAddress(feeChangeAddress));
-          } catch (error) {
-            console.log(error);
-          }
-        }
-      }
-    })();
-  }, [dispatch, wallets, isLoading, feeCurrency, transaction, unspents, app, feeLevel, satsPerByte]);
-
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      if (!isLoading) {
-        if (feeCurrency === 'L-BTC') {
-          // this check prevents to build a tx in case the fee change address isn't
-          // yet available but needed for the tx.
-          if (
-            feeCurrency === receipientAssetTicker ||
-            transaction.feeChangeAddress !== ''
-          ) {
-            try {
-              const w = walletFromCoins(unspents, app.network.value);
-              const receipients: RecipientInterface[] = [
-                {
-                  asset: transaction.asset,
-                  value: transaction.amountInSatoshi,
-                  address: transaction.receipientAddress,
-                },
-              ];
-              const changeAddressGetter = (asset: string): any => {
-                if (asset === transaction.asset) {
-                  return transaction.changeAddress;
-                }
-                return transaction.feeChangeAddress;
-              };
-
-              const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
-              if (currentSatsPerByte !== satsPerByte) {
-                const tx: string = w.buildTx(
-                  w.createTx(),
-                  receipients,
-                  greedyCoinSelector(),
-                  changeAddressGetter,
-                  true,
-                  satsPerByte
-                );
-                setUnsignedPendingTx(tx);
-                setSatsPerByte(currentSatsPerByte);
+            const w = walletFromCoins(unspents, app.network.value);
+            const receipients: RecipientInterface[] = [
+              {
+                asset: transaction.asset,
+                value: transaction.amountInSatoshi,
+                address: transaction.receipientAddress,
+              },
+            ];
+            const changeAddressGetter = (asset: string): any => {
+              if (asset === transaction.asset) {
+                return transaction.changeAddress;
               }
-            } catch (error) {
-              console.log(error);
+              return transaction.feeChangeAddress;
+            };
+
+            const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
+            if (currentSatsPerByte !== satsPerByte) {
+              const tx: string = w.buildTx(
+                w.createTx(),
+                receipients,
+                greedyCoinSelector(),
+                changeAddressGetter,
+                true,
+                satsPerByte
+              );
+              setUnsignedPendingTx(tx);
+              setSatsPerByte(currentSatsPerByte);
             }
+          } catch (ignore) {
+            console.log(wallets[0].errors);
           }
         }
       }
     })();
-  },  [isLoading, feeCurrency, transaction, unspents, app, feeLevel, satsPerByte]);
+  },  [feeCurrency, transaction, app, feeLevel, satsPerByte]);
 
   const handleConfirm = () => {
     const feeAsset = assetInfoByTicker[feeCurrency].hash;
@@ -170,16 +129,30 @@ const ChooseFee: React.FC = () => {
     );
   };
 
-  const handleUseUSDtFees = async () => {
+  const handlePayFeesInLBTC = () => setFeeCurrency('L-BTC');
+  const handlePayFeesInUSDt = async () => {
     const feeCurrency = 'USDt';
     setFeeCurrency(feeCurrency);
-    
+
     try {
+      // Sets fee change address only if fee asset is different from receipient
+      // one. Also, prevent to create a new address if already existing.
+      let feeChangeAddress = transaction.feeChangeAddress;
+      if (
+        feeCurrency !== receipientAssetTicker &&
+        transaction.feeChangeAddress === ''
+      ) {
+        const wallet = { ...wallets[0] };
+        wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
+        feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
+        dispatch(setFeeChangeAddress(feeChangeAddress));
+      }
+
       const changeAddressGetter = (asset: string): any => {
         if (asset === transaction.asset) {
           return transaction.changeAddress;
         }
-        return transaction.feeChangeAddress;
+        return feeChangeAddress;
       };
 
       let t = taxiTopup;
@@ -188,6 +161,7 @@ const ChooseFee: React.FC = () => {
         const topup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeAsset);
         setTaxiTopup(topup);
         t = topup;
+        console.log(topup)
       }
       const taxiPayout = {
         value: t.topup.assetAmount,
@@ -242,7 +216,7 @@ const ChooseFee: React.FC = () => {
         <Button
           className="flex-1"
           isOutline={true}
-          onClick={() => setFeeCurrency('L-BTC')}
+          onClick={handlePayFeesInLBTC}
           roundedMd={true}
           textBase={true}
         >
@@ -250,7 +224,7 @@ const ChooseFee: React.FC = () => {
         </Button>
         <Button
           className="flex-1"
-          onClick={handleUseUSDtFees}
+          onClick={handlePayFeesInUSDt}
           roundedMd={true}
           textBase={true}
         >

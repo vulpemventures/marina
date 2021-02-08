@@ -44,6 +44,7 @@ const Confirmation: React.FC = () => {
 
     const tx: string = await blindAndSignPset(
       mnemonic,
+      wallets[0].masterBlindingKey.value,
       wallets[0].confidentialAddresses,
       app.network.value,
       value,
