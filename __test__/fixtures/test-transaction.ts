@@ -9,14 +9,14 @@ export const transactionStateWithAsset = {
 
 export const transactionStateWithReceipient = {
   ...transactionStateWithAsset,
-  receipientAddress: confidentialAddresses[0].value,
-  changeAddress: confidentialAddresses[1].value,
+  receipientAddress: confidentialAddresses[0].address,
+  changeAddress: confidentialAddresses[1].address,
   amountInSatoshi: 10000000,
 };
 
 export const transactionStateWithFeeChangeAddress = {
   ...transactionStateWithReceipient,
-  feeChangeAddress: confidentialAddresses[1].value,
+  feeChangeAddress: confidentialAddresses[1].address,
 };
 
 export const transactionStateWithFees = {

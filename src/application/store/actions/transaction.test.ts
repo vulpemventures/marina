@@ -62,8 +62,8 @@ describe('Transaction Actions', () => {
 
     store.dispatch(
       setAddressesAndAmount(
-        confidentialAddresses[0].value,
-        confidentialAddresses[1].value,
+        confidentialAddresses[0].address,
+        confidentialAddresses[1].address,
         10000000
       )
     );
@@ -83,7 +83,7 @@ describe('Transaction Actions', () => {
       transaction: transactionStateWithReceipient,
     });
 
-    store.dispatch(setFeeChangeAddress(confidentialAddresses[1].value));
+    store.dispatch(setFeeChangeAddress(confidentialAddresses[1].address));
     expect(store.getState()).toStrictEqual({
       wallets: [],
       app: testAppProps,
@@ -119,8 +119,8 @@ describe('Transaction Actions', () => {
 
     store.dispatch(
       setAddressesAndAmount(
-        confidentialAddresses[0].value,
-        confidentialAddresses[1].value,
+        confidentialAddresses[0].address,
+        confidentialAddresses[1].address,
         10000000
       )
     );

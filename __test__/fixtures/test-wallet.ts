@@ -124,6 +124,7 @@ export const testWalletWithPendingTxDTO: WalletDTO = {
   passwordHash: passwordHash,
   walletId: v4(),
   pendingTx: pendingTx,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 
 export const testWalletWithPendingTxProps: IWallet = {
@@ -134,6 +135,7 @@ export const testWalletWithPendingTxProps: IWallet = {
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
   pendingTx: Transaction.create(pendingTx),
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWithPendingTx: Wallet = Wallet.createWallet(testWalletWithPendingTxProps);
 
@@ -145,6 +147,7 @@ export const testWalletWithoutPendingTxDTO: WalletDTO = {
   passwordHash: passwordHash,
   walletId: v4(),
   pendingTx: undefined,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 
 export const testWalletWithoutPendingTxProps: IWallet = {
@@ -155,6 +158,7 @@ export const testWalletWithoutPendingTxProps: IWallet = {
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
   pendingTx: undefined,
+  utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWithoutPendingTx: Wallet = Wallet.createWallet(
   testWalletWithoutPendingTxProps
