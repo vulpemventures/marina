@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {
   decodePset,
   networks,
@@ -82,7 +83,7 @@ export const blindingInfoFromPendingTx = (
   }
 
   const tx = psetToUnsignedTx(value);
-  console.log('FINAL UNSIGNED TX HEX', tx.toHex());
+
   const lbtcAsset: string = lbtcAssetByNetwork(network);
   const payFeesWithTaxi: boolean = feeAsset !== lbtcAsset;
   const outputsToBlind: number[] = [];
@@ -197,6 +198,14 @@ export const utxoMapToArray = (utxoMap: Map<Outpoint, UtxoInterface>): UtxoInter
     utxos.push(utxo);
   });
   return utxos;
+};
+
+export const broadcastTx = async (baseUrl: string, txHex: string): Promise<string> => {
+  const response = await axios.post(`${baseUrl}/tx`, txHex);
+  if (response.status !== 200) {
+    throw new Error(response.data);
+  }
+  return response.data.txId;
 };
 
 const lbtcAssetByNetwork = (net: string): string => {

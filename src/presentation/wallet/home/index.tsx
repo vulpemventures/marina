@@ -62,7 +62,6 @@ const Home: React.FC = () => {
     })();
   });
 
-
   const handleClick = ({ assetTicker }: { [key: string]: string }) => {
     history.push({
       pathname: TRANSACTIONS_ROUTE,

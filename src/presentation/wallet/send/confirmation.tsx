@@ -10,7 +10,17 @@ import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { assetInfoByHash, blindAndSignPset, blindingInfoFromPendingTx } from '../../utils';
+import {
+  assetInfoByHash,
+  blindAndSignPset,
+  blindingInfoFromPendingTx,
+  broadcastTx,
+} from '../../utils';
+
+const explorerURL: Record<string, string> = {
+  regtest: 'http://localhost:3001',
+  mainnet: 'https://blockstream.info/liquid/api',
+};
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app }, dispatch] = useContext(AppContext);
@@ -55,8 +65,7 @@ const Confirmation: React.FC = () => {
       outPubkeys
     );
 
-    console.log('FINAL TRANSACTION', tx);
-    // TODO: broadcast transaction
+    await broadcastTx(explorerURL[app.network.value], tx);
 
     const onError = (err: Error) => {
       console.log(err);
