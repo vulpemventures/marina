@@ -25,8 +25,13 @@ const Home: React.FC = () => {
   const [{ wallets, app, transaction }, dispatch] = useContext(AppContext);
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(true);
+  const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(!wallets[0].pendingTx);
   const wallet = wallets[0];
+
+  if (wallets[0].pendingTx) {
+    history.push(SEND_CONFIRMATION_ROUTE);
+    return <></>;
+  }
 
   useEffect(() => {
     void (async (): Promise<void> => {
@@ -57,10 +62,6 @@ const Home: React.FC = () => {
     })();
   });
 
-  if (wallets[0].pendingTx) {
-    history.push(SEND_CONFIRMATION_ROUTE);
-    return <></>;
-  }
 
   const handleClick = ({ assetTicker }: { [key: string]: string }) => {
     history.push({

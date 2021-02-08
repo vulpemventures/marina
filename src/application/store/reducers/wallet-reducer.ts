@@ -14,6 +14,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: payload.utxoMap,
+        pendingTx: payload.pendingTx,
       };
       return Object.assign([], state, [firstWallet]);
     }
