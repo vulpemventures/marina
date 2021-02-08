@@ -13,24 +13,18 @@ import {
 } from '../../../application/store/actions/transaction';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 
-import {
-  AddressInterface,
-  fetchAndUnblindUtxos,
-  address,
-  MasterPublicKey,
-  IdentityType,
-  fromXpub,
-  UtxoInterface,
-  walletFromCoins,
-  greedyCoinSelector,
-  RecipientInterface,
-  EsploraIdentityRestorer,
-} from 'ldk';
-import { IWallet } from '../../../domain/wallet/wallet';
+import { walletFromCoins, greedyCoinSelector, RecipientInterface } from 'ldk';
 import { Address } from '../../../domain/wallet/value-objects';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { browser } from 'webextension-polyfill-ts';
-import { assetInfoByHash, assetInfoByTicker, feeAmountFromTx, fetchTopupFromTaxi, fillTaxiTx, utxoMapToArray } from '../../utils';
+import {
+  assetInfoByHash,
+  assetInfoByTicker,
+  feeAmountFromTx,
+  fetchTopupFromTaxi,
+  fillTaxiTx,
+  utxoMapToArray,
+} from '../../utils';
 
 const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
@@ -39,9 +33,9 @@ const feeLevelToSatsPerByte: { [key: string]: number } = {
 };
 
 const taxiURL: Record<string, string> = {
-  'regtest': 'http://localhost:8000',
-  'mainnet': 'https://staging.api.liquid.taxi:8000',
-}
+  regtest: 'http://localhost:8000',
+  mainnet: 'https://staging.api.liquid.taxi:8000',
+};
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -57,28 +51,41 @@ const ChooseFee: React.FC = () => {
 
   useEffect(() => {
     void (async (): Promise<void> => {
-      if (feeCurrency === 'L-BTC') {
-        // this check prevents to build a tx in case the fee change address isn't
-        // yet available but needed for the tx.
-        if (
-          feeCurrency === receipientAssetTicker ||
-          transaction.feeChangeAddress !== ''
-        ) {
+      if (feeCurrency !== receipientAssetTicker && transaction.feeChangeAddress === '') {
+        try {
+          const wallet = { ...wallets[0] };
+          wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
+          const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
+          dispatch(setFeeChangeAddress(feeChangeAddress));
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    })();
+  });
+
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      if (feeCurrency === receipientAssetTicker || transaction.feeChangeAddress !== '') {
+        const changeAddressGetter = (asset: string): any => {
+          if (asset === transaction.asset) {
+            return transaction.changeAddress;
+          }
+          return transaction.feeChangeAddress;
+        };
+        const receipients: RecipientInterface[] = [
+          {
+            asset: transaction.asset,
+            value: transaction.amountInSatoshi,
+            address: transaction.receipientAddress,
+          },
+        ];
+
+        if (feeCurrency === 'L-BTC') {
+          // this check prevents to build a tx in case the fee change address isn't
+          // yet available but needed for the tx.
           try {
             const w = walletFromCoins(unspents, app.network.value);
-            const receipients: RecipientInterface[] = [
-              {
-                asset: transaction.asset,
-                value: transaction.amountInSatoshi,
-                address: transaction.receipientAddress,
-              },
-            ];
-            const changeAddressGetter = (asset: string): any => {
-              if (asset === transaction.asset) {
-                return transaction.changeAddress;
-              }
-              return transaction.feeChangeAddress;
-            };
 
             const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
             if (currentSatsPerByte !== satsPerByte) {
@@ -96,10 +103,43 @@ const ChooseFee: React.FC = () => {
           } catch (ignore) {
             console.log(wallets[0].errors);
           }
+        } else {
+          let t = taxiTopup;
+          if (!t) {
+            const feeAsset = assetInfoByTicker[feeCurrency].hash;
+            const topup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeAsset);
+            setTaxiTopup(topup);
+            t = topup;
+          }
+          const taxiPayout = {
+            value: t.topup.assetAmount,
+            asset: t.topup.assetHash,
+            address: '',
+          } as RecipientInterface;
+
+          const tx: string = fillTaxiTx(
+            t.topup.partial,
+            unspents,
+            receipients,
+            taxiPayout,
+            greedyCoinSelector(),
+            changeAddressGetter
+          );
+          setUnsignedPendingTx(tx);
         }
       }
     })();
-  },  [feeCurrency, transaction, app, feeLevel, satsPerByte]);
+  }, [
+    feeCurrency,
+    transaction,
+    app,
+    feeLevel,
+    satsPerByte,
+    receipientAssetTicker,
+    taxiTopup,
+    unspents,
+    wallets,
+  ]);
 
   const handleConfirm = () => {
     const feeAsset = assetInfoByTicker[feeCurrency].hash;
@@ -130,66 +170,7 @@ const ChooseFee: React.FC = () => {
   };
 
   const handlePayFeesInLBTC = () => setFeeCurrency('L-BTC');
-  const handlePayFeesInUSDt = async () => {
-    const feeCurrency = 'USDt';
-    setFeeCurrency(feeCurrency);
-
-    try {
-      // Sets fee change address only if fee asset is different from receipient
-      // one. Also, prevent to create a new address if already existing.
-      let feeChangeAddress = transaction.feeChangeAddress;
-      if (
-        feeCurrency !== receipientAssetTicker &&
-        transaction.feeChangeAddress === ''
-      ) {
-        const wallet = { ...wallets[0] };
-        wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
-        feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-        dispatch(setFeeChangeAddress(feeChangeAddress));
-      }
-
-      const changeAddressGetter = (asset: string): any => {
-        if (asset === transaction.asset) {
-          return transaction.changeAddress;
-        }
-        return feeChangeAddress;
-      };
-
-      let t = taxiTopup;
-      if (!t) {
-        const feeAsset = assetInfoByTicker[feeCurrency].hash;
-        const topup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeAsset);
-        setTaxiTopup(topup);
-        t = topup;
-        console.log(topup)
-      }
-      const taxiPayout = {
-        value: t.topup.assetAmount,
-        asset: t.topup.assetHash,
-        address: '',
-      } as RecipientInterface;
-      const receipients: RecipientInterface[] = [
-        {
-          asset: transaction.asset,
-          value: transaction.amountInSatoshi,
-          address: transaction.receipientAddress,
-        },
-      ];
-
-      const tx = fillTaxiTx(
-        t.topup.partial,
-        unspents,
-        receipients,
-        taxiPayout,
-        greedyCoinSelector(),
-        changeAddressGetter,
-      );
-
-      setUnsignedPendingTx(tx);
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  const handlePayFeesInUSDt = () => setFeeCurrency('USDt');
 
   const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
@@ -222,12 +203,7 @@ const ChooseFee: React.FC = () => {
         >
           L-BTC
         </Button>
-        <Button
-          className="flex-1"
-          onClick={handlePayFeesInUSDt}
-          roundedMd={true}
-          textBase={true}
-        >
+        <Button className="flex-1" onClick={handlePayFeesInUSDt} roundedMd={true} textBase={true}>
           USDt
         </Button>
       </div>
@@ -283,25 +259,3 @@ const ChooseFee: React.FC = () => {
   );
 };
 export default ChooseFee;
-
-const fetchUtxos = (wallet: IWallet, network: string): Promise<UtxoInterface[]> => {
-  const pubKeyWallet = new MasterPublicKey({
-    chain: network,
-    type: IdentityType.MasterPublicKey,
-    value: {
-      masterPublicKey: fromXpub(wallet.masterXPub.value, network),
-      masterBlindingKey: wallet.masterBlindingKey.value,
-    },
-    restorer: new EsploraIdentityRestorer('http://localhost:3001'),
-    initializeFromRestorer: true,
-  });
-  const addresses: AddressInterface[] = wallet.confidentialAddresses.map((addr) => {
-    const script = address.toOutputScript(addr.value);
-    return {
-      confidentialAddress: addr.value,
-      blindingPrivateKey: pubKeyWallet.getBlindingPrivateKey(script.toString('hex')),
-    };
-  });
-
-  return fetchAndUnblindUtxos(addresses, 'http://localhost:3001');
-};
