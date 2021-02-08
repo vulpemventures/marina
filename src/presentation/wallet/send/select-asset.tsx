@@ -73,7 +73,7 @@ const SelectAsset: React.FC = () => {
                 assetTicker={assets[r[2]].assetTicker}
                 quantity={assets[r[2]].quantity}
                 key={`${r[1]}_${r[2]}`}
-                onClick={handleSend}
+                handleClick={handleSend}
               />
             );
           })}
