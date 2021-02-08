@@ -18,9 +18,10 @@ import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
 import { setUtxos } from '../../../application/store/actions';
 import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
+import { flush } from '../../../application/store/actions/transaction';
 
 const Home: React.FC = () => {
-  const [{ wallets, app }, dispatch] = useContext(AppContext);
+  const [{ wallets, app, transaction }, dispatch] = useContext(AppContext);
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(true);
@@ -40,6 +41,9 @@ const Home: React.FC = () => {
           setUtxos(
             w.getAddresses(),
             () => {
+              if (transaction.asset !== '') {
+                dispatch(flush());
+              }
               setIsFetchingUtxos(false);
             },
             (err: Error) => {

@@ -44,7 +44,6 @@ const SelectAsset: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
   const handleBackBtn = () => {
-    dispatch(flush());
     history.push(DEFAULT_ROUTE);
   };
 
