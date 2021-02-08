@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { ErrorBoundary } from 'react-error-boundary';
 import {
@@ -16,11 +16,34 @@ import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
+import { setUtxos } from '../../../application/store/actions';
+import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 
 const Home: React.FC = () => {
-  const [{ wallets }] = useContext(AppContext);
+  const [{ wallets, app }, dispatch ] = useContext(AppContext);
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+  const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(true);
+  const wallet = wallets[0];
+
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      if (isFetchingUtxos) {
+        const w = await xpubWalletFromAddresses(
+          wallet.masterXPub.value,
+          wallet.masterBlindingKey.value,
+          wallet.confidentialAddresses,
+          app.network.value,
+        );
+          
+        dispatch(setUtxos(
+          w.getAddresses(),
+          () => {setIsFetchingUtxos(false)},
+          (err: Error) => {console.log(err)},
+        ))
+      }
+    })();
+  });
 
   if (wallets[0].pendingTx) {
     history.push(SEND_CONFIRMATION_ROUTE);
@@ -44,6 +67,10 @@ const Home: React.FC = () => {
   // blocked by https://github.com/vulpemventures/marina/issues/15
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
+
+  if (isFetchingUtxos) {
+    return <>Loading...</>;
+  }
 
   return (
     <ShellPopUp
