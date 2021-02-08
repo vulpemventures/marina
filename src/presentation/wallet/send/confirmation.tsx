@@ -40,7 +40,10 @@ const Confirmation: React.FC = () => {
       throw new Error('Invalid password');
     }
 
-    const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(wallets[0].pendingTx!.props, app.network.value);
+    const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(
+      wallets[0].pendingTx!.props,
+      app.network.value
+    );
 
     const tx: string = await blindAndSignPset(
       mnemonic,

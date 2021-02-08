@@ -20,7 +20,7 @@ import { setUtxos } from '../../../application/store/actions';
 import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 
 const Home: React.FC = () => {
-  const [{ wallets, app }, dispatch ] = useContext(AppContext);
+  const [{ wallets, app }, dispatch] = useContext(AppContext);
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(true);
@@ -33,14 +33,20 @@ const Home: React.FC = () => {
           wallet.masterXPub.value,
           wallet.masterBlindingKey.value,
           wallet.confidentialAddresses,
-          app.network.value,
+          app.network.value
         );
-          
-        dispatch(setUtxos(
-          w.getAddresses(),
-          () => {setIsFetchingUtxos(false)},
-          (err: Error) => {console.log(err)},
-        ))
+
+        dispatch(
+          setUtxos(
+            w.getAddresses(),
+            () => {
+              setIsFetchingUtxos(false);
+            },
+            (err: Error) => {
+              console.log(err);
+            }
+          )
+        );
       }
     })();
   });
@@ -59,7 +65,7 @@ const Home: React.FC = () => {
 
   // Save mnemonic modal
   const handleSaveMnemonicClose = () => {
-    showSaveMnemonicModal(false)
+    showSaveMnemonicModal(false);
   };
   const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
 

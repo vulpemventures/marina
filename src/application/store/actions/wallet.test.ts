@@ -1,4 +1,11 @@
-import { createWallet, deriveNewAddress, initWallet, restoreWallet, setPendingTx, unsetPendingTx } from './wallet';
+import {
+  createWallet,
+  deriveNewAddress,
+  initWallet,
+  restoreWallet,
+  setPendingTx,
+  unsetPendingTx,
+} from './wallet';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { IAppRepository } from '../../../domain/app/i-app-repository';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
