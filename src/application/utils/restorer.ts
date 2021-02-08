@@ -36,7 +36,7 @@ export async function nextAddressForWallet(
   return nextAddress;
 }
 
-export async function mnemoincWalletFromAddresses(
+export async function mnemonicWalletFromAddresses(
   mnemonic: string,
   masterBlindingKey: string,
   addresses: Address[],

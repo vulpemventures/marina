@@ -11,7 +11,7 @@ import {
 import { confidential } from 'liquidjs-lib';
 import { TaxiClient } from 'taxi-protobuf/generated/js/TaxiServiceClientPb';
 import { TopupWithAssetReply, TopupWithAssetRequest } from 'taxi-protobuf/generated/js/taxi_pb';
-import { mnemoincWalletFromAddresses } from '../../application/utils/restorer';
+import { mnemonicWalletFromAddresses } from '../../application/utils/restorer';
 import { Address } from '../../domain/wallet/value-objects';
 import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
 
@@ -130,7 +130,7 @@ export const blindAndSignPset = async (
   outputsToBlind: number[],
   outPubkeys: Map<number, string>
 ): Promise<string> => {
-  const mnemonicWallet = await mnemoincWalletFromAddresses(
+  const mnemonicWallet = await mnemonicWalletFromAddresses(
     mnemonic,
     masterBlindingKey,
     addresses,
