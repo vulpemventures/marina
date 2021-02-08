@@ -1,3 +1,4 @@
+import { Outpoint, UtxoInterface } from 'ldk';
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
@@ -22,8 +23,9 @@ export interface IWallet {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
-  restored?: boolean;
   pendingTx?: Transaction;
+  restored?: boolean;
+  utxoMap: Map<Outpoint, UtxoInterface>;
 }
 
 /**
@@ -61,6 +63,10 @@ export class Wallet extends Entity<IWallet> {
     return this.props.pendingTx;
   }
 
+  get utxoMap(): Map<Outpoint, UtxoInterface> {
+    return this.props.utxoMap;
+  }
+
   /**
    * @param props - Wallet props
    * @param id - When the id is known we can pass it in, or we create one
@@ -81,12 +87,13 @@ export class Wallet extends Entity<IWallet> {
    */
   public static createWallet(props: IWallet, id?: UniqueEntityID): Wallet {
     const walletProps = {
-      masterXPub: props.masterXPub,
-      masterBlindingKey: props.masterBlindingKey,
-      encryptedMnemonic: props.encryptedMnemonic,
-      passwordHash: props.passwordHash,
       confidentialAddresses: props.confidentialAddresses,
+      encryptedMnemonic: props.encryptedMnemonic,
+      masterBlindingKey: props.masterBlindingKey,
+      masterXPub: props.masterXPub,
+      passwordHash: props.passwordHash,
       pedingTx: props.pendingTx,
+      utxoMap: props.utxoMap,
     };
     return new Wallet(walletProps, id);
   }

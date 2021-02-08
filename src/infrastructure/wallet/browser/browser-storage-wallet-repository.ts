@@ -1,11 +1,11 @@
 import { browser } from 'webextension-polyfill-ts';
+import { Outpoint, UtxoInterface } from 'ldk';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
+import { Address } from '../../../domain/wallet/value-objects';
 import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
-import { Address } from '../../../domain/wallet/value-objects';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
-
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
     const ws = wallets.map((w: Wallet) => WalletMap.toDTO(w));
@@ -59,5 +59,13 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
 
     wallet.props.pendingTx = tx;
     await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
+  }
+
+  async setUtxos(utxoMap: Map<Outpoint, UtxoInterface>): Promise<void> {
+    const wallet = WalletMap.toDTO(await this.getOrCreateWallet());
+    wallet.utxoMap = utxoMap;
+    await browser.storage.local.set({
+      wallets: [wallet],
+    });
   }
 }

@@ -1,4 +1,17 @@
-import { IdentityOpts, IdentityType, Mnemonic, EsploraIdentityRestorer } from 'ldk';
+import {
+  AddressInterface,
+  EsploraIdentityRestorer,
+  IdentityOpts,
+  IdentityType,
+  fetchUtxos,
+  fromXpub,
+  Mnemonic,
+  MasterPublicKey,
+  Outpoint,
+  toOutpoint,
+  tryToUnblindUtxo,
+  UtxoInterface,
+} from 'ldk';
 import {
   INIT_WALLET,
   WALLET_CREATE_FAILURE,
@@ -11,6 +24,10 @@ import {
   WALLET_SET_PENDING_TX_SUCCESS,
   WALLET_UNSET_PENDING_TX_FAILURE,
   WALLET_UNSET_PENDING_TX_SUCCESS,
+  WALLET_SET_UTXOS_FAILURE,
+  WALLET_SET_UTXOS_SUCCESS,
+  WALLET_GET_ALL_BALANCES_SUCCESS,
+  WALLET_GET_ALL_BALANCES_FAILURE,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
@@ -61,6 +78,7 @@ export function createWallet(
       const encryptedMnemonic = encrypt(mnemonic, password);
       const passwordHash = hash(password);
       const confidentialAddresses: Address[] = [];
+      const utxoMap = new Map<Outpoint, UtxoInterface>();
 
       await repos.wallet.getOrCreateWallet({
         masterXPub,
@@ -68,17 +86,19 @@ export function createWallet(
         encryptedMnemonic,
         passwordHash,
         confidentialAddresses,
+        utxoMap,
       });
 
       // Update React state
       dispatch([
         WALLET_CREATE_SUCCESS,
         {
+          confidentialAddresses,
+          encryptedMnemonic,
           masterXPub,
           masterBlindingKey,
-          encryptedMnemonic,
           passwordHash,
-          confidentialAddresses,
+          utxoMap,
         },
       ]);
 
@@ -132,12 +152,15 @@ export function restoreWallet(
         .getAddresses()
         .map(({ confidentialAddress }) => Address.create(confidentialAddress));
 
+      const utxoMap = new Map<Outpoint, UtxoInterface>();
+
       await repos.wallet.getOrCreateWallet({
         masterXPub,
         masterBlindingKey,
         encryptedMnemonic,
         passwordHash,
         confidentialAddresses,
+        utxoMap,
       });
 
       dispatch([
@@ -148,6 +171,7 @@ export function restoreWallet(
           encryptedMnemonic,
           passwordHash,
           confidentialAddresses,
+          utxoMap,
         },
       ]);
       onSuccess();
@@ -235,6 +259,108 @@ export function unsetPendingTx(
     } catch (error) {
       dispatch([WALLET_UNSET_PENDING_TX_FAILURE, { error }]);
       onError(error);
+    }
+  };
+}
+
+/**
+ * Extract balances from all unblinded utxos in state
+ * @param onSuccess
+ * @param onError
+ */
+export function getAllBalances(
+  onSuccess: (balances: { [assetHash: string]: number }) => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return (dispatch, getState) => {
+    const { wallets } = getState();
+    const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
+      if (!curr.asset || !curr.value) {
+        dispatch([WALLET_GET_ALL_BALANCES_FAILURE]);
+        onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
+        return acc;
+      }
+      acc = { ...acc, [curr.asset]: curr.value };
+      return acc;
+    }, {} as { [assetHash: string]: number });
+    dispatch([WALLET_GET_ALL_BALANCES_SUCCESS]);
+    onSuccess(balances);
+  };
+}
+
+/**
+ * Check that utxoMapStore and fetchedUtxos have the same set of utxos
+ * @param utxoMapStore
+ * @param fetchedUtxos
+ * @returns boolean - true if utxo sets are equal, false if not
+ */
+export function compareUtxos(
+  utxoMapStore: Map<Outpoint, UtxoInterface>,
+  fetchedUtxos: UtxoInterface[]
+) {
+  if (utxoMapStore?.size !== fetchedUtxos?.length) return false;
+  for (const outpoint of utxoMapStore.keys()) {
+    // At least one outpoint in utxoMapStore is present in fetchedUtxos
+    const isEqual = fetchedUtxos.some(
+      (utxo) => utxo.txid === outpoint.txid && utxo.vout === outpoint.vout
+    );
+    if (!isEqual) return false;
+  }
+  return true;
+}
+
+export function setUtxos(
+  addressesWithBlindingKeys: AddressInterface[],
+  onSuccess: () => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, getState, repos) => {
+  try {
+    // Fetch utxos and return with corresponding blinding key
+    const fetchedUtxosWithBlindingPrivateKey = (await Promise.all(
+      addressesWithBlindingKeys.map(async (o) => ({
+        utxos: await fetchUtxos(o.confidentialAddress, 'http://localhost:3001'),
+        blindingPrivateKey: o.blindingPrivateKey,
+      }))
+    )) as {
+      utxos: UtxoInterface[];
+      blindingPrivateKey: AddressInterface['blindingPrivateKey'];
+    }[];
+
+    // Extract utxos of all key pairs in flat array
+    const allUtxos = fetchedUtxosWithBlindingPrivateKey.reduce(
+      (acc, curr) => [...acc, ...curr.utxos],
+      [] as UtxoInterface[]
+    );
+
+    const { wallets } = getState();
+    // If utxo sets not equal, create utxoMap and update stores
+    if (!compareUtxos(wallets[0].utxoMap, allUtxos)) {
+      const unblindedOrNotUtxos = await Promise.all(
+        fetchedUtxosWithBlindingPrivateKey.map(async (keyPairData) => {
+          return await Promise.all(
+            keyPairData.utxos.map(
+              async (utxo) =>
+                await tryToUnblindUtxo(
+                  utxo,
+                  keyPairData.blindingPrivateKey,
+                  'http://localhost:3001'
+                )
+            )
+          );
+        })
+      );
+      const utxoMap = new Map<Outpoint, UtxoInterface>();
+      unblindedOrNotUtxos.forEach((keyPairUtxos) =>
+        keyPairUtxos.forEach((utxo) => utxoMap.set(toOutpoint(utxo), utxo))
+      );
+      await repos.wallet.setUtxos(utxoMap);
+      dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap }]);
+    }
+    onSuccess();
+  } catch (error) {
+    dispatch([WALLET_SET_UTXOS_FAILURE, { error }]);
+    onError(error);
     }
   };
 }
