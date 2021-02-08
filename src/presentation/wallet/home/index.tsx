@@ -128,7 +128,7 @@ const Home: React.FC = () => {
                 assetName={asset.assetName}
                 assetTicker={asset.assetTicker}
                 quantity={asset.quantity}
-                onClick={handleClick}
+                handleClick={handleClick}
               />
             );
           })}

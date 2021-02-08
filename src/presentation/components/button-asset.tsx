@@ -6,7 +6,7 @@ interface Props {
   assetTicker: string;
   assetImgPath: string;
   disabled?: boolean;
-  onClick: ({ assetHash, assetName, assetTicker }: { [key: string]: string }) => void;
+  handleClick: ({ assetHash, assetName, assetTicker }: { [key: string]: string }) => void;
   type?: 'submit' | 'button' | 'reset';
   quantity: number;
 }
@@ -18,7 +18,7 @@ const ButtonAsset: React.FC<Props> = ({
   assetImgPath,
   disabled = false,
   quantity,
-  onClick,
+  handleClick,
   type = 'button',
 }: Props) => {
   return (
@@ -26,7 +26,7 @@ const ButtonAsset: React.FC<Props> = ({
       disabled={disabled}
       className="focus:outline-none flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
       onClick={() => {
-        onClick({ assetHash, assetName, assetTicker });
+        handleClick({ assetHash, assetName, assetTicker });
       }}
       type={type}
     >
