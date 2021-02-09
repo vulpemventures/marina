@@ -196,14 +196,20 @@ const ChooseFee: React.FC = () => {
       <div className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
         <Button
           className="flex-1"
-          isOutline={true}
+          isOutline={feeCurrency === 'L-BTC'}
           onClick={handlePayFeesInLBTC}
           roundedMd={true}
           textBase={true}
         >
           L-BTC
         </Button>
-        <Button className="flex-1" onClick={handlePayFeesInUSDt} roundedMd={true} textBase={true}>
+        <Button
+          className="flex-1"
+          isOutline={feeCurrency === 'USDt'}
+          onClick={handlePayFeesInUSDt}
+          roundedMd={true}
+          textBase={true}
+        >
           USDt
         </Button>
       </div>
