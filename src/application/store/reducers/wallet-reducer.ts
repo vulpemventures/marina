@@ -30,6 +30,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: payload.utxoMap,
+        pendingTx: undefined,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -53,6 +54,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: payload.utxoMap,
+        pendingTx: undefined,
       };
       return Object.assign([], state, [firstWallet]);
     }

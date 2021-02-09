@@ -22,8 +22,6 @@ import {
   testWalletWith2ConfidentialAddrProps,
   testWalletWithConfidentialAddrDTO,
   testWalletWithConfidentialAddrProps,
-  testWalletWithoutPendingTxDTO,
-  testWalletWithoutPendingTxProps,
   testWalletWithPendingTxDTO,
   testWalletWithPendingTxProps,
 } from '../../../../__test__/fixtures/test-wallet';
@@ -237,7 +235,7 @@ describe('Wallet Actions', () => {
     mockBrowser.storage.local.get
       .expect('wallets')
       .andResolve({ wallets: [testWalletWithPendingTxDTO] });
-    mockBrowser.storage.local.set.expect({ wallets: [testWalletWithoutPendingTxDTO] }).andResolve();
+    mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
 
     const unsetPendingTxAction = function () {
       return new Promise((resolve, reject) => {
@@ -253,7 +251,7 @@ describe('Wallet Actions', () => {
     };
 
     return expect(unsetPendingTxAction()).resolves.toStrictEqual({
-      wallets: [testWalletWithoutPendingTxProps],
+      wallets: [testWalletProps],
       app: testAppProps,
       onboarding: onboardingInitState,
       transaction: transactionInitState,

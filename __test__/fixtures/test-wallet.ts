@@ -31,6 +31,7 @@ export const testWalletDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
@@ -41,6 +42,7 @@ export const testWalletProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWallet: Wallet = Wallet.createWallet(testWalletProps);
@@ -52,6 +54,7 @@ export const testWalletWithConfidentialAddrDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
@@ -62,6 +65,7 @@ export const testWalletWithConfidentialAddrProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWithConfidentialAddr: Wallet = Wallet.createWallet(
@@ -75,6 +79,7 @@ export const testWalletWith2ConfidentialAddrDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
@@ -88,6 +93,7 @@ export const testWalletWith2ConfidentialAddrProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWith2ConfidentialAddr: Wallet = Wallet.createWallet(
@@ -101,6 +107,7 @@ export const testWalletRestoredDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
+  pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
@@ -111,6 +118,7 @@ export const testWalletRestoredProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
+  pendingTx: undefined,
   restored: true,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
@@ -138,28 +146,3 @@ export const testWalletWithPendingTxProps: IWallet = {
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletWithPendingTx: Wallet = Wallet.createWallet(testWalletWithPendingTxProps);
-
-export const testWalletWithoutPendingTxDTO: WalletDTO = {
-  confidentialAddresses: [],
-  encryptedMnemonic: encryptedMnemonic,
-  masterXPub: masterXPub,
-  masterBlindingKey: masterBlindingKey,
-  passwordHash: passwordHash,
-  walletId: v4(),
-  pendingTx: undefined,
-  utxoMap: new Map<Outpoint, UtxoInterface>(),
-};
-
-export const testWalletWithoutPendingTxProps: IWallet = {
-  confidentialAddresses: [],
-  encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
-  errors: undefined,
-  masterXPub: MasterXPub.create(masterXPub),
-  masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
-  passwordHash: PasswordHash.create(passwordHash),
-  pendingTx: undefined,
-  utxoMap: new Map<Outpoint, UtxoInterface>(),
-};
-export const testWalletWithoutPendingTx: Wallet = Wallet.createWallet(
-  testWalletWithoutPendingTxProps
-);
