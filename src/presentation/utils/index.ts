@@ -165,6 +165,15 @@ export const isConfidentialAddress = (addr: string): boolean => {
   }
 };
 
+export const isValidAddress = (addr: string): boolean => {
+  try {
+    address.toOutputScript(addr);
+    return true;
+  } catch (ignore) {
+    return false;
+  }
+};
+
 export const fetchTopupFromTaxi = async (
   taxiUrl: string,
   asset: string

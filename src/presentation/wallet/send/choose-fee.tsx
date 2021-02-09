@@ -100,8 +100,8 @@ const ChooseFee: React.FC = () => {
               setUnsignedPendingTx(tx);
               setSatsPerByte(currentSatsPerByte);
             }
-          } catch (ignore) {
-            console.log(wallets[0].errors);
+          } catch (error) {
+            console.log(error);
           }
         } else {
           let t = taxiTopup;

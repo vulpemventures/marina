@@ -11,7 +11,7 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { assetInfoByHash } from '../../utils';
+import { assetInfoByHash, isValidAddress } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -116,9 +116,17 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
   validationSchema: Yup.object().shape({
     // TODO: Test if valid address
-    address: Yup.string().required('Please enter an address'),
+    address: Yup.string()
+      .required('Please enter a valid address')
+      .test(
+        'valid-address',
+        'Address is not valid',
+        (value) => value !== undefined && isValidAddress(value.trim())
+      ),
 
-    amount: Yup.number().required('Please enter an amount'),
+    amount: Yup.number()
+      .required('Please enter a valid amount')
+      .min(0.00000001, 'Amount should be at least 1 satoshi'),
   }),
 
   handleSubmit: async (values, { props }) => {
