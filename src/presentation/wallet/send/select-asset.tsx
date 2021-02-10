@@ -7,10 +7,11 @@ import ShellPopUp from '../../components/shell-popup';
 import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
 import { setAsset } from '../../../application/store/actions/transaction';
+import { unsetPendingTx } from '../../../application/store/actions';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const [{ wallets }, dispatch] = useContext(AppContext);
 
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -44,7 +45,20 @@ const SelectAsset: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
   const handleBackBtn = () => {
-    history.push(DEFAULT_ROUTE);
+    if (wallets[0].pendingTx) {
+      dispatch(
+        unsetPendingTx(
+          () => {
+            history.push(DEFAULT_ROUTE);
+          },
+          (err: Error) => {
+            console.log(err);
+          }
+        )
+      );
+    } else {
+      history.push(DEFAULT_ROUTE);
+    }
   };
 
   return (
