@@ -107,10 +107,13 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
 const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmountFormValues>({
   mapPropsToValues: (props: AddressAmountFormProps): AddressAmountFormValues => ({
-    address: '',
+    address: props.state.transaction.receipientAddress,
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
-    amount: ('' as unknown) as number,
+    amount:
+      props.state.transaction.amountInSatoshi > 0
+        ? props.state.transaction.amountInSatoshi / Math.pow(10, 8)
+        : (('' as unknown) as number),
     assetTicker: assetInfoByHash[props.state.transaction.asset].ticker,
   }),
 
@@ -147,12 +150,10 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
 const AddressAmount: React.FC = () => {
   const history = useHistory();
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
   const [state, dispatch] = useContext(AppContext);
 
   return (
     <ShellPopUp
-      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
