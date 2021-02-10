@@ -44,17 +44,16 @@ const ChooseFee: React.FC = () => {
   useEffect(() => {
     if (supportedAssets.length <= 0) {
       void (async (): Promise<void> => {
+        let allAssets: string[] = [lbtcAssetByNetwork(app.network.value)];
         try {
           const taxiAssets: string[] = await fetchAssetsFromTaxi(taxiURL[app.network.value]);
-          const supportedAssets: string[] = [lbtcAssetByNetwork(app.network.value)].concat(
-            taxiAssets
-          );
-          setSupportedAssets(supportedAssets);
-          console.log(supportedAssets);
-          setFeeCurrency(supportedAssets[0]);
-          setFeeLevel('50');
+          allAssets = allAssets.concat(taxiAssets);
         } catch (error) {
           console.log(error);
+        } finally {
+          setSupportedAssets(allAssets);
+          setFeeCurrency(allAssets[0]);
+          setFeeLevel('50');
         }
       })();
     }
@@ -222,16 +221,18 @@ const ChooseFee: React.FC = () => {
             >
               L-BTC
             </Button>
-            <Button
-              className="flex-1"
-              isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
-              onClick={handlePayFeesInUSDt}
-              roundedMd={true}
-              textBase={true}
-              extraData={supportedAssets[1]}
-            >
-              USDt
-            </Button>
+            {supportedAssets.length > 1 && (
+              <Button
+                className="flex-1"
+                isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
+                onClick={handlePayFeesInUSDt}
+                roundedMd={true}
+                textBase={true}
+                extraData={supportedAssets[1]}
+              >
+                USDt
+              </Button>
+            )}
           </div>,
         ]
       )}
