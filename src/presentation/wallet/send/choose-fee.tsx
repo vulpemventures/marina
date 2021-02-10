@@ -152,7 +152,17 @@ const ChooseFee: React.FC = () => {
         }
       })();
     }
-  }, [feeCurrency, transaction, app, feeLevel, satsPerByte, taxiTopup, unspents, wallets]);
+  }, [
+    feeCurrency,
+    transaction,
+    app,
+    feeLevel,
+    satsPerByte,
+    taxiTopup,
+    unspents,
+    wallets,
+    supportedAssets,
+  ]);
 
   const handleConfirm = () => {
     let feeAmount: number;
@@ -207,8 +217,10 @@ const ChooseFee: React.FC = () => {
         <div>Loading...</div>
       ) : (
         [
-          <p className="text-sm font-medium">I pay fee in:</p>,
-          <div className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
+          <p key={0} className="text-sm font-medium">
+            I pay fee in:
+          </p>,
+          <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
             <Button
               className="flex-1"
               isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
