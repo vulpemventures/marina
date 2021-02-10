@@ -15,12 +15,8 @@ import {
   blindAndSignPset,
   blindingInfoFromPendingTx,
   broadcastTx,
+  explorerURL,
 } from '../../utils';
-
-const explorerURL: Record<string, string> = {
-  regtest: 'http://localhost:3001',
-  mainnet: 'https://blockstream.info/liquid/api',
-};
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app }, dispatch] = useContext(AppContext);

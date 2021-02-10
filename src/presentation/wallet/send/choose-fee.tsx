@@ -25,18 +25,9 @@ import {
   fillTaxiTx,
   utxoMapToArray,
   formatAmount,
+  feeLevelToSatsPerByte,
+  taxiURL,
 } from '../../utils';
-
-const feeLevelToSatsPerByte: { [key: string]: number } = {
-  '0': 0.1,
-  '50': 0.1,
-  '100': 0.1,
-};
-
-const taxiURL: Record<string, string> = {
-  regtest: 'http://localhost:8000',
-  mainnet: 'https://staging.api.liquid.taxi:8000',
-};
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
