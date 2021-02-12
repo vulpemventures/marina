@@ -142,9 +142,7 @@ describe('Wallet Actions', () => {
         store.dispatch(
           deriveNewAddress(
             false,
-            (confidentialAddress) => {
-              resolve(store.getState());
-            },
+            () => resolve(store.getState()),
             (err: Error) => reject(err.message)
           )
         );
@@ -194,16 +192,18 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWith2ConfidentialAddrProps],
     });
   });
 
   test('Should set a pending tx', () => {
     // Create wallet with address
     store.setState({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletProps],
     });
 
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
@@ -224,20 +224,22 @@ describe('Wallet Actions', () => {
     };
 
     return expect(setPendingTxAction()).resolves.toStrictEqual({
-      wallets: [testWalletWithPendingTxProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWithPendingTxProps],
     });
   });
 
   test('Should unset an already set pending tx', () => {
     // Create wallet with address
     store.setState({
-      wallets: [testWalletWithPendingTxProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWithPendingTxProps],
     });
 
     mockBrowser.storage.local.get
@@ -259,11 +261,11 @@ describe('Wallet Actions', () => {
     };
 
     return expect(unsetPendingTxAction()).resolves.toStrictEqual({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
-      wallets: [testWalletWith2ConfidentialAddrProps],
+      wallets: [testWalletProps],
     });
   });
 });

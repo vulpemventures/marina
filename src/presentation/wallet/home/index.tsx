@@ -1,20 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { ErrorBoundary } from 'react-error-boundary';
 import {
   RECEIVE_ROUTE,
   SELECT_ASSET_ROUTE,
   SEND_CONFIRMATION_ROUTE,
   TRANSACTIONS_ROUTE,
 } from '../../routes/constants';
-import { RECEIVE_ROUTE, SELECT_ASSET_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
-import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
 import { setUtxos } from '../../../application/store/actions';
 import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
@@ -129,25 +126,43 @@ const Home: React.FC = () => {
     buttonList = (
       <ButtonAsset
         assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
+        assetHash="6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d"
         assetName="Liquid Bitcoin"
         assetTicker="L-BTC"
         quantity={0}
-        onClick={() => handleClick('L-BTC')}
+        handleClick={handleClick}
       />
     );
   } else {
     // Wallet has coins
     buttonList = Object.entries(assets[app.network.value] || {}).map(([hash, { name, ticker }]) => {
+      let imgPath: string;
+      switch (ticker) {
+        case 'L-BTC':
+          imgPath = 'assets/images/liquid-assets/liquid-btc.svg';
+          break;
+        case 'LCAD':
+          imgPath = 'assets/images/liquid-assets/liquid-cad.png';
+          break;
+        case 'USDt':
+          imgPath = 'assets/images/liquid-assets/liquid-tether.png';
+          break;
+        default:
+          imgPath = 'assets/images/liquid-assets/question-mark.svg';
+          break;
+      }
+
       return (
         <ButtonAsset
           // TODO: fix img paths
           assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
+          assetHash={hash}
           assetName={name}
           assetTicker={ticker}
           // TODO: fix quantity
           quantity={1}
           key={hash}
-          onClick={() => handleClick(ticker)}
+          handleClick={handleClick}
         />
       );
     });
