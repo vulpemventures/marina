@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../../application/store/context';
-import { decrypt } from '../../application/utils/crypto';
+import { decrypt, hash } from '../../application/utils/crypto';
 import { Password } from '../../domain/wallet/value-objects';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
@@ -12,9 +12,13 @@ const SettingsShowMnemonic: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);
   const handleModalUnlockCancel = () => showUnlockModal(false);
-  const handleShowMnemonic = (password: string) => {
+  const handleShowMnemonic = (password: string): Promise<void> => {
+    if (!wallets[0].passwordHash.equals(hash(Password.create(password)))) {
+      throw new Error('Invalid password');
+    }
     const mnemo = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
     setMnemonic(mnemo);
+    return Promise.resolve();
   };
 
   return (

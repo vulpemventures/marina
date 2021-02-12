@@ -6,10 +6,11 @@ interface Props {
   className?: string;
   disabled?: boolean;
   isOutline?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, extraData: any) => void;
   roundedMd?: boolean;
   textBase?: boolean;
   type?: 'submit' | 'button' | 'reset';
+  extraData?: any;
 }
 
 const Button: React.FC<Props> = ({
@@ -21,6 +22,7 @@ const Button: React.FC<Props> = ({
   isOutline = false,
   roundedMd = false,
   textBase = false,
+  extraData = undefined,
 }: Props) => {
   const classes = cx(
     'antialiased font-bold tracking-wider py-2 px-4 focus:outline-none focus:shadow-outline',
@@ -35,7 +37,13 @@ const Button: React.FC<Props> = ({
   );
 
   return (
-    <button className={classes} disabled={disabled} type={type} onClick={onClick}>
+    <button
+      className={classes}
+      disabled={disabled}
+      type={type}
+      onClick={(e) => (onClick ? onClick(e, extraData) : {})}
+      data-extra={extraData}
+    >
       {children}
     </button>
   );

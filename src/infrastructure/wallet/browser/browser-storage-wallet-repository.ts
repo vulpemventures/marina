@@ -5,7 +5,7 @@ import { Address } from '../../../domain/wallet/value-objects';
 import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
-
+import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
     const ws = wallets.map((w: Wallet) => WalletMap.toDTO(w));
@@ -51,7 +51,16 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
     }
   }
 
-  // Set/replace first wallet utxo set
+  async setPendingTx(tx?: Transaction): Promise<void> {
+    const wallet = await this.getOrCreateWallet();
+    if (tx && wallet.pendingTx) {
+      throw new Error('wallet already has a pending tx');
+    }
+
+    wallet.props.pendingTx = tx;
+    await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
+  }
+
   async setUtxos(utxoMap: Map<Outpoint, UtxoInterface>): Promise<void> {
     const wallet = WalletMap.toDTO(await this.getOrCreateWallet());
     wallet.utxoMap = utxoMap;

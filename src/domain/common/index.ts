@@ -3,6 +3,7 @@ import { IApp } from '../app/app';
 import { IAppRepository } from '../app/i-app-repository';
 import { IWalletRepository } from '../wallet/i-wallet-repository';
 import { OnboardingState } from '../../application/store/reducers/onboarding-reducer';
+import { TransactionState } from '../../application/store/reducers/transaction-reducer';
 import { AssetsByNetwork } from '../asset';
 import { IAssetsRepository } from '../asset/i-assets-repository';
 
@@ -10,6 +11,7 @@ export interface IAppState {
   app: IApp;
   assets: AssetsByNetwork;
   onboarding: OnboardingState;
+  transaction: TransactionState;
   wallets: IWallet[];
 }
 

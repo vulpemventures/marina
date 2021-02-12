@@ -9,6 +9,7 @@ import {
   MasterBlindingKey,
   PasswordHash,
 } from './value-objects';
+import { Transaction } from './value-objects/transaction';
 import { WalletId } from './walletId';
 
 export interface IWallets {
@@ -22,6 +23,7 @@ export interface IWallet {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
+  pendingTx?: Transaction;
   restored?: boolean;
   utxoMap: Map<Outpoint, UtxoInterface>;
 }
@@ -57,6 +59,10 @@ export class Wallet extends Entity<IWallet> {
     return this.props.confidentialAddresses;
   }
 
+  get pendingTx(): Transaction | undefined {
+    return this.props.pendingTx;
+  }
+
   get utxoMap(): Map<Outpoint, UtxoInterface> {
     return this.props.utxoMap;
   }
@@ -86,6 +92,7 @@ export class Wallet extends Entity<IWallet> {
       masterBlindingKey: props.masterBlindingKey,
       masterXPub: props.masterXPub,
       passwordHash: props.passwordHash,
+      pendingTx: props.pendingTx,
       utxoMap: props.utxoMap,
     };
     return new Wallet(walletProps, id);

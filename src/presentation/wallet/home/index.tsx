@@ -1,5 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
+import { ErrorBoundary } from 'react-error-boundary';
+import {
+  RECEIVE_ROUTE,
+  SELECT_ASSET_ROUTE,
+  SEND_CONFIRMATION_ROUTE,
+  TRANSACTIONS_ROUTE,
+} from '../../routes/constants';
 import { RECEIVE_ROUTE, SELECT_ASSET_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
@@ -7,12 +14,17 @@ import ButtonList from '../../components/button-list';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
+import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
+import { setUtxos } from '../../../application/store/actions';
+import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
+import { flush } from '../../../application/store/actions/transaction';
+import { browser } from 'webextension-polyfill-ts';
 import { updateAllAssetsInfo } from '../../../application/store/actions/assets';
 import { populateWalletWithFakeTransactions } from '../../../../__test__/_regtest';
 
 const Home: React.FC = () => {
-  const [{ assets, app, wallets }, dispatch] = useContext(AppContext);
+  const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
   const [isAssetInfosLoaded, setAssetInfosLoaded] = useState(false);
   const [assetsData, setAssetsData] = useState({});
 
@@ -46,24 +58,65 @@ const Home: React.FC = () => {
   }, [wallets]);
 
   const history = useHistory();
-  const handleClick = (assetTicker: string) => {
+  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+  const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(!wallets[0].pendingTx);
+  const wallet = wallets[0];
+
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      if (isFetchingUtxos) {
+        const w = await xpubWalletFromAddresses(
+          wallet.masterXPub.value,
+          wallet.masterBlindingKey.value,
+          wallet.confidentialAddresses,
+          app.network.value
+        );
+
+        dispatch(
+          setUtxos(
+            w.getAddresses(),
+            () => {
+              if (transaction.asset !== '') {
+                dispatch(flush());
+                browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+              }
+              setIsFetchingUtxos(false);
+            },
+            (err: Error) => {
+              console.log(err);
+            }
+          )
+        );
+      }
+    })();
+  });
+
+  if (wallets[0].pendingTx) {
+    history.push(SEND_CONFIRMATION_ROUTE);
+    return <></>;
+  }
+
+  const handleClick = ({ assetTicker }: { [key: string]: string }) => {
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: {
-        assetTicker,
-      },
+      state: { assetTicker },
     });
   };
 
   // Save mnemonic modal
-  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+  const handleSaveMnemonicClose = () => {
+    showSaveMnemonicModal(false);
+  };
   const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
 
   // TODO: Show modal conditionnaly base on state
   // blocked by https://github.com/vulpemventures/marina/issues/15
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
+
+  if (isFetchingUtxos) {
+    return <>Loading...</>;
+  }
 
   // Generate ButtonList
   let buttonList;

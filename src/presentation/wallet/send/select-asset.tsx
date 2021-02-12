@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
 import assets from '../../../../__test__/fixtures/assets.json';
+import { AppContext } from '../../../application/store/context';
+import { setAsset } from '../../../application/store/actions/transaction';
+import { unsetPendingTx } from '../../../application/store/actions';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();
-  const handleSend = () => history.push(SEND_ADDRESS_AMOUNT_ROUTE);
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  const [{ wallets }, dispatch] = useContext(AppContext);
 
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -17,12 +19,7 @@ const SelectAsset: React.FC = () => {
     [assetName: string, assetTicker: string, index: number][]
   >([]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = event.target.value.toLowerCase().replace('-', '');
-    setSearchTerm(searchTerm);
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     const terms: [string, string, number][] = assets.map(({ assetName, assetTicker }, index) => [
       assetName,
       assetTicker,
@@ -37,6 +34,32 @@ const SelectAsset: React.FC = () => {
     });
     setSearchResults(results);
   }, [searchTerm]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = event.target.value.toLowerCase().replace('-', '');
+    setSearchTerm(searchTerm);
+  };
+
+  const handleSend = ({ assetHash }: { [key: string]: string }) => {
+    dispatch(setAsset(assetHash));
+    history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+  };
+  const handleBackBtn = () => {
+    if (wallets[0].pendingTx) {
+      dispatch(
+        unsetPendingTx(
+          () => {
+            history.push(DEFAULT_ROUTE);
+          },
+          (err: Error) => {
+            console.log(err);
+          }
+        )
+      );
+    } else {
+      history.push(DEFAULT_ROUTE);
+    }
+  };
 
   return (
     <ShellPopUp
@@ -59,11 +82,12 @@ const SelectAsset: React.FC = () => {
             return (
               <ButtonAsset
                 assetImgPath={assets[r[2]].assetImgPath}
+                assetHash={assets[r[2]].assetHash}
                 assetName={assets[r[2]].assetName}
                 assetTicker={assets[r[2]].assetTicker}
                 quantity={assets[r[2]].quantity}
                 key={`${r[1]}_${r[2]}`}
-                onClick={handleSend}
+                handleClick={handleSend}
               />
             );
           })}

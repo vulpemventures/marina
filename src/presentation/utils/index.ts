@@ -1,7 +1,16 @@
-export const formatAddress = (addr: string): string => {
-  return `${addr.substring(0, 9)}...${addr.substring(addr.length - 9, addr.length)}`;
-};
+import { UtxoInterface, Outpoint } from 'ldk';
 
-export const formatNetwork = (net: string): string => {
-  return net.charAt(0).toUpperCase().concat(net.slice(1));
+export * from './address';
+export * from './constants';
+export * from './format';
+export * from './network';
+export * from './taxi';
+export * from './transaction';
+
+export const utxoMapToArray = (utxoMap: Map<Outpoint, UtxoInterface>): UtxoInterface[] => {
+  const utxos: UtxoInterface[] = [];
+  utxoMap.forEach((utxo) => {
+    utxos.push(utxo);
+  });
+  return utxos;
 };

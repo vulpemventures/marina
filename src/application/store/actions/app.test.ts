@@ -23,6 +23,7 @@ import {
 } from '../../../../__test__/fixtures/test-app';
 import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
 import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
+import { transactionInitState } from '../reducers/transaction-reducer';
 
 describe('App Actions', () => {
   let repos, store: ReturnType<typeof mockThunkReducer>;
@@ -54,6 +55,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [],
+      transaction: transactionInitState,
     });
   });
 
@@ -78,6 +80,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [],
+      transaction: transactionInitState,
     });
   });
 
@@ -102,6 +105,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [],
+      transaction: transactionInitState,
     });
   });
 
@@ -115,6 +119,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [testWallet],
+      transaction: transactionInitState,
     });
 
     const logInAction = function () {
@@ -134,6 +139,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [testWallet],
+      transaction: transactionInitState,
     });
   });
 
@@ -179,6 +185,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [],
+      transaction: transactionInitState,
     });
   });
 
@@ -204,6 +211,7 @@ describe('App Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       wallets: [],
+      transaction: transactionInitState,
     });
   });
 });
