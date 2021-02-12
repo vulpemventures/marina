@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
+import { AppContext } from '../../application/store/context';
+import { flush } from '../../application/store/actions/transaction';
 
 interface Props {
   backBtnCb?: () => void;
@@ -21,13 +23,19 @@ const ShellPopUp: React.FC<Props> = ({
   hasBackBtn = true,
 }: Props) => {
   const history = useHistory();
+  const [{ transaction }, dispatch] = useContext(AppContext);
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
   //
   const goToPreviousPath = () => history.goBack();
-  const goToHome = () => history.push(DEFAULT_ROUTE);
+  const goToHome = () => {
+    if (transaction.asset) {
+      dispatch(flush());
+    }
+    history.push(DEFAULT_ROUTE);
+  };
   const handleBackBtn = () => {
     if (backBtnCb) {
       backBtnCb();
