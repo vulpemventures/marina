@@ -4,6 +4,7 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { AppContext } from '../../application/store/context';
 import { flush } from '../../application/store/actions/transaction';
+import { unsetPendingTx } from '../../application/store/actions';
 
 interface Props {
   backBtnCb?: () => void;
@@ -23,7 +24,7 @@ const ShellPopUp: React.FC<Props> = ({
   hasBackBtn = true,
 }: Props) => {
   const history = useHistory();
-  const [{ transaction }, dispatch] = useContext(AppContext);
+  const [{ wallets, transaction }, dispatch] = useContext(AppContext);
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
@@ -34,7 +35,16 @@ const ShellPopUp: React.FC<Props> = ({
     if (transaction.asset) {
       dispatch(flush());
     }
-    history.push(DEFAULT_ROUTE);
+    if (wallets[0].pendingTx) {
+      dispatch(
+        unsetPendingTx(
+          () => history.push(DEFAULT_ROUTE),
+          (err: Error) => console.log(err)
+        )
+      );
+    } else {
+      history.push(DEFAULT_ROUTE);
+    }
   };
   const handleBackBtn = () => {
     if (backBtnCb) {
