@@ -10,7 +10,13 @@ import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { blindAndSignPset, blindingInfoFromPendingTx, broadcastTx, explorerURL, formatTxid } from '../../utils';
+import {
+  blindAndSignPset,
+  blindingInfoFromPendingTx,
+  broadcastTx,
+  explorerURL,
+  formatTxid,
+} from '../../utils';
 
 interface State {
   mnemonic: string;
@@ -88,7 +94,7 @@ const EndOfFlow: React.FC = () => {
         }
       })();
     }
-  }, [app, wallets, dispatch, state, isModalUnlockOpen]);
+  }, [app, wallets, dispatch, state, isModalUnlockOpen, busy]);
 
   const handleShowMnemonic = (password: string) => {
     if (!wallets[0].passwordHash.equals(hash(Password.create(password)))) {
@@ -118,9 +124,7 @@ const EndOfFlow: React.FC = () => {
           <span className="font-medium">{state.success ? 'Success' : 'Failed'}</span>
           {state.txid.length > 0 && <h1>Transaction id: {formatTxid(state.txid)}</h1>}
           {state.error && <h1>{state.error.message}</h1>}
-          <Button onClick={handleClick}>
-            Back to home
-          </Button>
+          <Button onClick={handleClick}>Back to home</Button>
         </div>
       )}
       <ModalUnlock

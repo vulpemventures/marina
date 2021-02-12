@@ -12,4 +12,4 @@ export const formatAmount = (amountInSatoshi: number): string => {
 
 export const formatTxid = (txid: string): string => {
   return txid.substr(0, 6).concat('.......').concat(txid.substr(25, 6));
-}
+};

@@ -47,7 +47,9 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
 
 const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockFormValues>({
   mapPropsToValues: (props): ModalUnlockFormValues => ({
-    handleModalUnlockCancel: props.handleModalUnlockCancel ? props.handleModalUnlockCancel.bind(this) : props.handleModalUnlockClose.bind(this),
+    handleModalUnlockCancel: props.handleModalUnlockCancel
+      ? props.handleModalUnlockCancel.bind(this)
+      : props.handleModalUnlockClose.bind(this),
     handleModalUnlockClose: props.handleModalUnlockClose.bind(this),
     password: '',
   }),
@@ -81,13 +83,16 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   }
 
   return (
-    <Modal isOpen={isModalUnlockOpen} onClose={() => {
-      if (handleModalUnlockCancel) {
-        handleModalUnlockCancel();
-      } else {
-        handleModalUnlockClose();
-      }
-    }}>
+    <Modal
+      isOpen={isModalUnlockOpen}
+      onClose={() => {
+        if (handleModalUnlockCancel) {
+          handleModalUnlockCancel();
+        } else {
+          handleModalUnlockClose();
+        }
+      }}
+    >
       <ModalUnlockEnhancedForm
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
