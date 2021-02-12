@@ -10,6 +10,11 @@ const Confirmation: React.FC = () => {
   const [{ wallets }] = useContext(AppContext);
   const history = useHistory();
 
+  // In case the home btn is pressed prevents to use pendingTx's props
+  if (!wallets[0].pendingTx) {
+    return <></>;
+  }
+
   const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx!.props;
 
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);

@@ -5,6 +5,7 @@ import { DEFAULT_ROUTE } from '../routes/constants';
 import { AppContext } from '../../application/store/context';
 import { flush } from '../../application/store/actions/transaction';
 import { unsetPendingTx } from '../../application/store/actions';
+import { browser } from 'webextension-polyfill-ts';
 
 interface Props {
   backBtnCb?: () => void;
@@ -32,13 +33,14 @@ const ShellPopUp: React.FC<Props> = ({
   //
   const goToPreviousPath = () => history.goBack();
   const goToHome = () => {
-    if (transaction.asset) {
-      dispatch(flush());
-    }
     if (wallets[0].pendingTx) {
       dispatch(
         unsetPendingTx(
-          () => history.push(DEFAULT_ROUTE),
+          () => {
+            dispatch(flush());
+            browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+            history.push(DEFAULT_ROUTE);
+          },
           (err: Error) => console.log(err)
         )
       );
