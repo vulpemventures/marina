@@ -3,11 +3,13 @@ import { IApp } from '../app/app';
 import { IAppRepository } from '../app/i-app-repository';
 import { IWalletRepository } from '../wallet/i-wallet-repository';
 import { OnboardingState } from '../../application/store/reducers/onboarding-reducer';
+import { TransactionState } from '../../application/store/reducers/transaction-reducer';
 
 export interface IAppState {
   wallets: IWallet[];
   app: IApp;
   onboarding: OnboardingState;
+  transaction: TransactionState;
 }
 
 export interface IError {

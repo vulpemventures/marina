@@ -4,9 +4,7 @@ import {
   IdentityOpts,
   IdentityType,
   fetchUtxos,
-  fromXpub,
   Mnemonic,
-  MasterPublicKey,
   Outpoint,
   toOutpoint,
   tryToUnblindUtxo,
@@ -20,6 +18,10 @@ import {
   WALLET_DERIVE_ADDRESS_SUCCESS,
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
+  WALLET_SET_PENDING_TX_FAILURE,
+  WALLET_SET_PENDING_TX_SUCCESS,
+  WALLET_UNSET_PENDING_TX_FAILURE,
+  WALLET_UNSET_PENDING_TX_SUCCESS,
   WALLET_SET_UTXOS_FAILURE,
   WALLET_SET_UTXOS_SUCCESS,
   WALLET_GET_ALL_BALANCES_SUCCESS,
@@ -27,7 +29,7 @@ import {
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash } from '../../utils/crypto';
-import IdentityRestorerFromState from '../../utils/restorer';
+import { nextAddressForWallet } from '../../utils/restorer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import {
   Address,
@@ -36,6 +38,7 @@ import {
   Mnemonic as Mnemo,
   Password,
 } from '../../../domain/wallet/value-objects';
+import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 
 export function initWallet(wallet: IWallet): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
@@ -188,33 +191,8 @@ export function deriveNewAddress(
       throw new Error('Cannot derive new address');
     }
 
-    const chain = app.network.value;
-    const { confidentialAddresses, masterBlindingKey, masterXPub } = wallets[0];
-    const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
-    // Restore wallet from MasterPublicKey
     try {
-      const pubKeyWallet = new MasterPublicKey({
-        chain,
-        restorer,
-        type: IdentityType.MasterPublicKey,
-        value: {
-          masterPublicKey: fromXpub(masterXPub.value, chain),
-          masterBlindingKey: masterBlindingKey.value,
-        },
-        initializeFromRestorer: true,
-      });
-      const isRestored = await pubKeyWallet.isRestored;
-      if (!isRestored) {
-        throw new Error('Failed to restore wallet');
-      }
-
-      let nextAddress: string;
-      if (change) {
-        nextAddress = pubKeyWallet.getNextChangeAddress().confidentialAddress;
-      } else {
-        nextAddress = pubKeyWallet.getNextAddress().confidentialAddress;
-      }
-
+      const nextAddress = await nextAddressForWallet(wallets[0], app.network.value, change);
       const address = Address.create(nextAddress);
       await repos.wallet.addDerivedAddress(address);
 
@@ -223,6 +201,61 @@ export function deriveNewAddress(
       onSuccess(address.value);
     } catch (error) {
       dispatch([WALLET_DERIVE_ADDRESS_FAILURE, { error }]);
+      onError(error);
+    }
+  };
+}
+
+export function setPendingTx(
+  tx: Transaction,
+  onSuccess: () => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, getState, repos) => {
+    const { wallets } = getState();
+    if (wallets.length <= 0) {
+      throw new Error('Wallet does not exist');
+    }
+    const wallet = wallets[0];
+    try {
+      if (wallet.pendingTx) {
+        throw new Error(
+          'Pending tx already exists, either confirm or reject it before creating a new one'
+        );
+      }
+
+      await repos.wallet.setPendingTx(tx);
+
+      dispatch([WALLET_SET_PENDING_TX_SUCCESS, { pendingTx: tx }]);
+      onSuccess();
+    } catch (error) {
+      dispatch([WALLET_SET_PENDING_TX_FAILURE, { error }]);
+      onError(error);
+    }
+  };
+}
+
+export function unsetPendingTx(
+  onSuccess: () => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, getState, repos) => {
+    const { wallets } = getState();
+    if (wallets.length <= 0) {
+      throw new Error('Wallet does not exist');
+    }
+    const wallet = wallets[0];
+    try {
+      if (!wallet.pendingTx) {
+        return;
+      }
+
+      await repos.wallet.setPendingTx();
+
+      dispatch([WALLET_UNSET_PENDING_TX_SUCCESS]);
+      onSuccess();
+    } catch (error) {
+      dispatch([WALLET_UNSET_PENDING_TX_FAILURE, { error }]);
       onError(error);
     }
   };

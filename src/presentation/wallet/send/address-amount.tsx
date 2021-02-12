@@ -3,21 +3,26 @@ import { RouteComponentProps, useHistory } from 'react-router';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { DEFAULT_ROUTE, SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
+import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
-import { DispatchOrThunk } from '../../../domain/common';
+import { DispatchOrThunk, IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
+import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
+import { nextAddressForWallet } from '../../../application/utils/restorer';
+import { assetInfoByHash, isValidAddressForNetwork } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
   amount: number;
+  assetTicker: string;
 }
 
 interface AddressAmountFormProps {
   dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
+  state: IAppState;
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
@@ -75,7 +80,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
               value={values.amount}
             />
             <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-base font-medium">
-              L-BTC
+              {values.assetTicker}
             </span>
           </div>
         </label>
@@ -102,21 +107,42 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
 const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmountFormValues>({
   mapPropsToValues: (props: AddressAmountFormProps): AddressAmountFormValues => ({
-    address: '',
+    address: props.state.transaction.receipientAddress,
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
-    amount: ('' as unknown) as number,
+    amount:
+      props.state.transaction.amountInSatoshi > 0
+        ? props.state.transaction.amountInSatoshi / Math.pow(10, 8)
+        : (('' as unknown) as number),
+    assetTicker: assetInfoByHash[props.state.transaction.asset].ticker,
   }),
 
-  validationSchema: Yup.object().shape({
-    // TODO: Test if valid address
-    address: Yup.string().required('Please enter an address'),
+  validationSchema: (props: AddressAmountFormProps): any =>
+    Yup.object().shape({
+      address: Yup.string()
+        .required('Please enter a valid address')
+        .test(
+          'valid-address',
+          'Address is not valid',
+          (value) =>
+            value !== undefined && isValidAddressForNetwork(value, props.state.app.network.value)
+        ),
 
-    amount: Yup.number().required('Please enter an amount'),
-  }),
+      amount: Yup.number()
+        .required('Please enter a valid amount')
+        .min(0.00000001, 'Amount should be at least 1 satoshi'),
+    }),
 
-  handleSubmit: (values, { props }) => {
-    //props.dispatch(setAddressAndAmount(values.address, values.amount, props.history));
+  handleSubmit: async (values, { props }) => {
+    const { wallets, app } = props.state;
+    // we don't want to dispatch a deriveNewAddress here, because it would
+    // persist the derived change address. This could lead to potential unused
+    // addresses in case the user goes back to select-asset and then returns to
+    // this view. We'll derive the address when persisting the pending tx.
+    const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
+    props.dispatch(
+      setAddressesAndAmount(values.address, changeAddress, values.amount * Math.pow(10, 8))
+    );
     props.history.push(SEND_CHOOSE_FEE_ROUTE);
   },
 
@@ -125,19 +151,17 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
 const AddressAmount: React.FC = () => {
   const history = useHistory();
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
-  const [, dispatch] = useContext(AppContext);
+  const [state, dispatch] = useContext(AppContext);
 
   return (
     <ShellPopUp
-      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
       <Balance liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" className="mt-4" />
 
-      <AddressAmountEnhancedForm dispatch={dispatch} history={history} />
+      <AddressAmountEnhancedForm dispatch={dispatch} history={history} state={state} />
     </ShellPopUp>
   );
 };

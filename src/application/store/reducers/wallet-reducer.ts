@@ -14,6 +14,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: payload.utxoMap,
+        pendingTx: payload.pendingTx,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -29,6 +30,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: payload.utxoMap,
+        pendingTx: undefined,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -52,6 +54,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: payload.utxoMap,
+        pendingTx: undefined,
       };
       return Object.assign([], state, [firstWallet]);
     }
@@ -76,6 +79,34 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       const firstWallet: IWallet = {
         ...state[0],
         errors: { address: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_SET_PENDING_TX_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        pendingTx: payload.pendingTx,
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_SET_PENDING_TX_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { setPendingTx: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_UNSET_PENDING_TX_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        pendingTx: undefined,
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_UNSET_PENDING_TX_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { unsetPendingTx: { message: payload.error.message } as IError },
       };
       return Object.assign([], state, [firstWallet]);
     }
