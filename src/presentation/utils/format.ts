@@ -9,3 +9,7 @@ export const formatNetwork = (net: string): string => {
 export const formatAmount = (amountInSatoshi: number): string => {
   return (amountInSatoshi / Math.pow(10, 8)).toFixed(8);
 };
+
+export const formatTxid = (txid: string): string => {
+  return txid.substr(0, 6).concat('.......').concat(txid.substr(25, 6));
+}
