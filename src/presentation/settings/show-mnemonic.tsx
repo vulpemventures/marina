@@ -12,13 +12,12 @@ const SettingsShowMnemonic: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);
   const handleModalUnlockCancel = () => showUnlockModal(false);
-  const handleShowMnemonic = (password: string): Promise<void> => {
+  const handleShowMnemonic = (password: string) => {
     if (!wallets[0].passwordHash.equals(hash(Password.create(password)))) {
       throw new Error('Invalid password');
     }
     const mnemo = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
     setMnemonic(mnemo);
-    return Promise.resolve();
   };
 
   return (
