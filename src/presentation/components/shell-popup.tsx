@@ -25,7 +25,7 @@ const ShellPopUp: React.FC<Props> = ({
   hasBackBtn = true,
 }: Props) => {
   const history = useHistory();
-  const [{ wallets, transaction }, dispatch] = useContext(AppContext);
+  const [{ wallets }, dispatch] = useContext(AppContext);
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);

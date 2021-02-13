@@ -15,7 +15,7 @@ const Confirmation: React.FC = () => {
     return <></>;
   }
 
-  const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx!.props;
+  const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx.props;
 
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
 
