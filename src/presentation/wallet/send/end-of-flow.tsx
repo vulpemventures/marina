@@ -43,17 +43,16 @@ const EndOfFlow: React.FC = () => {
   const wallet = wallets[0];
 
   useEffect(() => {
-    console.log('BUSY?', busy)
-    console.log('ISMODALOPEN?', isModalUnlockOpen)
-    console.log('ERRORS', state.error)
     if (!state.aborted && !busy && !isModalUnlockOpen) {
       setBusy(true);
       void (async (): Promise<void> => {
         try {
-          const { sendAsset, feeAsset, value } = wallet.pendingTx!.props;
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const { props } = wallet.pendingTx!;
+          const { sendAsset, feeAsset, value } = props;
 
           const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(
-            wallet.pendingTx!.props,
+            props,
             app.network.value
           );
 
@@ -100,7 +99,7 @@ const EndOfFlow: React.FC = () => {
         }
       })();
     }
-  }, [app, wallets, dispatch, state, isModalUnlockOpen, busy]);
+  }, [app, wallet, dispatch, state, isModalUnlockOpen, busy]);
 
   const handleShowMnemonic = (password: string) => {
     if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
@@ -113,13 +112,13 @@ const EndOfFlow: React.FC = () => {
   const handleModalUnlockClose = () => {
     showUnlockModal(false);
     setState({ ...state, isLoading: false, aborted: true });
-  }
+  };
 
   const handleUnlock = () => {
     showUnlockModal(true);
     setBusy(false);
     setState({ ...state, isLoading: true, aborted: false });
-  }
+  };
   const handleBackToHome = () => {
     dispatch(flush());
     history.push(DEFAULT_ROUTE);
