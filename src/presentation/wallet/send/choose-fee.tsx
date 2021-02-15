@@ -28,6 +28,7 @@ import {
   feeLevelToSatsPerByte,
   taxiURL,
 } from '../../utils';
+import { getLiquidBitcoinBalance } from '../../../application/store/actions/assets';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -40,6 +41,17 @@ const ChooseFee: React.FC = () => {
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
   const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
+  const [lbtcBalance, setLbtcBalance] = useState<number>(0);
+
+  useEffect(() => {
+    dispatch(
+      getLiquidBitcoinBalance(
+        (balance) => setLbtcBalance(balance),
+        (error) => console.log(error)
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (supportedAssets.length <= 0) {
@@ -199,7 +211,12 @@ const ChooseFee: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      <Balance className="mt-4" liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" />
+      <Balance
+        className="mt-4"
+        liquidBitcoinBalance={lbtcBalance}
+        fiatBalance={120}
+        fiatCurrency="$"
+      />
 
       <div className="w-48 mx-auto border-b-0.5 border-graySuperLight pt-2 mb-6"></div>
 

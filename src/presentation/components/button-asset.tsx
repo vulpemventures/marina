@@ -25,9 +25,7 @@ const ButtonAsset: React.FC<Props> = ({
     <button
       disabled={disabled}
       className="focus:outline-none flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
-      onClick={() => {
-        handleClick({ assetHash, assetName, assetTicker });
-      }}
+      onClick={() => handleClick({ assetHash, assetName, assetTicker })}
       type={type}
     >
       <div className="flex flex-row">

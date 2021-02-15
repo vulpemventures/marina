@@ -254,7 +254,6 @@ describe('Assets Actions', () => {
     // Call once to set infos in stores
     await updateAllAssetInfosAction();
     // Call a second time to test that it's not fetched again and stored again
-    //mockBrowser.storage.local.get.expect('assets').andResolve(testAssetsUpdated1);
     const spyAxios = jest.spyOn(axios, 'get');
     expect(spyAxios).not.toHaveBeenCalled();
     return expect(updateAllAssetInfosAction()).resolves.toMatchObject({

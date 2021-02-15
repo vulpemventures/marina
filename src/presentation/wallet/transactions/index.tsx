@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
@@ -9,6 +9,9 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
+import { getAllAssetBalances } from '../../../application/store/actions/assets';
+import { AppContext } from '../../../application/store/context';
+import { lbtcAssetByNetwork } from '../../utils';
 
 interface LocationState {
   assetTicker: string;
@@ -16,10 +19,12 @@ interface LocationState {
 
 const Transactions: React.FC = () => {
   const history = useHistory();
+  const [{ app }, dispatch] = useContext(AppContext);
   const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
   const { state } = useLocation<LocationState>();
   const openTxDetailsModal = () => showTxDetailsModal(true);
   const closeTxDetailsModal = () => showTxDetailsModal(false);
+  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
   // Transaction details
   const txId = '69540a36a63e4f06d298ecacf243639fd5dfc5a31a14f355e14168a59577392a';
   const txExplorerUrl = `https://blockstream.info/liquid/tx/${txId}`;
@@ -37,6 +42,16 @@ const Transactions: React.FC = () => {
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SEND_ADDRESS_AMOUNT_ROUTE);
 
+  useEffect(() => {
+    dispatch(
+      getAllAssetBalances(
+        (balances) => setAssetsBalance(balances),
+        (error) => console.log(error)
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-home.png"
@@ -45,7 +60,9 @@ const Transactions: React.FC = () => {
     >
       <Balance
         bigBalanceText={true}
-        liquidBitcoinBalance={0.005}
+        liquidBitcoinBalance={
+          (assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0) / Math.pow(10, 8)
+        }
         fiatBalance={120}
         fiatCurrency="$"
       />

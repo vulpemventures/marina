@@ -8,6 +8,7 @@ import {
   ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
+import { lbtcAssetByNetwork } from '../../../presentation/utils';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -38,6 +39,29 @@ export function getAllAssetBalances(
     // Dispatch event simply for debugging. No balance state is kept outside utxos
     dispatch([ASSET_GET_ALL_ASSET_BALANCES_SUCCESS]);
     onSuccess(balances);
+  };
+}
+
+/**
+ * Get L-BTC balance
+ * @param onSuccess
+ * @param onError
+ */
+export function getLiquidBitcoinBalance(
+  onSuccess: (balance: number) => void,
+  onError: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return (dispatch, getState) => {
+    const { app, wallets } = getState();
+    const balance =
+      [...wallets[0].utxoMap.values()].find(
+        (utxo) => utxo.asset === lbtcAssetByNetwork(app.network.value)
+      )?.value ?? 0;
+    if (balance) {
+      onSuccess(balance / Math.pow(10, 8));
+    } else {
+      onError(new Error('Cannot fetch L-BTC balance'));
+    }
   };
 }
 

@@ -1,9 +1,9 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
+import { SEND_CHOOSE_FEE_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
 import { DispatchOrThunk, IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
@@ -12,6 +12,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { isValidAddressForNetwork } from '../../utils';
+import { getLiquidBitcoinBalance } from '../../../application/store/actions/assets';
 
 interface AddressAmountFormValues {
   address: string;
@@ -115,7 +116,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         ? props.state.transaction.amountInSatoshi / Math.pow(10, 8)
         : (('' as unknown) as number),
     assetTicker:
-      props.state.assets[props.state.app.network.value][props.state.transaction.asset].ticker,
+      props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
+      '',
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
@@ -153,14 +155,39 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 const AddressAmount: React.FC = () => {
   const history = useHistory();
   const [state, dispatch] = useContext(AppContext);
+  const [lbtcBalance, setLbtcBalance] = useState<number>(0);
+  const handleBackBtn = () =>
+    history.push({
+      pathname: TRANSACTIONS_ROUTE,
+      state: {
+        // TODO: Fix empty ticker
+        assetTicker: state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '',
+      },
+    });
+
+  useEffect(() => {
+    dispatch(
+      getLiquidBitcoinBalance(
+        (balance) => setLbtcBalance(balance),
+        (error) => console.log(error)
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      <Balance liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" className="mt-4" />
+      <Balance
+        liquidBitcoinBalance={lbtcBalance}
+        fiatBalance={120}
+        fiatCurrency="$"
+        className="mt-4"
+      />
 
       <AddressAmountEnhancedForm dispatch={dispatch} history={history} state={state} />
     </ShellPopUp>
