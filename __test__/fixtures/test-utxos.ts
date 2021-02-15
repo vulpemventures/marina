@@ -29,6 +29,12 @@ export const utxo: UtxoInterface = {
     surjectionProof: expect.any(Buffer),
     script: expect.anything(),
   },
+  unblindData: {
+    value: expect.any(String),
+    asset: expect.any(Buffer),
+    valueBlindingFactor: expect.any(Buffer),
+    assetBlindingFactor: expect.any(Buffer),
+  },
 };
 
 export const getUtxoMap = (num: number) => {
@@ -66,6 +72,12 @@ export const testWalletUtxosDTO: WalletDTO = {
         surjectionProof: expect.any(Buffer),
         script: expect.anything(),
       },
+      unblindData: {
+        value: expect.any(String),
+        asset: expect.any(Buffer),
+        valueBlindingFactor: expect.any(Buffer),
+        assetBlindingFactor: expect.any(Buffer),
+      },
     }
   ),
   walletId: v4(),
@@ -93,6 +105,12 @@ export const testWalletUtxosProps: IWallet = {
           surjectionProof: expect.any(Buffer),
           script: expect.anything(),
         },
+        unblindData: {
+          value: expect.any(String),
+          asset: expect.any(Buffer),
+          valueBlindingFactor: expect.any(Buffer),
+          assetBlindingFactor: expect.any(Buffer),
+        },
       }
     )
     .set(
@@ -109,6 +127,12 @@ export const testWalletUtxosProps: IWallet = {
           rangeProof: expect.any(Buffer),
           surjectionProof: expect.any(Buffer),
           script: expect.anything(),
+        },
+        unblindData: {
+          value: expect.any(String),
+          asset: expect.any(Buffer),
+          valueBlindingFactor: expect.any(Buffer),
+          assetBlindingFactor: expect.any(Buffer),
         },
       }
     ),
