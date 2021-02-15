@@ -6,7 +6,7 @@ export const broadcastTx = async (baseUrl: string, txHex: string): Promise<strin
   if (response.status !== 200) {
     throw new Error(response.data);
   }
-  return response.data.txId;
+  return response.data;
 };
 
 export const lbtcAssetByNetwork = (net: string): string => {
