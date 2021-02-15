@@ -22,9 +22,9 @@ export async function fetchUtxos(address: string, txid?: string): Promise<any> {
   }
 }
 
-export async function faucet(address: string): Promise<any> {
+export async function faucet(address: string, amount: number): Promise<any> {
   try {
-    const { status, data } = await axios.post(`${APIURL}/faucet`, { address });
+    const { status, data } = await axios.post(`${APIURL}/faucet`, { address, amount });
     if (status !== 200) {
       throw new Error('Invalid address');
     }

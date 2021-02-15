@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { updateAllAssetBalances, updateAllAssetInfos } from './assets';
+import { getAllAssetBalances, updateAllAssetInfos } from './assets';
 import { createWallet, setUtxos } from './wallet';
 import { appInitialState, appReducer } from '../reducers';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
@@ -47,10 +47,10 @@ describe('Assets Actions', () => {
       wallets: [testWalletUtxosProps],
     });
 
-    const updateAllAssetBalancesAction = function () {
+    const getAllAssetBalancesAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          updateAllAssetBalances(
+          getAllAssetBalances(
             (balances) => resolve(balances),
             (err: Error) => reject(err.message)
           )
@@ -58,7 +58,7 @@ describe('Assets Actions', () => {
       });
     };
 
-    return expect(updateAllAssetBalancesAction()).resolves.toMatchObject({
+    return expect(getAllAssetBalancesAction()).resolves.toMatchObject({
       '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8': 123000000,
       '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': 42069420,
     });
@@ -127,6 +127,11 @@ describe('Assets Actions', () => {
     await setUtxosAction();
     // Get all assets infos
     const expectedAssets = {
+      '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
+        name: 'Liquid Bitcoin',
+        precision: 8,
+        ticker: 'L-BTC',
+      },
       [mintData1.asset]: {
         name: 'Vulpem',
         precision: 8,
@@ -221,10 +226,15 @@ describe('Assets Actions', () => {
     await setUtxosAction();
     // Get all assets infos
     const expectedAssets = {
+      '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
+        name: 'Liquid Bitcoin',
+        precision: 8,
+        ticker: 'L-BTC',
+      },
       [mintData.asset]: {
         name: 'Random Shitcoin',
-        ticker: 'SHIT',
         precision: 8,
+        ticker: 'SHIT',
       },
     };
     mockBrowser.storage.local.get.expect('assets').andResolve(testAssetsUpdated1);

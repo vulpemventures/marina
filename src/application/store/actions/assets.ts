@@ -5,8 +5,8 @@ import {
   ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
   ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE,
   INIT_ASSETS,
-  ASSET_UPDATE_ALL_ASSET_BALANCES_FAILURE,
-  ASSET_UPDATE_ALL_ASSET_BALANCES_SUCCESS,
+  ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
+  ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
@@ -20,7 +20,7 @@ export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
  * @param onSuccess
  * @param onError
  */
-export function updateAllAssetBalances(
+export function getAllAssetBalances(
   onSuccess: (balances: { [assetHash: string]: number }) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
@@ -28,14 +28,15 @@ export function updateAllAssetBalances(
     const { wallets } = getState();
     const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
-        dispatch([ASSET_UPDATE_ALL_ASSET_BALANCES_FAILURE]);
+        dispatch([ASSET_GET_ALL_ASSET_BALANCES_FAILURE]);
         onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
         return acc;
       }
       acc = { ...acc, [curr.asset]: curr.value };
       return acc;
     }, {} as { [assetHash: string]: number });
-    dispatch([ASSET_UPDATE_ALL_ASSET_BALANCES_SUCCESS, { balances }]);
+    // Dispatch event simply for debugging. No balance state is kept outside utxos
+    dispatch([ASSET_GET_ALL_ASSET_BALANCES_SUCCESS]);
     onSuccess(balances);
   };
 }
@@ -56,16 +57,16 @@ export function updateAllAssetInfos(
         [...wallets[0].utxoMap.values()].map(async ({ asset, value }) =>
           // If asset in store don't fetch
           !((asset as string) in assets[app.network.value])
-            ? { ...(await axios.get(`http://localhost:3001/asset/${asset}`)).data, quantity: value }
+            ? (await axios.get(`http://localhost:3001/asset/${asset}`)).data
             : undefined
         )
       ).then((assetInfos) =>
         assetInfos
           .filter((a) => a !== undefined)
           .reduce(
-            (acc, { asset_id, name, ticker, precision, quantity }) => ({
+            (acc, { asset_id, name, ticker, precision }) => ({
               ...acc,
-              [asset_id]: { name, ticker, precision, quantity },
+              [asset_id]: { name, ticker, precision },
             }),
             {} as Assets
           )

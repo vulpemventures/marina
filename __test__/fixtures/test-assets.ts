@@ -9,10 +9,17 @@ export const testAssets: AssetsByNetwork = {
     },
     '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': {
       name: 'Liquid Bitcoin',
+      precision: 8,
       ticker: 'L-BTC',
     },
   },
-  regtest: {},
+  regtest: {
+    '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
+      name: 'Liquid Bitcoin',
+      precision: 8,
+      ticker: 'L-BTC',
+    },
+  },
 };
 
 export const testAssetsUpdated1: AssetsByNetwork = {
@@ -24,14 +31,20 @@ export const testAssetsUpdated1: AssetsByNetwork = {
     },
     '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': {
       name: 'Liquid Bitcoin',
+      precision: 8,
       ticker: 'L-BTC',
     },
   },
   regtest: {
+    '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
+      name: 'Liquid Bitcoin',
+      precision: 8,
+      ticker: 'L-BTC',
+    },
     '60d4a99f2413d67ad58a66a6e0d108957208f66484c1208a8aacebac4fc148bb': {
       name: 'Random Shitcoin',
-      ticker: 'SHIT',
       precision: 8,
+      ticker: 'SHIT',
     },
   },
 };
@@ -45,10 +58,16 @@ export const testAssetsUpdated2: AssetsByNetwork = {
     },
     '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': {
       name: 'Liquid Bitcoin',
+      precision: 8,
       ticker: 'L-BTC',
     },
   },
   regtest: {
+    '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
+      name: 'Liquid Bitcoin',
+      precision: 8,
+      ticker: 'L-BTC',
+    },
     '74cf7361647e720a11c11b214c7b96d3e539bb42d01e02b8fa5ef4cfaba2fb0d': {
       name: 'Vulpem',
       precision: 8,
@@ -77,10 +96,16 @@ export const testAssetsUpdated3: AssetsByNetwork = {
     },
     '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': {
       name: 'Liquid Bitcoin',
+      precision: 8,
       ticker: 'L-BTC',
     },
   },
   regtest: {
+    '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
+      name: 'Liquid Bitcoin',
+      precision: 8,
+      ticker: 'L-BTC',
+    },
     '60d4a99f2413d67ad58a66a6e0d108957208f66484c1208a8aacebac4fc148bb': {
       name: 'Random Shitcoin',
       precision: 8,

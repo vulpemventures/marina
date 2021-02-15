@@ -18,16 +18,16 @@ import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 import { flush } from '../../../application/store/actions/transaction';
 import { browser } from 'webextension-polyfill-ts';
 import {
-  updateAllAssetBalances,
+  getAllAssetBalances,
   updateAllAssetInfos,
 } from '../../../application/store/actions/assets';
 import { createDevState } from '../../../../__test__/dev-state';
-import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
+import { imgPathMapMainnet, imgPathMapRegtest, lbtcAssetByNetwork } from '../../utils';
 
 const Home: React.FC = () => {
   const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
-  const [isAssetInfosLoaded, setAssetInfosLoaded] = useState(false);
-  const [assetsData, setAssetsData] = useState({});
+  const [isAssetDataLoaded, setAssetDataLoaded] = useState(false);
+  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
 
   useEffect(() => {
     if (process.env.SKIP_ONBOARDING) {
@@ -39,26 +39,23 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (wallets[0].utxoMap.size > 0) {
       dispatch(
-        updateAllAssetInfos((assetInfos) => {
-          setAssetsData(assetInfos[app.network.value]);
-          setAssetInfosLoaded(true);
+        updateAllAssetInfos(() => {
+          dispatch(
+            getAllAssetBalances(
+              (balances) => {
+                setAssetsBalance(balances);
+                setAssetDataLoaded(true);
+              },
+              (error) => console.log(error)
+            )
+          );
         })
       );
-      // Extend assets with balances
-      dispatch(
-        updateAllAssetBalances(
-          (assetBalances) => {
-            console.log('{ ...assetsData, ...assetBalances }', { ...assetsData, ...assetBalances });
-            setAssetsData({ ...assetsData, ...assetBalances });
-          },
-          (error) => console.log(error)
-        )
-      );
     } else {
-      setAssetInfosLoaded(true);
+      setAssetDataLoaded(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallets]);
+  }, [app.network.value, wallets]);
 
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -123,16 +120,16 @@ const Home: React.FC = () => {
 
   // Generate ButtonList
   let buttonList;
-  if (Object.entries(assets[app.network.value] || {}).length === 0 && !isAssetInfosLoaded) {
+  if (Object.entries(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded) {
     // Loading
     // TODO: replace with a nice spinner
     buttonList = <p className="h-72">Loading...</p>;
-  } else if (Object.entries(assets[app.network.value]).length === 0 && isAssetInfosLoaded) {
+  } else if (Object.entries(assets[app.network.value]).length === 0 && isAssetDataLoaded) {
     // Wallet is empty
     buttonList = (
       <ButtonAsset
         assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
-        assetHash="6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d"
+        assetHash={lbtcAssetByNetwork(app.network.value)}
         assetName="Liquid Bitcoin"
         assetTicker="L-BTC"
         quantity={0}
@@ -145,13 +142,14 @@ const Home: React.FC = () => {
       return (
         <ButtonAsset
           assetImgPath={
-            app.network.value === 'regtest' ? imgPathMapRegtest[ticker] : imgPathMapMainnet[hash]
+            app.network.value === 'regtest'
+              ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
+              : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
           }
           assetHash={hash}
           assetName={name}
           assetTicker={ticker}
-          // TODO: fix quantity
-          quantity={1}
+          quantity={(assetsBalance[hash] ?? 0) / Math.pow(10, 8)}
           key={hash}
           handleClick={handleClick}
         />
@@ -167,7 +165,9 @@ const Home: React.FC = () => {
     >
       <Balance
         bigBalanceText={true}
-        liquidBitcoinBalance={0.005}
+        liquidBitcoinBalance={
+          (assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0) / Math.pow(10, 8)
+        }
         fiatBalance={120}
         fiatCurrency="$"
       />

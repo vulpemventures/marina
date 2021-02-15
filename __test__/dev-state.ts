@@ -1,4 +1,4 @@
-import { fetchUtxos, mint } from './_regtest';
+import { faucet, fetchUtxos, mint } from './_regtest';
 import { deriveNewAddress, setUtxos } from '../src/application/store/actions';
 import { xpubWalletFromAddresses } from '../src/application/utils/restorer';
 import { Thunk, IAppState, Action } from '../src/domain/common';
@@ -33,7 +33,7 @@ export function createDevState(
       const utxosAddr2 = await fetchUtxos(confidentialAddr2);
       //
       if (utxosAddr1.length < 3) {
-        await mint(confidentialAddr1, 21, 'Liquid Bitcoin', 'L-BTC');
+        await faucet(confidentialAddr1, 21); // L-BTC
         await mint(confidentialAddr1, 996699, 'Vulpem', 'VLP');
         await mint(confidentialAddr1, 4200, 'Tether USD', 'USDt');
       }
