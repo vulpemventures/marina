@@ -39,7 +39,7 @@
     "@grpc/grpc-js": "^1.2.5",
     "formik": "^2.2.6",
     "google-protobuf": "^3.14.0",
-    "ldk": "^0.2.0",
+    "ldk": "^0.2.1",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.1",
