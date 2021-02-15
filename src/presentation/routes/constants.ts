@@ -21,6 +21,7 @@ const SELECT_ASSET_ROUTE = '/select-asset';
 const SEND_ADDRESS_AMOUNT_ROUTE = '/send';
 const SEND_CHOOSE_FEE_ROUTE = '/send/choose-fee';
 const SEND_CONFIRMATION_ROUTE = '/send/confirmation';
+const SEND_END_OF_FLOW_ROUTE = '/send/end-of-flow';
 
 // Settings
 const SETTINGS_MENU_SECURITY_ROUTE = '/settings/security';
@@ -57,6 +58,7 @@ export {
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
+  SEND_END_OF_FLOW_ROUTE,
   // Settings
   SETTINGS_MENU_SECURITY_ROUTE,
   SETTINGS_MENU_SETTINGS_ROUTE,

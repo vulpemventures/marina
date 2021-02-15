@@ -1,98 +1,23 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { useHistory } from 'react-router';
-import { browser } from 'webextension-polyfill-ts';
-import { deriveNewAddress, unsetPendingTx } from '../../../application/store/actions';
-import { flush } from '../../../application/store/actions/transaction';
 import { AppContext } from '../../../application/store/context';
-import { decrypt, hash } from '../../../application/utils/crypto';
-import { Password } from '../../../domain/wallet/value-objects';
 import Button from '../../components/button';
-import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import { DEFAULT_ROUTE } from '../../routes/constants';
-import {
-  assetInfoByHash,
-  blindAndSignPset,
-  blindingInfoFromPendingTx,
-  broadcastTx,
-  explorerURL,
-} from '../../utils';
+import { SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { assetInfoByHash } from '../../utils';
 
 const Confirmation: React.FC = () => {
-  const [{ wallets, app }, dispatch] = useContext(AppContext);
+  const [{ wallets }] = useContext(AppContext);
   const history = useHistory();
-  const [isModalUnlockOpen, showUnlockModal] = useState(false);
 
+  // In case the home btn is pressed prevents to use pendingTx's props
   if (!wallets[0].pendingTx) {
-    return <>Loading...</>;
+    return <></>;
   }
 
-  const {
-    sendAddress,
-    sendAsset,
-    sendAmount,
-    feeAsset,
-    feeAmount,
-    value,
-  } = wallets[0].pendingTx.props;
+  const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx.props;
 
-  const handleModalUnlockCancel = () => showUnlockModal(false);
-  const handleShowMnemonic = async (password: string) => {
-    const pwd = Password.create(password);
-    let mnemonic: string;
-    if (hash(pwd).equals(wallets[0].passwordHash)) {
-      mnemonic = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
-    } else {
-      throw new Error('Invalid password');
-    }
-
-    const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(
-      wallets[0].pendingTx!.props,
-      app.network.value
-    );
-
-    const tx: string = await blindAndSignPset(
-      mnemonic,
-      wallets[0].masterBlindingKey.value,
-      wallets[0].confidentialAddresses,
-      app.network.value,
-      value,
-      outputsToBlind,
-      outPubkeys
-    );
-
-    await broadcastTx(explorerURL[app.network.value], tx);
-
-    const onError = (err: Error) => {
-      console.log(err);
-    };
-    const onSuccess = () => {
-      dispatch(
-        unsetPendingTx(() => {
-          dispatch(flush());
-          history.push(DEFAULT_ROUTE);
-          browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
-        }, onError)
-      );
-    };
-
-    // persist change addresses before unsetting the pending tx
-    dispatch(
-      deriveNewAddress(
-        true,
-        () => {
-          if (feeAsset !== sendAsset) {
-            dispatch(deriveNewAddress(true, onSuccess, onError));
-          } else {
-            onSuccess();
-          }
-        },
-        onError
-      )
-    );
-  };
-
-  const handleSend = () => showUnlockModal(true);
+  const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
 
   return (
     <ShellPopUp
@@ -129,12 +54,6 @@ const Confirmation: React.FC = () => {
       <Button className="bottom-20 right-8 absolute" onClick={handleSend}>
         Send
       </Button>
-
-      <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockCancel}
-        handleShowMnemonic={handleShowMnemonic}
-      />
     </ShellPopUp>
   );
 };

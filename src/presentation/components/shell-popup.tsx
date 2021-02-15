@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
+import { AppContext } from '../../application/store/context';
+import { flush } from '../../application/store/actions/transaction';
+import { unsetPendingTx } from '../../application/store/actions';
+import { browser } from 'webextension-polyfill-ts';
 
 interface Props {
   backBtnCb?: () => void;
@@ -21,13 +25,29 @@ const ShellPopUp: React.FC<Props> = ({
   hasBackBtn = true,
 }: Props) => {
   const history = useHistory();
+  const [{ wallets }, dispatch] = useContext(AppContext);
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
   //
   const goToPreviousPath = () => history.goBack();
-  const goToHome = () => history.push(DEFAULT_ROUTE);
+  const goToHome = () => {
+    if (wallets[0].pendingTx) {
+      dispatch(
+        unsetPendingTx(
+          () => {
+            dispatch(flush());
+            browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+            history.push(DEFAULT_ROUTE);
+          },
+          (err: Error) => console.log(err)
+        )
+      );
+    } else {
+      history.push(DEFAULT_ROUTE);
+    }
+  };
   const handleBackBtn = () => {
     if (backBtnCb) {
       backBtnCb();

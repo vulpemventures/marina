@@ -12,7 +12,7 @@ interface ModalUnlockFormValues {
 
 interface ModalUnlockFormProps {
   handleModalUnlockClose(): void;
-  handleShowMnemonic(password: string): Promise<void>;
+  handleShowMnemonic(password: string): void;
   isModalUnlockOpen: boolean;
 }
 
@@ -55,10 +55,9 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: async (values, { props, setStatus }) => {
+  handleSubmit: (values, { props, setStatus }) => {
     try {
-      await props.handleShowMnemonic(values.password);
-      props.handleModalUnlockClose();
+      props.handleShowMnemonic(values.password);
     } catch (err) {
       setStatus({ password: 'Invalid password' });
     }
