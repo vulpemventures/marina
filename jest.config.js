@@ -11,4 +11,5 @@ module.exports = {
   transform: {
     '.+\\.ts$': 'ts-jest',
   },
+  transformIgnorePatterns: ['node_modules/(?!(taxi-protobuf)/)"'],
 };
