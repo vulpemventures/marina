@@ -7,14 +7,12 @@ import Modal from './modal';
 
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
-  handleModalUnlockCancel(): void;
   password: string;
 }
 
 interface ModalUnlockFormProps {
-  handleModalUnlockCancel?: () => void;
-  handleModalUnlockClose: () => void;
-  handleShowMnemonic: (password: string) => void;
+  handleModalUnlockClose(): void;
+  handleShowMnemonic(password: string): void;
   isModalUnlockOpen: boolean;
 }
 
@@ -31,7 +29,7 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
         <div className="pr-1">
           <Button
             isOutline={true}
-            onClick={() => values.handleModalUnlockCancel()}
+            onClick={() => values.handleModalUnlockClose()}
             className="bg-secondary hover:bg-secondary-light"
           >
             Cancel
@@ -47,9 +45,6 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
 
 const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockFormValues>({
   mapPropsToValues: (props): ModalUnlockFormValues => ({
-    handleModalUnlockCancel: props.handleModalUnlockCancel
-      ? props.handleModalUnlockCancel.bind(this)
-      : props.handleModalUnlockClose.bind(this),
     handleModalUnlockClose: props.handleModalUnlockClose.bind(this),
     password: '',
   }),
@@ -63,7 +58,6 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
   handleSubmit: (values, { props, setStatus }) => {
     try {
       props.handleShowMnemonic(values.password);
-      props.handleModalUnlockClose();
     } catch (err) {
       setStatus({ password: 'Invalid password' });
     }
@@ -76,27 +70,16 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   isModalUnlockOpen,
   handleModalUnlockClose,
   handleShowMnemonic,
-  handleModalUnlockCancel,
 }) => {
   if (!isModalUnlockOpen) {
     return <></>;
   }
 
   return (
-    <Modal
-      isOpen={isModalUnlockOpen}
-      onClose={() => {
-        if (handleModalUnlockCancel) {
-          handleModalUnlockCancel();
-        } else {
-          handleModalUnlockClose();
-        }
-      }}
-    >
+    <Modal isOpen={isModalUnlockOpen} onClose={handleModalUnlockClose}>
       <ModalUnlockEnhancedForm
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleModalUnlockCancel={handleModalUnlockCancel}
         handleShowMnemonic={handleShowMnemonic}
       />
     </Modal>

@@ -18,6 +18,7 @@ const SettingsShowMnemonic: React.FC = () => {
     }
     const mnemo = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
     setMnemonic(mnemo);
+    showUnlockModal(false);
   };
 
   return (

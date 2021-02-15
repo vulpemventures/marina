@@ -23,6 +23,7 @@ interface State {
   txid: string;
   isLoading: boolean;
   success: boolean;
+  aborted: boolean;
   error?: Error;
 }
 
@@ -35,26 +36,31 @@ const EndOfFlow: React.FC = () => {
     mnemonic: '',
     isLoading: true,
     success: false,
+    aborted: false,
     error: undefined,
     txid: '',
   });
+  const wallet = wallets[0];
 
   useEffect(() => {
-    if (!busy && !isModalUnlockOpen) {
+    console.log('BUSY?', busy)
+    console.log('ISMODALOPEN?', isModalUnlockOpen)
+    console.log('ERRORS', state.error)
+    if (!state.aborted && !busy && !isModalUnlockOpen) {
       setBusy(true);
       void (async (): Promise<void> => {
         try {
-          const { sendAsset, feeAsset, value } = wallets[0].pendingTx!.props;
+          const { sendAsset, feeAsset, value } = wallet.pendingTx!.props;
 
           const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(
-            wallets[0].pendingTx!.props,
+            wallet.pendingTx!.props,
             app.network.value
           );
 
           const tx: string = await blindAndSignPset(
             state.mnemonic,
-            wallets[0].masterBlindingKey.value,
-            wallets[0].confidentialAddresses,
+            wallet.masterBlindingKey.value,
+            wallet.confidentialAddresses,
             app.network.value,
             value,
             outputsToBlind,
@@ -97,16 +103,24 @@ const EndOfFlow: React.FC = () => {
   }, [app, wallets, dispatch, state, isModalUnlockOpen, busy]);
 
   const handleShowMnemonic = (password: string) => {
-    if (!wallets[0].passwordHash.equals(hash(Password.create(password)))) {
+    if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
       throw new Error('Invalid password');
     }
-    const mnemonic = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
+    const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
     setState({ ...state, mnemonic });
+    showUnlockModal(false);
   };
-  const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleModalUnlockCancel = () => history.goBack();
+  const handleModalUnlockClose = () => {
+    showUnlockModal(false);
+    setState({ ...state, isLoading: false, aborted: true });
+  }
 
-  const handleClick = () => {
+  const handleUnlock = () => {
+    showUnlockModal(true);
+    setBusy(false);
+    setState({ ...state, isLoading: true, aborted: false });
+  }
+  const handleBackToHome = () => {
     dispatch(flush());
     history.push(DEFAULT_ROUTE);
   };
@@ -119,17 +133,22 @@ const EndOfFlow: React.FC = () => {
       hasBackBtn={false}
     >
       {state.isLoading && <span className="font-medium">Loading...</span>}
-      {!state.isLoading && !isModalUnlockOpen && (
+      {!state.isLoading && !isModalUnlockOpen && state.aborted && (
+        <div className="container mx-auto text-center">
+          <h1>Unlock my wallet to send transaction</h1>
+          <Button onClick={handleUnlock}>Unlock</Button>
+        </div>
+      )}
+      {!state.isLoading && !isModalUnlockOpen && !state.aborted && (
         <div className="container mx-auto text-center">
           <span className="font-medium">{state.success ? 'Success' : 'Failed'}</span>
           {state.txid.length > 0 && <h1>Transaction id: {formatTxid(state.txid)}</h1>}
           {state.error && <h1>{state.error.message}</h1>}
-          <Button onClick={handleClick}>Back to home</Button>
+          <Button onClick={handleBackToHome}>Back to home</Button>
         </div>
       )}
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockCancel={handleModalUnlockCancel}
         handleModalUnlockClose={handleModalUnlockClose}
         handleShowMnemonic={handleShowMnemonic}
       />
