@@ -11,15 +11,16 @@ import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import {
-  assetInfoByHash,
   blindAndSignPset,
   blindingInfoFromPendingTx,
   broadcastTx,
   explorerURL,
+  imgPathMapMainnet,
+  imgPathMapRegtest,
 } from '../../utils';
 
 const Confirmation: React.FC = () => {
-  const [{ wallets, app }, dispatch] = useContext(AppContext);
+  const [{ wallets, app, assets }, dispatch] = useContext(AppContext);
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState(false);
 
@@ -100,10 +101,14 @@ const Confirmation: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Confirmation"
     >
-      <h1 className="text-2xl">{assetInfoByHash[sendAsset].name}</h1>
+      <h1 className="text-2xl">{assets[app.network.value][sendAsset].name}</h1>
       <img
         className="w-11 mt-0.5 block mx-auto mb-2"
-        src={assetInfoByHash[sendAsset].imgPath}
+        src={
+          app.network.value === 'regtest'
+            ? imgPathMapRegtest[assets[app.network.value][sendAsset].ticker]
+            : imgPathMapMainnet[sendAsset]
+        }
         alt="liquid bitcoin logo"
       />
 
@@ -116,13 +121,13 @@ const Confirmation: React.FC = () => {
         <span className="text-lg font-medium">Amount</span>
         <span className="text-base font-medium text-white">{`${(
           sendAmount / Math.pow(10, 8)
-        ).toString()} ${assetInfoByHash[sendAsset].ticker}`}</span>
+        ).toString()} ${assets[app.network.value][sendAsset].ticker}`}</span>
       </div>
 
       <div className="flex flex-row justify-between px-3 mt-10">
         <span className="text-lg font-medium">Fee</span>
         <span className="font-regular text-base">{`${(feeAmount / Math.pow(10, 8)).toFixed(8)} ${
-          assetInfoByHash[feeAsset].ticker
+          assets[app.network.value][feeAsset].ticker
         }`}</span>
       </div>
 

@@ -5,8 +5,8 @@ import {
   ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
   ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE,
   INIT_ASSETS,
-  ASSET_GET_ALL_BALANCES_FAILURE,
-  ASSET_GET_ALL_BALANCES_SUCCESS,
+  ASSET_UPDATE_ALL_ASSET_BALANCES_FAILURE,
+  ASSET_UPDATE_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
@@ -20,7 +20,7 @@ export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
  * @param onSuccess
  * @param onError
  */
-export function getAllBalances(
+export function updateAllAssetBalances(
   onSuccess: (balances: { [assetHash: string]: number }) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
@@ -28,14 +28,14 @@ export function getAllBalances(
     const { wallets } = getState();
     const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
-        dispatch([ASSET_GET_ALL_BALANCES_FAILURE]);
+        dispatch([ASSET_UPDATE_ALL_ASSET_BALANCES_FAILURE]);
         onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
         return acc;
       }
       acc = { ...acc, [curr.asset]: curr.value };
       return acc;
     }, {} as { [assetHash: string]: number });
-    dispatch([ASSET_GET_ALL_BALANCES_SUCCESS, { balances }]);
+    dispatch([ASSET_UPDATE_ALL_ASSET_BALANCES_SUCCESS, { balances }]);
     onSuccess(balances);
   };
 }
@@ -45,7 +45,7 @@ export function getAllBalances(
  * @param onSuccess
  * @param onError
  */
-export function updateAllAssetsInfo(
+export function updateAllAssetInfos(
   onSuccess?: (assetInfos: AssetsByNetwork) => void,
   onError?: (err: Error) => void
 ): Thunk<IAppState, Action<AssetsByNetwork>> {
@@ -53,19 +53,19 @@ export function updateAllAssetsInfo(
     try {
       const { app, assets, wallets } = getState();
       const assetsFromUtxos: Assets = await Promise.all(
-        [...wallets[0].utxoMap.values()].map(async ({ asset }) =>
+        [...wallets[0].utxoMap.values()].map(async ({ asset, value }) =>
           // If asset in store don't fetch
           !((asset as string) in assets[app.network.value])
-            ? (await axios.get(`http://localhost:3001/asset/${asset}`)).data
+            ? { ...(await axios.get(`http://localhost:3001/asset/${asset}`)).data, quantity: value }
             : undefined
         )
       ).then((assetInfos) =>
         assetInfos
           .filter((a) => a !== undefined)
           .reduce(
-            (acc, { asset_id, name, ticker, precision }) => ({
+            (acc, { asset_id, name, ticker, precision, quantity }) => ({
               ...acc,
-              [asset_id]: { name, ticker, precision },
+              [asset_id]: { name, ticker, precision, quantity },
             }),
             {} as Assets
           )

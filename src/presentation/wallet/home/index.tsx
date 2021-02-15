@@ -17,8 +17,12 @@ import { setUtxos } from '../../../application/store/actions';
 import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 import { flush } from '../../../application/store/actions/transaction';
 import { browser } from 'webextension-polyfill-ts';
-import { updateAllAssetsInfo } from '../../../application/store/actions/assets';
-import { populateWalletWithFakeTransactions } from '../../../../__test__/_regtest';
+import {
+  updateAllAssetBalances,
+  updateAllAssetInfos,
+} from '../../../application/store/actions/assets';
+import { createDevState } from '../../../../__test__/dev-state';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
 
 const Home: React.FC = () => {
   const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
@@ -27,7 +31,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (process.env.SKIP_ONBOARDING) {
-      dispatch(populateWalletWithFakeTransactions());
+      dispatch(createDevState());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -35,19 +39,21 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (wallets[0].utxoMap.size > 0) {
       dispatch(
-        updateAllAssetsInfo((assetInfos) => {
+        updateAllAssetInfos((assetInfos) => {
           setAssetsData(assetInfos[app.network.value]);
           setAssetInfosLoaded(true);
         })
       );
-      // TODO: Extend assets with balances
-      //dispatch(
-      //getAllBalances(
-      //(assetBalances) => {
-      // setAssetsData({ ...assetsData, ...assetBalances });
-      // },
-      // (error) => console.log(error)
-      //);
+      // Extend assets with balances
+      dispatch(
+        updateAllAssetBalances(
+          (assetBalances) => {
+            console.log('{ ...assetsData, ...assetBalances }', { ...assetsData, ...assetBalances });
+            setAssetsData({ ...assetsData, ...assetBalances });
+          },
+          (error) => console.log(error)
+        )
+      );
     } else {
       setAssetInfosLoaded(true);
     }
@@ -136,26 +142,11 @@ const Home: React.FC = () => {
   } else {
     // Wallet has coins
     buttonList = Object.entries(assets[app.network.value] || {}).map(([hash, { name, ticker }]) => {
-      let imgPath: string;
-      switch (ticker) {
-        case 'L-BTC':
-          imgPath = 'assets/images/liquid-assets/liquid-btc.svg';
-          break;
-        case 'LCAD':
-          imgPath = 'assets/images/liquid-assets/liquid-cad.png';
-          break;
-        case 'USDt':
-          imgPath = 'assets/images/liquid-assets/liquid-tether.png';
-          break;
-        default:
-          imgPath = 'assets/images/liquid-assets/question-mark.svg';
-          break;
-      }
-
       return (
         <ButtonAsset
-          // TODO: fix img paths
-          assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
+          assetImgPath={
+            app.network.value === 'regtest' ? imgPathMapRegtest[ticker] : imgPathMapMainnet[hash]
+          }
           assetHash={hash}
           assetName={name}
           assetTicker={ticker}

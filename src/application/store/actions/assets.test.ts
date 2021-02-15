@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAllBalances, updateAllAssetsInfo } from './assets';
+import { updateAllAssetBalances, updateAllAssetInfos } from './assets';
 import { createWallet, setUtxos } from './wallet';
 import { appInitialState, appReducer } from '../reducers';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
@@ -47,10 +47,10 @@ describe('Assets Actions', () => {
       wallets: [testWalletUtxosProps],
     });
 
-    const getAllBalancesAction = function () {
+    const updateAllAssetBalancesAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          getAllBalances(
+          updateAllAssetBalances(
             (balances) => resolve(balances),
             (err: Error) => reject(err.message)
           )
@@ -58,7 +58,7 @@ describe('Assets Actions', () => {
       });
     };
 
-    return expect(getAllBalancesAction()).resolves.toMatchObject({
+    return expect(updateAllAssetBalancesAction()).resolves.toMatchObject({
       '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8': 123000000,
       '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': 42069420,
     });
@@ -152,10 +152,10 @@ describe('Assets Actions', () => {
         },
       })
       .andResolve();
-    const updateAllAssetsInfoAction = function () {
+    const updateAllAssetInfosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          updateAllAssetsInfo(
+          updateAllAssetInfos(
             () => resolve(store.getState()),
             (err: Error) => reject(err.message)
           )
@@ -163,7 +163,7 @@ describe('Assets Actions', () => {
       });
     };
     //
-    return expect(updateAllAssetsInfoAction()).resolves.toMatchObject({
+    return expect(updateAllAssetInfosAction()).resolves.toMatchObject({
       app: testAppProps,
       assets: {
         ...assetInitState,
@@ -231,10 +231,10 @@ describe('Assets Actions', () => {
     mockBrowser.storage.local.set
       .expect({ assets: { ...assetInitState, regtest: expectedAssets } })
       .andResolve();
-    const updateAllAssetsInfoAction = function () {
+    const updateAllAssetInfosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          updateAllAssetsInfo(
+          updateAllAssetInfos(
             () => resolve(store.getState()),
             (err: Error) => reject(err.message)
           )
@@ -242,12 +242,12 @@ describe('Assets Actions', () => {
       });
     };
     // Call once to set infos in stores
-    await updateAllAssetsInfoAction();
+    await updateAllAssetInfosAction();
     // Call a second time to test that it's not fetched again and stored again
     //mockBrowser.storage.local.get.expect('assets').andResolve(testAssetsUpdated1);
     const spyAxios = jest.spyOn(axios, 'get');
     expect(spyAxios).not.toHaveBeenCalled();
-    return expect(updateAllAssetsInfoAction()).resolves.toMatchObject({
+    return expect(updateAllAssetInfosAction()).resolves.toMatchObject({
       app: testAppProps,
       assets: {
         ...assetInitState,

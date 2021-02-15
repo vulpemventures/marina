@@ -32,7 +32,7 @@ export const assetReducer = (state: AssetsByNetwork, [type, payload]: [string, a
 
     //
     /*
-    case ACTION_TYPES.ASSET_GET_ALL_BALANCES_SUCCESS: {
+    case ACTION_TYPES.ASSET_UPDATE_ALL_ASSET_BALANCES_SUCCESS: {
       const liquidAssets = {
         ...state.liquid,
         quantity: 0,
@@ -73,7 +73,7 @@ export const assetReducer = (state: AssetsByNetwork, [type, payload]: [string, a
       //console.log('liquidAssets', liquidAssets);
       return { liquidAssets, regtestAssets };
     }
-    case ACTION_TYPES.ASSET_GET_ALL_BALANCES_FAILURE: {
+    case ACTION_TYPES.ASSET_UPDATE_ALL_ASSET_BALANCES_FAILURE: {
       return {
         ...state,
         errors: { assets: { message: payload.error.message } as IError },

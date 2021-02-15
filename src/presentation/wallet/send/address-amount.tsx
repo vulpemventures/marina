@@ -11,7 +11,7 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { assetInfoByHash, isValidAddressForNetwork } from '../../utils';
+import { isValidAddressForNetwork } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -114,7 +114,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       props.state.transaction.amountInSatoshi > 0
         ? props.state.transaction.amountInSatoshi / Math.pow(10, 8)
         : (('' as unknown) as number),
-    assetTicker: assetInfoByHash[props.state.transaction.asset].ticker,
+    assetTicker:
+      props.state.assets[props.state.app.network.value][props.state.transaction.asset].ticker,
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
