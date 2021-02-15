@@ -4,10 +4,7 @@ import { AppContext } from '../../../application/store/context';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import {
-  imgPathMapMainnet,
-  imgPathMapRegtest,
-} from '../../utils';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app, assets }] = useContext(AppContext);
