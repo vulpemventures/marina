@@ -1,22 +1,22 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useHistory } from 'react-router';
 import cx from 'classnames';
+import { walletFromCoins, greedyCoinSelector, RecipientInterface } from 'ldk';
+import { browser } from 'webextension-polyfill-ts';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import { useHistory } from 'react-router';
 import { AppContext } from '../../../application/store/context';
-import { setPendingTx } from '../../../application/store/actions';
 import {
+  getAllAssetBalances,
+  setPendingTx,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
-} from '../../../application/store/actions/transaction';
-import { Transaction } from '../../../domain/wallet/value-objects/transaction';
-
-import { walletFromCoins, greedyCoinSelector, RecipientInterface } from 'ldk';
-import { Address } from '../../../domain/wallet/value-objects';
+} from '../../../application/store/actions';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { browser } from 'webextension-polyfill-ts';
+import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+import { Address } from '../../../domain/wallet/value-objects';
 import {
   feeAmountFromTx,
   fetchAssetsFromTaxi,
@@ -27,12 +27,13 @@ import {
   formatAmount,
   feeLevelToSatsPerByte,
   taxiURL,
+  imgPathMapRegtest,
+  imgPathMapMainnet,
 } from '../../utils';
-import { getLiquidBitcoinBalance } from '../../../application/store/actions/assets';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
-  const [{ wallets, app, transaction }, dispatch] = useContext(AppContext);
+  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
   const [feeCurrency, setFeeCurrency] = useState<string>('');
   const [feeLevel, setFeeLevel] = useState<string>('');
   const [taxiTopup, setTaxiTopup] = useState<any>(undefined);
@@ -41,12 +42,12 @@ const ChooseFee: React.FC = () => {
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
   const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
-  const [lbtcBalance, setLbtcBalance] = useState<number>(0);
+  const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
 
   useEffect(() => {
     dispatch(
-      getLiquidBitcoinBalance(
-        (balance) => setLbtcBalance(balance),
+      getAllAssetBalances(
+        (b) => setBalances(b),
         (error) => console.log(error)
       )
     );
@@ -198,7 +199,7 @@ const ChooseFee: React.FC = () => {
 
   const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
-      <img className="w-4 h-4" src="assets/images/marina-logo.svg" alt="warning" />
+      <img className="w-4 h-4" src={'assets/images/marina-logo.svg'} alt="warning" />
       <p className="font-regular text-xs text-left">
         9.99862 L-BTC will be sent in order to cover fee
       </p>
@@ -212,13 +213,20 @@ const ChooseFee: React.FC = () => {
       currentPage="Send"
     >
       <Balance
+        assetBalance={(balances[feeCurrency] ?? 0) / Math.pow(10, 8)}
+        assetImgPath={
+          app.network.value === 'regtest'
+            ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
+              imgPathMapRegtest['']
+            : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
+        }
+        assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
         className="mt-4"
-        liquidBitcoinBalance={lbtcBalance}
         fiatBalance={120}
         fiatCurrency="$"
       />
 
-      <div className="w-48 mx-auto border-b-0.5 border-graySuperLight pt-2 mb-6"></div>
+      <div className="w-48 mx-auto border-b-0.5 border-graySuperLight pt-2 mb-6" />
 
       {supportedAssets.length <= 0 ? (
         <div>Loading...</div>

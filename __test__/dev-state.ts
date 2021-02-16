@@ -11,6 +11,12 @@ export function createDevState(
   return async (dispatch, getState) => {
     const { wallets } = getState();
     const firstWallet = wallets[0];
+    //
+    if (firstWallet.utxoMap.size === 4) {
+      onSuccess?.();
+      return;
+    }
+    //
     const deriveNewAddressAction = function (): Promise<string> {
       return new Promise((resolve, reject) => {
         dispatch(

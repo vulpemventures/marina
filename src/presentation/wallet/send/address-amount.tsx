@@ -9,10 +9,9 @@ import { DispatchOrThunk, IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
+import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { isValidAddressForNetwork } from '../../utils';
-import { getLiquidBitcoinBalance } from '../../../application/store/actions/assets';
+import { imgPathMapMainnet, imgPathMapRegtest, isValidAddressForNetwork } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -155,20 +154,20 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 const AddressAmount: React.FC = () => {
   const history = useHistory();
   const [state, dispatch] = useContext(AppContext);
-  const [lbtcBalance, setLbtcBalance] = useState<number>(0);
-  const handleBackBtn = () =>
+  const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
+  const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
+
+  const handleBackBtn = () => {
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: {
-        // TODO: Fix empty ticker
-        assetTicker: state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '',
-      },
+      state: { assetHash: state.transaction.asset, assetTicker },
     });
+  };
 
   useEffect(() => {
     dispatch(
-      getLiquidBitcoinBalance(
-        (balance) => setLbtcBalance(balance),
+      getAllAssetBalances(
+        (b) => setBalances(b),
         (error) => console.log(error)
       )
     );
@@ -183,10 +182,16 @@ const AddressAmount: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        liquidBitcoinBalance={lbtcBalance}
+        assetBalance={(balances[state.transaction.asset] ?? 0) / Math.pow(10, 8)}
+        assetImgPath={
+          state.app.network.value === 'regtest'
+            ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
+            : imgPathMapMainnet[state.transaction.asset] ?? imgPathMapMainnet['']
+        }
+        assetTicker={assetTicker}
+        className="mt-4"
         fiatBalance={120}
         fiatCurrency="$"
-        className="mt-4"
       />
 
       <AddressAmountEnhancedForm dispatch={dispatch} history={history} state={state} />

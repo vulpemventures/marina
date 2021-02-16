@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
+import { browser } from 'webextension-polyfill-ts';
 import {
   RECEIVE_ROUTE,
   SELECT_ASSET_ROUTE,
@@ -13,14 +14,13 @@ import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { AppContext } from '../../../application/store/context';
-import { setUtxos } from '../../../application/store/actions';
-import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
-import { flush } from '../../../application/store/actions/transaction';
-import { browser } from 'webextension-polyfill-ts';
 import {
+  flush,
+  setUtxos,
   getAllAssetBalances,
   updateAllAssetInfos,
-} from '../../../application/store/actions/assets';
+} from '../../../application/store/actions';
+import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 import { createDevState } from '../../../../__test__/dev-state';
 import { imgPathMapMainnet, imgPathMapRegtest, lbtcAssetByNetwork } from '../../utils';
 
@@ -96,10 +96,11 @@ const Home: React.FC = () => {
     return <></>;
   }
 
-  const handleClick = ({ assetTicker }: { [key: string]: string }) => {
+  const handleClick = (asset: { [key: string]: string }) => {
+    const { assetHash, assetTicker } = asset;
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: { assetTicker },
+      state: { assetHash, assetTicker },
     });
   };
 
@@ -164,10 +165,10 @@ const Home: React.FC = () => {
       hasBackBtn={false}
     >
       <Balance
+        assetBalance={(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0) / Math.pow(10, 8)}
+        assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
+        assetTicker="L-BTC"
         bigBalanceText={true}
-        liquidBitcoinBalance={
-          (assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0) / Math.pow(10, 8)
-        }
         fiatBalance={120}
         fiatCurrency="$"
       />
