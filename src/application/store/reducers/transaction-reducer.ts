@@ -1,4 +1,5 @@
 import * as ACTION_TYPES from '../actions/action-types';
+import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
 
 export interface TransactionState {
   asset: string;
@@ -8,6 +9,7 @@ export interface TransactionState {
   amountInSatoshi: number;
   feeAmountInSatoshi: number;
   feeAsset: string;
+  taxiTopup: TopupWithAssetReply.AsObject;
 }
 
 export const transactionInitState: TransactionState = {
@@ -18,6 +20,7 @@ export const transactionInitState: TransactionState = {
   amountInSatoshi: 0,
   feeAmountInSatoshi: 0,
   feeAsset: '',
+  taxiTopup: {} as TopupWithAssetReply.AsObject,
 };
 
 export const transactionReducer = (
@@ -65,6 +68,15 @@ export const transactionReducer = (
     case ACTION_TYPES.PENDING_TX_FLUSH: {
       return transactionInitState;
     }
+
+    case ACTION_TYPES.PENDING_TX_SET_TAXI_TOPUP: {
+      return {
+        ...state,
+        taxiTopup: payload.taxiTopup,
+      };
+    }
+
+    //
     default:
       return state;
   }

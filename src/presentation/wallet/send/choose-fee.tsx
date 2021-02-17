@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router';
 import cx from 'classnames';
 import { walletFromCoins, greedyCoinSelector, RecipientInterface } from 'ldk';
@@ -13,6 +13,7 @@ import {
   setPendingTx,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
+  setTopup,
 } from '../../../application/store/actions';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
@@ -36,13 +37,33 @@ const ChooseFee: React.FC = () => {
   const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
   const [feeCurrency, setFeeCurrency] = useState<string>('');
   const [feeLevel, setFeeLevel] = useState<string>('');
-  const [taxiTopup, setTaxiTopup] = useState<any>(undefined);
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
   const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
+
+  const changeAddressGetter = useCallback(
+    (asset: string): string => {
+      if (asset === transaction.asset) {
+        return transaction.changeAddress;
+      }
+      return transaction.feeChangeAddress;
+    },
+    [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
+  );
+
+  const receipients: RecipientInterface[] = useMemo(
+    () => [
+      {
+        asset: transaction.asset,
+        value: transaction.amountInSatoshi,
+        address: transaction.receipientAddress,
+      },
+    ],
+    [transaction.amountInSatoshi, transaction.asset, transaction.receipientAddress]
+  );
 
   useEffect(() => {
     dispatch(
@@ -105,80 +126,93 @@ const ChooseFee: React.FC = () => {
 
   useEffect(() => {
     if (supportedAssets.length > 0) {
-      void (async (): Promise<void> => {
-        if (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '') {
-          const changeAddressGetter = (asset: string): any => {
-            if (asset === transaction.asset) {
-              return transaction.changeAddress;
-            }
-            return transaction.feeChangeAddress;
-          };
-          const receipients: RecipientInterface[] = [
-            {
-              asset: transaction.asset,
-              value: transaction.amountInSatoshi,
-              address: transaction.receipientAddress,
-            },
-          ];
+      if (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '') {
+        if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
+          // this check prevents to build a tx in case the fee change address isn't
+          // yet available but needed for the tx.
+          try {
+            const w = walletFromCoins(unspents, app.network.value);
 
-          if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
-            // this check prevents to build a tx in case the fee change address isn't
-            // yet available but needed for the tx.
-            try {
-              const w = walletFromCoins(unspents, app.network.value);
-
-              const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
-              if (currentSatsPerByte !== satsPerByte) {
-                const tx: string = w.buildTx(
-                  w.createTx(),
-                  receipients,
-                  greedyCoinSelector(),
-                  changeAddressGetter,
-                  true,
-                  currentSatsPerByte
-                );
-                setUnsignedPendingTx(tx);
-                setSatsPerByte(currentSatsPerByte);
-              }
-            } catch (error) {
-              console.log(error);
+            const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
+            if (currentSatsPerByte !== satsPerByte) {
+              const tx: string = w.buildTx(
+                w.createTx(),
+                receipients,
+                greedyCoinSelector(),
+                changeAddressGetter,
+                true,
+                currentSatsPerByte
+              );
+              setUnsignedPendingTx(tx);
+              setSatsPerByte(currentSatsPerByte);
             }
-          } else {
-            let t = taxiTopup;
-            if (!t) {
-              const topup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeCurrency);
-              setTaxiTopup(topup);
-              t = topup;
-            }
-            const taxiPayout = {
-              value: t.topup.assetAmount,
-              asset: t.topup.assetHash,
-              address: '',
-            } as RecipientInterface;
-
-            const tx: string = fillTaxiTx(
-              t.topup.partial,
-              unspents,
-              receipients,
-              taxiPayout,
-              greedyCoinSelector(),
-              changeAddressGetter
-            );
-            setUnsignedPendingTx(tx);
+          } catch (error) {
+            console.log(error);
           }
         }
-      })();
+      }
     }
   }, [
+    app.network.value,
+    changeAddressGetter,
     feeCurrency,
-    transaction,
-    app,
     feeLevel,
+    receipients,
     satsPerByte,
-    taxiTopup,
+    supportedAssets.length,
+    transaction.amountInSatoshi,
+    transaction.asset,
+    transaction.changeAddress,
+    transaction.feeChangeAddress,
+    transaction.receipientAddress,
     unspents,
-    wallets,
-    supportedAssets,
+  ]);
+
+  // Fetch topup utxo from Taxi
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      if (feeCurrency && Object.entries(transaction.taxiTopup).length === 0) {
+        try {
+          const taxiTopup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeCurrency);
+          dispatch(setTopup(taxiTopup));
+        } catch (error) {
+          console.error(error.message);
+        }
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app.network.value, feeCurrency, transaction.taxiTopup]);
+
+  // Fill Taxi tx
+  useEffect(() => {
+    if (
+      !unsignedPendingTx &&
+      Object.entries(transaction.taxiTopup).length !== 0 &&
+      (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '')
+    ) {
+      const taxiPayout = {
+        value: transaction.taxiTopup.topup?.assetAmount,
+        asset: transaction.taxiTopup.topup?.assetHash,
+        address: '',
+      } as RecipientInterface;
+      const tx: string = fillTaxiTx(
+        transaction.taxiTopup.topup?.partial as string,
+        unspents,
+        receipients,
+        taxiPayout,
+        greedyCoinSelector(),
+        changeAddressGetter
+      );
+      setUnsignedPendingTx(tx);
+    }
+  }, [
+    changeAddressGetter,
+    feeCurrency,
+    receipients,
+    transaction,
+    transaction.taxiTopup,
+    unsignedPendingTx,
+    unspents,
   ]);
 
   const handleConfirm = () => {
@@ -186,7 +220,7 @@ const ChooseFee: React.FC = () => {
     if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
       feeAmount = parseFloat(feeAmountFromTx(unsignedPendingTx)) * Math.pow(10, 8);
     } else {
-      feeAmount = taxiTopup.topup.assetAmount;
+      feeAmount = transaction.taxiTopup?.topup?.assetAmount as number;
     }
     dispatch(
       setPendingTx(
@@ -325,7 +359,9 @@ const ChooseFee: React.FC = () => {
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
             <span className="font-regular mr-6 text-base">
-              {taxiTopup ? `${formatAmount(taxiTopup.topup.assetAmount)} USDt *` : 'Loading...'}
+              {transaction.taxiTopup?.topup
+                ? `${formatAmount(transaction.taxiTopup.topup.assetAmount)} USDt *`
+                : 'Loading...'}
             </span>
           </div>
           {isWarningFee && warningFee}
