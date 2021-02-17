@@ -11,7 +11,7 @@ import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import { getAllAssetBalances, setAsset } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
-import { lbtcAssetByNetwork } from '../../utils';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
 
 interface LocationState {
   assetHash: string;
@@ -63,9 +63,13 @@ const Transactions: React.FC = () => {
       currentPage="Transactions"
     >
       <Balance
-        assetBalance={(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0) / Math.pow(10, 8)}
-        assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
-        assetTicker="L-BTC"
+        assetBalance={(assetsBalance[state.assetHash] ?? 0) / Math.pow(10, 8)}
+        assetImgPath={
+          app.network.value === 'regtest'
+            ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
+            : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet['']
+        }
+        assetTicker={state.assetTicker}
         bigBalanceText={true}
         fiatBalance={120}
         fiatCurrency="$"
