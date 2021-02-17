@@ -132,7 +132,21 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
       amount: Yup.number()
         .required('Please enter a valid amount')
-        .min(0.00000001, 'Amount should be at least 1 satoshi'),
+        .min(0.00000001, 'Amount should be at least 1 satoshi')
+        .test('insufficient-funds', 'Insufficient funds', (value) => {
+          return (
+            value !== undefined &&
+            new Promise((resolve, reject) => {
+              props.dispatch(
+                getAllAssetBalances(
+                  (balances) =>
+                    resolve(value <= balances[props.state.transaction.asset] / Math.pow(10, 8)),
+                  () => reject('Something went wrong')
+                )
+              );
+            })
+          );
+        }),
     }),
 
   handleSubmit: async (values, { props }) => {

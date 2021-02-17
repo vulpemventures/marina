@@ -195,15 +195,19 @@ const ChooseFee: React.FC = () => {
         asset: transaction.taxiTopup.topup?.assetHash,
         address: '',
       } as RecipientInterface;
-      const tx: string = fillTaxiTx(
-        transaction.taxiTopup.topup?.partial as string,
-        unspents,
-        receipients,
-        taxiPayout,
-        greedyCoinSelector(),
-        changeAddressGetter
-      );
-      setUnsignedPendingTx(tx);
+      try {
+        const tx: string = fillTaxiTx(
+          transaction.taxiTopup.topup?.partial as string,
+          unspents,
+          receipients,
+          taxiPayout,
+          greedyCoinSelector(),
+          changeAddressGetter
+        );
+        setUnsignedPendingTx(tx);
+      } catch (error) {
+        console.log(error);
+      }
     }
   }, [
     changeAddressGetter,
