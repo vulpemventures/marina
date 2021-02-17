@@ -65,12 +65,26 @@ const ChooseFee: React.FC = () => {
           console.log(error);
         } finally {
           setSupportedAssets(allAssets);
-          setFeeCurrency(allAssets[0]);
           setFeeLevel('50');
         }
       })();
     }
-  });
+  }, [app.network.value, supportedAssets.length]);
+
+  // Set feeCurrency when balances and supportedAssets are ready (or change)
+  useEffect(() => {
+    if (Object.entries(balances).length === 0 || supportedAssets.length === 0) return;
+    // L-BTC if positive L-BTC balance only
+    if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
+      setFeeCurrency(supportedAssets[0]);
+    }
+    // USDt if positive USDt balance only
+    else if (!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
+      setFeeCurrency(supportedAssets[1]);
+    } else {
+      setFeeCurrency(supportedAssets[0]);
+    }
+  }, [balances, supportedAssets]);
 
   useEffect(() => {
     if (supportedAssets.length > 0) {
@@ -194,8 +208,7 @@ const ChooseFee: React.FC = () => {
     );
   };
 
-  const handlePayFeesInLBTC = (e: any, assetHash: string) => setFeeCurrency(assetHash);
-  const handlePayFeesInUSDt = (e: any, assetHash: string) => setFeeCurrency(assetHash);
+  const handlePayFees = (e: any, assetHash: string) => setFeeCurrency(assetHash);
 
   const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
@@ -205,6 +218,45 @@ const ChooseFee: React.FC = () => {
       </p>
     </div>
   );
+
+  // Choose Fee buttons
+  const chooseFeeLbtcButton = (
+    <Button
+      className="flex-1"
+      isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
+      onClick={handlePayFees}
+      roundedMd={true}
+      textBase={true}
+      extraData={supportedAssets[0]}
+    >
+      L-BTC
+    </Button>
+  );
+  const chooseFeeUsdtButton = (
+    <Button
+      className="flex-1"
+      isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
+      onClick={handlePayFees}
+      roundedMd={true}
+      textBase={true}
+      extraData={supportedAssets[1]}
+    >
+      USDt
+    </Button>
+  );
+  let chooseFeeButtons;
+  // Show only L-BTC if positive L-BTC balance only
+  if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
+    chooseFeeButtons = chooseFeeLbtcButton;
+  }
+  // Show only USDt if positive USDt balance only
+  if (!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
+    chooseFeeButtons = chooseFeeUsdtButton;
+  }
+  // Show L-BTC and USDt if both have positive balances
+  if (!!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
+    chooseFeeButtons = [chooseFeeLbtcButton, chooseFeeUsdtButton];
+  }
 
   return (
     <ShellPopUp
@@ -236,33 +288,12 @@ const ChooseFee: React.FC = () => {
             I pay fee in:
           </p>,
           <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-            <Button
-              className="flex-1"
-              isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
-              onClick={handlePayFeesInLBTC}
-              roundedMd={true}
-              textBase={true}
-              extraData={supportedAssets[0]}
-            >
-              L-BTC
-            </Button>
-            {supportedAssets.length > 1 && (
-              <Button
-                className="flex-1"
-                isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
-                onClick={handlePayFeesInUSDt}
-                roundedMd={true}
-                textBase={true}
-                extraData={supportedAssets[1]}
-              >
-                USDt
-              </Button>
-            )}
+            {chooseFeeButtons}
           </div>,
         ]
       )}
 
-      {feeCurrency.length > 0 && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
+      {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
         <div
           className={cx({
             'track-50': feeLevel === '50',
@@ -289,7 +320,7 @@ const ChooseFee: React.FC = () => {
         </div>
       )}
 
-      {feeCurrency.length > 0 && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
+      {feeCurrency && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
