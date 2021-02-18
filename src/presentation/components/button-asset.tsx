@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatDecimalAmount } from '../utils';
 
 interface Props {
   assetHash: string;
@@ -25,21 +26,19 @@ const ButtonAsset: React.FC<Props> = ({
     <button
       disabled={disabled}
       className="focus:outline-none flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
-      onClick={() => {
-        handleClick({ assetHash, assetName, assetTicker });
-      }}
+      onClick={() => handleClick({ assetHash, assetName, assetTicker })}
       type={type}
     >
-      <div className="flex flex-row">
+      <div className="flex flex-row items-center">
         <img className="w-8 mr-1.5" src={assetImgPath} alt="liquid asset" />
         <div className="flex flex-col text-left">
-          <span className="text-grayDark text-base font-medium">{assetName}</span>
+          <span className="text-grayDark text-base font-medium">{assetName || 'Unknown'}</span>
           <span className="text-grayLight text-xs font-medium">{assetTicker}</span>
         </div>
       </div>
       <div className="flex flex-row">
-        <div className="text-base font-medium">{quantity}</div>
-        <img className="ml-4" src="assets/images/chevron-right.svg" alt="chevron-right" />
+        <div className="text-base font-medium">{formatDecimalAmount(quantity)}</div>
+        <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
     </button>
   );

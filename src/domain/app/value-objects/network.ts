@@ -2,11 +2,11 @@ import { ValueObject } from '../../core/ValueObject';
 
 interface NetworkProps {
   [key: string]: any;
-  value: string;
+  value: 'regtest' | 'liquid';
 }
 
 export class Network extends ValueObject<NetworkProps> {
-  get value(): string {
+  get value(): 'regtest' | 'liquid' {
     return this.props.value;
   }
 

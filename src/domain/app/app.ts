@@ -1,6 +1,6 @@
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
-import { Network } from './value-objects/network';
+import { Network } from './value-objects';
 
 export interface IApp {
   errors?: Record<string, IError>;

@@ -3,6 +3,7 @@ import { address as addressLDK } from 'ldk';
 
 interface AddressProps {
   [key: string]: any;
+  // Blinding Public Key
   blindingKey?: Buffer;
   value: string;
   unconfidentialAddress?: string;

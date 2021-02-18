@@ -8,5 +8,6 @@ test('Should be able to create a Network', () => {
 });
 
 test('Should be equal to liquid or regtest', () => {
+  // @ts-ignore
   expect(() => Network.create('testnet')).toThrow('Network must be either liquid or regtest');
 });

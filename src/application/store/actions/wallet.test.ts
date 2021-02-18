@@ -12,6 +12,7 @@ import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { appInitialState, appReducer } from '../reducers';
+import { assetInitState } from '../reducers/asset-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import {
@@ -29,6 +30,8 @@ import { mnemonic, password, pendingTx } from '../../../../__test__/fixtures/wal
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { transactionInitState } from '../reducers/transaction-reducer';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
+import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -39,6 +42,7 @@ describe('Wallet Actions', () => {
   beforeAll(() => {
     repos = {
       app: new BrowserStorageAppRepo() as IAppRepository,
+      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
       wallet: new BrowserStorageWalletRepo() as IWalletRepository,
     };
     store = mockThunkReducer(appReducer, appInitialState, repos);
@@ -58,10 +62,11 @@ describe('Wallet Actions', () => {
     };
 
     return expect(initWalletAction()).resolves.toStrictEqual({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletProps],
     });
   });
 
@@ -83,10 +88,11 @@ describe('Wallet Actions', () => {
     };
 
     return expect(createWalletAction()).resolves.toStrictEqual({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletProps],
     });
   });
 
@@ -108,20 +114,22 @@ describe('Wallet Actions', () => {
     };
 
     return expect(restoreWalletAction()).resolves.toStrictEqual({
-      wallets: [testWalletRestoredProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletRestoredProps],
     });
   });
 
   test('Should derive new address', () => {
     // Create wallet
     store.setState({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletProps],
     });
 
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
@@ -134,9 +142,7 @@ describe('Wallet Actions', () => {
         store.dispatch(
           deriveNewAddress(
             false,
-            (confidentialAddress) => {
-              resolve(store.getState());
-            },
+            () => resolve(store.getState()),
             (err: Error) => reject(err.message)
           )
         );
@@ -144,20 +150,22 @@ describe('Wallet Actions', () => {
     };
 
     return expect(deriveNewAddressAction()).resolves.toStrictEqual({
-      wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWithConfidentialAddrProps],
     });
   });
 
   test('Should derive a new address when one already exists', () => {
     // Create wallet with address
     store.setState({
-      wallets: [testWalletWithConfidentialAddrProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWithConfidentialAddrProps],
     });
 
     mockBrowser.storage.local.get
@@ -172,9 +180,7 @@ describe('Wallet Actions', () => {
         store.dispatch(
           deriveNewAddress(
             false,
-            (confidentialAddress) => {
-              resolve(store.getState());
-            },
+            () => resolve(store.getState()),
             (err: Error) => reject(err.message)
           )
         );
@@ -182,20 +188,22 @@ describe('Wallet Actions', () => {
     };
 
     return expect(deriveNewAddressAction()).resolves.toStrictEqual({
-      wallets: [testWalletWith2ConfidentialAddrProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWith2ConfidentialAddrProps],
     });
   });
 
   test('Should set a pending tx', () => {
     // Create wallet with address
     store.setState({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletProps],
     });
 
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [testWalletDTO] });
@@ -216,20 +224,22 @@ describe('Wallet Actions', () => {
     };
 
     return expect(setPendingTxAction()).resolves.toStrictEqual({
-      wallets: [testWalletWithPendingTxProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWithPendingTxProps],
     });
   });
 
   test('Should unset an already set pending tx', () => {
     // Create wallet with address
     store.setState({
-      wallets: [testWalletWithPendingTxProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletWithPendingTxProps],
     });
 
     mockBrowser.storage.local.get
@@ -251,10 +261,11 @@ describe('Wallet Actions', () => {
     };
 
     return expect(unsetPendingTxAction()).resolves.toStrictEqual({
-      wallets: [testWalletProps],
       app: testAppProps,
+      assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      wallets: [testWalletProps],
     });
   });
 });

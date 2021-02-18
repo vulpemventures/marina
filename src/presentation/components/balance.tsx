@@ -2,9 +2,11 @@ import React from 'react';
 import cx from 'classnames';
 
 interface Props {
+  assetBalance: number;
+  assetImgPath: string;
+  assetTicker: string;
   bigBalanceText?: boolean;
   className?: string;
-  liquidBitcoinBalance: number;
   fiatBalance: number;
   fiatCurrency: '$' | '€';
 }
@@ -12,7 +14,9 @@ interface Props {
 const Balance: React.FC<Props> = ({
   bigBalanceText = false,
   className,
-  liquidBitcoinBalance,
+  assetBalance,
+  assetImgPath,
+  assetTicker,
   fiatBalance,
   fiatCurrency,
 }) => {
@@ -28,7 +32,7 @@ const Balance: React.FC<Props> = ({
     <div className={className}>
       <img
         className="w-11 mt-0.5 block mx-auto mb-2"
-        src="assets/images/liquid-assets/liquid-btc.svg"
+        src={assetImgPath}
         alt="liquid bitcoin logo"
       />
       <div>
@@ -38,7 +42,7 @@ const Balance: React.FC<Props> = ({
             'text-lg': !bigBalanceText,
           })}
         >
-          {liquidBitcoinBalance} L-BTC
+          {assetBalance} {assetTicker}
         </p>
         <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p>
       </div>

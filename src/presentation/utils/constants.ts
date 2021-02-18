@@ -14,15 +14,19 @@ export const explorerURL: Record<string, string> = {
   mainnet: 'https://blockstream.info/liquid/api',
 };
 
-export const assetInfoByHash: Record<string, any> = {
-  '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
-    ticker: 'L-BTC',
-    name: 'Liquid Bitcoin',
-    imgPath: 'assets/images/liquid-assets/liquid-btc.svg',
-  },
-  '9999437ead76b94dc2a175b47adfcd192a23bf17f15152d869480e8ac44bb6fa': {
-    ticker: 'USDt',
-    name: 'Tether',
-    imgPath: 'assets/images/liquid-assets/liquid-tether.png',
-  },
+export const imgPathMapMainnet: Record<string, string> = {
+  '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d':
+    'assets/images/liquid-assets/liquid-btc.svg',
+  ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2:
+    'assets/images/liquid-assets/liquid-tether.png',
+  '0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a':
+    'assets/images/liquid-assets/liquid-cad.png',
+  '': 'assets/images/liquid-assets/question-mark.svg',
+};
+
+export const imgPathMapRegtest: Record<string, string> = {
+  'L-BTC': 'assets/images/liquid-assets/liquid-btc.svg',
+  USDt: 'assets/images/liquid-assets/liquid-tether.png',
+  LCAD: 'assets/images/liquid-assets/liquid-cad.png',
+  '': 'assets/images/liquid-assets/question-mark.svg',
 };

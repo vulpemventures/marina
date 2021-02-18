@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
+import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ButtonList from '../../components/button-list';
@@ -9,17 +9,23 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
+import { getAllAssetBalances, setAsset } from '../../../application/store/actions';
+import { AppContext } from '../../../application/store/context';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
 
 interface LocationState {
+  assetHash: string;
   assetTicker: string;
 }
 
 const Transactions: React.FC = () => {
   const history = useHistory();
+  const [{ app }, dispatch] = useContext(AppContext);
   const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
   const { state } = useLocation<LocationState>();
   const openTxDetailsModal = () => showTxDetailsModal(true);
   const closeTxDetailsModal = () => showTxDetailsModal(false);
+  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
   // Transaction details
   const txId = '69540a36a63e4f06d298ecacf243639fd5dfc5a31a14f355e14168a59577392a';
   const txExplorerUrl = `https://blockstream.info/liquid/tx/${txId}`;
@@ -31,28 +37,47 @@ const Transactions: React.FC = () => {
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
   const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
-
-  // TODO: Show save mnemonic modal conditionnaly base on state
-  // blocked by https://github.com/vulpemventures/marina/issues/15
   const handleReceive = () => showSaveMnemonicModal(true);
-  const handleSend = () => history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+  const handleSend = () => {
+    dispatch(setAsset(state.assetHash));
+    history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+  };
+
+  useEffect(() => {
+    dispatch(
+      getAllAssetBalances(
+        (balances) => setAssetsBalance(balances),
+        (error) => console.log(error)
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
 
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-home.png"
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Transactions"
     >
       <Balance
+        assetBalance={(assetsBalance[state.assetHash] ?? 0) / Math.pow(10, 8)}
+        assetImgPath={
+          app.network.value === 'regtest'
+            ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
+            : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet['']
+        }
+        assetTicker={state.assetTicker}
         bigBalanceText={true}
-        liquidBitcoinBalance={0.005}
         fiatBalance={120}
         fiatCurrency="$"
       />
 
       <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
 
-      <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5"></div>
+      <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
       <ButtonList title="Transactions" type="transactions">
         <ButtonTransaction
@@ -96,7 +121,7 @@ const Transactions: React.FC = () => {
         <div className="mx-auto text-center">
           <img
             className="w-11 mt-0.5 block mx-auto mb-2"
-            src="assets/images/liquid-assets/liquid-btc.svg"
+            src={'assets/images/liquid-assets/liquid-btc.svg'}
             alt="liquid bitcoin logo"
           />
           <p className="font-medium">Received</p>

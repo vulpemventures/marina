@@ -1,8 +1,6 @@
 // Credits: https://github.com/nathanbuchar/react-hook-thunk-reducer
 import { Dispatch, Reducer, useCallback, useRef, useState } from 'react';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { Thunk } from '../../../domain/common';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
+import { Repositories, Thunk } from '../../../domain/common';
 
 /**
  * Augments React's useReducer() hook so that the action
@@ -17,10 +15,7 @@ import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 function useThunkReducer<S, A>(
   reducer: Reducer<S, A>,
   initialArg: S,
-  repositories: {
-    app: IAppRepository;
-    wallet: IWalletRepository;
-  },
+  repositories: Repositories,
   init: (s: S) => S = (a) => a
 ): [S, Dispatch<A | Thunk<S, A>>] {
   const [hookState, setHookState] = useState(init(initialArg));

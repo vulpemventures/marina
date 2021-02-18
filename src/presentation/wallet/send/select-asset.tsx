@@ -1,17 +1,19 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
-import assets from '../../../../__test__/fixtures/assets.json';
 import { AppContext } from '../../../application/store/context';
 import { setAsset } from '../../../application/store/actions/transaction';
 import { unsetPendingTx } from '../../../application/store/actions';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
+import { getAllAssetBalances } from '../../../application/store/actions/assets';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();
-  const [{ wallets }, dispatch] = useContext(AppContext);
+  const [{ app, assets, wallets }, dispatch] = useContext(AppContext);
+  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
 
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -20,11 +22,19 @@ const SelectAsset: React.FC = () => {
   >([]);
 
   useEffect(() => {
-    const terms: [string, string, number][] = assets.map(({ assetName, assetTicker }, index) => [
-      assetName,
-      assetTicker,
-      index,
-    ]);
+    dispatch(
+      getAllAssetBalances(
+        (balances) => setAssetsBalance(balances),
+        (error) => console.log(error)
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const terms: [name: string, ticker: string, index: number][] = Object.entries(
+      assets[app.network.value]
+    ).map(([hash, { name, ticker }], index) => [name, ticker, index]);
 
     const results = terms.filter((t) => {
       return (
@@ -33,6 +43,7 @@ const SelectAsset: React.FC = () => {
       );
     });
     setSearchResults(results);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +51,7 @@ const SelectAsset: React.FC = () => {
     setSearchTerm(searchTerm);
   };
 
-  const handleSend = ({ assetHash }: { [key: string]: string }) => {
+  const handleSend = ({ assetHash }: { [assetHash: string]: string }) => {
     dispatch(setAsset(assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
@@ -78,19 +89,24 @@ const SelectAsset: React.FC = () => {
 
       <div className="h-25.75 overflow-y-scroll">
         <div className="pb-4 space-y-4">
-          {searchResults.map((r) => {
-            return (
-              <ButtonAsset
-                assetImgPath={assets[r[2]].assetImgPath}
-                assetHash={assets[r[2]].assetHash}
-                assetName={assets[r[2]].assetName}
-                assetTicker={assets[r[2]].assetTicker}
-                quantity={assets[r[2]].quantity}
-                key={`${r[1]}_${r[2]}`}
-                handleClick={handleSend}
-              />
-            );
-          })}
+          {searchResults.map((r) => (
+            <ButtonAsset
+              assetImgPath={
+                app.network.value === 'regtest'
+                  ? imgPathMapRegtest[r[1]] ?? imgPathMapRegtest['']
+                  : imgPathMapMainnet[Object.keys(assets[app.network.value])[r[2]]] ??
+                    imgPathMapMainnet['']
+              }
+              assetHash={Object.keys(assets[app.network.value])[r[2]]}
+              assetName={r[0]}
+              assetTicker={r[1]}
+              quantity={
+                (assetsBalance[Object.keys(assets[app.network.value])[r[2]]] ?? 0) / Math.pow(10, 8)
+              }
+              key={`${r[1]}_${r[2]}`}
+              handleClick={handleSend}
+            />
+          ))}
         </div>
       </div>
     </ShellPopUp>

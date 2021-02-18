@@ -1,5 +1,5 @@
 import { App } from '../../domain/app/app';
-import { Network } from '../../domain/app/value-objects/network';
+import { Network } from '../../domain/app/value-objects';
 import { AppDTO } from '../dtos/app-dto';
 
 export class AppMap {

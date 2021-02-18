@@ -1,14 +1,15 @@
-import { IAppRepository } from '../domain/app/i-app-repository';
-import { IWalletRepository } from '../domain/wallet/i-wallet-repository';
 import { App } from '../domain/app/app';
 import { appInitState, walletInitState } from '../application/store/reducers';
+import { assetInitState } from '../application/store/reducers/asset-reducer';
 import { IWallet, Wallet } from '../domain/wallet/wallet';
+import { Repositories } from '../domain/common';
 
-export async function initPersistentStore(repos: {
-  app: IAppRepository;
-  wallet: IWalletRepository;
-}): Promise<void> {
+export async function initPersistentStore(repos: Repositories): Promise<void> {
   const app = App.createApp(appInitState);
   const wallets = walletInitState.map((w: IWallet) => Wallet.createWallet(w));
-  await Promise.all([repos.app.init(app), repos.wallet.init(wallets)]);
+  await Promise.all([
+    repos.app.init(app),
+    repos.assets.init(assetInitState),
+    repos.wallet.init(wallets),
+  ]);
 }

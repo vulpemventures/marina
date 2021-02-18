@@ -1,17 +1,17 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
+import { SEND_CHOOSE_FEE_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
 import { DispatchOrThunk, IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { setAddressesAndAmount } from '../../../application/store/actions/transaction';
+import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { assetInfoByHash, isValidAddressForNetwork } from '../../utils';
+import { imgPathMapMainnet, imgPathMapRegtest, isValidAddressForNetwork } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -114,7 +114,9 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       props.state.transaction.amountInSatoshi > 0
         ? props.state.transaction.amountInSatoshi / Math.pow(10, 8)
         : (('' as unknown) as number),
-    assetTicker: assetInfoByHash[props.state.transaction.asset].ticker,
+    assetTicker:
+      props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
+      '',
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
@@ -130,7 +132,21 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
       amount: Yup.number()
         .required('Please enter a valid amount')
-        .min(0.00000001, 'Amount should be at least 1 satoshi'),
+        .min(0.00000001, 'Amount should be at least 1 satoshi')
+        .test('insufficient-funds', 'Insufficient funds', (value) => {
+          return (
+            value !== undefined &&
+            new Promise((resolve, reject) => {
+              props.dispatch(
+                getAllAssetBalances(
+                  (balances) =>
+                    resolve(value <= balances[props.state.transaction.asset] / Math.pow(10, 8)),
+                  () => reject('Something went wrong')
+                )
+              );
+            })
+          );
+        }),
     }),
 
   handleSubmit: async (values, { props }) => {
@@ -152,14 +168,45 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 const AddressAmount: React.FC = () => {
   const history = useHistory();
   const [state, dispatch] = useContext(AppContext);
+  const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
+  const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
+
+  const handleBackBtn = () => {
+    history.push({
+      pathname: TRANSACTIONS_ROUTE,
+      state: { assetHash: state.transaction.asset, assetTicker },
+    });
+  };
+
+  useEffect(() => {
+    dispatch(
+      getAllAssetBalances(
+        (b) => setBalances(b),
+        (error) => console.log(error)
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      <Balance liquidBitcoinBalance={0.005} fiatBalance={120} fiatCurrency="$" className="mt-4" />
+      <Balance
+        assetBalance={(balances[state.transaction.asset] ?? 0) / Math.pow(10, 8)}
+        assetImgPath={
+          state.app.network.value === 'regtest'
+            ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
+            : imgPathMapMainnet[state.transaction.asset] ?? imgPathMapMainnet['']
+        }
+        assetTicker={assetTicker}
+        className="mt-4"
+        fiatBalance={120}
+        fiatCurrency="$"
+      />
 
       <AddressAmountEnhancedForm dispatch={dispatch} history={history} state={state} />
     </ShellPopUp>
