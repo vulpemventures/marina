@@ -94,7 +94,7 @@ const ChooseFee: React.FC = () => {
 
   // Set feeCurrency when balances and supportedAssets are ready (or change)
   useEffect(() => {
-    if (Object.entries(balances).length === 0 || supportedAssets.length === 0) return;
+    if (Object.keys(balances).length === 0 || supportedAssets.length === 0) return;
     // L-BTC if positive L-BTC balance only
     if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
       setFeeCurrency(supportedAssets[0]);
@@ -174,7 +174,7 @@ const ChooseFee: React.FC = () => {
       if (
         feeCurrency &&
         feeCurrency !== lbtcAssetByNetwork(app.network.value) &&
-        Object.entries(transaction.taxiTopup).length === 0
+        Object.keys(transaction.taxiTopup).length === 0
       ) {
         try {
           const taxiTopup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeCurrency);
