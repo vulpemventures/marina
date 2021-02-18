@@ -191,7 +191,7 @@ const ChooseFee: React.FC = () => {
   useEffect(() => {
     if (
       !unsignedPendingTx &&
-      Object.entries(transaction.taxiTopup).length !== 0 &&
+      Object.keys(transaction.taxiTopup).length !== 0 &&
       (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '')
     ) {
       const taxiPayout = {
