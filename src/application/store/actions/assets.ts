@@ -33,7 +33,12 @@ export function getAllAssetBalances(
         onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
         return acc;
       }
-      acc = { ...acc, [curr.asset]: curr.value };
+      let value = curr.value;
+      if (curr.asset in acc) {
+        // If multiple utxos of the same asset then add their values
+        value = acc[curr.asset] + curr.value;
+      }
+      acc = { ...acc, [curr.asset]: value };
       return acc;
     }, {} as { [assetHash: string]: number });
     // Dispatch event simply for debugging. No balance state is kept outside utxos
