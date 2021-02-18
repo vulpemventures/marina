@@ -171,7 +171,11 @@ const ChooseFee: React.FC = () => {
   // Fetch topup utxo from Taxi
   useEffect(() => {
     void (async (): Promise<void> => {
-      if (feeCurrency && Object.entries(transaction.taxiTopup).length === 0) {
+      if (
+        feeCurrency &&
+        feeCurrency !== lbtcAssetByNetwork(app.network.value) &&
+        Object.entries(transaction.taxiTopup).length === 0
+      ) {
         try {
           const taxiTopup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeCurrency);
           dispatch(setTopup(taxiTopup));
@@ -262,6 +266,7 @@ const ChooseFee: React.FC = () => {
     <Button
       className="flex-1"
       isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
+      key={1}
       onClick={handlePayFees}
       roundedMd={true}
       textBase={true}
@@ -274,6 +279,7 @@ const ChooseFee: React.FC = () => {
     <Button
       className="flex-1"
       isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
+      key={2}
       onClick={handlePayFees}
       roundedMd={true}
       textBase={true}

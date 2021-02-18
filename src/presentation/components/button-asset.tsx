@@ -21,6 +21,12 @@ const ButtonAsset: React.FC<Props> = ({
   handleClick,
   type = 'button',
 }: Props) => {
+  let formattedBalance = quantity.toString();
+  // If decimal number truncate to 2 decimals without rounding and add ellipsis
+  if (!Number.isInteger(quantity)) {
+    formattedBalance = `${formattedBalance.slice(0, formattedBalance.indexOf('.') + 3)}...`;
+  }
+
   return (
     <button
       disabled={disabled}
@@ -36,8 +42,8 @@ const ButtonAsset: React.FC<Props> = ({
         </div>
       </div>
       <div className="flex flex-row">
-        <div className="text-base font-medium">{quantity}</div>
-        <img className="ml-4" src="assets/images/chevron-right.svg" alt="chevron-right" />
+        <div className="text-base font-medium">{formattedBalance}</div>
+        <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
     </button>
   );
