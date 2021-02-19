@@ -194,7 +194,7 @@ const Home: React.FC = () => {
 
       <ModalConfirm
         btnTextClose="Cancel"
-        btnTextConfirm="Save"
+        btnTextConfirm="Yes, I got it"
         isOpen={isSaveMnemonicModalOpen}
         onClose={handleSaveMnemonicClose}
         onConfirm={handleSaveMnemonicConfirm}

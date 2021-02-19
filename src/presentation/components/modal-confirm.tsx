@@ -3,7 +3,7 @@ import Button from './button';
 import Modal from './modal';
 
 interface Props {
-  btnTextClose: string;
+  btnTextClose?: string;
   btnTextConfirm: string;
   children: React.ReactNode;
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface Props {
   title: string;
 }
 const ModalConfirm: React.FC<Props> = ({
-  btnTextClose = 'Cancel',
+  btnTextClose,
   btnTextConfirm = 'Ok',
   children,
   isOpen,
@@ -32,13 +32,13 @@ const ModalConfirm: React.FC<Props> = ({
       </div>
       <div className="flex justify-end">
         <div className="pr-1">
-          <Button
+          {btnTextClose && btnTextClose.length > 0 && <Button
             isOutline={true}
             onClick={() => onClose()}
             className="bg-secondary hover:bg-secondary-light"
           >
             {btnTextClose}
-          </Button>
+          </Button>}
         </div>
         <div>
           <Button
