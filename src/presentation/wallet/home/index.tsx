@@ -193,8 +193,7 @@ const Home: React.FC = () => {
       </ButtonList>
 
       <ModalConfirm
-        btnTextClose="Cancel"
-        btnTextConfirm="Yes, I got it"
+        btnTextConfirm="Gotcha!"
         isOpen={isSaveMnemonicModalOpen}
         onClose={handleSaveMnemonicClose}
         onConfirm={handleSaveMnemonicConfirm}

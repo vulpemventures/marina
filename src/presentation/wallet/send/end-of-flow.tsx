@@ -15,7 +15,7 @@ import {
   blindingInfoFromPendingTx,
   broadcastTx,
   explorerURL,
-  formatTxid,
+  esploraURL,
 } from '../../utils';
 
 interface State {
@@ -69,7 +69,6 @@ const EndOfFlow: React.FC = () => {
             outputsToBlind,
             outPubkeys
           );
-
           const txid = await broadcastTx(explorerURL[app.network.value], tx);
 
           const onError = (err: Error) => {
@@ -161,10 +160,17 @@ const EndOfFlow: React.FC = () => {
       )}
 
       {!state.isLoading && !isModalUnlockOpen && !state.aborted && (
-        <div className="container mx-auto text-center">
-          <span className="font-medium">{state.success ? 'Success' : 'Failed'}</span>
-          {state.txid.length > 0 && <h1>Transaction id: {formatTxid(state.txid)}</h1>}
+        <div className="container mx-auto">
+          <h1 className="font-regular text-base my-8 text-center">{state.success ? 'Success' : 'Failed'}</h1>
+          <br />
+          {
+            state.txid.length > 0 &&
+            <a href={`${esploraURL[app.network.value]}/tx/${state.txid}`} target="_blank" rel="noreferrer" className="mt-6 mb-6">
+              <p className="font-regular text-small my-8 text-center">Click to see transaction on Blockstream.info</p>
+            </a>
+          }
           {state.error && <h1>{state.error.message}</h1>}
+          <br />
           <Button onClick={handleBackToHome}>Back to home</Button>
         </div>
       )}

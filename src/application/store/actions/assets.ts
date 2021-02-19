@@ -9,6 +9,8 @@ import {
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
 import { lbtcAssetByNetwork } from '../../../presentation/utils';
+// TODO move away from presentation layer
+import { explorerURL } from '../../../presentation/utils';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -83,12 +85,11 @@ export function updateAllAssetInfos(
     try {
       const { app, assets, wallets } = getState();
 
-      const explorerURL = app.network.value === `liquid` ? `https://blockstream.info/liquid/api` : `http://localhost:3001`
       const assetsFromUtxos: Assets = await Promise.all(
         [...wallets[0].utxoMap.values()].map(async ({ asset, value }) =>
           // If asset in store don't fetch
           !((asset as string) in assets[app.network.value])
-            ? (await axios.get(`${explorerURL}/asset/${asset}`)).data
+            ? (await axios.get(`${explorerURL[app.network.value]}/asset/${asset}`)).data
             : undefined
         )
       ).then((assetInfos) =>

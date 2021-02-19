@@ -6,12 +6,17 @@ export const feeLevelToSatsPerByte: { [key: string]: number } = {
 
 export const taxiURL: Record<string, string> = {
   regtest: 'http://localhost:8000',
-  mainnet: 'https://staging.api.liquid.taxi:8000',
+  liquid: 'https://staging.api.liquid.taxi:8000',
 };
 
 export const explorerURL: Record<string, string> = {
   regtest: 'http://localhost:3001',
-  mainnet: 'https://blockstream.info/liquid/api',
+  liquid: 'https://blockstream.info/liquid/api',
+};
+
+export const esploraURL: Record<string, string> = {
+  regtest: 'http://localhost:5001',
+  liquid: 'https://blockstream.info/liquid',
 };
 
 export const imgPathMapMainnet: Record<string, string> = {

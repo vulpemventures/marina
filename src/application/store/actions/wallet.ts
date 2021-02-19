@@ -37,6 +37,8 @@ import {
   Password,
 } from '../../../domain/wallet/value-objects';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+// TODO move away from presentation layer
+import { explorerURL } from '../../../presentation/utils';
 
 export function initWallet(wallet: IWallet): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
@@ -287,12 +289,11 @@ export function setUtxos(
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     const { app } = getState();
-    const explorerURL = app.network.value === `liquid` ? `https://blockstream.info/liquid/api` : `http://localhost:3001`
     try {
       // Fetch utxos and return with corresponding blinding key
       const fetchedUtxosWithBlindingPrivateKey = (await Promise.all(
         addressesWithBlindingKeys.map(async (o) => ({
-          utxos: await fetchUtxos(o.confidentialAddress, explorerURL),
+          utxos: await fetchUtxos(o.confidentialAddress, explorerURL[app.network.value]),
           blindingPrivateKey: o.blindingPrivateKey,
         }))
       )) as {
@@ -317,7 +318,7 @@ export function setUtxos(
                   await tryToUnblindUtxo(
                     utxo,
                     keyPairData.blindingPrivateKey,
-                    explorerURL
+                    explorerURL[app.network.value]
                   )
               )
             );
