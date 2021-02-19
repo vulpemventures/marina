@@ -10,12 +10,17 @@ import { flush } from '../../../application/store/actions/onboarding';
 import { AppContext } from '../../../application/store/context';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
+import useLottieLoader from '../../hooks/use-lottie-loader';
 
 const POPUP = 'popup.html';
 
 const EndOfFlow: React.FC = () => {
   const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Populate ref div with svg animation
+  const marinaLoaderRef = React.useRef(null);
+  useLottieLoader(marinaLoaderRef);
 
   useEffect(() => {
     if (wallets.length <= 0) {
@@ -50,7 +55,15 @@ const EndOfFlow: React.FC = () => {
     }
   });
 
-  if (isLoading) return <div>Creating wallet...</div>;
+  if (isLoading) {
+    return (
+      <div
+        className="flex items-center justify-center h-screen p-24"
+        id="marina-loader"
+        ref={marinaLoaderRef}
+      />
+    );
+  }
 
   return (
     <Shell hasBackBtn={false}>
