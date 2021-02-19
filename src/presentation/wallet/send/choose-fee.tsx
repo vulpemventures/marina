@@ -40,7 +40,7 @@ const ChooseFee: React.FC = () => {
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
-  const [isWarningFee] = useState<boolean>(true);
+  const [isWarningFee] = useState<boolean>(false);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
 
@@ -277,6 +277,7 @@ const ChooseFee: React.FC = () => {
   );
   const chooseFeeUsdtButton = (
     <Button
+      disabled
       className="flex-1"
       isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
       key={2}
@@ -289,16 +290,21 @@ const ChooseFee: React.FC = () => {
     </Button>
   );
   let chooseFeeButtons;
-  // Show only L-BTC if positive L-BTC balance only
-  if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
-    chooseFeeButtons = chooseFeeLbtcButton;
-  }
-  // Show only USDt if positive USDt balance only
-  if (!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
-    chooseFeeButtons = chooseFeeUsdtButton;
-  }
-  // Show L-BTC and USDt if both have positive balances
-  if (!!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
+  /*   // Show only L-BTC if positive L-BTC balance only
+    if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
+      chooseFeeButtons = chooseFeeLbtcButton;
+    }
+    // Show only USDt if positive USDt balance only
+    if (!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
+      chooseFeeButtons = chooseFeeUsdtButton;
+    }
+    // Show L-BTC and USDt if both have positive balances
+    if (!!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
+      chooseFeeButtons = [chooseFeeLbtcButton, chooseFeeUsdtButton];
+    } */
+
+  // Show L-BTC and and always USDt disabled
+  if (!!balances[supportedAssets[0]]) {
     chooseFeeButtons = [chooseFeeLbtcButton, chooseFeeUsdtButton];
   }
 
@@ -313,7 +319,7 @@ const ChooseFee: React.FC = () => {
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-              imgPathMapRegtest['']
+            imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
@@ -327,15 +333,15 @@ const ChooseFee: React.FC = () => {
       {supportedAssets.length <= 0 ? (
         <div>Loading...</div>
       ) : (
-        [
-          <p key={0} className="text-sm font-medium">
-            I pay fee in:
+          [
+            <p key={0} className="text-sm font-medium">
+              I pay fee in:
           </p>,
-          <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-            {chooseFeeButtons}
-          </div>,
-        ]
-      )}
+            <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
+              {chooseFeeButtons}
+            </div>,
+          ]
+        )}
 
       {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
         <div
