@@ -22,7 +22,7 @@ export class Mnemonic extends ValueObject<MnemonicProps> {
 
     try {
       new MnemonicTdex({
-        chain: 'regtest',
+        chain: "liquid",
         type: IdentityType.Mnemonic,
         value: { mnemonic },
       } as IdentityOpts);

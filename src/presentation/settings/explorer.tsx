@@ -36,6 +36,10 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       </p>
       <Input name="explorerUrl" placeholder="Explorer URL" type="text" {...props} />
 
+      <p className="font-regular my-8 text-sm text-left">
+        Psst! It does not work! We hardcode Blockstream.info for Liquid and Nigiri default for RegTest
+      </p>
+
       <div className="bottom-20 right-8 absolute flex justify-end">
         <div className="pr-1">
           <Button

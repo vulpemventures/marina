@@ -82,11 +82,13 @@ export function updateAllAssetInfos(
   return async (dispatch, getState, repos) => {
     try {
       const { app, assets, wallets } = getState();
+
+      const explorerURL = app.network.value === `liquid` ? `https://blockstream.info/liquid/api` : `http://localhost:3001`
       const assetsFromUtxos: Assets = await Promise.all(
         [...wallets[0].utxoMap.values()].map(async ({ asset, value }) =>
           // If asset in store don't fetch
           !((asset as string) in assets[app.network.value])
-            ? (await axios.get(`http://localhost:3001/asset/${asset}`)).data
+            ? (await axios.get(`${explorerURL}/asset/${asset}`)).data
             : undefined
         )
       ).then((assetInfos) =>
