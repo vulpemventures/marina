@@ -44,7 +44,7 @@ const Balance: React.FC<Props> = ({
         >
           {assetBalance} {assetTicker}
         </p>
-        <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p>
+        {/* <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p> */}
       </div>
     </div>
   );
