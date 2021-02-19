@@ -13,6 +13,7 @@ import ButtonList from '../../components/button-list';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
+import useLottieLoader from '../../hooks/use-lottie-loader';
 import { AppContext } from '../../../application/store/context';
 import {
   flush,
@@ -28,6 +29,10 @@ const Home: React.FC = () => {
   const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
   const [isAssetDataLoaded, setAssetDataLoaded] = useState(false);
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
+
+  // Populate ref div with svg animation
+  const marinaLoaderRef = React.useRef(null);
+  useLottieLoader(marinaLoaderRef);
 
   useEffect(() => {
     if (process.env.SKIP_ONBOARDING) {
@@ -115,8 +120,15 @@ const Home: React.FC = () => {
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
+  // Lottie mermaid animation
   if (isFetchingUtxos) {
-    return <>Loading...</>;
+    return (
+      <div
+        className="flex items-center justify-center h-screen"
+        id="marina-loader"
+        ref={marinaLoaderRef}
+      />
+    );
   }
 
   // Generate ButtonList
