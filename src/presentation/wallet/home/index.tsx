@@ -187,9 +187,9 @@ const Home: React.FC = () => {
         isOpen={isSaveMnemonicModalOpen}
         onClose={handleSaveMnemonicClose}
         onConfirm={handleSaveMnemonicConfirm}
-        title="Save your mnemonic"
+        title="Have you saved the mnemonic?"
       >
-        <p className="text-base text-left">Save your mnemonic phrase to receive or send funds</p>
+        <p className="text-base text-left">Please be sure to store your mnemonic phrase before start receiving funds. If you loose, you will not be able to spend your funds!</p>
       </ModalConfirm>
     </ShellPopUp>
   );
