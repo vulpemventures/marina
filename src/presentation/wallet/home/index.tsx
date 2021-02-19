@@ -121,10 +121,13 @@ const Home: React.FC = () => {
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
   // Lottie mermaid animation
-  if (isFetchingUtxos) {
+  if (
+    isFetchingUtxos ||
+    (Object.keys(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded)
+  ) {
     return (
       <div
-        className="flex items-center justify-center h-screen"
+        className="flex items-center justify-center h-screen p-8"
         id="marina-loader"
         ref={marinaLoaderRef}
       />
@@ -133,11 +136,7 @@ const Home: React.FC = () => {
 
   // Generate ButtonList
   let buttonList;
-  if (Object.entries(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded) {
-    // Loading
-    // TODO: replace with a nice spinner
-    buttonList = <p className="h-72">Loading...</p>;
-  } else if (Object.entries(assets[app.network.value]).length === 0 && isAssetDataLoaded) {
+  if (Object.entries(assets[app.network.value]).length === 0 && isAssetDataLoaded) {
     // Wallet is empty
     buttonList = (
       <ButtonAsset

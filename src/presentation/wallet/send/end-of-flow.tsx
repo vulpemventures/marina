@@ -1,8 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
-import { deriveNewAddress, unsetPendingTx } from '../../../application/store/actions';
-import { flush } from '../../../application/store/actions/transaction';
+import { deriveNewAddress, flush, unsetPendingTx } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
 import { decrypt, hash } from '../../../application/utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
@@ -10,6 +9,7 @@ import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { DEFAULT_ROUTE } from '../../routes/constants';
+import useLottieLoader from '../../hooks/use-lottie-loader';
 import {
   blindAndSignPset,
   blindingInfoFromPendingTx,
@@ -41,6 +41,10 @@ const EndOfFlow: React.FC = () => {
     txid: '',
   });
   const wallet = wallets[0];
+
+  // Populate ref div with svg animation
+  const marinaLoaderRef = React.useRef(null);
+  useLottieLoader(marinaLoaderRef);
 
   useEffect(() => {
     if (!state.aborted && !busy && !isModalUnlockOpen) {
@@ -124,6 +128,24 @@ const EndOfFlow: React.FC = () => {
     history.push(DEFAULT_ROUTE);
   };
 
+  if (state.isLoading) {
+    return (
+      <>
+        <div
+          className="flex items-center justify-center h-screen p-8"
+          id="marina-loader"
+          ref={marinaLoaderRef}
+        />
+
+        <ModalUnlock
+          isModalUnlockOpen={isModalUnlockOpen}
+          handleModalUnlockClose={handleModalUnlockClose}
+          handleShowMnemonic={handleShowMnemonic}
+        />
+      </>
+    );
+  }
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -131,13 +153,13 @@ const EndOfFlow: React.FC = () => {
       currentPage="Send"
       hasBackBtn={false}
     >
-      {state.isLoading && <span className="font-medium">Loading...</span>}
       {!state.isLoading && !isModalUnlockOpen && state.aborted && (
         <div className="container mx-auto text-center">
           <h1>Unlock my wallet to send transaction</h1>
           <Button onClick={handleUnlock}>Unlock</Button>
         </div>
       )}
+
       {!state.isLoading && !isModalUnlockOpen && !state.aborted && (
         <div className="container mx-auto text-center">
           <span className="font-medium">{state.success ? 'Success' : 'Failed'}</span>
@@ -146,11 +168,6 @@ const EndOfFlow: React.FC = () => {
           <Button onClick={handleBackToHome}>Back to home</Button>
         </div>
       )}
-      <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockClose}
-        handleShowMnemonic={handleShowMnemonic}
-      />
     </ShellPopUp>
   );
 };

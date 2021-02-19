@@ -31,6 +31,7 @@ import {
   imgPathMapRegtest,
   imgPathMapMainnet,
 } from '../../utils';
+import useLottieLoader from '../../hooks/use-lottie-loader';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -43,6 +44,10 @@ const ChooseFee: React.FC = () => {
   const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
+
+  // Populate ref div with svg animation
+  const marinaLoaderRef = React.useRef(null);
+  useLottieLoader(marinaLoaderRef);
 
   const changeAddressGetter = useCallback(
     (asset: string): string => {
@@ -302,6 +307,16 @@ const ChooseFee: React.FC = () => {
     chooseFeeButtons = [chooseFeeLbtcButton, chooseFeeUsdtButton];
   }
 
+  if (supportedAssets.length <= 0) {
+    return (
+      <div
+        className="flex items-center justify-center h-screen p-8"
+        id="marina-loader"
+        ref={marinaLoaderRef}
+      />
+    );
+  }
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -321,21 +336,16 @@ const ChooseFee: React.FC = () => {
         fiatBalance={120}
         fiatCurrency="$"
       />
-
       <div className="w-48 mx-auto border-b-0.5 border-graySuperLight pt-2 mb-6" />
 
-      {supportedAssets.length <= 0 ? (
-        <div>Loading...</div>
-      ) : (
-        [
-          <p key={0} className="text-sm font-medium">
-            I pay fee in:
-          </p>,
-          <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-            {chooseFeeButtons}
-          </div>,
-        ]
-      )}
+      <div>
+        <p key={0} className="text-sm font-medium">
+          I pay fee in:
+        </p>
+        <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
+          {chooseFeeButtons}
+        </div>
+      </div>
 
       {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
         <div
@@ -363,7 +373,6 @@ const ChooseFee: React.FC = () => {
           {isWarningFee && warningFee}
         </div>
       )}
-
       {feeCurrency && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
@@ -380,7 +389,6 @@ const ChooseFee: React.FC = () => {
           </p>
         </>
       )}
-
       <Button
         className="bottom-20 right-8 absolute"
         onClick={handleConfirm}

@@ -9,6 +9,7 @@ import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-stora
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { initApp, initWallet } from '../application/store/actions';
 import { initAssets } from '../application/store/actions/assets';
+import useLottieLoader from './hooks/use-lottie-loader';
 
 const App: React.FC = () => {
   const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
@@ -18,6 +19,10 @@ const App: React.FC = () => {
   const wallet = new BrowserStorageWalletRepo();
   const repos = { app, assets, wallet };
   const [state, dispatch] = useThunkReducer(appReducer, appInitialState, repos);
+
+  // Populate ref div with svg animation
+  const marinaLoaderRef = React.useRef(null);
+  useLottieLoader(marinaLoaderRef);
 
   useEffect(() => {
     void (async (): Promise<void> => {
@@ -40,9 +45,14 @@ const App: React.FC = () => {
     })();
   });
 
-  // TODO: render something better like a spinner?
   if (!fetchedFromRepo) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        className="flex items-center justify-center h-screen p-8"
+        id="marina-loader"
+        ref={marinaLoaderRef}
+      />
+    );
   }
 
   return (
