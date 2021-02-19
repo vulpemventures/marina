@@ -13,6 +13,7 @@ import ButtonList from '../../components/button-list';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
+import useLottieLoader from '../../hooks/use-lottie-loader';
 import { AppContext } from '../../../application/store/context';
 import {
   flush,
@@ -28,6 +29,10 @@ const Home: React.FC = () => {
   const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
   const [isAssetDataLoaded, setAssetDataLoaded] = useState(false);
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
+
+  // Populate ref div with svg animation
+  const marinaLoaderRef = React.useRef(null);
+  useLottieLoader(marinaLoaderRef);
 
   useEffect(() => {
     if (process.env.SKIP_ONBOARDING) {
@@ -115,17 +120,23 @@ const Home: React.FC = () => {
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
-  if (isFetchingUtxos) {
-    return <>Loading...</>;
+  // Lottie mermaid animation
+  if (
+    isFetchingUtxos ||
+    (Object.keys(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded)
+  ) {
+    return (
+      <div
+        className="flex items-center justify-center h-screen p-8"
+        id="marina-loader"
+        ref={marinaLoaderRef}
+      />
+    );
   }
 
   // Generate ButtonList
   let buttonList;
-  if (Object.entries(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded) {
-    // Loading
-    // TODO: replace with a nice spinner
-    buttonList = <p className="h-72">Loading...</p>;
-  } else if (Object.entries(assets[app.network.value]).length === 0 && isAssetDataLoaded) {
+  if (Object.entries(assets[app.network.value]).length === 0 && isAssetDataLoaded) {
     // Wallet is empty
     buttonList = (
       <ButtonAsset
