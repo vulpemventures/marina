@@ -8,7 +8,7 @@ import {
   ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
-import { lbtcAssetByNetwork } from '../../../presentation/utils';
+import { lbtcAssetByNetwork } from '../../utils';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
   return (dispatch) => {

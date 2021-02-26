@@ -6,6 +6,7 @@ import { walletReducer } from './wallet-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { IApp } from '../../../domain/app/app';
 import { transactionInitState, transactionReducer } from './transaction-reducer';
+import { txsHistoryInitState, txsHistoryReducer } from './txs-history-reducer';
 import { Network } from '../../../domain/app/value-objects';
 import {
   devAppInitState,
@@ -33,6 +34,7 @@ const [appReducer, appInitialState] = combineReducers({
   assets: [assetReducer, assetInitState],
   onboarding: [onboardingReducer, onboardingInitState],
   transaction: [transactionReducer, transactionInitState],
+  txsHistory: [txsHistoryReducer, txsHistoryInitState],
   wallets: [walletReducer, walletInitState],
 });
 

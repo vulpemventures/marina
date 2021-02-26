@@ -11,7 +11,11 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
 import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { imgPathMapMainnet, imgPathMapRegtest, isValidAddressForNetwork } from '../../utils';
+import {
+  imgPathMapMainnet,
+  imgPathMapRegtest,
+  isValidAddressForNetwork,
+} from '../../../application/utils';
 
 interface AddressAmountFormValues {
   address: string;

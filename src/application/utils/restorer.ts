@@ -81,7 +81,7 @@ export async function xpubWalletFromAddresses(
   return xpubWallet;
 }
 
-class IdentityRestorerFromState implements IdentityRestorerInterface {
+export class IdentityRestorerFromState implements IdentityRestorerInterface {
   private addresses: string[];
 
   constructor(addresses: string[]) {

@@ -1,11 +1,10 @@
+import { browser, Idle } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
 import { IDLE_MESSAGE_TYPE } from './utils/idle';
-import { browser, Idle } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
-import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
+import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -21,12 +20,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
   switch (reason) {
     //On first install, open new tab for onboarding
     case 'install': {
-      const repos = {
-        app: new BrowserStorageAppRepo(),
-        assets: new BrowserStorageAssetsRepo(),
-        wallet: new BrowserStorageWalletRepo(),
-      };
-
       initPersistentStore(repos)
         .then(async () => {
           // Skip onboarding

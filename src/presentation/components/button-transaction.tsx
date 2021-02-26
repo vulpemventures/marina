@@ -1,30 +1,33 @@
 import React from 'react';
+import { TxType } from '../../domain/transaction';
 
 interface Props {
+  amount: string;
   assetTicker: string;
   disabled?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  handleClick: (txId: string) => void;
   txDate: string;
-  txType: 'receive' | 'send';
-  quantity: number;
+  txId: string;
+  txType: TxType;
 }
 
 const ButtonTransaction: React.FC<Props> = ({
   assetTicker,
   disabled = false,
-  quantity,
-  onClick,
+  amount,
+  handleClick,
   txDate,
+  txId,
   txType,
 }: Props) => {
   return (
     <button
       disabled={disabled}
-      className="flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
-      onClick={onClick}
+      className="focus:outline-none h-14 flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
+      onClick={() => handleClick(txId)}
       type="button"
     >
-      <div className="flex flex-row items-center">
+      <div className="flex items-center">
         {txType === 'receive' ? (
           <img
             className="w-8 mr-1.5"
@@ -37,8 +40,11 @@ const ButtonTransaction: React.FC<Props> = ({
         <span className="text-grayDark items-center mr-2 text-sm font-medium text-left">
           {txDate}
         </span>
+      </div>
+      <div className="flex">
         <div className="text-primary whitespace-nowrap text-sm font-medium">
-          {quantity} {assetTicker}
+          {txType === 'receive' ? '+' : '-'}
+          {amount} {assetTicker}
         </div>
         <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>

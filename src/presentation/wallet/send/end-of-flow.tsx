@@ -14,9 +14,9 @@ import {
   blindAndSignPset,
   blindingInfoFromPendingTx,
   broadcastTx,
-  explorerURL,
-  formatTxid,
-} from '../../utils';
+  explorerApiUrl,
+} from '../../../application/utils';
+import { formatTxid } from '../../utils';
 
 interface State {
   mnemonic: string;
@@ -70,7 +70,7 @@ const EndOfFlow: React.FC = () => {
             outPubkeys
           );
 
-          const txid = await broadcastTx(explorerURL[app.network.value], tx);
+          const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
 
           const onError = (err: Error) => {
             console.log(err);

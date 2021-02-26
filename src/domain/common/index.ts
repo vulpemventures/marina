@@ -6,12 +6,15 @@ import { OnboardingState } from '../../application/store/reducers/onboarding-red
 import { TransactionState } from '../../application/store/reducers/transaction-reducer';
 import { AssetsByNetwork } from '../asset';
 import { IAssetsRepository } from '../asset/i-assets-repository';
+import { TxsHistoryByNetwork } from '../transaction';
+import { ITxsHistoryRepository } from '../transaction/i-txs-history-repository';
 
 export interface IAppState {
   app: IApp;
   assets: AssetsByNetwork;
   onboarding: OnboardingState;
   transaction: TransactionState;
+  txsHistory: TxsHistoryByNetwork;
   wallets: IWallet[];
 }
 
@@ -28,6 +31,7 @@ export type Dispatch<A> = (value: A) => void;
 export type Repositories = {
   app: IAppRepository;
   assets: IAssetsRepository;
+  txsHistory: ITxsHistoryRepository;
   wallet: IWalletRepository;
 };
 

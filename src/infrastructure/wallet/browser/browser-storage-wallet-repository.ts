@@ -6,6 +6,7 @@ import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
     const ws = wallets.map((w: Wallet) => WalletMap.toDTO(w));

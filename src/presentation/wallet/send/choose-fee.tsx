@@ -25,12 +25,12 @@ import {
   lbtcAssetByNetwork,
   fillTaxiTx,
   utxoMapToArray,
-  formatAmount,
   feeLevelToSatsPerByte,
   taxiURL,
   imgPathMapRegtest,
   imgPathMapMainnet,
-} from '../../utils';
+} from '../../../application/utils';
+import { fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 
 const ChooseFee: React.FC = () => {
@@ -379,7 +379,7 @@ const ChooseFee: React.FC = () => {
             <span className="text-lg font-medium">Fee:</span>
             <span className="font-regular mr-6 text-base">
               {transaction.taxiTopup?.topup
-                ? `${formatAmount(transaction.taxiTopup.topup.assetAmount)} USDt *`
+                ? `${fromSatoshiStr(transaction.taxiTopup.topup.assetAmount)} USDt *`
                 : 'Loading...'}
             </span>
           </div>

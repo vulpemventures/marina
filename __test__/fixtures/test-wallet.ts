@@ -16,6 +16,13 @@ import {
   passwordHash,
   pendingTx,
 } from './wallet.json';
+import {
+  encryptedMnemonic as encryptedMnemonicRestore,
+  masterXPub as masterXPubRestore,
+  masterBlindingKey as masterBlindingKeyRestore,
+  passwordHash as passwordHashRestore,
+} from './restore-wallet.json';
+
 import { Transaction } from '../../src/domain/wallet/value-objects/transaction';
 
 // Mock for UniqueEntityID
@@ -103,27 +110,28 @@ export const testWalletWith2ConfidentialAddr: Wallet = Wallet.createWallet(
 // Restored, without generated confidential addresses
 export const testWalletRestoredDTO: WalletDTO = {
   confidentialAddresses: [],
-  encryptedMnemonic: encryptedMnemonic,
-  masterXPub: masterXPub,
-  masterBlindingKey: masterBlindingKey,
-  passwordHash: passwordHash,
+  encryptedMnemonic: encryptedMnemonicRestore,
+  masterXPub: masterXPubRestore,
+  masterBlindingKey: masterBlindingKeyRestore,
+  passwordHash: passwordHashRestore,
   pendingTx: undefined,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
   walletId: v4(),
 };
 export const testWalletRestoredProps: IWallet = {
   confidentialAddresses: [],
-  encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
+  encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonicRestore),
   errors: undefined,
-  masterXPub: MasterXPub.create(masterXPub),
-  masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
-  passwordHash: PasswordHash.create(passwordHash),
+  masterXPub: MasterXPub.create(masterXPubRestore),
+  masterBlindingKey: MasterBlindingKey.create(masterBlindingKeyRestore),
+  passwordHash: PasswordHash.create(passwordHashRestore),
   pendingTx: undefined,
   restored: true,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
 export const testWalletRestored: Wallet = Wallet.createWallet(testWalletRestoredProps);
 
+//
 export const testWalletWithPendingTxDTO: WalletDTO = {
   confidentialAddresses: [],
   encryptedMnemonic: encryptedMnemonic,
@@ -134,7 +142,6 @@ export const testWalletWithPendingTxDTO: WalletDTO = {
   pendingTx: pendingTx,
   utxoMap: new Map<Outpoint, UtxoInterface>(),
 };
-
 export const testWalletWithPendingTxProps: IWallet = {
   confidentialAddresses: [],
   encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),

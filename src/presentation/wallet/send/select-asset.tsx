@@ -5,10 +5,8 @@ import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
 import { AppContext } from '../../../application/store/context';
-import { setAsset } from '../../../application/store/actions/transaction';
-import { unsetPendingTx } from '../../../application/store/actions';
-import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
-import { getAllAssetBalances } from '../../../application/store/actions/assets';
+import { getAllAssetBalances, setAsset, unsetPendingTx } from '../../../application/store/actions';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();

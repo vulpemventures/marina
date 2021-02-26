@@ -1,35 +1,26 @@
 import { UtxoInterface } from 'ldk';
 import { compareUtxos, createWallet, setUtxos } from './wallet';
 import { mint } from '../../../../__test__/_regtest';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { appInitialState, appReducer } from '../reducers';
+import { assetInitState } from '../reducers/asset-reducer';
+import { txsHistoryInitState } from '../reducers/txs-history-reducer';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testWalletDTO, testWalletProps } from '../../../../__test__/fixtures/test-wallet';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
 import { getUtxoMap } from '../../../../__test__/fixtures/test-utxos';
 import { getRandomWallet } from '../../../../__test__/fixtures/wallet-keys';
-import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
-import { assetInitState } from '../reducers/asset-reducer';
-import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
-import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
+import { repos } from '../../../infrastructure';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
 
 describe('Utxos Actions', () => {
-  let repos, store: ReturnType<typeof mockThunkReducer>;
+  let store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {
-    repos = {
-      app: new BrowserStorageAppRepo() as IAppRepository,
-      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
-      wallet: new BrowserStorageWalletRepo() as IWalletRepository,
-    };
     store = mockThunkReducer(appReducer, appInitialState, repos);
   });
 
@@ -87,6 +78,7 @@ describe('Utxos Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(3) }],
     });
   });
@@ -139,6 +131,7 @@ describe('Utxos Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(1) }],
     });
   });

@@ -23,7 +23,11 @@ import {
 } from '../../../application/store/actions';
 import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 import { createDevState } from '../../../../__test__/dev-state';
-import { imgPathMapMainnet, imgPathMapRegtest, lbtcAssetByNetwork } from '../../utils';
+import {
+  imgPathMapMainnet,
+  imgPathMapRegtest,
+  lbtcAssetByNetwork,
+} from '../../../application/utils';
 
 const Home: React.FC = () => {
   const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);

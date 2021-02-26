@@ -22,9 +22,9 @@ export async function fetchUtxos(address: string, txid?: string): Promise<any> {
   }
 }
 
-export async function faucet(address: string, amount: number): Promise<any> {
+export async function faucet(address: string, amount: number, asset?: string): Promise<any> {
   try {
-    const { status, data } = await axios.post(`${APIURL}/faucet`, { address, amount });
+    const { status, data } = await axios.post(`${APIURL}/faucet`, { address, amount, asset });
     if (status !== 200) {
       throw new Error('Invalid address');
     }
@@ -35,7 +35,7 @@ export async function faucet(address: string, amount: number): Promise<any> {
       try {
         const utxos = await fetchUtxos(address, txId);
         if (utxos.length > 0) {
-          return;
+          return txId;
         }
       } catch (ignore) {}
     }
@@ -60,6 +60,7 @@ export async function fetchTxHex(txId: string): Promise<string> {
  * @param quantity
  * @param name
  * @param ticker
+ * @param precision
  * @returns mint data
  */
 export async function mint(
