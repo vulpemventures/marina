@@ -30,7 +30,6 @@ describe('Utxos Actions', () => {
   });
 
   test('Should set utxos of 2 different key pairs', async () => {
-    jest.setTimeout(30000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -84,7 +83,6 @@ describe('Utxos Actions', () => {
   });
 
   test('Should not set utxos if same utxo set exists in store', async () => {
-    jest.setTimeout(20000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();

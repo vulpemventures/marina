@@ -33,7 +33,6 @@ describe('Transaction History Actions', () => {
   });
 
   test('Should add a single transaction to transactions history', async () => {
-    jest.setTimeout(20000);
     // Create wallet
     store.setState({
       app: testAppProps,

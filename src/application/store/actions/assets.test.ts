@@ -56,7 +56,6 @@ describe('Assets Actions', () => {
   });
 
   test('Should get all asset infos', async () => {
-    jest.setTimeout(30000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -172,7 +171,6 @@ describe('Assets Actions', () => {
   });
 
   test('Should not fetch info from network if asset is in store', async () => {
-    jest.setTimeout(20000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();

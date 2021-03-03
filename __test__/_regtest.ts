@@ -81,7 +81,7 @@ export async function mint(
     if (status !== 200) {
       throw new Error('Invalid address');
     }
-    await sleep(5000);
+    await sleep(6000);
     return data;
   } catch (e) {
     console.error(e);

@@ -7,7 +7,7 @@ import {
   Mnemonic,
   Outpoint,
   toOutpoint,
-  tryToUnblindUtxo,
+  fetchPrevoutAndTryToUnblindUtxo,
   UtxoInterface,
 } from 'ldk';
 import {
@@ -312,7 +312,7 @@ export function setUtxos(
             return await Promise.all(
               keyPairData.utxos.map(
                 async (utxo) =>
-                  await tryToUnblindUtxo(
+                  await fetchPrevoutAndTryToUnblindUtxo(
                     utxo,
                     keyPairData.blindingPrivateKey,
                     'http://localhost:3001'
