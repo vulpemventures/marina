@@ -7,7 +7,7 @@ export async function nextAddressForWallet(
   wallet: IWallet,
   chain: string,
   change: boolean
-): Promise<string> {
+): Promise<{ confidentialAddress: string; derivationPath?: string }> {
   const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
   const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
   // Restore wallet from MasterPublicKey
@@ -26,11 +26,17 @@ export async function nextAddressForWallet(
     throw new Error('Failed to restore wallet');
   }
 
-  let nextAddress: string;
+  let nextAddress;
   if (change) {
-    nextAddress = pubKeyWallet.getNextChangeAddress().confidentialAddress;
+    nextAddress = {
+      confidentialAddress: pubKeyWallet.getNextChangeAddress().confidentialAddress,
+      derivationPath: pubKeyWallet.getNextChangeAddress().derivationPath,
+    };
   } else {
-    nextAddress = pubKeyWallet.getNextAddress().confidentialAddress;
+    nextAddress = {
+      confidentialAddress: pubKeyWallet.getNextAddress().confidentialAddress,
+      derivationPath: pubKeyWallet.getNextAddress().derivationPath,
+    };
   }
 
   return nextAddress;

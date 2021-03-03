@@ -10,8 +10,8 @@ describe('Transaction Utils', () => {
   describe('Receive', () => {
     test('Should extract info from raw tx data - Receive 100 USDt and fees paid in L-BTC', () => {
       const confAddrs: Address[] = [
-        Address.create(confidentialAddresses[0].address),
-        Address.create(confidentialAddresses[1].address),
+        Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+        Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath),
       ];
       const { vin, vout } = JSON.parse(JSON.stringify(receiveUsdt));
       const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs);
@@ -27,8 +27,8 @@ describe('Transaction Utils', () => {
 
     test('Should extract info from raw tx data - Receive 20 L-BTC and fees paid in L-BTC', () => {
       const confAddrs: Address[] = [
-        Address.create(confidentialAddresses[0].address),
-        Address.create(confidentialAddresses[1].address),
+        Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+        Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath),
       ];
       const { vin, vout } = JSON.parse(JSON.stringify(receiveLbtc));
       const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs);
@@ -46,8 +46,8 @@ describe('Transaction Utils', () => {
   describe('Send', () => {
     test('Should extract info from raw tx data - Send 2 L-BTC and fees paid in L-BTC', () => {
       const confAddrs: Address[] = [
-        Address.create(confidentialAddresses[0].address),
-        Address.create(confidentialAddresses[1].address),
+        Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+        Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath),
       ];
       const { vin, vout } = JSON.parse(JSON.stringify(sendLbtc));
       const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs);
@@ -63,8 +63,8 @@ describe('Transaction Utils', () => {
 
     test('Should extract info from raw tx data - Send 5 USDt and fees paid in L-BTC', () => {
       const confAddrs: Address[] = [
-        Address.create(confidentialAddresses[0].address),
-        Address.create(confidentialAddresses[1].address),
+        Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+        Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath),
       ];
       const { vin, vout } = JSON.parse(JSON.stringify(sendUsdt));
       const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs);
@@ -81,8 +81,8 @@ describe('Transaction Utils', () => {
 
   test('Should get txs details sorted by asset', () => {
     const confAddrs: Address[] = [
-      Address.create(confidentialAddresses[0].address),
-      Address.create(confidentialAddresses[1].address),
+      Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+      Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath),
     ];
     const tx = JSON.parse(JSON.stringify(receiveLbtc));
     const res = getTxsDetails([tx], 'regtest', confAddrs).byAsset;
@@ -106,8 +106,8 @@ describe('Transaction Utils', () => {
 
   test('Should get txs details sorted by txid', () => {
     const confAddrs: Address[] = [
-      Address.create(confidentialAddresses[0].address),
-      Address.create(confidentialAddresses[1].address),
+      Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+      Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath),
     ];
     const tx = JSON.parse(JSON.stringify(receiveLbtc));
     const res = getTxsDetails([tx], 'regtest', confAddrs).byTxId;

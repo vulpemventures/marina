@@ -5,6 +5,7 @@ interface AddressProps {
   [key: string]: any;
   // Blinding Public Key
   blindingKey?: Buffer;
+  derivationPath?: string;
   value: string;
   unconfidentialAddress?: string;
 }
@@ -18,6 +19,10 @@ export class Address extends ValueObject<AddressProps> {
     return this.props.blindingKey;
   }
 
+  get derivationPath(): string | undefined {
+    return this.props.derivationPath;
+  }
+
   get unconfidentialAddress(): string | undefined {
     return this.props.unconfidentialAddress;
   }
@@ -27,16 +32,18 @@ export class Address extends ValueObject<AddressProps> {
     super({
       value: props.value,
       blindingKey: props.blindingKey,
+      derivationPath: props.derivationPath,
       unconfidentialAddress: props.unconfidentialAddress,
     });
   }
 
-  public static create(address: AddressProps['value']): Address {
+  public static create(address: AddressProps['value'], derivationPath?: AddressProps['derivationPath']): Address {
     try {
       // Non Confidential
       if (address.startsWith('ert') || address.startsWith('ex')) {
         addressLDK.fromBech32(address);
         return new Address({
+          derivationPath: derivationPath,
           value: address,
         });
       } else {
@@ -45,6 +52,7 @@ export class Address extends ValueObject<AddressProps> {
         return new Address({
           value: address,
           blindingKey: blindingKey,
+          derivationPath: derivationPath,
           unconfidentialAddress: unconfidentialAddress,
         });
       }

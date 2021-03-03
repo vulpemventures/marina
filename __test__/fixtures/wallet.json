@@ -4,12 +4,14 @@
       "address": "el1qqwvvx8garcrdyj5qjsjpqcpreq67dlthdp979uduhln40qanvjaf06jm3caydwqeqjgm220d3ahlj7rvqt82wq3vs4tp6rhqt",
       "blindingKey": "0398c31d1d1e06d24a809424106023c835e6fd77684be2f1bcbfe75783b364ba97",
       "blindingPrivateKey": "60d4a99f2413d67ad58a66a6e0d108957208f66484c1208a8aacebac4fc148bb",
+      "derivationPath": "m/84'/0'/0'/0/1",
       "unconfidentialAddress": "ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl"
     },
     {
       "address": "el1qqfm3m2g2glynhmjfcyupd7y980w9lrpwnvun40mq99e5ctrndaaz2axpa8lakz8ap9zrzuu30wcf7qknjgmk5pl0wl0e2dtfv",
       "blindingKey": "02771da90a47c93bee49c13816f8853bdc5f8c2e9b393abf6029734c2c736f7a25",
       "blindingPrivateKey": "92ae063a8be13fce24b9a7bbdb102ad429a348f131646c691fc661afd4a5fb5c",
+      "derivationPath": "m/84'/0'/0'/0/2",
       "unconfidentialAddress": "ert1qwnq7nl7mpr7sj3p3wwghhvylqtfeydm2l75d0f"
     }
   ],

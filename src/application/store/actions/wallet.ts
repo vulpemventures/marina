@@ -26,8 +26,7 @@ import {
   WALLET_SET_UTXOS_SUCCESS,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
-import { encrypt, hash } from '../../utils/crypto';
-import { nextAddressForWallet } from '../../utils/restorer';
+import { encrypt, hash, nextAddressForWallet } from '../../utils';
 import { IWallet } from '../../../domain/wallet/wallet';
 import {
   Address,
@@ -146,7 +145,7 @@ export function restoreWallet(
       }
       const confidentialAddresses: Address[] = mnemonicWallet
         .getAddresses()
-        .map(({ confidentialAddress }) => Address.create(confidentialAddress));
+        .map(({ confidentialAddress, derivationPath }) => Address.create(confidentialAddress, derivationPath));
 
       const utxoMap = new Map<Outpoint, UtxoInterface>();
 
@@ -190,8 +189,8 @@ export function deriveNewAddress(
     }
 
     try {
-      const nextAddress = await nextAddressForWallet(wallets[0], app.network.value, change);
-      const address = Address.create(nextAddress);
+      const {confidentialAddress, derivationPath} = await nextAddressForWallet(wallets[0], app.network.value, change);
+      const address = Address.create(confidentialAddress, derivationPath);
       await repos.wallet.addDerivedAddress(address);
 
       // Update React state
