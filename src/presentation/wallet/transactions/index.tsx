@@ -76,6 +76,10 @@ const Transactions: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // TODO: Addresses and derivation path are wrong?
+    // After payment to unconfidential address
+    console.log('confidentialAddresses!!!', confidentialAddresses);
+
     setTxsByAssets(
       getTxsDetails(Object.values(txsHistory), app.network.value, confidentialAddresses).byAsset
     );
@@ -83,19 +87,23 @@ const Transactions: React.FC = () => {
 
   // Generate transaction list for current asset
   if (Object.keys(txsHistory).length && Object.keys(txsByAssets).length && state.assetHash) {
-    listButtonTransaction = txsByAssets[
-      state.assetHash
-    ]?.map(({ amount, dateContracted, type, txId }, index) => (
-      <ButtonTransaction
-        amount={fromSatoshiStr(amount)}
-        assetTicker={state.assetTicker}
-        key={`${state.assetTicker} + ${index}`}
-        handleClick={openTxDetailsModal}
-        txDate={dateContracted}
-        txId={txId}
-        txType={type}
-      />
-    ));
+    listButtonTransaction = txsByAssets[state.assetHash]
+      ?.sort(function (a, b) {
+        // Descending order
+        return b.blockTime - a.blockTime;
+      })
+      .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
+        <ButtonTransaction
+          amount={fromSatoshiStr(amount)}
+          assetTicker={state.assetTicker}
+          key={`${state.assetTicker} + ${index}`}
+          handleClick={openTxDetailsModal}
+          toSelf={toSelf}
+          txDate={dateContracted}
+          txId={txId}
+          txType={type}
+        />
+      ));
   }
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
@@ -154,7 +162,7 @@ const Transactions: React.FC = () => {
           <div>
             <p className="text-base font-medium">Fee</p>
             <p className="text-xs font-light">
-              {modalTxDetails?.fee} {state.assetTicker}
+              {fromSatoshiStr(modalTxDetails?.fee ?? 0)} {state.assetTicker}
             </p>
           </div>
           <div>

@@ -37,7 +37,10 @@ export class Address extends ValueObject<AddressProps> {
     });
   }
 
-  public static create(address: AddressProps['value'], derivationPath?: AddressProps['derivationPath']): Address {
+  public static create(
+    address: AddressProps['value'],
+    derivationPath?: AddressProps['derivationPath']
+  ): Address {
     try {
       // Non Confidential
       if (address.startsWith('ert') || address.startsWith('ex')) {

@@ -1,13 +1,13 @@
 import {
   AddressInterface,
   EsploraIdentityRestorer,
+  fetchPrevoutAndTryToUnblindUtxo,
+  fetchUtxos,
   IdentityOpts,
   IdentityType,
-  fetchUtxos,
   Mnemonic,
   Outpoint,
   toOutpoint,
-  fetchPrevoutAndTryToUnblindUtxo,
   UtxoInterface,
 } from 'ldk';
 import {
@@ -20,10 +20,10 @@ import {
   WALLET_RESTORE_SUCCESS,
   WALLET_SET_PENDING_TX_FAILURE,
   WALLET_SET_PENDING_TX_SUCCESS,
-  WALLET_UNSET_PENDING_TX_FAILURE,
-  WALLET_UNSET_PENDING_TX_SUCCESS,
   WALLET_SET_UTXOS_FAILURE,
   WALLET_SET_UTXOS_SUCCESS,
+  WALLET_UNSET_PENDING_TX_FAILURE,
+  WALLET_UNSET_PENDING_TX_SUCCESS,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash, nextAddressForWallet } from '../../utils';
@@ -145,7 +145,9 @@ export function restoreWallet(
       }
       const confidentialAddresses: Address[] = mnemonicWallet
         .getAddresses()
-        .map(({ confidentialAddress, derivationPath }) => Address.create(confidentialAddress, derivationPath));
+        .map(({ confidentialAddress, derivationPath }) =>
+          Address.create(confidentialAddress, derivationPath)
+        );
 
       const utxoMap = new Map<Outpoint, UtxoInterface>();
 
@@ -189,8 +191,8 @@ export function deriveNewAddress(
     }
 
     try {
-      const {confidentialAddress, derivationPath} = await nextAddressForWallet(wallets[0], app.network.value, change);
-      const address = Address.create(confidentialAddress, derivationPath);
+      const addr = await nextAddressForWallet(wallets[0], app.network.value, change);
+      const address = Address.create(addr.value, addr.derivationPath);
       await repos.wallet.addDerivedAddress(address);
 
       // Update React state

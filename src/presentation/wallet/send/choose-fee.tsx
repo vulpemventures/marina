@@ -15,7 +15,6 @@ import {
   setFeeChangeAddress,
   setTopup,
 } from '../../../application/store/actions';
-import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { Address } from '../../../domain/wallet/value-objects';
 import {
@@ -24,6 +23,7 @@ import {
   fetchTopupFromTaxi,
   lbtcAssetByNetwork,
   fillTaxiTx,
+  nextAddressForWallet,
   utxoMapToArray,
   feeLevelToSatsPerByte,
   taxiURL,
@@ -50,11 +50,11 @@ const ChooseFee: React.FC = () => {
   useLottieLoader(marinaLoaderRef);
 
   const changeAddressGetter = useCallback(
-    (asset: string): string => {
+    (asset: string): string | undefined => {
       if (asset === transaction.asset) {
-        return transaction.changeAddress;
+        return transaction.changeAddress?.value;
       }
-      return transaction.feeChangeAddress;
+      return transaction.feeChangeAddress?.value;
     },
     [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
   );
@@ -64,7 +64,7 @@ const ChooseFee: React.FC = () => {
       {
         asset: transaction.asset,
         value: transaction.amountInSatoshi,
-        address: transaction.receipientAddress,
+        address: transaction.receipientAddress?.value,
       },
     ],
     [transaction.amountInSatoshi, transaction.asset, transaction.receipientAddress]
@@ -115,23 +115,37 @@ const ChooseFee: React.FC = () => {
   useEffect(() => {
     if (supportedAssets.length > 0) {
       void (async (): Promise<void> => {
-        if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === '') {
+        // TODO: Should not create new feeChangeAddress more than once
+        if (
+          feeCurrency !== transaction.asset &&
+          transaction.feeChangeAddress?.value === undefined
+        ) {
           try {
             const wallet = { ...wallets[0] };
-            wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
+            wallet.confidentialAddresses.push(
+              Address.create(
+                transaction.changeAddress?.value ?? '',
+                transaction.changeAddress?.derivationPath
+              )
+            );
             const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-            dispatch(setFeeChangeAddress(feeChangeAddress));
+            dispatch(
+              setFeeChangeAddress(
+                Address.create(feeChangeAddress.value, feeChangeAddress.derivationPath)
+              )
+            );
           } catch (error) {
             console.log(error);
           }
         }
       })();
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supportedAssets]);
 
   useEffect(() => {
     if (supportedAssets.length > 0) {
-      if (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '') {
+      if (feeCurrency === transaction.asset || transaction.feeChangeAddress?.value !== undefined) {
         if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
           // this check prevents to build a tx in case the fee change address isn't
           // yet available but needed for the tx.
@@ -197,7 +211,7 @@ const ChooseFee: React.FC = () => {
     if (
       !unsignedPendingTx &&
       Object.keys(transaction.taxiTopup).length !== 0 &&
-      (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '')
+      (feeCurrency === transaction.asset || transaction.feeChangeAddress?.value !== undefined)
     ) {
       const taxiPayout = {
         value: transaction.taxiTopup.topup?.assetAmount,
@@ -239,7 +253,7 @@ const ChooseFee: React.FC = () => {
       setPendingTx(
         Transaction.create({
           value: unsignedPendingTx,
-          sendAddress: transaction.receipientAddress,
+          sendAddress: transaction.receipientAddress?.value ?? '',
           sendAsset: transaction.asset,
           sendAmount: transaction.amountInSatoshi,
           feeAsset: feeCurrency,

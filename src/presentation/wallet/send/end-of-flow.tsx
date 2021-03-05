@@ -3,7 +3,6 @@ import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
 import { deriveNewAddress, flush, unsetPendingTx } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
-import { decrypt, hash } from '../../../application/utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
@@ -14,7 +13,9 @@ import {
   blindAndSignPset,
   blindingInfoFromPendingTx,
   broadcastTx,
+  decrypt,
   explorerApiUrl,
+  hash,
 } from '../../../application/utils';
 import { formatTxid } from '../../utils';
 

@@ -56,7 +56,9 @@ export const testWallet: Wallet = Wallet.createWallet(testWalletProps);
 
 // With 1 Confidential Address
 export const testWalletWithConfidentialAddrDTO: WalletDTO = {
-  confidentialAddresses: [confidentialAddresses[0].address],
+  confidentialAddresses: [
+    [confidentialAddresses[0].address, confidentialAddresses[0].derivationPath],
+  ],
   encryptedMnemonic: encryptedMnemonic,
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
@@ -66,7 +68,9 @@ export const testWalletWithConfidentialAddrDTO: WalletDTO = {
   walletId: v4(),
 };
 export const testWalletWithConfidentialAddrProps: IWallet = {
-  confidentialAddresses: [Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath)],
+  confidentialAddresses: [
+    Address.create(confidentialAddresses[0].address, confidentialAddresses[0].derivationPath),
+  ],
   encryptedMnemonic: EncryptedMnemonic.create(encryptedMnemonic),
   errors: undefined,
   masterXPub: MasterXPub.create(masterXPub),
@@ -81,7 +85,10 @@ export const testWalletWithConfidentialAddr: Wallet = Wallet.createWallet(
 
 // With 2 Confidential Addresses
 export const testWalletWith2ConfidentialAddrDTO: WalletDTO = {
-  confidentialAddresses: [confidentialAddresses[0].address, confidentialAddresses[1].address],
+  confidentialAddresses: [
+    [confidentialAddresses[0].address, confidentialAddresses[0].derivationPath],
+    [confidentialAddresses[1].address, confidentialAddresses[1].derivationPath],
+  ],
   encryptedMnemonic: encryptedMnemonic,
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,

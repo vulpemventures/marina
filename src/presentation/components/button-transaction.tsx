@@ -5,7 +5,8 @@ interface Props {
   amount: string;
   assetTicker: string;
   disabled?: boolean;
-  handleClick: (txId: string) => void;
+  handleClick: (txId: string, toSelf: boolean) => void;
+  toSelf: boolean;
   txDate: string;
   txId: string;
   txType: TxType;
@@ -16,6 +17,7 @@ const ButtonTransaction: React.FC<Props> = ({
   disabled = false,
   amount,
   handleClick,
+  toSelf,
   txDate,
   txId,
   txType,
@@ -24,7 +26,8 @@ const ButtonTransaction: React.FC<Props> = ({
     <button
       disabled={disabled}
       className="focus:outline-none h-14 flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
-      onClick={() => handleClick(txId)}
+      data-toself={toSelf}
+      onClick={() => handleClick(txId, toSelf)}
       type="button"
     >
       <div className="flex items-center">

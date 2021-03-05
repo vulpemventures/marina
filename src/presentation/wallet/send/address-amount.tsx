@@ -10,12 +10,13 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
-import { nextAddressForWallet } from '../../../application/utils/restorer';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
   isValidAddressForNetwork,
+  nextAddressForWallet,
 } from '../../../application/utils';
+import { Address } from '../../../domain/wallet/value-objects';
 
 interface AddressAmountFormValues {
   address: string;
@@ -111,7 +112,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
 const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmountFormValues>({
   mapPropsToValues: (props: AddressAmountFormProps): AddressAmountFormValues => ({
-    address: props.state.transaction.receipientAddress,
+    address: props.state.transaction.receipientAddress?.value ?? '',
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
@@ -161,7 +162,11 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // this view. We'll derive the address when persisting the pending tx.
     const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
     props.dispatch(
-      setAddressesAndAmount(values.address, changeAddress, values.amount * Math.pow(10, 8))
+      setAddressesAndAmount(
+        Address.create(values.address),
+        Address.create(changeAddress.value),
+        values.amount * Math.pow(10, 8)
+      )
     );
     props.history.push(SEND_CHOOSE_FEE_ROUTE);
   },

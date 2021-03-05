@@ -24,6 +24,7 @@ import {
   TxDisplayInterface,
   TxsByAssetsInterface,
   TxsByTxIdInterface,
+  TxStatus,
   TxType,
 } from '../../domain/transaction';
 
@@ -139,29 +140,36 @@ export const feeAmountFromTx = (tx: string): string => {
   return fromSatoshiFixed(confidential.confidentialValueToSatoshi(feeOut.value), 8, 8);
 };
 
+export const isChange = (a: Address): boolean | null =>
+  a?.derivationPath ? a.derivationPath?.split('/')[4] === '1' : null;
+
 export const extractInfoFromRawTxData = (
   vin: Array<InputInterface>,
   vout: Array<BlindedOutputInterface | UnblindedOutputInterface>,
   network: Network['value'],
-  confidentialAddresses: Address[]
+  addresses: Address[]
 ): {
   address: string;
   amount: number;
   asset: string;
   feeAsset: string;
+  toSelf: boolean;
   type: TxType;
 } => {
   const assets = new Set<string>();
   let amount = 0,
     asset = '',
     address = '',
+    changeAmount = 0,
     feeAmount = 0,
     feeAsset = '',
+    hasBlindedOutput = false,
+    toSelf = false,
     type: TxType = 'receive',
     vinTotalAmount = 0,
     voutTotalAmount = 0;
 
-  // Determine asset
+  // Determine asset and fee asset
   vin.forEach((item) => {
     if (!isBlindedOutputInterface(item.prevout)) {
       if (item.prevout.asset && item.prevout.script) {
@@ -185,8 +193,6 @@ export const extractInfoFromRawTxData = (
 
   //
   vin.forEach((item) => {
-    //console.log('VIN item', item);
-
     if (!isBlindedOutputInterface(item.prevout)) {
       if (item.prevout.asset && item.prevout.script && assets.has(item.prevout.asset)) {
         assets.add(item.prevout.asset);
@@ -205,76 +211,91 @@ export const extractInfoFromRawTxData = (
   vout.forEach((item) => {
     if (!isBlindedOutputInterface(item)) {
       if (item.asset && item.script && assets.has(item.asset)) {
-        // Workaround to check if utxo address is ours.
-        address = addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network]);
-        const isMine = confidentialAddresses?.some((c) => c.unconfidentialAddress === address);
+        const [addrOfMine] = addresses.filter((c) => {
+          return (
+            c.unconfidentialAddress ===
+            addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network])
+          );
+        });
 
         // Receive Tx - No unblind inputs
         if (!asset) {
           type = 'receive';
-          if (isMine) {
+          if (addrOfMine?.value) {
+            address = addressLDK.fromOutputScript(
+              Buffer.from(item.script, 'hex'),
+              networks[network]
+            );
             amount = item.value;
           }
         }
 
-        // Send Tx - Unblind input asset
+        // Send Tx
+        // Vout asset === unblind input asset
         if (item.asset === asset) {
           type = 'send';
-          if (!isMine) {
+
+          // Sending to unknown address
+          if (!addrOfMine?.value) {
+            address = addressLDK.fromOutputScript(
+              Buffer.from(item.script, 'hex'),
+              networks[network]
+            );
             amount = item.value;
+          }
+
+          // Send to unconfidential address
+          if (addrOfMine?.value && isChange(addrOfMine)) {
+            changeAmount = item.value;
+          }
+
+          // Sending to yourself
+          if (addrOfMine?.value && !isChange(addrOfMine)) {
+            address = addressLDK.fromOutputScript(
+              Buffer.from(item.script, 'hex'),
+              networks[network]
+            );
+            amount = item.value;
+            toSelf = true;
           }
         }
 
         // Set asset
         asset = item.asset;
-
         // Sum all outputs values
         voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
-
         // Add fee if same asset
         if (feeAsset === item.asset) {
           voutTotalAmount = voutTotalAmount + feeAmount;
         }
       }
+    } else {
+      hasBlindedOutput = true;
     }
   });
 
   // Send with change output
   if (!!vinTotalAmount && !!voutTotalAmount) {
-    // console.log(
-    //   'vinTotalAmount && voutTotalAmount',
-    //   !!vinTotalAmount && !!voutTotalAmount,
-    //   vinTotalAmount,
-    //   voutTotalAmount
-    // );
-
-    amount = vinTotalAmount - voutTotalAmount;
-
-    //console.log('amount', amount);
+    // To unconfidential address
+    if (!hasBlindedOutput) {
+      amount = vinTotalAmount - changeAmount;
+    } else {
+      // To confidential address
+      amount = vinTotalAmount - voutTotalAmount;
+    }
   }
 
   // Send without change
   if (!!vinTotalAmount && !voutTotalAmount) {
-    // console.log(
-    //   'vinTotalAmount && !voutTotalAmount',
-    //   !!vinTotalAmount && !voutTotalAmount,
-    //   vinTotalAmount,
-    //   !voutTotalAmount
-    // );
     amount = vinTotalAmount;
   }
-
-  // amount = vinTotalAmount
-  //   ? vinTotalAmount
-  //     ? vinTotalAmount - vinTotalAmount
-  //     : vinTotalAmount
-  //   : vinTotalAmount;
 
   return {
     address,
     amount,
     asset,
     feeAsset,
+    toSelf,
     type,
   };
 };
@@ -283,20 +304,20 @@ export const extractInfoFromRawTxData = (
  * Get txs details and restructure by asset hash or by txid
  * @param txs
  * @param network
- * @param confidentialAddresses
+ * @param addresses
  */
 export const getTxsDetails = (
   txs: TxInterface[],
   network: Network['value'],
-  confidentialAddresses: Address[]
+  addresses: Address[]
 ) => {
   const txArray = txs?.map(
     (tx: TxInterface): TxDisplayInterface => {
-      const { address, asset, feeAsset, amount, type } = extractInfoFromRawTxData(
+      const { address, asset, feeAsset, amount, toSelf, type } = extractInfoFromRawTxData(
         tx.vin,
         tx.vout,
         network,
-        confidentialAddresses
+        addresses
       );
 
       const timeTxInBlock = new Date((tx.status.blockTime ?? 0) * 1000);
@@ -312,13 +333,15 @@ export const getTxsDetails = (
           month: 'short',
           day: 'numeric',
         }),
-        status: tx.status.confirmed ? 'confirmed' : 'pending',
+        status: tx.status.confirmed ? ('confirmed' as TxStatus) : ('pending' as TxStatus),
         type,
         asset,
         amount,
         address,
         fee: tx.fee,
         feeAsset,
+        toSelf,
+        blockTime: tx.status.blockTime ?? 0,
       };
     }
   );

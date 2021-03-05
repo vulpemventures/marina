@@ -13,7 +13,7 @@ import { Transaction } from '../../domain/wallet/value-objects/transaction';
 export class WalletMap {
   public static toDTO(wallet: Wallet): WalletDTO {
     return {
-      confidentialAddresses: wallet.confidentialAddresses.map((d) => d.value),
+      confidentialAddresses: wallet.confidentialAddresses.map((a) => [a.value, a.derivationPath]),
       encryptedMnemonic: wallet.encryptedMnemonic.value,
       masterBlindingKey: wallet.masterBlindingKey.value,
       masterXPub: wallet.masterXPub.value,
@@ -27,7 +27,9 @@ export class WalletMap {
   public static toDomain(raw: WalletDTO): Wallet {
     const wallet = Wallet.createWallet(
       {
-        confidentialAddresses: raw.confidentialAddresses.map((addr) => Address.create(addr)),
+        confidentialAddresses: raw.confidentialAddresses.map(([address, derivationPath]) =>
+          Address.create(address, derivationPath)
+        ),
         encryptedMnemonic: EncryptedMnemonic.create(raw.encryptedMnemonic),
         masterBlindingKey: MasterBlindingKey.create(raw.masterBlindingKey),
         masterXPub: MasterXPub.create(raw.masterXPub),

@@ -1,13 +1,13 @@
 import {
-  TXS_HISTORY_UPDATE_FAILURE,
-  TXS_HISTORY_SET_TXS_SUCCESS,
   INIT_TXS_HISTORY,
+  TXS_HISTORY_SET_TXS_SUCCESS,
+  TXS_HISTORY_UPDATE_FAILURE,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import {
+  BlindingKeyGetter,
   fetchAndUnblindTxsGenerator,
   fromXpub,
-  BlindingKeyGetter,
   IdentityType,
   MasterPublicKey,
 } from 'ldk';
@@ -28,13 +28,14 @@ export function initTxsHistoryByNetwork(
  * @param onError
  */
 export function updateTxsHistory(
-  onSuccess: (txs: TxsHistory) => void,
-  onError: (err: Error) => void
+  onSuccess?: (txs: TxsHistory) => void,
+  onError?: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
       const { app, txsHistory, wallets } = getState();
-      const txs: TxsHistory = {};
+      // Initialize with txsHistory state if any
+      const txs: TxsHistory = txsHistory[app.network.value] ?? {};
       const { confidentialAddresses, masterBlindingKey, masterXPub } = wallets[0];
       const addresses = confidentialAddresses.map((addr) => addr.value);
       const restorer = new IdentityRestorerFromState(addresses);
@@ -78,7 +79,7 @@ export function updateTxsHistory(
 
       // If no new tx already in state then return txsHistory of current network
       if (it.done) {
-        onSuccess(txsHistory[app.network.value]);
+        onSuccess?.(txsHistory[app.network.value]);
         return;
       }
 
@@ -91,10 +92,10 @@ export function updateTxsHistory(
       }
       // Update browser storage with all tx history of this network
       await repos.txsHistory.addTxsHistory(txs, app.network.value);
-      onSuccess(txs);
+      onSuccess?.(txs);
     } catch (error) {
       dispatch([TXS_HISTORY_UPDATE_FAILURE, { error }]);
-      onError(error);
+      onError?.(error);
     }
   };
 }

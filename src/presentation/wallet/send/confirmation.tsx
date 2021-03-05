@@ -5,6 +5,7 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { fromSatoshiStr } from '../../utils';
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app, assets }] = useContext(AppContext);
@@ -43,16 +44,16 @@ const Confirmation: React.FC = () => {
 
       <div className="bg-gradient-to-r from-secondary to-primary flex flex-row items-center justify-between h-12 px-4 mt-4 rounded-full">
         <span className="text-lg font-medium">Amount</span>
-        <span className="text-base font-medium text-white">{`${(
-          sendAmount / Math.pow(10, 8)
-        ).toString()} ${assets[app.network.value][sendAsset].ticker}`}</span>
+        <span className="text-base font-medium text-white">
+          {fromSatoshiStr(sendAmount)} {assets[app.network.value][sendAsset].ticker}
+        </span>
       </div>
 
       <div className="flex flex-row justify-between px-3 mt-10">
         <span className="text-lg font-medium">Fee</span>
-        <span className="font-regular text-base">{`${(feeAmount / Math.pow(10, 8)).toFixed(8)} ${
-          assets[app.network.value][feeAsset].ticker
-        }`}</span>
+        <span className="font-regular text-base">
+          {fromSatoshiStr(feeAmount)} {assets[app.network.value][feeAsset].ticker}
+        </span>
       </div>
 
       <Button className="bottom-20 right-8 absolute" onClick={handleSend}>

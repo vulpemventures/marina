@@ -8,6 +8,7 @@ import {
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
+import { Address } from '../../../domain/wallet/value-objects';
 
 export function setAsset(asset: string): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -16,8 +17,8 @@ export function setAsset(asset: string): Thunk<IAppState, Action> {
 }
 
 export function setAddressesAndAmount(
-  receipientAddress: string,
-  changeAddress: string,
+  receipientAddress: Address,
+  changeAddress: Address,
   amountInSatoshi: number
 ): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -28,7 +29,7 @@ export function setAddressesAndAmount(
   };
 }
 
-export function setFeeChangeAddress(feeChangeAddress: string): Thunk<IAppState, Action> {
+export function setFeeChangeAddress(feeChangeAddress: Address): Thunk<IAppState, Action> {
   return (dispatch) => {
     dispatch([PENDING_TX_SET_FEE_CHANGE_ADDRESS, { feeChangeAddress }]);
   };

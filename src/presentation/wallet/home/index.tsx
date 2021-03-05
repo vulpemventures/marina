@@ -21,13 +21,14 @@ import {
   getAllAssetBalances,
   updateAllAssetInfos,
 } from '../../../application/store/actions';
-import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
 import { createDevState } from '../../../../__test__/dev-state';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
   lbtcAssetByNetwork,
+  xpubWalletFromAddresses,
 } from '../../../application/utils';
+import { fromSatoshi } from '../../utils';
 
 const Home: React.FC = () => {
   const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
@@ -165,7 +166,7 @@ const Home: React.FC = () => {
           assetHash={hash}
           assetName={name}
           assetTicker={ticker}
-          quantity={(assetsBalance[hash] ?? 0) / Math.pow(10, 8)}
+          quantity={fromSatoshi(assetsBalance[hash] ?? 0)}
           key={hash}
           handleClick={handleClick}
         />

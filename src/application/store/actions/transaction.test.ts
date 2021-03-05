@@ -21,6 +21,7 @@ import {
   transactionStateWithFees,
 } from '../../../../__test__/fixtures/test-transaction';
 import { confidentialAddresses } from '../../../../__test__/fixtures/wallet.json';
+import { Address } from '../../../domain/wallet/value-objects';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -61,8 +62,8 @@ describe('Transaction Actions', () => {
 
     store.dispatch(
       setAddressesAndAmount(
-        confidentialAddresses[0].address,
-        confidentialAddresses[1].address,
+        Address.create(confidentialAddresses[0].address),
+        Address.create(confidentialAddresses[1].address),
         10000000
       )
     );
@@ -86,7 +87,11 @@ describe('Transaction Actions', () => {
       wallets: [],
     });
 
-    store.dispatch(setFeeChangeAddress(confidentialAddresses[1].address));
+    store.dispatch(
+      setFeeChangeAddress(
+        Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath)
+      )
+    );
     expect(store.getState()).toStrictEqual({
       app: testAppProps,
       assets: assetInitState,
@@ -130,8 +135,8 @@ describe('Transaction Actions', () => {
 
     store.dispatch(
       setAddressesAndAmount(
-        confidentialAddresses[0].address,
-        confidentialAddresses[1].address,
+        Address.create(confidentialAddresses[0].address),
+        Address.create(confidentialAddresses[1].address),
         10000000
       )
     );
