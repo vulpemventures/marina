@@ -18,18 +18,12 @@ import { assetInitState } from '../application/store/reducers/asset-reducer';
 import { txsHistoryInitState } from '../application/store/reducers/txs-history-reducer';
 import { TxsHistoryByNetwork } from '../domain/transaction';
 import { repos } from './index';
-import { BrowserStorageTxsHistoryRepo } from '../infrastructure/txs-history/browser-storage-txs-history-repository';
+import { BrowserStorageTxsHistoryRepo } from './txs-history/browser-storage-txs-history-repository';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { v4 } = require('uuid');
-// const serializeTxsHistory = (txsHistory: TxsHistory | string) => {
-//   return typeof txsHistory !== 'string' ? JSON.stringify(txsHistory) : txsHistory;
-// };
-// const unserializeTxsHistory = (txsHistory: TxsHistory | string) => {
-//   return typeof txsHistory === 'string' ? JSON.parse(txsHistory) : txsHistory;
-// };
 
 describe('Repositories', () => {
   beforeAll(() => {

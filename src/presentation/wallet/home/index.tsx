@@ -17,8 +17,8 @@ import useLottieLoader from '../../hooks/use-lottie-loader';
 import { AppContext } from '../../../application/store/context';
 import {
   flush,
-  setUtxos,
   getAllAssetBalances,
+  setUtxos,
   updateAllAssetInfos,
 } from '../../../application/store/actions';
 import { createDevState } from '../../../../__test__/dev-state';
@@ -81,7 +81,6 @@ const Home: React.FC = () => {
           wallet.confidentialAddresses,
           app.network.value
         );
-
         dispatch(
           setUtxos(
             w.getAddresses(),
@@ -99,7 +98,15 @@ const Home: React.FC = () => {
         );
       }
     })();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    app.network.value,
+    isFetchingUtxos,
+    transaction.asset,
+    wallet.confidentialAddresses,
+    wallet.masterBlindingKey.value,
+    wallet.masterXPub.value,
+  ]);
 
   if (wallets[0].pendingTx) {
     history.push(SEND_CONFIRMATION_ROUTE);

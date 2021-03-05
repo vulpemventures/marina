@@ -32,6 +32,7 @@ import {
 } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
+import { IWallet } from '../../../domain/wallet/wallet';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -115,13 +116,9 @@ const ChooseFee: React.FC = () => {
   useEffect(() => {
     if (supportedAssets.length > 0) {
       void (async (): Promise<void> => {
-        // TODO: Should not create new feeChangeAddress more than once
-        if (
-          feeCurrency !== transaction.asset &&
-          transaction.feeChangeAddress?.value === undefined
-        ) {
+        if (feeCurrency !== transaction.asset && transaction.feeChangeAddress?.value === '') {
           try {
-            const wallet = { ...wallets[0] };
+            const wallet: IWallet = { ...wallets[0] };
             wallet.confidentialAddresses.push(
               Address.create(
                 transaction.changeAddress?.value ?? '',
@@ -141,7 +138,15 @@ const ChooseFee: React.FC = () => {
       })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supportedAssets]);
+  }, [
+    app.network.value,
+    feeCurrency,
+    supportedAssets.length,
+    transaction.asset,
+    transaction.changeAddress,
+    transaction.feeChangeAddress,
+    wallets,
+  ]);
 
   useEffect(() => {
     if (supportedAssets.length > 0) {

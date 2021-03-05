@@ -76,10 +76,6 @@ const Transactions: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // TODO: Addresses and derivation path are wrong?
-    // After payment to unconfidential address
-    console.log('confidentialAddresses!!!', confidentialAddresses);
-
     setTxsByAssets(
       getTxsDetails(Object.values(txsHistory), app.network.value, confidentialAddresses).byAsset
     );

@@ -164,7 +164,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     props.dispatch(
       setAddressesAndAmount(
         Address.create(values.address),
-        Address.create(changeAddress.value),
+        Address.create(changeAddress.value, changeAddress.derivationPath),
         values.amount * Math.pow(10, 8)
       )
     );
