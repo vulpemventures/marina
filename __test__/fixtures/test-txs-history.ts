@@ -1,6 +1,11 @@
 import { TxsHistoryByNetwork } from '../../src/domain/transaction';
+import { stringify } from '../../src/application/utils/browser-storage-converters';
 
-export const testTxsHistory: TxsHistoryByNetwork = {
+export const testTxsHistoryByNetworkDTO = {
+  liquid: stringify({}),
+  regtest: stringify({}),
+};
+export const testTxsHistoryByNetwork = {
   liquid: {},
   regtest: {},
 };

@@ -136,27 +136,18 @@ describe('Utxos Actions', () => {
 
   test('Should have utxo sets equal', () => {
     const utxoMapStore = new Map()
-      .set(
-        { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },
-        {
-          txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439',
-          vout: 0,
-        }
-      )
-      .set(
-        { txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8', vout: 1 },
-        {
-          txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
-          vout: 1,
-        }
-      )
-      .set(
-        { txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', vout: 3 },
-        {
-          txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
-          vout: 3,
-        }
-      );
+      .set('2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439:0', {
+        txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439',
+        vout: 0,
+      })
+      .set('7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8:1', {
+        txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
+        vout: 1,
+      })
+      .set('6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d:3', {
+        txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
+        vout: 3,
+      });
 
     const fetchedUtxos = [
       { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },

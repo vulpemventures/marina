@@ -15,7 +15,7 @@ import {
 import { deriveNewAddress } from './wallet';
 import { confidentialAddresses } from '../../../../__test__/fixtures/wallet.json';
 import { transactionInitState } from '../reducers/transaction-reducer';
-import { testTx, testTxsHistory } from '../../../../__test__/fixtures/test-txs-history';
+import { testTx, testTxsHistoryByNetworkDTO } from '../../../../__test__/fixtures/test-txs-history';
 import { IAppState } from '../../../domain/common';
 
 jest.mock('uuid');
@@ -60,7 +60,9 @@ describe('Transaction History Actions', () => {
     };
     await deriveNewAddressAction();
     // Broadcast tx
-    mockBrowser.storage.local.get.expect('txsHistory').andResolve({ txsHistory: testTxsHistory });
+    mockBrowser.storage.local.get
+      .expect('txsHistory')
+      .andResolve({ txsHistory: testTxsHistoryByNetworkDTO });
     // TODO: Find out how to test object with dynamic keys
     // regtest: { [expect.any(String)]: testTx }
     mockBrowser.storage.local.set.expect({ txsHistory: expect.anything() }).andResolve();

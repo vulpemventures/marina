@@ -1,4 +1,4 @@
-import { Outpoint, UtxoInterface } from 'ldk';
+import { UtxoInterface } from 'ldk';
 import { IError } from '../common';
 import { Entity } from '../core/Entity';
 import { UniqueEntityID } from '../core/UniqueEntityID';
@@ -25,7 +25,7 @@ export interface IWallet {
   passwordHash: PasswordHash;
   pendingTx?: Transaction;
   restored?: boolean;
-  utxoMap: Map<Outpoint, UtxoInterface>;
+  utxoMap: Map<string, UtxoInterface>;
 }
 
 /**
@@ -63,7 +63,7 @@ export class Wallet extends Entity<IWallet> {
     return this.props.pendingTx;
   }
 
-  get utxoMap(): Map<Outpoint, UtxoInterface> {
+  get utxoMap(): Map<string, UtxoInterface> {
     return this.props.utxoMap;
   }
 

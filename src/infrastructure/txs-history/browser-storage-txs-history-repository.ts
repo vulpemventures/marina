@@ -2,14 +2,15 @@ import { browser } from 'webextension-polyfill-ts';
 import { ITxsHistoryRepository } from '../../domain/transaction/i-txs-history-repository';
 import { Network } from '../../domain/app/value-objects';
 import { TxsHistory, TxsHistoryByNetwork } from '../../domain/transaction';
+import { parse, stringify } from '../../application/utils/browser-storage-converters';
 
 export class BrowserStorageTxsHistoryRepo implements ITxsHistoryRepository {
   // Uint8Array in vin and vout need to be stringified to be stored
-  static serializeTxsHistory(txsHistory: TxsHistory | string) {
-    return typeof txsHistory !== 'string' ? JSON.stringify(txsHistory) : txsHistory;
+  static serializeTxsHistory(txsHistory: TxsHistory): string {
+    return stringify(txsHistory);
   }
-  static unserializeTxsHistory(txsHistory: TxsHistory | string) {
-    return typeof txsHistory === 'string' ? JSON.parse(txsHistory) : txsHistory;
+  static unserializeTxsHistory(txsHistory: string): TxsHistory {
+    return parse(txsHistory);
   }
 
   /**
@@ -30,6 +31,7 @@ export class BrowserStorageTxsHistoryRepo implements ITxsHistoryRepository {
       } else {
         newRegtestTxsHistory = { ...currentTxsHistoryByNetwork.regtest, ...txsHistory };
       }
+      //const txs = BrowserStorageTxsHistoryRepo.serializeTxsHistory({liquid:newLiquidTxsHistory, regtest: newRegtestTxsHistory})
       await browser.storage.local.set({
         txsHistory: {
           regtest: BrowserStorageTxsHistoryRepo.serializeTxsHistory(newRegtestTxsHistory),

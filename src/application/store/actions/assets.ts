@@ -8,7 +8,7 @@ import {
   ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
-import { lbtcAssetByNetwork } from '../../utils';
+import { explorerApiUrl, lbtcAssetByNetwork } from '../../utils';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -83,10 +83,10 @@ export function updateAllAssetInfos(
     try {
       const { app, assets, wallets } = getState();
       const assetsFromUtxos: Assets = await Promise.all(
-        [...wallets[0].utxoMap.values()].map(async ({ asset, value }) =>
+        [...wallets[0].utxoMap.values()].map(async ({ asset }) =>
           // If asset in store don't fetch
           !((asset as string) in assets[app.network.value])
-            ? (await axios.get(`http://localhost:3001/asset/${asset}`)).data
+            ? (await axios.get(`${explorerApiUrl[app.network.value]}/asset/${asset}`)).data
             : undefined
         )
       ).then((assetInfos) =>

@@ -1,3 +1,4 @@
+import { Outpoint, UtxoInterface } from 'ldk';
 import { Wallet } from '../../domain/wallet/wallet';
 import { WalletDTO } from '../dtos/wallet-dto';
 import { UniqueEntityID } from '../../domain/core/UniqueEntityID';
@@ -9,6 +10,8 @@ import {
   MasterXPub,
 } from '../../domain/wallet/value-objects';
 import { Transaction } from '../../domain/wallet/value-objects/transaction';
+import { parse, stringify } from '../utils/browser-storage-converters';
+import { toStringOutpoint } from '../utils';
 
 export class WalletMap {
   public static toDTO(wallet: Wallet): WalletDTO {
@@ -19,12 +22,13 @@ export class WalletMap {
       masterXPub: wallet.masterXPub.value,
       passwordHash: wallet.passwordHash.value,
       pendingTx: wallet.pendingTx?.props,
-      utxoMap: wallet.utxoMap,
+      utxoMap: stringify(wallet.utxoMap),
       walletId: wallet.walletId.id.toString(),
     };
   }
 
   public static toDomain(raw: WalletDTO): Wallet {
+    const utxos = parse(raw.utxoMap);
     const wallet = Wallet.createWallet(
       {
         confidentialAddresses: raw.confidentialAddresses.map(([address, derivationPath]) =>
@@ -34,7 +38,10 @@ export class WalletMap {
         masterBlindingKey: MasterBlindingKey.create(raw.masterBlindingKey),
         masterXPub: MasterXPub.create(raw.masterXPub),
         passwordHash: PasswordHash.create(raw.passwordHash),
-        utxoMap: raw.utxoMap,
+        utxoMap:
+          utxos.length > 0
+            ? new Map(utxos.map((v: [Outpoint, UtxoInterface]) => [toStringOutpoint(v[1]), v[1]]))
+            : new Map(),
       },
       new UniqueEntityID(raw.walletId)
     );

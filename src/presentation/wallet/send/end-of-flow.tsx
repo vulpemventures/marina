@@ -44,8 +44,8 @@ const EndOfFlow: React.FC = () => {
   const wallet = wallets[0];
 
   // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  const mermaidLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     if (!state.aborted && !busy && !isModalUnlockOpen) {
@@ -132,12 +132,7 @@ const EndOfFlow: React.FC = () => {
   if (state.isLoading) {
     return (
       <>
-        <div
-          className="flex items-center justify-center h-screen p-8"
-          id="marina-loader"
-          ref={marinaLoaderRef}
-        />
-
+        <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />
         <ModalUnlock
           isModalUnlockOpen={isModalUnlockOpen}
           handleModalUnlockClose={handleModalUnlockClose}

@@ -36,8 +36,8 @@ const Home: React.FC = () => {
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
 
   // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  const mermaidLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     if (process.env.SKIP_ONBOARDING) {
@@ -49,17 +49,20 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (wallets[0].utxoMap.size > 0) {
       dispatch(
-        updateAllAssetInfos(() => {
-          dispatch(
-            getAllAssetBalances(
-              (balances) => {
-                setAssetsBalance(balances);
-                setAssetDataLoaded(true);
-              },
-              (error) => console.log(error)
-            )
-          );
-        })
+        updateAllAssetInfos(
+          () => {
+            dispatch(
+              getAllAssetBalances(
+                (balances) => {
+                  setAssetsBalance(balances);
+                  setAssetDataLoaded(true);
+                },
+                (error) => console.log(error)
+              )
+            );
+          },
+          (error) => console.log(error)
+        )
       );
     } else {
       setAssetDataLoaded(true);
@@ -72,6 +75,7 @@ const Home: React.FC = () => {
   const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(!wallets[0].pendingTx);
   const wallet = wallets[0];
 
+  // Update Utxos
   useEffect(() => {
     void (async (): Promise<void> => {
       if (isFetchingUtxos) {
@@ -137,13 +141,7 @@ const Home: React.FC = () => {
     isFetchingUtxos ||
     (Object.keys(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded)
   ) {
-    return (
-      <div
-        className="flex items-center justify-center h-screen p-8"
-        id="marina-loader"
-        ref={marinaLoaderRef}
-      />
-    );
+    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   }
 
   // Generate ButtonList

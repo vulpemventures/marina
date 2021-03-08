@@ -1,11 +1,12 @@
 import { browser } from 'webextension-polyfill-ts';
-import { Outpoint, UtxoInterface } from 'ldk';
+import { UtxoInterface } from 'ldk';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { Address } from '../../../domain/wallet/value-objects';
 import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+import { stringify } from '../../../application/utils/browser-storage-converters';
 
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
@@ -62,11 +63,16 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
     await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
   }
 
-  async setUtxos(utxoMap: Map<Outpoint, UtxoInterface>): Promise<void> {
-    const wallet = WalletMap.toDTO(await this.getOrCreateWallet());
-    wallet.utxoMap = utxoMap;
-    await browser.storage.local.set({
-      wallets: [wallet],
-    });
+  async setUtxos(utxoMap: Map<string, UtxoInterface>): Promise<void> {
+    try {
+      const w = await this.getOrCreateWallet();
+      const wallet = WalletMap.toDTO(w);
+      wallet.utxoMap = stringify(utxoMap);
+      await browser.storage.local.set({
+        wallets: [wallet],
+      });
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 }

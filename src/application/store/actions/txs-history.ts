@@ -71,7 +71,7 @@ export function updateTxsHistory(
         identityBlindKeyGetter,
         explorerApiUrl[app.network.value],
         // Check if tx exists in React state
-        (tx) => tx.status.confirmed && txsHistory[app.network.value][tx.txid] !== undefined
+        (tx) => txsHistory[app.network.value][tx.txid] !== undefined
       );
 
       const next = () => txsGen.next();

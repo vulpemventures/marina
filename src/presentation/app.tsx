@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
-import { appReducer, appInitialState } from '../application/store/reducers';
-import { AppContext } from '../application/store/context';
 import Routes from './routes';
-import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
 import { BrowserStorageTxsHistoryRepo } from '../infrastructure/txs-history/browser-storage-txs-history-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
-import { initApp, initTxsHistoryByNetwork, initWallet } from '../application/store/actions';
-import { initAssets } from '../application/store/actions/assets';
+import { appInitialState, appReducer } from '../application/store/reducers';
+import { AppContext } from '../application/store/context';
+import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
+import {
+  initApp,
+  initAssets,
+  initTxsHistoryByNetwork,
+  initWallet,
+} from '../application/store/actions';
 import useLottieLoader from './hooks/use-lottie-loader';
 
 const App: React.FC = () => {
@@ -23,8 +27,8 @@ const App: React.FC = () => {
   const [state, dispatch] = useThunkReducer(appReducer, appInitialState, repos);
 
   // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  const mermaidLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     void (async (): Promise<void> => {
@@ -47,16 +51,11 @@ const App: React.FC = () => {
         }
       }
     })();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!fetchedFromRepo) {
-    return (
-      <div
-        className="flex items-center justify-center h-screen p-8"
-        id="marina-loader"
-        ref={marinaLoaderRef}
-      />
-    );
+    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   }
 
   return (

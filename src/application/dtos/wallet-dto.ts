@@ -1,5 +1,4 @@
 import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
-import { Outpoint, UtxoInterface } from 'ldk';
 
 export interface WalletDTO {
   confidentialAddresses: [address: string, derivationPath?: string][];
@@ -8,6 +7,6 @@ export interface WalletDTO {
   masterBlindingKey: string;
   passwordHash: string;
   pendingTx?: TransactionProps;
-  utxoMap: Map<Outpoint, UtxoInterface>;
+  utxoMap: string;
   walletId: string;
 }

@@ -12,7 +12,11 @@ import {
   testAssetsUpdated2,
   testAssetsUpdated3,
 } from '../../__test__/fixtures/test-assets';
-import { testTxsHistory, testTxsHistoryUpdated1 } from '../../__test__/fixtures/test-txs-history';
+import {
+  testTxsHistoryByNetwork,
+  testTxsHistoryByNetworkDTO,
+  testTxsHistoryUpdated1,
+} from '../../__test__/fixtures/test-txs-history';
 import { testWallet, testWalletDTO, testWalletProps } from '../../__test__/fixtures/test-wallet';
 import { assetInitState } from '../application/store/reducers/asset-reducer';
 import { txsHistoryInitState } from '../application/store/reducers/txs-history-reducer';
@@ -144,16 +148,22 @@ describe('Repositories', () => {
       mockBrowser.storage.local.set
         .expect({
           txsHistory: {
-            regtest: BrowserStorageTxsHistoryRepo.serializeTxsHistory(testTxsHistory.regtest),
-            liquid: BrowserStorageTxsHistoryRepo.serializeTxsHistory(testTxsHistory.liquid),
+            regtest: BrowserStorageTxsHistoryRepo.serializeTxsHistory(
+              testTxsHistoryByNetwork.regtest
+            ),
+            liquid: BrowserStorageTxsHistoryRepo.serializeTxsHistory(
+              testTxsHistoryByNetwork.liquid
+            ),
           },
         })
         .andResolve();
-      return expect(repos.txsHistory.init(testTxsHistory)).resolves.toBeUndefined();
+      return expect(repos.txsHistory.init(testTxsHistoryByNetwork)).resolves.toBeUndefined();
     });
 
     test('Should retrieve txsHistoryInitState from repo', () => {
-      mockBrowser.storage.local.get.expect('txsHistory').andResolve({ txsHistory: testTxsHistory });
+      mockBrowser.storage.local.get
+        .expect('txsHistory')
+        .andResolve({ txsHistory: testTxsHistoryByNetworkDTO });
       return expect(repos.txsHistory.getTxsHistoryByNetwork()).resolves.toStrictEqual(
         txsHistoryInitState
       );
@@ -172,7 +182,9 @@ describe('Repositories', () => {
         vin: [],
         vout: [],
       };
-      mockBrowser.storage.local.get.expect('txsHistory').andResolve({ txsHistory: testTxsHistory });
+      mockBrowser.storage.local.get
+        .expect('txsHistory')
+        .andResolve({ txsHistory: testTxsHistoryByNetworkDTO });
       mockBrowser.storage.local.set
         .expect({
           txsHistory: {
@@ -200,14 +212,20 @@ describe('Repositories', () => {
       mockBrowser.storage.local.set
         .expect({
           txsHistory: {
-            regtest: BrowserStorageTxsHistoryRepo.serializeTxsHistory(testTxsHistory.regtest),
-            liquid: BrowserStorageTxsHistoryRepo.serializeTxsHistory(testTxsHistory.liquid),
+            regtest: BrowserStorageTxsHistoryRepo.serializeTxsHistory(
+              testTxsHistoryByNetwork.regtest
+            ),
+            liquid: BrowserStorageTxsHistoryRepo.serializeTxsHistory(
+              testTxsHistoryByNetwork.liquid
+            ),
           },
         })
         .andResolve();
-      await repos.txsHistory.init(testTxsHistory);
+      await repos.txsHistory.init(testTxsHistoryByNetwork);
       // Add txs history
-      mockBrowser.storage.local.get.expect('txsHistory').andResolve({ txsHistory: testTxsHistory });
+      mockBrowser.storage.local.get
+        .expect('txsHistory')
+        .andResolve({ txsHistory: testTxsHistoryByNetworkDTO });
       mockBrowser.storage.local.set
         .expect({
           txsHistory: {
