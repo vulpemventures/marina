@@ -7,22 +7,25 @@ import Input from '../components/input';
 import { DispatchOrThunk } from '../../domain/common';
 import { AppContext } from '../../application/store/context';
 import Button from '../components/button';
+import { esploraURL } from '../utils';
+import { Network } from '../../domain/app/value-objects';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;
+  network: Network['value'];
 }
 
 interface SettingsExplorerFormProps {
   dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
+  network: Network['value'];
 }
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
-  const { handleSubmit, setFieldValue, submitForm, errors } = props;
+  const { handleSubmit, setFieldValue, submitForm, errors, values } = props;
 
-  const defaultExplorer = 'https://blockstream.info/liquid';
   const handleUseDefault = async () => {
-    setFieldValue('explorerUrl', defaultExplorer, false);
+    setFieldValue('explorerUrl', esploraURL[values.network], false);
     // Hack to wait for new value to be applied
     // https://github.com/formium/formik/issues/529
     await Promise.resolve();
@@ -60,7 +63,8 @@ const SettingsExplorerEnhancedForm = withFormik<
   SettingsExplorerFormProps,
   SettingsExplorerFormValues
 >({
-  mapPropsToValues: (): SettingsExplorerFormValues => ({
+  mapPropsToValues: (props): SettingsExplorerFormValues => ({
+    network: props.network,
     explorerUrl: '',
   }),
 
@@ -78,7 +82,7 @@ const SettingsExplorerEnhancedForm = withFormik<
 
 const SettingsExplorer: React.FC = () => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const [{ app }, dispatch] = useContext(AppContext);
 
   return (
     <ShellPopUp
@@ -86,7 +90,11 @@ const SettingsExplorer: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Explorer"
     >
-      <SettingsExplorerEnhancedForm dispatch={dispatch} history={history} />
+      <SettingsExplorerEnhancedForm
+        dispatch={dispatch}
+        history={history}
+        network={app.network.value}
+      />
     </ShellPopUp>
   );
 };

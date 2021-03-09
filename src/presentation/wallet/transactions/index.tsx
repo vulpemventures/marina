@@ -16,7 +16,7 @@ import {
 } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
 import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
-import { fromSatoshiStr } from '../../utils';
+import { esploraURL, fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
 
 interface LocationState {
@@ -162,7 +162,7 @@ const Transactions: React.FC = () => {
           </div>
         </div>
         <a
-          href={`https://blockstream.info/liquid/tx/${modalTxDetails?.txId}`}
+          href={`${esploraURL[app.network.value]}/tx/${modalTxDetails?.txId}`}
           target="_blank"
           rel="noreferrer"
         >
