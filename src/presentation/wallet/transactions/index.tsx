@@ -10,9 +10,9 @@ import Modal from '../../components/modal';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
 import {
-  getAllAssetBalances,
   setAsset,
   updateTxsHistory,
+  updateUtxosAssetsBalances,
 } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
 import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
@@ -60,12 +60,7 @@ const Transactions: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (balances) => setAssetsBalance(balances),
-        (error) => console.log(error)
-      )
-    );
+    dispatch(updateUtxosAssetsBalances(setAssetsBalance, console.log));
     dispatch(
       updateTxsHistory(
         (txs) => setTxsHistory(txs),

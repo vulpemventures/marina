@@ -34,8 +34,8 @@ export function updateTxsHistory(
   return async (dispatch, getState, repos) => {
     try {
       const { app, txsHistory, wallets } = getState();
-      // Initialize with txsHistory state if any
-      const txs: TxsHistory = txsHistory[app.network.value] ?? {};
+      // Initialize txs to txsHistory shallow clone
+      const txs: TxsHistory = { ...txsHistory[app.network.value] } ?? {};
       const { confidentialAddresses, masterBlindingKey, masterXPub } = wallets[0];
       const addresses = confidentialAddresses.map((addr) => addr.value);
       const restorer = new IdentityRestorerFromState(addresses);

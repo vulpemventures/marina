@@ -195,15 +195,26 @@ export const extractInfoFromRawTxData = (
   vin.forEach((item) => {
     if (!isBlindedOutputInterface(item.prevout)) {
       if (item.prevout.asset && item.prevout.script && assets.has(item.prevout.asset)) {
-        assets.add(item.prevout.asset);
-        type = 'receive';
-        asset = item.prevout.asset;
-        address = addressLDK.fromOutputScript(
-          Buffer.from(item.prevout.script, 'hex'),
-          networks[network]
-        );
-        // Sum all inputs values
-        vinTotalAmount = vinTotalAmount ? vinTotalAmount + item.prevout.value : item.prevout.value;
+        try {
+          assets.add(item.prevout.asset);
+          type = 'receive';
+          asset = item.prevout.asset;
+          address = addressLDK.fromOutputScript(
+            Buffer.from(item.prevout.script, 'hex'),
+            networks[network]
+          );
+          // Sum all inputs values
+          vinTotalAmount = vinTotalAmount
+            ? vinTotalAmount + item.prevout.value
+            : item.prevout.value;
+        } catch (error) {
+          console.log(error);
+          console.log('vin outpoint:', `${item.txid}:${item.vout}`);
+          console.log('prevout asset:', item.prevout.asset);
+          console.log('prevout value:', item.prevout.value);
+          console.log('prevout script:', item.prevout.script);
+          // Nigiri coinbase invalid prevout.script '51' will be catch here
+        }
       }
     }
   });

@@ -26,7 +26,7 @@ export function getAllAssetBalances(
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
-    const { wallets } = getState();
+    const { app, wallets } = getState();
     const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
         dispatch([ASSET_GET_ALL_ASSET_BALANCES_FAILURE]);
@@ -41,9 +41,15 @@ export function getAllAssetBalances(
       acc = { ...acc, [curr.asset]: value };
       return acc;
     }, {} as { [assetHash: string]: number });
+
+    if (Object.keys(balances).length === 0) {
+      const lbtcHash = lbtcAssetByNetwork(app.network.value);
+      onSuccess({ [lbtcHash]: 0 });
+    } else {
+      onSuccess(balances);
+    }
     // Dispatch event simply for debugging. No balance state is kept outside utxos
     dispatch([ASSET_GET_ALL_ASSET_BALANCES_SUCCESS]);
-    onSuccess(balances);
   };
 }
 
