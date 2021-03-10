@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
@@ -28,7 +28,6 @@ const Transactions: React.FC = () => {
   const { confidentialAddresses } = wallets[0];
   const { state } = useLocation<LocationState>();
 
-  const listButtonTransaction = useRef<JSX.Element[]>([]);
   const [txsByAssets, setTxsByAssets] = useState<{ [x: string]: TxDisplayInterface[] }>({});
   const assetImgPath =
     app.network.value === 'regtest'
@@ -99,23 +98,26 @@ const Transactions: React.FC = () => {
   /**
    * Generate transaction list for current asset
    * Will render new button tx as soon as data is ready
+   * @returns Memoized callback
    */
-  useEffect(() => {
-    listButtonTransaction.current = txsByAssets[state.assetHash]
-      // Descending order
-      ?.sort((a, b) => b.blockTime - a.blockTime)
-      .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
-        <ButtonTransaction
-          amount={fromSatoshiStr(amount)}
-          assetTicker={state.assetTicker}
-          key={`${state.assetTicker}_${index}`}
-          handleClick={openTxDetailsModal}
-          toSelf={toSelf}
-          txDate={dateContracted}
-          txId={txId}
-          txType={type}
-        />
-      ));
+  const listButtonTransactionCb = useCallback(() => {
+    return (
+      txsByAssets[state.assetHash]
+        // Descending order
+        ?.sort((a, b) => b.blockTime - a.blockTime)
+        .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
+          <ButtonTransaction
+            amount={fromSatoshiStr(amount)}
+            assetTicker={state.assetTicker}
+            key={`${state.assetTicker}_${index}`}
+            handleClick={openTxDetailsModal}
+            toSelf={toSelf}
+            txDate={dateContracted}
+            txId={txId}
+            txType={type}
+          />
+        ))
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.assetHash, state.assetTicker, txsByAssets]);
 
@@ -140,7 +142,7 @@ const Transactions: React.FC = () => {
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
       <ButtonList title="Transactions" type="transactions">
-        {listButtonTransaction.current}
+        {listButtonTransactionCb()}
       </ButtonList>
 
       <Modal isOpen={isTxDetailsModalOpen} onClose={closeTxDetailsModal}>
