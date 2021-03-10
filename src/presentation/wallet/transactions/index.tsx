@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
@@ -9,31 +10,30 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
-import {
-  setAsset,
-  updateTxsHistory,
-  updateUtxosAssetsBalances,
-} from '../../../application/store/actions';
+import { setAsset, updateTxsHistory } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
 import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
-import { esploraURL, fromSatoshiStr } from '../../utils';
-import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
+import { esploraURL, fromSatoshi, fromSatoshiStr } from '../../utils';
+import { TxDisplayInterface } from '../../../domain/transaction';
 
 interface LocationState {
+  assetsBalance: { [hash: string]: number };
   assetHash: string;
   assetTicker: string;
 }
 
 const Transactions: React.FC = () => {
   const history = useHistory();
-  const [{ app, wallets }, dispatch] = useContext(AppContext);
+  const [{ app, txsHistory, wallets }, dispatch] = useContext(AppContext);
   const { confidentialAddresses } = wallets[0];
   const { state } = useLocation<LocationState>();
 
-  let listButtonTransaction;
+  const listButtonTransaction = useRef<JSX.Element[]>([]);
   const [txsByAssets, setTxsByAssets] = useState<{ [x: string]: TxDisplayInterface[] }>({});
-  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
-  const [txsHistory, setTxsHistory] = useState<TxsHistory>({});
+  const assetImgPath =
+    app.network.value === 'regtest'
+      ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
+      : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
 
   // TxDetails Modal
   const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
@@ -41,7 +41,7 @@ const Transactions: React.FC = () => {
   const openTxDetailsModal = (txId: string) => {
     showTxDetailsModal(true);
     const txsByTxId = getTxsDetails(
-      Object.values(txsHistory),
+      Object.values(txsHistory[app.network.value]),
       app.network.value,
       confidentialAddresses
     ).byTxId;
@@ -59,35 +59,56 @@ const Transactions: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
+  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  const handleOpenExplorer = () =>
+    browser.tabs.create({
+      url: `${esploraURL[app.network.value]}/tx/${modalTxDetails?.txId}`,
+      active: false,
+    });
+
+  /**
+   * Update txs history once at first render
+   */
   useEffect(() => {
-    dispatch(updateUtxosAssetsBalances(setAssetsBalance, console.log));
-    dispatch(
-      updateTxsHistory(
-        (txs) => setTxsHistory(txs),
-        (error) => console.log(error)
-      )
-    );
+    dispatch(updateTxsHistory());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Prepare txs data sorted by assets
+   * Effect triggered each time TXS_HISTORY_SET_TXS_SUCCESS is dispatched
+   */
   useEffect(() => {
     setTxsByAssets(
-      getTxsDetails(Object.values(txsHistory), app.network.value, confidentialAddresses).byAsset
+      getTxsDetails(
+        Object.values(txsHistory[app.network.value]),
+        app.network.value,
+        confidentialAddresses
+      ).byAsset
     );
   }, [app.network.value, confidentialAddresses, txsHistory]);
 
-  // Generate transaction list for current asset
-  if (Object.keys(txsHistory).length && Object.keys(txsByAssets).length && state.assetHash) {
-    listButtonTransaction = txsByAssets[state.assetHash]
-      ?.sort(function (a, b) {
-        // Descending order
-        return b.blockTime - a.blockTime;
-      })
+  /**
+   * Log errors if any
+   */
+  useEffect(() => {
+    if (txsHistory.errors && txsHistory.errors.message.length > 0)
+      console.error(txsHistory.errors?.message);
+  }, [txsHistory.errors]);
+
+  /**
+   * Generate transaction list for current asset
+   * Will render new button tx as soon as data is ready
+   */
+  useEffect(() => {
+    listButtonTransaction.current = txsByAssets[state.assetHash]
+      // Descending order
+      ?.sort((a, b) => b.blockTime - a.blockTime)
       .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
         <ButtonTransaction
           amount={fromSatoshiStr(amount)}
           assetTicker={state.assetTicker}
-          key={`${state.assetTicker} + ${index}`}
+          key={`${state.assetTicker}_${index}`}
           handleClick={openTxDetailsModal}
           toSelf={toSelf}
           txDate={dateContracted}
@@ -95,13 +116,8 @@ const Transactions: React.FC = () => {
           txType={type}
         />
       ));
-  }
-
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
-  const assetImgPath =
-    app.network.value === 'regtest'
-      ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
-      : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.assetHash, state.assetTicker, txsByAssets]);
 
   return (
     <ShellPopUp
@@ -111,7 +127,7 @@ const Transactions: React.FC = () => {
       currentPage="Transactions"
     >
       <Balance
-        assetBalance={(assetsBalance[state.assetHash] ?? 0) / Math.pow(10, 8)}
+        assetBalance={fromSatoshi(state.assetsBalance[state.assetHash] ?? 0)}
         assetImgPath={assetImgPath}
         assetTicker={state.assetTicker}
         bigBalanceText={true}
@@ -124,7 +140,7 @@ const Transactions: React.FC = () => {
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
       <ButtonList title="Transactions" type="transactions">
-        {listButtonTransaction}
+        {listButtonTransaction.current}
       </ButtonList>
 
       <Modal isOpen={isTxDetailsModalOpen} onClose={closeTxDetailsModal}>
@@ -161,13 +177,9 @@ const Transactions: React.FC = () => {
             <p className="wrap text-xs font-light break-all">{modalTxDetails?.txId}</p>
           </div>
         </div>
-        <a
-          href={`${esploraURL[app.network.value]}/tx/${modalTxDetails?.txId}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Button className="w-full">See in Explorer</Button>
-        </a>
+        <Button className="w-full" onClick={handleOpenExplorer}>
+          See in Explorer
+        </Button>
       </Modal>
 
       <ModalConfirm

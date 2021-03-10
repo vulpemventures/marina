@@ -17,14 +17,17 @@ import {
   nextAddressForWallet,
 } from '../../../application/utils';
 import { Address } from '../../../domain/wallet/value-objects';
+import { fromSatoshi } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
   amount: number;
   assetTicker: string;
+  balances: { [assetHash: string]: number };
 }
 
 interface AddressAmountFormProps {
+  balances: { [assetHash: string]: number };
   dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
   state: IAppState;
@@ -122,6 +125,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     assetTicker:
       props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
       '',
+    balances: props.balances,
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
@@ -138,18 +142,13 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       amount: Yup.number()
         .required('Please enter a valid amount')
         .min(0.00000001, 'Amount should be at least 1 satoshi')
+        .test('too-many-digits', 'Too many digits', (value) => {
+          return value !== undefined && value.toString().length < 14;
+        })
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return (
             value !== undefined &&
-            new Promise((resolve, reject) => {
-              props.dispatch(
-                getAllAssetBalances(
-                  (balances) =>
-                    resolve(value <= balances[props.state.transaction.asset] / Math.pow(10, 8)),
-                  () => reject('Something went wrong')
-                )
-              );
-            })
+            value <= fromSatoshi(props.balances[props.state.transaction.asset])
           );
         }),
     }),
@@ -170,7 +169,6 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     );
     props.history.push(SEND_CHOOSE_FEE_ROUTE);
   },
-
   displayName: 'AddressAmountForm',
 })(AddressAmountForm);
 
@@ -188,12 +186,7 @@ const AddressAmount: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (b) => setBalances(b),
-        (error) => console.log(error)
-      )
-    );
+    dispatch(getAllAssetBalances(setBalances, console.log));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -205,7 +198,7 @@ const AddressAmount: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={(balances[state.transaction.asset] ?? 0) / Math.pow(10, 8)}
+        assetBalance={fromSatoshi(balances[state.transaction.asset] ?? 0)}
         assetImgPath={
           state.app.network.value === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
@@ -217,7 +210,12 @@ const AddressAmount: React.FC = () => {
         fiatCurrency="$"
       />
 
-      <AddressAmountEnhancedForm dispatch={dispatch} history={history} state={state} />
+      <AddressAmountEnhancedForm
+        dispatch={dispatch}
+        history={history}
+        state={state}
+        balances={balances}
+      />
     </ShellPopUp>
   );
 };

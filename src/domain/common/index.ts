@@ -19,8 +19,8 @@ export interface IAppState {
 }
 
 export interface IError {
-  message?: string;
-  stack?: string;
+  message: string;
+  stack: string;
 }
 
 // State Management

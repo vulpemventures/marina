@@ -18,8 +18,7 @@ export abstract class Entity<T> {
   }
 
   public equals(object?: Entity<T>): boolean {
-    // eslint-disable-next-line eqeqeq
-    if (object == null || object == undefined) {
+    if (object === null) {
       return false;
     }
 

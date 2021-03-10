@@ -8,13 +8,13 @@ interface ValueObjectProps {
  */
 
 export abstract class ValueObject<T extends ValueObjectProps> {
+  // TODO: make props private? Confusing redundancy
   public props: T;
 
-  constructor(props: T) {
-    const baseProps: T = {
+  protected constructor(props: T) {
+    this.props = {
       ...props,
     };
-    this.props = baseProps;
   }
 
   public equals(vo?: ValueObject<T>): boolean {

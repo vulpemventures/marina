@@ -220,9 +220,7 @@ export function setPendingTx(
           'Pending tx already exists, either confirm or reject it before creating a new one'
         );
       }
-
       await repos.wallet.setPendingTx(tx);
-
       dispatch([WALLET_SET_PENDING_TX_SUCCESS, { pendingTx: tx }]);
       onSuccess();
     } catch (error) {
@@ -246,9 +244,7 @@ export function unsetPendingTx(
       if (!wallet.pendingTx) {
         return;
       }
-
       await repos.wallet.setPendingTx();
-
       dispatch([WALLET_UNSET_PENDING_TX_SUCCESS]);
       onSuccess();
     } catch (error) {

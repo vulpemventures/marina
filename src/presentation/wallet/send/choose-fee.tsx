@@ -95,8 +95,11 @@ const ChooseFee: React.FC = () => {
           const taxiAssets: string[] = await fetchAssetsFromTaxi(taxiURL[app.network.value]);
           allAssets = allAssets.concat(taxiAssets);
         } catch (error) {
-          console.log(error);
-          setErrorMessage(error.message);
+          let msg = error.message;
+          if (error.code === 2) {
+            msg = 'Taxi is not available';
+          }
+          setErrorMessage(msg);
         } finally {
           setSupportedAssets(allAssets);
           setFeeLevel('50');
@@ -178,7 +181,6 @@ const ChooseFee: React.FC = () => {
                 true,
                 currentSatsPerByte
               );
-              console.log('setUnsignedPendingTx tx', tx);
               setUnsignedPendingTx(tx);
               setSatsPerByte(currentSatsPerByte);
             }
@@ -403,7 +405,7 @@ const ChooseFee: React.FC = () => {
             {unsignedPendingTx ? (
               <span className="mt-3">{`Fee: ${feeAmountFromTx(unsignedPendingTx)} L-BTC`}</span>
             ) : errorMessage.length ? (
-              <p className="text-red text-xs text-left">{errorMessage}</p>
+              <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
             ) : (
               <div className="h-10 mx-auto" ref={circleLoaderRef} />
             )}
@@ -419,7 +421,7 @@ const ChooseFee: React.FC = () => {
               {transaction.taxiTopup?.topup ? (
                 `${fromSatoshiStr(transaction.taxiTopup.topup.assetAmount)} USDt *`
               ) : errorMessage.length ? (
-                <p className="text-red text-xs text-left">{errorMessage}</p>
+                <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
               ) : (
                 <div className="h-10 mx-auto" ref={circleLoaderRef} />
               )}

@@ -58,7 +58,6 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
     if (tx && wallet.pendingTx) {
       throw new Error('wallet already has a pending tx');
     }
-
     wallet.props.pendingTx = tx;
     await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
   }

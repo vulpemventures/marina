@@ -27,7 +27,7 @@ export const txsHistoryReducer = (state: TxsHistory, [type, payload]: [string, a
     case ACTION_TYPES.TXS_HISTORY_UPDATE_FAILURE: {
       return {
         ...state,
-        errors: { txsHistory: { message: payload.error.message } as IError },
+        errors: { message: payload.error.message } as IError,
       };
     }
 

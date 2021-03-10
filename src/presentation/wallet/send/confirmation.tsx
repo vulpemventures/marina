@@ -16,7 +16,7 @@ const Confirmation: React.FC = () => {
     return <></>;
   }
 
-  const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx.props;
+  const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx;
 
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
 
@@ -31,10 +31,11 @@ const Confirmation: React.FC = () => {
         className="w-11 mt-0.5 block mx-auto mb-2"
         src={
           app.network.value === 'regtest'
-            ? imgPathMapRegtest[assets[app.network.value][sendAsset].ticker]
-            : imgPathMapMainnet[sendAsset]
+            ? imgPathMapRegtest[assets[app.network.value][sendAsset].ticker] ??
+              imgPathMapRegtest['']
+            : imgPathMapMainnet[sendAsset] ?? imgPathMapMainnet['']
         }
-        alt="liquid bitcoin logo"
+        alt="liquid asset logo"
       />
 
       <div className="px-3 mt-3">

@@ -35,7 +35,11 @@ const Home: React.FC = () => {
     const { assetHash, assetTicker } = asset;
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash, assetTicker },
+      state: {
+        assetsBalance,
+        assetHash,
+        assetTicker,
+      },
     });
   };
 
