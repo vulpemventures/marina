@@ -23,6 +23,7 @@ import {
   imgPathMapRegtest,
   lbtcAssetByNetwork,
 } from '../../../application/utils';
+import { waitAtLeast } from '../../../application/utils/common';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -57,7 +58,21 @@ const Home: React.FC = () => {
       dispatch(createDevState());
     }
     // Update utxos set, owned assets and balances
-    dispatch(updateUtxosAssetsBalances(setAssetsBalance, console.log));
+    // Wait at least 800ms to avoid flickering
+    waitAtLeast(
+      800,
+      new Promise((resolve, reject) => {
+        dispatch(
+          updateUtxosAssetsBalances(
+            (balances) => resolve(balances),
+            (error) => reject(error.message)
+          )
+        );
+      })
+    )
+      .then(setAssetsBalance)
+      .catch(console.error);
+
     // Flush last sent tx
     if (transaction.asset !== '') {
       dispatch(flush());
