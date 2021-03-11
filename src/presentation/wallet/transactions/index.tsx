@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
@@ -27,8 +27,6 @@ const Transactions: React.FC = () => {
   const [{ app, txsHistory, wallets }, dispatch] = useContext(AppContext);
   const { confidentialAddresses } = wallets[0];
   const { state } = useLocation<LocationState>();
-
-  const [txsByAssets, setTxsByAssets] = useState<{ [x: string]: TxDisplayInterface[] }>({});
   const assetImgPath =
     app.network.value === 'regtest'
       ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
@@ -37,15 +35,6 @@ const Transactions: React.FC = () => {
   // TxDetails Modal
   const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
   const [modalTxDetails, setmodalTxDetails] = useState<TxDisplayInterface>();
-  const openTxDetailsModal = (txId: string) => {
-    showTxDetailsModal(true);
-    const txsByTxId = getTxsDetails(
-      Object.values(txsHistory[app.network.value]),
-      app.network.value,
-      confidentialAddresses
-    ).byTxId;
-    setmodalTxDetails(txsByTxId[txId]);
-  };
   const closeTxDetailsModal = () => showTxDetailsModal(false);
 
   // Save mnemonic modal
@@ -74,18 +63,6 @@ const Transactions: React.FC = () => {
   }, []);
 
   /**
-   * Prepare txs data sorted by assets
-   * Effect triggered each time TXS_HISTORY_SET_TXS_SUCCESS is dispatched
-   */
-  useEffect(() => {
-    setTxsByAssets(
-      getTxsDetails(
-        Object.values(txsHistory[app.network.value]),
-        app.network.value,
-        confidentialAddresses
-      ).byAsset
-    );
-  }, [app.network.value, confidentialAddresses, txsHistory]);
 
   /**
    * Log errors if any
@@ -98,9 +75,26 @@ const Transactions: React.FC = () => {
   /**
    * Generate transaction list for current asset
    * Will render new button tx as soon as data is ready
-   * @returns Memoized callback
+   * @returns Memoized widgets
    */
-  const listButtonTransactionCb = useCallback(() => {
+  const buttonTransactions = useMemo(() => {
+    //
+    const openTxDetailsModal = (txId: string) => {
+      showTxDetailsModal(true);
+      const txsByTxId = getTxsDetails(
+        Object.values(txsHistory[app.network.value]),
+        app.network.value,
+        confidentialAddresses
+      ).byTxId;
+      setmodalTxDetails(txsByTxId[txId]);
+    };
+    //
+    const txsByAssets = getTxsDetails(
+      Object.values(txsHistory[app.network.value]),
+      app.network.value,
+      confidentialAddresses
+    ).byAsset;
+    //
     return (
       txsByAssets[state.assetHash]
         // Descending order
@@ -118,8 +112,7 @@ const Transactions: React.FC = () => {
           />
         ))
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.assetHash, state.assetTicker, txsByAssets]);
+  }, [app.network.value, confidentialAddresses, state.assetHash, state.assetTicker, txsHistory]);
 
   return (
     <ShellPopUp
@@ -142,7 +135,7 @@ const Transactions: React.FC = () => {
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
       <ButtonList title="Transactions" type="transactions">
-        {listButtonTransactionCb()}
+        {buttonTransactions}
       </ButtonList>
 
       <Modal isOpen={isTxDetailsModalOpen} onClose={closeTxDetailsModal}>
