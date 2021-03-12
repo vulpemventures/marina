@@ -1,12 +1,48 @@
+import { AddressInterface, networks } from "ldk";
+import { AppDTO } from './dtos/app-dto';
+
 interface LiquidProvider {
   foo(): string;
+  //currentNetwork(): Promise<'liquid' | 'regtest'>;
+
+  /* enable(): Promise<void>;
+  disable(): Promise<void>;
+  isEnabled(): Promise<boolean>;
+
+  getAddresses(): AddressInterface[];
+  getNextAddress(): AddressInterface;
+  getNextChangeAddress(): AddressInterface;
+
+  sendTransaction(recipientAddress: string, amountInSatoshis: number, assetHash: string): Promise<string>;
+  signTransaction(psetBase64: string): Promise<string>;
+ */
 };
 
+
+function handleResponse(message: any) {
+  console.log(`Message from the background script:  ${message.response}`);
+}
+
+function handleError(error: Error) {
+  console.log(`Error: ${error}`);
+}
+
+
+// look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 if (shouldInjectProvider()) {
   injectScript(
     '(' +
     function () {
-      const marina: LiquidProvider = { foo: () => "bar" };
+      const marina: LiquidProvider = {
+        foo: () => "bar"
+        /* currentNetwork: () => new Promise((resolve, reject) => {
+          browser.storage.local.get('app')
+            .then(({ app }) => {
+              resolve((app as AppDTO).network);
+            })
+            .catch(reject);
+        }) */
+      };
 
       (window as Record<string, any>).marina = marina;
       window.dispatchEvent(new Event('marina#initialized'));
@@ -14,6 +50,7 @@ if (shouldInjectProvider()) {
     + ')();'
   );
 };
+
 
 /**
  * Determines if the provider should be injected
@@ -27,6 +64,7 @@ function shouldInjectProvider() {
     documentElementCheck()
   );
 }
+
 
 /**
  * Injects a script tag into the current document
