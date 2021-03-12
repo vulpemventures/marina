@@ -18,8 +18,17 @@ export interface LiquidProvider {
 
 
 export default class Marina {
+  private port: any;
   foo() {
     return "bar";
+  }
+
+  setPort(port: any) {
+    this.port = port;
+  }
+
+  hello() {
+    (window as Record<string, any>).marinaPort.postMessage({ success: true, data: "hello world", name: "hello" })
   }
 }
 

@@ -19,11 +19,9 @@ function shouldInjectProvider() {
   );
 }
 
+
 function injectPort() {
-  (window as Record<string, any>).marinaPort = browser.runtime.connect();
-  (window as Record<string, any>).marinaPort.onMessage.addListener(function (response: { name: string, success: boolean, data: any }) {
-    console.log(response.success);
-  });
+  const extensionPort = browser.runtime.connect("CONTENT_SCRIPT");
 }
 
 /**
