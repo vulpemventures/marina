@@ -20,7 +20,14 @@ export function updateUtxosAssetsBalances(
   onError?: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState) => {
-    const { app, wallets } = getState();
+    const { app, assets, wallets } = getState();
+    // Return early with empty balances if no addresses
+    if (!wallets[0].confidentialAddresses.length) {
+      return onSuccess?.(
+        Object.keys(assets[app.network.value]).map((asset) => ({ [asset]: 0 }))[0]
+      );
+    }
+    //
     const w = await xpubWalletFromAddresses(
       wallets[0].masterXPub.value,
       wallets[0].masterBlindingKey.value,

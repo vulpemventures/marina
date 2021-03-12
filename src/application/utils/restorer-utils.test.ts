@@ -9,6 +9,41 @@ describe('Restorer Utils', () => {
     MasterPublicKey.INITIAL_INDEX = 0;
   });
 
+  test('Should produce correct derivation paths', async () => {
+    const a = await nextAddressForWallet(testWalletProps, 'regtest', false);
+    expect(a.derivationPath).toStrictEqual("m/84'/0'/0'/0/0");
+    const b = await nextAddressForWallet(
+      { ...testWalletProps, confidentialAddresses: [a] },
+      'regtest',
+      false
+    );
+    expect(b.derivationPath).toStrictEqual("m/84'/0'/0'/0/1");
+    const c = await nextAddressForWallet(
+      { ...testWalletProps, confidentialAddresses: [a, b] },
+      'regtest',
+      false
+    );
+    expect(c.derivationPath).toStrictEqual("m/84'/0'/0'/0/2");
+    const d = await nextAddressForWallet(
+      { ...testWalletProps, confidentialAddresses: [a, b, c] },
+      'regtest',
+      true
+    );
+    expect(d.derivationPath).toStrictEqual("m/84'/0'/0'/1/0");
+    const e = await nextAddressForWallet(
+      { ...testWalletProps, confidentialAddresses: [a, b, c, d] },
+      'regtest',
+      true
+    );
+    expect(e.derivationPath).toStrictEqual("m/84'/0'/0'/1/1");
+    const f = await nextAddressForWallet(
+      { ...testWalletProps, confidentialAddresses: [a, b, c, d, e] },
+      'regtest',
+      false
+    );
+    expect(f.derivationPath).toStrictEqual("m/84'/0'/0'/0/3");
+  });
+
   test('Should produce correct non-change addresses', async () => {
     const received = [];
 

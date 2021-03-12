@@ -1,7 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
-import { deriveNewAddress, flush, unsetPendingTx } from '../../../application/store/actions';
+import {
+  deriveNewAddress,
+  flush,
+  setAddress,
+  unsetPendingTx,
+} from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
 import { Password } from '../../../domain/wallet/value-objects';
 import Button from '../../components/button';
@@ -86,19 +91,22 @@ const EndOfFlow: React.FC = () => {
           };
 
           // persist change addresses before unsetting the pending tx
-          dispatch(
-            deriveNewAddress(
-              true,
-              () => {
-                if (feeAsset !== sendAsset) {
-                  dispatch(deriveNewAddress(true, onSuccess, onError));
-                } else {
-                  onSuccess();
-                }
-              },
-              onError
-            )
-          );
+          if (wallet.pendingTx?.changeAddress) {
+            dispatch(
+              setAddress(
+                wallet.pendingTx.changeAddress,
+                () => {
+                  //
+                  if (feeAsset !== sendAsset) {
+                    dispatch(deriveNewAddress(true, onSuccess, onError));
+                  } else {
+                    onSuccess();
+                  }
+                },
+                console.log
+              )
+            );
+          }
         } catch (error) {
           setState({ ...state, isLoading: false, error });
         }

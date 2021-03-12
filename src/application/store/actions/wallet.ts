@@ -16,6 +16,8 @@ import {
   WALLET_DERIVE_ADDRESS_SUCCESS,
   WALLET_RESTORE_FAILURE,
   WALLET_RESTORE_SUCCESS,
+  WALLET_SET_ADDRESS_FAILURE,
+  WALLET_SET_ADDRESS_SUCCESS,
   WALLET_SET_PENDING_TX_FAILURE,
   WALLET_SET_PENDING_TX_SUCCESS,
   WALLET_SET_UTXOS_FAILURE,
@@ -179,7 +181,7 @@ export function restoreWallet(
 
 export function deriveNewAddress(
   change: boolean,
-  onSuccess: (confidentialAddress: string) => void,
+  onSuccess: (address: Address) => void,
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
@@ -192,13 +194,30 @@ export function deriveNewAddress(
       const addr = await nextAddressForWallet(wallets[0], app.network.value, change);
       const address = Address.create(addr.value, addr.derivationPath);
       await repos.wallet.addDerivedAddress(address);
-
       // Update React state
       dispatch([WALLET_DERIVE_ADDRESS_SUCCESS, { address }]);
-      onSuccess(address.value);
+      onSuccess(address);
     } catch (error) {
       dispatch([WALLET_DERIVE_ADDRESS_FAILURE, { error }]);
       onError(error);
+    }
+  };
+}
+
+export function setAddress(
+  address: Address,
+  onSuccess?: (address: Address) => void,
+  onError?: (error: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, _, repos) => {
+    try {
+      // TODO: rename to addAddress()
+      await repos.wallet.addDerivedAddress(address);
+      dispatch([WALLET_SET_ADDRESS_SUCCESS, { address }]);
+      onSuccess?.(address);
+    } catch (error) {
+      dispatch([WALLET_SET_ADDRESS_FAILURE, { error }]);
+      onError?.(error);
     }
   };
 }
@@ -213,13 +232,7 @@ export function setPendingTx(
     if (wallets.length <= 0) {
       throw new Error('Wallet does not exist');
     }
-    const wallet = wallets[0];
     try {
-      if (wallet.pendingTx) {
-        throw new Error(
-          'Pending tx already exists, either confirm or reject it before creating a new one'
-        );
-      }
       await repos.wallet.setPendingTx(tx);
       dispatch([WALLET_SET_PENDING_TX_SUCCESS, { pendingTx: tx }]);
       onSuccess();

@@ -7,7 +7,6 @@ import {
   unsetPendingTx,
 } from './wallet';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { appInitialState, appReducer } from '../reducers';
 import { assetInitState } from '../reducers/asset-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
@@ -25,7 +24,7 @@ import {
   testWalletWithPendingTxDTO,
   testWalletWithPendingTxProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { mnemonic, password, pendingTx } from '../../../../__test__/fixtures/wallet.json';
+import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
 import {
   mnemonic as mnemonicRestore,
   password as passwordRestore,
@@ -215,13 +214,14 @@ describe('Wallet Actions', () => {
     const setPendingTxAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          setPendingTx(
-            Transaction.create(pendingTx),
-            () => {
-              resolve(store.getState());
-            },
-            (err: Error) => reject(err.message)
-          )
+          testWalletWithPendingTxProps.pendingTx &&
+            setPendingTx(
+              testWalletWithPendingTxProps.pendingTx,
+              () => {
+                resolve(store.getState());
+              },
+              (err: Error) => reject(err.message)
+            )
         );
       });
     };

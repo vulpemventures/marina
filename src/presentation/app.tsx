@@ -18,7 +18,6 @@ import useLottieLoader from './hooks/use-lottie-loader';
 
 const App: React.FC = () => {
   const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
-
   const app = new BrowserStorageAppRepo();
   const assets = new BrowserStorageAssetsRepo();
   const txsHistory = new BrowserStorageTxsHistoryRepo();

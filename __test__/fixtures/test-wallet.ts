@@ -146,7 +146,11 @@ export const testWalletWithPendingTxDTO: WalletDTO = {
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
   walletId: v4(),
-  pendingTx: pendingTx,
+  pendingTx: {
+    ...pendingTx,
+    // Going through json the type become string[] instead of [address: string, derivationPath?: string]
+    changeAddress: pendingTx.changeAddress as [address: string, derivationPath?: string],
+  },
   utxoMap: '[]',
 };
 export const testWalletWithPendingTxProps: IWallet = {
@@ -156,7 +160,10 @@ export const testWalletWithPendingTxProps: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
-  pendingTx: Transaction.create(pendingTx),
+  pendingTx: Transaction.create({
+    ...pendingTx,
+    changeAddress: Address.create(pendingTx.changeAddress[0], pendingTx.changeAddress[1]),
+  }),
   utxoMap: new Map<string, UtxoInterface>(),
 };
 export const testWalletWithPendingTx: Wallet = Wallet.createWallet(testWalletWithPendingTxProps);

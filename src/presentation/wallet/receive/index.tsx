@@ -24,9 +24,7 @@ const Receive: React.FC = () => {
   };
 
   useEffect(() => {
-    const onError = (err: Error) => console.log(err);
-    const onSuccess = (address: string) => setConfidentialAddress(address);
-    dispatch(deriveNewAddress(false, onSuccess, onError));
+    dispatch(deriveNewAddress(false, (addr) => setConfidentialAddress(addr.value), console.log));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -42,7 +40,7 @@ const Receive: React.FC = () => {
           {confidentialAddress ? (
             <QRCode size={176} value={confidentialAddress.toUpperCase()} />
           ) : (
-            <div className="w-44 h-44"></div>
+            <div className="w-44 h-44" />
           )}
           {isAddressExpanded ? (
             <p className="mt-2.5 text-xs font-medium break-all">{confidentialAddress}</p>

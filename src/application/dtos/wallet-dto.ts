@@ -1,4 +1,4 @@
-import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
+import { TransactionDTO } from '../../domain/wallet/value-objects/transaction';
 
 export interface WalletDTO {
   confidentialAddresses: [address: string, derivationPath?: string][];
@@ -6,7 +6,7 @@ export interface WalletDTO {
   masterXPub: string;
   masterBlindingKey: string;
   passwordHash: string;
-  pendingTx?: TransactionProps;
+  pendingTx?: TransactionDTO;
   utxoMap: string;
   walletId: string;
 }

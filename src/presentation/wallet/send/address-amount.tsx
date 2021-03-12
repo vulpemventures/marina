@@ -167,7 +167,10 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         values.amount * Math.pow(10, 8)
       )
     );
-    props.history.push(SEND_CHOOSE_FEE_ROUTE);
+    props.history.push({
+      pathname: SEND_CHOOSE_FEE_ROUTE,
+      state: { changeAddress: changeAddress },
+    });
   },
   displayName: 'AddressAmountForm',
 })(AddressAmountForm);
@@ -181,7 +184,7 @@ const AddressAmount: React.FC = () => {
   const handleBackBtn = () => {
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash: state.transaction.asset, assetTicker },
+      state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
     });
   };
 

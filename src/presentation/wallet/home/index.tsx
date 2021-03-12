@@ -27,7 +27,7 @@ import { waitAtLeast } from '../../../application/utils/common';
 
 const Home: React.FC = () => {
   const history = useHistory();
-  const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
+  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;
@@ -72,7 +72,6 @@ const Home: React.FC = () => {
     )
       .then(setAssetsBalance)
       .catch(console.error);
-
     // Flush last sent tx
     if (transaction.asset !== '') {
       dispatch(flush());
@@ -81,6 +80,7 @@ const Home: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // If extension was closed when a tx is pending then navigate to confirmation route
   if (wallets[0].pendingTx) {
     history.push(SEND_CONFIRMATION_ROUTE);
     return <></>;

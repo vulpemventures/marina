@@ -48,16 +48,13 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
       .includes(address.value);
 
     if (!isAlreadyDerived) {
-      wallet.confidentialAddresses.push(address);
+      wallet.props.confidentialAddresses = [...wallet.confidentialAddresses, address];
       await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
     }
   }
 
   async setPendingTx(tx?: Transaction): Promise<void> {
     const wallet = await this.getOrCreateWallet();
-    if (tx && wallet.pendingTx) {
-      throw new Error('wallet already has a pending tx');
-    }
     wallet.props.pendingTx = tx;
     await browser.storage.local.set({ wallets: [WalletMap.toDTO(wallet)] });
   }

@@ -7,6 +7,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { AppContext } from '../../../application/store/context';
 import { getAllAssetBalances, setAsset, unsetPendingTx } from '../../../application/store/actions';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { fromSatoshi } from '../../utils';
 
 const SelectAsset: React.FC = () => {
   const history = useHistory();
@@ -98,9 +99,9 @@ const SelectAsset: React.FC = () => {
               assetHash={Object.keys(assets[app.network.value])[r[2]]}
               assetName={r[0]}
               assetTicker={r[1]}
-              quantity={
-                (assetsBalance[Object.keys(assets[app.network.value])[r[2]]] ?? 0) / Math.pow(10, 8)
-              }
+              quantity={fromSatoshi(
+                assetsBalance[Object.keys(assets[app.network.value])[r[2]]] ?? 0
+              )}
               key={`${r[1]}_${r[2]}`}
               handleClick={handleSend}
             />

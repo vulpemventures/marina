@@ -15,13 +15,24 @@ import { toStringOutpoint } from '../utils';
 
 export class WalletMap {
   public static toDTO(wallet: Wallet): WalletDTO {
+    let pendingTx: any;
+    if (wallet.pendingTx !== undefined && wallet.pendingTx.props.changeAddress) {
+      pendingTx = { ...wallet.pendingTx.props };
+      pendingTx.changeAddress = [
+        wallet.pendingTx.props.changeAddress.value,
+        wallet.pendingTx.props.changeAddress?.derivationPath,
+      ] as [address: string, derivationPath?: string];
+    } else {
+      pendingTx = undefined;
+    }
+
     return {
       confidentialAddresses: wallet.confidentialAddresses.map((a) => [a.value, a.derivationPath]),
       encryptedMnemonic: wallet.encryptedMnemonic.value,
       masterBlindingKey: wallet.masterBlindingKey.value,
       masterXPub: wallet.masterXPub.value,
       passwordHash: wallet.passwordHash.value,
-      pendingTx: wallet.pendingTx?.props,
+      pendingTx: pendingTx as WalletDTO['pendingTx'],
       utxoMap: stringify(wallet.utxoMap),
       walletId: wallet.walletId.id.toString(),
     };
@@ -46,7 +57,11 @@ export class WalletMap {
       new UniqueEntityID(raw.walletId)
     );
     if (raw.pendingTx) {
-      wallet.props.pendingTx = Transaction.create(raw.pendingTx);
+      const addr = Address.create(
+        raw.pendingTx.changeAddress![0],
+        raw.pendingTx.changeAddress?.[1]
+      );
+      wallet.props.pendingTx = Transaction.create({ ...raw.pendingTx, changeAddress: addr });
     }
     return wallet;
   }

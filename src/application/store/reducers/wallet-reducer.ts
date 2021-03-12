@@ -82,6 +82,25 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
+    //
+    case ACTION_TYPES.WALLET_SET_ADDRESS_SUCCESS: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: undefined,
+        confidentialAddresses: state[0].confidentialAddresses.concat([payload.address]),
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+    case ACTION_TYPES.WALLET_SET_ADDRESS_FAILURE: {
+      const firstWallet: IWallet = {
+        ...state[0],
+        errors: { address: { message: payload.error.message } as IError },
+      };
+      return Object.assign([], state, [firstWallet]);
+    }
+
+    //
     case ACTION_TYPES.WALLET_SET_PENDING_TX_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],

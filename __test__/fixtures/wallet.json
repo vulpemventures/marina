@@ -131,6 +131,10 @@
     "sendAsset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
     "sendAmount": 100000,
     "feeAsset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-    "feeAmount": 240
+    "feeAmount": 240,
+    "changeAddress": [
+      "el1qqwslj0vyurc74a9js0jvekzq5qdsxrd5gd0ndvjr2v0sfrmgxdgapwl94e4nw62an7lwduhwelpn6plmjj8vxj2qvx5rf44sf",
+      "m/84'/0'/0'/1/0"
+    ]
   }
 }

@@ -1,12 +1,12 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory, useLocation } from 'react-router';
 import cx from 'classnames';
 import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
 import { browser } from 'webextension-polyfill-ts';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
+import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
 import {
   getAllAssetBalances,
@@ -34,9 +34,14 @@ import { fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IWallet } from '../../../domain/wallet/wallet';
 
+interface LocationState {
+  changeAddress: Address;
+}
+
 const ChooseFee: React.FC = () => {
   const history = useHistory();
   const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
+  const { state } = useLocation<LocationState>();
   const [feeCurrency, setFeeCurrency] = useState<string>('');
   const [feeLevel, setFeeLevel] = useState<string>('');
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
@@ -75,15 +80,7 @@ const ChooseFee: React.FC = () => {
   );
 
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (b) => setBalances(b),
-        (error) => {
-          console.log(error);
-          setErrorMessage(error.message);
-        }
-      )
-    );
+    dispatch(getAllAssetBalances(setBalances, (error) => setErrorMessage(error.message)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -123,18 +120,15 @@ const ChooseFee: React.FC = () => {
     }
   }, [balances, supportedAssets]);
 
+  /**
+   * Set fee change address
+   */
   useEffect(() => {
     if (supportedAssets.length > 0) {
       void (async (): Promise<void> => {
         if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
           try {
             const wallet: IWallet = { ...wallets[0] };
-            wallet.confidentialAddresses.push(
-              Address.create(
-                transaction.changeAddress?.value ?? '',
-                transaction.changeAddress?.derivationPath
-              )
-            );
             const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
             dispatch(
               setFeeChangeAddress(
@@ -154,7 +148,6 @@ const ChooseFee: React.FC = () => {
     feeCurrency,
     supportedAssets.length,
     transaction.asset,
-    transaction.changeAddress,
     transaction.feeChangeAddress,
     wallets,
   ]);
@@ -281,10 +274,14 @@ const ChooseFee: React.FC = () => {
           sendAmount: transaction.amountInSatoshi,
           feeAsset: feeCurrency,
           feeAmount: feeAmount,
+          changeAddress: state.changeAddress,
         }),
         () => {
           dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
-          history.push(SEND_CONFIRMATION_ROUTE);
+          history.push({
+            pathname: SEND_CONFIRMATION_ROUTE,
+            state: { changeAddress: state.changeAddress },
+          });
           browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
         },
         (error) => {
@@ -293,6 +290,10 @@ const ChooseFee: React.FC = () => {
         }
       )
     );
+  };
+
+  const handleBackBtn = () => {
+    history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
   const handlePayFees = (e: any, assetHash: string) => setFeeCurrency(assetHash);
@@ -353,6 +354,7 @@ const ChooseFee: React.FC = () => {
 
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"

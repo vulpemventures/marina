@@ -1,14 +1,20 @@
 import React, { useContext } from 'react';
-import { useHistory } from 'react-router';
+import { useLocation, useHistory } from 'react-router';
 import { AppContext } from '../../../application/store/context';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
+import { Address } from '../../../domain/wallet/value-objects';
+
+interface LocationState {
+  changeAddress: Address;
+}
 
 const Confirmation: React.FC = () => {
   const [{ wallets, app, assets }] = useContext(AppContext);
+  const { state } = useLocation<LocationState>();
   const history = useHistory();
 
   // In case the home btn is pressed prevents to use pendingTx's props
@@ -19,9 +25,16 @@ const Confirmation: React.FC = () => {
   const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = wallets[0].pendingTx;
 
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
+  const handleBackBtn = () => {
+    history.push({
+      pathname: SEND_CHOOSE_FEE_ROUTE,
+      state: { changeAddress: state.changeAddress },
+    });
+  };
 
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Confirmation"
