@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run clean && npm run copy-assets && run-p build:**",
     "build:html": "parcel build --no-cache public/*.html",
-    "build:scripts": "parcel build --no-cache src/application/background_script.ts src/application/content_script.ts",
+    "build:scripts": "parcel build --no-cache src/application/inject.ts src/application/background_script.ts src/application/content_script.ts",
     "clean": "rimraf dist",
     "copy-assets": "mkdir -p dist && cp public/manifest.json dist/ && cp -r public/assets dist/",
     "lint": "eslint --ext .ts,.tsx src __test__",
@@ -34,7 +34,7 @@
     "watchskip": "npm run clean && npm run copy-assets && SKIP_ONBOARDING=true run-p watch:**",
     "watch": "npm run clean && npm run copy-assets && run-p watch:**",
     "watch:html": "parcel watch public/*.html",
-    "watch:scripts": "parcel watch src/application/background_script.ts src/application/content_script.ts",
+    "watch:scripts": "parcel watch src/application/inject.ts src/application/background_script.ts src/application/content_script.ts",
     "web-ext:build": "web-ext build --source-dir dist",
     "web-ext:lint": "web-ext lint --source-dir dist"
   },

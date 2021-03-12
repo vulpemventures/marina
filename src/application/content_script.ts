@@ -1,56 +1,10 @@
-import { AddressInterface, networks } from "ldk";
-import { AppDTO } from './dtos/app-dto';
-
-interface LiquidProvider {
-  foo(): string;
-  //currentNetwork(): Promise<'liquid' | 'regtest'>;
-
-  /* enable(): Promise<void>;
-  disable(): Promise<void>;
-  isEnabled(): Promise<boolean>;
-
-  getAddresses(): AddressInterface[];
-  getNextAddress(): AddressInterface;
-  getNextChangeAddress(): AddressInterface;
-
-  sendTransaction(recipientAddress: string, amountInSatoshis: number, assetHash: string): Promise<string>;
-  signTransaction(psetBase64: string): Promise<string>;
- */
-};
-
-
-function handleResponse(message: any) {
-  console.log(`Message from the background script:  ${message.response}`);
-}
-
-function handleError(error: Error) {
-  console.log(`Error: ${error}`);
-}
-
+import { browser } from 'webextension-polyfill-ts';
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 if (shouldInjectProvider()) {
-  injectScript(
-    '(' +
-    function () {
-      const marina: LiquidProvider = {
-        foo: () => "bar"
-        /* currentNetwork: () => new Promise((resolve, reject) => {
-          browser.storage.local.get('app')
-            .then(({ app }) => {
-              resolve((app as AppDTO).network);
-            })
-            .catch(reject);
-        }) */
-      };
-
-      (window as Record<string, any>).marina = marina;
-      window.dispatchEvent(new Event('marina#initialized'));
-    }
-    + ')();'
-  );
+  injectScript(browser.extension.getURL('inject.js'));
+  injectPort();
 };
-
 
 /**
  * Determines if the provider should be injected
@@ -65,6 +19,12 @@ function shouldInjectProvider() {
   );
 }
 
+function injectPort() {
+  (window as Record<string, any>).marinaPort = browser.runtime.connect();
+  (window as Record<string, any>).marinaPort.onMessage.addListener(function (response: { name: string, success: boolean, data: any }) {
+    console.log(response.success);
+  });
+}
 
 /**
  * Injects a script tag into the current document
@@ -75,10 +35,13 @@ function injectScript(content: string) {
   try {
     const container = document.head || document.documentElement;
     const scriptTag = document.createElement('script');
+
     scriptTag.setAttribute('async', 'false');
-    scriptTag.textContent = content;
+    scriptTag.src = content;
     container.insertBefore(scriptTag, container.children[0]);
-    container.removeChild(scriptTag);
+    scriptTag.onload = function () {
+      container.removeChild(scriptTag);
+    };
   } catch (error) {
     console.error('Marina: Liquid Provider injection failed.', error);
   }
