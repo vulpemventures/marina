@@ -27,8 +27,8 @@ export default class Marina {
     this.port = port;
   }
 
-  hello() {
-    (window as Record<string, any>).marinaPort.postMessage({ success: true, data: "hello world", name: "hello" })
+  post() {
+    window.postMessage({ type: "FROM_PAGE", text: "Hello from the webpage!" }, "*");
   }
 }
 

@@ -94,3 +94,16 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const { id } = await browser.tabs.create({ url });
   return id;
 }
+
+
+var portFromCS;
+
+function connected(p: any) {
+  portFromCS = p;
+  portFromCS.postMessage("hi there content script!");
+  portFromCS.onMessage.addListener(function (m: any) {
+    console.log("In background script, received message from content script: " + m)
+  });
+}
+
+browser.runtime.onConnect.addListener(connected);

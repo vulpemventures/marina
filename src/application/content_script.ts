@@ -1,9 +1,24 @@
 import { browser } from 'webextension-polyfill-ts';
 
+
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 if (shouldInjectProvider()) {
   injectScript(browser.extension.getURL('inject.js'));
-  injectPort();
+  (window as Record<string, any>).port = browser.runtime.connect();
+  (window as Record<string, any>).port.onMessage.addListener(function (m: any) {
+    console.log("In content script, received message from background script: " + m);
+  });
+
+  window.addEventListener("message", (event) => {
+    // We only accept messages from ourselves
+    if (event.source != window)
+      return;
+
+    if (event.data.type && (event.data.type == "FROM_PAGE")) {
+      console.log("we cazzu: " + event.data.text);
+      (window as Record<string, any>).port.postMessage(event.data.text);
+    }
+  }, false);
 };
 
 /**
@@ -20,8 +35,16 @@ function shouldInjectProvider() {
 }
 
 
-function injectPort() {
-  const extensionPort = browser.runtime.connect("CONTENT_SCRIPT");
+function injectScriptFromFunction(func: Function) {
+  try {
+    var actualCode = '(' + func + ')();'
+    var script = document.createElement('script');
+    script.textContent = actualCode;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+  } catch (error) {
+    console.error('Marina: Liquid Provider injection failed.', error);
+  }
 }
 
 /**
