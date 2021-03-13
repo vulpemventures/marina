@@ -111,8 +111,8 @@ browser.runtime.onConnect.addListener((port: Runtime.Port) => {
   };
   // We listen for API calls from injected Marina provider. 
   // id is random identifier used as reference in the response
-  // type is the name of the API method
-  // data is the list of arguments 
+  // name is the name of the API method
+  // params is the list of arguments from the method
   port.onMessage.addListener(async ({ id, name, params }: { id: string, name: string, params: any[] }) => {
 
     // TODO all this logic should eventually be moved somewhere else 

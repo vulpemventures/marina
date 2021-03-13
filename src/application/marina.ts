@@ -2,24 +2,33 @@ import { AddressInterface } from "ldk";
 
 
 export interface MarinaProvider {
-  /* isEnabled: Promise<boolean>;
-  currentNetwork: Promise<'liquid' | 'regtest'>;
- */
   enable(): Promise<void>;
   disable(): Promise<void>;
 
   getAddresses(): Promise<Record<number, AddressInterface[]>>;
 
-  /*  
-   getNextAddress(account?: number): Promise<AddressInterface>;
-   getNextChangeAddress(account?: number): Promise<AddressInterface>;
- 
-   sendTransaction(recipientAddress: string, amountInSatoshis: number, assetHash: string): Promise<string>;
-   signTransaction(psetBase64: string): Promise<string>; */
+  getNextAddress(account?: number): Promise<AddressInterface>;
+  getNextChangeAddress(account?: number): Promise<AddressInterface>;
+
+  sendTransaction(recipientAddress: string, amountInSatoshis: number, assetHash: string): Promise<string>;
+  signTransaction(psetBase64: string): Promise<string>;
 };
 
 
 export default class Marina implements MarinaProvider {
+
+  getNextAddress(account?: number): Promise<AddressInterface> {
+    throw new Error("Method not implemented.");
+  }
+  getNextChangeAddress(account?: number): Promise<AddressInterface> {
+    throw new Error("Method not implemented.");
+  }
+  sendTransaction(recipientAddress: string, amountInSatoshis: number, assetHash: string): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
+  signTransaction(psetBase64: string): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
 
   getAddresses(): Promise<Record<number, AddressInterface[]>> {
     return this.proxy(this.getAddresses.name, []);
