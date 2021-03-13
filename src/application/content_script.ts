@@ -1,24 +1,53 @@
-import { browser } from 'webextension-polyfill-ts';
+import EventEmitter from 'events';
+import { browser, Runtime } from 'webextension-polyfill-ts';
+
+class Broker {
+  port: Runtime.Port;
+  emitter: EventEmitter;
+
+  constructor() {
+    this.emitter = new EventEmitter()
+    this.port = browser.runtime.connect();
+    this.port.onMessage.addListener(message => this.onMessage(message));
+  }
+
+  start() {
+
+    // start listening for messages from the injected script in page
+    window.addEventListener('message', event => {
+      if (event.source !== window) return
+      if (!event.data) return
+
+      const { id, name, params } = event.data
+      if (!id || !name) return
+
+
+      // forward message to the background script
+      this.port.postMessage({
+        id,
+        name,
+        params
+      });
+
+      // emit event to notify the injected script in page we got a reponse from background script
+      this.emitter.once(id, result => window.dispatchEvent(new CustomEvent(id, { detail: result })));
+
+
+    }, false)
+  }
+
+  onMessage(message: { id: string, payload: { success: boolean, data?: any, error?: string } }) {
+    this.emitter.emit(message.id, message.payload)
+  }
+}
+
 
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 if (shouldInjectProvider()) {
   injectScript(browser.extension.getURL('inject.js'));
-  (window as Record<string, any>).port = browser.runtime.connect();
-  (window as Record<string, any>).port.onMessage.addListener(function (m: any) {
-    console.log("In content script, received message from background script: " + m);
-  });
-
-  window.addEventListener("message", (event) => {
-    // We only accept messages from ourselves
-    if (event.source != window)
-      return;
-
-    if (event.data.type && (event.data.type == "FROM_PAGE")) {
-      console.log("we cazzu: " + event.data.text);
-      (window as Record<string, any>).port.postMessage(event.data.text);
-    }
-  }, false);
+  const broker = new Broker();
+  broker.start();
 };
 
 /**
@@ -35,30 +64,16 @@ function shouldInjectProvider() {
 }
 
 
-function injectScriptFromFunction(func: Function) {
-  try {
-    var actualCode = '(' + func + ')();'
-    var script = document.createElement('script');
-    script.textContent = actualCode;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
-  } catch (error) {
-    console.error('Marina: Liquid Provider injection failed.', error);
-  }
-}
 
-/**
- * Injects a script tag into the current document
- *
- * @param {string} content - Code to be executed in the current document
- */
-function injectScript(content: string) {
+
+
+function injectScript(script: string) {
   try {
     const container = document.head || document.documentElement;
     const scriptTag = document.createElement('script');
 
     scriptTag.setAttribute('async', 'false');
-    scriptTag.src = content;
+    scriptTag.src = script;
     container.insertBefore(scriptTag, container.children[0]);
     scriptTag.onload = function () {
       container.removeChild(scriptTag);
@@ -68,11 +83,6 @@ function injectScript(content: string) {
   }
 }
 
-/**
- * Checks the doctype of the current document if it exists
- *
- * @returns {boolean} {@code true} if the doctype is html or if none exists
- */
 function doctypeCheck(): boolean {
   const { doctype } = window.document;
   if (doctype) {
@@ -81,15 +91,6 @@ function doctypeCheck(): boolean {
   return true;
 }
 
-/**
- * Returns whether or not the extension (suffix) of the current document is prohibited
- *
- * This checks {@code window.location.pathname} against a set of file extensions
- * that we should not inject the provider into. This check is indifferent of
- * query parameters in the location.
- *
- * @returns {boolean} whether or not the extension of the current document is prohibited
- */
 function suffixCheck(): boolean {
   const prohibitedTypes = [/\.xml$/u, /\.pdf$/u];
   const currentUrl = window.location.pathname;
@@ -101,11 +102,6 @@ function suffixCheck(): boolean {
   return true;
 }
 
-/**
- * Checks the documentElement of the current document
- *
- * @returns {boolean} {@code true} if the documentElement is an html node or if none exists
- */
 function documentElementCheck(): boolean {
   const documentElement = document.documentElement.nodeName;
   if (documentElement) {
@@ -114,4 +110,5 @@ function documentElementCheck(): boolean {
   return true;
 }
 
-export { }
+
+

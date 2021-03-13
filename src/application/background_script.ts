@@ -1,11 +1,13 @@
 import { App } from '../domain/app/app';
 import { IDLE_MESSAGE_TYPE } from './utils/idle';
-import { browser, Idle } from 'webextension-polyfill-ts';
+import { browser, Idle, Runtime } from 'webextension-polyfill-ts';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
+
+import Marina from './marina';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -96,14 +98,21 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
 }
 
 
-var portFromCS;
-
-function connected(p: any) {
-  portFromCS = p;
-  portFromCS.postMessage("hi there content script!");
-  portFromCS.onMessage.addListener(function (m: any) {
-    console.log("In background script, received message from content script: " + m)
+// start listening for connections from the content script and injected scripts
+browser.runtime.onConnect.addListener((portFromCS: Runtime.Port) => {
+  // We listen for API calls from injected Marina provider. 
+  // id is random identifier used as reference in the response
+  // type is the name of the API method
+  // data is the list of arguments 
+  portFromCS.onMessage.addListener(async ({ id, name, params }: { id: string, name: string, params: any[] }) => {
+    switch (name) {
+      case Marina.prototype.enable.name:
+        portFromCS.postMessage({ id, payload: { success: true, data: "All good!" } })
+        return;
+      default:
+        break;
+    }
   });
-}
+});
 
-browser.runtime.onConnect.addListener(connected);
+
