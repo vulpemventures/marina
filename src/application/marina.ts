@@ -8,7 +8,9 @@ export interface MarinaProvider {
   enable(): Promise<void>;
   disable(): Promise<void>;
 
-  /*  getAddresses(): Promise<Record<number, AddressInterface[]>>;
+  getAddresses(): Promise<Record<number, AddressInterface[]>>;
+
+  /*  
    getNextAddress(account?: number): Promise<AddressInterface>;
    getNextChangeAddress(account?: number): Promise<AddressInterface>;
  
@@ -18,6 +20,10 @@ export interface MarinaProvider {
 
 
 export default class Marina implements MarinaProvider {
+
+  getAddresses(): Promise<Record<number, AddressInterface[]>> {
+    return this.proxy(this.getAddresses.name, []);
+  }
 
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
@@ -37,8 +43,11 @@ export default class Marina implements MarinaProvider {
       // here we listen for response from the content script
       window.addEventListener(id, (event: Event) => {
         const response = (event as CustomEvent).detail;
-        if (!response.success) reject(new Error(response.error))
-        else resolve(response.data)
+
+        if (!response.success)
+          return reject(new Error(response.error));
+
+        return resolve(response.data);
       }, {
         once: true,
         passive: true

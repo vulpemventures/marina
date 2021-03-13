@@ -8,6 +8,7 @@ import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
 
 import Marina from './marina';
+import { xpubWalletFromAddresses } from './utils/restorer';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -99,16 +100,52 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
 
 
 // start listening for connections from the content script and injected scripts
-browser.runtime.onConnect.addListener((portFromCS: Runtime.Port) => {
+browser.runtime.onConnect.addListener((port: Runtime.Port) => {
+
+  const handleResponse = (id: string, data: any) => {
+    port.postMessage({ id, payload: { success: true, data } });
+  };
+
+  const handleError = (id: string, e: Error) => {
+    port.postMessage({ id, payload: { success: false, error: e.message } });
+  };
   // We listen for API calls from injected Marina provider. 
   // id is random identifier used as reference in the response
   // type is the name of the API method
   // data is the list of arguments 
-  portFromCS.onMessage.addListener(async ({ id, name, params }: { id: string, name: string, params: any[] }) => {
+  port.onMessage.addListener(async ({ id, name, params }: { id: string, name: string, params: any[] }) => {
+
+    // TODO all this logic should eventually be moved somewhere else 
+
     switch (name) {
+
       case Marina.prototype.enable.name:
-        portFromCS.postMessage({ id, payload: { success: true, data: "All good!" } })
-        return;
+
+        return handleResponse(id, "requested website has been enabled");
+
+      case Marina.prototype.getAddresses.name:
+
+        try {
+          const appRepo = new BrowserStorageAppRepo();
+          const walletRepo = new BrowserStorageWalletRepo();
+
+          const app = await appRepo.getApp();
+          const wallet = await walletRepo.getOrCreateWallet();
+
+          const xpub = await xpubWalletFromAddresses(
+            wallet.masterXPub.value,
+            wallet.masterBlindingKey.value,
+            wallet.confidentialAddresses,
+            app.network.value
+          );
+
+          const addrs = xpub.getAddresses();
+
+          return handleResponse(id, addrs);
+        } catch (e) {
+          return handleError(id, e);
+        }
+
       default:
         break;
     }

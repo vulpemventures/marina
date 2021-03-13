@@ -6,13 +6,12 @@ class Broker {
   emitter: EventEmitter;
 
   constructor() {
-    this.emitter = new EventEmitter()
+    this.emitter = new EventEmitter();
     this.port = browser.runtime.connect();
     this.port.onMessage.addListener(message => this.onMessage(message));
   }
 
   start() {
-
     // start listening for messages from the injected script in page
     window.addEventListener('message', event => {
       if (event.source !== window) return
@@ -29,15 +28,17 @@ class Broker {
         params
       });
 
-      // emit event to notify the injected script in page we got a reponse from background script
+      // listen for events from the background script
+      // we are going to notify the injected script in page we got a reponse 
       this.emitter.once(id, result => window.dispatchEvent(new CustomEvent(id, { detail: result })));
 
 
-    }, false)
+    }, false);
   }
 
   onMessage(message: { id: string, payload: { success: boolean, data?: any, error?: string } }) {
-    this.emitter.emit(message.id, message.payload)
+    // emit event when background script reponds
+    this.emitter.emit(message.id, message.payload);
   }
 }
 
