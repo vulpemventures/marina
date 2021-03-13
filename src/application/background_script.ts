@@ -9,6 +9,7 @@ import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-stora
 
 import Marina from './marina';
 import { xpubWalletFromAddresses } from './utils/restorer';
+import { AddressInterface } from 'ldk';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -136,7 +137,10 @@ browser.runtime.onConnect.addListener((port: Runtime.Port) => {
 
             const addrs = xpub.getAddresses();
 
-            return handleResponse(id, addrs);
+            // it's safe to hardcode here since in Marina we always deafult to Account 0 in the BIP44 derivation
+            const addressesByAccount: Record<number, AddressInterface[]> = { 0: addrs };
+
+            return handleResponse(id, addressesByAccount);
           } catch (e) {
             return handleError(id, e);
           }

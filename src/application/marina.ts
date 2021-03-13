@@ -18,6 +18,20 @@ export interface MarinaProvider {
 }
 
 export default class Marina implements MarinaProvider {
+  private isEnabled: {};
+
+  constructor() {
+    this.isEnabled = false;
+  }
+
+  enable(): Promise<void> {
+    return this.proxy(this.enable.name, []);
+  }
+
+  disable(): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
   getNextAddress(account?: number): Promise<AddressInterface> {
     throw new Error('Method not implemented.');
   }
@@ -39,17 +53,9 @@ export default class Marina implements MarinaProvider {
     return this.proxy(this.getAddresses.name, []);
   }
 
-  enable(): Promise<void> {
-    return this.proxy(this.enable.name, []);
-  }
-
-  disable(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
   proxy(name: string, params: any[] = []): Promise<any> {
     return new Promise((resolve, reject) => {
-      const id = makeid(8);
+      const id = makeid(16);
 
       // forward the method call to the content script via message passing
       this.call(id, name, params);

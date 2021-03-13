@@ -11,6 +11,12 @@ class Broker {
     this.port.onMessage.addListener((message) => this.onMessage(message));
   }
 
+
+  onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
+    // emit event when background script reponds
+    this.emitter.emit(message.id, message.payload);
+  }
+
   start() {
     // start listening for messages from the injected script in page
     window.addEventListener(
@@ -38,27 +44,14 @@ class Broker {
       false
     );
   }
-
-  onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
-    // emit event when background script reponds
-    this.emitter.emit(message.id, message.payload);
-  }
 }
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
-if (shouldInjectProvider()) {
-  injectScript(browser.extension.getURL('inject.js'));
+if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
   const broker = new Broker();
   broker.start();
-}
 
-/**
- * Determines if the provider should be injected
- *
- * @returns {boolean} {@code true} Whether the provider should be injected
- */
-function shouldInjectProvider() {
-  return doctypeCheck() && suffixCheck() && documentElementCheck();
+  injectScript(browser.extension.getURL('inject.js'));
 }
 
 function injectScript(script: string) {

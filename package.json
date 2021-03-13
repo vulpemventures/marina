@@ -44,7 +44,7 @@
     "axios": "^0.21.1",
     "formik": "^2.2.6",
     "google-protobuf": "^3.14.0",
-    "ldk": "^0.2.1",
+    "ldk": "^0.2.7",
     "lottie-web": "^5.7.6",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
