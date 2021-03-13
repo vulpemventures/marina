@@ -8,48 +8,49 @@ class Broker {
   constructor() {
     this.emitter = new EventEmitter();
     this.port = browser.runtime.connect();
-    this.port.onMessage.addListener(message => this.onMessage(message));
+    this.port.onMessage.addListener((message) => this.onMessage(message));
   }
 
   start() {
     // start listening for messages from the injected script in page
-    window.addEventListener('message', event => {
-      if (event.source !== window) return
-      if (!event.data) return
+    window.addEventListener(
+      'message',
+      (event) => {
+        if (event.source !== window) return;
+        if (!event.data) return;
 
-      const { id, name, params } = event.data
-      if (!id || !name) return
+        const { id, name, params } = event.data;
+        if (!id || !name) return;
 
+        // forward message to the background script
+        this.port.postMessage({
+          id,
+          name,
+          params,
+        });
 
-      // forward message to the background script
-      this.port.postMessage({
-        id,
-        name,
-        params
-      });
-
-      // listen for events from the background script
-      // we are going to notify the injected script in page we got a reponse 
-      this.emitter.once(id, result => window.dispatchEvent(new CustomEvent(id, { detail: result })));
-
-
-    }, false);
+        // listen for events from the background script
+        // we are going to notify the injected script in page we got a reponse
+        this.emitter.once(id, (result) =>
+          window.dispatchEvent(new CustomEvent(id, { detail: result }))
+        );
+      },
+      false
+    );
   }
 
-  onMessage(message: { id: string, payload: { success: boolean, data?: any, error?: string } }) {
+  onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
     // emit event when background script reponds
     this.emitter.emit(message.id, message.payload);
   }
 }
-
-
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 if (shouldInjectProvider()) {
   injectScript(browser.extension.getURL('inject.js'));
   const broker = new Broker();
   broker.start();
-};
+}
 
 /**
  * Determines if the provider should be injected
@@ -57,16 +58,8 @@ if (shouldInjectProvider()) {
  * @returns {boolean} {@code true} Whether the provider should be injected
  */
 function shouldInjectProvider() {
-  return (
-    doctypeCheck() &&
-    suffixCheck() &&
-    documentElementCheck()
-  );
+  return doctypeCheck() && suffixCheck() && documentElementCheck();
 }
-
-
-
-
 
 function injectScript(script: string) {
   try {
@@ -110,6 +103,3 @@ function documentElementCheck(): boolean {
   }
   return true;
 }
-
-
-

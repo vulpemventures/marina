@@ -98,10 +98,8 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   return id;
 }
 
-
 // start listening for connections from the content script and injected scripts
 browser.runtime.onConnect.addListener((port: Runtime.Port) => {
-
   const handleResponse = (id: string, data: any) => {
     port.postMessage({ id, payload: { success: true, data } });
   };
@@ -109,47 +107,43 @@ browser.runtime.onConnect.addListener((port: Runtime.Port) => {
   const handleError = (id: string, e: Error) => {
     port.postMessage({ id, payload: { success: false, error: e.message } });
   };
-  // We listen for API calls from injected Marina provider. 
+  // We listen for API calls from injected Marina provider.
   // id is random identifier used as reference in the response
   // name is the name of the API method
   // params is the list of arguments from the method
-  port.onMessage.addListener(async ({ id, name, params }: { id: string, name: string, params: any[] }) => {
+  port.onMessage.addListener(
+    async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
+      // TODO all this logic should eventually be moved somewhere else
 
-    // TODO all this logic should eventually be moved somewhere else 
+      switch (name) {
+        case Marina.prototype.enable.name:
+          return handleResponse(id, 'requested website has been enabled');
 
-    switch (name) {
+        case Marina.prototype.getAddresses.name:
+          try {
+            const appRepo = new BrowserStorageAppRepo();
+            const walletRepo = new BrowserStorageWalletRepo();
 
-      case Marina.prototype.enable.name:
+            const app = await appRepo.getApp();
+            const wallet = await walletRepo.getOrCreateWallet();
 
-        return handleResponse(id, "requested website has been enabled");
+            const xpub = await xpubWalletFromAddresses(
+              wallet.masterXPub.value,
+              wallet.masterBlindingKey.value,
+              wallet.confidentialAddresses,
+              app.network.value
+            );
 
-      case Marina.prototype.getAddresses.name:
+            const addrs = xpub.getAddresses();
 
-        try {
-          const appRepo = new BrowserStorageAppRepo();
-          const walletRepo = new BrowserStorageWalletRepo();
+            return handleResponse(id, addrs);
+          } catch (e) {
+            return handleError(id, e);
+          }
 
-          const app = await appRepo.getApp();
-          const wallet = await walletRepo.getOrCreateWallet();
-
-          const xpub = await xpubWalletFromAddresses(
-            wallet.masterXPub.value,
-            wallet.masterBlindingKey.value,
-            wallet.confidentialAddresses,
-            app.network.value
-          );
-
-          const addrs = xpub.getAddresses();
-
-          return handleResponse(id, addrs);
-        } catch (e) {
-          return handleError(id, e);
-        }
-
-      default:
-        break;
+        default:
+          break;
+      }
     }
-  });
+  );
 });
-
-
