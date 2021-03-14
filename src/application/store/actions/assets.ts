@@ -8,7 +8,7 @@ import {
   ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
 } from './action-types';
-import { lbtcAssetByNetwork } from '../../../presentation/utils';
+import { explorerApiUrl, lbtcAssetByNetwork } from '../../utils';
 
 export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -26,7 +26,7 @@ export function getAllAssetBalances(
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return (dispatch, getState) => {
-    const { wallets } = getState();
+    const { app, wallets } = getState();
     const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
         dispatch([ASSET_GET_ALL_ASSET_BALANCES_FAILURE]);
@@ -41,9 +41,15 @@ export function getAllAssetBalances(
       acc = { ...acc, [curr.asset]: value };
       return acc;
     }, {} as { [assetHash: string]: number });
+
+    if (Object.keys(balances).length === 0) {
+      const lbtcHash = lbtcAssetByNetwork(app.network.value);
+      onSuccess({ [lbtcHash]: 0 });
+    } else {
+      onSuccess(balances);
+    }
     // Dispatch event simply for debugging. No balance state is kept outside utxos
     dispatch([ASSET_GET_ALL_ASSET_BALANCES_SUCCESS]);
-    onSuccess(balances);
   };
 }
 
@@ -83,10 +89,10 @@ export function updateAllAssetInfos(
     try {
       const { app, assets, wallets } = getState();
       const assetsFromUtxos: Assets = await Promise.all(
-        [...wallets[0].utxoMap.values()].map(async ({ asset, value }) =>
+        [...wallets[0].utxoMap.values()].map(async ({ asset }) =>
           // If asset in store don't fetch
           !((asset as string) in assets[app.network.value])
-            ? (await axios.get(`http://localhost:3001/asset/${asset}`)).data
+            ? (await axios.get(`${explorerApiUrl[app.network.value]}/asset/${asset}`)).data
             : undefined
         )
       ).then((assetInfos) =>

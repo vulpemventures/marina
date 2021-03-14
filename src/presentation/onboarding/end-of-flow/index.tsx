@@ -19,8 +19,8 @@ const EndOfFlow: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  const mermaidLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     if (wallets.length <= 0) {
@@ -57,11 +57,7 @@ const EndOfFlow: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div
-        className="flex items-center justify-center h-screen p-24"
-        id="marina-loader"
-        ref={marinaLoaderRef}
-      />
+      <div className="flex items-center justify-center h-screen p-24" ref={mermaidLoaderRef} />
     );
   }
 

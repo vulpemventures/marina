@@ -1,6 +1,7 @@
 import { transactionInitState } from '../../src/application/store/reducers/transaction-reducer';
 import assets from './assets.json';
 import { confidentialAddresses } from './wallet.json';
+import { Address } from '../../src/domain/wallet/value-objects';
 
 export const transactionStateWithAsset = {
   ...transactionInitState,
@@ -9,14 +10,17 @@ export const transactionStateWithAsset = {
 
 export const transactionStateWithReceipient = {
   ...transactionStateWithAsset,
-  receipientAddress: confidentialAddresses[0].address,
-  changeAddress: confidentialAddresses[1].address,
+  receipientAddress: Address.create(confidentialAddresses[0].address),
+  changeAddress: Address.create(confidentialAddresses[1].address),
   amountInSatoshi: 10000000,
 };
 
 export const transactionStateWithFeeChangeAddress = {
   ...transactionStateWithReceipient,
-  feeChangeAddress: confidentialAddresses[1].address,
+  feeChangeAddress: Address.create(
+    confidentialAddresses[1].address,
+    confidentialAddresses[1].derivationPath
+  ),
 };
 
 export const transactionStateWithFees = {

@@ -1,11 +1,12 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
+import { Address } from '../../../domain/wallet/value-objects';
 
 export interface TransactionState {
   asset: string;
-  receipientAddress: string;
-  changeAddress: string;
-  feeChangeAddress: string;
+  receipientAddress?: Address;
+  changeAddress?: Address;
+  feeChangeAddress?: Address;
   amountInSatoshi: number;
   feeAmountInSatoshi: number;
   feeAsset: string;
@@ -14,9 +15,9 @@ export interface TransactionState {
 
 export const transactionInitState: TransactionState = {
   asset: '',
-  receipientAddress: '',
-  changeAddress: '',
-  feeChangeAddress: '',
+  receipientAddress: undefined,
+  changeAddress: undefined,
+  feeChangeAddress: undefined,
   amountInSatoshi: 0,
   feeAmountInSatoshi: 0,
   feeAsset: '',
@@ -32,9 +33,9 @@ export const transactionReducer = (
       return {
         ...state,
         asset: payload.asset,
-        receipientAddress: '',
-        changeAddress: '',
-        feeChangeAddress: '',
+        receipientAddress: undefined,
+        changeAddress: undefined,
+        feeChangeAddress: undefined,
         amountInSatoshi: 0,
         feeAmountInSatoshi: 0,
         feeAsset: '',
@@ -46,7 +47,7 @@ export const transactionReducer = (
         receipientAddress: payload.receipientAddress,
         changeAddress: payload.changeAddress,
         amountInSatoshi: payload.amountInSatoshi,
-        feeChangeAddress: '',
+        feeChangeAddress: undefined,
         feeAmountInSatoshi: 0,
         feeAsset: '',
       };

@@ -1,35 +1,26 @@
 import { UtxoInterface } from 'ldk';
 import { compareUtxos, createWallet, setUtxos } from './wallet';
 import { mint } from '../../../../__test__/_regtest';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { appInitialState, appReducer } from '../reducers';
+import { assetInitState } from '../reducers/asset-reducer';
+import { txsHistoryInitState } from '../reducers/txs-history-reducer';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testWalletDTO, testWalletProps } from '../../../../__test__/fixtures/test-wallet';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
 import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
 import { getUtxoMap } from '../../../../__test__/fixtures/test-utxos';
 import { getRandomWallet } from '../../../../__test__/fixtures/wallet-keys';
-import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
-import { assetInitState } from '../reducers/asset-reducer';
-import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
-import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
+import { repos } from '../../../infrastructure';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
 
 describe('Utxos Actions', () => {
-  let repos, store: ReturnType<typeof mockThunkReducer>;
+  let store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {
-    repos = {
-      app: new BrowserStorageAppRepo() as IAppRepository,
-      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
-      wallet: new BrowserStorageWalletRepo() as IWalletRepository,
-    };
     store = mockThunkReducer(appReducer, appInitialState, repos);
   });
 
@@ -39,7 +30,6 @@ describe('Utxos Actions', () => {
   });
 
   test('Should set utxos of 2 different key pairs', async () => {
-    jest.setTimeout(30000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -87,12 +77,12 @@ describe('Utxos Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(3) }],
     });
   });
 
   test('Should not set utxos if same utxo set exists in store', async () => {
-    jest.setTimeout(20000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -139,33 +129,25 @@ describe('Utxos Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(1) }],
     });
   });
 
   test('Should have utxo sets equal', () => {
     const utxoMapStore = new Map()
-      .set(
-        { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },
-        {
-          txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439',
-          vout: 0,
-        }
-      )
-      .set(
-        { txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8', vout: 1 },
-        {
-          txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
-          vout: 1,
-        }
-      )
-      .set(
-        { txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', vout: 3 },
-        {
-          txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
-          vout: 3,
-        }
-      );
+      .set('2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439:0', {
+        txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439',
+        vout: 0,
+      })
+      .set('7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8:1', {
+        txid: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
+        vout: 1,
+      })
+      .set('6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d:3', {
+        txid: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
+        vout: 3,
+      });
 
     const fetchedUtxos = [
       { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },

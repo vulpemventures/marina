@@ -1,41 +1,47 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory, useLocation } from 'react-router';
 import cx from 'classnames';
-import { walletFromCoins, greedyCoinSelector, RecipientInterface } from 'ldk';
+import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
 import { browser } from 'webextension-polyfill-ts';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
+import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
 import {
   getAllAssetBalances,
-  setPendingTx,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
+  setPendingTx,
   setTopup,
 } from '../../../application/store/actions';
-import { nextAddressForWallet } from '../../../application/utils/restorer';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { Address } from '../../../domain/wallet/value-objects';
 import {
   feeAmountFromTx,
+  feeLevelToSatsPerByte,
   fetchAssetsFromTaxi,
   fetchTopupFromTaxi,
-  lbtcAssetByNetwork,
   fillTaxiTx,
-  utxoMapToArray,
-  formatAmount,
-  feeLevelToSatsPerByte,
-  taxiURL,
-  imgPathMapRegtest,
   imgPathMapMainnet,
-} from '../../utils';
+  imgPathMapRegtest,
+  lbtcAssetByNetwork,
+  nextAddressForWallet,
+  taxiURL,
+  utxoMapToArray,
+} from '../../../application/utils';
+import { fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
+import { IWallet } from '../../../domain/wallet/wallet';
+
+interface LocationState {
+  changeAddress: Address;
+}
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
   const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
+  const { state } = useLocation<LocationState>();
   const [feeCurrency, setFeeCurrency] = useState<string>('');
   const [feeLevel, setFeeLevel] = useState<string>('');
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
@@ -44,17 +50,20 @@ const ChooseFee: React.FC = () => {
   const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  // Populate ref div with svg animations
+  const mermaidLoaderRef = React.useRef(null);
+  const circleLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
+  useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
 
   const changeAddressGetter = useCallback(
     (asset: string): string => {
       if (asset === transaction.asset) {
-        return transaction.changeAddress;
+        return transaction.changeAddress!.value;
       }
-      return transaction.feeChangeAddress;
+      return transaction.feeChangeAddress!.value;
     },
     [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
   );
@@ -64,19 +73,14 @@ const ChooseFee: React.FC = () => {
       {
         asset: transaction.asset,
         value: transaction.amountInSatoshi,
-        address: transaction.receipientAddress,
+        address: transaction.receipientAddress?.value,
       },
     ],
     [transaction.amountInSatoshi, transaction.asset, transaction.receipientAddress]
   );
 
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (b) => setBalances(b),
-        (error) => console.log(error)
-      )
-    );
+    dispatch(getAllAssetBalances(setBalances, (error) => setErrorMessage(error.message)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -88,7 +92,11 @@ const ChooseFee: React.FC = () => {
           const taxiAssets: string[] = await fetchAssetsFromTaxi(taxiURL[app.network.value]);
           allAssets = allAssets.concat(taxiAssets);
         } catch (error) {
-          console.log(error);
+          let msg = error.message;
+          if (error.code === 2) {
+            msg = 'Taxi is not available';
+          }
+          setErrorMessage(msg);
         } finally {
           setSupportedAssets(allAssets);
           setFeeLevel('50');
@@ -112,26 +120,44 @@ const ChooseFee: React.FC = () => {
     }
   }, [balances, supportedAssets]);
 
+  /**
+   * Set fee change address
+   */
   useEffect(() => {
     if (supportedAssets.length > 0) {
       void (async (): Promise<void> => {
-        if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === '') {
+        if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
           try {
-            const wallet = { ...wallets[0] };
-            wallet.confidentialAddresses.push(Address.create(transaction.changeAddress));
+            const wallet: IWallet = { ...wallets[0] };
             const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-            dispatch(setFeeChangeAddress(feeChangeAddress));
+            dispatch(
+              setFeeChangeAddress(
+                Address.create(feeChangeAddress.value, feeChangeAddress.derivationPath)
+              )
+            );
           } catch (error) {
             console.log(error);
+            setErrorMessage(error.message);
           }
         }
       })();
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    app.network.value,
+    feeCurrency,
+    supportedAssets.length,
+    transaction.asset,
+    transaction.feeChangeAddress,
+    wallets,
+  ]);
 
   useEffect(() => {
     if (supportedAssets.length > 0) {
-      if (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '') {
+      if (
+        feeCurrency === transaction.asset ||
+        (transaction.feeChangeAddress && transaction.feeChangeAddress.value !== '')
+      ) {
         if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
           // this check prevents to build a tx in case the fee change address isn't
           // yet available but needed for the tx.
@@ -153,6 +179,7 @@ const ChooseFee: React.FC = () => {
             }
           } catch (error) {
             console.log(error);
+            setErrorMessage(error.message);
           }
         }
       }
@@ -186,6 +213,7 @@ const ChooseFee: React.FC = () => {
           dispatch(setTopup(taxiTopup));
         } catch (error) {
           console.error(error.message);
+          setErrorMessage(error.message);
         }
       }
     })();
@@ -197,7 +225,8 @@ const ChooseFee: React.FC = () => {
     if (
       !unsignedPendingTx &&
       Object.keys(transaction.taxiTopup).length !== 0 &&
-      (feeCurrency === transaction.asset || transaction.feeChangeAddress !== '')
+      (feeCurrency === transaction.asset ||
+        (transaction.feeChangeAddress && transaction.feeChangeAddress.value !== ''))
     ) {
       const taxiPayout = {
         value: transaction.taxiTopup.topup?.assetAmount,
@@ -216,6 +245,7 @@ const ChooseFee: React.FC = () => {
         setUnsignedPendingTx(tx);
       } catch (error) {
         console.log(error);
+        setErrorMessage(error.message);
       }
     }
   }, [
@@ -239,27 +269,38 @@ const ChooseFee: React.FC = () => {
       setPendingTx(
         Transaction.create({
           value: unsignedPendingTx,
-          sendAddress: transaction.receipientAddress,
+          sendAddress: transaction.receipientAddress?.value ?? '',
           sendAsset: transaction.asset,
           sendAmount: transaction.amountInSatoshi,
           feeAsset: feeCurrency,
           feeAmount: feeAmount,
+          changeAddress: state.changeAddress,
         }),
         () => {
           dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
-          history.push(SEND_CONFIRMATION_ROUTE);
+          history.push({
+            pathname: SEND_CONFIRMATION_ROUTE,
+            state: { changeAddress: state.changeAddress },
+          });
           browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
         },
-        (err) => console.log(err)
+        (error) => {
+          console.log(error);
+          setErrorMessage(error.message);
+        }
       )
     );
+  };
+
+  const handleBackBtn = () => {
+    history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
   const handlePayFees = (e: any, assetHash: string) => setFeeCurrency(assetHash);
 
   const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
-      <img className="w-4 h-4" src={'assets/images/marina-logo.svg'} alt="warning" />
+      <img className="w-4 h-4" src={'assets/images/warning.svg'} alt="warning" />
       <p className="font-regular text-xs text-left">
         9.99862 L-BTC will be sent in order to cover fee
       </p>
@@ -308,17 +349,12 @@ const ChooseFee: React.FC = () => {
   }
 
   if (supportedAssets.length <= 0) {
-    return (
-      <div
-        className="flex items-center justify-center h-screen p-8"
-        id="marina-loader"
-        ref={marinaLoaderRef}
-      />
-    );
+    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   }
 
   return (
     <ShellPopUp
+      backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
@@ -367,9 +403,15 @@ const ChooseFee: React.FC = () => {
             step="50"
             type="range"
           />
-          <p className="text-gray mt-5 text-xs font-medium text-left">
-            {unsignedPendingTx ? `${feeAmountFromTx(unsignedPendingTx)} L-BTC` : 'Loading...'}
-          </p>
+          <div className="text-gray mt-1 text-xs font-medium text-center">
+            {unsignedPendingTx ? (
+              <span className="mt-3">{`Fee: ${feeAmountFromTx(unsignedPendingTx)} L-BTC`}</span>
+            ) : errorMessage.length ? (
+              <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
+            ) : (
+              <div className="h-10 mx-auto" ref={circleLoaderRef} />
+            )}
+          </div>
           {isWarningFee && warningFee}
         </div>
       )}
@@ -378,9 +420,13 @@ const ChooseFee: React.FC = () => {
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
             <span className="font-regular mr-6 text-base">
-              {transaction.taxiTopup?.topup
-                ? `${formatAmount(transaction.taxiTopup.topup.assetAmount)} USDt *`
-                : 'Loading...'}
+              {transaction.taxiTopup?.topup ? (
+                `${fromSatoshiStr(transaction.taxiTopup.topup.assetAmount)} USDt *`
+              ) : errorMessage.length ? (
+                <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
+              ) : (
+                <div className="h-10 mx-auto" ref={circleLoaderRef} />
+              )}
             </span>
           </div>
           {isWarningFee && warningFee}

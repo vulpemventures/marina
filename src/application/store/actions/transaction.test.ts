@@ -1,13 +1,11 @@
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
-import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
-import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
+import { repos } from '../../../infrastructure';
 import { appInitialState, appReducer } from '../reducers';
+import { assetInitState } from '../reducers/asset-reducer';
+import { onboardingInitState } from '../reducers/onboarding-reducer';
+import { transactionInitState } from '../reducers/transaction-reducer';
+import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
 import {
   flush,
   setAddressesAndAmount,
@@ -23,21 +21,15 @@ import {
   transactionStateWithFees,
 } from '../../../../__test__/fixtures/test-transaction';
 import { confidentialAddresses } from '../../../../__test__/fixtures/wallet.json';
-import { transactionInitState } from '../reducers/transaction-reducer';
-import { assetInitState } from '../reducers/asset-reducer';
+import { Address } from '../../../domain/wallet/value-objects';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
 
 describe('Transaction Actions', () => {
-  let repos, store: ReturnType<typeof mockThunkReducer>;
+  let store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {
-    repos = {
-      app: new BrowserStorageAppRepo() as IAppRepository,
-      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
-      wallet: new BrowserStorageWalletRepo() as IWalletRepository,
-    };
     store = mockThunkReducer(appReducer, appInitialState, repos);
   });
 
@@ -53,6 +45,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithAsset,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });
@@ -63,13 +56,14 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithAsset,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
 
     store.dispatch(
       setAddressesAndAmount(
-        confidentialAddresses[0].address,
-        confidentialAddresses[1].address,
+        Address.create(confidentialAddresses[0].address),
+        Address.create(confidentialAddresses[1].address),
         10000000
       )
     );
@@ -78,6 +72,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithReceipient,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });
@@ -88,15 +83,21 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithReceipient,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
 
-    store.dispatch(setFeeChangeAddress(confidentialAddresses[1].address));
+    store.dispatch(
+      setFeeChangeAddress(
+        Address.create(confidentialAddresses[1].address, confidentialAddresses[1].derivationPath)
+      )
+    );
     expect(store.getState()).toStrictEqual({
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFeeChangeAddress,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });
@@ -107,6 +108,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFeeChangeAddress,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
 
@@ -116,6 +118,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFees,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });
@@ -126,13 +129,14 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFees,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
 
     store.dispatch(
       setAddressesAndAmount(
-        confidentialAddresses[0].address,
-        confidentialAddresses[1].address,
+        Address.create(confidentialAddresses[0].address),
+        Address.create(confidentialAddresses[1].address),
         10000000
       )
     );
@@ -141,6 +145,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithReceipient,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });
@@ -151,6 +156,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFees,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
 
@@ -160,6 +166,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithAsset,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });
@@ -170,6 +177,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionStateWithFees,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
 
@@ -179,6 +187,7 @@ describe('Transaction Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [],
     });
   });

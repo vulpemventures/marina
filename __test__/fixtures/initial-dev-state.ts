@@ -6,7 +6,7 @@ import {
   PasswordHash,
 } from '../../src/domain/wallet/value-objects';
 import { encryptedMnemonic, masterBlindingKey, masterXPub, passwordHash } from './wallet.json';
-import { Outpoint, UtxoInterface } from 'ldk';
+import { UtxoInterface } from 'ldk';
 import { IApp } from '../../src/domain/app/app';
 import { Network } from '../../src/domain/app/value-objects';
 
@@ -17,7 +17,7 @@ export const devWalletInitState: IWallet = {
   masterXPub: MasterXPub.create(masterXPub),
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
-  utxoMap: new Map<Outpoint, UtxoInterface>(),
+  utxoMap: new Map<string, UtxoInterface>(),
 };
 
 export const devAppInitState: IApp = {

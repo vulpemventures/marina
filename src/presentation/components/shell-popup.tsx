@@ -3,8 +3,7 @@ import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { AppContext } from '../../application/store/context';
-import { flush } from '../../application/store/actions/transaction';
-import { unsetPendingTx } from '../../application/store/actions';
+import { flush, unsetPendingTx, updateUtxosAssetsBalances } from '../../application/store/actions';
 import { browser } from 'webextension-polyfill-ts';
 
 interface Props {
@@ -14,6 +13,7 @@ interface Props {
   className?: string;
   currentPage?: string;
   hasBackBtn?: boolean;
+  refreshCb?: (balances: { [p: string]: number }) => void;
 }
 
 const ShellPopUp: React.FC<Props> = ({
@@ -23,6 +23,7 @@ const ShellPopUp: React.FC<Props> = ({
   className = '',
   currentPage,
   hasBackBtn = true,
+  refreshCb,
 }: Props) => {
   const history = useHistory();
   const [{ wallets }, dispatch] = useContext(AppContext);
@@ -33,6 +34,10 @@ const ShellPopUp: React.FC<Props> = ({
   //
   const goToPreviousPath = () => history.goBack();
   const goToHome = () => {
+    // If already home, refresh state and return balances
+    if (history.location.pathname === '/') {
+      dispatch(updateUtxosAssetsBalances(refreshCb, (error) => console.log(error)));
+    }
     if (wallets[0].pendingTx) {
       dispatch(
         unsetPendingTx(
@@ -80,7 +85,7 @@ const ShellPopUp: React.FC<Props> = ({
             <span>{currentPage}</span>
           </button>
         ) : (
-          <div className="h-8"></div>
+          <div className="h-8" />
         )}
       </header>
 

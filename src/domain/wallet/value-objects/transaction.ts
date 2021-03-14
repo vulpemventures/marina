@@ -1,5 +1,6 @@
 import { ValueObject } from '../../core/ValueObject';
 import { address, decodePset } from 'ldk';
+import { Address } from './address';
 
 export interface TransactionProps {
   [key: string]: any;
@@ -9,6 +10,17 @@ export interface TransactionProps {
   sendAmount: number;
   feeAsset: string;
   feeAmount: number;
+  changeAddress?: Address;
+}
+
+export interface TransactionDTO {
+  value: string;
+  sendAddress: string;
+  sendAsset: string;
+  sendAmount: number;
+  feeAsset: string;
+  feeAmount: number;
+  changeAddress?: [address: string, derivationPath?: string];
 }
 
 export class Transaction extends ValueObject<TransactionProps> {
@@ -36,6 +48,10 @@ export class Transaction extends ValueObject<TransactionProps> {
     return this.props.feeAmount;
   }
 
+  get changeAddress(): Address | undefined {
+    return this.props.changeAddress;
+  }
+
   // Can't use the `new` keyword from outside the scope of the class.
   private constructor(props: TransactionProps) {
     super({
@@ -45,6 +61,7 @@ export class Transaction extends ValueObject<TransactionProps> {
       sendAmount: props.sendAmount,
       feeAsset: props.feeAsset,
       feeAmount: props.feeAmount,
+      changeAddress: props.changeAddress,
     });
   }
 
@@ -76,8 +93,6 @@ export class Transaction extends ValueObject<TransactionProps> {
 
   public static create(props: TransactionProps): Transaction {
     if (
-      props === undefined ||
-      props === null ||
       !this.isValidTx(props.value) ||
       !this.isValidAddress(props.sendAddress) ||
       !this.isValidAsset(props.sendAsset) ||
@@ -85,6 +100,8 @@ export class Transaction extends ValueObject<TransactionProps> {
       !this.isValidAsset(props.feeAsset) ||
       !this.isValidAmount(props.feeAmount)
     ) {
+      throw new Error('Transaction must be a valid base64 encoded PSET');
+    } else if (props.changeAddress && !this.isValidAddress(props.changeAddress.value)) {
       throw new Error('Transaction must be a valid base64 encoded PSET');
     } else {
       return new Transaction(props);

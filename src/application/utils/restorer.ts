@@ -7,7 +7,7 @@ export async function nextAddressForWallet(
   wallet: IWallet,
   chain: string,
   change: boolean
-): Promise<string> {
+): Promise<Address> {
   const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
   const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
   // Restore wallet from MasterPublicKey
@@ -26,14 +26,22 @@ export async function nextAddressForWallet(
     throw new Error('Failed to restore wallet');
   }
 
-  let nextAddress: string;
+  let nextAddress;
   if (change) {
-    nextAddress = pubKeyWallet.getNextChangeAddress().confidentialAddress;
+    const { confidentialAddress, derivationPath } = pubKeyWallet.getNextChangeAddress();
+    nextAddress = {
+      confidentialAddress: confidentialAddress,
+      derivationPath: derivationPath,
+    };
   } else {
-    nextAddress = pubKeyWallet.getNextAddress().confidentialAddress;
+    const { confidentialAddress, derivationPath } = pubKeyWallet.getNextAddress();
+    nextAddress = {
+      confidentialAddress: confidentialAddress,
+      derivationPath: derivationPath,
+    };
   }
 
-  return nextAddress;
+  return Address.create(nextAddress.confidentialAddress, nextAddress.derivationPath);
 }
 
 export async function mnemonicWalletFromAddresses(
@@ -81,7 +89,7 @@ export async function xpubWalletFromAddresses(
   return xpubWallet;
 }
 
-class IdentityRestorerFromState implements IdentityRestorerInterface {
+export class IdentityRestorerFromState implements IdentityRestorerInterface {
   private addresses: string[];
 
   constructor(addresses: string[]) {

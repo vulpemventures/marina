@@ -27,7 +27,7 @@ export const utxo: UtxoInterface = {
     nonce: expect.any(Buffer),
     rangeProof: expect.any(Buffer),
     surjectionProof: expect.any(Buffer),
-    script: expect.anything(),
+    script: expect.any(Buffer),
   },
   unblindData: {
     value: expect.any(String),
@@ -39,16 +39,10 @@ export const utxo: UtxoInterface = {
 
 export const getUtxoMap = (num: number) => {
   const utxoMap = new Map();
-  [...Array(num)].forEach((_, i) => {
-    utxoMap.set(
-      {
-        txid: expect.any(String),
-        vout: expect.any(Number),
-      },
-      utxo
-    );
+  [...Array(num)].forEach(() => {
+    utxoMap.set(expect.any(String), utxo);
   });
-  return utxoMap;
+  return expect.objectContaining(utxoMap);
 };
 
 export const testWalletUtxosDTO: WalletDTO = {
@@ -57,29 +51,13 @@ export const testWalletUtxosDTO: WalletDTO = {
   masterXPub: masterXPub,
   masterBlindingKey: masterBlindingKey,
   passwordHash: passwordHash,
-  utxoMap: new Map().set(
-    { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },
-    {
-      txid: expect.any(String),
-      vout: expect.any(Number),
+  utxoMap: JSON.stringify([
+    ...new Map().set('2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439:0', {
+      ...utxo,
       asset: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
       value: 123000000,
-      prevout: {
-        asset: expect.any(Buffer),
-        value: expect.any(Number),
-        nonce: expect.any(Buffer),
-        rangeProof: expect.any(Buffer),
-        surjectionProof: expect.any(Buffer),
-        script: expect.anything(),
-      },
-      unblindData: {
-        value: expect.any(String),
-        asset: expect.any(Buffer),
-        valueBlindingFactor: expect.any(Buffer),
-        assetBlindingFactor: expect.any(Buffer),
-      },
-    }
-  ),
+    }),
+  ]),
   walletId: v4(),
 };
 export const testWalletUtxosProps: IWallet = {
@@ -90,51 +68,15 @@ export const testWalletUtxosProps: IWallet = {
   masterBlindingKey: MasterBlindingKey.create(masterBlindingKey),
   passwordHash: PasswordHash.create(passwordHash),
   utxoMap: new Map()
-    .set(
-      { txid: '2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439', vout: 0 },
-      {
-        txid: expect.any(String),
-        vout: expect.any(Number),
-        asset: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
-        value: 123000000,
-        prevout: {
-          asset: expect.any(Buffer),
-          value: expect.any(Number),
-          nonce: expect.any(Buffer),
-          rangeProof: expect.any(Buffer),
-          surjectionProof: expect.any(Buffer),
-          script: expect.anything(),
-        },
-        unblindData: {
-          value: expect.any(String),
-          asset: expect.any(Buffer),
-          valueBlindingFactor: expect.any(Buffer),
-          assetBlindingFactor: expect.any(Buffer),
-        },
-      }
-    )
-    .set(
-      { txid: '5bd82976903fe9ebff1249f35b5a8b0a7b47053d0980ff08e1c795101a3add5b', vout: 2 },
-      {
-        txid: expect.any(String),
-        vout: expect.any(Number),
-        asset: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
-        value: 42069420,
-        prevout: {
-          asset: expect.any(Buffer),
-          value: expect.any(Number),
-          nonce: expect.any(Buffer),
-          rangeProof: expect.any(Buffer),
-          surjectionProof: expect.any(Buffer),
-          script: expect.anything(),
-        },
-        unblindData: {
-          value: expect.any(String),
-          asset: expect.any(Buffer),
-          valueBlindingFactor: expect.any(Buffer),
-          assetBlindingFactor: expect.any(Buffer),
-        },
-      }
-    ),
+    .set('2de786058f73ff3d60a92c64c3c247b5599115d71a2f920e225646bc69f2f439:0', {
+      ...utxo,
+      asset: '7444b42c0c8be14d07a763ab0c1ca91cda0728b2d44775683a174bcdb98eecc8',
+      value: 123000000,
+    })
+    .set('5bd82976903fe9ebff1249f35b5a8b0a7b47053d0980ff08e1c795101a3add5b:2', {
+      ...utxo,
+      asset: '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
+      value: 42069420,
+    }),
 };
 export const testWalletUtxos: Wallet = Wallet.createWallet(testWalletUtxosProps);

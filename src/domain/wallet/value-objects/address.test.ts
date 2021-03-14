@@ -1,5 +1,5 @@
 import { Address } from './address';
-import { addresses } from '../../../../__test__/fixtures/wallet.json';
+import { addresses } from '../../../../__test__/fixtures/addresses.json';
 
 describe('Address - Regtest', () => {
   test('Should throw if non-base58 characters', () => {
@@ -74,5 +74,11 @@ describe('Address - Liquid', () => {
     expect(address.value).toContain(addresses.liquid.blech32[0]);
     //
     expect(() => Address.create(addresses.liquid.blech32[0].slice(0, 20))).toThrow('decode');
+  });
+
+  test('Should have derivation path', () => {
+    const address = Address.create(addresses.liquid.legacy[0], "m/84'/0'/0'/0/0");
+    expect(address.derivationPath?.split('/')).toHaveLength(6);
+    expect(address.derivationPath).toMatch("m/84'/0'/0'/0/0");
   });
 });

@@ -1,9 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
-import { deriveNewAddress, flush, unsetPendingTx } from '../../../application/store/actions';
+import {
+  deriveNewAddress,
+  flush,
+  setAddress,
+  unsetPendingTx,
+} from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
-import { decrypt, hash } from '../../../application/utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
@@ -14,9 +18,11 @@ import {
   blindAndSignPset,
   blindingInfoFromPendingTx,
   broadcastTx,
-  explorerURL,
-  formatTxid,
-} from '../../utils';
+  decrypt,
+  explorerApiUrl,
+  hash,
+} from '../../../application/utils';
+import { formatTxid } from '../../utils';
 
 interface State {
   mnemonic: string;
@@ -43,8 +49,8 @@ const EndOfFlow: React.FC = () => {
   const wallet = wallets[0];
 
   // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  const mermaidLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     if (!state.aborted && !busy && !isModalUnlockOpen) {
@@ -70,7 +76,7 @@ const EndOfFlow: React.FC = () => {
             outPubkeys
           );
 
-          const txid = await broadcastTx(explorerURL[app.network.value], tx);
+          const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
 
           const onError = (err: Error) => {
             console.log(err);
@@ -85,19 +91,22 @@ const EndOfFlow: React.FC = () => {
           };
 
           // persist change addresses before unsetting the pending tx
-          dispatch(
-            deriveNewAddress(
-              true,
-              () => {
-                if (feeAsset !== sendAsset) {
-                  dispatch(deriveNewAddress(true, onSuccess, onError));
-                } else {
-                  onSuccess();
-                }
-              },
-              onError
-            )
-          );
+          if (wallet.pendingTx?.changeAddress) {
+            dispatch(
+              setAddress(
+                wallet.pendingTx.changeAddress,
+                () => {
+                  //
+                  if (feeAsset !== sendAsset) {
+                    dispatch(deriveNewAddress(true, onSuccess, onError));
+                  } else {
+                    onSuccess();
+                  }
+                },
+                console.log
+              )
+            );
+          }
         } catch (error) {
           setState({ ...state, isLoading: false, error });
         }
@@ -131,12 +140,7 @@ const EndOfFlow: React.FC = () => {
   if (state.isLoading) {
     return (
       <>
-        <div
-          className="flex items-center justify-center h-screen p-8"
-          id="marina-loader"
-          ref={marinaLoaderRef}
-        />
-
+        <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />
         <ModalUnlock
           isModalUnlockOpen={isModalUnlockOpen}
           handleModalUnlockClose={handleModalUnlockClose}
