@@ -112,8 +112,6 @@ class Backend {
   // this eventually will go in the repository localStorage
   enabledSites: string[];
 
-  private port!: Runtime.Port;
-
   constructor() {
     // we keep a local in-memory list of enabled sites in this session
     this.enabledSites = [];
