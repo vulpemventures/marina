@@ -1,12 +1,11 @@
 import { changeNetwork, initApp, logIn, logOut, onboardingComplete, verifyWallet } from './app';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { Network } from '../../../domain/app/value-objects';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
+import { repos } from '../../../infrastructure';
 import { appInitialState, appReducer } from '../reducers';
 import { assetInitState } from '../reducers/asset-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
+import { transactionInitState } from '../reducers/transaction-reducer';
+import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testWallet } from '../../../../__test__/fixtures/test-wallet';
 import {
@@ -21,19 +20,11 @@ import {
   testAppWalletVerifiedDTO,
   testAppWalletVerifiedProps,
 } from '../../../../__test__/fixtures/test-app';
-import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
-import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
-import { transactionInitState } from '../reducers/transaction-reducer';
 
 describe('App Actions', () => {
-  let repos, store: ReturnType<typeof mockThunkReducer>;
+  let store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {
-    repos = {
-      app: new BrowserStorageAppRepo() as IAppRepository,
-      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
-      wallet: new BrowserStorageWalletRepo() as IWalletRepository,
-    };
     store = mockThunkReducer(appReducer, appInitialState, repos);
   });
 
@@ -54,8 +45,9 @@ describe('App Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [],
     });
   });
 
@@ -79,8 +71,9 @@ describe('App Actions', () => {
       app: testAppWalletVerifiedProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [],
     });
   });
 
@@ -104,8 +97,9 @@ describe('App Actions', () => {
       app: testAppOnboardedProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [],
     });
   });
 
@@ -118,8 +112,9 @@ describe('App Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [testWallet],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [testWallet],
     });
 
     const logInAction = function () {
@@ -138,8 +133,9 @@ describe('App Actions', () => {
       app: testAppAuthenticatedProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [testWallet],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [testWallet],
     });
   });
 
@@ -184,8 +180,9 @@ describe('App Actions', () => {
       app: testAppProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [],
     });
   });
 
@@ -210,8 +207,9 @@ describe('App Actions', () => {
       app: testAppNetworkLiquidProps,
       assets: assetInitState,
       onboarding: onboardingInitState,
-      wallets: [],
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
+      wallets: [],
     });
   });
 });

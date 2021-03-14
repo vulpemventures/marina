@@ -10,16 +10,24 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
-import { nextAddressForWallet } from '../../../application/utils/restorer';
-import { imgPathMapMainnet, imgPathMapRegtest, isValidAddressForNetwork } from '../../utils';
+import {
+  imgPathMapMainnet,
+  imgPathMapRegtest,
+  isValidAddressForNetwork,
+  nextAddressForWallet,
+} from '../../../application/utils';
+import { Address } from '../../../domain/wallet/value-objects';
+import { fromSatoshi } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
   amount: number;
   assetTicker: string;
+  balances: { [assetHash: string]: number };
 }
 
 interface AddressAmountFormProps {
+  balances: { [assetHash: string]: number };
   dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
   state: IAppState;
@@ -107,7 +115,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
 const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmountFormValues>({
   mapPropsToValues: (props: AddressAmountFormProps): AddressAmountFormValues => ({
-    address: props.state.transaction.receipientAddress,
+    address: props.state.transaction.receipientAddress?.value ?? '',
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
@@ -117,6 +125,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     assetTicker:
       props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
       '',
+    balances: props.balances,
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
@@ -133,18 +142,13 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       amount: Yup.number()
         .required('Please enter a valid amount')
         .min(0.00000001, 'Amount should be at least 1 satoshi')
+        .test('too-many-digits', 'Too many digits', (value) => {
+          return value !== undefined && value.toString().length < 14;
+        })
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return (
             value !== undefined &&
-            new Promise((resolve, reject) => {
-              props.dispatch(
-                getAllAssetBalances(
-                  (balances) =>
-                    resolve(value <= balances[props.state.transaction.asset] / Math.pow(10, 8)),
-                  () => reject('Something went wrong')
-                )
-              );
-            })
+            value <= fromSatoshi(props.balances[props.state.transaction.asset])
           );
         }),
     }),
@@ -157,11 +161,17 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // this view. We'll derive the address when persisting the pending tx.
     const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
     props.dispatch(
-      setAddressesAndAmount(values.address, changeAddress, values.amount * Math.pow(10, 8))
+      setAddressesAndAmount(
+        Address.create(values.address),
+        Address.create(changeAddress.value, changeAddress.derivationPath),
+        values.amount * Math.pow(10, 8)
+      )
     );
-    props.history.push(SEND_CHOOSE_FEE_ROUTE);
+    props.history.push({
+      pathname: SEND_CHOOSE_FEE_ROUTE,
+      state: { changeAddress: changeAddress },
+    });
   },
-
   displayName: 'AddressAmountForm',
 })(AddressAmountForm);
 
@@ -174,17 +184,12 @@ const AddressAmount: React.FC = () => {
   const handleBackBtn = () => {
     history.push({
       pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash: state.transaction.asset, assetTicker },
+      state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
     });
   };
 
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (b) => setBalances(b),
-        (error) => console.log(error)
-      )
-    );
+    dispatch(getAllAssetBalances(setBalances, console.log));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -196,7 +201,7 @@ const AddressAmount: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={(balances[state.transaction.asset] ?? 0) / Math.pow(10, 8)}
+        assetBalance={fromSatoshi(balances[state.transaction.asset] ?? 0)}
         assetImgPath={
           state.app.network.value === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
@@ -208,7 +213,12 @@ const AddressAmount: React.FC = () => {
         fiatCurrency="$"
       />
 
-      <AddressAmountEnhancedForm dispatch={dispatch} history={history} state={state} />
+      <AddressAmountEnhancedForm
+        dispatch={dispatch}
+        history={history}
+        state={state}
+        balances={balances}
+      />
     </ShellPopUp>
   );
 };

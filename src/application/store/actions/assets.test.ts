@@ -5,12 +5,8 @@ import { appInitialState, appReducer } from '../reducers';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { assetInitState } from '../reducers/asset-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
+import { txsHistoryInitState } from '../reducers/txs-history-reducer';
+import { repos } from '../../../infrastructure';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { testWalletDTO, testWalletProps } from '../../../../__test__/fixtures/test-wallet';
 import { getUtxoMap, testWalletUtxosProps } from '../../../../__test__/fixtures/test-utxos';
@@ -24,14 +20,9 @@ import { mint } from '../../../../__test__/_regtest';
 jest.mock('uuid');
 
 describe('Assets Actions', () => {
-  let repos, store: ReturnType<typeof mockThunkReducer>;
+  let store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {
-    repos = {
-      app: new BrowserStorageAppRepo() as IAppRepository,
-      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
-      wallet: new BrowserStorageWalletRepo() as IWalletRepository,
-    };
     store = mockThunkReducer(appReducer, appInitialState, repos);
   });
 
@@ -65,7 +56,6 @@ describe('Assets Actions', () => {
   });
 
   test('Should get all asset infos', async () => {
-    jest.setTimeout(30000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -148,7 +138,7 @@ describe('Assets Actions', () => {
         ticker: 'STIKR',
       },
     };
-    mockBrowser.storage.local.get.expect('assets').andResolve(testAssets);
+    mockBrowser.storage.local.get.expect('assets').andResolve({ assets: testAssets });
     mockBrowser.storage.local.set
       .expect({
         assets: {
@@ -175,12 +165,12 @@ describe('Assets Actions', () => {
         regtest: expectedAssets,
       },
       onboarding: onboardingInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(3) }],
     });
   });
 
   test('Should not fetch info from network if asset is in store', async () => {
-    jest.setTimeout(20000);
     // Create basic wallet in React state and browser storage
     mockBrowser.storage.local.get.expect('wallets').andResolve({ wallets: [] });
     mockBrowser.storage.local.set.expect({ wallets: [testWalletDTO] }).andResolve();
@@ -237,7 +227,7 @@ describe('Assets Actions', () => {
         ticker: 'SHIT',
       },
     };
-    mockBrowser.storage.local.get.expect('assets').andResolve(testAssetsUpdated1);
+    mockBrowser.storage.local.get.expect('assets').andResolve({ assets: testAssetsUpdated1 });
     mockBrowser.storage.local.set
       .expect({ assets: { ...assetInitState, regtest: expectedAssets } })
       .andResolve();
@@ -263,6 +253,7 @@ describe('Assets Actions', () => {
         regtest: expectedAssets,
       },
       onboarding: onboardingInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [{ ...testWalletProps, utxoMap: getUtxoMap(1) }],
     });
   });

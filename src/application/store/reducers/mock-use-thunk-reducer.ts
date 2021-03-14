@@ -10,7 +10,7 @@ export function mockThunkReducer<S, A>(
     let actions: A[] = [];
     let state = { ...initialState };
 
-    const self = {
+    return {
       getState(): S {
         return state;
       },
@@ -30,8 +30,6 @@ export function mockThunkReducer<S, A>(
         actions = [];
       },
     };
-
-    return self;
   };
 
   return mockStore();

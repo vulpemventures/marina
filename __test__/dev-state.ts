@@ -1,6 +1,6 @@
 import { faucet, fetchUtxos, mint } from './_regtest';
 import { deriveNewAddress, setUtxos } from '../src/application/store/actions';
-import { xpubWalletFromAddresses } from '../src/application/utils/restorer';
+import { xpubWalletFromAddresses } from '../src/application/utils';
 import { Thunk, IAppState, Action } from '../src/domain/common';
 import { Address } from '../src/domain/wallet/value-objects';
 
@@ -22,8 +22,8 @@ export function createDevState(
         dispatch(
           deriveNewAddress(
             false,
-            (confidentialAddress) => {
-              resolve(confidentialAddress);
+            (address) => {
+              resolve(address.value);
             },
             (err: Error) => reject(err.message)
           )
@@ -39,11 +39,15 @@ export function createDevState(
       const utxosAddr2 = await fetchUtxos(confidentialAddr2);
       //
       if (utxosAddr1.length < 3) {
+        console.log(`Send 21 BTC to ${confidentialAddr1}`);
         await faucet(confidentialAddr1, 21); // L-BTC
+        console.log(`Send 996699 VLP to ${confidentialAddr1}`);
         await mint(confidentialAddr1, 996699, 'Vulpem', 'VLP');
+        console.log(`Send 4200 USDt to ${confidentialAddr1}`);
         await mint(confidentialAddr1, 4200, 'Tether USD', 'USDt');
       }
       if (utxosAddr2.length < 1) {
+        console.log(`Send 100 STIKR to ${confidentialAddr2}`);
         await mint(confidentialAddr2, 100, 'Sticker pack', 'STIKR');
       }
       //

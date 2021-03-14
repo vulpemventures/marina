@@ -57,7 +57,7 @@ module.exports = {
         8.6: '8.6rem',
       },
       width: {
-        29: '29rem'
+        29: '29rem',
       },
       minHeight: {
         80: '80%',
@@ -73,5 +73,5 @@ module.exports = {
       //outline: ['focus'],
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
 };

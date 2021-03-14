@@ -15,141 +15,82 @@ import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { AppContext } from '../../../application/store/context';
-import {
-  flush,
-  setUtxos,
-  getAllAssetBalances,
-  updateAllAssetInfos,
-} from '../../../application/store/actions';
-import { xpubWalletFromAddresses } from '../../../application/utils/restorer';
+import { flush, updateUtxosAssetsBalances } from '../../../application/store/actions';
 import { createDevState } from '../../../../__test__/dev-state';
-import { imgPathMapMainnet, imgPathMapRegtest, lbtcAssetByNetwork } from '../../utils';
+import { fromSatoshi } from '../../utils';
+import {
+  imgPathMapMainnet,
+  imgPathMapRegtest,
+  lbtcAssetByNetwork,
+} from '../../../application/utils';
+import { waitAtLeast } from '../../../application/utils/common';
 
 const Home: React.FC = () => {
-  const [{ wallets, app, assets, transaction }, dispatch] = useContext(AppContext);
-  const [isAssetDataLoaded, setAssetDataLoaded] = useState(false);
+  const history = useHistory();
+  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
+  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+  let buttonList;
+
+  const handleAssetBalanceButtonClick = (asset: { [key: string]: string }) => {
+    const { assetHash, assetTicker } = asset;
+    history.push({
+      pathname: TRANSACTIONS_ROUTE,
+      state: {
+        assetsBalance,
+        assetHash,
+        assetTicker,
+      },
+    });
+  };
+
+  const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
+  const handleReceive = () => showSaveMnemonicModal(true);
+  const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
   // Populate ref div with svg animation
-  const marinaLoaderRef = React.useRef(null);
-  useLottieLoader(marinaLoaderRef);
+  const mermaidLoaderRef = React.useRef(null);
+  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     if (process.env.SKIP_ONBOARDING) {
       dispatch(createDevState());
     }
+    // Update utxos set, owned assets and balances
+    // Wait at least 800ms to avoid flickering
+    waitAtLeast(
+      800,
+      new Promise((resolve, reject) => {
+        dispatch(
+          updateUtxosAssetsBalances(
+            (balances) => resolve(balances),
+            (error) => reject(error.message)
+          )
+        );
+      })
+    )
+      .then(setAssetsBalance)
+      .catch(console.error);
+    // Flush last sent tx
+    if (transaction.asset !== '') {
+      dispatch(flush());
+      browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (wallets[0].utxoMap.size > 0) {
-      dispatch(
-        updateAllAssetInfos(() => {
-          dispatch(
-            getAllAssetBalances(
-              (balances) => {
-                setAssetsBalance(balances);
-                setAssetDataLoaded(true);
-              },
-              (error) => console.log(error)
-            )
-          );
-        })
-      );
-    } else {
-      setAssetDataLoaded(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [app.network.value, wallets]);
-
-  const history = useHistory();
-  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  const [isFetchingUtxos, setIsFetchingUtxos] = useState<boolean>(!wallets[0].pendingTx);
-  const wallet = wallets[0];
-
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      if (isFetchingUtxos) {
-        const w = await xpubWalletFromAddresses(
-          wallet.masterXPub.value,
-          wallet.masterBlindingKey.value,
-          wallet.confidentialAddresses,
-          app.network.value
-        );
-
-        dispatch(
-          setUtxos(
-            w.getAddresses(),
-            () => {
-              if (transaction.asset !== '') {
-                dispatch(flush());
-                browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
-              }
-              setIsFetchingUtxos(false);
-            },
-            (err: Error) => {
-              console.log(err);
-            }
-          )
-        );
-      }
-    })();
-  });
-
+  // If extension was closed when a tx is pending then navigate to confirmation route
   if (wallets[0].pendingTx) {
     history.push(SEND_CONFIRMATION_ROUTE);
     return <></>;
   }
 
-  const handleClick = (asset: { [key: string]: string }) => {
-    const { assetHash, assetTicker } = asset;
-    history.push({
-      pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash, assetTicker },
-    });
-  };
-
-  // Save mnemonic modal
-  const handleSaveMnemonicClose = () => {
-    showSaveMnemonicModal(false);
-  };
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
-
-  // TODO: Show modal conditionnaly base on state
-  // blocked by https://github.com/vulpemventures/marina/issues/15
-  const handleReceive = () => showSaveMnemonicModal(true);
-  const handleSend = () => history.push(SELECT_ASSET_ROUTE);
-
-  // Lottie mermaid animation
-  if (
-    isFetchingUtxos ||
-    (Object.keys(assets[app.network.value] || {}).length === 0 && !isAssetDataLoaded)
-  ) {
-    return (
-      <div
-        className="flex items-center justify-center h-screen p-8"
-        id="marina-loader"
-        ref={marinaLoaderRef}
-      />
-    );
-  }
-
-  // Generate ButtonList
-  let buttonList;
-  if (Object.entries(assets[app.network.value]).length === 0 && isAssetDataLoaded) {
-    // Wallet is empty
-    buttonList = (
-      <ButtonAsset
-        assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
-        assetHash={lbtcAssetByNetwork(app.network.value)}
-        assetName="Liquid Bitcoin"
-        assetTicker="L-BTC"
-        quantity={0}
-        handleClick={handleClick}
-      />
-    );
+  if (Object.keys(assetsBalance).length === 0) {
+    // Lottie mermaid animation
+    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   } else {
-    // Wallet has coins
+    // Generate list of Asset/Balance buttons
     buttonList = Object.entries(assets[app.network.value] || {}).map(([hash, { name, ticker }]) => {
       return (
         <ButtonAsset
@@ -161,9 +102,9 @@ const Home: React.FC = () => {
           assetHash={hash}
           assetName={name}
           assetTicker={ticker}
-          quantity={(assetsBalance[hash] ?? 0) / Math.pow(10, 8)}
+          quantity={fromSatoshi(assetsBalance[hash] ?? 0)}
           key={hash}
-          handleClick={handleClick}
+          handleClick={handleAssetBalanceButtonClick}
         />
       );
     });
@@ -174,9 +115,10 @@ const Home: React.FC = () => {
       backgroundImagePath="/assets/images/popup/bg-home.png"
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       hasBackBtn={false}
+      refreshCb={setAssetsBalance}
     >
       <Balance
-        assetBalance={(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0) / Math.pow(10, 8)}
+        assetBalance={fromSatoshi(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
         assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
         assetTicker="L-BTC"
         bigBalanceText={true}

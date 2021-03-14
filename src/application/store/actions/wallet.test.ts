@@ -7,13 +7,11 @@ import {
   unsetPendingTx,
 } from './wallet';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { IAppRepository } from '../../../domain/app/i-app-repository';
-import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
-import { BrowserStorageAppRepo } from '../../../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../../../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { appInitialState, appReducer } from '../reducers';
 import { assetInitState } from '../reducers/asset-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
+import { transactionInitState } from '../reducers/transaction-reducer';
+import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import {
   testWalletDTO,
@@ -26,25 +24,21 @@ import {
   testWalletWithPendingTxDTO,
   testWalletWithPendingTxProps,
 } from '../../../../__test__/fixtures/test-wallet';
-import { mnemonic, password, pendingTx } from '../../../../__test__/fixtures/wallet.json';
+import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
+import {
+  mnemonic as mnemonicRestore,
+  password as passwordRestore,
+} from '../../../../__test__/fixtures/restore-wallet.json';
 import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { transactionInitState } from '../reducers/transaction-reducer';
-import { Transaction } from '../../../domain/wallet/value-objects/transaction';
-import { BrowserStorageAssetsRepo } from '../../../infrastructure/assets/browser-storage-assets-repository';
-import { IAssetsRepository } from '../../../domain/asset/i-assets-repository';
+import { repos } from '../../../infrastructure';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
 
 describe('Wallet Actions', () => {
-  let repos, store: ReturnType<typeof mockThunkReducer>;
+  let store: ReturnType<typeof mockThunkReducer>;
 
   beforeAll(() => {
-    repos = {
-      app: new BrowserStorageAppRepo() as IAppRepository,
-      assets: new BrowserStorageAssetsRepo() as IAssetsRepository,
-      wallet: new BrowserStorageWalletRepo() as IWalletRepository,
-    };
     store = mockThunkReducer(appReducer, appInitialState, repos);
   });
 
@@ -66,6 +60,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletProps],
     });
   });
@@ -92,6 +87,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletProps],
     });
   });
@@ -104,8 +100,8 @@ describe('Wallet Actions', () => {
       return new Promise((resolve, reject) => {
         store.dispatch(
           restoreWallet(
-            Password.create(password),
-            Mnemonic.create(mnemonic),
+            Password.create(passwordRestore),
+            Mnemonic.create(mnemonicRestore),
             () => resolve(store.getState()),
             (err: Error) => reject(err.message)
           )
@@ -118,6 +114,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletRestoredProps],
     });
   });
@@ -129,6 +126,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletProps],
     });
 
@@ -154,6 +152,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletWithConfidentialAddrProps],
     });
   });
@@ -165,6 +164,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletWithConfidentialAddrProps],
     });
 
@@ -192,6 +192,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletWith2ConfidentialAddrProps],
     });
   });
@@ -203,6 +204,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletProps],
     });
 
@@ -212,13 +214,14 @@ describe('Wallet Actions', () => {
     const setPendingTxAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          setPendingTx(
-            Transaction.create(pendingTx),
-            () => {
-              resolve(store.getState());
-            },
-            (err: Error) => reject(err.message)
-          )
+          testWalletWithPendingTxProps.pendingTx &&
+            setPendingTx(
+              testWalletWithPendingTxProps.pendingTx,
+              () => {
+                resolve(store.getState());
+              },
+              (err: Error) => reject(err.message)
+            )
         );
       });
     };
@@ -228,6 +231,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletWithPendingTxProps],
     });
   });
@@ -239,6 +243,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletWithPendingTxProps],
     });
 
@@ -265,6 +270,7 @@ describe('Wallet Actions', () => {
       assets: assetInitState,
       onboarding: onboardingInitState,
       transaction: transactionInitState,
+      txsHistory: txsHistoryInitState,
       wallets: [testWalletProps],
     });
   });

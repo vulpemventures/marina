@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
@@ -9,29 +10,32 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ModalConfirm from '../../components/modal-confirm';
 import ShellPopUp from '../../components/shell-popup';
-import { getAllAssetBalances, setAsset } from '../../../application/store/actions';
+import { setAsset, updateTxsHistory } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
-import { imgPathMapMainnet, imgPathMapRegtest } from '../../utils';
+import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { esploraURL, fromSatoshi, fromSatoshiStr } from '../../utils';
+import { TxDisplayInterface } from '../../../domain/transaction';
 
 interface LocationState {
+  assetsBalance: { [hash: string]: number };
   assetHash: string;
   assetTicker: string;
 }
 
 const Transactions: React.FC = () => {
   const history = useHistory();
-  const [{ app }, dispatch] = useContext(AppContext);
-  const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
+  const [{ app, txsHistory, wallets }, dispatch] = useContext(AppContext);
+  const { confidentialAddresses } = wallets[0];
   const { state } = useLocation<LocationState>();
-  const openTxDetailsModal = () => showTxDetailsModal(true);
+  const assetImgPath =
+    app.network.value === 'regtest'
+      ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
+      : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
+
+  // TxDetails Modal
+  const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
+  const [modalTxDetails, setmodalTxDetails] = useState<TxDisplayInterface>();
   const closeTxDetailsModal = () => showTxDetailsModal(false);
-  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
-  // Transaction details
-  const txId = '69540a36a63e4f06d298ecacf243639fd5dfc5a31a14f355e14168a59577392a';
-  const txExplorerUrl = `https://blockstream.info/liquid/tx/${txId}`;
-  const receptionDate = 'October 19, 2020';
-  const amount = '0.00598562 BTC';
-  const fee = '0.000000746 BTC';
 
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -43,17 +47,72 @@ const Transactions: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
+  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  const handleOpenExplorer = () =>
+    browser.tabs.create({
+      url: `${esploraURL[app.network.value]}/tx/${modalTxDetails?.txId}`,
+      active: false,
+    });
+
+  /**
+   * Update txs history once at first render
+   */
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (balances) => setAssetsBalance(balances),
-        (error) => console.log(error)
-      )
-    );
+    dispatch(updateTxsHistory());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  /**
+
+  /**
+   * Log errors if any
+   */
+  useEffect(() => {
+    if (txsHistory.errors && txsHistory.errors.message.length > 0)
+      console.error(txsHistory.errors?.message);
+  }, [txsHistory.errors]);
+
+  /**
+   * Generate transaction list for current asset
+   * Will render new button tx as soon as data is ready
+   * @returns Memoized widgets
+   */
+  const buttonTransactions = useMemo(() => {
+    //
+    const openTxDetailsModal = (txId: string) => {
+      showTxDetailsModal(true);
+      const txsByTxId = getTxsDetails(
+        Object.values(txsHistory[app.network.value]),
+        app.network.value,
+        confidentialAddresses
+      ).byTxId;
+      setmodalTxDetails(txsByTxId[txId]);
+    };
+    //
+    const txsByAssets = getTxsDetails(
+      Object.values(txsHistory[app.network.value]),
+      app.network.value,
+      confidentialAddresses
+    ).byAsset;
+    //
+    return (
+      txsByAssets[state.assetHash]
+        // Descending order
+        ?.sort((a, b) => b.blockTime - a.blockTime)
+        .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
+          <ButtonTransaction
+            amount={fromSatoshiStr(amount)}
+            assetTicker={state.assetTicker}
+            key={`${state.assetTicker}_${index}`}
+            handleClick={openTxDetailsModal}
+            toSelf={toSelf}
+            txDate={dateContracted}
+            txId={txId}
+            txType={type}
+          />
+        ))
+    );
+  }, [app.network.value, confidentialAddresses, state.assetHash, state.assetTicker, txsHistory]);
 
   return (
     <ShellPopUp
@@ -63,12 +122,8 @@ const Transactions: React.FC = () => {
       currentPage="Transactions"
     >
       <Balance
-        assetBalance={(assetsBalance[state.assetHash] ?? 0) / Math.pow(10, 8)}
-        assetImgPath={
-          app.network.value === 'regtest'
-            ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
-            : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet['']
-        }
+        assetBalance={fromSatoshi(state.assetsBalance[state.assetHash] ?? 0)}
+        assetImgPath={assetImgPath}
         assetTicker={state.assetTicker}
         bigBalanceText={true}
         fiatBalance={120}
@@ -80,71 +135,46 @@ const Transactions: React.FC = () => {
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
       <ButtonList title="Transactions" type="transactions">
-        <ButtonTransaction
-          assetTicker={state.assetTicker}
-          onClick={openTxDetailsModal}
-          txDate="19 oct 2020"
-          txType="receive"
-          quantity={0.00598562}
-        />
-        <ButtonTransaction
-          assetTicker={state.assetTicker}
-          onClick={openTxDetailsModal}
-          txDate="27 sep 2020"
-          txType="send"
-          quantity={0.00478849}
-        />
-        <ButtonTransaction
-          assetTicker={state.assetTicker}
-          onClick={openTxDetailsModal}
-          txDate="7 apr 2020"
-          txType="receive"
-          quantity={0.00237845}
-        />
-        <ButtonTransaction
-          assetTicker={state.assetTicker}
-          onClick={openTxDetailsModal}
-          txDate="7 apr 2020"
-          txType="receive"
-          quantity={0.00237845}
-        />
-        <ButtonTransaction
-          assetTicker={state.assetTicker}
-          onClick={openTxDetailsModal}
-          txDate="7 apr 2020"
-          txType="receive"
-          quantity={0.00237845}
-        />
+        {buttonTransactions}
       </ButtonList>
 
       <Modal isOpen={isTxDetailsModalOpen} onClose={closeTxDetailsModal}>
         <div className="mx-auto text-center">
           <img
-            className="w-11 mt-0.5 block mx-auto mb-2"
-            src={'assets/images/liquid-assets/liquid-btc.svg'}
+            className="w-8 h-8 mt-0.5 block mx-auto mb-2"
+            src={assetImgPath}
             alt="liquid bitcoin logo"
           />
-          <p className="font-medium">Received</p>
-          <p className="text-xs font-light">{receptionDate}</p>
+          <p className="text-base font-medium">
+            {modalTxDetails?.type === 'receive' ? 'Received' : 'Send'}
+          </p>
+          <p className="text-xs font-light">{modalTxDetails?.date}</p>
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
-          <p className="text-primary antialiased font-bold">Confirmed</p>
-          <div>
-            <p className="font-medium">Amount</p>
-            <p className="text-xs font-light">{amount}</p>
+          <div className="flex flex-row">
+            <p className="text-primary text-base antialiased font-bold">Confirmed</p>
+            <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
           </div>
           <div>
-            <p className="font-medium">Fee</p>
-            <p className="text-xs font-light">{fee}</p>
+            <p className="text-base font-medium">Amount</p>
+            <p className="text-xs font-light">
+              {fromSatoshiStr(modalTxDetails?.amount ?? 0)} {state.assetTicker}
+            </p>
           </div>
           <div>
-            <p className="font-medium">ID transaction</p>
-            <p className="wrap text-xs font-light break-all">{txId}</p>
+            <p className="text-base font-medium">Fee</p>
+            <p className="text-xs font-light">
+              {fromSatoshiStr(modalTxDetails?.fee ?? 0)} {state.assetTicker}
+            </p>
+          </div>
+          <div>
+            <p className="text-base font-medium">ID transaction</p>
+            <p className="wrap text-xs font-light break-all">{modalTxDetails?.txId}</p>
           </div>
         </div>
-        <a href={txExplorerUrl} target="_blank" rel="noreferrer">
-          <Button className="w-full">See in Explorer</Button>
-        </a>
+        <Button className="w-full" onClick={handleOpenExplorer}>
+          See in Explorer
+        </Button>
       </Modal>
 
       <ModalConfirm
