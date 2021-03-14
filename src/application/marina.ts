@@ -5,6 +5,9 @@ export interface MarinaProvider {
   disable(): Promise<void>;
 
   setAccount(account: number): Promise<void>;
+
+  getNetwork(): Promise<'liquid' | 'regtest'>;
+
   getAddresses(): Promise<AddressInterface[]>;
 
   getNextAddress(): Promise<AddressInterface>;
@@ -21,6 +24,7 @@ export interface MarinaProvider {
 }
 
 export default class Marina implements MarinaProvider {
+
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
@@ -29,15 +33,20 @@ export default class Marina implements MarinaProvider {
     return this.proxy(this.disable.name, []);
   }
 
+  getNetwork(): Promise<'liquid' | 'regtest'> {
+    return this.proxy(this.getNetwork.name, []);
+  }
+
   getAddresses(): Promise<AddressInterface[]> {
     return this.proxy(this.getAddresses.name, []);
   }
 
   getNextAddress(): Promise<AddressInterface> {
-    throw new Error('Method not implemented.');
+    return this.proxy(this.getNextAddress.name, []);
   }
+
   getNextChangeAddress(): Promise<AddressInterface> {
-    throw new Error('Method not implemented.');
+    return this.proxy(this.getNextChangeAddress.name, []);
   }
 
   setAccount(account: number): Promise<void> {
@@ -45,7 +54,7 @@ export default class Marina implements MarinaProvider {
   }
 
   blindTransaction(psetBase64: string): Promise<string> {
-    throw new Error('Method not implemented.');
+    return this.proxy(this.blindTransaction.name, [psetBase64]);
   }
 
   sendTransaction(
@@ -53,11 +62,11 @@ export default class Marina implements MarinaProvider {
     amountInSatoshis: number,
     assetHash: string
   ): Promise<string> {
-    throw new Error('Method not implemented.');
+    return this.proxy(this.signTransaction.name, [recipientAddress, amountInSatoshis, assetHash]);
   }
 
   signTransaction(psetBase64: string): Promise<string> {
-    throw new Error('Method not implemented.');
+    return this.proxy(this.signTransaction.name, [psetBase64]);
   }
 
   private proxy(name: string, params: any[] = []): Promise<any> {

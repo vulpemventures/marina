@@ -8,7 +8,10 @@ import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
 
 import Marina from './marina';
-import { xpubWalletFromAddresses } from './utils/restorer';
+import { mnemonicWalletFromAddresses, nextAddressForWallet, xpubWalletFromAddresses } from './utils/restorer';
+import { Address, Password } from '../domain/wallet/value-objects';
+import { AddressInterface, greedyCoinSelector, IdentityInterface, UtxoInterface, Wallet, walletFromCoins } from 'ldk';
+import { decrypt } from './utils/crypto';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -98,13 +101,73 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   return id;
 }
 
-async function getCurrentUrl() {
+async function getCurrentUrl(): Promise<string> {
   const [currentTab] = await browser.tabs.query({ currentWindow: true, active: true });
   if (!currentTab.url) throw new Error('No active tab available');
 
   const url = new URL(currentTab.url);
 
-  return url;
+  return url.hostname;
+}
+
+async function getXpub(): Promise<IdentityInterface> {
+  const appRepo = new BrowserStorageAppRepo();
+  const walletRepo = new BrowserStorageWalletRepo();
+
+  const app = await appRepo.getApp();
+  const wallet = await walletRepo.getOrCreateWallet();
+
+  const xpub = await xpubWalletFromAddresses(
+    wallet.masterXPub.value,
+    wallet.masterBlindingKey.value,
+    wallet.confidentialAddresses,
+    app.network.value
+  );
+
+  return xpub;
+}
+
+async function persistAddress(addr: AddressInterface): Promise<void> {
+  const walletRepo = new BrowserStorageWalletRepo();
+  await walletRepo.addDerivedAddress(Address.create(addr.confidentialAddress));
+}
+
+async function getMnemonic(): Promise<IdentityInterface> {
+  const appRepo = new BrowserStorageAppRepo();
+  const walletRepo = new BrowserStorageWalletRepo();
+
+  const app = await appRepo.getApp();
+  const wallet = await walletRepo.getOrCreateWallet();
+
+  // TODO: show shell popup instead of prompt
+  const password = window.prompt("Unlock your wallet");
+  if (!password)
+    throw new Error('You must enter the password to unlock');
+
+  const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+
+  const mnemo = await mnemonicWalletFromAddresses(
+    mnemonic,
+    wallet.masterBlindingKey.value,
+    wallet.confidentialAddresses,
+    app.network.value
+  );
+
+  return mnemo;
+}
+
+async function getCurrentNetwork(): Promise<string> {
+  const appRepo = new BrowserStorageAppRepo();
+  const app = await appRepo.getApp();
+
+  return app.network.value;
+}
+
+async function getCoins(): Promise<UtxoInterface[]> {
+  const walletRepo = new BrowserStorageWalletRepo();
+  const wallet = await walletRepo.getOrCreateWallet();
+
+  return Object.values(wallet.utxoMap);
 }
 
 // TODO all this logic should eventually be moved somewhere else
@@ -130,31 +193,43 @@ class Backend {
   }
 
   async isCurentSiteEnabled() {
-    const url = await getCurrentUrl();
-    return this.enabledSites.includes(url.hostname);
+    const hostname = await getCurrentUrl();
+    return this.enabledSites.includes(hostname);
   }
 
   start() {
-    // We listen for API calls from injected Marina provider.
-    // id is random identifier used as reference in the response
-    // name is the name of the API method
-    // params is the list of arguments from the method
     browser.runtime.onConnect.addListener((port: Runtime.Port) => {
+
+      // We listen for API calls from injected Marina provider.
+      // id is random identifier used as reference in the response
+      // name is the name of the API method
+      // params is the list of arguments from the method
+
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
           switch (name) {
+
+            case Marina.prototype.getNetwork.name:
+              try {
+                const network = await getCurrentNetwork()
+
+                return handleResponse(id, network);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
             case Marina.prototype.enable.name:
               try {
-                const url = await getCurrentUrl();
+                const hostname = await getCurrentUrl();
 
                 // Eventually show the shell popup to ask for confirmation from the user
                 const confirmed = window.confirm(
-                  `Are you sure you want to authorize ${url.hostname} to access your balances?`
+                  `Are you sure you want to authorize ${hostname} to access your balances?`
                 );
 
                 if (!confirmed) return handleError(id, new Error('User denied access'));
 
-                this.enableSite(url.hostname);
+                this.enableSite(hostname);
 
                 return handleResponse(id, undefined);
               } catch (e: any) {
@@ -163,9 +238,9 @@ class Backend {
 
             case Marina.prototype.disable.name:
               try {
-                const url = await getCurrentUrl();
+                const hostname = await getCurrentUrl();
 
-                this.disableSite(url.hostname);
+                this.disableSite(hostname);
 
                 return handleResponse(id, undefined);
               } catch (e: any) {
@@ -178,27 +253,108 @@ class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
 
-                const appRepo = new BrowserStorageAppRepo();
-                const walletRepo = new BrowserStorageWalletRepo();
-
-                const app = await appRepo.getApp();
-                const wallet = await walletRepo.getOrCreateWallet();
-
-                const xpub = await xpubWalletFromAddresses(
-                  wallet.masterXPub.value,
-                  wallet.masterBlindingKey.value,
-                  wallet.confidentialAddresses,
-                  app.network.value
-                );
-
+                const xpub = await getXpub();
                 const addrs = xpub.getAddresses();
+
                 return handleResponse(id, addrs);
               } catch (e: any) {
                 return handleError(id, e);
               }
 
+            case Marina.prototype.getNextAddress.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                const xpub = await getXpub();
+                const nextAddress = xpub.getNextAddress();
+
+                await persistAddress(nextAddress);
+
+                return handleResponse(id, nextAddress);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getNextChangeAddress.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                const xpub = await getXpub();
+                const nextChangeAddress = xpub.getNextChangeAddress();
+
+                await persistAddress(nextChangeAddress);
+
+                return handleResponse(id, nextChangeAddress);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.signTransaction.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                if (!params || params.length != 1) {
+                  return handleError(id, new Error('Missing params'));
+                }
+
+                const [tx] = params;
+
+                const mnemo = await getMnemonic();
+                const signedTx = await mnemo.signPset(tx);
+
+                return handleResponse(id, signedTx);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.sendTransaction.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                if (!params || params.length != 3) {
+                  return handleError(id, new Error('Missing params'));
+                }
+
+                const [recipient, amount, asset] = params;
+
+                const coins = await getCoins();
+                const network = await getCurrentNetwork();
+
+                const txBuilder = walletFromCoins(coins, network);
+
+
+                const mnemo = await getMnemonic();
+                const changeAddress = mnemo.getNextChangeAddress().confidentialAddress;
+
+                const unsignedTx = txBuilder.buildTx(
+                  txBuilder.createTx(),
+                  [{
+                    address: recipient,
+                    value: amount,
+                    asset: asset
+                  }],
+                  greedyCoinSelector(),
+                  (asset: string): string => changeAddress,
+                  true
+                );
+
+                const signedTx = await mnemo.signPset(unsignedTx);
+
+                return handleResponse(id, signedTx);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
             default:
-              break;
+              return handleError(id, new Error('Method not implemented.'));
           }
         }
       );
