@@ -24,7 +24,6 @@ export interface MarinaProvider {
 }
 
 export default class Marina implements MarinaProvider {
-
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
@@ -62,7 +61,7 @@ export default class Marina implements MarinaProvider {
     amountInSatoshis: number,
     assetHash: string
   ): Promise<string> {
-    return this.proxy(this.signTransaction.name, [recipientAddress, amountInSatoshis, assetHash]);
+    return this.proxy(this.sendTransaction.name, [recipientAddress, amountInSatoshis, assetHash]);
   }
 
   signTransaction(psetBase64: string): Promise<string> {

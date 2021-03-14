@@ -1,6 +1,6 @@
 import { browser, Idle, Runtime } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
-import { IDLE_MESSAGE_TYPE } from './utils';
+import { broadcastTx, explorerApiUrl, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
@@ -8,11 +8,18 @@ import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-sto
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 
 import Marina from './marina';
-import { mnemonicWalletFromAddresses, nextAddressForWallet, xpubWalletFromAddresses } from './utils/restorer';
+import { mnemonicWalletFromAddresses, xpubWalletFromAddresses } from './utils/restorer';
 import { Address, Password } from '../domain/wallet/value-objects';
-import { AddressInterface, greedyCoinSelector, IdentityInterface, UtxoInterface, Wallet, walletFromCoins } from 'ldk';
+import {
+  AddressInterface,
+  decodePset,
+  greedyCoinSelector,
+  IdentityInterface,
+  psetToUnsignedTx,
+  UtxoInterface,
+  walletFromCoins,
+} from 'ldk';
 import { decrypt } from './utils/crypto';
-
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -135,9 +142,8 @@ async function getMnemonic(): Promise<IdentityInterface> {
   const wallet = await walletRepo.getOrCreateWallet();
 
   // TODO: show shell popup instead of prompt
-  const password = window.prompt("Unlock your wallet");
-  if (!password)
-    throw new Error('You must enter the password to unlock');
+  const password = window.prompt('Unlock your wallet');
+  if (!password) throw new Error('You must enter the password to unlock');
 
   const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
 
@@ -151,7 +157,7 @@ async function getMnemonic(): Promise<IdentityInterface> {
   return mnemo;
 }
 
-async function getCurrentNetwork(): Promise<string> {
+async function getCurrentNetwork(): Promise<'liquid' | 'regtest'> {
   const appRepo = new BrowserStorageAppRepo();
   const app = await appRepo.getApp();
 
@@ -162,7 +168,7 @@ async function getCoins(): Promise<UtxoInterface[]> {
   const walletRepo = new BrowserStorageWalletRepo();
   const wallet = await walletRepo.getOrCreateWallet();
 
-  return Object.values(wallet.utxoMap);
+  return Array.from(wallet.utxoMap.values());
 }
 
 // TODO all this logic should eventually be moved somewhere else
@@ -194,7 +200,6 @@ class Backend {
 
   start() {
     browser.runtime.onConnect.addListener((port: Runtime.Port) => {
-
       // We listen for API calls from injected Marina provider.
       // id is random identifier used as reference in the response
       // name is the name of the API method
@@ -203,10 +208,9 @@ class Backend {
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
           switch (name) {
-
             case Marina.prototype.getNetwork.name:
               try {
-                const network = await getCurrentNetwork()
+                const network = await getCurrentNetwork();
 
                 return handleResponse(id, network);
               } catch (e: any) {
@@ -294,7 +298,7 @@ class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
 
-                if (!params || params.length != 1) {
+                if (!params || params.length !== 1) {
                   return handleError(id, new Error('Missing params'));
                 }
 
@@ -314,7 +318,7 @@ class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
 
-                if (!params || params.length != 3) {
+                if (!params || params.length !== 3) {
                   return handleError(id, new Error('Missing params'));
                 }
 
@@ -325,25 +329,46 @@ class Backend {
 
                 const txBuilder = walletFromCoins(coins, network);
 
-
                 const mnemo = await getMnemonic();
-                const changeAddress = mnemo.getNextChangeAddress().confidentialAddress;
+                const changeAddress = mnemo.getNextChangeAddress();
 
-                const unsignedTx = txBuilder.buildTx(
+                const unsignedPset = txBuilder.buildTx(
                   txBuilder.createTx(),
-                  [{
-                    address: recipient,
-                    value: amount,
-                    asset: asset
-                  }],
+                  [
+                    {
+                      address: recipient,
+                      value: amount,
+                      asset: asset,
+                    },
+                  ],
                   greedyCoinSelector(),
-                  (asset: string): string => changeAddress,
+                  (asset: string): string => changeAddress.confidentialAddress,
                   true
                 );
 
-                const signedTx = await mnemo.signPset(unsignedTx);
+                const unsignedTx = psetToUnsignedTx(unsignedPset);
+                const outputsIndexToBlind: number[] = [];
+                unsignedTx.outs.forEach((out, i) => {
+                  if (out.script.length > 0) {
+                    outputsIndexToBlind.push(i);
+                  }
+                });
 
-                return handleResponse(id, signedTx);
+                const blindedPset = await mnemo.blindPset(unsignedPset, outputsIndexToBlind);
+                const signedPset = await mnemo.signPset(blindedPset);
+
+                const ptx = decodePset(signedPset);
+                if (!ptx.validateSignaturesOfAllInputs()) {
+                  throw new Error('Transaction contains invalid signatures');
+                }
+                const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
+
+                const txid = await broadcastTx(explorerApiUrl[network], txHex);
+
+                // if we reached this point we can persist the change address
+                await persistAddress(changeAddress);
+
+                return handleResponse(id, txid);
               } catch (e: any) {
                 return handleError(id, e);
               }
