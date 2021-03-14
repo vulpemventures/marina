@@ -9,7 +9,6 @@ import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-stora
 
 import Marina from './marina';
 import { xpubWalletFromAddresses } from './utils/restorer';
-import { AddressInterface } from 'ldk';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -99,55 +98,124 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   return id;
 }
 
-// start listening for connections from the content script and injected scripts
-browser.runtime.onConnect.addListener((port: Runtime.Port) => {
-  const handleResponse = (id: string, data: any) => {
-    port.postMessage({ id, payload: { success: true, data } });
-  };
+async function getCurrentUrl() {
+  const [currentTab] = await browser.tabs.query({ currentWindow: true, active: true });
+  if (!currentTab.url) throw new Error('No active tab available');
 
-  const handleError = (id: string, e: Error) => {
-    port.postMessage({ id, payload: { success: false, error: e.message } });
-  };
-  // We listen for API calls from injected Marina provider.
-  // id is random identifier used as reference in the response
-  // name is the name of the API method
-  // params is the list of arguments from the method
-  port.onMessage.addListener(
-    async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-      // TODO all this logic should eventually be moved somewhere else
+  const url = new URL(currentTab.url);
 
-      switch (name) {
-        case Marina.prototype.enable.name:
-          return handleResponse(id, 'requested website has been enabled');
+  return url;
+}
 
-        case Marina.prototype.getAddresses.name:
-          try {
-            const appRepo = new BrowserStorageAppRepo();
-            const walletRepo = new BrowserStorageWalletRepo();
+// TODO all this logic should eventually be moved somewhere else
+class Backend {
+  // this eventually will go in the repository localStorage
+  enabledSites: string[];
 
-            const app = await appRepo.getApp();
-            const wallet = await walletRepo.getOrCreateWallet();
+  private port!: Runtime.Port;
 
-            const xpub = await xpubWalletFromAddresses(
-              wallet.masterXPub.value,
-              wallet.masterBlindingKey.value,
-              wallet.confidentialAddresses,
-              app.network.value
-            );
+  constructor() {
+    // we keep a local in-memory list of enabled sites in this session
+    this.enabledSites = [];
+  }
 
-            const addrs = xpub.getAddresses();
-
-            // it's safe to hardcode here since in Marina we always deafult to Account 0 in the BIP44 derivation
-            const addressesByAccount: Record<number, AddressInterface[]> = { 0: addrs };
-
-            return handleResponse(id, addressesByAccount);
-          } catch (e) {
-            return handleError(id, e);
-          }
-
-        default:
-          break;
-      }
+  enableSite(hostname: string) {
+    if (!this.enabledSites.includes(hostname)) {
+      this.enabledSites.push(hostname);
     }
-  );
-});
+  }
+
+  disableSite(hostname: string) {
+    if (this.enabledSites.includes(hostname)) {
+      this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
+    }
+  }
+
+  async isCurentSiteEnabled() {
+    const url = await getCurrentUrl();
+    return this.enabledSites.includes(url.hostname);
+  }
+
+  start() {
+    // We listen for API calls from injected Marina provider.
+    // id is random identifier used as reference in the response
+    // name is the name of the API method
+    // params is the list of arguments from the method
+    browser.runtime.onConnect.addListener((port: Runtime.Port) => {
+      port.onMessage.addListener(
+        async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
+          switch (name) {
+            case Marina.prototype.enable.name:
+              try {
+                const url = await getCurrentUrl();
+
+                // Eventually show the shell popup to ask for confirmation from the user
+                const confirmed = window.confirm(
+                  `Are you sure you want to authorize ${url.hostname} to access your balances?`
+                );
+
+                if (!confirmed) return handleError(id, new Error('User denied access'));
+
+                this.enableSite(url.hostname);
+
+                return handleResponse(id, undefined);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.disable.name:
+              try {
+                const url = await getCurrentUrl();
+
+                this.disableSite(url.hostname);
+
+                return handleResponse(id, undefined);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getAddresses.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                const appRepo = new BrowserStorageAppRepo();
+                const walletRepo = new BrowserStorageWalletRepo();
+
+                const app = await appRepo.getApp();
+                const wallet = await walletRepo.getOrCreateWallet();
+
+                const xpub = await xpubWalletFromAddresses(
+                  wallet.masterXPub.value,
+                  wallet.masterBlindingKey.value,
+                  wallet.confidentialAddresses,
+                  app.network.value
+                );
+
+                const addrs = xpub.getAddresses();
+                return handleResponse(id, addrs);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            default:
+              break;
+          }
+        }
+      );
+
+      const handleResponse = (id: string, data: any) => {
+        port.postMessage({ id, payload: { success: true, data } });
+      };
+
+      const handleError = (id: string, e: Error) => {
+        port.postMessage({ id, payload: { success: false, error: e.message } });
+      };
+    });
+  }
+}
+
+// We start listening and handling messages from injected script
+const backend = new Backend();
+backend.start();

@@ -4,40 +4,50 @@ export interface MarinaProvider {
   enable(): Promise<void>;
   disable(): Promise<void>;
 
-  getAddresses(): Promise<Record<number, AddressInterface[]>>;
+  setAccount(account: number): Promise<void>;
+  getAddresses(): Promise<AddressInterface[]>;
 
-  getNextAddress(account?: number): Promise<AddressInterface>;
-  getNextChangeAddress(account?: number): Promise<AddressInterface>;
+  getNextAddress(): Promise<AddressInterface>;
+  getNextChangeAddress(): Promise<AddressInterface>;
 
   sendTransaction(
     recipientAddress: string,
     amountInSatoshis: number,
     assetHash: string
   ): Promise<string>;
+
+  blindTransaction(psetBase64: string): Promise<string>;
   signTransaction(psetBase64: string): Promise<string>;
 }
 
 export default class Marina implements MarinaProvider {
-  private isEnabled: {};
-
-  constructor() {
-    this.isEnabled = false;
-  }
-
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
 
   disable(): Promise<void> {
+    return this.proxy(this.disable.name, []);
+  }
+
+  getAddresses(): Promise<AddressInterface[]> {
+    return this.proxy(this.getAddresses.name, []);
+  }
+
+  getNextAddress(): Promise<AddressInterface> {
+    throw new Error('Method not implemented.');
+  }
+  getNextChangeAddress(): Promise<AddressInterface> {
     throw new Error('Method not implemented.');
   }
 
-  getNextAddress(account?: number): Promise<AddressInterface> {
+  setAccount(account: number): Promise<void> {
     throw new Error('Method not implemented.');
   }
-  getNextChangeAddress(account?: number): Promise<AddressInterface> {
+
+  blindTransaction(psetBase64: string): Promise<string> {
     throw new Error('Method not implemented.');
   }
+
   sendTransaction(
     recipientAddress: string,
     amountInSatoshis: number,
@@ -45,15 +55,12 @@ export default class Marina implements MarinaProvider {
   ): Promise<string> {
     throw new Error('Method not implemented.');
   }
+
   signTransaction(psetBase64: string): Promise<string> {
     throw new Error('Method not implemented.');
   }
 
-  getAddresses(): Promise<Record<number, AddressInterface[]>> {
-    return this.proxy(this.getAddresses.name, []);
-  }
-
-  proxy(name: string, params: any[] = []): Promise<any> {
+  private proxy(name: string, params: any[] = []): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = makeid(16);
 
@@ -78,7 +85,7 @@ export default class Marina implements MarinaProvider {
     });
   }
 
-  call(id: string, name: string, params?: any[]) {
+  private call(id: string, name: string, params?: any[]) {
     window.postMessage(
       {
         id: id,
