@@ -67,6 +67,8 @@ Safari web extensions are available in macOS 11 (Big Sur) and later, and in macO
 * Prettier
 ** https://github.com/marcosvega91/prettier-tailwind
 * https://tsdoc.org[TSDoc]
+* React devtool as standalone Electron app
+** https://github.com/facebook/react/tree/master/packages/react-devtools#usage-with-react-dom
 
 .Lint and auto-fix the extension source
  npm run lint
