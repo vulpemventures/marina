@@ -5,7 +5,7 @@
   "description": "Liquid Wallet Web Extension",
   "permissions": ["storage", "idle", "tabs"],
   "background": {
-    "scripts": ["background_script.js"]
+    "scripts": ["background-script.js"]
   },
   "icons": {
     "16": "assets/images/marina-logo-green-16.png",

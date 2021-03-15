@@ -73,7 +73,7 @@ const ChooseFee: React.FC = () => {
       {
         asset: transaction.asset,
         value: transaction.amountInSatoshi,
-        address: transaction.receipientAddress?.value,
+        address: transaction.receipientAddress?.value ?? '',
       },
     ],
     [transaction.amountInSatoshi, transaction.asset, transaction.receipientAddress]

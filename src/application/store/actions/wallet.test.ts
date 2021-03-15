@@ -23,13 +23,13 @@ import {
   testWalletWithConfidentialAddrProps,
   testWalletWithPendingTxDTO,
   testWalletWithPendingTxProps,
-} from '../../../../__test__/fixtures/test-wallet';
-import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
+} from '../../../../test/fixtures/test-wallet';
+import { mnemonic, password } from '../../../../test/fixtures/wallet.json';
 import {
   mnemonic as mnemonicRestore,
   password as passwordRestore,
-} from '../../../../__test__/fixtures/restore-wallet.json';
-import { testAppProps } from '../../../../__test__/fixtures/test-app';
+} from '../../../../test/fixtures/restore-wallet.json';
+import { testAppProps } from '../../../../test/fixtures/test-app';
 import { repos } from '../../../infrastructure';
 
 // Mock for UniqueEntityID

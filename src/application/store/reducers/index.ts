@@ -8,10 +8,7 @@ import { IApp } from '../../../domain/app/app';
 import { transactionInitState, transactionReducer } from './transaction-reducer';
 import { txsHistoryInitState, txsHistoryReducer } from './txs-history-reducer';
 import { Network } from '../../../domain/app/value-objects';
-import {
-  devAppInitState,
-  devWalletInitState,
-} from '../../../../__test__/fixtures/initial-dev-state';
+import { devAppInitState, devWalletInitState } from '../../../../test/fixtures/initial-dev-state';
 
 export let walletInitState: IWallet[];
 export let appInitState: IApp;
