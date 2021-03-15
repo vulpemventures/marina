@@ -116,8 +116,7 @@ async function getXpub(): Promise<IdentityInterface> {
   const appRepo = new BrowserStorageAppRepo();
   const walletRepo = new BrowserStorageWalletRepo();
 
-  const app = await appRepo.getApp();
-  const wallet = await walletRepo.getOrCreateWallet();
+  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()]);
 
   const xpub = await xpubWalletFromAddresses(
     wallet.masterXPub.value,
@@ -138,14 +137,18 @@ async function getMnemonic(): Promise<IdentityInterface> {
   const appRepo = new BrowserStorageAppRepo();
   const walletRepo = new BrowserStorageWalletRepo();
 
-  const app = await appRepo.getApp();
-  const wallet = await walletRepo.getOrCreateWallet();
+  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()])
 
   // TODO: show shell popup instead of prompt
   const password = window.prompt('Unlock your wallet');
   if (!password) throw new Error('You must enter the password to unlock');
 
-  const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+  let mnemonic: string;
+  try {
+    mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+  } catch (e: any) {
+    throw new Error('Invalid password');
+  }
 
   const mnemo = await mnemonicWalletFromAddresses(
     mnemonic,
