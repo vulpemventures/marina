@@ -20,6 +20,7 @@ import {
   walletFromCoins,
 } from 'ldk';
 import { decrypt } from './utils/crypto';
+import { Network } from '../domain/app/value-objects';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -160,7 +161,7 @@ async function getMnemonic(): Promise<IdentityInterface> {
   return mnemo;
 }
 
-async function getCurrentNetwork(): Promise<'liquid' | 'regtest'> {
+async function getCurrentNetwork(): Promise<Network['value']> {
   const appRepo = new BrowserStorageAppRepo();
   const app = await appRepo.getApp();
 
