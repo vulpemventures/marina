@@ -2,8 +2,8 @@ import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { appInitialState, appReducer } from '../reducers';
 import { repos } from '../../../infrastructure';
 import { updateTxsHistory } from './txs-history';
-import { faucet } from '../../../../__test__/_regtest';
-import { testAppProps } from '../../../../__test__/fixtures/test-app';
+import { faucet } from '../../../../test/_regtest';
+import { testAppProps } from '../../../../test/fixtures/test-app';
 import { assetInitState } from '../reducers/asset-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { txsHistoryInitState } from '../reducers/txs-history-reducer';
@@ -11,11 +11,11 @@ import {
   testWalletDTO,
   testWalletProps,
   testWalletWithConfidentialAddrDTO,
-} from '../../../../__test__/fixtures/test-wallet';
+} from '../../../../test/fixtures/test-wallet';
 import { deriveNewAddress } from './wallet';
-import { confidentialAddresses } from '../../../../__test__/fixtures/wallet.json';
+import { confidentialAddresses } from '../../../../test/fixtures/wallet.json';
 import { transactionInitState } from '../reducers/transaction-reducer';
-import { testTx, testTxsHistoryByNetworkDTO } from '../../../../__test__/fixtures/test-txs-history';
+import { testTx, testTxsHistoryByNetworkDTO } from '../../../../test/fixtures/test-txs-history';
 import { IAppState } from '../../../domain/common';
 
 jest.mock('uuid');

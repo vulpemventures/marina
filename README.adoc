@@ -14,7 +14,7 @@ Liquid Wallet browser extension
  npm run start:chrome-mac
 
 .Development environment
-image::webext-parcel_watch.png[development environment]
+image::webext-parcel-watch.png[development environment]
 
 
 == Packaging the extension

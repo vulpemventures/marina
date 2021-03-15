@@ -8,13 +8,13 @@ import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { repos } from '../../../infrastructure';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
-import { testWalletDTO, testWalletProps } from '../../../../__test__/fixtures/test-wallet';
-import { getUtxoMap, testWalletUtxosProps } from '../../../../__test__/fixtures/test-utxos';
-import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { testAssets, testAssetsUpdated1 } from '../../../../__test__/fixtures/test-assets';
-import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
-import { getRandomWallet } from '../../../../__test__/fixtures/wallet-keys';
-import { mint } from '../../../../__test__/_regtest';
+import { testWalletDTO, testWalletProps } from '../../../../test/fixtures/test-wallet';
+import { getUtxoMap, testWalletUtxosProps } from '../../../../test/fixtures/test-utxos';
+import { testAppProps } from '../../../../test/fixtures/test-app';
+import { testAssets, testAssetsUpdated1 } from '../../../../test/fixtures/test-assets';
+import { mnemonic, password } from '../../../../test/fixtures/wallet.json';
+import { getRandomWallet } from '../../../../test/fixtures/wallet-keys';
+import { mint } from '../../../../test/_regtest';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');

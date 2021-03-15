@@ -1,5 +1,5 @@
 import { Address } from './address';
-import { addresses } from '../../../../__test__/fixtures/addresses.json';
+import { addresses } from '../../../../test/fixtures/addresses.json';
 
 describe('Address - Regtest', () => {
   test('Should throw if non-base58 characters', () => {

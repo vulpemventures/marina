@@ -16,7 +16,7 @@ import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { AppContext } from '../../../application/store/context';
 import { flush, updateUtxosAssetsBalances } from '../../../application/store/actions';
-import { createDevState } from '../../../../__test__/dev-state';
+import { createDevState } from '../../../../test/dev-state';
 import { fromSatoshi } from '../../utils';
 import {
   imgPathMapMainnet,

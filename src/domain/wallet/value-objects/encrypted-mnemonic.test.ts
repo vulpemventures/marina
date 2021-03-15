@@ -1,5 +1,5 @@
 import { EncryptedMnemonic } from './encrypted-mnemonic';
-import { encryptedMnemonic } from '../../../../__test__/fixtures/wallet.json';
+import { encryptedMnemonic } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create an encrypted mnemonic', () => {
   const res = EncryptedMnemonic.create(encryptedMnemonic);

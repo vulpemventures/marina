@@ -1,11 +1,11 @@
 import { extractInfoFromRawTxData, getTxsDetails } from './transaction';
-import receiveUsdtFeeLbtc from '../../../__test__/fixtures/tx-interface/receive/receive-usdt-fee-lbtc.json';
-import receiveLbtcFeeLbtc from '../../../__test__/fixtures/tx-interface/receive/receive-lbtc-fee-lbtc.json';
-import sendLbtcFeeLbtcConf from '../../../__test__/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf.json';
-import sendUsdtFeeLbtcConf from '../../../__test__/fixtures/tx-interface/send/send-usdt-fee-lbtc-conf.json';
-import sendUsdtFeeLbtcUnconf from '../../../__test__/fixtures/tx-interface/send/send-usdt-fee-lbtc-unconf.json';
+import receiveUsdtFeeLbtc from '../../../test/fixtures/tx-interface/receive/receive-usdt-fee-lbtc.json';
+import receiveLbtcFeeLbtc from '../../../test/fixtures/tx-interface/receive/receive-lbtc-fee-lbtc.json';
+import sendLbtcFeeLbtcConf from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf.json';
+import sendUsdtFeeLbtcConf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-conf.json';
+import sendUsdtFeeLbtcUnconf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-unconf.json';
 import { Address } from '../../domain/wallet/value-objects';
-import { addresses, addressesChange } from '../../../__test__/fixtures/wallet.json';
+import { addresses, addressesChange } from '../../../test/fixtures/wallet.json';
 
 describe('Transaction Utils', () => {
   describe('Receive', () => {
