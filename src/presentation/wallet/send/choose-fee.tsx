@@ -321,7 +321,7 @@ const ChooseFee: React.FC = () => {
   const chooseFeeLbtcButton = (
     <Button
       className="flex-1"
-      isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
+      isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
       key={1}
       onClick={handlePayFees}
       roundedMd={true}
@@ -334,7 +334,7 @@ const ChooseFee: React.FC = () => {
   const chooseFeeUsdtButton = (
     <Button
       className="flex-1"
-      isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
+      isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
       key={2}
       onClick={handlePayFees}
       roundedMd={true}
@@ -374,7 +374,7 @@ const ChooseFee: React.FC = () => {
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-              imgPathMapRegtest['']
+            imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
