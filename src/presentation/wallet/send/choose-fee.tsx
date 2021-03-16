@@ -374,7 +374,7 @@ const ChooseFee: React.FC = () => {
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-            imgPathMapRegtest['']
+              imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
