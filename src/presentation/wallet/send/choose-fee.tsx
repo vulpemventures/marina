@@ -28,9 +28,10 @@ import {
   lbtcAssetByNetwork,
   nextAddressForWallet,
   taxiURL,
+  usdtAssetHash,
   utxoMapToArray,
 } from '../../../application/utils';
-import { fromSatoshiStr } from '../../utils';
+import { fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IWallet } from '../../../domain/wallet/wallet';
 
@@ -152,6 +153,7 @@ const ChooseFee: React.FC = () => {
     wallets,
   ]);
 
+  // Build regular tx (no taxi)
   useEffect(() => {
     if (supportedAssets.length > 0) {
       if (
@@ -191,6 +193,7 @@ const ChooseFee: React.FC = () => {
     feeLevel,
     receipients,
     satsPerByte,
+    supportedAssets,
     supportedAssets.length,
     transaction.amountInSatoshi,
     transaction.asset,
@@ -223,10 +226,8 @@ const ChooseFee: React.FC = () => {
   // Fill Taxi tx
   useEffect(() => {
     if (
-      !unsignedPendingTx &&
       Object.keys(transaction.taxiTopup).length !== 0 &&
-      (feeCurrency === transaction.asset ||
-        (transaction.feeChangeAddress && transaction.feeChangeAddress.value !== ''))
+      feeCurrency === usdtAssetHash(assets[app.network.value])
     ) {
       const taxiPayout = {
         value: transaction.taxiTopup.topup?.assetAmount,
@@ -249,12 +250,14 @@ const ChooseFee: React.FC = () => {
       }
     }
   }, [
+    app.network.value,
+    assets,
     changeAddressGetter,
     feeCurrency,
     receipients,
-    transaction,
+    transaction.asset,
+    transaction.feeChangeAddress,
     transaction.taxiTopup,
-    unsignedPendingTx,
     unspents,
   ]);
 
@@ -296,7 +299,14 @@ const ChooseFee: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
-  const handlePayFees = (e: any, assetHash: string) => setFeeCurrency(assetHash);
+  const handlePayFees = (e: any, assetHash: string) => {
+    if (feeCurrency !== assetHash) {
+      setFeeCurrency(assetHash);
+      setUnsignedPendingTx('');
+      setSatsPerByte(0);
+      setTopup({});
+    }
+  };
 
   const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
@@ -360,7 +370,7 @@ const ChooseFee: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={(balances[feeCurrency] ?? 0) / Math.pow(10, 8)}
+        assetBalance={fromSatoshi(balances[feeCurrency] ?? 0)}
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??

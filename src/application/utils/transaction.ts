@@ -27,6 +27,7 @@ import {
   TxStatus,
   TxType,
 } from '../../domain/transaction';
+import { Assets } from '../../domain/asset';
 
 export const blindingInfoFromPendingTx = (
   { value, sendAddress, feeAsset }: TransactionProps,
@@ -147,12 +148,14 @@ export const extractInfoFromRawTxData = (
   vin: Array<InputInterface>,
   vout: Array<BlindedOutputInterface | UnblindedOutputInterface>,
   network: Network['value'],
-  addresses: Address[]
+  addresses: Address[],
+  assetsInStore: Assets
 ): {
   address: string;
   amount: number;
   asset: string;
   feeAsset: string;
+  taxiFeeAmount?: number;
   toSelf: boolean;
   type: TxType;
 } => {
@@ -161,7 +164,8 @@ export const extractInfoFromRawTxData = (
     asset = '',
     address = '',
     changeAmount = 0,
-    feeAmount = 0,
+    lbtcFeeAmount = 0,
+    taxiFeeAmount = 0,
     feeAsset = '',
     hasBlindedOutput = false,
     toSelf = false,
@@ -169,146 +173,259 @@ export const extractInfoFromRawTxData = (
     vinTotalAmount = 0,
     voutTotalAmount = 0;
 
-  // Determine asset and fee asset
-  vin.forEach((item) => {
-    if (!isBlindedOutputInterface(item.prevout)) {
-      if (item.prevout.asset && item.prevout.script) {
-        assets.add(item.prevout.asset);
-      }
-    }
-  });
-  vout.forEach((item) => {
-    if (!isBlindedOutputInterface(item)) {
-      if (item.asset && item.script) {
-        assets.add(item.asset);
-      } else if (item.asset && !item.script) {
-        feeAmount = item.value;
-        feeAsset = item.asset;
-      }
-    }
-  });
-  if (feeAsset && assets.size > 1 && assets.has(feeAsset)) {
-    assets.delete(feeAsset);
-  }
+  const usdt = Object.entries(assetsInStore).find(([_, { ticker }]) => ticker === 'USDt');
+  const isTaxi =
+    !isBlindedOutputInterface(vin[0].prevout) &&
+    vin[0].prevout.value === 1000 &&
+    vin[0].prevout.asset === lbtcAssetByNetwork(network) &&
+    !isBlindedOutputInterface(vout[0]) &&
+    vout[0].asset === usdt?.[0];
 
-  //
-  vin.forEach((item) => {
-    if (!isBlindedOutputInterface(item.prevout)) {
-      if (item.prevout.asset && item.prevout.script && assets.has(item.prevout.asset)) {
+  if (isTaxi) {
+    taxiFeeAmount = !isBlindedOutputInterface(vout[0]) ? vout[0].value : 0;
+    feeAsset = !isBlindedOutputInterface(vout[0]) ? vout[0].asset : '';
+    type = 'send';
+
+    // Infer payment asset
+    // If more than one asset type in vin[1 - x]
+    const assetsVin = new Set<string>();
+    for (let i = 1; i < vin.length; i++) {
+      if (!isBlindedOutputInterface(vin[i].prevout)) {
         try {
-          assets.add(item.prevout.asset);
-          type = 'receive';
-          asset = item.prevout.asset;
-          address = addressLDK.fromOutputScript(
-            Buffer.from(item.prevout.script, 'hex'),
-            networks[network]
-          );
-          // Sum all inputs values
+          assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
+          // eslint-disable-next-line no-empty
+        } catch (_) {}
+      }
+    }
+    asset =
+      assetsVin.size === 1
+        ? usdt![0]
+        : assetsVin.size === 2
+        ? lbtcAssetByNetwork(network)
+        : 'muliple assets';
+
+    if (asset === lbtcAssetByNetwork(network)) {
+      // Calculate payment amount for lbtc payment
+      for (let i = 1; i < vin.length; i++) {
+        if (
+          !isBlindedOutputInterface(vin[i].prevout) &&
+          (vin[i].prevout as UnblindedOutputInterface).asset === lbtcAssetByNetwork(network)
+        ) {
           vinTotalAmount = vinTotalAmount
-            ? vinTotalAmount + item.prevout.value
-            : item.prevout.value;
-        } catch (error) {
-          console.log(error);
-          console.log('vin outpoint:', `${item.txid}:${item.vout}`);
-          console.log('prevout asset:', item.prevout.asset);
-          console.log('prevout value:', item.prevout.value);
-          console.log('prevout script:', item.prevout.script);
-          // Nigiri coinbase invalid prevout.script '51' will be catch here
+            ? vinTotalAmount + (vin[i].prevout as UnblindedOutputInterface).value
+            : (vin[i].prevout as UnblindedOutputInterface).value;
         }
       }
-    }
-  });
-
-  vout.forEach((item) => {
-    if (!isBlindedOutputInterface(item)) {
-      if (item.asset && item.script && assets.has(item.asset)) {
-        const [addrOfMine] = addresses.filter((c) => {
-          return (
-            c.unconfidentialAddress ===
-            addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network])
-          );
-        });
-
-        // Receive Tx - No unblind inputs
-        if (!asset) {
-          type = 'receive';
-          if (addrOfMine?.value) {
-            address = addressLDK.fromOutputScript(
-              Buffer.from(item.script, 'hex'),
-              networks[network]
-            );
-            amount = item.value;
+      // Check if lbtc change
+      vout.forEach((item) => {
+        if (!isBlindedOutputInterface(item)) {
+          // Exclude lbtc fee and filter asset
+          if (item.script && item.asset === lbtcAssetByNetwork(network)) {
+            voutTotalAmount = item.value;
           }
         }
-
-        // Send Tx
-        // Vout asset === unblind input asset
-        if (item.asset === asset) {
-          type = 'send';
-
-          // Sending to unknown address
-          if (!addrOfMine?.value) {
-            address = addressLDK.fromOutputScript(
-              Buffer.from(item.script, 'hex'),
-              networks[network]
-            );
-            amount = item.value;
-          }
-
-          // Send to unconfidential address
-          if (addrOfMine?.value && isChange(addrOfMine)) {
-            changeAmount = item.value;
-          }
-
-          // Sending to yourself
-          if (addrOfMine?.value && !isChange(addrOfMine)) {
-            address = addressLDK.fromOutputScript(
-              Buffer.from(item.script, 'hex'),
-              networks[network]
-            );
-            amount = item.value;
-            toSelf = true;
-          }
-        }
-
-        // Set asset
-        asset = item.asset;
-        // Sum all outputs values
-        voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
-        // Add fee if same asset
-        if (feeAsset === item.asset) {
-          voutTotalAmount = voutTotalAmount + feeAmount;
-        }
-      }
-    } else {
-      hasBlindedOutput = true;
-    }
-  });
-
-  // Send with change output
-  if (!!vinTotalAmount && !!voutTotalAmount) {
-    // To unconfidential address
-    if (!hasBlindedOutput) {
-      amount = vinTotalAmount - changeAmount;
-    } else {
-      // To confidential address
+      });
       amount = vinTotalAmount - voutTotalAmount;
+
+      // Get unconfidential address from blinded output
+      vout.forEach((item) => {
+        if (isBlindedOutputInterface(item)) {
+          address = addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network]);
+        }
+      });
+    } else {
+      // Calculate payment amount for USDt payment
+      const isPaymentToUnconf = vout.every((item) => !isBlindedOutputInterface(item));
+
+      if (!isPaymentToUnconf) {
+        // To confidential address
+        for (let i = 1; i < vin.length; i++) {
+          if (!isBlindedOutputInterface(vin[i].prevout)) {
+            vinTotalAmount = vinTotalAmount
+              ? vinTotalAmount + (vin[i].prevout as UnblindedOutputInterface).value
+              : (vin[i].prevout as UnblindedOutputInterface).value;
+          }
+        }
+        vout.forEach((item) => {
+          if (!isBlindedOutputInterface(item)) {
+            // Exclude lbtc fee
+            if (item.script) {
+              voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
+            }
+          }
+        });
+        amount = vinTotalAmount - voutTotalAmount;
+
+        // Get unconfidential address from blinded output
+        vout.forEach((item) => {
+          if (isBlindedOutputInterface(item)) {
+            address = addressLDK.fromOutputScript(
+              Buffer.from(item.script, 'hex'),
+              networks[network]
+            );
+          }
+        });
+      } else {
+        // To unconfidential address
+        // TODO: need Taxi xpub to determine payment output
+        amount = 0;
+        address = '';
+      }
     }
-  }
 
-  // Send without change
-  if (!!vinTotalAmount && !voutTotalAmount) {
-    amount = vinTotalAmount;
-  }
+    return {
+      address,
+      amount,
+      asset,
+      feeAsset,
+      taxiFeeAmount,
+      toSelf,
+      type,
+    };
 
-  return {
-    address,
-    amount,
-    asset,
-    feeAsset,
-    toSelf,
-    type,
-  };
+    // Non Taxi payment
+  } else {
+    // Determine asset and fee asset
+    vin.forEach((item) => {
+      if (!isBlindedOutputInterface(item.prevout)) {
+        if (item.prevout.asset && item.prevout.script) {
+          assets.add(item.prevout.asset);
+        }
+      }
+    });
+    vout.forEach((item) => {
+      if (!isBlindedOutputInterface(item)) {
+        if (item.asset && item.script) {
+          assets.add(item.asset);
+        } else if (item.asset && !item.script) {
+          lbtcFeeAmount = item.value;
+          feeAsset = item.asset;
+        }
+      }
+    });
+    if (feeAsset && assets.size > 1 && assets.has(feeAsset)) {
+      assets.delete(feeAsset);
+    }
+
+    //
+    vin.forEach((item) => {
+      if (!isBlindedOutputInterface(item.prevout)) {
+        if (item.prevout.asset && item.prevout.script && assets.has(item.prevout.asset)) {
+          try {
+            assets.add(item.prevout.asset);
+            type = 'receive';
+            asset = item.prevout.asset;
+            address = addressLDK.fromOutputScript(
+              Buffer.from(item.prevout.script, 'hex'),
+              networks[network]
+            );
+            // Sum all inputs values
+            vinTotalAmount = vinTotalAmount
+              ? vinTotalAmount + item.prevout.value
+              : item.prevout.value;
+          } catch (error) {
+            console.log(error);
+            console.log('vin outpoint:', `${item.txid}:${item.vout}`);
+            console.log('prevout asset:', item.prevout.asset);
+            console.log('prevout value:', item.prevout.value);
+            console.log('prevout script:', item.prevout.script);
+            // Nigiri coinbase invalid prevout.script '51' will be catch here
+          }
+        }
+      }
+    });
+
+    vout.forEach((item) => {
+      if (!isBlindedOutputInterface(item)) {
+        if (item.asset && item.script && assets.has(item.asset)) {
+          const addrOfMine = addresses.find((c) => {
+            return (
+              c.unconfidentialAddress ===
+              addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network])
+            );
+          });
+
+          // Receive Tx - No unblind inputs
+          if (!asset) {
+            type = 'receive';
+            if (addrOfMine?.value) {
+              address = addressLDK.fromOutputScript(
+                Buffer.from(item.script, 'hex'),
+                networks[network]
+              );
+              amount = item.value;
+            }
+          }
+
+          // Send Tx
+          // Vout asset === unblind input asset
+          if (item.asset === asset) {
+            type = 'send';
+
+            // Sending to unknown address
+            if (!addrOfMine?.value) {
+              address = addressLDK.fromOutputScript(
+                Buffer.from(item.script, 'hex'),
+                networks[network]
+              );
+              amount = item.value;
+            }
+
+            // Send to unconfidential address
+            if (addrOfMine?.value && isChange(addrOfMine)) {
+              changeAmount = item.value;
+            }
+
+            // Sending to yourself
+            if (addrOfMine?.value && !isChange(addrOfMine)) {
+              address = addressLDK.fromOutputScript(
+                Buffer.from(item.script, 'hex'),
+                networks[network]
+              );
+              amount = item.value;
+              toSelf = true;
+            }
+          }
+
+          // Set asset
+          asset = item.asset;
+          // Sum all outputs values
+          voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
+          // Add fee if same asset
+          if (feeAsset === item.asset) {
+            voutTotalAmount = voutTotalAmount + lbtcFeeAmount;
+          }
+        }
+      } else {
+        hasBlindedOutput = true;
+      }
+    });
+
+    // Send with change output
+    if (!!vinTotalAmount && !!voutTotalAmount) {
+      // To unconfidential address
+      if (!hasBlindedOutput) {
+        amount = vinTotalAmount - changeAmount;
+      } else {
+        // To confidential address
+        amount = vinTotalAmount - voutTotalAmount;
+      }
+    }
+
+    // Send without change
+    if (!!vinTotalAmount && !voutTotalAmount) {
+      amount = vinTotalAmount;
+    }
+
+    return {
+      address,
+      amount,
+      asset,
+      feeAsset,
+      toSelf,
+      type,
+    };
+  }
 };
 
 /**
@@ -316,20 +433,25 @@ export const extractInfoFromRawTxData = (
  * @param txs
  * @param network
  * @param addresses
+ * @param assets
  */
 export const getTxsDetails = (
   txs: TxInterface[],
   network: Network['value'],
-  addresses: Address[]
+  addresses: Address[],
+  assets: Assets
 ) => {
   const txArray = txs?.map(
     (tx: TxInterface): TxDisplayInterface => {
-      const { address, asset, feeAsset, amount, toSelf, type } = extractInfoFromRawTxData(
-        tx.vin,
-        tx.vout,
-        network,
-        addresses
-      );
+      const {
+        address,
+        asset,
+        feeAsset,
+        amount,
+        taxiFeeAmount,
+        toSelf,
+        type,
+      } = extractInfoFromRawTxData(tx.vin, tx.vout, network, addresses, assets);
 
       const timeTxInBlock = new Date((tx.status.blockTime ?? 0) * 1000);
       return {
@@ -349,7 +471,7 @@ export const getTxsDetails = (
         asset,
         amount,
         address,
-        fee: tx.fee,
+        fee: taxiFeeAmount ? taxiFeeAmount : tx.fee,
         feeAsset,
         toSelf,
         blockTime: tx.status.blockTime ?? 0,

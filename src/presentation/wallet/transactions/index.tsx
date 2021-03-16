@@ -24,7 +24,7 @@ interface LocationState {
 
 const Transactions: React.FC = () => {
   const history = useHistory();
-  const [{ app, txsHistory, wallets }, dispatch] = useContext(AppContext);
+  const [{ app, assets, txsHistory, wallets }, dispatch] = useContext(AppContext);
   const { confidentialAddresses } = wallets[0];
   const { state } = useLocation<LocationState>();
   const assetImgPath =
@@ -84,7 +84,8 @@ const Transactions: React.FC = () => {
       const txsByTxId = getTxsDetails(
         Object.values(txsHistory[app.network.value]),
         app.network.value,
-        confidentialAddresses
+        confidentialAddresses,
+        assets[app.network.value]
       ).byTxId;
       setmodalTxDetails(txsByTxId[txId]);
     };
@@ -92,7 +93,8 @@ const Transactions: React.FC = () => {
     const txsByAssets = getTxsDetails(
       Object.values(txsHistory[app.network.value]),
       app.network.value,
-      confidentialAddresses
+      confidentialAddresses,
+      assets[app.network.value]
     ).byAsset;
     //
     return (
@@ -112,7 +114,14 @@ const Transactions: React.FC = () => {
           />
         ))
     );
-  }, [app.network.value, confidentialAddresses, state.assetHash, state.assetTicker, txsHistory]);
+  }, [
+    app.network.value,
+    assets,
+    confidentialAddresses,
+    state.assetHash,
+    state.assetTicker,
+    txsHistory,
+  ]);
 
   return (
     <ShellPopUp
@@ -164,7 +173,8 @@ const Transactions: React.FC = () => {
           <div>
             <p className="text-base font-medium">Fee</p>
             <p className="text-xs font-light">
-              {fromSatoshiStr(modalTxDetails?.fee ?? 0)} {state.assetTicker}
+              {fromSatoshiStr(modalTxDetails?.fee ?? 0)}{' '}
+              {assets[app.network.value][modalTxDetails?.feeAsset ?? '']?.ticker ?? ''}
             </p>
           </div>
           <div>

@@ -50,7 +50,9 @@ export function flush(): Thunk<IAppState, Action> {
   };
 }
 
-export function setTopup(taxiTopup: TopupWithAssetReply.AsObject): Thunk<IAppState, Action> {
+export function setTopup(
+  taxiTopup: TopupWithAssetReply.AsObject | Record<string, never>
+): Thunk<IAppState, Action> {
   return (dispatch) => {
     dispatch([PENDING_TX_SET_TAXI_TOPUP, { taxiTopup }]);
   };
