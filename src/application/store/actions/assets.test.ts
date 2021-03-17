@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getAllAssetBalances, updateAllAssetInfos } from './assets';
-import { createWallet, setUtxos } from './wallet';
+import { setUtxos } from './utxos';
+import { createWallet } from './wallet';
 import { appInitialState, appReducer } from '../reducers';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { assetInitState } from '../reducers/asset-reducer';

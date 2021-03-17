@@ -1,0 +1,38 @@
+{
+  "txid": "2ab0983fc907b17643aad850af2dc785a4ab348bbec928ea85610817c8e9f1fc",
+  "vin": [
+    {
+      "prevout": {
+        "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+        "value": 2000000000,
+        "script": "0014ea5b8e3a46b8190491b529ed8f6ff9786c02cea7"
+      },
+      "txid": "a2eac25f0ce7bd8b1c54b7a9e962b33b5912123d15472522ad2615a8b39e704b",
+      "vout": 1
+    }
+  ],
+  "vout": [
+    {
+      "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "value": 1000000000,
+      "script": "0014ea5b8e3a46b8190491b529ed8f6ff9786c02cea7"
+    },
+    {
+      "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "value": 999999760,
+      "script": "0014bbe5ae6b37695d9fbee6f2eecfc33d07fb948ec3"
+    },
+    {
+      "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "value": 240,
+      "script": ""
+    }
+  ],
+  "fee": 240,
+  "status": {
+    "confirmed": true,
+    "blockHash": "7824eb231fbf738b463dd0f490d42b2d21f42bef1bb5e8ca9a2fda06c41c46e0",
+    "blockHeight": 15,
+    "blockTime": 1615999086
+  }
+}

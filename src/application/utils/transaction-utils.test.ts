@@ -6,6 +6,7 @@ import receiveLbtcFeeLbtc from '../../../test/fixtures/tx-interface/receive/rece
 import sendLbtcFeeLbtcConf from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf.json';
 import sendLbtcFeeLbtcConfSendAll from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf-send-all.json';
 import sendLbtcFeeUsdtConf from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-usdt-conf.json';
+import sendLbtcFeeLbtcConfToSelf from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf-to-self.json';
 //
 import sendUsdtFeeLbtcConf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-conf.json';
 import sendUsdtFeeLbtcUnconf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-unconf.json';
@@ -110,6 +111,24 @@ describe('Transaction Utils', () => {
           asset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
+          type: 'send',
+        });
+      });
+
+      test('Send 10 L-BTC to ourself and fees paid in L-BTC', () => {
+        const confAddrs: Address[] = [
+          Address.create(addresses[0].confidential, addresses[0].derivationPath),
+          Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
+        ];
+        const { vin, vout } = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConfToSelf));
+        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+
+        return expect(res).toStrictEqual({
+          address: 'ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl',
+          amount: 1000000000,
+          asset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+          feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+          toSelf: true,
           type: 'send',
         });
       });

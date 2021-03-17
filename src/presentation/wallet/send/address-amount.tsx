@@ -155,10 +155,6 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
   handleSubmit: async (values, { props }) => {
     const { wallets, app } = props.state;
-    // we don't want to dispatch a deriveNewAddress here, because it would
-    // persist the derived change address. This could lead to potential unused
-    // addresses in case the user goes back to select-asset and then returns to
-    // this view. We'll derive the address when persisting the pending tx.
     const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
     props.dispatch(
       setAddressesAndAmount(

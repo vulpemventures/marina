@@ -1,12 +1,13 @@
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { getAllAssetBalances, updateAllAssetInfos } from './assets';
 import { xpubWalletFromAddresses } from '../../utils';
-import { setUtxos } from './wallet';
+import { setUtxos } from './utxos';
 
 export * from './app';
 export * from './assets';
 export * from './transaction';
 export * from './txs-history';
+export * from './utxos';
 export * from './wallet';
 
 /**

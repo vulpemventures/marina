@@ -268,6 +268,11 @@ const ChooseFee: React.FC = () => {
     } else {
       feeAmount = transaction.taxiTopup?.topup?.assetAmount as number;
     }
+
+    // If user empty asset balance we don't set the change address
+    const total = feeAmount + transaction.amountInSatoshi;
+    const balanceAsset = balances[transaction.asset];
+
     dispatch(
       setPendingTx(
         Transaction.create({
@@ -277,7 +282,7 @@ const ChooseFee: React.FC = () => {
           sendAmount: transaction.amountInSatoshi,
           feeAsset: feeCurrency,
           feeAmount: feeAmount,
-          changeAddress: state.changeAddress,
+          changeAddress: total === balanceAsset ? undefined : state.changeAddress,
         }),
         () => {
           dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
