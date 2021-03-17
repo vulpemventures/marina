@@ -77,6 +77,16 @@ Safari web extensions are available in macOS 11 (Big Sur) and later, and in macO
  npm run web-ext:lint
 
 
+== Inspecting browser storage
+
+Browser storage content is not visible from Chrome and Firefox devtools, but you can dump content from browser console.
+
+.On Chrome
+ chrome.storage.local.get(undefined, console.log)
+ chrome.storage.local.get('wallets', ({wallets}) => console.log(JSON.parse(wallets[0])))
+ chrome.storage.local.get('txsHistory', ({txsHistory}) => console.log(JSON.parse(txsHistory)))
+
+
 == Create a Firefox profile to persist preferences
 
 . Launch Firefox this way (on Mac)
