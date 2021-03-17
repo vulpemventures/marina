@@ -44,3 +44,4 @@ yarn-error.log*
 # misc
 .DS_Store
 tmp
+runtaxi.sh
