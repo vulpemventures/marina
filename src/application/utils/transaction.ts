@@ -413,7 +413,11 @@ export const extractInfoFromRawTxData = (
     if (!!vinTotalAmount && !!voutTotalAmount) {
       // To unconfidential address
       if (!hasBlindedOutput) {
-        amount = vinTotalAmount - changeAmount;
+        if (toSelf && asset === lbtcAssetByNetwork(network)) {
+          amount = vinTotalAmount - (changeAmount + lbtcFeeAmount);
+        } else {
+          amount = vinTotalAmount - changeAmount;
+        }
       } else {
         // To confidential address
         amount = vinTotalAmount - voutTotalAmount;
