@@ -106,6 +106,9 @@ const EndOfFlow: React.FC = () => {
                 console.log
               )
             );
+          } else {
+            // Asset balance sent in full, no change
+            onSuccess();
           }
         } catch (error) {
           setState({ ...state, isLoading: false, error });
