@@ -18,7 +18,7 @@ import { Address } from '../../domain/wallet/value-objects';
 import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { fromSatoshiStr } from '../../presentation/utils';
-import { lbtcAssetByNetwork } from './network';
+import { lbtcAssetByNetwork, usdtAssetHash } from './network';
 import { Network } from '../../domain/app/value-objects';
 import {
   TxDisplayInterface,
@@ -173,13 +173,12 @@ export const extractInfoFromRawTxData = (
     vinTotalAmount = 0,
     voutTotalAmount = 0;
 
-  const usdt = Object.entries(assetsInStore).find(([_, { ticker }]) => ticker === 'USDt');
   const isTaxi =
     !isBlindedOutputInterface(vin[0].prevout) &&
     vin[0].prevout.value === 1000 &&
     vin[0].prevout.asset === lbtcAssetByNetwork(network) &&
     !isBlindedOutputInterface(vout[0]) &&
-    vout[0].asset === usdt?.[0];
+    vout[0].asset === usdtAssetHash(assetsInStore);
 
   if (isTaxi) {
     taxiFeeAmount = !isBlindedOutputInterface(vout[0]) ? vout[0].value : 0;
@@ -199,7 +198,7 @@ export const extractInfoFromRawTxData = (
     }
     asset =
       assetsVin.size === 1
-        ? usdt![0]
+        ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
         ? lbtcAssetByNetwork(network)
         : 'muliple assets';
@@ -311,29 +310,38 @@ export const extractInfoFromRawTxData = (
     vin.forEach((item) => {
       if (!isBlindedOutputInterface(item.prevout)) {
         if (item.prevout.asset && item.prevout.script && assets.has(item.prevout.asset)) {
-          try {
-            assets.add(item.prevout.asset);
-            type = 'receive';
-            asset = item.prevout.asset;
-            address = addressLDK.fromOutputScript(
-              Buffer.from(item.prevout.script, 'hex'),
-              networks[network]
-            );
-            // Sum all inputs values
-            vinTotalAmount = vinTotalAmount
-              ? vinTotalAmount + item.prevout.value
-              : item.prevout.value;
-          } catch (error) {
-            console.log(error);
-            console.log('vin outpoint:', `${item.txid}:${item.vout}`);
-            console.log('prevout asset:', item.prevout.asset);
-            console.log('prevout value:', item.prevout.value);
-            console.log('prevout script:', item.prevout.script);
-            // Nigiri coinbase invalid prevout.script '51' will be catch here
-          }
+          assets.add(item.prevout.asset);
+          asset = item.prevout.asset;
+          // Sum all inputs values
+          vinTotalAmount = vinTotalAmount
+            ? vinTotalAmount + item.prevout.value
+            : item.prevout.value;
         }
       }
     });
+
+    // Check if asset sent in full
+    // Not a receive
+    const allVinUnblinded = vin.every(({ prevout }) => !isBlindedOutputInterface(prevout));
+    // Check if payment asset utxo(s) exist. Exclude blinded and fee utxos.
+    const isPaymentAssetInVout = vout
+      .filter((o) => !isBlindedOutputInterface(o))
+      .filter((o) => o.script !== '')
+      .every((o) => !assets.has((o as UnblindedOutputInterface).asset));
+    // Asset sent in full
+    if (allVinUnblinded && isPaymentAssetInVout) {
+      type = 'send';
+      // Get first blinded utxo for unconf address
+      const blindedUtxo = vout.find((o) => isBlindedOutputInterface(o)) as BlindedOutputInterface;
+      try {
+        address = addressLDK.fromOutputScript(
+          Buffer.from(blindedUtxo.script, 'hex'),
+          networks[network]
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
     vout.forEach((item) => {
       if (!isBlindedOutputInterface(item)) {

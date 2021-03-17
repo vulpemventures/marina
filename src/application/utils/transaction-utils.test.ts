@@ -4,11 +4,13 @@ import receiveUsdtFeeLbtc from '../../../test/fixtures/tx-interface/receive/rece
 import receiveLbtcFeeLbtc from '../../../test/fixtures/tx-interface/receive/receive-lbtc-fee-lbtc.json';
 //
 import sendLbtcFeeLbtcConf from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf.json';
+import sendLbtcFeeLbtcConfSendAll from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-lbtc-conf-send-all.json';
 import sendLbtcFeeUsdtConf from '../../../test/fixtures/tx-interface/send/send-lbtc-fee-usdt-conf.json';
 //
 import sendUsdtFeeLbtcConf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-conf.json';
 import sendUsdtFeeLbtcUnconf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-unconf.json';
 import sendUsdtFeeUsdtConf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-usdt-conf.json';
+import sendUsdtFeeLbtcConfSendAll from '../../../test/fixtures/tx-interface/send/send-usdt-fee-lbtc-conf-send-all.json';
 import sendUsdtFeeUsdtUnconf from '../../../test/fixtures/tx-interface/send/send-usdt-fee-usdt-unconf.json';
 //
 import { Address } from '../../domain/wallet/value-objects';
@@ -75,8 +77,8 @@ describe('Transaction Utils', () => {
   });
 
   describe('Send', () => {
-    describe('Non Taxi payments', () => {
-      test('Should extract info from raw tx data - Send 2 L-BTC to confidential address and fees paid in L-BTC', () => {
+    describe('Should extract info from raw tx data - Non Taxi payments', () => {
+      test('Send 2 L-BTC to confidential address and fees paid in L-BTC', () => {
         const confAddrs: Address[] = [
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
@@ -94,7 +96,25 @@ describe('Transaction Utils', () => {
         });
       });
 
-      test('Should extract info from raw tx data - Send 5 USDt to confidential address and fees paid in L-BTC', () => {
+      test('Spend all 20 L-BTC balance to confidential address and fees paid in L-BTC', () => {
+        const confAddrs: Address[] = [
+          Address.create(addresses[0].confidential, addresses[0].derivationPath),
+          Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
+        ];
+        const { vin, vout } = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConfSendAll));
+        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+
+        return expect(res).toStrictEqual({
+          address: 'ert1quhwp6sc890z25rth2ljfq0pudal98yqswwd0jc',
+          amount: 2000000000,
+          asset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+          feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+          toSelf: false,
+          type: 'send',
+        });
+      });
+
+      test('Send 5 USDt to confidential address and fees paid in L-BTC', () => {
         const confAddrs: Address[] = [
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
@@ -112,7 +132,7 @@ describe('Transaction Utils', () => {
         });
       });
 
-      test('Should extract info from raw tx data - Send 3 USDt to unconfidential address and fees paid in L-BTC', () => {
+      test('Send 3 USDt to unconfidential address and fees paid in L-BTC', () => {
         const confAddrs: Address[] = [
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
@@ -123,6 +143,24 @@ describe('Transaction Utils', () => {
         return expect(res).toStrictEqual({
           address: 'ert1q24vgnwk88y0k4h3ene0qfayp8umcnhc3tljrk5',
           amount: 300000000,
+          asset: 'e19655127be5bbdd09831c0ee6f90634597573ab9832e77e5572a42d2cc0903c',
+          feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+          toSelf: false,
+          type: 'send',
+        });
+      });
+
+      test('Spend all 100 USDt balance to confidential address and fees paid in L-BTC', () => {
+        const confAddrs: Address[] = [
+          Address.create(addresses[0].confidential, addresses[0].derivationPath),
+          Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
+        ];
+        const { vin, vout } = JSON.parse(JSON.stringify(sendUsdtFeeLbtcConfSendAll));
+        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+
+        return expect(res).toStrictEqual({
+          address: 'ert1quhwp6sc890z25rth2ljfq0pudal98yqswwd0jc',
+          amount: 10000000000,
           asset: 'e19655127be5bbdd09831c0ee6f90634597573ab9832e77e5572a42d2cc0903c',
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
