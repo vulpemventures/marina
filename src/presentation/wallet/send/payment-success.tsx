@@ -44,7 +44,6 @@ const PaymentSuccess: React.FC = () => {
         unsetPendingTx(() => {
           browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
           dispatch(flush());
-          console.log('flushed');
         }, console.error)
       );
     };
@@ -65,6 +64,7 @@ const PaymentSuccess: React.FC = () => {
         )
       );
     } else {
+      // Asset balance sent in full, no change
       onSuccess();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
