@@ -1,5 +1,5 @@
 import { UtxoInterface } from 'ldk';
-import { compareUtxos, createWallet, setUtxos } from './wallet';
+import { compareUtxos, createWallet, setUtxos } from './index';
 import { mint } from '../../../../test/_regtest';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { appInitialState, appReducer } from '../reducers';
