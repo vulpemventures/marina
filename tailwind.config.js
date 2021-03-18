@@ -56,8 +56,8 @@ module.exports = {
         // Hack for seed-reveal screen
         8.6: '8.6rem',
       },
-      width: {
-        29: '29rem',
+      inset: {
+        13: '3.25rem',
       },
       minHeight: {
         80: '80%',
@@ -66,11 +66,6 @@ module.exports = {
         // Mirror transform with scaleX(-1). 1 is not used by Tailwind
         1: '-1',
       },
-    },
-  },
-  variants: {
-    extend: {
-      //outline: ['focus'],
     },
   },
   plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],

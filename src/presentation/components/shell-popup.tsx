@@ -32,7 +32,6 @@ const ShellPopUp: React.FC<Props> = ({
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
   //
-  const goToPreviousPath = () => history.goBack();
   const goToHome = () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
@@ -57,9 +56,42 @@ const ShellPopUp: React.FC<Props> = ({
     if (backBtnCb) {
       backBtnCb();
     } else {
-      goToPreviousPath();
+      history.goBack();
     }
   };
+
+  let nav;
+  if (hasBackBtn && !currentPage) {
+    nav = (
+      <button
+        className="focus:outline-none flex items-center justify-center w-full h-8"
+        onClick={handleBackBtn}
+      >
+        <img
+          className="top-13 absolute left-0 w-5 ml-4"
+          src="assets/images/chevron-left.svg"
+          alt="chevron-left"
+        />
+      </button>
+    );
+  } else if (hasBackBtn && currentPage) {
+    nav = (
+      <span className="flex items-center justify-center w-full h-8">
+        <button className="focus:outline-none" onClick={handleBackBtn}>
+          <img
+            className="top-13 absolute left-0 w-5 ml-4"
+            src="assets/images/chevron-left.svg"
+            alt="chevron-left"
+          />
+        </button>
+        <span>{currentPage}</span>
+      </span>
+    );
+  } else if (!hasBackBtn && currentPage) {
+    nav = <span className="flex items-center justify-center w-full h-8">{currentPage}</span>;
+  } else {
+    nav = <div className="h-8" />;
+  }
 
   return (
     <div id="shell-popup" className="grid h-screen">
@@ -72,21 +104,7 @@ const ShellPopUp: React.FC<Props> = ({
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>
         </div>
-        {hasBackBtn ? (
-          <button
-            className="focus:outline-none flex items-center justify-center w-full h-8"
-            onClick={handleBackBtn}
-          >
-            <img
-              className="absolute left-0 mx-4"
-              src="assets/images/chevron-left.svg"
-              alt="chevron-left"
-            />
-            <span>{currentPage}</span>
-          </button>
-        ) : (
-          <div className="h-8" />
-        )}
+        {nav}
       </header>
 
       {backgroundImagePath ? (

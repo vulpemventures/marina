@@ -22,6 +22,8 @@ const SEND_ADDRESS_AMOUNT_ROUTE = '/send';
 const SEND_CHOOSE_FEE_ROUTE = '/send/choose-fee';
 const SEND_CONFIRMATION_ROUTE = '/send/confirmation';
 const SEND_END_OF_FLOW_ROUTE = '/send/end-of-flow';
+const SEND_PAYMENT_SUCCESS_ROUTE = '/send/payment-success';
+const SEND_PAYMENT_ERROR_ROUTE = '/send/payment-error';
 
 // Settings
 const SETTINGS_MENU_SECURITY_ROUTE = '/settings/security';
@@ -59,6 +61,8 @@ export {
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
   SEND_END_OF_FLOW_ROUTE,
+  SEND_PAYMENT_SUCCESS_ROUTE,
+  SEND_PAYMENT_ERROR_ROUTE,
   // Settings
   SETTINGS_MENU_SECURITY_ROUTE,
   SETTINGS_MENU_SETTINGS_ROUTE,

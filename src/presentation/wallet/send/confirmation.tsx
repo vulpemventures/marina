@@ -63,7 +63,7 @@ const Confirmation: React.FC = () => {
         </span>
       </div>
 
-      <div className="flex flex-row justify-between px-3 mt-10">
+      <div className="flex flex-row items-end justify-between px-3 mt-10">
         <span className="text-lg font-medium">Fee</span>
         <span className="font-regular text-base">
           {fromSatoshiStr(feeAmount)} {assets[app.network.value][feeAsset].ticker}
