@@ -379,7 +379,7 @@ const ChooseFee: React.FC = () => {
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-              imgPathMapRegtest['']
+            imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
@@ -399,7 +399,20 @@ const ChooseFee: React.FC = () => {
       </div>
 
       {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
-        <div
+        <>
+          <div className="flex flex-row items-baseline justify-between mt-12">
+            <span className="text-lg font-medium">Fee:</span>
+            <span className="font-regular mr-6 text-base">
+              {unsignedPendingTx ? (
+                `${feeAmountFromTx(unsignedPendingTx)} L-BTC`
+              ) : errorMessage.length ? (
+                <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
+              ) : (
+                <div className="h-10 mx-auto" ref={circleLoaderRef} />
+              )}
+            </span>
+          </div>
+          {/* <div
           className={cx({
             'track-50': feeLevel === '50',
             'track-100': feeLevel === '100',
@@ -428,7 +441,8 @@ const ChooseFee: React.FC = () => {
             )}
           </div>
           {isWarningFee && warningFee}
-        </div>
+        </div> */}
+        </>
       )}
       {feeCurrency && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
         <>
