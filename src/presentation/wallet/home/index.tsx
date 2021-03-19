@@ -10,7 +10,7 @@ import {
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
-import ModalConfirm from '../../components/modal-confirm';
+import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -134,16 +134,11 @@ const Home: React.FC = () => {
         {buttonList}
       </ButtonList>
 
-      <ModalConfirm
-        btnTextClose="Cancel"
-        btnTextConfirm="Save"
+      <ReminderSaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}
-        onClose={handleSaveMnemonicClose}
-        onConfirm={handleSaveMnemonicConfirm}
-        title="Save your mnemonic"
-      >
-        <p className="text-base text-left">Save your mnemonic phrase to receive or send funds</p>
-      </ModalConfirm>
+        handleClose={handleSaveMnemonicClose}
+        handleConfirm={handleSaveMnemonicConfirm}
+      />
     </ShellPopUp>
   );
 };
