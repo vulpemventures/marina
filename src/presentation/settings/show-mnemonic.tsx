@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../../application/store/context';
-import { decrypt, hash } from '../../application/utils/crypto';
+import { decrypt, hash } from '../../application/utils';
 import { Password } from '../../domain/wallet/value-objects';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
@@ -41,7 +41,7 @@ const SettingsShowMnemonic: React.FC = () => {
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockCancel}
-        handleShowMnemonic={handleShowMnemonic}
+        handleUnlock={handleShowMnemonic}
       />
     </ShellPopUp>
   );

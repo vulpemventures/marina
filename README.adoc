@@ -14,7 +14,7 @@ Liquid Wallet browser extension
  npm run start:chrome-mac
 
 .Development environment
-image::webext-parcel_watch.png[development environment]
+image::webext-parcel-watch.png[development environment]
 
 
 == Packaging the extension
@@ -67,12 +67,24 @@ Safari web extensions are available in macOS 11 (Big Sur) and later, and in macO
 * Prettier
 ** https://github.com/marcosvega91/prettier-tailwind
 * https://tsdoc.org[TSDoc]
+* React devtool as standalone Electron app
+** https://github.com/facebook/react/tree/master/packages/react-devtools#usage-with-react-dom
 
 .Lint and auto-fix the extension source
  npm run lint
 
 .Validate the extension compiled source with web-ext
  npm run web-ext:lint
+
+
+== Inspecting browser storage
+
+Browser storage content is not visible from Chrome and Firefox devtools, but you can dump content from browser console.
+
+.On Chrome
+ chrome.storage.local.get(undefined, console.log)
+ chrome.storage.local.get('wallets', ({wallets}) => console.log(JSON.parse(wallets[0])))
+ chrome.storage.local.get('txsHistory', ({txsHistory}) => console.log(JSON.parse(txsHistory)))
 
 
 == Create a Firefox profile to persist preferences

@@ -11,7 +11,7 @@
   ],
   "background": {
     "scripts": [
-      "background_script.js"
+      "background-script.js"
     ],
     "persistent": true
   },
@@ -38,7 +38,7 @@
   "web_accessible_resources": [
     "inject.js"
   ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' http://localhost:8097; object-src 'self'",
   "browser_action": {
     "default_icon": "assets/images/marina-logo-green-128.png",
     "default_title": "Marina"

@@ -29,6 +29,8 @@ import {
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SEND_END_OF_FLOW_ROUTE,
+  SEND_PAYMENT_SUCCESS_ROUTE,
+  SEND_PAYMENT_ERROR_ROUTE,
 } from './constants';
 
 // Onboarding
@@ -49,6 +51,8 @@ import AddressAmount from '../wallet/send/address-amount';
 import ChooseFee from '../wallet/send/choose-fee';
 import Confirmation from '../wallet/send/confirmation';
 import SendEndOfFlow from '../wallet/send/end-of-flow';
+import PaymentSuccess from '../wallet/send/payment-success';
+import PaymentError from '../wallet/send/payment-error';
 // Settings
 import SettingsMenuSecurity from '../settings/menu-security';
 import SettingsMenuSettings from '../settings/menu-settings';
@@ -82,6 +86,8 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} comp={ChooseFee} />
       <ProtectedRoute exact path={SEND_CONFIRMATION_ROUTE} comp={Confirmation} />
       <ProtectedRoute exact path={SEND_END_OF_FLOW_ROUTE} comp={SendEndOfFlow} />
+      <ProtectedRoute exact path={SEND_PAYMENT_SUCCESS_ROUTE} comp={PaymentSuccess} />
+      <ProtectedRoute exact path={SEND_PAYMENT_ERROR_ROUTE} comp={PaymentError} />
       {/*Settings*/}
       <ProtectedRoute exact path={SETTINGS_MENU_SECURITY_ROUTE} comp={SettingsMenuSecurity} />
       <ProtectedRoute exact path={SETTINGS_MENU_SETTINGS_ROUTE} comp={SettingsMenuSettings} />

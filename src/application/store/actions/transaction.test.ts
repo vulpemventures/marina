@@ -5,7 +5,7 @@ import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { transactionInitState } from '../reducers/transaction-reducer';
 import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
-import { testAppProps } from '../../../../__test__/fixtures/test-app';
+import { testAppProps } from '../../../../test/fixtures/test-app';
 import {
   flush,
   setAddressesAndAmount,
@@ -13,14 +13,14 @@ import {
   setFeeAssetAndAmount,
   setFeeChangeAddress,
 } from './transaction';
-import assets from '../../../../__test__/fixtures/assets.json';
+import assets from '../../../../test/fixtures/assets.json';
 import {
   transactionStateWithAsset,
   transactionStateWithReceipient,
   transactionStateWithFeeChangeAddress,
   transactionStateWithFees,
-} from '../../../../__test__/fixtures/test-transaction';
-import { confidentialAddresses } from '../../../../__test__/fixtures/wallet.json';
+} from '../../../../test/fixtures/test-transaction';
+import { confidentialAddresses } from '../../../../test/fixtures/wallet.json';
 import { Address } from '../../../domain/wallet/value-objects';
 
 // Mock for UniqueEntityID

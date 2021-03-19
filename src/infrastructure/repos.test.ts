@@ -5,19 +5,19 @@ import {
   testAppDTO,
   testAppOnboarded,
   testAppOnboardedDTO,
-} from '../../__test__/fixtures/test-app';
+} from '../../test/fixtures/test-app';
 import {
   testAssets,
   testAssetsUpdated1,
   testAssetsUpdated2,
   testAssetsUpdated3,
-} from '../../__test__/fixtures/test-assets';
+} from '../../test/fixtures/test-assets';
 import {
   testTxsHistoryByNetwork,
   testTxsHistoryByNetworkDTO,
   testTxsHistoryUpdated1,
-} from '../../__test__/fixtures/test-txs-history';
-import { testWallet, testWalletDTO, testWalletProps } from '../../__test__/fixtures/test-wallet';
+} from '../../test/fixtures/test-txs-history';
+import { testWallet, testWalletDTO, testWalletProps } from '../../test/fixtures/test-wallet';
 import { assetInitState } from '../application/store/reducers/asset-reducer';
 import { txsHistoryInitState } from '../application/store/reducers/txs-history-reducer';
 import { TxsHistoryByNetwork } from '../domain/transaction';

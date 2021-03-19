@@ -1,3 +1,4 @@
+import { browser } from 'webextension-polyfill-ts';
 import {
   PENDING_TX_SET_ASSET,
   PENDING_TX_FLUSH,
@@ -9,6 +10,7 @@ import {
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
 import { Address } from '../../../domain/wallet/value-objects';
+import { unsetPendingTx } from './wallet';
 
 export function setAsset(asset: string): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -50,8 +52,37 @@ export function flush(): Thunk<IAppState, Action> {
   };
 }
 
-export function setTopup(taxiTopup: TopupWithAssetReply.AsObject): Thunk<IAppState, Action> {
+export function setTopup(
+  taxiTopup: TopupWithAssetReply.AsObject | Record<string, never>
+): Thunk<IAppState, Action> {
   return (dispatch) => {
     dispatch([PENDING_TX_SET_TAXI_TOPUP, { taxiTopup }]);
+  };
+}
+
+/**
+ * Flush both 'wallets[0].pendingTx' and 'transaction' state
+ * Unset badge
+ */
+export function flushTx(
+  onSuccess?: () => void,
+  onError?: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return (dispatch) => {
+    dispatch(
+      // Unset 'wallets[0].pendingTx'
+      unsetPendingTx(
+        () => {
+          // Unset state 'transaction'
+          dispatch(flush());
+          browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+          onSuccess?.();
+        },
+        (error) => {
+          console.error(error);
+          onError?.(error);
+        }
+      )
+    );
   };
 }

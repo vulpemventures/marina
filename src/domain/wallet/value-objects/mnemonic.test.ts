@@ -1,5 +1,5 @@
 import { Mnemonic } from './mnemonic';
-import { mnemonic } from '../../../../__test__/fixtures/wallet.json';
+import { mnemonic } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create a mnemonic', () => {
   const res = Mnemonic.create(mnemonic);

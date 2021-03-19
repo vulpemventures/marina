@@ -33,6 +33,7 @@
   },
   "rules": {
     "no-debugger": "off",
+    "react/display-name": "off",
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
     "@typescript-eslint/ban-ts-comment": "off",

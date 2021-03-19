@@ -1,5 +1,5 @@
 import { MasterXPub } from './master-extended-pub';
-import { masterXPub } from '../../../../__test__/fixtures/wallet.json';
+import { masterXPub } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create a MasterXPub', () => {
   const res = MasterXPub.create(masterXPub);

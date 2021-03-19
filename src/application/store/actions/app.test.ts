@@ -7,7 +7,7 @@ import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { transactionInitState } from '../reducers/transaction-reducer';
 import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
-import { testWallet } from '../../../../__test__/fixtures/test-wallet';
+import { testWallet } from '../../../../test/fixtures/test-wallet';
 import {
   testAppDTO,
   testAppProps,
@@ -19,7 +19,7 @@ import {
   testAppOnboardedProps,
   testAppWalletVerifiedDTO,
   testAppWalletVerifiedProps,
-} from '../../../../__test__/fixtures/test-app';
+} from '../../../../test/fixtures/test-app';
 
 describe('App Actions', () => {
   let store: ReturnType<typeof mockThunkReducer>;

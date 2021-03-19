@@ -26,10 +26,12 @@ const Confirmation: React.FC = () => {
 
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
   const handleBackBtn = () => {
-    history.push({
-      pathname: SEND_CHOOSE_FEE_ROUTE,
-      state: { changeAddress: state.changeAddress },
-    });
+    if (state?.changeAddress) {
+      history.push({
+        pathname: SEND_CHOOSE_FEE_ROUTE,
+        state: { changeAddress: state.changeAddress },
+      });
+    }
   };
 
   return (
@@ -39,12 +41,12 @@ const Confirmation: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Confirmation"
     >
-      <h1 className="text-2xl">{assets[app.network.value][sendAsset].name}</h1>
+      <h1 className="text-2xl">{assets[app.network.value][sendAsset]?.name}</h1>
       <img
         className="w-11 mt-0.5 block mx-auto mb-2"
         src={
           app.network.value === 'regtest'
-            ? imgPathMapRegtest[assets[app.network.value][sendAsset].ticker] ??
+            ? imgPathMapRegtest[assets[app.network.value][sendAsset]?.ticker] ??
               imgPathMapRegtest['']
             : imgPathMapMainnet[sendAsset] ?? imgPathMapMainnet['']
         }
@@ -59,14 +61,14 @@ const Confirmation: React.FC = () => {
       <div className="bg-gradient-to-r from-secondary to-primary flex flex-row items-center justify-between h-12 px-4 mt-4 rounded-full">
         <span className="text-lg font-medium">Amount</span>
         <span className="text-base font-medium text-white">
-          {fromSatoshiStr(sendAmount)} {assets[app.network.value][sendAsset].ticker}
+          {fromSatoshiStr(sendAmount)} {assets[app.network.value][sendAsset]?.ticker}
         </span>
       </div>
 
-      <div className="flex flex-row justify-between px-3 mt-10">
+      <div className="flex flex-row items-end justify-between px-3 mt-10">
         <span className="text-lg font-medium">Fee</span>
         <span className="font-regular text-base">
-          {fromSatoshiStr(feeAmount)} {assets[app.network.value][feeAsset].ticker}
+          {fromSatoshiStr(feeAmount)} {assets[app.network.value][feeAsset]?.ticker}
         </span>
       </div>
 

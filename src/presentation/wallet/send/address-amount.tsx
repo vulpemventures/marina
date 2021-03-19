@@ -9,7 +9,11 @@ import { DispatchOrThunk, IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
+import {
+  flushTx,
+  getAllAssetBalances,
+  setAddressesAndAmount,
+} from '../../../application/store/actions';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
@@ -155,10 +159,6 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
   handleSubmit: async (values, { props }) => {
     const { wallets, app } = props.state;
-    // we don't want to dispatch a deriveNewAddress here, because it would
-    // persist the derived change address. This could lead to potential unused
-    // addresses in case the user goes back to select-asset and then returns to
-    // this view. We'll derive the address when persisting the pending tx.
     const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
     props.dispatch(
       setAddressesAndAmount(
@@ -182,10 +182,14 @@ const AddressAmount: React.FC = () => {
   const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
-    history.push({
-      pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
-    });
+    dispatch(
+      flushTx(() => {
+        history.push({
+          pathname: TRANSACTIONS_ROUTE,
+          state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
+        });
+      })
+    );
   };
 
   useEffect(() => {

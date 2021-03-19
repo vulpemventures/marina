@@ -1,17 +1,17 @@
 import { UtxoInterface } from 'ldk';
-import { compareUtxos, createWallet, setUtxos } from './wallet';
-import { mint } from '../../../../__test__/_regtest';
+import { compareUtxos, createWallet, setUtxos } from './index';
+import { mint } from '../../../../test/_regtest';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { appInitialState, appReducer } from '../reducers';
 import { assetInitState } from '../reducers/asset-reducer';
 import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { onboardingInitState } from '../reducers/onboarding-reducer';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
-import { testWalletDTO, testWalletProps } from '../../../../__test__/fixtures/test-wallet';
-import { testAppProps } from '../../../../__test__/fixtures/test-app';
-import { mnemonic, password } from '../../../../__test__/fixtures/wallet.json';
-import { getUtxoMap } from '../../../../__test__/fixtures/test-utxos';
-import { getRandomWallet } from '../../../../__test__/fixtures/wallet-keys';
+import { testWalletDTO, testWalletProps } from '../../../../test/fixtures/test-wallet';
+import { testAppProps } from '../../../../test/fixtures/test-app';
+import { mnemonic, password } from '../../../../test/fixtures/wallet.json';
+import { getUtxoMap } from '../../../../test/fixtures/test-utxos';
+import { getRandomWallet } from '../../../../test/fixtures/wallet-keys';
 import { repos } from '../../../infrastructure';
 
 // Mock for UniqueEntityID

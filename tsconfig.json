@@ -18,5 +18,5 @@
     "strictNullChecks": true,
     "target": "ES2015"
   },
-  "include": ["src", "__test__"]
+  "include": ["src", "test"]
 }

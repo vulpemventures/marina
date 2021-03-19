@@ -1,7 +1,7 @@
 import { MasterPublicKey } from 'ldk';
 import { nextAddressForWallet } from './restorer';
-import { testWalletProps } from '../../../__test__/fixtures/test-wallet';
-import { addresses, addressesChange } from '../../../__test__/fixtures/wallet.json';
+import { testWalletProps } from '../../../test/fixtures/test-wallet';
+import { addresses, addressesChange } from '../../../test/fixtures/wallet.json';
 import { Address } from '../../domain/wallet/value-objects';
 
 describe('Restorer Utils', () => {

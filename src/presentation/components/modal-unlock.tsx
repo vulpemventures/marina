@@ -12,7 +12,7 @@ interface ModalUnlockFormValues {
 
 interface ModalUnlockFormProps {
   handleModalUnlockClose(): void;
-  handleShowMnemonic(password: string): void;
+  handleUnlock(password: string): void;
   isModalUnlockOpen: boolean;
 }
 
@@ -57,7 +57,7 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
 
   handleSubmit: (values, { props, setStatus }) => {
     try {
-      props.handleShowMnemonic(values.password);
+      props.handleUnlock(values.password);
     } catch (err) {
       setStatus({ password: 'Invalid password' });
     }
@@ -69,7 +69,7 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
 const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   isModalUnlockOpen,
   handleModalUnlockClose,
-  handleShowMnemonic,
+  handleUnlock,
 }) => {
   if (!isModalUnlockOpen) {
     return <></>;
@@ -80,7 +80,7 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
       <ModalUnlockEnhancedForm
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleShowMnemonic={handleShowMnemonic}
+        handleUnlock={handleUnlock}
       />
     </Modal>
   );
