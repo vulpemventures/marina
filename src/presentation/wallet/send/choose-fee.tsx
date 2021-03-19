@@ -458,7 +458,6 @@ const ChooseFee: React.FC = () => {
               )}
             </span>
           </div>
-          {isWarningFee && warningFee}
           <p className="text-primary mt-3.5 text-xs font-medium text-left">
             * Fee paid with Liquid taxi 🚕
           </p>
