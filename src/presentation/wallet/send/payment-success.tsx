@@ -7,12 +7,7 @@ import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
-import {
-  deriveNewAddress,
-  flush,
-  setAddress,
-  unsetPendingTx,
-} from '../../../application/store/actions';
+import { deriveNewAddress, flushTx, setAddress } from '../../../application/store/actions';
 import { Address } from '../../../domain/wallet/value-objects';
 
 interface LocationState {
@@ -39,15 +34,7 @@ const PaymentSuccess: React.FC = () => {
 
   // Cleanup and change address derivation
   useEffect(() => {
-    const onSuccess = () => {
-      dispatch(
-        unsetPendingTx(() => {
-          browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
-          dispatch(flush());
-        }, console.error)
-      );
-    };
-
+    const onSuccess = () => dispatch(flushTx());
     // persist change addresses before unsetting the pending tx
     if (state.changeAddress?.value) {
       dispatch(

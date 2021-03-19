@@ -64,7 +64,7 @@ const Transactions: React.FC = () => {
 
   /**
 
-  /**
+   /**
    * Log errors if any
    */
   useEffect(() => {
