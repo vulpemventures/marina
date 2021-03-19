@@ -17,7 +17,7 @@ import useLottieLoader from '../../hooks/use-lottie-loader';
 import { AppContext } from '../../../application/store/context';
 import { flush, updateUtxosAssetsBalances } from '../../../application/store/actions';
 import { createDevState } from '../../../../test/dev-state';
-import { fromSatoshi } from '../../utils';
+import { fromSatoshiStr } from '../../utils';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
@@ -118,7 +118,7 @@ const Home: React.FC = () => {
       refreshCb={setAssetsBalance}
     >
       <Balance
-        assetBalance={fromSatoshi(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
+        assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
         assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
         assetTicker="L-BTC"
         bigBalanceText={true}

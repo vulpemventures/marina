@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
-import cx from 'classnames';
 import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
 import { browser } from 'webextension-polyfill-ts';
 import Balance from '../../components/balance';
@@ -48,7 +47,7 @@ const ChooseFee: React.FC = () => {
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
-  const [isWarningFee] = useState<boolean>(true);
+  //const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const [errorMessage, setErrorMessage] = useState('');
@@ -313,14 +312,14 @@ const ChooseFee: React.FC = () => {
     }
   };
 
-  const warningFee = (
+  /* const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
       <img className="w-4 h-4" src={'assets/images/warning.svg'} alt="warning" />
       <p className="font-regular text-xs text-left">
         9.99862 L-BTC will be sent in order to cover fee
       </p>
     </div>
-  );
+  ); */
 
   // Choose Fee buttons
   const chooseFeeLbtcButton = (
@@ -379,7 +378,7 @@ const ChooseFee: React.FC = () => {
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-            imgPathMapRegtest['']
+              imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}

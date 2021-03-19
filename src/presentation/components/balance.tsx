@@ -2,12 +2,12 @@ import React from 'react';
 import cx from 'classnames';
 
 interface Props {
-  assetBalance: number;
+  assetBalance: string | number;
   assetImgPath: string;
   assetTicker: string;
   bigBalanceText?: boolean;
   className?: string;
-  fiatBalance?: number;
+  fiatBalance?: string | number;
   fiatCurrency: '$' | '€';
 }
 
