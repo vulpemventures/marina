@@ -138,7 +138,7 @@ async function getMnemonic(): Promise<IdentityInterface> {
   const appRepo = new BrowserStorageAppRepo();
   const walletRepo = new BrowserStorageWalletRepo();
 
-  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()])
+  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()]);
 
   // TODO: show shell popup instead of prompt
   const password = window.prompt('Unlock your wallet');
