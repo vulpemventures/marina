@@ -63,8 +63,8 @@ const EndOfFlow: React.FC = () => {
 
   return (
     <Shell hasBackBtn={false}>
-      <h1 className="text-5xl">Congratulations !</h1>
-      <p className="mt-4">You have just created a new wallet</p>
+      <h1 className="text-5xl">Congratulations!</h1>
+      <p className="mt-4">Your wallet is ready. You can close this page and open the extension from the browser toolbar</p>
       <img className="w-72 mb-14 mt-10" src="/assets/images/mermaid.png" alt="mermaid" />
     </Shell>
   );
