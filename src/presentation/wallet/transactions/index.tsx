@@ -8,7 +8,7 @@ import ButtonList from '../../components/button-list';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
-import ModalConfirm from '../../components/modal-confirm';
+import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import { setAsset, updateTxsHistory } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
@@ -64,7 +64,7 @@ const Transactions: React.FC = () => {
 
   /**
 
-  /**
+   /**
    * Log errors if any
    */
   useEffect(() => {
@@ -187,16 +187,11 @@ const Transactions: React.FC = () => {
         </Button>
       </Modal>
 
-      <ModalConfirm
-        btnTextClose="Cancel"
-        btnTextConfirm="Save"
+      <ReminderSaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}
-        onClose={handleSaveMnemonicClose}
-        onConfirm={handleSaveMnemonicConfirm}
-        title="Save your mnemonic"
-      >
-        <p className="text-base text-left">Save your mnemonic phrase to receive or send funds</p>
-      </ModalConfirm>
+        handleClose={handleSaveMnemonicClose}
+        handleConfirm={handleSaveMnemonicConfirm}
+      />
     </ShellPopUp>
   );
 };

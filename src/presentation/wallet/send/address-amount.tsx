@@ -9,7 +9,11 @@ import { DispatchOrThunk, IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { getAllAssetBalances, setAddressesAndAmount } from '../../../application/store/actions';
+import {
+  flushTx,
+  getAllAssetBalances,
+  setAddressesAndAmount,
+} from '../../../application/store/actions';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
@@ -178,10 +182,14 @@ const AddressAmount: React.FC = () => {
   const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
-    history.push({
-      pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
-    });
+    dispatch(
+      flushTx(() => {
+        history.push({
+          pathname: TRANSACTIONS_ROUTE,
+          state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
+        });
+      })
+    );
   };
 
   useEffect(() => {
