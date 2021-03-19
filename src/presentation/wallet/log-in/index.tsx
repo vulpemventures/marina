@@ -82,7 +82,7 @@ const LogIn: React.FC = () => {
           alt="marina logo"
         />
         <h1 className="text-4xl font-medium">Marina</h1>
-        <h2 className="text-grayLight text-lg font-medium">Be your own bank</h2>
+        <h2 className="text-grayLight text-lg font-medium">The ultimate gateway to access the Liquid Network</h2>
         <LogInEnhancedForm dispatch={dispatch} history={history} />
         {/* <Link className="text-primary block font-bold text-left" to={RESTORE_VAULT_ROUTE}>
           Restore account

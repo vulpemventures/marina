@@ -7,7 +7,7 @@ interface Props {
   assetTicker: string;
   bigBalanceText?: boolean;
   className?: string;
-  fiatBalance: number;
+  fiatBalance?: number;
   fiatCurrency: '$' | '€';
 }
 
@@ -17,16 +17,15 @@ const Balance: React.FC<Props> = ({
   assetBalance,
   assetImgPath,
   assetTicker,
-  fiatBalance,
+  //fiatBalance,
   fiatCurrency,
 }) => {
-  //
-  let formattedFiatBalance;
+  /* let formattedFiatBalance;
   if (fiatCurrency === '$') {
     formattedFiatBalance = `$${fiatBalance} USD`;
   } else if (fiatCurrency === '€') {
     formattedFiatBalance = `${fiatBalance} EUR`;
-  }
+  } */
 
   return (
     <div className={className}>
@@ -44,7 +43,7 @@ const Balance: React.FC<Props> = ({
         >
           {assetBalance} {assetTicker}
         </p>
-        <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p>
+        {/* <p className="text-grayLight text-sm font-medium">{formattedFiatBalance}</p> */}
       </div>
     </div>
   );
