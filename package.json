@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run clean && npm run copy-assets && run-p build:**",
     "build:html": "parcel build --no-cache public/*.html",
-    "build:scripts": "parcel build --no-cache src/application/background-script.ts",
+    "build:scripts": "parcel build --no-cache src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "clean": "rimraf dist",
     "copy-assets": "mkdir -p dist && cp public/manifest.json dist/ && cp -r public/assets dist/",
     "lint": "eslint --ext .ts,.tsx src test",
@@ -34,10 +34,10 @@
     "watchskip": "npm run clean && npm run copy-assets && SKIP_ONBOARDING=true run-p watch:**",
     "watch": "npm run clean && npm run copy-assets && run-p watch:**",
     "watch:html": "NETWORK=regtest parcel watch public/*.html",
-    "watch:scripts": "NETWORK=regtest parcel watch src/application/background-script.ts",
+    "watch:scripts": "NETWORK=regtest parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "watchliquid": "npm run clean && npm run copy-assets && run-p watchliquid:**",
     "watchliquid:html": "parcel watch public/*.html",
-    "watchliquid:scripts": "parcel watch src/application/background-script.ts",
+    "watchliquid:scripts": "parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "web-ext:build": "web-ext build --source-dir dist",
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
@@ -101,7 +101,7 @@
     "prettier-plugin-tailwind-css": "^1.5.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.2",
-    "typescript": "^4.2.2",
+    "typescript": "^4.2.3",
     "web-ext": "^5.5.0"
   }
 }

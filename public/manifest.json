@@ -3,19 +3,44 @@
   "version": "0.0.1",
   "manifest_version": 2,
   "description": "Liquid Wallet Web Extension",
-  "permissions": ["storage", "idle", "tabs"],
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "idle",
+    "tabs"
+  ],
   "background": {
-    "scripts": ["background-script.js"]
+    "scripts": [
+      "background-script.js"
+    ],
+    "persistent": true
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "file://*/*",
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
   "icons": {
     "16": "assets/images/marina-logo-green-16.png",
     "32": "assets/images/marina-logo-green-32.png",
     "48": "assets/images/marina-logo-green-48.png",
     "128": "assets/images/marina-logo-green-128.png"
   },
-  "web_accessible_resources": [],
+  "web_accessible_resources": [
+    "inject.js"
+  ],
   "content_security_policy": "script-src 'self' 'unsafe-eval' http://localhost:8097; object-src 'self'",
   "browser_action": {
-    "default_icon": "assets/images/marina-logo-green-128.png"
+    "default_icon": "assets/images/marina-logo-green-128.png",
+    "default_title": "Marina"
   }
 }
