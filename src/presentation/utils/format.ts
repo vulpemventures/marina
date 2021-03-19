@@ -11,7 +11,10 @@ export const formatNetwork = (net: string): string => {
 // If decimal number and total length is more than 6 then truncate to 2 decimals without rounding
 // Add ellipsis
 export const formatDecimalAmount = (amount: number): string => {
-  let formattedAmount = amount.toString();
+  let formattedAmount = amount.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 8
+  });
   if (!Number.isInteger(amount) && formattedAmount.length > 6) {
     formattedAmount = `${formattedAmount.slice(0, formattedAmount.indexOf('.') + 3)}...`;
   }
@@ -24,7 +27,11 @@ export function toSatoshi(x: number, y?: number): number {
 
 // Converting to string will trim trailing zeros
 export function fromSatoshiStr(sats: number, precision?: number): string {
-  return String(sats / Math.pow(10, precision || defaultPrecision));
+  return (sats / Math.pow(10, precision || defaultPrecision))
+    .toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 8
+    });
 }
 
 export function fromSatoshi(sats: number, precision?: number): number {
