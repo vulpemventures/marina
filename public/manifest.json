@@ -23,7 +23,7 @@
         "https://*/*"
       ],
       "js": [
-        "content_script.js"
+        "content-script.js"
       ],
       "run_at": "document_start",
       "all_frames": true
