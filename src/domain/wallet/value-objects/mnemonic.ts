@@ -1,5 +1,5 @@
-import { ValueObject } from '../../core/ValueObject';
 import { IdentityOpts, IdentityType, Mnemonic as MnemonicTdex } from 'ldk';
+import { ValueObject } from '../../core/ValueObject';
 
 interface MnemonicProps {
   [key: string]: any;
@@ -21,8 +21,9 @@ export class Mnemonic extends ValueObject<MnemonicProps> {
     const mnemonic = mnemo.trim().replace(/ +(?= )/g, '');
 
     try {
+      // Mnemonic validation, network doesn't matter
       new MnemonicTdex({
-        chain: 'regtest',
+        chain: 'liquid',
         type: IdentityType.Mnemonic,
         value: { mnemonic },
       } as IdentityOpts);
