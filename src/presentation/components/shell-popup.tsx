@@ -3,8 +3,7 @@ import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { AppContext } from '../../application/store/context';
-import { flush, unsetPendingTx, updateUtxosAssetsBalances } from '../../application/store/actions';
-import { browser } from 'webextension-polyfill-ts';
+import { flushTx, updateUtxosAssetsBalances } from '../../application/store/actions';
 
 interface Props {
   backBtnCb?: () => void;
@@ -38,16 +37,7 @@ const ShellPopUp: React.FC<Props> = ({
       dispatch(updateUtxosAssetsBalances(refreshCb, (error) => console.log(error)));
     }
     if (wallets[0].pendingTx) {
-      dispatch(
-        unsetPendingTx(
-          () => {
-            dispatch(flush());
-            browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
-            history.push(DEFAULT_ROUTE);
-          },
-          (err: Error) => console.log(err)
-        )
-      );
+      dispatch(flushTx(() => history.push(DEFAULT_ROUTE)));
     } else {
       history.push(DEFAULT_ROUTE);
     }
