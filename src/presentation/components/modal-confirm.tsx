@@ -11,6 +11,7 @@ interface Props {
   onConfirm: () => any;
   title: string;
 }
+
 const ModalConfirm: React.FC<Props> = ({
   btnTextClose = 'Cancel',
   btnTextConfirm = 'Ok',
@@ -30,26 +31,24 @@ const ModalConfirm: React.FC<Props> = ({
         <h2 className="mt-4 text-2xl">{title}</h2>
         <div className="py-5">{children}</div>
       </div>
-      <div className="flex justify-end">
-        <div className="pr-1">
-          <Button
-            isOutline={true}
-            onClick={() => onClose()}
-            className="bg-secondary hover:bg-secondary-light"
-          >
-            {btnTextClose}
-          </Button>
-        </div>
-        <div>
-          <Button
-            onClick={() => {
-              onClose();
-              onConfirm();
-            }}
-          >
-            {btnTextConfirm}
-          </Button>
-        </div>
+      <div className="flex justify-between">
+        <Button
+          isOutline={true}
+          onClick={() => onClose()}
+          className="bg-secondary hover:bg-secondary-light"
+          textBase={true}
+        >
+          {btnTextClose}
+        </Button>
+        <Button
+          onClick={() => {
+            onClose();
+            onConfirm();
+          }}
+          textBase={true}
+        >
+          {btnTextConfirm}
+        </Button>
       </div>
     </Modal>
   );
