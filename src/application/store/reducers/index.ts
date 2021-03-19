@@ -22,7 +22,7 @@ if (process.env.SKIP_ONBOARDING) {
     isOnboardingCompleted: false,
     isAuthenticated: false,
     isWalletVerified: false,
-    network: Network.create('regtest'),
+    network: Network.create((process.env.NETWORK || 'liquid') as Network['value']),
   };
 }
 
