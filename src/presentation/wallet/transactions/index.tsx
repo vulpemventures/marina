@@ -103,7 +103,7 @@ const Transactions: React.FC = () => {
         ?.sort((a, b) => b.blockTime - a.blockTime)
         .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
           <ButtonTransaction
-            amount={fromSatoshiStr(amount)}
+            amount={amount ?? 0}
             assetTicker={state.assetTicker}
             key={`${state.assetTicker}_${index}`}
             handleClick={openTxDetailsModal}

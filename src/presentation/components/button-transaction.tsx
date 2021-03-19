@@ -1,8 +1,9 @@
 import React from 'react';
 import { TxType } from '../../domain/transaction';
+import { formatDecimalAmount, fromSatoshi } from '../utils';
 
 interface Props {
-  amount: string;
+  amount: number;
   assetTicker: string;
   disabled?: boolean;
   handleClick: (txId: string, toSelf: boolean) => void;
@@ -47,7 +48,7 @@ const ButtonTransaction: React.FC<Props> = ({
       <div className="flex">
         <div className="text-primary whitespace-nowrap text-sm font-medium">
           {txType === 'receive' ? '+' : '-'}
-          {amount} {assetTicker}
+          {formatDecimalAmount(fromSatoshi(amount))} {assetTicker}
         </div>
         <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
