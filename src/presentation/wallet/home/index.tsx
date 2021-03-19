@@ -102,7 +102,7 @@ const Home: React.FC = () => {
           assetHash={hash}
           assetName={name}
           assetTicker={ticker}
-          quantity={fromSatoshi(assetsBalance[hash] ?? 0)}
+          quantity={assetsBalance[hash] ?? 0}
           key={hash}
           handleClick={handleAssetBalanceButtonClick}
         />
