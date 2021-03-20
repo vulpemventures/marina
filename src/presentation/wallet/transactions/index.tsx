@@ -13,7 +13,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { setAsset, updateTxsHistory } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
 import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
-import { esploraURL, fromSatoshi, fromSatoshiStr } from '../../utils';
+import { esploraURL, fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
 
 interface LocationState {
@@ -131,7 +131,7 @@ const Transactions: React.FC = () => {
       currentPage="Transactions"
     >
       <Balance
-        assetBalance={fromSatoshi(state.assetsBalance[state.assetHash] ?? 0)}
+        assetBalance={fromSatoshiStr(state.assetsBalance[state.assetHash] ?? 0)}
         assetImgPath={assetImgPath}
         assetTicker={state.assetTicker}
         bigBalanceText={true}

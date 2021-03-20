@@ -33,46 +33,59 @@ let welcomeTabID: number | undefined = undefined;
  * https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
  */
 browser.runtime.onInstalled.addListener(({ reason }) => {
-  switch (reason) {
-    //On first install, open new tab for onboarding
-    case 'install': {
-      initPersistentStore(repos)
-        .then(async () => {
-          // Skip onboarding
-          if (process.env.SKIP_ONBOARDING) {
-            await browser.browserAction.setPopup({ popup: 'popup.html' }).catch(console.error);
-          } else {
-            return openInitializeWelcomeRoute().then(
-              (id: number | undefined) => (welcomeTabID = id)
-            );
-          }
-        })
-        .catch((err) => console.log(err));
+  (async () => {
+    switch (reason) {
+      //On first install, open new tab for onboarding
+      case 'install':
+        await initPersistentStore(repos);
 
-      break;
+        // this is for development only
+        if (process.env.SKIP_ONBOARDING) {
+          await browser.browserAction.setPopup({ popup: 'popup.html' });
+          return;
+        }
+
+        // run onboarding flow on fullscreen
+        welcomeTabID = await openInitializeWelcomeRoute();
+        break;
+      // TODO: on update, open new tab to tell users about the new features and any fixed issues
+      // case 'update':
+      //   {
+      //     const url = browser.runtime.getURL('updated.html');
+      //     browser.tabs.create({ url }).catch(console.log);
+      //   }
+      //   break;
     }
-    // TODO: on update, open new tab to tell users about the new features and any fixed issues
-    // case 'update':
-    //   {
-    //     const url = browser.runtime.getURL('updated.html');
-    //     browser.tabs.create({ url }).catch(console.log);
-    //   }
-    //   break;
-  }
+  })().catch(console.error);
+});
+
+// Everytime the browser starts up we need to set up the popup page
+browser.runtime.onStartup.addListener(() => {
+  (async () => {
+    await browser.browserAction.setPopup({ popup: 'popup.html' });
+  })().catch(console.error);
 });
 
 // this listener only run IF AND ONLY IF the popup is not set
 // popup is set at the end of onboarding workflow
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
-    try {
-      const tabs = await browser.tabs.query({ currentWindow: true });
-      for (const { id } of tabs) {
-        if (id && id === welcomeTabID) return;
-      }
+    // here we prevent to open many onboarding pages fullscreen
+    // in case we have one active already in the current tab
+    const tabs = await browser.tabs.query({ currentWindow: true });
+    for (const { id } of tabs) {
+      if (id && id === welcomeTabID) return;
+    }
+
+    // in case the onboarding page is closed before finishing
+    // the wallet creation process, we let user re-open it
+    // Check if wallet exists in storage and if not we open the
+    // onboarding page again.
+    const store = await browser.storage.local.get('wallets');
+    if (store.wallets === undefined || store.wallets.length <= 0) {
+      await initPersistentStore(repos);
       welcomeTabID = await openInitializeWelcomeRoute();
-    } catch (error) {
-      console.error(error);
+      return;
     }
   })().catch(console.error);
 });

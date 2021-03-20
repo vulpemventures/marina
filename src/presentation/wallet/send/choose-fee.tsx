@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
-import cx from 'classnames';
 import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
 import { browser } from 'webextension-polyfill-ts';
 import Balance from '../../components/balance';
@@ -48,7 +47,7 @@ const ChooseFee: React.FC = () => {
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
-  const [isWarningFee] = useState<boolean>(true);
+  //const [isWarningFee] = useState<boolean>(true);
   const unspents = utxoMapToArray(wallets[0].utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const [errorMessage, setErrorMessage] = useState('');
@@ -313,14 +312,14 @@ const ChooseFee: React.FC = () => {
     }
   };
 
-  const warningFee = (
+  /* const warningFee = (
     <div className="flex flex-row gap-2 mt-5">
       <img className="w-4 h-4" src={'assets/images/warning.svg'} alt="warning" />
       <p className="font-regular text-xs text-left">
         9.99862 L-BTC will be sent in order to cover fee
       </p>
     </div>
-  );
+  ); */
 
   // Choose Fee buttons
   const chooseFeeLbtcButton = (
@@ -399,7 +398,20 @@ const ChooseFee: React.FC = () => {
       </div>
 
       {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
-        <div
+        <>
+          <div className="flex flex-row items-baseline justify-between mt-12">
+            <span className="text-lg font-medium">Fee:</span>
+            <span className="font-regular mr-6 text-base">
+              {unsignedPendingTx ? (
+                `${feeAmountFromTx(unsignedPendingTx)} L-BTC`
+              ) : errorMessage.length ? (
+                <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
+              ) : (
+                <div className="h-10 mx-auto" ref={circleLoaderRef} />
+              )}
+            </span>
+          </div>
+          {/* <div
           className={cx({
             'track-50': feeLevel === '50',
             'track-100': feeLevel === '100',
@@ -428,7 +440,8 @@ const ChooseFee: React.FC = () => {
             )}
           </div>
           {isWarningFee && warningFee}
-        </div>
+        </div> */}
+        </>
       )}
       {feeCurrency && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
         <>
@@ -444,7 +457,6 @@ const ChooseFee: React.FC = () => {
               )}
             </span>
           </div>
-          {isWarningFee && warningFee}
           <p className="text-primary mt-3.5 text-xs font-medium text-left">
             * Fee paid with Liquid taxi 🚕
           </p>

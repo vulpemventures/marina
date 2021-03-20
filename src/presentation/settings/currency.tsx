@@ -18,6 +18,10 @@ const SettingsCurrency: React.FC = () => {
         selectedValue={selectedCurrency}
         setSelectedValue={setSelectedCurrency}
       />
+      <br />
+      <p className="font-regular my-8 text-sm text-left">
+        Psst! It does not work yet! Coming soon...
+      </p>
     </ShellPopUp>
   );
 };

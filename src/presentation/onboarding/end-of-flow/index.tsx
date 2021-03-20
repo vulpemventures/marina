@@ -12,8 +12,6 @@ import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 
-const POPUP = 'popup.html';
-
 const EndOfFlow: React.FC = () => {
   const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +24,9 @@ const EndOfFlow: React.FC = () => {
     if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
       const dispatchOnboardingCompleted = () => {
-        browser.browserAction.setPopup({ popup: POPUP }).catch(console.error);
+        // set the popup after the onboarding flow
+        browser.browserAction.setPopup({ popup: 'popup.html' }).catch(console.error);
+
         return dispatch(
           onboardingComplete(() => {
             dispatch(flush());
@@ -63,8 +63,11 @@ const EndOfFlow: React.FC = () => {
 
   return (
     <Shell hasBackBtn={false}>
-      <h1 className="text-5xl">Congratulations !</h1>
-      <p className="mt-4">You have just created a new wallet</p>
+      <h1 className="text-5xl">Congratulations!</h1>
+      <p className="mt-4">
+        Your wallet is ready. You can close this page and open the extension from the browser
+        toolbar
+      </p>
       <img className="w-72 mb-14 mt-10" src="/assets/images/mermaid.png" alt="mermaid" />
     </Shell>
   );
