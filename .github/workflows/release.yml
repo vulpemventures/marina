@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-    - 'v*'
+      - "v*"
 
 name: Release
 
@@ -14,16 +14,15 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
       # setup nodejs
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
-      
-      # cache our node modules  
+          node-version: "14"
+
+      # cache our node modules
       - uses: actions/cache@v1
         env:
           node-version: 14
@@ -31,13 +30,12 @@ jobs:
         with:
           path: ~/.npm
           key: ${{ runner.os }}-build-${{ env.cache-name }}-node${{ env.node-version }}
-      
 
       # get current  tag
       - name: tag
         id: next_tag
         run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
-     
+
       - name: version
         id: next_version
         run: |
@@ -48,22 +46,22 @@ jobs:
         uses: yoichiro/gh-action-increment-value@v3
         with:
           # A directory where has the target file
-          target_directory: 'public'
-          target_file: 'manifest.json'
+          target_directory: "public"
+          target_file: "manifest.json"
           # A prefix string
           prefix: 'version":'
           # A suffix string
-          suffix: ','
+          suffix: ","
           # A commit message
           commit_message: ${{ steps.next_version.outputs.version }}
-        
+
       # Build extension
       - name: Install and build
         run: |
           npm install
           npm run web-ext:build
-      
-      # Release to github       
+
+      # Release to github
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -81,8 +79,3 @@ jobs:
           asset_path: ./web-ext-artifacts/marina-${{ steps.next_tag.outputs.tag }}.zip
           asset_name: marina-${{ steps.next_tag.outputs.tag }}.zip
           asset_content_type: application/zip
-
-
-
-
-          echo test, and deploy your project.
