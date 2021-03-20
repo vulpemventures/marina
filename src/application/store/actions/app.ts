@@ -53,8 +53,6 @@ export function onboardingComplete(
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
-      // this allows users to open the popup shell clicking on the toolbar
-      await browser.browserAction.setPopup({ popup: 'popup.html' });
 
       await repos.app.updateApp(
         (app: App): App => {
