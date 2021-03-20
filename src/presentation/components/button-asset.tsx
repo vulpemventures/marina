@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDecimalAmount, fromSatoshi } from '../utils';
+import { formatAssetName, formatDecimalAmount, fromSatoshi } from '../utils';
 
 interface Props {
   assetHash: string;
@@ -32,13 +32,13 @@ const ButtonAsset: React.FC<Props> = ({
       <div className="flex flex-row items-center">
         <img className="w-8 mr-1.5" src={assetImgPath} alt="liquid asset" />
         <div className="flex flex-col text-left">
-          <span className="text-grayDark text-base font-medium">{assetName || 'Unknown'}</span>
+          <span className="text-grayDark text-small font-medium">{formatAssetName(assetName)}</span>
           <span className="text-grayLight text-xs font-medium">{assetTicker}</span>
         </div>
       </div>
       <div className="flex flex-row">
-        <div className="text-base font-medium">{formatDecimalAmount(fromSatoshi(quantity))}</div>
-        <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
+        <div className="text-small font-medium">{formatDecimalAmount(fromSatoshi(quantity))}</div>
+        <img className="ml-1.5" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
     </button>
   );
