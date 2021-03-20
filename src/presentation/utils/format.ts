@@ -45,13 +45,12 @@ export const formatTxid = (txid: string): string => {
   return txid.substr(0, 6).concat('.......').concat(txid.substr(25, 6));
 };
 
-
 export const formatAssetName = (name?: string): string => {
-  let assetName = name || 'Unknown';
+  const assetName = name || 'Unknown';
 
   if (assetName.length > 16) {
     return assetName.substr(0, 12).concat('...');
   }
 
   return assetName;
-}
+};
