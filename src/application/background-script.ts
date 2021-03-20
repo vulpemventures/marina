@@ -37,20 +37,16 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install':
-        try {
-          await initPersistentStore(repos);
+        await initPersistentStore(repos);
 
-          // this is for development only
-          if (process.env.SKIP_ONBOARDING) {
-            await browser.browserAction.setPopup({ popup: 'popup.html' });
-            return;
-          }
-
-          // run onboarding flow on fullscreen
-          welcomeTabID = await openInitializeWelcomeRoute();
-        } catch (err: any) {
-          throw err;
+        // this is for development only
+        if (process.env.SKIP_ONBOARDING) {
+          await browser.browserAction.setPopup({ popup: 'popup.html' });
+          return;
         }
+
+        // run onboarding flow on fullscreen
+        welcomeTabID = await openInitializeWelcomeRoute();
         break;
       // TODO: on update, open new tab to tell users about the new features and any fixed issues
       // case 'update':
@@ -63,15 +59,10 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
   })().catch(console.error);
 });
 
-
-// Everytime the browser starts up we need to set up the popup page 
-browser.runtime.onStartup.addListener(async () => {
+// Everytime the browser starts up we need to set up the popup page
+browser.runtime.onStartup.addListener(() => {
   (async () => {
-    try {
-      await browser.browserAction.setPopup({ popup: 'popup.html' });
-    } catch (err: any) {
-      throw err;
-    }
+    await browser.browserAction.setPopup({ popup: 'popup.html' });
   })().catch(console.error);
 });
 
@@ -79,26 +70,22 @@ browser.runtime.onStartup.addListener(async () => {
 // popup is set at the end of onboarding workflow
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
-    try {
-      // here we prevent to open many onboarding pages fullscreen 
-      // in case we have one active already in the current tab
-      const tabs = await browser.tabs.query({ currentWindow: true });
-      for (const { id } of tabs) {
-        if (id && id === welcomeTabID) return;
-      }
+    // here we prevent to open many onboarding pages fullscreen
+    // in case we have one active already in the current tab
+    const tabs = await browser.tabs.query({ currentWindow: true });
+    for (const { id } of tabs) {
+      if (id && id === welcomeTabID) return;
+    }
 
-      // in case the onboarding page is closed before finishing
-      // the wallet creation process, we let user re-open it 
-      // Check if wallet exists in storage and if not we open the 
-      // onboarding page again.
-      const store = await browser.storage.local.get('wallets');
-      if (store.wallets === undefined || store.wallets.length <= 0) {
-        await initPersistentStore(repos);
-        welcomeTabID = await openInitializeWelcomeRoute();
-        return;
-      }
-    } catch (err: any) {
-      throw err;
+    // in case the onboarding page is closed before finishing
+    // the wallet creation process, we let user re-open it
+    // Check if wallet exists in storage and if not we open the
+    // onboarding page again.
+    const store = await browser.storage.local.get('wallets');
+    if (store.wallets === undefined || store.wallets.length <= 0) {
+      await initPersistentStore(repos);
+      welcomeTabID = await openInitializeWelcomeRoute();
+      return;
     }
   })().catch(console.error);
 });

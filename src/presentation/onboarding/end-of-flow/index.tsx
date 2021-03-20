@@ -11,8 +11,6 @@ import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 
-const POPUP = 'popup.html';
-
 const EndOfFlow: React.FC = () => {
   const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
