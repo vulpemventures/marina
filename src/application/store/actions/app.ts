@@ -17,7 +17,6 @@ import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
 import { Network } from '../../../domain/app/value-objects';
 import { setIdleAction } from '../../utils/idle';
-import { browser } from 'webextension-polyfill-ts';
 
 export function initApp(app: IApp): Thunk<IAppState, Action> {
   return (dispatch) => {
@@ -53,7 +52,6 @@ export function onboardingComplete(
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
     try {
-
       await repos.app.updateApp(
         (app: App): App => {
           app.props.isOnboardingCompleted = true;

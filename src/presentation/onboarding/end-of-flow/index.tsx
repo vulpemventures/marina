@@ -23,9 +23,9 @@ const EndOfFlow: React.FC = () => {
   useEffect(() => {
     if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
-      const dispatchOnboardingCompleted = async () => {
-
-        await browser.browserAction.setPopup({ popup: 'popup.html' });
+      const dispatchOnboardingCompleted = () => {
+        // set the popup after the onboarding flow
+        browser.browserAction.setPopup({ popup: 'popup.html' }).catch(console.error);
 
         return dispatch(
           onboardingComplete(() => {
