@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { browser } from 'webextension-polyfill-ts';
 import {
   createWallet,
   onboardingComplete,
@@ -26,7 +25,6 @@ const EndOfFlow: React.FC = () => {
     if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
       const dispatchOnboardingCompleted = () => {
-        browser.browserAction.setPopup({ popup: POPUP }).catch(console.error);
         return dispatch(
           onboardingComplete(() => {
             dispatch(flush());
