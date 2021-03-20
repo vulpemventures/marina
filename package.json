@@ -38,7 +38,7 @@
     "watchliquid": "npm run clean && npm run copy-assets && run-p watchliquid:**",
     "watchliquid:html": "parcel watch public/*.html",
     "watchliquid:scripts": "parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
-    "web-ext:build": "web-ext build --source-dir dist",
+    "web-ext:build": "web-ext build --source-dir dist --overwrite-dest",
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
