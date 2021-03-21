@@ -24,6 +24,7 @@ import { Network } from '../domain/app/value-objects';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
+const POPUP_HTML = 'popup.html';
 
 let welcomeTabID: number | undefined = undefined;
 
@@ -41,7 +42,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 
         // this is for development only
         if (process.env.SKIP_ONBOARDING) {
-          await browser.browserAction.setPopup({ popup: 'popup.html' });
+          await browser.browserAction.setPopup({ popup: POPUP_HTML });
           return;
         }
 
@@ -62,7 +63,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // Everytime the browser starts up we need to set up the popup page
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    await browser.browserAction.setPopup({ popup: 'popup.html' });
+    await browser.browserAction.setPopup({ popup: POPUP_HTML });
   })().catch(console.error);
 });
 
@@ -124,6 +125,18 @@ async function getCurrentUrl(): Promise<string> {
   const url = new URL(currentTab.url);
 
   return url.hostname;
+}
+
+export async function showPopup(path?: string): Promise<void> {
+  const options = {
+    url: `${POPUP_HTML}#/${path}`,
+    type: 'popup',
+    height: 620,
+    width: 360,
+    focused: true,
+  };
+
+  await browser.windows.create(options as any);
 }
 
 async function getXpub(): Promise<IdentityInterface> {
@@ -239,11 +252,12 @@ class Backend {
                 const hostname = await getCurrentUrl();
 
                 // Eventually show the shell popup to ask for confirmation from the user
-                const confirmed = window.confirm(
-                  `Are you sure you want to authorize ${hostname} to access your balances?`
-                );
+                /*  const confirmed = window.confirm(
+                   `Are you sure you want to authorize ${hostname} to access your balances?`
+                 ); */
+                //if (!confirmed) return handleError(id, new Error('User denied access'));
 
-                if (!confirmed) return handleError(id, new Error('User denied access'));
+                await showPopup(`spend?origin=${hostname}`);
 
                 this.enableSite(hostname);
 

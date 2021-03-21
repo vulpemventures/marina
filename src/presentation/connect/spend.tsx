@@ -1,17 +1,28 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Button from '../components/button';
 import ShellPopUp from '../components/shell-popup';
 
+function useQuery(key: string) {
+  const queryString = new URLSearchParams(useLocation().search);
+  return queryString.get(key);
+}
+
 const ConnectSpend: React.FC = () => {
+  const hostname = useQuery('origin');
+
   const assetTicker = 'L-BTC';
   const assetAmount = '0.007';
-  const websiteTitle = 'Sideshift.ai';
-  const handleReject = () => console.log('reject');
-  const handleAccept = () => console.log('accept');
+  const websiteTitle = hostname;
+  const handleReject = () => window.close();
+  const handleAccept = () => {
+    console.log('accept');
+    window.close();
+  };
 
   return (
     <ShellPopUp
-      backgroundImagePath="/assets/images/popup/bg-sm.png"
+      hasBackBtn={false}
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Spend"
     >

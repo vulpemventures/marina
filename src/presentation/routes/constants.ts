@@ -1,3 +1,7 @@
+// Connect
+const CONNECT_ENABLE_ROUTE = '/enable';
+const CONNECT_SPEND_ROUTE = '/spend';
+
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
 const INITIALIZE_CREATE_PASSWORD_ROUTE = '/initialize/create-password';
@@ -41,6 +45,9 @@ const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 
 export {
+  //Connect
+  CONNECT_ENABLE_ROUTE,
+  CONNECT_SPEND_ROUTE,
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
