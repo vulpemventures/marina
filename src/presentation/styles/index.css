@@ -149,15 +149,11 @@ scrollbar thumb {
 }
 #btn-list::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
-  background-clip: padding-box;
-  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 15px;
 }
+#btn-list::-webkit-scrollbar-corner,
 #btn-list::-webkit-scrollbar-track {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 15px;
-}
-::-webkit-scrollbar-button {
-  background-color: rgba(0, 0, 0, 0.2);
 }
 /**/
