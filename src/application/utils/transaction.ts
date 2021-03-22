@@ -17,7 +17,6 @@ import { mnemonicWalletFromAddresses } from './restorer';
 import { Address } from '../../domain/wallet/value-objects';
 import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
-import { fromSatoshiStr } from '../../presentation/utils';
 import { lbtcAssetByNetwork, usdtAssetHash } from './network';
 import { Network } from '../../domain/app/value-objects';
 import {
@@ -134,11 +133,11 @@ export const receipientOutIndexFromTx = (tx: string, receipientAddress: string):
   return utx.outs.findIndex((out) => out.script.equals(receipientScript));
 };
 
-export const feeAmountFromTx = (tx: string): string => {
+export const feeAmountFromTx = (tx: string): number => {
   const utx = psetToUnsignedTx(tx);
   const feeOutIndex = utx.outs.findIndex((out) => out.script.length === 0);
   const feeOut = utx.outs[feeOutIndex];
-  return fromSatoshiStr(confidential.confidentialValueToSatoshi(feeOut.value));
+  return confidential.confidentialValueToSatoshi(feeOut.value);
 };
 
 export const isChange = (a: Address): boolean | null =>

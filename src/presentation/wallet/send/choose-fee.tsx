@@ -263,13 +263,13 @@ const ChooseFee: React.FC = () => {
   const handleConfirm = () => {
     let feeAmount: number;
     if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
-      feeAmount = parseFloat(feeAmountFromTx(unsignedPendingTx)) * Math.pow(10, 8);
+      feeAmount = feeAmountFromTx(unsignedPendingTx);
     } else {
       feeAmount = transaction.taxiTopup?.topup?.assetAmount as number;
     }
 
     // If user empty asset balance we don't set the change address
-    const total = feeAmount + transaction.amountInSatoshi;
+    const totalSats = feeAmount + transaction.amountInSatoshi;
     const balanceAsset = balances[transaction.asset];
 
     dispatch(
@@ -281,7 +281,7 @@ const ChooseFee: React.FC = () => {
           sendAmount: transaction.amountInSatoshi,
           feeAsset: feeCurrency,
           feeAmount: feeAmount,
-          changeAddress: total === balanceAsset ? undefined : state.changeAddress,
+          changeAddress: totalSats === balanceAsset ? undefined : state.changeAddress,
         }),
         () => {
           dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
@@ -403,7 +403,7 @@ const ChooseFee: React.FC = () => {
             <span className="text-lg font-medium">Fee:</span>
             <span className="font-regular mr-6 text-base">
               {unsignedPendingTx ? (
-                `${feeAmountFromTx(unsignedPendingTx)} L-BTC`
+                `${fromSatoshiStr(feeAmountFromTx(unsignedPendingTx))} L-BTC`
               ) : errorMessage.length ? (
                 <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
               ) : (
@@ -432,7 +432,7 @@ const ChooseFee: React.FC = () => {
           />
           <div className="text-gray mt-1 text-xs font-medium text-center">
             {unsignedPendingTx ? (
-              <span className="mt-3">{`Fee: ${feeAmountFromTx(unsignedPendingTx)} L-BTC`}</span>
+              <span className="mt-3">{`Fee: ${fromSatoshiStr(feeAmountFromTx(unsignedPendingTx))} L-BTC`}</span>
             ) : errorMessage.length ? (
               <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
             ) : (

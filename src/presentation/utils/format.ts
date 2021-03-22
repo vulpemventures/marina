@@ -1,3 +1,4 @@
+import JSBI from 'jsbi';
 import { defaultPrecision } from '../../application/utils';
 
 export const formatAddress = (addr: string): string => {
@@ -21,13 +22,26 @@ export const formatDecimalAmount = (amount: number): string => {
   return formattedAmount;
 };
 
-export function toSatoshi(x: number, y?: number): number {
-  return Math.floor(x * Math.pow(10, y || defaultPrecision));
+export function pow(x: number, y: number): JSBI {
+  return JSBI.exponentiate(JSBI.BigInt(x), JSBI.BigInt(y));
+}
+
+export function decimalCount(num: number) {
+  const numStr = String(num);
+  if (numStr.includes('.')) {
+    return numStr.split('.')[1].length;
+  }
+  return 0;
+}
+
+export function toSatoshi(x: number, y: number = defaultPrecision): number {
+  const int = x * Math.pow(10, decimalCount(x));
+  return JSBI.toNumber(JSBI.multiply(JSBI.BigInt(int), pow(10, y - decimalCount(x))));
 }
 
 // Converting to string will trim trailing zeros
-export function fromSatoshiStr(sats: number, precision?: number): string {
-  return (sats / Math.pow(10, precision || defaultPrecision)).toLocaleString('en-US', {
+export function fromSatoshiStr(sats: number, precision: number = defaultPrecision): string {
+  return fromSatoshi(sats, precision).toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 8,
   });
@@ -47,10 +61,8 @@ export const formatTxid = (txid: string): string => {
 
 export const formatAssetName = (name?: string): string => {
   const assetName = name || 'Unknown';
-
   if (assetName.length > 16) {
     return assetName.substr(0, 12).concat('...');
   }
-
   return assetName;
 };
