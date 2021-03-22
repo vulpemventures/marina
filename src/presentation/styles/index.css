@@ -125,3 +125,17 @@ input[type='number'] {
   display: none;
 }
 /**/
+
+/* Scrollbar Firefox */
+:root {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-width: thin;
+}
+scrollbar {
+  width: 5px;
+  margin-left: 5px;
+}
+scrollbar thumb {
+  border-radius: 15px;
+}
+/**/
