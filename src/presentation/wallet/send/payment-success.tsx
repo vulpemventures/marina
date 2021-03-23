@@ -9,6 +9,7 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
 import { deriveNewAddress, flushTx, setAddress } from '../../../application/store/actions';
 import { Address } from '../../../domain/wallet/value-objects';
+import Broker from '../../../application/content-script';
 
 interface LocationState {
   changeAddress?: Address;
@@ -34,7 +35,11 @@ const PaymentSuccess: React.FC = () => {
 
   // Cleanup and change address derivation
   useEffect(() => {
-    const onSuccess = () => dispatch(flushTx());
+    const onSuccess = () => {
+      const broker = new Broker();
+      broker.port.postMessage({ id: 'reactjs', name: 'startAlarmUtxosAssets' });
+      dispatch(flushTx());
+    };
     // persist change addresses before unsetting the pending tx
     if (state.changeAddress?.value) {
       dispatch(
