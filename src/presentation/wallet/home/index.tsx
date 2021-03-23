@@ -117,22 +117,28 @@ const Home: React.FC = () => {
       hasBackBtn={false}
       refreshCb={setAssetsBalance}
     >
-      <Balance
-        assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
-        assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
-        assetTicker="L-BTC"
-        bigBalanceText={true}
-        fiatBalance={120}
-        fiatCurrency="$"
-      />
+      <div className="flex flex-col justify-between h-popupContent">
+        <div>
+          <Balance
+            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
+            assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
+            assetTicker="L-BTC"
+            bigBalanceText={true}
+            fiatBalance={120}
+            fiatCurrency="$"
+          />
 
-      <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
+          <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
+        </div>
 
-      <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
+        <div>
+          <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
-      <ButtonList title="Assets" type="assets">
-        {buttonList}
-      </ButtonList>
+          <ButtonList title="Assets" type="assets">
+            {buttonList}
+          </ButtonList>
+        </div>
+      </div>
 
       <ReminderSaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}

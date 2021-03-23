@@ -9,6 +9,10 @@
   }
 }
 
+html, body  {
+  overflow: hidden;
+}
+
 /* Remove blue border from buttons when clicked (default Chrome behavior) */
 button:focus {
   outline: none;
