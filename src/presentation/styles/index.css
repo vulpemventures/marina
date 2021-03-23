@@ -9,6 +9,11 @@
   }
 }
 
+html,
+body {
+  overflow: hidden;
+}
+
 /* Remove blue border from buttons when clicked (default Chrome behavior) */
 button:focus {
   outline: none;
@@ -123,5 +128,37 @@ input[type='number'] {
 }
 [type='range']::-ms-tooltip {
   display: none;
+}
+/**/
+
+/* Scrollbar */
+/* Firefox */
+:root {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-width: thin;
+}
+scrollbar {
+  width: 5px;
+  margin-left: 5px;
+}
+scrollbar thumb {
+  border-radius: 15px;
+}
+/* Chrome */
+#btn-list {
+  margin-right: -10px;
+  padding-right: 10px;
+}
+#btn-list::-webkit-scrollbar {
+  width: 10px;
+}
+#btn-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+}
+#btn-list::-webkit-scrollbar-corner,
+#btn-list::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
 }
 /**/
