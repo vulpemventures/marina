@@ -117,7 +117,7 @@ const Home: React.FC = () => {
       hasBackBtn={false}
       refreshCb={setAssetsBalance}
     >
-      <div className="flex flex-col justify-between h-popupContent">
+      <div className="h-popupContent flex flex-col justify-between">
         <div>
           <Balance
             assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
