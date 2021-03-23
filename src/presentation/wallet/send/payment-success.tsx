@@ -9,6 +9,7 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 import { AppContext } from '../../../application/store/context';
 import { deriveNewAddress, flushTx, setAddress } from '../../../application/store/actions';
 import { Address } from '../../../domain/wallet/value-objects';
+import Broker from '../../../application/content-script';
 
 interface LocationState {
   changeAddress?: Address;

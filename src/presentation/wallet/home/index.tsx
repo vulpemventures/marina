@@ -24,6 +24,7 @@ import {
   lbtcAssetByNetwork,
 } from '../../../application/utils';
 import { waitAtLeast } from '../../../application/utils/common';
+import Broker from '../../../application/content-script';
 
 const Home: React.FC = () => {
   const history = useHistory();
