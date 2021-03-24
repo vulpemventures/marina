@@ -21,7 +21,7 @@ import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/brows
 import { Address, Password } from '../domain/wallet/value-objects';
 import { Network } from '../domain/app/value-objects';
 import { repos } from '../infrastructure';
-import { fromSatoshi, toSatoshi } from '../presentation/utils';
+import { toSatoshi } from '../presentation/utils';
 
 const POPUP_HTML = 'popup.html';
 
@@ -149,20 +149,28 @@ export default class Backend {
 
             case Marina.prototype.signTransaction.name:
               try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
+                // from spend popup
+                if (id === 'connect-popup') {
+                  if (params[0]) {
+                    const mnemo = await getMnemonic();
+                    const signedTx = await mnemo.signPset(params[1]);
+                    return handleResponse(id, signedTx);
+                  } else {
+                    return handleError(id, new Error('Transaction has been rejected'));
+                  }
+                } else {
+                  // from api call
+                  if (!(await this.isCurentSiteEnabled())) {
+                    return handleError(id, new Error('User must authorize the current website'));
+                  }
+                  if (!params || params.length !== 1 || params.some((p) => p === null)) {
+                    return handleError(id, new Error('Missing params'));
+                  }
+                  const hostname = await getCurrentUrl();
+                  const [tx] = params;
+                  await showPopup(`spend?origin=${hostname}&method=signTransaction&tx=${tx}`);
                 }
-
-                if (!params || params.length !== 1) {
-                  return handleError(id, new Error('Missing params'));
-                }
-
-                const [tx] = params;
-
-                const mnemo = await getMnemonic();
-                const signedTx = await mnemo.signPset(tx);
-
-                return handleResponse(id, signedTx);
+                return;
               } catch (e: any) {
                 return handleError(id, e);
               }
@@ -173,14 +181,10 @@ export default class Backend {
                 if (id === 'connect-popup') {
                   if (params[0]) {
                     const coins = await getCoins();
-                    console.log('coins', coins);
                     const network = await getCurrentNetwork();
                     const txBuilder = walletFromCoins(coins, network);
                     const mnemo = await getMnemonic();
-                    console.log('mnemo', mnemo);
                     const changeAddress = mnemo.getNextChangeAddress();
-                    console.log('changeAddress', changeAddress);
-                    console.log('params', params);
                     const unsignedPset = txBuilder.buildTx(
                       txBuilder.createTx(),
                       [
@@ -191,26 +195,19 @@ export default class Backend {
                         },
                       ],
                       greedyCoinSelector(),
-                      (asset: string): string => changeAddress.confidentialAddress,
+                      (): string => changeAddress.confidentialAddress,
                       true
                     );
-                    console.log('unsignedPset', unsignedPset);
-
                     const unsignedTx = psetToUnsignedTx(unsignedPset);
-                    console.log('unsignedTx', unsignedTx);
                     const outputsIndexToBlind: number[] = [];
                     unsignedTx.outs.forEach((out, i) => {
                       if (out.script.length > 0) {
                         outputsIndexToBlind.push(i);
                       }
                     });
-                    console.log('outputsIndexToBlind', outputsIndexToBlind);
                     const blindedPset = await mnemo.blindPset(unsignedPset, outputsIndexToBlind);
-                    console.log('blindedPset', blindedPset);
                     const signedPset = await mnemo.signPset(blindedPset);
-                    console.log('signedPset', signedPset);
                     const ptx = decodePset(signedPset);
-                    console.log('ptx', ptx);
                     if (!ptx.validateSignaturesOfAllInputs()) {
                       throw new Error('Transaction contains invalid signatures');
                     }
@@ -252,9 +249,10 @@ export default class Backend {
       };
 
       const handleError = (id: string, e: Error) => {
+        console.error(e.stack);
         port.postMessage({
           id,
-          payload: { success: false, error: e.message, stack: JSON.stringify(e.stack) },
+          payload: { success: false, error: e.message },
         });
       };
     });
@@ -311,7 +309,6 @@ async function getMnemonic(): Promise<IdentityInterface> {
 
   // TODO: show shell popup instead of prompt
   const password = window.prompt('Unlock your wallet');
-  console.log('password', password);
   if (!password) throw new Error('You must enter the password to unlock');
 
   let mnemonic: string;
@@ -340,6 +337,5 @@ async function getCurrentNetwork(): Promise<Network['value']> {
 
 async function getCoins(): Promise<UtxoInterface[]> {
   const wallet = await repos.wallet.getOrCreateWallet();
-  console.log('wallet.utxoMap.values()', wallet.utxoMap.values());
   return Array.from(wallet.utxoMap.values());
 }

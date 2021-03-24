@@ -22,7 +22,6 @@ const ConnectEnable: React.FC = () => {
   const handleConnect = (e: any) => {
     broker.port.postMessage({ id: 'connect-popup', name: 'enable', params: [true, hostname] });
     broker.port.onMessage.addListener(({ payload }) => {
-      console.log('payload!!!', payload);
       if (payload.success) {
         window.close();
       }

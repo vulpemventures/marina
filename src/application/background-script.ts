@@ -1,6 +1,6 @@
-import { browser, Idle, Runtime } from 'webextension-polyfill-ts';
+import { browser, Idle } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
-import { broadcastTx, explorerApiUrl, IDLE_MESSAGE_TYPE } from './utils';
+import { IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
