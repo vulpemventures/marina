@@ -21,7 +21,7 @@ import {
   nextAddressForWallet,
 } from '../../../application/utils';
 import { Address } from '../../../domain/wallet/value-objects';
-import { fromSatoshi } from '../../utils';
+import { fromSatoshi, toSatoshi } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -124,7 +124,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
       props.state.transaction.amountInSatoshi > 0
-        ? props.state.transaction.amountInSatoshi / Math.pow(10, 8)
+        ? fromSatoshi(props.state.transaction.amountInSatoshi)
         : (('' as unknown) as number),
     assetTicker:
       props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
@@ -164,7 +164,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       setAddressesAndAmount(
         Address.create(values.address),
         Address.create(changeAddress.value, changeAddress.derivationPath),
-        values.amount * Math.pow(10, 8)
+        toSatoshi(values.amount)
       )
     );
     props.history.push({
