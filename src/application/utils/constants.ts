@@ -1,4 +1,5 @@
 import { Network } from '../../domain/app/value-objects';
+import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
@@ -26,11 +27,9 @@ const featuredAssets: Record<string, string> = {
   '': 'assets/images/liquid-assets/question-mark.svg',
 };
 
-
 const lightniteAssets: Record<string, string> = {};
-const lightniteAssetsHashes = require('../constants/lightnite_asset_hash.json');
 lightniteAssetsHashes.forEach((assetHash: string) => {
-  lightniteAssets[assetHash] = 'assets/images/liquid-assets/lightnite.png'
+  lightniteAssets[assetHash] = 'assets/images/liquid-assets/lightnite.png';
 });
 
 export const imgPathMapMainnet: Record<string, string> = {
