@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import { browser, Runtime } from 'webextension-polyfill-ts';
 
-class Broker {
+export default class Broker {
   port: Runtime.Port;
   emitter: EventEmitter;
 

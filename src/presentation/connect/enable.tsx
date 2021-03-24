@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import Button from '../components/button';
-import ShellPopUp from '../components/shell-popup';
+import Broker from '../../application/content-script';
+import ShellConnectPopup from '../components/shell-connect-popup';
 
 function useQuery(key: string) {
   const queryString = new URLSearchParams(useLocation().search);
@@ -9,23 +10,31 @@ function useQuery(key: string) {
 }
 
 const ConnectEnable: React.FC = () => {
+  const broker = new Broker();
   const hostname = useQuery('origin');
 
   const permissions = ['View addresses of your wallet'];
   const websiteTitle = hostname;
-  const handleReject = () => window.close();
-  const handleAccept = () => {
-    console.log('accept');
-    window.close();
+  const handleReject = () => {
+    broker.port.postMessage({ id: 'connect-popup', name: 'enable', params: [false] });
+    broker.port.onMessage.addListener(() => window.close());
+  };
+  const handleConnect = (e: any) => {
+    broker.port.postMessage({ id: 'connect-popup', name: 'enable', params: [true, hostname] });
+    broker.port.onMessage.addListener(({ payload }) => {
+      console.log('payload!!!', payload);
+      if (payload.success) {
+        window.close();
+      }
+    });
   };
 
   return (
-    <ShellPopUp
-      hasBackBtn={false}
+    <ShellConnectPopup
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Enable"
     >
-      <h1 className="mt-8 text-2xl font-medium">{websiteTitle}</h1>
+      <h1 className="mt-8 text-2xl font-medium break-all">{websiteTitle}</h1>
 
       <p className="mt-4 text-base font-medium">Connect with Marina</p>
 
@@ -42,11 +51,11 @@ const ConnectEnable: React.FC = () => {
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
-        <Button onClick={handleAccept} textBase={true}>
+        <Button onClick={handleConnect} textBase={true}>
           Connect
         </Button>
       </div>
-    </ShellPopUp>
+    </ShellConnectPopup>
   );
 };
 
