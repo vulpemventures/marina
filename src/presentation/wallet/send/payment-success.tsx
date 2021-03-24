@@ -35,11 +35,7 @@ const PaymentSuccess: React.FC = () => {
 
   // Cleanup and change address derivation
   useEffect(() => {
-    const onSuccess = () => {
-      const broker = new Broker();
-      broker.port.postMessage({ id: 'reactjs', name: 'startAlarmUtxosAssets' });
-      dispatch(flushTx());
-    };
+    const onSuccess = () => dispatch(flushTx());
     // persist change addresses before unsetting the pending tx
     if (state.changeAddress?.value) {
       dispatch(

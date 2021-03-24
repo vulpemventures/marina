@@ -24,7 +24,6 @@ import {
   lbtcAssetByNetwork,
 } from '../../../application/utils';
 import { waitAtLeast } from '../../../application/utils/common';
-import Broker from '../../../application/content-script';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -73,12 +72,6 @@ const Home: React.FC = () => {
     )
       .then(setAssetsBalance)
       .catch(console.error);
-
-    // TODO: Update state on event
-    // const broker = new Broker();
-    // broker.port.onMessage.addListener((v) => {
-    //   console.log('vvvvv', v);
-    // });
 
     // Flush last sent tx
     if (transaction.asset !== '') {
