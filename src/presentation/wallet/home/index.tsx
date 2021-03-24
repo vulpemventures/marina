@@ -24,7 +24,6 @@ import {
   lbtcAssetByNetwork,
 } from '../../../application/utils';
 import { waitAtLeast } from '../../../application/utils/common';
-import Broker from '../../../application/content-script';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -61,7 +60,7 @@ const Home: React.FC = () => {
     // Update utxos set, owned assets and balances
     // Wait at least 800ms to avoid flickering
     waitAtLeast(
-      800,
+      50,
       new Promise((resolve, reject) => {
         dispatch(
           updateUtxosAssetsBalances(

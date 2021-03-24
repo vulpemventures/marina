@@ -36,24 +36,16 @@ export function updateUtxosAssetsBalances(
       app.network.value
     );
     dispatch(
-      setUtxos(
-        w.getAddresses(),
+      updateAllAssetInfos(
         () => {
           dispatch(
-            updateAllAssetInfos(
-              () => {
-                dispatch(
-                  getAllAssetBalances(
-                    (balances) => onSuccess?.(balances),
-                    (error) => onError?.(error)
-                  )
-                );
-              },
+            getAllAssetBalances(
+              (balances) => onSuccess?.(balances),
               (error) => onError?.(error)
             )
           );
         },
-        (error: Error) => onError?.(error)
+        (error) => onError?.(error)
       )
     );
   };

@@ -60,30 +60,8 @@ export default class Backend {
 
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          console.log('name!!!!', name);
-          switch (name) {
-            case 'startAlarmUtxosAssets':
-              try {
-                const nowPlus5sec = Date.now() + 5000;
-                browser.alarms.create('updateUtxosAssets', {
-                  when: nowPlus5sec,
-                  periodInMinutes: 1,
-                });
-                browser.alarms.onAlarm.addListener(async (alarm) => {
-                  console.log(alarm.name);
-                  if (alarm.name === 'updateUtxosAssets') {
-                    console.log('alarm updateUtxos !!!!!!');
-                    const utxos = await updateUtxos();
-                    await updateAllAssetInfos();
-                    console.log('id', id);
-                    return handleResponse(id, { utxos });
-                  }
-                });
-                return handleResponse(id, { message: 'Polling of utxos and assets started' });
-              } catch (e: any) {
-                return handleError(id, e);
-              }
 
+          switch (name) {
             case Marina.prototype.getNetwork.name:
               try {
                 const network = await getCurrentNetwork();
@@ -285,7 +263,7 @@ async function getCoins(): Promise<UtxoInterface[]> {
   return Array.from(wallet.utxoMap.values());
 }
 
-async function updateUtxos() {
+export async function updateUtxos() {
   const xpub = await getXpub();
   const addrs = xpub.getAddresses();
   const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
@@ -316,10 +294,9 @@ async function updateUtxos() {
   });
   console.log('newMap', newMap);
   await repos.wallet.setUtxos(newMap);
-  return newMap;
 }
 
-async function updateAllAssetInfos() {
+export async function updateAllAssetInfos() {
   const [app, assets, wallet] = await Promise.all([
     repos.app.getApp(),
     repos.assets.getAssets(),

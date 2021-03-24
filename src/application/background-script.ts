@@ -5,10 +5,13 @@ import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
-import Backend from './backend';
+import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
+const POLLING_START_TIMEOUT = Date.now() + 5000; // 5 seconds
+const POLLING_INTERVAL = 1; // 1 minute
+const UPDATE_UTXOS = "UPDATE_UTXOS";
 
 let welcomeTabID: number | undefined = undefined;
 
@@ -44,9 +47,10 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
   })().catch(console.error);
 });
 
-// Everytime the browser starts up we need to set up the popup page
+
 browser.runtime.onStartup.addListener(() => {
   (async () => {
+    // Everytime the browser starts up we need to set up the popup page
     await browser.browserAction.setPopup({ popup: 'popup.html' });
   })().catch(console.error);
 });
@@ -95,6 +99,24 @@ try {
 } catch (error) {
   console.error(error);
 }
+
+/**
+ *  Fetch and update utxos on recurrent basis
+ */
+// lets start an alarm for fetchin and updating utxos
+browser.alarms.create(UPDATE_UTXOS, {
+  when: POLLING_START_TIMEOUT,
+  periodInMinutes: POLLING_INTERVAL,
+});
+
+browser.alarms.onAlarm.addListener(async (alarm) => {
+  console.log(alarm.name);
+  if (alarm.name === UPDATE_UTXOS) {
+    console.log('alarm updateUtxos !!!!!!');
+    await updateUtxos();
+    await updateAllAssetInfos();
+  }
+});
 
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
