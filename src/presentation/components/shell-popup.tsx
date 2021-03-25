@@ -34,7 +34,7 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(updateUtxosAssetsBalances(refreshCb, (error) => console.log(error)));
+      dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
     }
     if (wallets[0].pendingTx) {
       dispatch(flushTx(() => history.push(DEFAULT_ROUTE)));

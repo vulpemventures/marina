@@ -1,25 +1,30 @@
+import axios from 'axios';
 import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
-import Marina from './marina';
 import {
   AddressInterface,
   decodePset,
+  fetchAndUnblindUtxos,
   greedyCoinSelector,
   IdentityInterface,
+  isBlindedUtxo,
   psetToUnsignedTx,
   UtxoInterface,
   walletFromCoins,
 } from 'ldk';
+import Marina from './marina';
 import {
   broadcastTx,
   decrypt,
   explorerApiUrl,
   mnemonicWalletFromAddresses,
+  toStringOutpoint,
   xpubWalletFromAddresses,
 } from './utils';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { Address, Password } from '../domain/wallet/value-objects';
 import { Network } from '../domain/app/value-objects';
+import { Assets, AssetsByNetwork } from '../domain/asset';
 import { repos } from '../infrastructure';
 import { toSatoshi } from '../presentation/utils';
 
@@ -64,7 +69,6 @@ export default class Backend {
             case Marina.prototype.getNetwork.name:
               try {
                 const network = await getCurrentNetwork();
-
                 return handleResponse(id, network);
               } catch (e: any) {
                 return handleError(id, e);
@@ -93,9 +97,7 @@ export default class Backend {
             case Marina.prototype.disable.name:
               try {
                 const hostname = await getCurrentUrl();
-
                 this.disableSite(hostname);
-
                 return handleResponse(id, undefined);
               } catch (e: any) {
                 return handleError(id, e);
@@ -106,10 +108,8 @@ export default class Backend {
                 if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
-
                 const xpub = await getXpub();
                 const addrs = xpub.getAddresses();
-
                 return handleResponse(id, addrs);
               } catch (e: any) {
                 return handleError(id, e);
@@ -120,12 +120,9 @@ export default class Backend {
                 if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
-
                 const xpub = await getXpub();
                 const nextAddress = xpub.getNextAddress();
-
                 await persistAddress(nextAddress);
-
                 return handleResponse(id, nextAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -136,12 +133,9 @@ export default class Backend {
                 if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
-
                 const xpub = await getXpub();
                 const nextChangeAddress = xpub.getNextChangeAddress();
-
                 await persistAddress(nextChangeAddress);
-
                 return handleResponse(id, nextChangeAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -292,8 +286,7 @@ async function getXpub(): Promise<IdentityInterface> {
 }
 
 async function persistAddress(addr: AddressInterface): Promise<void> {
-  const walletRepo = new BrowserStorageWalletRepo();
-  await walletRepo.addDerivedAddress(Address.create(addr.confidentialAddress));
+  await repos.wallet.addDerivedAddress(Address.create(addr.confidentialAddress));
 }
 
 async function getMnemonic(password: string, port?: Runtime.Port): Promise<IdentityInterface> {
@@ -318,13 +311,81 @@ async function getMnemonic(password: string, port?: Runtime.Port): Promise<Ident
 }
 
 async function getCurrentNetwork(): Promise<Network['value']> {
-  const appRepo = new BrowserStorageAppRepo();
-  const app = await appRepo.getApp();
-
+  const app = await repos.app.getApp();
   return app.network.value;
 }
 
 async function getCoins(): Promise<UtxoInterface[]> {
   const wallet = await repos.wallet.getOrCreateWallet();
   return Array.from(wallet.utxoMap.values());
+}
+
+export async function updateUtxos() {
+  const xpub = await getXpub();
+  const addrs = xpub.getAddresses();
+  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
+  const newMap = new Map(wallet.utxoMap);
+  // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
+  const fetchedUtxos = await fetchAndUnblindUtxos(
+    addrs,
+    explorerApiUrl[app.network.value],
+    // Skip fetch and unblind if utxo exists in storage
+    (utxo) =>
+      Array.from(wallet.utxoMap.keys()).some((outpoint) => `${utxo.txid}:${utxo.vout}` === outpoint)
+  );
+  if (fetchedUtxos.every((u) => isBlindedUtxo(u)) && fetchedUtxos.length === wallet.utxoMap.size)
+    return;
+  // Add to newMap fetched utxo(s) not present in storage
+  fetchedUtxos.forEach((fetchedUtxo) => {
+    const isPresent = Array.from(wallet.utxoMap.keys()).some(
+      (storedUtxoOutpoint) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
+    );
+    if (!isPresent) newMap.set(toStringOutpoint(fetchedUtxo), fetchedUtxo);
+  });
+  // Delete from newMap utxo(s) not present in fetched utxos
+  Array.from(newMap.keys()).forEach((storedUtxoOutpoint) => {
+    const isPresent = fetchedUtxos.some(
+      (fetchedUtxo) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
+    );
+    if (!isPresent) newMap.delete(storedUtxoOutpoint);
+  });
+  await repos.wallet.setUtxos(newMap);
+}
+
+export async function updateAllAssetInfos() {
+  const [app, assets, wallet] = await Promise.all([
+    repos.app.getApp(),
+    repos.assets.getAssets(),
+    repos.wallet.getOrCreateWallet(),
+  ]);
+  const assetsFromUtxos: Assets = await Promise.all(
+    [...wallet.utxoMap.values()].map(async ({ asset }) =>
+      // If asset in store don't fetch
+      !((asset as string) in assets[app.network.value])
+        ? (await axios.get(`${explorerApiUrl[app.network.value]}/asset/${asset}`)).data
+        : undefined
+    )
+  ).then((assetInfos) =>
+    assetInfos
+      .filter((a) => a !== undefined)
+      .reduce(
+        (acc, { asset_id, name, ticker, precision }) => ({
+          ...acc,
+          [asset_id]: { name, ticker, precision },
+        }),
+        {} as Assets
+      )
+  );
+  // Update stores
+  if (Object.keys(assetsFromUtxos).length) {
+    let assetInfosLiquid = assets.liquid;
+    let assetInfosRegtest = assets.regtest;
+    if (app.network.value === 'liquid') {
+      assetInfosLiquid = { ...assets.liquid, ...assetsFromUtxos };
+    } else {
+      assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };
+    }
+    const newAssets: AssetsByNetwork = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
+    await repos.assets.updateAssets(() => newAssets);
+  }
 }

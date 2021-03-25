@@ -9,4 +9,5 @@ export interface IWalletRepository {
   addDerivedAddress(address: Address): Promise<void>;
   setPendingTx(tx?: Transaction): Promise<void>;
   setUtxos(utxoMap: Map<string, UtxoInterface>): Promise<void>;
+  getUtxos(): Promise<Map<string, UtxoInterface>>;
 }

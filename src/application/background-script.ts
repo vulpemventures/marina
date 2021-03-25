@@ -1,15 +1,14 @@
 import { browser, Idle } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
-import { IDLE_MESSAGE_TYPE } from './utils';
+import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
-import Backend from './backend';
+import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
-const POPUP_HTML = 'popup.html';
 
 let welcomeTabID: number | undefined = undefined;
 
@@ -27,7 +26,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 
         // this is for development only
         if (process.env.SKIP_ONBOARDING) {
-          await browser.browserAction.setPopup({ popup: POPUP_HTML });
+          await browser.browserAction.setPopup({ popup: 'popup.html' });
           return;
         }
 
@@ -45,10 +44,10 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
   })().catch(console.error);
 });
 
-// Everytime the browser starts up we need to set up the popup page
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    await browser.browserAction.setPopup({ popup: POPUP_HTML });
+    // Everytime the browser starts up we need to set up the popup page
+    await browser.browserAction.setPopup({ popup: 'popup.html' });
   })().catch(console.error);
 });
 
@@ -96,6 +95,29 @@ try {
 } catch (error) {
   console.error(error);
 }
+
+/**
+ * Fetch and update utxos on recurrent basis
+ * The alarms can be triggered every minute, not less
+ * To give more frequent updates we use setInterval
+ * However this can be killed randmoly by the browser
+ * therefore we keep this local variable to check
+ * if is going on. if not we will at least recover each
+ * other minute when the alarm is fired off
+ */
+
+let utxosInterval: NodeJS.Timer | number | undefined;
+
+browser.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'UPDATE_UTXOS') {
+    if (!utxosInterval) {
+      utxosInterval = setAsyncInterval(async () => {
+        await updateUtxos();
+        await updateAllAssetInfos();
+      }, 5000);
+    }
+  }
+});
 
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);

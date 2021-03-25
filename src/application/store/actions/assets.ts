@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { Assets, AssetsByNetwork } from '../../../domain/asset';
-import { Thunk, IAppState, Action } from '../../../domain/common';
+import { Action, IAppState, Thunk } from '../../../domain/common';
 import {
-  ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
-  ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE,
-  INIT_ASSETS,
   ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
+  ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE,
+  ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
+  INIT_ASSETS,
 } from './action-types';
 import { explorerApiUrl, lbtcAssetByNetwork } from '../../utils';
 
@@ -122,6 +122,27 @@ export function updateAllAssetInfos(
       } else {
         onSuccess?.(assets);
       }
+    } catch (error) {
+      dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE, { error }]);
+      onError?.(error);
+    }
+  };
+}
+
+/**
+ * Update stored asset's info for all assets in wallet from storage
+ * @param onSuccess
+ * @param onError
+ */
+export function updateAllAssetInfosFromStorage(
+  onSuccess?: (assetInfos: AssetsByNetwork) => void,
+  onError?: (err: Error) => void
+): Thunk<IAppState, Action<AssetsByNetwork>> {
+  return async (dispatch, getState, repos) => {
+    try {
+      const assetsFromRepo = await repos.assets.getAssets();
+      dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, { assets: assetsFromRepo }]);
+      onSuccess?.(assetsFromRepo);
     } catch (error) {
       dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE, { error }]);
       onError?.(error);
