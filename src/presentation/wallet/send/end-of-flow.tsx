@@ -19,40 +19,44 @@ const EndOfFlow: React.FC = () => {
   const history = useHistory();
   const [{ wallets, app }] = useContext(AppContext);
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
+  const [isBusy, setIsBusy] = useState<boolean>(false);
   const wallet = wallets[0];
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleShowUnlockModal = () => showUnlockModal(true);
 
   const handleUnlock = async (password: string) => {
-    let tx = '';
-    try {
-      if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
-        throw new Error('Invalid password');
+    if (!isBusy) {
+      setIsBusy(true);
+      let tx = '';
+      try {
+        if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
+          throw new Error('Invalid password');
+        }
+        const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+        const { props } = wallet.pendingTx!;
+        const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, app.network.value);
+        tx = await blindAndSignPset(
+          mnemonic,
+          wallet.masterBlindingKey.value,
+          wallet.confidentialAddresses,
+          app.network.value,
+          props.value,
+          outputsToBlind,
+          outPubkeys
+        );
+        const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
+        history.push({
+          pathname: SEND_PAYMENT_SUCCESS_ROUTE,
+          state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },
+        });
+      } catch (error) {
+        console.error(error);
+        history.push({
+          pathname: SEND_PAYMENT_ERROR_ROUTE,
+          state: { changeAddress: wallet.pendingTx?.changeAddress, tx: tx },
+        });
       }
-      const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
-      const { props } = wallet.pendingTx!;
-      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, app.network.value);
-      tx = await blindAndSignPset(
-        mnemonic,
-        wallet.masterBlindingKey.value,
-        wallet.confidentialAddresses,
-        app.network.value,
-        props.value,
-        outputsToBlind,
-        outPubkeys
-      );
-      const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
-      history.push({
-        pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },
-      });
-    } catch (error) {
-      console.error(error);
-      history.push({
-        pathname: SEND_PAYMENT_ERROR_ROUTE,
-        state: { changeAddress: wallet.pendingTx?.changeAddress, tx: tx },
-      });
     }
   };
 
