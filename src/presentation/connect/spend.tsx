@@ -73,6 +73,7 @@ const ConnectSpend: React.FC = () => {
             // Will throw error in root function scope
             // To display error message
             handleUnlock('');
+            // eslint-disable-next-line no-empty
           } catch (_) {}
         }
       });
