@@ -1,26 +1,11 @@
-import { browser, Idle, Runtime } from 'webextension-polyfill-ts';
+import { browser, Idle } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
-import { broadcastTx, explorerApiUrl, IDLE_MESSAGE_TYPE } from './utils';
+import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
-
-import Marina from './marina';
-import { mnemonicWalletFromAddresses, xpubWalletFromAddresses } from './utils/restorer';
-import { Address, Password } from '../domain/wallet/value-objects';
-import {
-  AddressInterface,
-  decodePset,
-  greedyCoinSelector,
-  IdentityInterface,
-  psetToUnsignedTx,
-  UtxoInterface,
-  walletFromCoins,
-} from 'ldk';
-import { decrypt } from './utils/crypto';
-import { Network } from '../domain/app/value-objects';
+import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -59,9 +44,9 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
   })().catch(console.error);
 });
 
-// Everytime the browser starts up we need to set up the popup page
 browser.runtime.onStartup.addListener(() => {
   (async () => {
+    // Everytime the browser starts up we need to set up the popup page
     await browser.browserAction.setPopup({ popup: 'popup.html' });
   })().catch(console.error);
 });
@@ -111,300 +96,33 @@ try {
   console.error(error);
 }
 
+/**
+ * Fetch and update utxos on recurrent basis
+ * The alarms can be triggered every minute, not less
+ * To give more frequent updates we use setInterval
+ * However this can be killed randmoly by the browser
+ * therefore we keep this local variable to check
+ * if is going on. if not we will at least recover each
+ * other minute when the alarm is fired off
+ */
+
+let utxosInterval: NodeJS.Timer | number | undefined;
+
+browser.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'UPDATE_UTXOS') {
+    if (!utxosInterval) {
+      utxosInterval = setAsyncInterval(async () => {
+        await updateUtxos();
+        await updateAllAssetInfos();
+      }, 5000);
+    }
+  }
+});
+
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
   const { id } = await browser.tabs.create({ url });
   return id;
-}
-
-async function getCurrentUrl(): Promise<string> {
-  const [currentTab] = await browser.tabs.query({ currentWindow: true, active: true });
-  if (!currentTab.url) throw new Error('No active tab available');
-
-  const url = new URL(currentTab.url);
-
-  return url.hostname;
-}
-
-async function getXpub(): Promise<IdentityInterface> {
-  const appRepo = new BrowserStorageAppRepo();
-  const walletRepo = new BrowserStorageWalletRepo();
-
-  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()]);
-
-  const xpub = await xpubWalletFromAddresses(
-    wallet.masterXPub.value,
-    wallet.masterBlindingKey.value,
-    wallet.confidentialAddresses,
-    app.network.value
-  );
-
-  return xpub;
-}
-
-async function persistAddress(addr: AddressInterface): Promise<void> {
-  const walletRepo = new BrowserStorageWalletRepo();
-  await walletRepo.addDerivedAddress(Address.create(addr.confidentialAddress));
-}
-
-async function getMnemonic(): Promise<IdentityInterface> {
-  const appRepo = new BrowserStorageAppRepo();
-  const walletRepo = new BrowserStorageWalletRepo();
-
-  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()]);
-
-  // TODO: show shell popup instead of prompt
-  const password = window.prompt('Unlock your wallet');
-  if (!password) throw new Error('You must enter the password to unlock');
-
-  let mnemonic: string;
-  try {
-    mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
-  } catch (e: any) {
-    throw new Error('Invalid password');
-  }
-
-  const mnemo = await mnemonicWalletFromAddresses(
-    mnemonic,
-    wallet.masterBlindingKey.value,
-    wallet.confidentialAddresses,
-    app.network.value
-  );
-
-  return mnemo;
-}
-
-async function getCurrentNetwork(): Promise<Network['value']> {
-  const appRepo = new BrowserStorageAppRepo();
-  const app = await appRepo.getApp();
-
-  return app.network.value;
-}
-
-async function getCoins(): Promise<UtxoInterface[]> {
-  const walletRepo = new BrowserStorageWalletRepo();
-  const wallet = await walletRepo.getOrCreateWallet();
-
-  return Array.from(wallet.utxoMap.values());
-}
-
-// TODO all this logic should eventually be moved somewhere else
-class Backend {
-  // this eventually will go in the repository localStorage
-  enabledSites: string[];
-
-  constructor() {
-    // we keep a local in-memory list of enabled sites in this session
-    this.enabledSites = [];
-  }
-
-  enableSite(hostname: string) {
-    if (!this.enabledSites.includes(hostname)) {
-      this.enabledSites.push(hostname);
-    }
-  }
-
-  disableSite(hostname: string) {
-    if (this.enabledSites.includes(hostname)) {
-      this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
-    }
-  }
-
-  async isCurentSiteEnabled() {
-    const hostname = await getCurrentUrl();
-    return this.enabledSites.includes(hostname);
-  }
-
-  start() {
-    browser.runtime.onConnect.addListener((port: Runtime.Port) => {
-      // We listen for API calls from injected Marina provider.
-      // id is random identifier used as reference in the response
-      // name is the name of the API method
-      // params is the list of arguments from the method
-
-      port.onMessage.addListener(
-        async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          switch (name) {
-            case Marina.prototype.getNetwork.name:
-              try {
-                const network = await getCurrentNetwork();
-
-                return handleResponse(id, network);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.enable.name:
-              try {
-                const hostname = await getCurrentUrl();
-
-                // Eventually show the shell popup to ask for confirmation from the user
-                const confirmed = window.confirm(
-                  `Are you sure you want to authorize ${hostname} to access your balances?`
-                );
-
-                if (!confirmed) return handleError(id, new Error('User denied access'));
-
-                this.enableSite(hostname);
-
-                return handleResponse(id, undefined);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.disable.name:
-              try {
-                const hostname = await getCurrentUrl();
-
-                this.disableSite(hostname);
-
-                return handleResponse(id, undefined);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.getAddresses.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-
-                const xpub = await getXpub();
-                const addrs = xpub.getAddresses();
-
-                return handleResponse(id, addrs);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.getNextAddress.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-
-                const xpub = await getXpub();
-                const nextAddress = xpub.getNextAddress();
-
-                await persistAddress(nextAddress);
-
-                return handleResponse(id, nextAddress);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.getNextChangeAddress.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-
-                const xpub = await getXpub();
-                const nextChangeAddress = xpub.getNextChangeAddress();
-
-                await persistAddress(nextChangeAddress);
-
-                return handleResponse(id, nextChangeAddress);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.signTransaction.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-
-                if (!params || params.length !== 1) {
-                  return handleError(id, new Error('Missing params'));
-                }
-
-                const [tx] = params;
-
-                const mnemo = await getMnemonic();
-                const signedTx = await mnemo.signPset(tx);
-
-                return handleResponse(id, signedTx);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.sendTransaction.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-
-                if (!params || params.length !== 3) {
-                  return handleError(id, new Error('Missing params'));
-                }
-
-                const [recipient, amount, asset] = params;
-
-                const coins = await getCoins();
-                const network = await getCurrentNetwork();
-
-                const txBuilder = walletFromCoins(coins, network);
-
-                const mnemo = await getMnemonic();
-                const changeAddress = mnemo.getNextChangeAddress();
-
-                const unsignedPset = txBuilder.buildTx(
-                  txBuilder.createTx(),
-                  [
-                    {
-                      address: recipient,
-                      value: amount,
-                      asset: asset,
-                    },
-                  ],
-                  greedyCoinSelector(),
-                  (asset: string): string => changeAddress.confidentialAddress,
-                  true
-                );
-
-                const unsignedTx = psetToUnsignedTx(unsignedPset);
-                const outputsIndexToBlind: number[] = [];
-                unsignedTx.outs.forEach((out, i) => {
-                  if (out.script.length > 0) {
-                    outputsIndexToBlind.push(i);
-                  }
-                });
-
-                const blindedPset = await mnemo.blindPset(unsignedPset, outputsIndexToBlind);
-                const signedPset = await mnemo.signPset(blindedPset);
-
-                const ptx = decodePset(signedPset);
-                if (!ptx.validateSignaturesOfAllInputs()) {
-                  throw new Error('Transaction contains invalid signatures');
-                }
-                const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
-
-                const txid = await broadcastTx(explorerApiUrl[network], txHex);
-
-                // if we reached this point we can persist the change address
-                await persistAddress(changeAddress);
-
-                return handleResponse(id, txid);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            default:
-              return handleError(id, new Error('Method not implemented.'));
-          }
-        }
-      );
-
-      const handleResponse = (id: string, data: any) => {
-        port.postMessage({ id, payload: { success: true, data } });
-      };
-
-      const handleError = (id: string, e: Error) => {
-        port.postMessage({ id, payload: { success: false, error: e.message } });
-      };
-    });
-  }
 }
 
 // We start listening and handling messages from injected script

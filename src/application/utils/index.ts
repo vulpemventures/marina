@@ -7,3 +7,4 @@ export * from './restorer';
 export * from './taxi';
 export * from './transaction';
 export * from './utxos';
+export * from './set-interval-async';

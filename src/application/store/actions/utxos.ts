@@ -77,3 +77,24 @@ export function setUtxos(
     }
   };
 }
+
+/**
+ * Set utxos to store from browser storage
+ * @param onSuccess
+ * @param onError
+ */
+export function setUtxosFromStorage(
+  onSuccess?: () => void,
+  onError?: (err: Error) => void
+): Thunk<IAppState, Action> {
+  return async (dispatch, getState, repos) => {
+    try {
+      const utxoMapFromRepo = await repos.wallet.getUtxos();
+      dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: utxoMapFromRepo }]);
+      onSuccess?.();
+    } catch (error) {
+      dispatch([WALLET_SET_UTXOS_FAILURE, { error }]);
+      onError?.(error);
+    }
+  };
+}

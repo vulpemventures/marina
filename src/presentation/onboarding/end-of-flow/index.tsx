@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { browser } from 'webextension-polyfill-ts';
 import {
   createWallet,
   onboardingComplete,
@@ -8,6 +7,7 @@ import {
 } from '../../../application/store/actions';
 import { flush } from '../../../application/store/actions/onboarding';
 import { AppContext } from '../../../application/store/context';
+import { provisionBackgroundScript } from '../../../application/utils/provision';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -24,8 +24,10 @@ const EndOfFlow: React.FC = () => {
     if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
       const dispatchOnboardingCompleted = () => {
-        // set the popup after the onboarding flow
-        browser.browserAction.setPopup({ popup: 'popup.html' }).catch(console.error);
+        // Startup alarms to fetch utxos & set the popup page
+        (async () => {
+          await provisionBackgroundScript();
+        })().catch(console.error);
 
         return dispatch(
           onboardingComplete(() => {
