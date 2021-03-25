@@ -88,30 +88,9 @@ export function setUtxosFromStorage(
   onError?: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
-    const { wallets } = getState();
-    const newMap = new Map(wallets[0].utxoMap);
     try {
-      // get utxos from repo
       const utxoMapFromRepo = await repos.wallet.getUtxos();
-      if (utxoMapFromRepo.size === wallets[0].utxoMap.size) {
-        return onSuccess?.();
-      }
-      // Add to newMap fetched utxo(s) from repo not present in store
-      utxoMapFromRepo.forEach((fetchedUtxo: UtxoInterface) => {
-        const isPresent = Array.from(wallets[0].utxoMap.keys()).some(
-          (storedUtxoOutpoint) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
-        );
-        if (!isPresent) newMap.set(toStringOutpoint(fetchedUtxo), fetchedUtxo);
-      });
-      // Delete from newMap utxo(s) not present in fetched utxos
-      Array.from(newMap.keys()).forEach((storedUtxoOutpoint) => {
-        const isPresent = Array.from(utxoMapFromRepo).some(
-          ([_, fetchedUtxo]) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
-        );
-        if (!isPresent) newMap.delete(storedUtxoOutpoint);
-      });
-
-      dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: newMap }]);
+      dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: utxoMapFromRepo }]);
       onSuccess?.();
     } catch (error) {
       dispatch([WALLET_SET_UTXOS_FAILURE, { error }]);

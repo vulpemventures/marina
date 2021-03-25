@@ -1,6 +1,6 @@
 import { browser, Idle } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
-import { IDLE_MESSAGE_TYPE } from './utils';
+import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
@@ -99,7 +99,7 @@ try {
 /**
  * Fetch and update utxos on recurrent basis
  * The alarms can be triggered every minute, not less
- * To give more frequest updates we use setInterval
+ * To give more frequent updates we use setInterval
  * However this can be killed randmoly by the browser
  * therefore we keep this local variable to check
  * if is going on. if not we will at least recover each
@@ -111,7 +111,7 @@ let utxosInterval: NodeJS.Timer | number | undefined;
 browser.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'UPDATE_UTXOS') {
     if (!utxosInterval) {
-      utxosInterval = setInterval(async () => {
+      utxosInterval = setAsyncInterval(async () => {
         await updateUtxos();
         await updateAllAssetInfos();
       }, 5000);

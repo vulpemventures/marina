@@ -1,5 +1,5 @@
 import { Action, IAppState, Thunk } from '../../../domain/common';
-import { getAllAssetBalances, updateAllAssetInfos } from './assets';
+import { getAllAssetBalances, updateAllAssetInfosFromStorage } from './assets';
 import { xpubWalletFromAddresses } from '../../utils';
 import { setUtxos, setUtxosFromStorage } from './utxos';
 
@@ -34,7 +34,7 @@ export function updateUtxosAssetsBalances(
 
     const onInnerSuccess = () => {
       dispatch(
-        updateAllAssetInfos(
+        updateAllAssetInfosFromStorage(
           () => {
             dispatch(
               getAllAssetBalances(

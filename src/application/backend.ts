@@ -271,13 +271,13 @@ export async function updateUtxos() {
   const fetchedUtxos = await fetchAndUnblindUtxos(
     addrs,
     explorerApiUrl[app.network.value],
-    // Skip fetch and unblind if utxo exists in React state
+    // Skip fetch and unblind if utxo exists in storage
     (utxo) =>
       Array.from(wallet.utxoMap.keys()).some((outpoint) => `${utxo.txid}:${utxo.vout}` === outpoint)
   );
   if (fetchedUtxos.every((u) => isBlindedUtxo(u)) && fetchedUtxos.length === wallet.utxoMap.size)
     return;
-  // Add to newMap fetched utxo(s) not present in store
+  // Add to newMap fetched utxo(s) not present in storage
   fetchedUtxos.forEach((fetchedUtxo) => {
     const isPresent = Array.from(wallet.utxoMap.keys()).some(
       (storedUtxoOutpoint) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
