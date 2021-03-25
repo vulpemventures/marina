@@ -67,7 +67,7 @@ export function setUtxos(
         );
         if (!isPresent) newMap.delete(storedUtxoOutpoint);
       });
-      console.log(newMap);
+
       await repos.wallet.setUtxos(newMap);
       dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: newMap }]);
       onSuccess?.();
