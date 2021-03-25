@@ -83,7 +83,7 @@ export default class Backend {
                   }
                 } else {
                   // call from api
-                  await showPopup(`enable?origin=${hostname}`);
+                  await showPopup(`connect/enable?origin=${hostname}`);
                 }
                 return;
               } catch (e: any) {
@@ -152,7 +152,7 @@ export default class Backend {
                 // from spend popup
                 if (id === 'connect-popup') {
                   if (params[0]) {
-                    const mnemo = await getMnemonic();
+                    const mnemo = await getMnemonic('password');
                     const signedTx = await mnemo.signPset(params[1]);
                     return handleResponse(id, signedTx);
                   } else {
@@ -168,7 +168,9 @@ export default class Backend {
                   }
                   const hostname = await getCurrentUrl();
                   const [tx] = params;
-                  await showPopup(`spend?origin=${hostname}&method=signTransaction&tx=${tx}`);
+                  await showPopup(
+                    `connect/spend?origin=${hostname}&method=signTransaction&tx=${tx}`
+                  );
                 }
                 return;
               } catch (e: any) {
@@ -183,7 +185,7 @@ export default class Backend {
                     const coins = await getCoins();
                     const network = await getCurrentNetwork();
                     const txBuilder = walletFromCoins(coins, network);
-                    const mnemo = await getMnemonic();
+                    const mnemo = await getMnemonic(params[4], port);
                     const changeAddress = mnemo.getNextChangeAddress();
                     const unsignedPset = txBuilder.buildTx(
                       txBuilder.createTx(),
@@ -230,7 +232,7 @@ export default class Backend {
                   const hostname = await getCurrentUrl();
                   const [recipientAddress, amountInSatoshis, assetHash] = params;
                   await showPopup(
-                    `spend?origin=${hostname}&method=sendTransaction&recipient=${recipientAddress}&amount=${amountInSatoshis}&assetHash=${assetHash}`
+                    `connect/spend?origin=${hostname}&method=sendTransaction&recipient=${recipientAddress}&amount=${amountInSatoshis}&assetHash=${assetHash}`
                   );
                 }
                 return;
@@ -276,24 +278,17 @@ export function showPopup(path?: string): Promise<Windows.Window> {
     left: 100,
     top: 100,
   };
-
   return browser.windows.create(options as any);
 }
 
 async function getXpub(): Promise<IdentityInterface> {
-  const appRepo = new BrowserStorageAppRepo();
-  const walletRepo = new BrowserStorageWalletRepo();
-
-  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()]);
-
-  const xpub = await xpubWalletFromAddresses(
+  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
+  return await xpubWalletFromAddresses(
     wallet.masterXPub.value,
     wallet.masterBlindingKey.value,
     wallet.confidentialAddresses,
     app.network.value
   );
-
-  return xpub;
 }
 
 async function persistAddress(addr: AddressInterface): Promise<void> {
@@ -301,31 +296,25 @@ async function persistAddress(addr: AddressInterface): Promise<void> {
   await walletRepo.addDerivedAddress(Address.create(addr.confidentialAddress));
 }
 
-async function getMnemonic(): Promise<IdentityInterface> {
-  const appRepo = new BrowserStorageAppRepo();
-  const walletRepo = new BrowserStorageWalletRepo();
-
-  const [app, wallet] = await Promise.all([appRepo.getApp(), walletRepo.getOrCreateWallet()]);
-
-  // TODO: show shell popup instead of prompt
-  const password = window.prompt('Unlock your wallet');
-  if (!password) throw new Error('You must enter the password to unlock');
-
-  let mnemonic: string;
+async function getMnemonic(password: string, port?: Runtime.Port): Promise<IdentityInterface> {
+  let mnemonic = '';
+  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
   try {
     mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
   } catch (e: any) {
+    if (port) {
+      port.postMessage({
+        payload: { success: false, error: 'Invalid password' },
+      });
+    }
     throw new Error('Invalid password');
   }
-
-  const mnemo = await mnemonicWalletFromAddresses(
+  return await mnemonicWalletFromAddresses(
     mnemonic,
     wallet.masterBlindingKey.value,
     wallet.confidentialAddresses,
     app.network.value
   );
-
-  return mnemo;
 }
 
 async function getCurrentNetwork(): Promise<Network['value']> {

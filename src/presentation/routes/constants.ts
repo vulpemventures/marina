@@ -1,6 +1,6 @@
 // Connect
-const CONNECT_ENABLE_ROUTE = '/enable';
-const CONNECT_SPEND_ROUTE = '/spend';
+const CONNECT_ENABLE_ROUTE = '/connect/enable';
+const CONNECT_SPEND_ROUTE = '/connect/spend';
 
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';

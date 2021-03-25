@@ -1,12 +1,13 @@
 /* eslint react-hooks/rules-of-hooks: 0 */
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { decodePset } from 'ldk';
 import Button from '../components/button';
 import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { AppContext } from '../../application/store/context';
 import { formatAddress } from '../utils';
-import { decodePset } from 'ldk';
+import ModalUnlock from '../components/modal-unlock';
 
 function useQuery(key: string) {
   const queryString = new URLSearchParams(useLocation().search);
@@ -14,6 +15,8 @@ function useQuery(key: string) {
 }
 
 const ConnectSpend: React.FC = () => {
+  const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   let recipient = '';
   let assetAmount = '';
   let assetHash = '';
@@ -42,26 +45,39 @@ const ConnectSpend: React.FC = () => {
     broker.port.onMessage.addListener(() => window.close());
   };
 
-  const handleAccept = () => {
-    if (method === 'sendTransaction') {
-      broker.port.postMessage({
-        id: 'connect-popup',
-        name: method,
-        params: [true, recipient, assetAmount, assetHash],
-      });
-    }
-    if (method === 'signTransaction') {
-      broker.port.postMessage({
-        id: 'connect-popup',
-        name: method,
-        params: [true, tx],
-      });
-    }
-    broker.port.onMessage.addListener(({ payload }) => {
-      if (payload.success) {
-        window.close();
+  const handleModalUnlockClose = () => showUnlockModal(false);
+  const handleUnlockModalOpen = () => showUnlockModal(true);
+
+  const handleUnlock = (password: string) => {
+    if (password) {
+      if (method === 'sendTransaction') {
+        broker.port.postMessage({
+          id: 'connect-popup',
+          name: method,
+          params: [true, recipient, assetAmount, assetHash, password],
+        });
       }
-    });
+      if (method === 'signTransaction') {
+        broker.port.postMessage({
+          id: 'connect-popup',
+          name: method,
+          params: [true, tx],
+        });
+      }
+      broker.port.onMessage.addListener(({ payload }) => {
+        if (payload.success) {
+          window.close();
+        } else {
+          setError(payload.error);
+          try {
+            // Will throw error in root function scope
+            // To display error message
+            handleUnlock('');
+          } catch (_) {}
+        }
+      });
+    }
+    throw new Error(error);
   };
 
   return (
@@ -87,10 +103,16 @@ const ConnectSpend: React.FC = () => {
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
-        <Button onClick={handleAccept} textBase={true}>
+        <Button onClick={handleUnlockModalOpen} textBase={true}>
           Accept
         </Button>
       </div>
+
+      <ModalUnlock
+        isModalUnlockOpen={isModalUnlockOpen}
+        handleModalUnlockClose={handleModalUnlockClose}
+        handleUnlock={handleUnlock}
+      />
     </ShellConnectPopup>
   );
 };
