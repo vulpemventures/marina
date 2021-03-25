@@ -17,7 +17,7 @@ export * from './wallet';
  * @returns balances
  */
 export function updateUtxosAssetsBalances(
-  fromNetwork: boolean = false,
+  fromNetwork = false,
   onSuccess?: (balances: { [p: string]: number }) => void,
   onError?: (err: Error) => void
 ): Thunk<IAppState, Action> {
@@ -31,7 +31,6 @@ export function updateUtxosAssetsBalances(
         Object.keys(assets[app.network.value]).map((asset) => ({ [asset]: 0 }))[0]
       );
     }
-
 
     const onInnerSuccess = () => {
       dispatch(
@@ -48,7 +47,7 @@ export function updateUtxosAssetsBalances(
         )
       );
     };
-    const onInnerError = (error: Error) => onError?.(error)
+    const onInnerError = (error: Error) => onError?.(error);
 
     let utxoSetter = () => setUtxosFromStorage(onInnerSuccess, onInnerError);
     if (fromNetwork) {

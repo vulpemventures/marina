@@ -60,7 +60,7 @@ const Home: React.FC = () => {
 
     // Poll the browser storage to check for new utxos
     const updateUtxos = () => {
-      console.log('updating utxo state...')
+      console.log('updating utxo state...');
       dispatch(
         updateUtxosAssetsBalances(
           false,
@@ -68,13 +68,10 @@ const Home: React.FC = () => {
           (error) => console.error(error.message)
         )
       );
-    }
-    let utxosInterval = setInterval(updateUtxos, 2500);
+    };
+    const utxosInterval = setInterval(updateUtxos, 2500);
     // Wait at least 800ms to avoid flickering
-    waitAtLeast(
-      800,
-      Promise.resolve(updateUtxos())
-    );
+    waitAtLeast(800, Promise.resolve(updateUtxos())).catch(console.error);
     // Flush last sent tx
     if (transaction.asset !== '') {
       dispatch(flush());
@@ -84,7 +81,7 @@ const Home: React.FC = () => {
     //Clean up can be done like this
     return () => {
       clearInterval(utxosInterval);
-    }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -67,7 +67,7 @@ export function setUtxos(
         );
         if (!isPresent) newMap.delete(storedUtxoOutpoint);
       });
-      console.log(newMap)
+      console.log(newMap);
       await repos.wallet.setUtxos(newMap);
       dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: newMap }]);
       onSuccess?.();
@@ -77,7 +77,6 @@ export function setUtxos(
     }
   };
 }
-
 
 /**
  * Set utxos to store from browser storage
@@ -94,11 +93,8 @@ export function setUtxosFromStorage(
     try {
       // get utxos from repo
       const utxoMapFromRepo = await repos.wallet.getUtxos();
-      if (
-        utxoMapFromRepo.size === wallets[0].utxoMap.size
-      ) {
+      if (utxoMapFromRepo.size === wallets[0].utxoMap.size) {
         return onSuccess?.();
-
       }
       // Add to newMap fetched utxo(s) from repo not present in store
       utxoMapFromRepo.forEach((fetchedUtxo: UtxoInterface) => {

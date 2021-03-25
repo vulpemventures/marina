@@ -44,7 +44,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
   })().catch(console.error);
 });
 
-
 browser.runtime.onStartup.addListener(() => {
   (async () => {
     // Everytime the browser starts up we need to set up the popup page
@@ -102,7 +101,7 @@ try {
  * The alarms can be triggered every minute, not less
  * To give more frequest updates we use setInterval
  * However this can be killed randmoly by the browser
- * therefore we keep this local variable to check 
+ * therefore we keep this local variable to check
  * if is going on. if not we will at least recover each
  * other minute when the alarm is fired off
  */
@@ -110,29 +109,20 @@ try {
 let utxosInterval: NodeJS.Timer | number | undefined;
 
 browser.alarms.onAlarm.addListener((alarm) => {
-  (async () => {
-
-    if (alarm.name === "UPDATE_UTXOS") {
-      if (!utxosInterval) {
-        utxosInterval = setInterval(async () => {
-          await updateUtxos();
-          await updateAllAssetInfos();
-        }, 2500);
-      }
+  if (alarm.name === 'UPDATE_UTXOS') {
+    if (!utxosInterval) {
+      utxosInterval = setInterval(async () => {
+        await updateUtxos();
+        await updateAllAssetInfos();
+      }, 5000);
     }
-  })().catch(console.error)
+  }
 });
 
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
   const { id } = await browser.tabs.create({ url });
   return id;
-}
-
-function randomInRange(min: number, max: number): number {
-  const diff = max - min;
-  const random = Math.random();
-  return Math.floor((random * diff) + min);
 }
 
 // We start listening and handling messages from injected script

@@ -78,7 +78,9 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
       const w = await this.getOrCreateWallet();
       const wallet = WalletMap.toDTO(w);
       const arrayOfTuples = parse(wallet.utxoMap);
-      return new Map(arrayOfTuples.map((v: [Outpoint, UtxoInterface]) => [toStringOutpoint(v[1]), v[1]]));
+      return new Map(
+        arrayOfTuples.map((v: [Outpoint, UtxoInterface]) => [toStringOutpoint(v[1]), v[1]])
+      );
     } catch (error) {
       throw new Error(error.message);
     }

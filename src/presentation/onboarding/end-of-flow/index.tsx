@@ -23,10 +23,11 @@ const EndOfFlow: React.FC = () => {
   useEffect(() => {
     if (wallets.length <= 0) {
       const onError = (err: Error) => console.log(err);
-      const dispatchOnboardingCompleted = async () => {
-
-        // Startup alarms to fetch utxos & set the popup page 
-        await provisionBackgroundScript();
+      const dispatchOnboardingCompleted = () => {
+        // Startup alarms to fetch utxos & set the popup page
+        (async () => {
+          await provisionBackgroundScript();
+        })().catch(console.error);
 
         return dispatch(
           onboardingComplete(() => {

@@ -60,7 +60,6 @@ export default class Backend {
 
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-
           switch (name) {
             case Marina.prototype.getNetwork.name:
               try {
