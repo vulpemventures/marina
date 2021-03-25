@@ -57,26 +57,33 @@ const Home: React.FC = () => {
     if (process.env.SKIP_ONBOARDING) {
       dispatch(createDevState());
     }
-    // Update utxos set, owned assets and balances
+
+    // Poll the browser storage to check for new utxos
+    const updateUtxos = () => {
+      console.log('updating utxo state...')
+      dispatch(
+        updateUtxosAssetsBalances(
+          false,
+          (balances) => setAssetsBalance(balances),
+          (error) => console.error(error.message)
+        )
+      );
+    }
+    let utxosInterval = setInterval(updateUtxos, 2500);
     // Wait at least 800ms to avoid flickering
     waitAtLeast(
-      50,
-      new Promise((resolve, reject) => {
-        dispatch(
-          updateUtxosAssetsBalances(
-            (balances) => resolve(balances),
-            (error) => reject(error.message)
-          )
-        );
-      })
-    )
-      .then(setAssetsBalance)
-      .catch(console.error);
-
+      800,
+      Promise.resolve(updateUtxos())
+    );
     // Flush last sent tx
     if (transaction.asset !== '') {
       dispatch(flush());
       browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+    }
+
+    //Clean up can be done like this
+    return () => {
+      clearInterval(utxosInterval);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

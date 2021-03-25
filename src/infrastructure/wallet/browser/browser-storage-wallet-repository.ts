@@ -1,12 +1,13 @@
 import { browser } from 'webextension-polyfill-ts';
-import { UtxoInterface } from 'ldk';
+import { Outpoint, UtxoInterface } from 'ldk';
 import { IWalletRepository } from '../../../domain/wallet/i-wallet-repository';
 import { Address } from '../../../domain/wallet/value-objects';
 import { IWallet, Wallet } from '../../../domain/wallet/wallet';
 import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
-import { stringify } from '../../../application/utils/browser-storage-converters';
+import { parse, stringify } from '../../../application/utils/browser-storage-converters';
+import { toStringOutpoint } from '../../../application/utils/utxos';
 
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {
@@ -67,6 +68,17 @@ export class BrowserStorageWalletRepo implements IWalletRepository {
       await browser.storage.local.set({
         wallets: [wallet],
       });
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getUtxos(): Promise<Map<string, UtxoInterface>> {
+    try {
+      const w = await this.getOrCreateWallet();
+      const wallet = WalletMap.toDTO(w);
+      const arrayOfTuples = parse(wallet.utxoMap);
+      return new Map(arrayOfTuples.map((v: [Outpoint, UtxoInterface]) => [toStringOutpoint(v[1]), v[1]]));
     } catch (error) {
       throw new Error(error.message);
     }

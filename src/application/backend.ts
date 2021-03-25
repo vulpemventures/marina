@@ -277,7 +277,7 @@ export async function updateUtxos() {
       Array.from(wallet.utxoMap.keys()).some((outpoint) => `${utxo.txid}:${utxo.vout}` === outpoint)
   );
   if (fetchedUtxos.every((u) => isBlindedUtxo(u)) && fetchedUtxos.length === wallet.utxoMap.size)
-    return wallet.utxoMap;
+    return;
   // Add to newMap fetched utxo(s) not present in store
   fetchedUtxos.forEach((fetchedUtxo) => {
     const isPresent = Array.from(wallet.utxoMap.keys()).some(
@@ -292,7 +292,7 @@ export async function updateUtxos() {
     );
     if (!isPresent) newMap.delete(storedUtxoOutpoint);
   });
-  console.log('newMap', newMap);
+
   await repos.wallet.setUtxos(newMap);
 }
 
@@ -330,7 +330,7 @@ export async function updateAllAssetInfos() {
       assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };
     }
     const newAssets: AssetsByNetwork = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
-    console.log('newAssets', newAssets);
+
     await repos.assets.updateAssets(() => newAssets);
   }
 }

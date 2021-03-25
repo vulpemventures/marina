@@ -9,9 +9,6 @@ import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
-const POLLING_START_TIMEOUT = Date.now() + 5000; // 5 seconds
-const POLLING_INTERVAL = 1; // 1 minute
-const UPDATE_UTXOS = "UPDATE_UTXOS";
 
 let welcomeTabID: number | undefined = undefined;
 
@@ -101,27 +98,41 @@ try {
 }
 
 /**
- *  Fetch and update utxos on recurrent basis
+ * Fetch and update utxos on recurrent basis
+ * The alarms can be triggered every minute, not less
+ * To give more frequest updates we use setInterval
+ * However this can be killed randmoly by the browser
+ * therefore we keep this local variable to check 
+ * if is going on. if not we will at least recover each
+ * other minute when the alarm is fired off
  */
-// lets start an alarm for fetchin and updating utxos
-browser.alarms.create(UPDATE_UTXOS, {
-  when: POLLING_START_TIMEOUT,
-  periodInMinutes: POLLING_INTERVAL,
-});
 
-browser.alarms.onAlarm.addListener(async (alarm) => {
-  console.log(alarm.name);
-  if (alarm.name === UPDATE_UTXOS) {
-    console.log('alarm updateUtxos !!!!!!');
-    await updateUtxos();
-    await updateAllAssetInfos();
-  }
+let utxosInterval: NodeJS.Timer | number | undefined;
+
+browser.alarms.onAlarm.addListener((alarm) => {
+  (async () => {
+
+    if (alarm.name === "UPDATE_UTXOS") {
+      if (!utxosInterval) {
+        utxosInterval = setInterval(async () => {
+          await updateUtxos();
+          await updateAllAssetInfos();
+        }, 2500);
+      }
+    }
+  })().catch(console.error)
 });
 
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
   const { id } = await browser.tabs.create({ url });
   return id;
+}
+
+function randomInRange(min: number, max: number): number {
+  const diff = max - min;
+  const random = Math.random();
+  return Math.floor((random * diff) + min);
 }
 
 // We start listening and handling messages from injected script
