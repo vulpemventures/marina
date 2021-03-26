@@ -54,10 +54,7 @@ export default class Backend {
   async disableSite(hostname: string) {
     const network = await getCurrentNetwork();
     await repos.connect.updateConnectData((data) => {
-      if (
-        this.enabledSites.includes(data[network].enableSitePending) &&
-        data[network].enabledSites.includes(data[network].enableSitePending)
-      ) {
+      if (this.enabledSites.includes(hostname) && data[network].enabledSites.includes(hostname)) {
         this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
         data[network].enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
       }
