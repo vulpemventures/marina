@@ -30,7 +30,7 @@ import {
   usdtAssetHash,
   utxoMapToArray,
 } from '../../../application/utils';
-import { fromSatoshi, fromSatoshiStr } from '../../utils';
+import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IWallet } from '../../../domain/wallet/wallet';
 
@@ -374,7 +374,7 @@ const ChooseFee: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={fromSatoshi(balances[feeCurrency] ?? 0)}
+        assetBalance={formatDecimalAmount(fromSatoshi(balances[feeCurrency] ?? 0))}
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
