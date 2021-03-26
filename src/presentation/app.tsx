@@ -3,6 +3,7 @@ import { HashRouter } from 'react-router-dom';
 import Routes from './routes';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-storage-assets-repository';
+import { BrowserStorageConnectRepo } from '../infrastructure/connect/browser-storage-connect-repository';
 import { BrowserStorageTxsHistoryRepo } from '../infrastructure/txs-history/browser-storage-txs-history-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { appInitialState, appReducer } from '../application/store/reducers';
@@ -20,9 +21,10 @@ const App: React.FC = () => {
   const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
   const app = new BrowserStorageAppRepo();
   const assets = new BrowserStorageAssetsRepo();
+  const connect = new BrowserStorageConnectRepo();
   const txsHistory = new BrowserStorageTxsHistoryRepo();
   const wallet = new BrowserStorageWalletRepo();
-  const repos = { app, assets, txsHistory, wallet };
+  const repos = { app, assets, connect, txsHistory, wallet };
   const [state, dispatch] = useThunkReducer(appReducer, appInitialState, repos);
 
   // Populate ref div with svg animation

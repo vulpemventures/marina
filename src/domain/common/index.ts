@@ -8,6 +8,7 @@ import { AssetsByNetwork } from '../asset';
 import { IAssetsRepository } from '../asset/i-assets-repository';
 import { TxsHistoryByNetwork } from '../transaction';
 import { ITxsHistoryRepository } from '../transaction/i-txs-history-repository';
+import { IConnectRepository } from '../connect/i-connect-repository';
 
 export interface IAppState {
   app: IApp;
@@ -31,6 +32,7 @@ export type Dispatch<A> = (value: A) => void;
 export type Repositories = {
   app: IAppRepository;
   assets: IAssetsRepository;
+  connect: IConnectRepository;
   txsHistory: ITxsHistoryRepository;
   wallet: IWalletRepository;
 };

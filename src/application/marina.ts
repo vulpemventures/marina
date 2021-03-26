@@ -28,6 +28,10 @@ export default class Marina implements MarinaProvider {
     return this.proxy(this.enable.name, []);
   }
 
+  enableResponse(id: string): void {
+    return this.call(id, this.enableResponse.name, []);
+  }
+
   disable(): Promise<void> {
     return this.proxy(this.disable.name, []);
   }
@@ -64,8 +68,16 @@ export default class Marina implements MarinaProvider {
     return this.proxy(this.sendTransaction.name, [recipientAddress, amountInSatoshis, assetHash]);
   }
 
+  sendTransactionResponse(id: string): void {
+    return this.call(id, this.sendTransactionResponse.name, []);
+  }
+
   signTransaction(psetBase64: string): Promise<string> {
     return this.proxy(this.signTransaction.name, [psetBase64]);
+  }
+
+  signTransactionResponse(id: string): void {
+    return this.call(id, this.signTransactionResponse.name, []);
   }
 
   private proxy(name: string, params: any[] = []): Promise<any> {

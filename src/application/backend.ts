@@ -29,24 +29,40 @@ import { toSatoshi } from '../presentation/utils';
 const POPUP_HTML = 'popup.html';
 
 export default class Backend {
-  // this eventually will go in the repository localStorage
-  enabledSites: string[];
+  private enabledSites: string[];
 
   constructor() {
     // we keep a local in-memory list of enabled sites in this session
     this.enabledSites = [];
   }
 
-  enableSite(hostname: string) {
-    if (!this.enabledSites.includes(hostname)) {
-      this.enabledSites.push(hostname);
-    }
+  async enableSite() {
+    const network = await getCurrentNetwork();
+    await repos.connect.updateConnectData((data) => {
+      if (
+        !this.enabledSites.includes(data[network].enableSitePending) &&
+        !data[network].enabledSites.includes(data[network].enableSitePending)
+      ) {
+        this.enabledSites.push(data[network].enableSitePending);
+        data[network].enabledSites.push(data[network].enableSitePending);
+        data[network].enableSitePending = '';
+      }
+      return data;
+    });
   }
 
-  disableSite(hostname: string) {
-    if (this.enabledSites.includes(hostname)) {
-      this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
-    }
+  async disableSite(hostname: string) {
+    const network = await getCurrentNetwork();
+    await repos.connect.updateConnectData((data) => {
+      if (
+        this.enabledSites.includes(data[network].enableSitePending) &&
+        data[network].enabledSites.includes(data[network].enableSitePending)
+      ) {
+        this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
+        data[network].enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
+      }
+      return data;
+    });
   }
 
   async isCurentSiteEnabled() {
@@ -60,98 +76,98 @@ export default class Backend {
       // id is random identifier used as reference in the response
       // name is the name of the API method
       // params is the list of arguments from the method
-
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          switch (name) {
-            case Marina.prototype.getNetwork.name:
-              try {
-                const network = await getCurrentNetwork();
-                return handleResponse(id, network);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
+          if (id !== 'connect-popup') {
+            switch (name) {
+              case Marina.prototype.getNetwork.name:
+                try {
+                  const network = await getCurrentNetwork();
+                  return handleResponse(id, network);
+                } catch (e: any) {
+                  return handleError(id, e);
+                }
 
-            case Marina.prototype.enable.name:
-              try {
-                const hostname = await getCurrentUrl();
-                // popup response
-                if (id === 'connect-popup') {
+              case Marina.prototype.enable.name:
+                try {
+                  const hostname = await getCurrentUrl();
+                  const network = await getCurrentNetwork();
+                  await repos.connect.updateConnectData((data) => {
+                    data[network].enableSitePending = hostname;
+                    return data;
+                  });
+                  await showPopup(`connect/enable`);
+                  return;
+                } catch (e: any) {
+                  return handleError(id, e);
+                }
+
+              case Marina.prototype.enableResponse.name:
+                try {
                   if (params[0]) {
-                    this.enableSite(params[1]);
+                    await this.enableSite();
                     return handleResponse(id);
                   } else {
+                    const network = await getCurrentNetwork();
+                    await repos.connect.updateConnectData((data) => {
+                      data[network].enableSitePending = '';
+                      return data;
+                    });
                     return handleError(id, new Error('User denied access'));
                   }
-                } else {
-                  // call from api
-                  await showPopup(`connect/enable?origin=${hostname}`);
+                } catch (e: any) {
+                  return handleError(id, e);
                 }
-                return;
-              } catch (e: any) {
-                return handleError(id, e);
-              }
 
-            case Marina.prototype.disable.name:
-              try {
-                const hostname = await getCurrentUrl();
-                this.disableSite(hostname);
-                return handleResponse(id, undefined);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.getAddresses.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
+              case Marina.prototype.disable.name:
+                try {
+                  const hostname = await getCurrentUrl();
+                  await this.disableSite(hostname);
+                  return handleResponse(id, undefined);
+                } catch (e: any) {
+                  return handleError(id, e);
                 }
-                const xpub = await getXpub();
-                const addrs = xpub.getAddresses();
-                return handleResponse(id, addrs);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
 
-            case Marina.prototype.getNextAddress.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-                const xpub = await getXpub();
-                const nextAddress = xpub.getNextAddress();
-                await persistAddress(nextAddress);
-                return handleResponse(id, nextAddress);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.getNextChangeAddress.name:
-              try {
-                if (!(await this.isCurentSiteEnabled())) {
-                  return handleError(id, new Error('User must authorize the current website'));
-                }
-                const xpub = await getXpub();
-                const nextChangeAddress = xpub.getNextChangeAddress();
-                await persistAddress(nextChangeAddress);
-                return handleResponse(id, nextChangeAddress);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case Marina.prototype.signTransaction.name:
-              try {
-                // from spend popup
-                if (id === 'connect-popup') {
-                  if (params[0]) {
-                    const mnemo = await getMnemonic('password');
-                    const signedTx = await mnemo.signPset(params[1]);
-                    return handleResponse(id, signedTx);
-                  } else {
-                    return handleError(id, new Error('Transaction has been rejected'));
+              case Marina.prototype.getAddresses.name:
+                try {
+                  if (!(await this.isCurentSiteEnabled())) {
+                    return handleError(id, new Error('User must authorize the current website'));
                   }
-                } else {
-                  // from api call
+                  const xpub = await getXpub();
+                  const addrs = xpub.getAddresses();
+                  return handleResponse(id, addrs);
+                } catch (e: any) {
+                  return handleError(id, e);
+                }
+
+              case Marina.prototype.getNextAddress.name:
+                try {
+                  if (!(await this.isCurentSiteEnabled())) {
+                    return handleError(id, new Error('User must authorize the current website'));
+                  }
+                  const xpub = await getXpub();
+                  const nextAddress = xpub.getNextAddress();
+                  await persistAddress(nextAddress);
+                  return handleResponse(id, nextAddress);
+                } catch (e: any) {
+                  return handleError(id, e);
+                }
+
+              case Marina.prototype.getNextChangeAddress.name:
+                try {
+                  if (!(await this.isCurentSiteEnabled())) {
+                    return handleError(id, new Error('User must authorize the current website'));
+                  }
+                  const xpub = await getXpub();
+                  const nextChangeAddress = xpub.getNextChangeAddress();
+                  await persistAddress(nextChangeAddress);
+                  return handleResponse(id, nextChangeAddress);
+                } catch (e: any) {
+                  return handleError(id, e);
+                }
+
+              case Marina.prototype.signTransaction.name:
+                try {
                   if (!(await this.isCurentSiteEnabled())) {
                     return handleError(id, new Error('User must authorize the current website'));
                   }
@@ -160,32 +176,91 @@ export default class Backend {
                   }
                   const hostname = await getCurrentUrl();
                   const [tx] = params;
-                  await showPopup(
-                    `connect/spend?origin=${hostname}&method=signTransaction&tx=${tx}`
-                  );
+                  const network = await getCurrentNetwork();
+                  await repos.connect.updateConnectData((data) => {
+                    data[network].tx = {
+                      hostname: hostname,
+                      pset: tx,
+                    };
+                    return data;
+                  });
+                  await showPopup(`connect/spend-pset`);
+                  return;
+                } catch (e: any) {
+                  return handleError(id, e);
                 }
-                return;
-              } catch (e: any) {
-                return handleError(id, e);
-              }
 
-            case Marina.prototype.sendTransaction.name:
-              try {
-                // from spend popup
-                if (id === 'connect-popup') {
-                  if (params[0]) {
-                    const coins = await getCoins();
+              case Marina.prototype.signTransactionResponse.name:
+                try {
+                  const [accepted, password] = params;
+                  if (accepted) {
+                    const mnemo = await getMnemonic(password);
                     const network = await getCurrentNetwork();
+                    const connectDataByNetwork = await repos.connect.getConnectData();
+                    if (!connectDataByNetwork[network].tx?.pset) throw new Error('PSET missing');
+                    const tx = connectDataByNetwork[network].tx!.pset as string;
+                    const signedTx = await mnemo.signPset(tx);
+                    return handleResponse(id, signedTx);
+                  } else {
+                    return handleError(id, new Error('Transaction has been rejected'));
+                  }
+                } catch (e: any) {
+                  return handleError(id, e);
+                }
+
+              case Marina.prototype.sendTransaction.name:
+                try {
+                  if (!(await this.isCurentSiteEnabled())) {
+                    return handleError(id, new Error('User must authorize the current website'));
+                  }
+                  if (!params || params.length !== 3 || params.some((p) => p === null)) {
+                    return handleError(id, new Error('Missing params'));
+                  }
+                  const [recipientAddress, amountInSatoshis, assetHash]: string[] = params;
+                  const hostname = await getCurrentUrl();
+                  const network = await getCurrentNetwork();
+                  await repos.connect.updateConnectData((data) => {
+                    data[network].tx = {
+                      hostname: hostname,
+                      recipient: recipientAddress,
+                      amount: amountInSatoshis,
+                      assetHash: assetHash,
+                    };
+                    return data;
+                  });
+                  await showPopup(`connect/spend`);
+                  return;
+                } catch (e: any) {
+                  const network = await getCurrentNetwork();
+                  await repos.connect.updateConnectData((data) => {
+                    data[network].tx = undefined;
+                    return data;
+                  });
+                  return handleError(id, e);
+                }
+
+              //
+              case Marina.prototype.sendTransactionResponse.name:
+                try {
+                  const [accepted, password] = params;
+                  if (accepted) {
+                    const network = await getCurrentNetwork();
+                    const connectDataByNetwork = await repos.connect.getConnectData();
+                    const { tx } = connectDataByNetwork[network];
+                    if (!tx || !tx.amount || !tx.assetHash || !tx.recipient)
+                      throw new Error('Transaction data are missing');
+                    const { assetHash, amount, recipient } = tx;
+                    const coins = await getCoins();
                     const txBuilder = walletFromCoins(coins, network);
-                    const mnemo = await getMnemonic(params[4], port);
+                    const mnemo = await getMnemonic(password, port);
                     const changeAddress = mnemo.getNextChangeAddress();
                     const unsignedPset = txBuilder.buildTx(
                       txBuilder.createTx(),
                       [
                         {
-                          address: params[1],
-                          value: toSatoshi(Number(params[2])),
-                          asset: params[3],
+                          address: recipient,
+                          value: toSatoshi(Number(amount)),
+                          asset: assetHash,
                         },
                       ],
                       greedyCoinSelector(),
@@ -209,39 +284,39 @@ export default class Backend {
                     const txid = await broadcastTx(explorerApiUrl[network], txHex);
                     // if we reached this point we can persist the change address
                     await persistAddress(changeAddress);
+                    // Flush tx data
+                    await repos.connect.updateConnectData((data) => {
+                      data[network].tx = undefined;
+                      return data;
+                    });
                     return handleResponse(id, txid);
                   } else {
+                    // Flush tx data
+                    const network = await getCurrentNetwork();
+                    await repos.connect.updateConnectData((data) => {
+                      data[network].tx = undefined;
+                      return data;
+                    });
                     return handleError(id, new Error('Transaction has been rejected'));
                   }
-                } else {
-                  // api call
-                  if (!(await this.isCurentSiteEnabled())) {
-                    return handleError(id, new Error('User must authorize the current website'));
-                  }
-                  if (!params || params.length !== 3 || params.some((p) => p === null)) {
-                    return handleError(id, new Error('Missing params'));
-                  }
-                  const hostname = await getCurrentUrl();
-                  const [recipientAddress, amountInSatoshis, assetHash] = params;
-                  await showPopup(
-                    `connect/spend?origin=${hostname}&method=sendTransaction&recipient=${recipientAddress}&amount=${amountInSatoshis}&assetHash=${assetHash}`
-                  );
+                } catch (e: any) {
+                  return handleError(id, e);
                 }
-                return;
-              } catch (e: any) {
-                return handleError(id, e);
-              }
 
-            default:
-              return handleError(id, new Error('Method not implemented.'));
+              //
+              default:
+                return handleError(id, new Error('Method not implemented.'));
+            }
           }
         }
       );
 
+      //
       const handleResponse = (id: string, data?: any) => {
         port.postMessage({ id, payload: { success: true, data } });
       };
 
+      //
       const handleError = (id: string, e: Error) => {
         console.error(e.stack);
         port.postMessage({

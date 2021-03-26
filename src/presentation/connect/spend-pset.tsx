@@ -1,18 +1,14 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from '../components/button';
 import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import { AppContext } from '../../application/store/context';
-import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
-import { makeid } from '../../application/marina';
 import { repos } from '../../infrastructure';
+import { makeid } from '../../application/marina';
 
-const ConnectSpend: React.FC = () => {
-  const [{ app, assets }] = useContext(AppContext);
+const ConnectSpendPset: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [hasError, setHasError] = useState<boolean>(false);
-
   const [tx, setTx] = useState<
     | {
         hostname?: string;
@@ -33,16 +29,11 @@ const ConnectSpend: React.FC = () => {
 
   const broker = new Broker();
   const idParam = makeid(16);
-  const assetTicker = tx?.assetHash ? assets[app.network.value][tx.assetHash]?.ticker : 'Unknown';
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const handleReject = () => {
-    broker.port.postMessage({
-      id: idParam,
-      name: 'sendTransactionResponse',
-      params: [false],
-    });
+    broker.port.postMessage({ id: idParam, name: 'signTransactionResponse', params: [false] });
     broker.port.onMessage.addListener(({ id, payload }) => {
       if (!payload.success && id === idParam) {
         window.close();
@@ -68,9 +59,14 @@ const ConnectSpend: React.FC = () => {
 
   const handleUnlock = (password: string) => {
     if (password) {
+      // Get tx from repo and decode it
+      //const connectDataByNetwork = await repos.connect.getConnectData()
+      //const decodedTx = decodePset(tx);
+      //console.log('decodedTx', decodedTx);
+
       broker.port.postMessage({
         id: idParam,
-        name: 'sendTransactionResponse',
+        name: 'signTransactionResponse',
         params: [true, password],
       });
     }
@@ -87,17 +83,7 @@ const ConnectSpend: React.FC = () => {
     >
       <h1 className="mt-8 text-2xl font-medium break-all">{tx?.hostname}</h1>
 
-      <p className="mt-4 text-base font-medium">Requests you to spend</p>
-
-      <div className="container flex justify-between mt-16">
-        <span className="text-lg font-medium">{tx?.amount}</span>
-        <span className="text-lg font-medium">{assetTicker}</span>
-      </div>
-
-      <div className="container flex items-baseline justify-between mt-4">
-        <span className="mr-2 text-lg font-medium">To: </span>
-        <span className="font-small text-sm break-all">{formatAddress(tx?.recipient ?? '')}</span>
-      </div>
+      <p className="mt-4 text-base font-medium">We are going to spend your funds, are you sure?</p>
 
       <div className="bottom-24 container absolute right-0 flex justify-between">
         <Button isOutline={true} onClick={handleReject} textBase={true}>
@@ -117,4 +103,4 @@ const ConnectSpend: React.FC = () => {
   );
 };
 
-export default ConnectSpend;
+export default ConnectSpendPset;

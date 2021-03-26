@@ -1,6 +1,7 @@
 // Connect
 const CONNECT_ENABLE_ROUTE = '/connect/enable';
 const CONNECT_SPEND_ROUTE = '/connect/spend';
+const CONNECT_SPEND_PSET_ROUTE = '/connect/spend-pset';
 
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
@@ -48,6 +49,7 @@ export {
   //Connect
   CONNECT_ENABLE_ROUTE,
   CONNECT_SPEND_ROUTE,
+  CONNECT_SPEND_PSET_ROUTE,
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,

@@ -1,28 +1,39 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/button';
 import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
-
-function useQuery(key: string) {
-  const queryString = new URLSearchParams(useLocation().search);
-  return queryString.get(key);
-}
+import { repos } from '../../infrastructure';
+import { makeid } from '../../application/marina';
 
 const ConnectEnable: React.FC = () => {
-  const broker = new Broker();
-  const hostname = useQuery('origin');
+  const [hostname, setHostname] = useState<string>('');
 
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      const network = (await repos.app.getApp()).network.value;
+      const data = await repos.connect.getConnectData();
+      const hostname = data[network].enableSitePending;
+      setHostname(hostname);
+    })();
+  }, []);
+
+  const broker = new Broker();
+  const idParam = makeid(16);
   const permissions = ['View addresses of your wallet'];
-  const websiteTitle = hostname;
+
   const handleReject = () => {
-    broker.port.postMessage({ id: 'connect-popup', name: 'enable', params: [false] });
-    broker.port.onMessage.addListener(() => window.close());
+    broker.port.postMessage({ id: idParam, name: 'enableResponse', params: [false] });
+    broker.port.onMessage.addListener(({ id, payload }) => {
+      if (!payload.success && id === idParam) {
+        window.close();
+      }
+    });
   };
-  const handleConnect = (e: any) => {
-    broker.port.postMessage({ id: 'connect-popup', name: 'enable', params: [true, hostname] });
-    broker.port.onMessage.addListener(({ payload }) => {
-      if (payload.success) {
+
+  const handleConnect = () => {
+    broker.port.postMessage({ id: idParam, name: 'enableResponse', params: [true] });
+    broker.port.onMessage.addListener(({ id, payload }) => {
+      if (payload.success && id === idParam) {
         window.close();
       }
     });
@@ -33,7 +44,7 @@ const ConnectEnable: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Enable"
     >
-      <h1 className="mt-8 text-2xl font-medium break-all">{websiteTitle}</h1>
+      <h1 className="mt-8 text-2xl font-medium break-all">{hostname}</h1>
 
       <p className="mt-4 text-base font-medium">Connect with Marina</p>
 
