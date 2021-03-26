@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useRef, useContext, useEffect, useState } from 'react';
 import Button from '../components/button';
 import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
@@ -7,7 +7,7 @@ import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { makeid } from '../../application/marina';
 import { repos } from '../../infrastructure';
-import { debounce } from '../../application/utils/debounce';
+import { debounce } from 'lodash';
 
 const ConnectSpend: React.FC = () => {
   const [{ app, assets }] = useContext(AppContext);
@@ -67,20 +67,22 @@ const ConnectSpend: React.FC = () => {
   });
 
   const handleUnlock = (password: string) => {
-      if (password) {
-        broker.port.postMessage({
-          id: idParam,
-          name: 'sendTransactionResponse',
-          params: [true, password],
-        });
-      }
-      if (!error) return;
-      // Will display generic error message 'Invalid Password'
-      // TODO: bug, msg will only be displayed at second click
-      throw new Error();
+    if (password) {
+      broker.port.postMessage({
+        id: idParam,
+        name: 'sendTransactionResponse',
+        params: [true, password],
+      });
+    }
+    if (!error) return;
+    // Will display generic error message 'Invalid Password'
+    // TODO: bug, msg will only be displayed at second click
+    throw new Error();
   };
 
-  const debouncedHandleUnlock = useCallback(debounce(handleUnlock, 2000, true), []);
+  const debouncedHandleUnlock = useRef(
+    debounce(handleUnlock, 2000, { leading: true, trailing: false })
+  ).current;
 
   return (
     <ShellConnectPopup

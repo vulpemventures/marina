@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import Button from './button';
 import Input from './input';
 import Modal from './modal';
-
+import { DebouncedFunc } from 'lodash';
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
   password: string;
@@ -13,7 +13,7 @@ interface ModalUnlockFormValues {
 interface ModalUnlockFormProps {
   error?: string;
   handleModalUnlockClose(): void;
-  handleUnlock(password: string): void;
+  handleUnlock: DebouncedFunc<(password: string) => Promise<void>>;
   isModalUnlockOpen: boolean;
 }
 

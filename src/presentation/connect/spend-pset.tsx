@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Button from '../components/button';
 import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { repos } from '../../infrastructure';
 import { makeid } from '../../application/marina';
-import { debounce } from '../../application/utils/debounce';
+import { debounce } from 'lodash';
 
 const ConnectSpendPset: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -77,7 +77,9 @@ const ConnectSpendPset: React.FC = () => {
     throw new Error();
   };
 
-  const debouncedHandleUnlock = useCallback(debounce(handleUnlock, 2000, true), []);
+  const debouncedHandleUnlock = useRef(
+    debounce(handleUnlock, 2000, { leading: true, trailing: false })
+  ).current;
 
   return (
     <ShellConnectPopup

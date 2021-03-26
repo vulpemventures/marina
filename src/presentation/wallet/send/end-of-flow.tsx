@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useRef, useContext, useState } from 'react';
 import { useHistory } from 'react-router';
 import { AppContext } from '../../../application/store/context';
 import { Password } from '../../../domain/wallet/value-objects';
@@ -14,7 +14,7 @@ import {
   hash,
 } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
-import { debounce } from '../../../application/utils/debounce';
+import { debounce } from 'lodash';
 
 const EndOfFlow: React.FC = () => {
   const history = useHistory();
@@ -61,7 +61,9 @@ const EndOfFlow: React.FC = () => {
     }
   };
 
-  const debouncedHandleUnlock = useCallback(debounce(handleUnlock, 2000, true), []);
+  const debouncedHandleUnlock = useRef(
+    debounce(handleUnlock, 2000, { leading: true, trailing: false })
+  ).current;
 
   return (
     <ShellPopUp

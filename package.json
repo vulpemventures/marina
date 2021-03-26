@@ -49,6 +49,7 @@
     "google-protobuf": "^3.15.3",
     "jsbi": "^3.1.4",
     "ldk": "^0.2.8",
+    "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.6",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
