@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { useHistory } from 'react-router';
 import { AppContext } from '../../../application/store/context';
 import { Password } from '../../../domain/wallet/value-objects';
@@ -14,44 +14,45 @@ import {
   hash,
 } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
+import { debounce } from '../../../application/utils/debounce';
 
 const EndOfFlow: React.FC = () => {
   const history = useHistory();
   const [{ wallets, app }] = useContext(AppContext);
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
-  const [isBusy, setIsBusy] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   const wallet = wallets[0];
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleShowUnlockModal = () => showUnlockModal(true);
 
   const handleUnlock = async (password: string) => {
-    if (!isBusy) {
-      setIsBusy(true);
-      let tx = '';
-      try {
-        if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
-          throw new Error('Invalid password');
-        }
-        const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
-        const { props } = wallet.pendingTx!;
-        const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, app.network.value);
-        tx = await blindAndSignPset(
-          mnemonic,
-          wallet.masterBlindingKey.value,
-          wallet.confidentialAddresses,
-          app.network.value,
-          props.value,
-          outputsToBlind,
-          outPubkeys
-        );
-        const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
-        history.push({
-          pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-          state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },
-        });
-      } catch (error) {
-        console.error(error);
+    setError('');
+    let tx = '';
+    try {
+      if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
+        throw new Error('Invalid password');
+      }
+      const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+      const { props } = wallet.pendingTx!;
+      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, app.network.value);
+      tx = await blindAndSignPset(
+        mnemonic,
+        wallet.masterBlindingKey.value,
+        wallet.confidentialAddresses,
+        app.network.value,
+        props.value,
+        outputsToBlind,
+        outPubkeys
+      );
+      const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
+      history.push({
+        pathname: SEND_PAYMENT_SUCCESS_ROUTE,
+        state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },
+      });
+    } catch (error) {
+      setError(error.message);
+      if (error.message !== 'Invalid password') {
         history.push({
           pathname: SEND_PAYMENT_ERROR_ROUTE,
           state: { changeAddress: wallet.pendingTx?.changeAddress, tx: tx },
@@ -59,6 +60,8 @@ const EndOfFlow: React.FC = () => {
       }
     }
   };
+
+  const debouncedHandleUnlock = useCallback(debounce(handleUnlock, 2000, true), []);
 
   return (
     <ShellPopUp
@@ -78,9 +81,10 @@ const EndOfFlow: React.FC = () => {
         </div>
       )}
       <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
+        error={error}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={handleUnlock}
+        handleUnlock={debouncedHandleUnlock}
+        isModalUnlockOpen={isModalUnlockOpen}
       />
     </ShellPopUp>
   );

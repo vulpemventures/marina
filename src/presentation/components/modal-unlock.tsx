@@ -11,6 +11,7 @@ interface ModalUnlockFormValues {
 }
 
 interface ModalUnlockFormProps {
+  error?: string;
   handleModalUnlockClose(): void;
   handleUnlock(password: string): void;
   isModalUnlockOpen: boolean;
@@ -55,11 +56,14 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: (values, { props, setStatus }) => {
+  handleSubmit: async (values, { props, setStatus }) => {
     try {
-      props.handleUnlock(values.password);
+      await props.handleUnlock(values.password);
     } catch (_) {
       setStatus({ password: 'Invalid password' });
+    }
+    if (props.error) {
+      setStatus({ password: props.error });
     }
   },
 
@@ -67,9 +71,10 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
 })(ModalUnlockForm);
 
 const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
-  isModalUnlockOpen,
+  error,
   handleModalUnlockClose,
   handleUnlock,
+  isModalUnlockOpen,
 }) => {
   if (!isModalUnlockOpen) {
     return <></>;
@@ -78,6 +83,7 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   return (
     <Modal isOpen={isModalUnlockOpen} onClose={handleModalUnlockClose}>
       <ModalUnlockEnhancedForm
+        error={error}
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
         handleUnlock={handleUnlock}

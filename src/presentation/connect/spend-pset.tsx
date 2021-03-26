@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Button from '../components/button';
 import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { repos } from '../../infrastructure';
 import { makeid } from '../../application/marina';
+import { debounce } from '../../application/utils/debounce';
 
 const ConnectSpendPset: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   const [tx, setTx] = useState<
     | {
         hostname?: string;
@@ -47,7 +48,7 @@ const ConnectSpendPset: React.FC = () => {
       if (payload.success) {
         window.close();
       } else {
-        setHasError(true);
+        setError('Invalid password');
         try {
           // Will throw error in root function scope
           handleUnlock('');
@@ -70,11 +71,13 @@ const ConnectSpendPset: React.FC = () => {
         params: [true, password],
       });
     }
-    if (!hasError) return;
+    if (!error) return;
     // Will display generic error message 'Invalid Password'
     // TODO: bug, msg will only be displayed at second click
     throw new Error();
   };
+
+  const debouncedHandleUnlock = useCallback(debounce(handleUnlock, 2000, true), []);
 
   return (
     <ShellConnectPopup
@@ -95,9 +98,10 @@ const ConnectSpendPset: React.FC = () => {
       </div>
 
       <ModalUnlock
+        error={error}
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={handleUnlock}
+        handleUnlock={debouncedHandleUnlock}
       />
     </ShellConnectPopup>
   );
