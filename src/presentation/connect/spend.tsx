@@ -16,7 +16,6 @@ function useQuery(key: string) {
 
 const ConnectSpend: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
   let recipient = '';
   let assetAmount = '';
   let assetHash = '';
@@ -68,17 +67,16 @@ const ConnectSpend: React.FC = () => {
         if (payload.success) {
           window.close();
         } else {
-          setError(payload.error);
           try {
             // Will throw error in root function scope
-            // To display error message
             handleUnlock('');
             // eslint-disable-next-line no-empty
           } catch (_) {}
         }
       });
     }
-    throw new Error(error);
+    // Will display generic error message 'Invalid Password'
+    throw new Error();
   };
 
   return (

@@ -58,7 +58,7 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
   handleSubmit: (values, { props, setStatus }) => {
     try {
       props.handleUnlock(values.password);
-    } catch (err) {
+    } catch (_) {
       setStatus({ password: 'Invalid password' });
     }
   },

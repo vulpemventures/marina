@@ -20,8 +20,6 @@ import {
   toStringOutpoint,
   xpubWalletFromAddresses,
 } from './utils';
-import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
-import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import { Address, Password } from '../domain/wallet/value-objects';
 import { Network } from '../domain/app/value-objects';
 import { Assets, AssetsByNetwork } from '../domain/asset';
@@ -296,9 +294,7 @@ async function getMnemonic(password: string, port?: Runtime.Port): Promise<Ident
     mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
   } catch (e: any) {
     if (port) {
-      port.postMessage({
-        payload: { success: false, error: 'Invalid password' },
-      });
+      port.postMessage({ payload: { success: false } });
     }
     throw new Error('Invalid password');
   }
