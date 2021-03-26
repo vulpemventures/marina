@@ -21,7 +21,7 @@ import {
   nextAddressForWallet,
 } from '../../../application/utils';
 import { Address } from '../../../domain/wallet/value-objects';
-import { fromSatoshi, toSatoshi } from '../../utils';
+import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -205,7 +205,7 @@ const AddressAmount: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={fromSatoshi(balances[state.transaction.asset] ?? 0)}
+        assetBalance={formatDecimalAmount(fromSatoshi(balances[state.transaction.asset] ?? 0))}
         assetImgPath={
           state.app.network.value === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
