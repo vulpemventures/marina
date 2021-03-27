@@ -3,7 +3,8 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { repos } from '../../infrastructure';
 import WindowProxy from '../../application/proxy';
-import Marina from '../../application/marina';
+
+const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
 const ConnectEnable: React.FC = () => {
   const [hostname, setHostname] = useState<string>('');
@@ -18,10 +19,6 @@ const ConnectEnable: React.FC = () => {
   }, []);
 
   const windowProxy = new WindowProxy();
-  const permissions = [
-    'View confidential addresses of your wallet',
-    'View balances of your wallet',
-  ];
 
   const handleReject = async () => {
     try {

@@ -88,8 +88,7 @@ export default class Backend {
       // params is the list of arguments from the method
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-
-          let network: "regtest" | "liquid";
+          let network: 'regtest' | 'liquid';
 
           try {
             network = await getCurrentNetwork();

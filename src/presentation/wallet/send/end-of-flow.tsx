@@ -20,7 +20,6 @@ const EndOfFlow: React.FC = () => {
   const history = useHistory();
   const [{ wallets, app }] = useContext(AppContext);
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
   const wallet = wallets[0];
 
   const handleModalUnlockClose = () => showUnlockModal(false);
