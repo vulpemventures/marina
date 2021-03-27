@@ -97,7 +97,7 @@ const ConnectSpend: React.FC = () => {
           </> :
           <>
             <h1 className="mt-8 text-lg font-medium">Oops, Something went wrong...</h1>
-            <p className="mt-4 text-small font-medium">{error}</p>
+            <p className="mt-4 text-sm font-small">{error}</p>
             <img className="my-10 mx-auto" src="/assets/images/cross.svg" alt="error" />
             <Button className="w-36 container mx-auto mt-10" onClick={handleUnlockModalOpen} textBase={true}>
               Unlock
