@@ -17,7 +17,7 @@ interface ModalUnlockFormProps {
 }
 
 const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
-  const { handleSubmit, values } = props;
+  const { handleSubmit, values, isSubmitting } = props;
   return (
     <form onSubmit={handleSubmit}>
       <div>
@@ -36,7 +36,9 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
           </Button>
         </div>
         <div>
-          <Button type="submit">Unlock</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {!isSubmitting ? `Unlock` : `Please wait...`}
+          </Button>
         </div>
       </div>
     </form>

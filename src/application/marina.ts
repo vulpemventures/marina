@@ -5,6 +5,8 @@ export interface MarinaProvider {
   enable(): Promise<void>;
   disable(): Promise<void>;
 
+  isEnabled(): Promise<boolean>;
+
   setAccount(account: number): Promise<void>;
 
   getNetwork(): Promise<'liquid' | 'regtest'>;
@@ -31,6 +33,10 @@ export default class Marina extends WindowProxy implements MarinaProvider {
 
   disable(): Promise<void> {
     return this.proxy(this.disable.name, []);
+  }
+
+  isEnabled(): Promise<boolean> {
+    return this.proxy(this.isEnabled.name, []);
   }
 
   getNetwork(): Promise<'liquid' | 'regtest'> {

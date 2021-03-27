@@ -14,7 +14,6 @@ import {
 } from 'ldk';
 import Marina from './marina';
 import {
-  broadcastTx,
   decrypt,
   explorerApiUrl,
   mnemonicWalletFromAddresses,
@@ -67,10 +66,14 @@ export default class Backend {
   async disableSite(hostname: string) {
     const network = await getCurrentNetwork();
     await repos.connect.updateConnectData((data) => {
-      if (this.enabledSites.includes(hostname) && data[network].enabledSites.includes(hostname)) {
+      if (this.enabledSites.includes(hostname)) {
         this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
+      }
+
+      if (data[network].enabledSites.includes(hostname)) {
         data[network].enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
       }
+
       return data;
     });
   }
@@ -100,6 +103,14 @@ export default class Backend {
             case Marina.prototype.getNetwork.name:
               try {
                 return handleResponse(id, network);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.isEnabled.name:
+              try {
+                const isEnabled = await this.isCurentSiteEnabled();
+                return handleResponse(id, isEnabled);
               } catch (e: any) {
                 return handleError(id, e);
               }
@@ -154,7 +165,7 @@ export default class Backend {
               try {
                 const hostname = await getCurrentUrl();
                 await this.disableSite(hostname);
-                return handleResponse(id, undefined);
+                return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
               }
@@ -306,7 +317,7 @@ export default class Backend {
                 const { assetHash, amount, recipient } = tx;
                 const coins = await getCoins();
                 const txBuilder = walletFromCoins(coins, network);
-                const mnemo = await getMnemonic(password, port);
+                const mnemo = await getMnemonic(password);
                 const changeAddress = mnemo.getNextChangeAddress();
 
                 const unsignedPset = txBuilder.buildTx(
@@ -341,7 +352,6 @@ export default class Backend {
                 }
 
                 const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
-                const txid = await broadcastTx(explorerApiUrl[network], txHex);
 
                 // if we reached this point we can persist the change address
                 await persistAddress(changeAddress);
@@ -353,7 +363,8 @@ export default class Backend {
                 });
 
                 // respond to the injected script
-                this.emitter.emit(Marina.prototype.sendTransaction.name, txid);
+                this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
+
                 // repond to the popup so it can be closed
                 return handleResponse(id);
               } catch (e: any) {
@@ -418,15 +429,12 @@ async function persistAddress(addr: AddressInterface): Promise<void> {
   await repos.wallet.addDerivedAddress(Address.create(addr.confidentialAddress));
 }
 
-async function getMnemonic(password: string, port?: Runtime.Port): Promise<IdentityInterface> {
+async function getMnemonic(password: string): Promise<IdentityInterface> {
   let mnemonic = '';
   const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
   try {
     mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
   } catch (e: any) {
-    if (port) {
-      port.postMessage({ payload: { success: false } });
-    }
     throw new Error('Invalid password');
   }
   return await mnemonicWalletFromAddresses(
