@@ -24,10 +24,9 @@ const EndOfFlow: React.FC = () => {
   const wallet = wallets[0];
 
   const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleShowUnlockModal = () => showUnlockModal(true);
+  const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const handleUnlock = async (password: string) => {
-    setError('');
     let tx = '';
     try {
       if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
@@ -51,14 +50,17 @@ const EndOfFlow: React.FC = () => {
         state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },
       });
     } catch (error) {
-      setError(error.message);
-      if (error.message !== 'Invalid password') {
-        history.push({
-          pathname: SEND_PAYMENT_ERROR_ROUTE,
-          state: { changeAddress: wallet.pendingTx?.changeAddress, tx: tx },
-        });
-      }
+      return history.push({
+        pathname: SEND_PAYMENT_ERROR_ROUTE,
+        state: {
+          tx: tx,
+          error: error.message,
+          changeAddress: wallet.pendingTx?.changeAddress,
+        },
+      });
     }
+
+    handleModalUnlockClose();
   };
 
   const debouncedHandleUnlock = useRef(
@@ -77,13 +79,12 @@ const EndOfFlow: React.FC = () => {
           <h1 className="mx-1 mt-16 text-lg font-medium text-left">
             You must unlock your wallet to proceed with the transaction
           </h1>
-          <Button className="mt-28" onClick={handleShowUnlockModal}>
+          <Button className="mt-28" onClick={handleUnlockModalOpen}>
             Unlock
           </Button>
         </div>
       )}
       <ModalUnlock
-        error={error}
         handleModalUnlockClose={handleModalUnlockClose}
         handleUnlock={debouncedHandleUnlock}
         isModalUnlockOpen={isModalUnlockOpen}
