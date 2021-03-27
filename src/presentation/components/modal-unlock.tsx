@@ -11,7 +11,6 @@ interface ModalUnlockFormValues {
 }
 
 interface ModalUnlockFormProps {
-  error?: string;
   handleModalUnlockClose(): void;
   handleUnlock: DebouncedFunc<(password: string) => Promise<void>>;
   isModalUnlockOpen: boolean;
@@ -64,7 +63,6 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
 })(ModalUnlockForm);
 
 const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
-  error,
   handleModalUnlockClose,
   handleUnlock,
   isModalUnlockOpen,
@@ -76,7 +74,6 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   return (
     <Modal isOpen={isModalUnlockOpen} onClose={handleModalUnlockClose}>
       <ModalUnlockEnhancedForm
-        error={error}
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
         handleUnlock={handleUnlock}
