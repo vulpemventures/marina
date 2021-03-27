@@ -28,7 +28,6 @@ import { repos } from '../infrastructure';
 
 const POPUP_HTML = 'popup.html';
 
-
 export default class Backend {
   private emitter = new EventEmitter();
   private enabledSites: string[];
@@ -89,7 +88,6 @@ export default class Backend {
       // params is the list of arguments from the method
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-
           const network = await getCurrentNetwork();
 
           switch (name) {
@@ -117,7 +115,7 @@ export default class Backend {
                 return handleError(id, e);
               }
 
-            case "ENABLE_RESPONSE":
+            case 'ENABLE_RESPONSE':
               try {
                 const [accepted] = params;
 
@@ -128,11 +126,13 @@ export default class Backend {
                     return data;
                   });
                   // respond to the injecteded sript
-                  this.emitter.emit(Marina.prototype.enable.name, new Error("User rejected the connection request"));
+                  this.emitter.emit(
+                    Marina.prototype.enable.name,
+                    new Error('User rejected the connection request')
+                  );
                   // repond to the popup so it can be closed
                   return handleResponse(id);
                 }
-
 
                 // persist the site
                 await this.enableSite();
@@ -214,13 +214,12 @@ export default class Backend {
                 return handleError(id, e);
               }
 
-            case "SIGN_TRANSACTION_RESPONSE":
+            case 'SIGN_TRANSACTION_RESPONSE':
               try {
                 const [accepted, password] = params;
 
                 // return early if user rejected
-                if (!accepted)
-                  return handleError(id, new Error('Transaction has been rejected'));
+                if (!accepted) return handleError(id, new Error('Transaction has been rejected'));
 
                 const mnemo = await getMnemonic(password);
                 const connectDataByNetwork = await repos.connect.getConnectData();
@@ -228,7 +227,6 @@ export default class Backend {
                 const tx = connectDataByNetwork[network].tx!.pset as string;
                 const signedTx = await mnemo.signPset(tx);
                 return handleResponse(id, signedTx);
-
               } catch (e: any) {
                 return handleError(id, e);
               }
@@ -266,7 +264,7 @@ export default class Backend {
               }
 
             //
-            case "SEND_TRANSACTION_RESPONSE":
+            case 'SEND_TRANSACTION_RESPONSE':
               try {
                 const [accepted, password] = params;
 
@@ -278,11 +276,13 @@ export default class Backend {
                     return data;
                   });
                   // respond to the injected script
-                  this.emitter.emit(Marina.prototype.sendTransaction.name, new Error("User rejected the spend request"));
+                  this.emitter.emit(
+                    Marina.prototype.sendTransaction.name,
+                    new Error('User rejected the spend request')
+                  );
                   // repond to the popup so it can be closed
                   return handleResponse(id);
                 }
-
 
                 const connectDataByNetwork = await repos.connect.getConnectData();
                 console.log(connectDataByNetwork);
@@ -344,7 +344,6 @@ export default class Backend {
                 this.emitter.emit(Marina.prototype.sendTransaction.name, txid);
                 // repond to the popup so it can be closed
                 return handleResponse(id);
-
               } catch (e: any) {
                 return handleError(id, e);
               }

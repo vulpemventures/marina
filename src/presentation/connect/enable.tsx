@@ -18,11 +18,14 @@ const ConnectEnable: React.FC = () => {
   }, []);
 
   const windowProxy = new WindowProxy();
-  const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
+  const permissions = [
+    'View confidential addresses of your wallet',
+    'View balances of your wallet',
+  ];
 
   const handleReject = async () => {
     try {
-      await windowProxy.proxy("ENABLE_RESPONSE", [false]);
+      await windowProxy.proxy('ENABLE_RESPONSE', [false]);
       window.close();
     } catch (e) {
       console.error(e);
@@ -31,7 +34,7 @@ const ConnectEnable: React.FC = () => {
 
   const handleConnect = async () => {
     try {
-      await windowProxy.proxy("ENABLE_RESPONSE", [true]);
+      await windowProxy.proxy('ENABLE_RESPONSE', [true]);
       window.close();
     } catch (e) {
       console.error(e);

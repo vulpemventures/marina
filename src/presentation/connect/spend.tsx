@@ -15,11 +15,11 @@ const ConnectSpend: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [tx, setTx] = useState<
     | {
-      hostname?: string;
-      amount?: string;
-      assetHash?: string;
-      recipient?: string;
-    }
+        hostname?: string;
+        amount?: string;
+        assetHash?: string;
+        recipient?: string;
+      }
     | undefined
   >(undefined);
 
@@ -39,22 +39,21 @@ const ConnectSpend: React.FC = () => {
 
   const handleReject = async () => {
     try {
-      await windowProxy.proxy("SEND_TRANSACTION_RESPONSE", [false]);
+      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [false]);
     } catch (e) {
       console.error(e);
     }
     window.close();
   };
 
-
   const handleUnlock = async (password: string) => {
     if (!password || password.length === 0) {
-      setError("Password cannot be empty");
+      setError('Password cannot be empty');
       return;
     }
 
     try {
-      await windowProxy.proxy("SEND_TRANSACTION_RESPONSE", [true, password]);
+      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [true, password]);
       window.close();
     } catch (e) {
       console.error(e);

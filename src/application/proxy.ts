@@ -19,10 +19,8 @@ export default class WindowProxy {
         }
       );
 
-
       // forward the method call to the content script via message passing
       this.call(id, name, params);
-
     });
   }
 

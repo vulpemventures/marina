@@ -25,7 +25,6 @@ export interface MarinaProvider {
 }
 
 export default class Marina extends WindowProxy implements MarinaProvider {
-
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
@@ -70,4 +69,3 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.signTransaction.name, [psetBase64]);
   }
 }
-
