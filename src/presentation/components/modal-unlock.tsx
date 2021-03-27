@@ -56,15 +56,8 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: async (values, { props, setStatus }) => {
-    try {
-      await props.handleUnlock(values.password);
-    } catch (_) {
-      setStatus({ password: 'Invalid password' });
-    }
-    if (props.error) {
-      setStatus({ password: props.error });
-    }
+  handleSubmit: async (values, { props }) => {
+    return await props.handleUnlock(values.password);
   },
 
   displayName: 'ModalUnlockForm',
