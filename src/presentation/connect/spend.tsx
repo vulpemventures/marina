@@ -5,9 +5,9 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import { AppContext } from '../../application/store/context';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
-import { makeid } from '../../application/marina';
 import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
+import WindowProxy from '../../application/proxy';
 
 const ConnectSpend: React.FC = () => {
   const [{ app, assets }] = useContext(AppContext);
@@ -15,11 +15,11 @@ const ConnectSpend: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [tx, setTx] = useState<
     | {
-        hostname?: string;
-        amount?: string;
-        assetHash?: string;
-        recipient?: string;
-      }
+      hostname?: string;
+      amount?: string;
+      assetHash?: string;
+      recipient?: string;
+    }
     | undefined
   >(undefined);
 
@@ -31,53 +31,34 @@ const ConnectSpend: React.FC = () => {
     })();
   }, []);
 
-  const broker = new Broker();
-  const idParam = makeid(16);
+  const windowProxy = new WindowProxy();
+
   const assetTicker = tx?.assetHash ? assets[app.network.value][tx.assetHash]?.ticker : 'Unknown';
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const handleReject = () => {
-    broker.port.postMessage({
-      id: idParam,
-      name: 'sendTransactionResponse',
-      params: [false],
-    });
-    broker.port.onMessage.addListener(({ id, payload }) => {
-      if (!payload.success && id === idParam) {
-        window.close();
-      }
-    });
+  const handleReject = async () => {
+    try {
+      await windowProxy.proxy("SEND_TRANSACTION_RESPONSE", [false]);
+    } catch (e) {
+      console.error(e);
+    }
+    window.close();
   };
 
-  // Handle response
-  broker.port.onMessage.addListener(({ id, payload }) => {
-    if (id === idParam) {
-      if (payload.success) {
-        window.close();
-      } else {
-        setError('Invalid password');
-        try {
-          // Will throw error in root function scope
-          handleUnlock('');
-          // eslint-disable-next-line no-empty
-        } catch (_) {}
-      }
-    }
-  });
 
-  const handleUnlock = (password: string) => {
-    if (password) {
-      broker.port.postMessage({
-        id: idParam,
-        name: 'sendTransactionResponse',
-        params: [true, password],
-      });
+  const handleUnlock = async (password: string) => {
+    if (!password || password.length === 0) {
+      setError("Password cannot be empty");
+      return;
     }
-    if (!error) return;
-    // Will display generic error message 'Invalid Password'
-    // TODO: bug, msg will only be displayed at second click
-    throw new Error();
+
+    try {
+      await windowProxy.proxy("SEND_TRANSACTION_RESPONSE", [true, password]);
+      window.close();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const debouncedHandleUnlock = useRef(

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/button';
-import Broker from '../../application/content-script';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { repos } from '../../infrastructure';
-import { makeid } from '../../application/marina';
+import WindowProxy from '../../application/proxy';
+import Marina from '../../application/marina';
 
 const ConnectEnable: React.FC = () => {
   const [hostname, setHostname] = useState<string>('');
@@ -17,26 +17,25 @@ const ConnectEnable: React.FC = () => {
     })();
   }, []);
 
-  const broker = new Broker();
-  const idParam = makeid(16);
-  const permissions = ['View addresses of your wallet'];
+  const windowProxy = new WindowProxy();
+  const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
-  const handleReject = () => {
-    broker.port.postMessage({ id: idParam, name: 'enableResponse', params: [false] });
-    broker.port.onMessage.addListener(({ id, payload }) => {
-      if (!payload.success && id === idParam) {
-        window.close();
-      }
-    });
+  const handleReject = async () => {
+    try {
+      await windowProxy.proxy("ENABLE_RESPONSE", [false]);
+      window.close();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleConnect = () => {
-    broker.port.postMessage({ id: idParam, name: 'enableResponse', params: [true] });
-    broker.port.onMessage.addListener(({ id, payload }) => {
-      if (payload.success && id === idParam) {
-        window.close();
-      }
-    });
+  const handleConnect = async () => {
+    try {
+      await windowProxy.proxy("ENABLE_RESPONSE", [true]);
+      window.close();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
