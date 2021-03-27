@@ -88,7 +88,14 @@ export default class Backend {
       // params is the list of arguments from the method
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          const network = await getCurrentNetwork();
+
+          let network: "regtest" | "liquid";
+
+          try {
+            network = await getCurrentNetwork();
+          } catch (e: any) {
+            return handleError(id, e);
+          }
 
           switch (name) {
             case Marina.prototype.getNetwork.name:
@@ -209,7 +216,10 @@ export default class Backend {
                   return data;
                 });
                 await showPopup(`connect/spend-pset`);
-                return;
+
+                const rawTx = await this.waitForEvent(Marina.prototype.signTransaction.name);
+
+                return handleResponse(id, rawTx);
               } catch (e: any) {
                 return handleError(id, e);
               }
@@ -226,7 +236,11 @@ export default class Backend {
                 if (!connectDataByNetwork[network].tx?.pset) throw new Error('PSET missing');
                 const tx = connectDataByNetwork[network].tx!.pset as string;
                 const signedTx = await mnemo.signPset(tx);
-                return handleResponse(id, signedTx);
+
+                // respond to the injected script
+                this.emitter.emit(Marina.prototype.sendTransaction.name, signedTx);
+
+                return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
               }
@@ -285,7 +299,6 @@ export default class Backend {
                 }
 
                 const connectDataByNetwork = await repos.connect.getConnectData();
-                console.log(connectDataByNetwork);
                 const { tx } = connectDataByNetwork[network];
 
                 if (!tx || !tx.amount || !tx.assetHash || !tx.recipient)
