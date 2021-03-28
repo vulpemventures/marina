@@ -43,11 +43,10 @@
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.2.9",
     "axios": "^0.21.1",
+    "decimal.js": "^10.2.1",
     "formik": "^2.2.6",
     "google-protobuf": "^3.15.3",
-    "jsbi": "^3.1.4",
     "ldk": "^0.2.8",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.6",

@@ -1,4 +1,4 @@
-import JSBI from 'jsbi';
+import { Decimal } from 'decimal.js';
 import { defaultPrecision } from '../../application/utils';
 
 export const formatAddress = (addr: string): string => {
@@ -9,22 +9,19 @@ export const formatNetwork = (net: string): string => {
   return net.charAt(0).toUpperCase().concat(net.slice(1));
 };
 
-// If decimal number and total length is more than 6 then truncate to 2 decimals without rounding
+// If digits are more than 10 then truncate to 2 decimals without rounding
 // Add ellipsis
 export const formatDecimalAmount = (amount: number): string => {
   let formattedAmount = amount.toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 8,
   });
-  if (!Number.isInteger(amount) && formattedAmount.length > 6) {
+  if (!Number.isInteger(amount) && formattedAmount.length > 10) {
     formattedAmount = `${formattedAmount.slice(0, formattedAmount.indexOf('.') + 3)}...`;
   }
   return formattedAmount;
 };
 
-export function pow(x: number, y: number): JSBI {
-  return JSBI.exponentiate(JSBI.BigInt(x), JSBI.BigInt(y));
-}
 
 export function decimalCount(num: number) {
   const numStr = String(num);
@@ -35,8 +32,7 @@ export function decimalCount(num: number) {
 }
 
 export function toSatoshi(x: number, y: number = defaultPrecision): number {
-  const int = x * Math.pow(10, decimalCount(x));
-  return JSBI.toNumber(JSBI.multiply(JSBI.BigInt(int), pow(10, y - decimalCount(x))));
+  return new Decimal(x).mul(Decimal.pow(10, y)).toNumber();
 }
 
 // Converting to string will trim trailing zeros
@@ -47,8 +43,8 @@ export function fromSatoshiStr(sats: number, precision: number = defaultPrecisio
   });
 }
 
-export function fromSatoshi(sats: number, precision?: number): number {
-  return sats / Math.pow(10, precision || defaultPrecision);
+export function fromSatoshi(sats: number, precision: number = defaultPrecision): number {
+  return new Decimal(sats).div(Decimal.pow(10, precision)).toNumber();
 }
 
 export function fromSatoshiFixed(sats: number, precision?: number, fixed?: number): string {
