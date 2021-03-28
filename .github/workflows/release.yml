@@ -22,15 +22,6 @@ jobs:
         with:
           node-version: "14"
 
-      # cache our node modules
-      - uses: actions/cache@v1
-        env:
-          node-version: 14
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-node${{ env.node-version }}
-
       # get current  tag
       - name: tag
         id: next_tag
@@ -55,7 +46,7 @@ jobs:
       # Build extension
       - name: Install and build
         run: |
-          npm ci
+          npm install
           npm run build
           npm run web-ext:build
 
