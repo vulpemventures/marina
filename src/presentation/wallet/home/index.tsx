@@ -99,7 +99,6 @@ const Home: React.FC = () => {
     // Generate list of Asset/Balance buttons
     buttonList = Object.entries(assets[app.network.value] || {}).map(
       ([hash, { name, ticker, precision }]) => {
-        console.log(name, ticker, precision);
         return (
           <ButtonAsset
             assetImgPath={

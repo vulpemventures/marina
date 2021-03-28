@@ -1,5 +1,5 @@
 import axios from 'axios';
-import EventEmitter from 'events';
+import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
   AddressInterface,
@@ -28,7 +28,7 @@ import { repos } from '../infrastructure';
 const POPUP_HTML = 'popup.html';
 
 export default class Backend {
-  private emitter = new EventEmitter();
+  private emitter = new SafeEventEmitter();
   private enabledSites: string[];
 
   constructor() {
