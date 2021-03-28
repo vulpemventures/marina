@@ -38,7 +38,10 @@ const Receive: React.FC = () => {
       <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-between p-10 bg-white">
         <div className="flex flex-col items-center">
           {confidentialAddress ? (
-            <QRCode size={176} value={confidentialAddress.toUpperCase()} />
+            // TODO: altough BIP173 suggest to use uppercase when encoding as QRCODE image
+            // Blockstream Green unfortunately do not recognize BLECH32 uppercase as valid
+            // https://t.me/blockstream_green/17583
+            <QRCode size={176} value={confidentialAddress.toLowerCase()} />
           ) : (
             <div className="w-44 h-44" />
           )}
