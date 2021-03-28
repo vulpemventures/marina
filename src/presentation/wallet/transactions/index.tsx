@@ -20,6 +20,7 @@ interface LocationState {
   assetsBalance: { [hash: string]: number };
   assetHash: string;
   assetTicker: string;
+  assetPrecision: number;
 }
 
 const Transactions: React.FC = () => {
@@ -101,9 +102,10 @@ const Transactions: React.FC = () => {
       txsByAssets[state.assetHash]
         // Descending order
         ?.sort((a, b) => b.blockTime - a.blockTime)
-        .map(({ amount, blockTime, dateContracted, toSelf, type, txId }, index) => (
+        .map(({ amount, dateContracted, toSelf, type, txId }, index) => (
           <ButtonTransaction
             amount={amount ?? 0}
+            assetPrecision={state.assetPrecision}
             assetTicker={state.assetTicker}
             key={`${state.assetTicker}_${index}`}
             handleClick={openTxDetailsModal}
@@ -120,6 +122,7 @@ const Transactions: React.FC = () => {
     confidentialAddresses,
     state.assetHash,
     state.assetTicker,
+    state.assetPrecision,
     txsHistory,
   ]);
 
@@ -131,7 +134,11 @@ const Transactions: React.FC = () => {
       currentPage="Transactions"
     >
       <Balance
-        assetBalance={fromSatoshiStr(state.assetsBalance[state.assetHash] ?? 0)}
+        assetHash={state.assetHash}
+        assetBalance={fromSatoshiStr(
+          state.assetsBalance[state.assetHash] ?? 0,
+          state.assetPrecision
+        )}
         assetImgPath={assetImgPath}
         assetTicker={state.assetTicker}
         bigBalanceText={true}

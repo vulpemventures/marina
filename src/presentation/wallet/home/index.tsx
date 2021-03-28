@@ -23,7 +23,6 @@ import {
   imgPathMapRegtest,
   lbtcAssetByNetwork,
 } from '../../../application/utils';
-import { waitAtLeast } from '../../../application/utils/common';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -32,14 +31,15 @@ const Home: React.FC = () => {
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;
 
-  const handleAssetBalanceButtonClick = (asset: { [key: string]: string }) => {
-    const { assetHash, assetTicker } = asset;
+  const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number }) => {
+    const { assetHash, assetTicker, assetPrecision } = asset;
     history.push({
       pathname: TRANSACTIONS_ROUTE,
       state: {
         assetsBalance,
         assetHash,
         assetTicker,
+        assetPrecision,
       },
     });
   };
@@ -97,23 +97,27 @@ const Home: React.FC = () => {
     return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   } else {
     // Generate list of Asset/Balance buttons
-    buttonList = Object.entries(assets[app.network.value] || {}).map(([hash, { name, ticker }]) => {
-      return (
-        <ButtonAsset
-          assetImgPath={
-            app.network.value === 'regtest'
-              ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
-              : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
-          }
-          assetHash={hash}
-          assetName={name}
-          assetTicker={ticker}
-          quantity={assetsBalance[hash] ?? 0}
-          key={hash}
-          handleClick={handleAssetBalanceButtonClick}
-        />
-      );
-    });
+    buttonList = Object.entries(assets[app.network.value] || {}).map(
+      ([hash, { name, ticker, precision }]) => {
+        console.log(name, ticker, precision);
+        return (
+          <ButtonAsset
+            assetImgPath={
+              app.network.value === 'regtest'
+                ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
+                : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
+            }
+            assetHash={hash}
+            assetName={name}
+            assetTicker={ticker}
+            assetPrecision={precision}
+            quantity={assetsBalance[hash] ?? 0}
+            key={hash}
+            handleClick={handleAssetBalanceButtonClick}
+          />
+        );
+      }
+    );
   }
 
   return (
@@ -126,12 +130,11 @@ const Home: React.FC = () => {
       <div className="h-popupContent flex flex-col justify-between">
         <div>
           <Balance
+            assetHash={lbtcAssetByNetwork(app.network.value)}
             assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
             assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
             assetTicker="L-BTC"
             bigBalanceText={true}
-            fiatBalance={120}
-            fiatCurrency="$"
           />
 
           <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />

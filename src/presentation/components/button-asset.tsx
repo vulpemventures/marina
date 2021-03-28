@@ -6,8 +6,16 @@ interface Props {
   assetName: string;
   assetTicker: string;
   assetImgPath: string;
+  assetPrecision: number;
   disabled?: boolean;
-  handleClick: ({ assetHash, assetName, assetTicker }: { [key: string]: string }) => void;
+  handleClick: ({
+    assetHash,
+    assetName,
+    assetTicker,
+    assetPrecision,
+  }: {
+    [key: string]: string | number;
+  }) => void;
   type?: 'submit' | 'button' | 'reset';
   quantity: number;
 }
@@ -17,6 +25,7 @@ const ButtonAsset: React.FC<Props> = ({
   assetName,
   assetTicker,
   assetImgPath,
+  assetPrecision,
   disabled = false,
   quantity,
   handleClick,
@@ -26,7 +35,7 @@ const ButtonAsset: React.FC<Props> = ({
     <button
       disabled={disabled}
       className="focus:outline-none h-14 flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
-      onClick={() => handleClick({ assetHash, assetName, assetTicker })}
+      onClick={() => handleClick({ assetHash, assetName, assetTicker, assetPrecision })}
       type={type}
     >
       <div className="flex flex-row items-center">
@@ -37,7 +46,9 @@ const ButtonAsset: React.FC<Props> = ({
         </div>
       </div>
       <div className="flex flex-row">
-        <div className="text-small font-medium">{formatDecimalAmount(fromSatoshi(quantity))}</div>
+        <div className="text-small font-medium">
+          {formatDecimalAmount(fromSatoshi(quantity, assetPrecision))}
+        </div>
         <img className="ml-1.5" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
     </button>

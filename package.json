@@ -39,7 +39,7 @@
     "watchliquid": "npm run clean && npm run copy-assets && run-p watchliquid:**",
     "watchliquid:html": "parcel watch public/*.html",
     "watchliquid:scripts": "parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
-    "web-ext:build": "web-ext build --source-dir dist --overwrite-dest",
+    "web-ext:build": "web-ext build --source-dir dist --overwrite-dest --ignore-files report.html",
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
@@ -63,6 +63,7 @@
     "yup": "^0.32.9"
   },
   "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^3.0.0",
     "@headlessui/react": "^0.3.1",
     "@tailwindcss/forms": "^0.2.1",
     "@tailwindcss/line-clamp": "^0.2.0",

@@ -22,7 +22,6 @@ export const formatDecimalAmount = (amount: number): string => {
   return formattedAmount;
 };
 
-
 export function decimalCount(num: number) {
   const numStr = String(num);
   if (numStr.includes('.')) {
