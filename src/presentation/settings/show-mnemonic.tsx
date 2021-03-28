@@ -1,4 +1,5 @@
-import React, { useContext, useState } from 'react';
+import React, { useRef, useContext, useState } from 'react';
+import { debounce } from 'lodash';
 import { AppContext } from '../../application/store/context';
 import { decrypt, hash } from '../../application/utils';
 import { Password } from '../../domain/wallet/value-objects';
@@ -21,6 +22,10 @@ const SettingsShowMnemonic: React.FC = () => {
     showUnlockModal(false);
   };
 
+  const debouncedHandleShowMnemonic = useRef(
+    debounce(handleShowMnemonic, 2000, { leading: true, trailing: false })
+  ).current;
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -41,7 +46,7 @@ const SettingsShowMnemonic: React.FC = () => {
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockCancel}
-        handleUnlock={handleShowMnemonic}
+        handleUnlock={debouncedHandleShowMnemonic}
       />
     </ShellPopUp>
   );

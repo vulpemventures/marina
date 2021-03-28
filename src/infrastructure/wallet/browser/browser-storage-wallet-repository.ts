@@ -7,7 +7,7 @@ import { WalletMap } from '../../../application/mappers/wallet-map';
 import { WalletDTO } from '../../../application/dtos/wallet-dto';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { parse, stringify } from '../../../application/utils/browser-storage-converters';
-import { toStringOutpoint } from '../../../application/utils/utxos';
+import { toStringOutpoint } from '../../../application/utils';
 
 export class BrowserStorageWalletRepo implements IWalletRepository {
   async init(wallets: Wallet[]): Promise<void> {

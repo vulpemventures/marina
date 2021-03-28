@@ -2,6 +2,9 @@ import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 import { ProtectedRoute } from './guards';
 import {
+  CONNECT_ENABLE_ROUTE,
+  CONNECT_SPEND_ROUTE,
+  CONNECT_SPEND_PSET_ROUTE,
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_SELECT_ACTION_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
@@ -32,6 +35,11 @@ import {
   SEND_PAYMENT_SUCCESS_ROUTE,
   SEND_PAYMENT_ERROR_ROUTE,
 } from './constants';
+
+// Connect
+import ConnectEnable from '../connect/enable';
+import ConnectSpend from '../connect/spend';
+import ConnectSpendPset from '../connect/spend-pset';
 
 // Onboarding
 import Welcome from '../onboarding/welcome';
@@ -102,6 +110,10 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_TERMS_ROUTE} comp={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
+      {/*Connect*/}
+      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnable} />
+      <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
+      <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
     </Switch>
   );
 };

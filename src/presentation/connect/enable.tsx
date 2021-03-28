@@ -1,20 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/button';
-import ShellPopUp from '../components/shell-popup';
+import ShellConnectPopup from '../components/shell-connect-popup';
+import { repos } from '../../infrastructure';
+import WindowProxy from '../../application/proxy';
+
+const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
 const ConnectEnable: React.FC = () => {
-  const permissions = ['View this address of your account'];
-  const websiteTitle = 'Sideshift.ai';
-  const handleReject = () => console.log('reject');
-  const handleAccept = () => console.log('accept');
+  const [hostname, setHostname] = useState<string>('');
+
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      const network = (await repos.app.getApp()).network.value;
+      const data = await repos.connect.getConnectData();
+      const hostname = data[network].enableSitePending;
+      setHostname(hostname);
+    })();
+  }, []);
+
+  const windowProxy = new WindowProxy();
+
+  const handleReject = async () => {
+    try {
+      await windowProxy.proxy('ENABLE_RESPONSE', [false]);
+      window.close();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleConnect = async () => {
+    try {
+      await windowProxy.proxy('ENABLE_RESPONSE', [true]);
+      window.close();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
-    <ShellPopUp
-      backgroundImagePath="/assets/images/popup/bg-sm.png"
+    <ShellConnectPopup
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="Spend"
+      currentPage="Enable"
     >
-      <h1 className="mt-8 text-2xl font-medium">{websiteTitle}</h1>
+      <h1 className="mt-8 text-2xl font-medium break-all">{hostname}</h1>
 
       <p className="mt-4 text-base font-medium">Connect with Marina</p>
 
@@ -31,11 +60,11 @@ const ConnectEnable: React.FC = () => {
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
-        <Button onClick={handleAccept} textBase={true}>
+        <Button onClick={handleConnect} textBase={true}>
           Connect
         </Button>
       </div>
-    </ShellPopUp>
+    </ShellConnectPopup>
   );
 };
 

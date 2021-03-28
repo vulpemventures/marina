@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import Button from './button';
 import Input from './input';
 import Modal from './modal';
-
+import { DebouncedFunc } from 'lodash';
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
   password: string;
@@ -12,12 +12,12 @@ interface ModalUnlockFormValues {
 
 interface ModalUnlockFormProps {
   handleModalUnlockClose(): void;
-  handleUnlock(password: string): void;
+  handleUnlock: DebouncedFunc<(password: string) => Promise<void>>;
   isModalUnlockOpen: boolean;
 }
 
 const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
-  const { handleSubmit, values } = props;
+  const { handleSubmit, values, isSubmitting } = props;
   return (
     <form onSubmit={handleSubmit}>
       <div>
@@ -36,7 +36,9 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
           </Button>
         </div>
         <div>
-          <Button type="submit">Unlock</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {!isSubmitting ? `Unlock` : `Please wait...`}
+          </Button>
         </div>
       </div>
     </form>
@@ -55,21 +57,17 @@ const ModalUnlockEnhancedForm = withFormik<ModalUnlockFormProps, ModalUnlockForm
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: (values, { props, setStatus }) => {
-    try {
-      props.handleUnlock(values.password);
-    } catch (err) {
-      setStatus({ password: 'Invalid password' });
-    }
+  handleSubmit: async (values, { props }) => {
+    return await props.handleUnlock(values.password);
   },
 
   displayName: 'ModalUnlockForm',
 })(ModalUnlockForm);
 
 const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
-  isModalUnlockOpen,
   handleModalUnlockClose,
   handleUnlock,
+  isModalUnlockOpen,
 }) => {
   if (!isModalUnlockOpen) {
     return <></>;
