@@ -51,6 +51,7 @@
     "ldk": "^0.2.8",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.6",
+    "marina-provider": "^1.0.0",
     "postcss-cli": "^7.1.2",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.1",
