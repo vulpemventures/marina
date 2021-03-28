@@ -17,7 +17,7 @@ export * from './wallet';
  * @returns balances
  */
 export function updateUtxosAssetsBalances(
-  fromNetwork = false,
+  fromNetwork: boolean,
   onSuccess?: (balances: { [p: string]: number }) => void,
   onError?: (err: Error) => void
 ): Thunk<IAppState, Action> {

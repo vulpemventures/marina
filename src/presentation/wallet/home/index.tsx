@@ -70,8 +70,9 @@ const Home: React.FC = () => {
       );
     };
     const utxosInterval = setInterval(updateUtxos, 2500);
-    // Wait at least 800ms to avoid flickering
-    waitAtLeast(800, Promise.resolve(updateUtxos())).catch(console.error);
+    // update at first component mount
+    updateUtxos();
+
     // Flush last sent tx
     if (transaction.asset !== '') {
       dispatch(flush());
