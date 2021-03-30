@@ -20,6 +20,7 @@ import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { lbtcAssetByNetwork, usdtAssetHash } from './network';
 import { Network } from '../../domain/app/value-objects';
 import {
+  OutputBlinders,
   TxDisplayInterface,
   TxsByAssetsInterface,
   TxsByTxIdInterface,
@@ -157,7 +158,7 @@ export const extractInfoFromRawTxData = (
   taxiFeeAmount?: number;
   toSelf: boolean;
   type: TxType;
-  blinders: { asset: string; value: number; assetBlinder: string; valueBlinder: string }[];
+  blinders: OutputBlinders[];
 } => {
   const assets = new Set<string>();
   let amount = 0,
@@ -171,14 +172,8 @@ export const extractInfoFromRawTxData = (
     toSelf = false,
     type: TxType = 'receive',
     vinTotalAmount = 0,
-    voutTotalAmount = 0;
-
-  const blinders: {
-    asset: string;
-    value: number;
-    assetBlinder: string;
-    valueBlinder: string;
-  }[] = [];
+    voutTotalAmount = 0,
+    blinders: OutputBlinders[] = [];
 
   const isTaxi =
     !isBlindedOutputInterface(vin[0].prevout) &&
@@ -200,15 +195,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) {}
+        } catch (_) { }
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-        ? lbtcAssetByNetwork(network)
-        : 'muliple assets';
+          ? lbtcAssetByNetwork(network)
+          : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
@@ -230,7 +225,7 @@ export const extractInfoFromRawTxData = (
             voutTotalAmount = item.value;
           }
           // add blinders
-          if (item.script) {
+          if (item.script && item.assetBlinder && item.valueBlinder) {
             blinders.push({
               asset: item.asset,
               value: item.value,
@@ -239,14 +234,16 @@ export const extractInfoFromRawTxData = (
             });
           }
         }
+      });
 
+      amount = vinTotalAmount - voutTotalAmount;
+
+      vout.forEach((item) => {
         // Get unconfidential address of the recipient from blinded output
         if (isBlindedOutputInterface(item)) {
           address = addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network]);
         }
       });
-
-      amount = vinTotalAmount - voutTotalAmount;
     } else {
       // Calculate payment amount for USDt payment
       const isPaymentToUnconf = vout.every((item) => !isBlindedOutputInterface(item));
@@ -267,7 +264,7 @@ export const extractInfoFromRawTxData = (
               voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
             }
             // add blinders
-            if (item.script) {
+            if (item.script && item.assetBlinder && item.valueBlinder) {
               blinders.push({
                 asset: item.asset,
                 value: item.value,
@@ -324,7 +321,7 @@ export const extractInfoFromRawTxData = (
           feeAsset = item.asset;
         }
         // add blinders
-        if (item.script) {
+        if (item.script && item.assetBlinder && item.valueBlinder) {
           blinders.push({
             asset: item.asset,
             value: item.value,
@@ -543,3 +540,6 @@ export const getTxsDetails = (
     },
   };
 };
+
+
+
