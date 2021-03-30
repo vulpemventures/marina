@@ -48,7 +48,7 @@ export default class Backend {
     });
   }
 
-  async enableSite(network: "liquid" | "regtest") {
+  async enableSite(network: 'liquid' | 'regtest') {
     await repos.connect.updateConnectData((data: ConnectDataByNetwork) => {
       if (!data[network].enabledSites.includes(data[network].enableSitePending)) {
         data[network].enabledSites.push(data[network].enableSitePending);
@@ -58,7 +58,7 @@ export default class Backend {
     });
   }
 
-  async disableSite(network: "liquid" | "regtest") {
+  async disableSite(network: 'liquid' | 'regtest') {
     const hostname = await getCurrentUrl();
     await repos.connect.updateConnectData((data: ConnectDataByNetwork) => {
       if (data[network].enabledSites.includes(hostname)) {
@@ -68,7 +68,7 @@ export default class Backend {
     });
   }
 
-  async isCurentSiteEnabled(network: "liquid" | "regtest") {
+  async isCurentSiteEnabled(network: 'liquid' | 'regtest') {
     const hostname = await getCurrentUrl();
     const data = await repos.connect.getConnectData();
     return data[network].enabledSites.includes(hostname);
