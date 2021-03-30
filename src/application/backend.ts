@@ -24,18 +24,16 @@ import {
 import { Address, Password } from '../domain/wallet/value-objects';
 import { Network } from '../domain/app/value-objects';
 import { Assets, AssetsByNetwork } from '../domain/asset';
+import { ConnectDataByNetwork } from '../domain/connect';
 import { repos } from '../infrastructure';
 
 const POPUP_HTML = 'popup.html';
 
 export default class Backend {
   private emitter: SafeEventEmitter;
-  private enabledSites: string[];
 
   constructor() {
     this.emitter = new SafeEventEmitter();
-    // we keep a local in-memory list of enabled sites in this session
-    this.enabledSites = [];
   }
 
   waitForEvent<T>(event: string): Promise<T> {
@@ -50,14 +48,9 @@ export default class Backend {
     });
   }
 
-  async enableSite() {
-    const network = await getCurrentNetwork();
-    await repos.connect.updateConnectData((data) => {
-      if (
-        !this.enabledSites.includes(data[network].enableSitePending) &&
-        !data[network].enabledSites.includes(data[network].enableSitePending)
-      ) {
-        this.enabledSites.push(data[network].enableSitePending);
+  async enableSite(network: 'liquid' | 'regtest') {
+    await repos.connect.updateConnectData((data: ConnectDataByNetwork) => {
+      if (!data[network].enabledSites.includes(data[network].enableSitePending)) {
         data[network].enabledSites.push(data[network].enableSitePending);
         data[network].enableSitePending = '';
       }
@@ -65,24 +58,20 @@ export default class Backend {
     });
   }
 
-  async disableSite(hostname: string) {
-    const network = await getCurrentNetwork();
-    await repos.connect.updateConnectData((data) => {
-      if (this.enabledSites.includes(hostname)) {
-        this.enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
-      }
-
+  async disableSite(network: 'liquid' | 'regtest') {
+    const hostname = await getCurrentUrl();
+    await repos.connect.updateConnectData((data: ConnectDataByNetwork) => {
       if (data[network].enabledSites.includes(hostname)) {
-        data[network].enabledSites.splice(this.enabledSites.indexOf(hostname), 1);
+        data[network].enabledSites.splice(data[network].enabledSites.indexOf(hostname), 1);
       }
-
       return data;
     });
   }
 
-  async isCurentSiteEnabled() {
+  async isCurentSiteEnabled(network: 'liquid' | 'regtest') {
     const hostname = await getCurrentUrl();
-    return this.enabledSites.includes(hostname);
+    const data = await repos.connect.getConnectData();
+    return data[network].enabledSites.includes(hostname);
   }
 
   start() {
@@ -111,7 +100,7 @@ export default class Backend {
 
             case Marina.prototype.isEnabled.name:
               try {
-                const isEnabled = await this.isCurentSiteEnabled();
+                const isEnabled = await this.isCurentSiteEnabled(network);
                 return handleResponse(id, isEnabled);
               } catch (e: any) {
                 return handleError(id, e);
@@ -154,7 +143,7 @@ export default class Backend {
                 }
 
                 // persist the site
-                await this.enableSite();
+                await this.enableSite(network);
                 // respond to the injecteded sript
                 this.emitter.emit(Marina.prototype.enable.name);
                 // repond to the popup so it can be closed
@@ -165,8 +154,7 @@ export default class Backend {
 
             case Marina.prototype.disable.name:
               try {
-                const hostname = await getCurrentUrl();
-                await this.disableSite(hostname);
+                await this.disableSite(network);
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -174,7 +162,7 @@ export default class Backend {
 
             case Marina.prototype.getAddresses.name:
               try {
-                if (!(await this.isCurentSiteEnabled())) {
+                if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -186,7 +174,7 @@ export default class Backend {
 
             case Marina.prototype.getNextAddress.name:
               try {
-                if (!(await this.isCurentSiteEnabled())) {
+                if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -199,7 +187,7 @@ export default class Backend {
 
             case Marina.prototype.getNextChangeAddress.name:
               try {
-                if (!(await this.isCurentSiteEnabled())) {
+                if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -212,7 +200,7 @@ export default class Backend {
 
             case Marina.prototype.signTransaction.name:
               try {
-                if (!(await this.isCurentSiteEnabled())) {
+                if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 if (!params || params.length !== 1 || params.some((p) => p === null)) {
@@ -259,7 +247,7 @@ export default class Backend {
 
             case Marina.prototype.sendTransaction.name:
               try {
-                if (!(await this.isCurentSiteEnabled())) {
+                if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 if (!params || params.length !== 3 || params.some((p) => p === null)) {
