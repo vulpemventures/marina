@@ -347,7 +347,11 @@ export default class Backend {
                     blindKeyMap.set(index, recipientData.blindingKey.toString('hex'));
                 });
 
-                const blindedPset = await mnemo.blindPset(unsignedPset, outputsIndexToBlind);
+                const blindedPset = await mnemo.blindPset(
+                  unsignedPset,
+                  outputsIndexToBlind,
+                  blindKeyMap
+                );
                 const signedPset = await mnemo.signPset(blindedPset);
 
                 const ptx = decodePset(signedPset);
