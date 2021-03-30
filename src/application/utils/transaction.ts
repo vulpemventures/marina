@@ -172,8 +172,9 @@ export const extractInfoFromRawTxData = (
     toSelf = false,
     type: TxType = 'receive',
     vinTotalAmount = 0,
-    voutTotalAmount = 0,
-    blinders: OutputBlinders[] = [];
+    voutTotalAmount = 0;
+
+  const blinders: OutputBlinders[] = [];
 
   const isTaxi =
     !isBlindedOutputInterface(vin[0].prevout) &&
@@ -195,15 +196,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) { }
+        } catch (_) {}
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-          ? lbtcAssetByNetwork(network)
-          : 'muliple assets';
+        ? lbtcAssetByNetwork(network)
+        : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
@@ -540,6 +541,3 @@ export const getTxsDetails = (
     },
   };
 };
-
-
-
