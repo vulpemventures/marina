@@ -2,6 +2,7 @@ import axios from 'axios';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
+  address,
   AddressInterface,
   decodePset,
   fetchAndUnblindUtxos,
@@ -335,13 +336,15 @@ export default class Backend {
                   true
                 );
 
-                const unsignedTx = psetToUnsignedTx(unsignedPset);
-
                 const outputsIndexToBlind: number[] = [];
-                unsignedTx.outs.forEach((out, i) => {
-                  if (out.script.length > 0) {
-                    outputsIndexToBlind.push(i);
-                  }
+                const blindKeyMap = new Map<number, string>();
+                const recipientData = address.fromConfidential(recipient);
+                const recipientScript = address.toOutputScript(recipientData.unconfidentialAddress);
+                psetToUnsignedTx(unsignedPset).outs.forEach((out, index) => {
+                  if (out.script.length === 0) return;
+                  outputsIndexToBlind.push(index);
+                  if (out.script.equals(recipientScript))
+                    blindKeyMap.set(index, recipientData.blindingKey.toString('hex'));
                 });
 
                 const blindedPset = await mnemo.blindPset(unsignedPset, outputsIndexToBlind);
