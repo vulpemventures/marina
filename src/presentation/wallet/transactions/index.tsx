@@ -57,14 +57,12 @@ const Transactions: React.FC = () => {
       asset: string;
       assetBlinder: string;
       valueBlinder: string;
-    }[]) => {
-    console.log(blinders)
+    }[]
+  ) =>
     browser.tabs.create({
       url: makeUnblindURL(esploraURL[app.network.value], txid, blinders),
       active: false,
     });
-  }
-
 
   /**
    * Update txs history once at first render
@@ -200,7 +198,10 @@ const Transactions: React.FC = () => {
             <p className="wrap text-xs font-light break-all">{modalTxDetails?.txId}</p>
           </div>
         </div>
-        <Button className="w-full" onClick={() => handleOpenExplorer(modalTxDetails!.txId, modalTxDetails!.blinders)}>
+        <Button
+          className="w-full"
+          onClick={() => handleOpenExplorer(modalTxDetails!.txId, modalTxDetails!.blinders)}
+        >
           See in Explorer
         </Button>
       </Modal>

@@ -24,7 +24,7 @@ export interface TxDisplayInterface {
   txId: string;
   toSelf: boolean;
   type: TxType;
-  blinders: { asset: string, value: number, assetBlinder: string, valueBlinder: string }[];
+  blinders: { asset: string; value: number; assetBlinder: string; valueBlinder: string }[];
 }
 
 export interface TxsByAssetsInterface {

@@ -157,7 +157,7 @@ export const extractInfoFromRawTxData = (
   taxiFeeAmount?: number;
   toSelf: boolean;
   type: TxType;
-  blinders: { asset: string; value: number; assetBlinder: string, valueBlinder: string }[];
+  blinders: { asset: string; value: number; assetBlinder: string; valueBlinder: string }[];
 } => {
   const assets = new Set<string>();
   let amount = 0,
@@ -171,8 +171,14 @@ export const extractInfoFromRawTxData = (
     toSelf = false,
     type: TxType = 'receive',
     vinTotalAmount = 0,
-    voutTotalAmount = 0,
-    blinders: { asset: string, value: number, assetBlinder: string, valueBlinder: string }[] = [];
+    voutTotalAmount = 0;
+
+  const blinders: {
+    asset: string;
+    value: number;
+    assetBlinder: string;
+    valueBlinder: string;
+  }[] = [];
 
   const isTaxi =
     !isBlindedOutputInterface(vin[0].prevout) &&
@@ -194,15 +200,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) { }
+        } catch (_) {}
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-          ? lbtcAssetByNetwork(network)
-          : 'muliple assets';
+        ? lbtcAssetByNetwork(network)
+        : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
@@ -229,22 +235,18 @@ export const extractInfoFromRawTxData = (
               asset: item.asset,
               value: item.value,
               assetBlinder: item.assetBlinder,
-              valueBlinder: item.valueBlinder
+              valueBlinder: item.valueBlinder,
             });
           }
         }
 
         // Get unconfidential address of the recipient from blinded output
         if (isBlindedOutputInterface(item)) {
-          address = addressLDK.fromOutputScript(
-            Buffer.from(item.script, 'hex'),
-            networks[network]
-          );
+          address = addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network]);
         }
       });
 
       amount = vinTotalAmount - voutTotalAmount;
-
     } else {
       // Calculate payment amount for USDt payment
       const isPaymentToUnconf = vout.every((item) => !isBlindedOutputInterface(item));
@@ -270,7 +272,7 @@ export const extractInfoFromRawTxData = (
                 asset: item.asset,
                 value: item.value,
                 assetBlinder: item.assetBlinder,
-                valueBlinder: item.valueBlinder
+                valueBlinder: item.valueBlinder,
               });
             }
           }
@@ -327,7 +329,7 @@ export const extractInfoFromRawTxData = (
             asset: item.asset,
             value: item.value,
             assetBlinder: item.assetBlinder,
-            valueBlinder: item.valueBlinder
+            valueBlinder: item.valueBlinder,
           });
         }
       }
@@ -466,7 +468,7 @@ export const extractInfoFromRawTxData = (
       feeAsset,
       toSelf,
       type,
-      blinders
+      blinders,
     };
   }
 };
