@@ -20,6 +20,7 @@ import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { lbtcAssetByNetwork, usdtAssetHash } from './network';
 import { Network } from '../../domain/app/value-objects';
 import {
+  OutputBlinders,
   TxDisplayInterface,
   TxsByAssetsInterface,
   TxsByTxIdInterface,
@@ -157,6 +158,7 @@ export const extractInfoFromRawTxData = (
   taxiFeeAmount?: number;
   toSelf: boolean;
   type: TxType;
+  blinders: OutputBlinders[];
 } => {
   const assets = new Set<string>();
   let amount = 0,
@@ -171,6 +173,8 @@ export const extractInfoFromRawTxData = (
     type: TxType = 'receive',
     vinTotalAmount = 0,
     voutTotalAmount = 0;
+
+  const blinders: OutputBlinders[] = [];
 
   const isTaxi =
     !isBlindedOutputInterface(vin[0].prevout) &&
@@ -221,12 +225,22 @@ export const extractInfoFromRawTxData = (
           if (item.script && item.asset === lbtcAssetByNetwork(network)) {
             voutTotalAmount = item.value;
           }
+          // add blinders
+          if (item.script && item.assetBlinder && item.valueBlinder) {
+            blinders.push({
+              asset: item.asset,
+              value: item.value,
+              assetBlinder: item.assetBlinder,
+              valueBlinder: item.valueBlinder,
+            });
+          }
         }
       });
+
       amount = vinTotalAmount - voutTotalAmount;
 
-      // Get unconfidential address from blinded output
       vout.forEach((item) => {
+        // Get unconfidential address of the recipient from blinded output
         if (isBlindedOutputInterface(item)) {
           address = addressLDK.fromOutputScript(Buffer.from(item.script, 'hex'), networks[network]);
         }
@@ -250,12 +264,18 @@ export const extractInfoFromRawTxData = (
             if (item.script) {
               voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
             }
+            // add blinders
+            if (item.script && item.assetBlinder && item.valueBlinder) {
+              blinders.push({
+                asset: item.asset,
+                value: item.value,
+                assetBlinder: item.assetBlinder,
+                valueBlinder: item.valueBlinder,
+              });
+            }
           }
-        });
-        amount = vinTotalAmount - voutTotalAmount;
 
-        // Get unconfidential address from blinded output
-        vout.forEach((item) => {
+          // Get unconfidential address of the recipient from blinded output
           if (isBlindedOutputInterface(item)) {
             address = addressLDK.fromOutputScript(
               Buffer.from(item.script, 'hex'),
@@ -263,6 +283,7 @@ export const extractInfoFromRawTxData = (
             );
           }
         });
+        amount = vinTotalAmount - voutTotalAmount;
       } else {
         // To unconfidential address
         // TODO: need Taxi xpub to determine payment output
@@ -279,6 +300,7 @@ export const extractInfoFromRawTxData = (
       taxiFeeAmount,
       toSelf,
       type,
+      blinders,
     };
 
     // Non Taxi payment
@@ -298,6 +320,15 @@ export const extractInfoFromRawTxData = (
         } else if (item.asset && !item.script) {
           lbtcFeeAmount = item.value;
           feeAsset = item.asset;
+        }
+        // add blinders
+        if (item.script && item.assetBlinder && item.valueBlinder) {
+          blinders.push({
+            asset: item.asset,
+            value: item.value,
+            assetBlinder: item.assetBlinder,
+            valueBlinder: item.valueBlinder,
+          });
         }
       }
     });
@@ -435,6 +466,7 @@ export const extractInfoFromRawTxData = (
       feeAsset,
       toSelf,
       type,
+      blinders,
     };
   }
 };
@@ -462,6 +494,7 @@ export const getTxsDetails = (
         taxiFeeAmount,
         toSelf,
         type,
+        blinders,
       } = extractInfoFromRawTxData(tx.vin, tx.vout, network, addresses, assets);
 
       const timeTxInBlock = new Date((tx.status.blockTime ?? 0) * 1000);
@@ -486,6 +519,7 @@ export const getTxsDetails = (
         feeAsset,
         toSelf,
         blockTime: tx.status.blockTime ?? 0,
+        blinders,
       };
     }
   );

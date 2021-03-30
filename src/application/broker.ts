@@ -2,8 +2,8 @@ import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime } from 'webextension-polyfill-ts';
 
 export default class Broker {
-  port: Runtime.Port;
-  emitter: SafeEventEmitter;
+  private port: Runtime.Port;
+  private emitter: SafeEventEmitter;
 
   constructor() {
     this.emitter = new SafeEventEmitter();

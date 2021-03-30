@@ -24,6 +24,7 @@ export interface TxDisplayInterface {
   txId: string;
   toSelf: boolean;
   type: TxType;
+  blinders: OutputBlinders[];
 }
 
 export interface TxsByAssetsInterface {
@@ -32,4 +33,11 @@ export interface TxsByAssetsInterface {
 
 export interface TxsByTxIdInterface {
   [txid: string]: TxDisplayInterface;
+}
+
+export interface OutputBlinders {
+  asset: string;
+  value: number;
+  assetBlinder: string;
+  valueBlinder: string;
 }

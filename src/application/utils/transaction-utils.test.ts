@@ -55,6 +55,7 @@ describe('Transaction Utils', () => {
         feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
         toSelf: false,
         type: 'receive',
+        blinders: [],
       });
     });
 
@@ -73,6 +74,7 @@ describe('Transaction Utils', () => {
         feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
         toSelf: false,
         type: 'receive',
+        blinders: [],
       });
     });
   });
@@ -94,6 +96,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -112,6 +115,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -130,6 +134,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: true,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -148,6 +153,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -166,6 +172,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -184,6 +191,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
     });
@@ -204,6 +212,7 @@ describe('Transaction Utils', () => {
           taxiFeeAmount: 44000000,
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -222,6 +231,7 @@ describe('Transaction Utils', () => {
           taxiFeeAmount: 44000000,
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
 
@@ -240,6 +250,7 @@ describe('Transaction Utils', () => {
           taxiFeeAmount: 44000000,
           toSelf: false,
           type: 'send',
+          blinders: [],
         });
       });
     });
@@ -267,6 +278,7 @@ describe('Transaction Utils', () => {
           toSelf: false,
           txId: 'b7f45d63f296aa683a5594be672bbbcc8d5527b1ab6dbb4b75f3fd6c7dcca478',
           type: 'receive',
+          blinders: [],
         },
       ],
     });
@@ -293,6 +305,7 @@ describe('Transaction Utils', () => {
         toSelf: false,
         txId: 'b7f45d63f296aa683a5594be672bbbcc8d5527b1ab6dbb4b75f3fd6c7dcca478',
         type: 'receive',
+        blinders: [],
       },
     });
   });

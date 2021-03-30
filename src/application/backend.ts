@@ -28,10 +28,11 @@ import { repos } from '../infrastructure';
 const POPUP_HTML = 'popup.html';
 
 export default class Backend {
-  private emitter = new SafeEventEmitter();
+  private emitter: SafeEventEmitter;
   private enabledSites: string[];
 
   constructor() {
+    this.emitter = new SafeEventEmitter();
     // we keep a local in-memory list of enabled sites in this session
     this.enabledSites = [];
   }
