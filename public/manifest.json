@@ -31,17 +31,22 @@
     }
   ],
   "icons": {
-    "16": "assets/images/marina-logo-green-16.png",
-    "32": "assets/images/marina-logo-green-32.png",
-    "48": "assets/images/marina-logo-green-48.png",
-    "128": "assets/images/marina-logo-green-128.png"
+    "16": "assets/images/logo/marina_logo_16x16.png",
+    "32": "assets/images/logo/marina_logo_32x32.png",
+    "48": "assets/images/logo/marina_logo_48x48.png",
+    "128": "assets/images/logo/marina_logo_128x128.png"
   },
   "web_accessible_resources": [
     "inject.js"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "browser_action": {
-    "default_icon": "assets/images/marina-logo-green-128.png",
+    "default_icon": {
+      "16": "assets/images/logo/marina_logo_16x16.png",
+      "32": "assets/images/logo/marina_logo_32x32.png",
+      "48": "assets/images/logo/marina_logo_48x48.png",
+      "128": "assets/images/logo/marina_logo_128x128.png"
+    },
     "default_title": "Marina"
   }
 }
