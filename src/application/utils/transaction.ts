@@ -160,7 +160,6 @@ export const extractInfoFromRawTxData = (
   type: TxType;
   unblindURL: string;
 } => {
-
   const unblindURL = getUnblindURLFromTx(tx, esploraURL[network]);
   const vin: Array<InputInterface> = tx.vin;
   const vout: Array<BlindedOutputInterface | UnblindedOutputInterface> = tx.vout;
@@ -285,7 +284,7 @@ export const extractInfoFromRawTxData = (
       taxiFeeAmount,
       toSelf,
       type,
-      unblindURL
+      unblindURL,
     };
 
     // Non Taxi payment
@@ -442,7 +441,7 @@ export const extractInfoFromRawTxData = (
       feeAsset,
       toSelf,
       type,
-      unblindURL
+      unblindURL,
     };
   }
 };

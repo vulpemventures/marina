@@ -16,6 +16,7 @@ import sendUsdtFeeUsdtUnconf from '../../../test/fixtures/tx-interface/send/send
 //
 import { Address } from '../../domain/wallet/value-objects';
 import { addresses, addressesChange } from '../../../test/fixtures/wallet.json';
+import { TxInterface } from 'ldk';
 
 describe('Transaction Utils', () => {
   const assetsInStore = {
@@ -45,8 +46,8 @@ describe('Transaction Utils', () => {
         Address.create(addresses[0].confidential, addresses[0].derivationPath),
         Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
       ];
-      const { vin, vout } = JSON.parse(JSON.stringify(receiveUsdtFeeLbtc));
-      const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+      const tx: TxInterface = JSON.parse(JSON.stringify(receiveUsdtFeeLbtc));
+      const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
       return expect(res).toStrictEqual({
         address: 'ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl',
@@ -55,7 +56,7 @@ describe('Transaction Utils', () => {
         feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
         toSelf: false,
         type: 'receive',
-        blinders: [],
+        unblindURL: expect.anything()
       });
     });
 
@@ -64,8 +65,8 @@ describe('Transaction Utils', () => {
         Address.create(addresses[0].confidential, addresses[0].derivationPath),
         Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
       ];
-      const { vin, vout } = JSON.parse(JSON.stringify(receiveLbtcFeeLbtc));
-      const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+      const tx: TxInterface = JSON.parse(JSON.stringify(receiveLbtcFeeLbtc));
+      const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
       return expect(res).toStrictEqual({
         address: 'ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl',
@@ -74,7 +75,7 @@ describe('Transaction Utils', () => {
         feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
         toSelf: false,
         type: 'receive',
-        blinders: [],
+        unblindURL: expect.anything()
       });
     });
   });
@@ -86,8 +87,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
         return expect(res).toStrictEqual({
           address: 'ert1qh0j6u6ehd9wel0hx7thvlseaqlaefrkrg5sn0q',
@@ -96,7 +97,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -105,8 +106,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConfSendAll));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConfSendAll));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
         return expect(res).toStrictEqual({
           address: 'ert1quhwp6sc890z25rth2ljfq0pudal98yqswwd0jc',
@@ -115,7 +116,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -124,8 +125,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConfToSelf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendLbtcFeeLbtcConfToSelf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
         return expect(res).toStrictEqual({
           address: 'ert1qafdcuwjxhqvsfyd498kc7mle0pkq9n48y9xctl',
@@ -134,7 +135,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: true,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -143,8 +144,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendUsdtFeeLbtcConf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendUsdtFeeLbtcConf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
         return expect(res).toStrictEqual({
           address: 'ert1qpt67avhdvkae759mfxssechq3kydhll5ht96vr',
@@ -153,7 +154,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -162,8 +163,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendUsdtFeeLbtcUnconf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendUsdtFeeLbtcUnconf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
         return expect(res).toStrictEqual({
           address: 'ert1q24vgnwk88y0k4h3ene0qfayp8umcnhc3tljrk5',
@@ -172,7 +173,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -181,8 +182,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[0].confidential, addressesChange[0].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendUsdtFeeLbtcConfSendAll));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStore);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendUsdtFeeLbtcConfSendAll));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStore);
 
         return expect(res).toStrictEqual({
           address: 'ert1quhwp6sc890z25rth2ljfq0pudal98yqswwd0jc',
@@ -191,7 +192,7 @@ describe('Transaction Utils', () => {
           feeAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
     });
@@ -202,8 +203,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendUsdtFeeUsdtConf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStoreTaxi);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendUsdtFeeUsdtConf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStoreTaxi);
         return expect(res).toStrictEqual({
           address: 'ert1quhwp6sc890z25rth2ljfq0pudal98yqswwd0jc',
           amount: 3000000000,
@@ -212,7 +213,7 @@ describe('Transaction Utils', () => {
           taxiFeeAmount: 44000000,
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -221,8 +222,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendUsdtFeeUsdtUnconf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStoreTaxi);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendUsdtFeeUsdtUnconf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStoreTaxi);
         return expect(res).toStrictEqual({
           address: '',
           amount: 0,
@@ -231,7 +232,7 @@ describe('Transaction Utils', () => {
           taxiFeeAmount: 44000000,
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
 
@@ -240,8 +241,8 @@ describe('Transaction Utils', () => {
           Address.create(addresses[0].confidential, addresses[0].derivationPath),
           Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
         ];
-        const { vin, vout } = JSON.parse(JSON.stringify(sendLbtcFeeUsdtConf));
-        const res = extractInfoFromRawTxData(vin, vout, 'regtest', confAddrs, assetsInStoreTaxi);
+        const tx: TxInterface = JSON.parse(JSON.stringify(sendLbtcFeeUsdtConf));
+        const res = extractInfoFromRawTxData(tx, 'regtest', confAddrs, assetsInStoreTaxi);
         return expect(res).toStrictEqual({
           address: 'ert1quhwp6sc890z25rth2ljfq0pudal98yqswwd0jc',
           amount: 100000000,
@@ -250,7 +251,7 @@ describe('Transaction Utils', () => {
           taxiFeeAmount: 44000000,
           toSelf: false,
           type: 'send',
-          blinders: [],
+          unblindURL: expect.anything()
         });
       });
     });
@@ -261,7 +262,7 @@ describe('Transaction Utils', () => {
       Address.create(addresses[0].confidential, addresses[0].derivationPath),
       Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
     ];
-    const tx = JSON.parse(JSON.stringify(receiveLbtcFeeLbtc));
+    const tx: TxInterface = JSON.parse(JSON.stringify(receiveLbtcFeeLbtc));
     const res = getTxsDetails([tx], 'regtest', confAddrs, assetsInStore).byAsset;
     return expect(res).toStrictEqual({
       '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': [
@@ -278,7 +279,7 @@ describe('Transaction Utils', () => {
           toSelf: false,
           txId: 'b7f45d63f296aa683a5594be672bbbcc8d5527b1ab6dbb4b75f3fd6c7dcca478',
           type: 'receive',
-          blinders: [],
+          unblindURL: expect.anything()
         },
       ],
     });
@@ -289,7 +290,7 @@ describe('Transaction Utils', () => {
       Address.create(addresses[0].confidential, addresses[0].derivationPath),
       Address.create(addressesChange[1].confidential, addressesChange[1].derivationPath),
     ];
-    const tx = JSON.parse(JSON.stringify(receiveLbtcFeeLbtc));
+    const tx: TxInterface = JSON.parse(JSON.stringify(receiveLbtcFeeLbtc));
     const res = getTxsDetails([tx], 'regtest', confAddrs, assetsInStore).byTxId;
     return expect(res).toStrictEqual({
       b7f45d63f296aa683a5594be672bbbcc8d5527b1ab6dbb4b75f3fd6c7dcca478: {
@@ -305,7 +306,7 @@ describe('Transaction Utils', () => {
         toSelf: false,
         txId: 'b7f45d63f296aa683a5594be672bbbcc8d5527b1ab6dbb4b75f3fd6c7dcca478',
         type: 'receive',
-        blinders: [],
+        unblindURL: expect.anything()
       },
     });
   });
