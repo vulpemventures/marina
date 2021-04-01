@@ -50,19 +50,15 @@ const Transactions: React.FC = () => {
   };
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
-  const handleOpenExplorer = (
-    txid: string,
-    blinders: {
-      value: number;
-      asset: string;
-      assetBlinder: string;
-      valueBlinder: string;
-    }[]
-  ) =>
-    browser.tabs.create({
-      url: makeUnblindURL(esploraURL[app.network.value], txid, blinders),
-      active: false,
-    });
+  const handleOpenExplorer = (url?: string) => {
+
+    if (!url) {
+      url = esploraURL[app.network.value]
+    }
+
+    browser.tabs.create({ url, active: false });
+  }
+
 
   /**
    * Update txs history once at first render
@@ -200,7 +196,7 @@ const Transactions: React.FC = () => {
         </div>
         <Button
           className="w-full"
-          onClick={() => handleOpenExplorer(modalTxDetails!.txId, modalTxDetails!.blinders)}
+          onClick={() => handleOpenExplorer(modalTxDetails?.unblindURL)}
         >
           See in Explorer
         </Button>

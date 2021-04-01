@@ -24,7 +24,7 @@ export interface TxDisplayInterface {
   txId: string;
   toSelf: boolean;
   type: TxType;
-  blinders: OutputBlinders[];
+  unblindURL: string;
 }
 
 export interface TxsByAssetsInterface {

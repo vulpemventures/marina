@@ -11,6 +11,7 @@ import {
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
+  getUnblindURLFromTx,
 } from 'ldk';
 import { address as addressLDK, confidential } from 'liquidjs-lib';
 import { mnemonicWalletFromAddresses } from './restorer';
@@ -20,7 +21,6 @@ import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { lbtcAssetByNetwork, usdtAssetHash } from './network';
 import { Network } from '../../domain/app/value-objects';
 import {
-  OutputBlinders,
   TxDisplayInterface,
   TxsByAssetsInterface,
   TxsByTxIdInterface,
@@ -28,6 +28,7 @@ import {
   TxType,
 } from '../../domain/transaction';
 import { Assets } from '../../domain/asset';
+import { esploraURL } from '../../presentation/utils';
 
 export const blindingInfoFromPendingTx = (
   { value, sendAddress, feeAsset }: TransactionProps,
@@ -145,8 +146,7 @@ export const isChange = (a: Address): boolean | null =>
   a?.derivationPath ? a.derivationPath?.split('/')[4] === '1' : null;
 
 export const extractInfoFromRawTxData = (
-  vin: Array<InputInterface>,
-  vout: Array<BlindedOutputInterface | UnblindedOutputInterface>,
+  tx: TxInterface,
   network: Network['value'],
   addresses: Address[],
   assetsInStore: Assets
@@ -158,9 +158,14 @@ export const extractInfoFromRawTxData = (
   taxiFeeAmount?: number;
   toSelf: boolean;
   type: TxType;
-  blinders: OutputBlinders[];
+  unblindURL: string;
 } => {
+
+  const unblindURL = getUnblindURLFromTx(tx, esploraURL[network]);
+  const vin: Array<InputInterface> = tx.vin;
+  const vout: Array<BlindedOutputInterface | UnblindedOutputInterface> = tx.vout;
   const assets = new Set<string>();
+
   let amount = 0,
     asset = '',
     address = '',
@@ -173,8 +178,6 @@ export const extractInfoFromRawTxData = (
     type: TxType = 'receive',
     vinTotalAmount = 0,
     voutTotalAmount = 0;
-
-  const blinders: OutputBlinders[] = [];
 
   const isTaxi =
     !isBlindedOutputInterface(vin[0].prevout) &&
@@ -196,15 +199,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) {}
+        } catch (_) { }
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-        ? lbtcAssetByNetwork(network)
-        : 'muliple assets';
+          ? lbtcAssetByNetwork(network)
+          : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
@@ -224,15 +227,6 @@ export const extractInfoFromRawTxData = (
           // Exclude lbtc fee and filter asset
           if (item.script && item.asset === lbtcAssetByNetwork(network)) {
             voutTotalAmount = item.value;
-          }
-          // add blinders
-          if (item.script && item.assetBlinder && item.valueBlinder) {
-            blinders.push({
-              asset: item.asset,
-              value: item.value,
-              assetBlinder: item.assetBlinder,
-              valueBlinder: item.valueBlinder,
-            });
           }
         }
       });
@@ -264,15 +258,6 @@ export const extractInfoFromRawTxData = (
             if (item.script) {
               voutTotalAmount = voutTotalAmount ? voutTotalAmount + item.value : item.value;
             }
-            // add blinders
-            if (item.script && item.assetBlinder && item.valueBlinder) {
-              blinders.push({
-                asset: item.asset,
-                value: item.value,
-                assetBlinder: item.assetBlinder,
-                valueBlinder: item.valueBlinder,
-              });
-            }
           }
 
           // Get unconfidential address of the recipient from blinded output
@@ -300,7 +285,7 @@ export const extractInfoFromRawTxData = (
       taxiFeeAmount,
       toSelf,
       type,
-      blinders,
+      unblindURL
     };
 
     // Non Taxi payment
@@ -320,15 +305,6 @@ export const extractInfoFromRawTxData = (
         } else if (item.asset && !item.script) {
           lbtcFeeAmount = item.value;
           feeAsset = item.asset;
-        }
-        // add blinders
-        if (item.script && item.assetBlinder && item.valueBlinder) {
-          blinders.push({
-            asset: item.asset,
-            value: item.value,
-            assetBlinder: item.assetBlinder,
-            valueBlinder: item.valueBlinder,
-          });
         }
       }
     });
@@ -466,7 +442,7 @@ export const extractInfoFromRawTxData = (
       feeAsset,
       toSelf,
       type,
-      blinders,
+      unblindURL
     };
   }
 };
@@ -494,8 +470,8 @@ export const getTxsDetails = (
         taxiFeeAmount,
         toSelf,
         type,
-        blinders,
-      } = extractInfoFromRawTxData(tx.vin, tx.vout, network, addresses, assets);
+        unblindURL,
+      } = extractInfoFromRawTxData(tx, network, addresses, assets);
 
       const timeTxInBlock = new Date((tx.status.blockTime ?? 0) * 1000);
       return {
@@ -519,7 +495,7 @@ export const getTxsDetails = (
         feeAsset,
         toSelf,
         blockTime: tx.status.blockTime ?? 0,
-        blinders,
+        unblindURL,
       };
     }
   );
