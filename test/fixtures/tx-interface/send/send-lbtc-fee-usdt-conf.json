@@ -33,7 +33,9 @@
     {
       "asset": "e19655127be5bbdd09831c0ee6f90634597573ab9832e77e5572a42d2cc0903c",
       "value": 44000000,
-      "script": "00147e72f026a423361eb3b7206e9a83ce4e07023460"
+      "script": "00147e72f026a423361eb3b7206e9a83ce4e07023460",
+      "valueBlinder": "0d3a72a026d3463fc1855ab3e0e10eae983b84d6c9250d468f1512f2f1447e57",
+      "assetBlinder": "77e65977979eb5f4b6e34e81a86b2100ac3cd65b7a061c8154b9eaa1b41ebf7c"
     },
     {
       "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
@@ -3194,12 +3196,16 @@
     {
       "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
       "value": 1900000000,
-      "script": "0014bbe5ae6b37695d9fbee6f2eecfc33d07fb948ec3"
+      "script": "0014bbe5ae6b37695d9fbee6f2eecfc33d07fb948ec3",
+      "valueBlinder": "0d3a72a026d3463fc1855ab3e0e10eae983b84d6c9250d468f1512f2f1447e57",
+      "assetBlinder": "77e65977979eb5f4b6e34e81a86b2100ac3cd65b7a061c8154b9eaa1b41ebf7c"
     },
     {
       "asset": "e19655127be5bbdd09831c0ee6f90634597573ab9832e77e5572a42d2cc0903c",
       "value": 9956000000,
-      "script": "0014bbe5ae6b37695d9fbee6f2eecfc33d07fb948ec3"
+      "script": "0014bbe5ae6b37695d9fbee6f2eecfc33d07fb948ec3",
+      "valueBlinder": "0d3a72a026d3463fc1855ab3e0e10eae983b84d6c9250d468f1512f2f1447e57",
+      "assetBlinder": "77e65977979eb5f4b6e34e81a86b2100ac3cd65b7a061c8154b9eaa1b41ebf7c"
     }
   ],
   "fee": 1000,

@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { makeUnblindURL } from 'ldk';
 import { useHistory, useLocation } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
@@ -50,19 +49,13 @@ const Transactions: React.FC = () => {
   };
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
-  const handleOpenExplorer = (
-    txid: string,
-    blinders: {
-      value: number;
-      asset: string;
-      assetBlinder: string;
-      valueBlinder: string;
-    }[]
-  ) =>
-    browser.tabs.create({
-      url: makeUnblindURL(esploraURL[app.network.value], txid, blinders),
-      active: false,
-    });
+  const handleOpenExplorer = async (url?: string) => {
+    if (!url) {
+      url = `${esploraURL[app.network.value]}/tx/${modalTxDetails?.txId}`;
+    }
+
+    await browser.tabs.create({ url, active: false });
+  };
 
   /**
    * Update txs history once at first render
@@ -198,10 +191,7 @@ const Transactions: React.FC = () => {
             <p className="wrap text-xs font-light break-all">{modalTxDetails?.txId}</p>
           </div>
         </div>
-        <Button
-          className="w-full"
-          onClick={() => handleOpenExplorer(modalTxDetails!.txId, modalTxDetails!.blinders)}
-        >
+        <Button className="w-full" onClick={() => handleOpenExplorer(modalTxDetails?.unblindURL)}>
           See in Explorer
         </Button>
       </Modal>

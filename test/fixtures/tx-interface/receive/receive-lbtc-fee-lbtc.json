@@ -4410,7 +4410,9 @@
     {
       "asset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
       "value": 2000000000,
-      "script": "0014ea5b8e3a46b8190491b529ed8f6ff9786c02cea7"
+      "script": "0014ea5b8e3a46b8190491b529ed8f6ff9786c02cea7",
+      "valueBlinder": "0d3a72a026d3463fc1855ab3e0e10eae983b84d6c9250d468f1512f2f1447e57",
+      "assetBlinder": "77e65977979eb5f4b6e34e81a86b2100ac3cd65b7a061c8154b9eaa1b41ebf7c"
     },
     {
       "blindedAsset": {
