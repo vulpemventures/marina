@@ -12,14 +12,10 @@ const ConnectSpendPset: React.FC = () => {
   const [tx, setTx] = useState<
     | {
         hostname?: string;
-        amount?: string;
-        assetHash?: string;
-        recipient?: string;
+        pset?: string;
       }
     | undefined
   >(undefined);
-
-  const windowProxy = new WindowProxy();
 
   useEffect(() => {
     void (async (): Promise<void> => {
@@ -28,6 +24,8 @@ const ConnectSpendPset: React.FC = () => {
       setTx(data[network].tx);
     })();
   }, []);
+
+  const windowProxy = new WindowProxy();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
@@ -64,12 +62,15 @@ const ConnectSpendPset: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Spend"
     >
-      {error.length !== 0 ? (
+      {error.length === 0 ? (
         <>
           <h1 className="mt-8 text-2xl font-medium break-all">{tx?.hostname}</h1>
 
-          <p className="mt-4 text-base font-medium">
-            We are going to spend your funds, are you sure?
+          <p className="mt-4 text-base font-medium">Requests you to spend</p>
+
+          <p className="text-small mt-4 font-medium">
+            {' '}
+            <b>WARNING</b> This transaction could potentially spend all of your funds.
           </p>
 
           <div className="bottom-24 container absolute right-0 flex justify-between">
