@@ -228,17 +228,33 @@ export default class Backend {
               try {
                 const [accepted, password] = params;
 
-                // return early if user rejected
-                if (!accepted) return handleError(id, new Error('Transaction has been rejected'));
+                // exit early if user rejected the transaction
+                if (!accepted) {
+                  // Flush tx data
+                  await repos.connect.updateConnectData((data) => {
+                    data[network].tx = undefined;
+                    return data;
+                  });
+                  // respond to the injected script
+                  this.emitter.emit(
+                    Marina.prototype.signTransaction.name,
+                    new Error('User rejected the spend request')
+                  );
+                  // repond to the popup so it can be closed
+                  return handleResponse(id);
+                }
 
-                const mnemo = await getMnemonic(password);
                 const connectDataByNetwork = await repos.connect.getConnectData();
-                if (!connectDataByNetwork[network].tx?.pset) throw new Error('PSET missing');
-                const tx = connectDataByNetwork[network].tx!.pset as string;
-                const signedTx = await mnemo.signPset(tx);
+                const { tx } = connectDataByNetwork[network];
+
+                if (!tx || !tx.pset) throw new Error('Transaction data are missing');
+
+                const psetBase64 = connectDataByNetwork[network].tx!.pset as string;
+                const mnemo = await getMnemonic(password);
+                const signedTx = await mnemo.signPset(psetBase64);
 
                 // respond to the injected script
-                this.emitter.emit(Marina.prototype.sendTransaction.name, signedTx);
+                this.emitter.emit(Marina.prototype.signTransaction.name, signedTx);
 
                 return handleResponse(id);
               } catch (e: any) {
