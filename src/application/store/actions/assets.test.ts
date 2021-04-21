@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AddressInterface } from 'ldk';
 import { getAllAssetBalances, updateAllAssetInfos } from './assets';
 import { setUtxos } from './utxos';
 import { createWallet } from './wallet';
@@ -22,6 +23,7 @@ jest.mock('uuid');
 
 describe('Assets Actions', () => {
   let store: ReturnType<typeof mockThunkReducer>;
+  let confidentialAddress: AddressInterface['confidentialAddress'];
 
   beforeAll(() => {
     store = mockThunkReducer(appReducer, appInitialState, repos);
@@ -75,38 +77,28 @@ describe('Assets Actions', () => {
       .andResolve();
     // Mint 2 tokens on keyPair1
     const keyPair1 = getRandomWallet();
-    const mintData1 = await mint(
-      keyPair1.getNextAddress().confidentialAddress,
-      21000000,
-      'Vulpem',
-      'VLP'
-    );
-    const mintData2 = await mint(
-      keyPair1.getNextAddress().confidentialAddress,
-      4200,
-      'Tether USD',
-      'USDt'
-    );
+    confidentialAddress = (await keyPair1.getNextAddress()).confidentialAddress;
+    const mintData1 = await mint(confidentialAddress, 21000000, 'Vulpem', 'VLP');
+    confidentialAddress = (await keyPair1.getNextAddress()).confidentialAddress;
+    const mintData2 = await mint(confidentialAddress, 4200, 'Tether USD', 'USDt');
     // Mint 1 token on keyPair2
     const keyPair2 = getRandomWallet();
-    const mintData3 = await mint(
-      keyPair2.getNextAddress().confidentialAddress,
-      100,
-      'Sticker pack',
-      'STIKR'
-    );
+    confidentialAddress = (await keyPair2.getNextAddress()).confidentialAddress;
+    const mintData3 = await mint(confidentialAddress, 100, 'Sticker pack', 'STIKR');
+    const keyPair1Addr = await keyPair1.getNextAddress();
+    const keyPair2Addr = await keyPair2.getNextAddress();
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
           setUtxos(
             [
               {
-                confidentialAddress: keyPair1.getNextAddress().confidentialAddress,
-                blindingPrivateKey: keyPair1.getNextAddress().blindingPrivateKey,
+                confidentialAddress: keyPair1Addr.confidentialAddress,
+                blindingPrivateKey: keyPair1Addr.blindingPrivateKey,
               },
               {
-                confidentialAddress: keyPair2.getNextAddress().confidentialAddress,
-                blindingPrivateKey: keyPair2.getNextAddress().blindingPrivateKey,
+                confidentialAddress: keyPair2Addr.confidentialAddress,
+                blindingPrivateKey: keyPair2Addr.blindingPrivateKey,
               },
             ],
             () => resolve(store.getState()),
@@ -190,22 +182,18 @@ describe('Assets Actions', () => {
       .andResolve();
     // Mint 1 token
     const keyPair = getRandomWallet();
-    const mintData = await mint(
-      keyPair.getNextAddress().confidentialAddress,
-      21000000,
-      'Random Shitcoin',
-      'SHIT',
-      8
-    );
+    confidentialAddress = (await keyPair.getNextAddress()).confidentialAddress;
+    const mintData = await mint(confidentialAddress, 21000000, 'Random Shitcoin', 'SHIT', 8);
     // Set utxos in store using address/blindingPrivKey
+    const keyPairAddr = await keyPair.getNextAddress();
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
           setUtxos(
             [
               {
-                confidentialAddress: keyPair.getNextAddress().confidentialAddress,
-                blindingPrivateKey: keyPair.getNextAddress().blindingPrivateKey,
+                confidentialAddress: keyPairAddr.confidentialAddress,
+                blindingPrivateKey: keyPairAddr.blindingPrivateKey,
               },
             ],
             () => resolve(store.getState()),

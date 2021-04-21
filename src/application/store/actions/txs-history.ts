@@ -10,9 +10,11 @@ import {
   fromXpub,
   IdentityType,
   MasterPublicKey,
+  networks,
 } from 'ldk';
 import { explorerApiUrl, IdentityRestorerFromState } from '../../utils';
 import { TxsHistory, TxsHistoryByNetwork } from '../../../domain/transaction';
+import { address as addressLDK } from 'liquidjs-lib';
 
 export function initTxsHistoryByNetwork(
   txsHistoryByNetwork: TxsHistoryByNetwork
@@ -55,12 +57,18 @@ export function updateTxsHistory(
         throw new Error('Failed to restore wallet');
       }
 
-      const blindPrivKeys = pubKeyWallet.getAddresses().map((a) => a.blindingPrivateKey);
+      const addressInterfaces = await pubKeyWallet.getAddresses();
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
-          const k = pubKeyWallet.getBlindingPrivateKey(script);
-          if (blindPrivKeys.includes(k)) return k;
-          return undefined;
+          const address = addressLDK.fromOutputScript(
+            Buffer.from(script, 'hex'),
+            networks[app.network.value]
+          );
+          return addressInterfaces.find(
+            (addr) =>
+              addressLDK.fromConfidential(addr.confidentialAddress).unconfidentialAddress ===
+              address
+          )?.blindingPrivateKey;
         } catch (_) {
           return undefined;
         }

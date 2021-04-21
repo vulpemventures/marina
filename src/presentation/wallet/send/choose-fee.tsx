@@ -381,6 +381,7 @@ const ChooseFee: React.FC = () => {
               imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
+        assetHash={transaction.asset}
         assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
         className="mt-4"
         fiatBalance={120}

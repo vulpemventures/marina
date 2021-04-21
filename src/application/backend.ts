@@ -178,7 +178,7 @@ export default class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
-                const nextAddress = xpub.getNextAddress();
+                const nextAddress = await xpub.getNextAddress();
                 await persistAddress(nextAddress);
                 return handleResponse(id, nextAddress);
               } catch (e: any) {
@@ -191,7 +191,7 @@ export default class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
-                const nextChangeAddress = xpub.getNextChangeAddress();
+                const nextChangeAddress = await xpub.getNextChangeAddress();
                 await persistAddress(nextChangeAddress);
                 return handleResponse(id, nextChangeAddress);
               } catch (e: any) {
@@ -324,7 +324,7 @@ export default class Backend {
                 const coins = await getCoins();
                 const txBuilder = walletFromCoins(coins, network);
                 const mnemo = await getMnemonic(password);
-                const changeAddress = mnemo.getNextChangeAddress();
+                const changeAddress = await mnemo.getNextChangeAddress();
 
                 const unsignedPset = txBuilder.buildTx(
                   txBuilder.createTx(),
@@ -469,7 +469,7 @@ async function getCoins(): Promise<UtxoInterface[]> {
 
 export async function updateUtxos() {
   const xpub = await getXpub();
-  const addrs = xpub.getAddresses();
+  const addrs = await xpub.getAddresses();
   const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
   const newMap = new Map(wallet.utxoMap);
   // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped

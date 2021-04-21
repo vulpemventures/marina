@@ -16,7 +16,7 @@ const SelectAsset: React.FC = () => {
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<
-    [assetName: string, assetTicker: string, index: number][]
+    [assetName: string, assetTicker: string, precision: number, index: number][]
   >([]);
 
   useEffect(() => {
@@ -30,9 +30,14 @@ const SelectAsset: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const terms: [name: string, ticker: string, index: number][] = Object.entries(
+    const terms: [
+      name: string,
+      ticker: string,
+      precision: number,
+      index: number
+    ][] = Object.entries(
       assets[app.network.value]
-    ).map(([hash, { name, ticker }], index) => [name, ticker, index]);
+    ).map(([hash, { name, ticker, precision }], index) => [name, ticker, precision, index]);
 
     const results = terms.filter((t) => {
       return (
@@ -49,7 +54,7 @@ const SelectAsset: React.FC = () => {
     setSearchTerm(searchTerm);
   };
 
-  const handleSend = ({ assetHash }: { [assetHash: string]: string }) => {
+  const handleSend = (assetHash: string) => {
     dispatch(setAsset(assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
@@ -92,15 +97,16 @@ const SelectAsset: React.FC = () => {
               assetImgPath={
                 app.network.value === 'regtest'
                   ? imgPathMapRegtest[r[1]] ?? imgPathMapRegtest['']
-                  : imgPathMapMainnet[Object.keys(assets[app.network.value])[r[2]]] ??
+                  : imgPathMapMainnet[Object.keys(assets[app.network.value])[r[3]]] ??
                     imgPathMapMainnet['']
               }
-              assetHash={Object.keys(assets[app.network.value])[r[2]]}
+              assetHash={Object.keys(assets[app.network.value])[r[3]]}
               assetName={r[0]}
               assetTicker={r[1]}
-              quantity={assetsBalance[Object.keys(assets[app.network.value])[r[2]]] ?? 0}
-              key={`${r[1]}_${r[2]}`}
-              handleClick={handleSend}
+              assetPrecision={r[2]}
+              quantity={assetsBalance[Object.keys(assets[app.network.value])[r[3]]] ?? 0}
+              key={`${r[1]}_${r[3]}`}
+              handleClick={({ assetHash }) => handleSend(assetHash as string)}
             />
           ))}
         </div>

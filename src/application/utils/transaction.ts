@@ -434,6 +434,8 @@ export const extractInfoFromRawTxData = (
       amount = vinTotalAmount;
     }
 
+    if (asset === '') console.error('Asset not recongized');
+
     return {
       address,
       amount,
