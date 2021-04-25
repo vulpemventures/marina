@@ -31,14 +31,22 @@ import { Assets } from '../../domain/asset';
 import { esploraURL } from '../../presentation/utils';
 
 export const blindingInfoFromPendingTx = (
-  { value, sendAddress, feeAsset }: TransactionProps,
+  { value, sendAddress, feeAsset, changeAddress }: TransactionProps,
   network: string
 ): any => {
+  if (!changeAddress) {
+    throw new Error('changeAddress is undefined')
+  }
+
   const outPubkeys: Map<number, string> = new Map();
   const blindReceipientOutput = isConfidentialAddress(sendAddress);
-  const receipientOutIndex = receipientOutIndexFromTx(value, sendAddress);
 
-  if (isConfidentialAddress(sendAddress)) {
+  const receipientOutIndex = outputIndexFromAddress(value, sendAddress);
+  const changeOutIndex = outputIndexFromAddress(value, changeAddress.unconfidentialAddress!);
+
+  outPubkeys.set(changeOutIndex, changeAddress.blindingKey!.toString('hex'));
+
+  if (blindReceipientOutput) {
     const receipientBlindingKey = blindingKeyFromAddress(sendAddress);
     outPubkeys.set(receipientOutIndex, receipientBlindingKey);
   }
@@ -104,6 +112,7 @@ export const blindAndSignPset = async (
     outputsToBlind,
     outPubkeys
   );
+
   const signedPset: string = await mnemonicWallet.signPset(blindedPset);
 
   const ptx = decodePset(signedPset);
@@ -129,9 +138,9 @@ export const fillTaxiTx = (
   return addToTx(psetBase64, selectedUtxos, receipients.concat(changeOutputs));
 };
 
-export const receipientOutIndexFromTx = (tx: string, receipientAddress: string): number => {
+function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
-  const receipientScript = address.toOutputScript(receipientAddress);
+  const receipientScript = address.toOutputScript(addressToFind);
   return utx.outs.findIndex((out) => out.script.equals(receipientScript));
 };
 
@@ -198,15 +207,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) {}
+        } catch (_) { }
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-        ? lbtcAssetByNetwork(network)
-        : 'muliple assets';
+          ? lbtcAssetByNetwork(network)
+          : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
