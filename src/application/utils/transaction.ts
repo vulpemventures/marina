@@ -35,7 +35,7 @@ export const blindingInfoFromPendingTx = (
   network: string
 ): any => {
   if (!changeAddress) {
-    throw new Error('changeAddress is undefined')
+    throw new Error('changeAddress is undefined');
   }
 
   const outPubkeys: Map<number, string> = new Map();
@@ -142,7 +142,7 @@ function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
   const receipientScript = address.toOutputScript(addressToFind);
   return utx.outs.findIndex((out) => out.script.equals(receipientScript));
-};
+}
 
 export const feeAmountFromTx = (tx: string): number => {
   const utx = psetToUnsignedTx(tx);
@@ -207,15 +207,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) { }
+        } catch (_) {}
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-          ? lbtcAssetByNetwork(network)
-          : 'muliple assets';
+        ? lbtcAssetByNetwork(network)
+        : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
