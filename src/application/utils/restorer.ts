@@ -28,13 +28,13 @@ export async function nextAddressForWallet(
 
   let nextAddress;
   if (change) {
-    const { confidentialAddress, derivationPath } = pubKeyWallet.getNextChangeAddress();
+    const { confidentialAddress, derivationPath } = await pubKeyWallet.getNextChangeAddress();
     nextAddress = {
       confidentialAddress: confidentialAddress,
       derivationPath: derivationPath,
     };
   } else {
-    const { confidentialAddress, derivationPath } = pubKeyWallet.getNextAddress();
+    const { confidentialAddress, derivationPath } = await pubKeyWallet.getNextAddress();
     nextAddress = {
       confidentialAddress: confidentialAddress,
       derivationPath: derivationPath,

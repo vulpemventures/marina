@@ -60,7 +60,7 @@ export function createDevState(
       //
       dispatch(
         setUtxos(
-          w.getAddresses().map((a) => ({
+          (await w.getAddresses()).map((a) => ({
             confidentialAddress: a.confidentialAddress,
             blindingPrivateKey: a.blindingPrivateKey,
           })),

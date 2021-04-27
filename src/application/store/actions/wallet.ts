@@ -132,11 +132,11 @@ export function restoreWallet(
       if (!isRestored) {
         throw new Error('Failed to restore wallet');
       }
-      const confidentialAddresses: Address[] = mnemonicWallet
-        .getAddresses()
-        .map(({ confidentialAddress, derivationPath }) =>
-          Address.create(confidentialAddress, derivationPath)
-        );
+      const confidentialAddresses: Address[] = (
+        await mnemonicWallet.getAddresses()
+      ).map(({ confidentialAddress, derivationPath }) =>
+        Address.create(confidentialAddress, derivationPath)
+      );
 
       const utxoMap = new Map<string, UtxoInterface>();
 

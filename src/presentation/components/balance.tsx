@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import cx from 'classnames';
 import { browser } from 'webextension-polyfill-ts';
-import { esploraURL } from '../utils/constants';
+import { esploraURL } from '../utils';
 import { AppContext } from '../../application/store/context';
 
 interface Props {

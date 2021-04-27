@@ -12,6 +12,7 @@ export * from './wallet';
 
 /**
  * Update utxos set, owned assets and balances
+ * @param fromNetwork
  * @param onSuccess
  * @param onError
  * @returns balances
@@ -57,7 +58,8 @@ export function updateUtxosAssetsBalances(
         wallet.confidentialAddresses,
         app.network.value
       );
-      utxoSetter = () => setUtxos(xpub.getAddresses(), onInnerSuccess, onInnerError);
+      const addressesWithBlindingKeys = await xpub.getAddresses();
+      utxoSetter = () => setUtxos(addressesWithBlindingKeys, onInnerSuccess, onInnerError);
     }
 
     dispatch(utxoSetter());

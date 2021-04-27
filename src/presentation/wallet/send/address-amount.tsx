@@ -160,7 +160,6 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
   handleSubmit: async (values, { props }) => {
     const { wallets, app } = props.state;
     const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
-    console.log('handleSubmit', values.amount, toSatoshi(values.amount));
     props.dispatch(
       setAddressesAndAmount(
         Address.create(values.address),
