@@ -31,7 +31,11 @@ const Shell: React.FC<Props> = ({ children, className = '', hasBackBtn = true }:
       <main className={`container mx-auto ${className}`}>{children}</main>
 
       <footer>
-        <img src="/assets/images/fullscreen/bg-onboarding.png" alt="background bottom" />
+        <img
+          className="w-screen"
+          src="/assets/images/fullscreen/bg-onboarding.png"
+          alt="background bottom"
+        />
       </footer>
     </div>
   );
