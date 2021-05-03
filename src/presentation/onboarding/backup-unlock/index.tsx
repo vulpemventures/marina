@@ -50,7 +50,7 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: async (values, { props, setErrors }) => {
+  handleSubmit: (values, { props, setErrors }) => {
     try {
       const mnemonic = decrypt(props.encryptedMnemonic, Password.create(values.password));
       props.dispatch(setRestored(values.password, mnemonic.value));
