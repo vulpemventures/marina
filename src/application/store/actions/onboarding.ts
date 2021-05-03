@@ -4,6 +4,7 @@ import {
   ONBOARDING_SET_VERIFIED,
   ONBOARDING_SET_RESTORED,
   ONBOARDING_FLUSH,
+  ONBOARDING_SET_IS_FROM_POPUP_FLOW,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 
@@ -36,5 +37,11 @@ export function setRestored(password: string, mnemonic: string): Thunk<IAppState
 export function flush(): Thunk<IAppState, Action> {
   return (dispatch) => {
     dispatch([ONBOARDING_FLUSH]);
+  };
+}
+
+export function setIsFromPopupFlow(): Thunk<IAppState, Action> {
+  return (dispatch) => {
+    dispatch([ONBOARDING_SET_IS_FROM_POPUP_FLOW]);
   };
 }

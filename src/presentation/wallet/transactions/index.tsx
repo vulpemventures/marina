@@ -1,14 +1,18 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
-import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
+import {
+  BACKUP_UNLOCK_ROUTE,
+  DEFAULT_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+} from '../../routes/constants';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ButtonList from '../../components/button-list';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
-import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
+import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import { setAsset, updateTxsHistory } from '../../../application/store/actions';
 import { AppContext } from '../../../application/store/context';
@@ -41,7 +45,9 @@ const Transactions: React.FC = () => {
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
+  const handleSaveMnemonicConfirm = async () => {
+    await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
+  };
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => {
     dispatch(setAsset(state.assetHash));
@@ -66,7 +72,7 @@ const Transactions: React.FC = () => {
   }, []);
 
   /**
- 
+
    /**
    * Log errors if any
    */
@@ -196,7 +202,7 @@ const Transactions: React.FC = () => {
         </Button>
       </Modal>
 
-      <ReminderSaveMnemonicModal
+      <SaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}
         handleClose={handleSaveMnemonicClose}
         handleConfirm={handleSaveMnemonicConfirm}

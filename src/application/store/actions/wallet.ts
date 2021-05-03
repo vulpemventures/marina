@@ -101,8 +101,8 @@ export function restoreWallet(
   onError: (err: Error) => void
 ): Thunk<IAppState, Action> {
   return async (dispatch, getState, repos) => {
-    const { app, wallets } = getState();
-    if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
+    const { app, wallets, onboarding } = getState();
+    if (!onboarding.isFromPopupFlow && wallets.length > 0 && wallets[0].encryptedMnemonic) {
       throw new Error(
         'Wallet already exists. Remove the extension from the browser first to create a new one'
       );

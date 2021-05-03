@@ -21,7 +21,7 @@ const EndOfFlow: React.FC = () => {
   useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
-    if (wallets.length <= 0) {
+    if (wallets.length <= 0 || onboarding.isFromPopupFlow) {
       const onError = (err: Error) => console.log(err);
       const dispatchOnboardingCompleted = () => {
         // Startup alarms to fetch utxos & set the popup page
@@ -55,7 +55,7 @@ const EndOfFlow: React.FC = () => {
         )
       );
     }
-  });
+  }, []);
 
   if (isLoading) {
     return (

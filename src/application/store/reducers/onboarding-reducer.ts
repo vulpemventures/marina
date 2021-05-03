@@ -5,6 +5,7 @@ export interface OnboardingState {
   password: string;
   verified: boolean;
   restored: boolean;
+  isFromPopupFlow: boolean;
 }
 
 export const onboardingInitState: OnboardingState = {
@@ -12,6 +13,7 @@ export const onboardingInitState: OnboardingState = {
   password: '',
   verified: false,
   restored: false,
+  isFromPopupFlow: false,
 };
 
 export const onboardingReducer = (state: OnboardingState, [type, payload]: [string, any]): any => {
@@ -44,6 +46,12 @@ export const onboardingReducer = (state: OnboardingState, [type, payload]: [stri
     }
     case ACTION_TYPES.ONBOARDING_FLUSH: {
       return onboardingInitState;
+    }
+    case ACTION_TYPES.ONBOARDING_SET_IS_FROM_POPUP_FLOW: {
+      return {
+        ...state,
+        isFromPopupFlow: true,
+      };
     }
     default:
       return state;

@@ -27,9 +27,9 @@ const SeedReveal: React.FC = () => {
   const handleClickReveal = () => setRevealed(true);
 
   return (
-    <Shell>
+    <Shell hasBackBtn={!onboarding.isFromPopupFlow}>
       <div className="flex flex-col content-start justify-start space-y-10">
-        <h1 className="text-3xl font-medium">{'Save your mnemonic phrase'}</h1>
+        <h1 className="text-3xl font-medium">Save your mnemonic phrase</h1>
         <div className="max-w-prose w-96 flex flex-col justify-center h-32">
           {revealed ? (
             <div className="border-primary p-4 text-base font-medium text-left border-2 rounded-md shadow-md">
@@ -40,11 +40,13 @@ const SeedReveal: React.FC = () => {
           )}
         </div>
         <div className="flex flex-wrap">
-          <Button className="w-52 mr-5" onClick={handleRemindMe} isOutline={true}>
-            {'Remind me later'}
-          </Button>
+          {!onboarding.isFromPopupFlow && (
+            <Button className="w-52 mr-5" onClick={handleRemindMe} isOutline={true}>
+              Remind me later
+            </Button>
+          )}
           <Button className="w-52" onClick={handleNext}>
-            {'Next'}
+            Next
           </Button>
         </div>
       </div>

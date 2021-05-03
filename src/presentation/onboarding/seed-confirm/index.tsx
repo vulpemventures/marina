@@ -29,10 +29,8 @@ const ERROR_MSG = 'Invalid mnemonic';
 const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const [{ onboarding }, dispatch] = useContext(AppContext);
-
   const mnemonic: string[] = onboarding.mnemonic.trim().split(' ');
   const mnemonicRandomized = shuffleMnemonic([...mnemonic]);
-
   const [wordsList, setWordsList] = useState(mnemonicRandomized);
   const [selected, setSelected] = useState([] as string[]);
   const [error, setError] = useState(NULL_ERROR);
@@ -64,7 +62,7 @@ const SeedConfirm: React.FC = () => {
   };
 
   return (
-    <Shell className="space-y-5">
+    <Shell className="space-y-5" hasBackBtn={!onboarding.isFromPopupFlow}>
       <h1 className="text-3xl font-medium">{'Confirm your secret mnemonic phrase'}</h1>
       <p className="text-base">
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
 import {
-  RECEIVE_ROUTE,
+  BACKUP_UNLOCK_ROUTE,
   SELECT_ASSET_ROUTE,
   SEND_CONFIRMATION_ROUTE,
   TRANSACTIONS_ROUTE,
@@ -10,7 +10,7 @@ import {
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
-import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
+import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -45,7 +45,9 @@ const Home: React.FC = () => {
   };
 
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
+  const handleSaveMnemonicConfirm = async () => {
+    await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
+  };
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
@@ -148,7 +150,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <ReminderSaveMnemonicModal
+      <SaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}
         handleClose={handleSaveMnemonicClose}
         handleConfirm={handleSaveMnemonicConfirm}
