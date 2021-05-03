@@ -4,6 +4,7 @@ import { browser } from 'webextension-polyfill-ts';
 import {
   BACKUP_UNLOCK_ROUTE,
   DEFAULT_ROUTE,
+  RECEIVE_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
 } from '../../routes/constants';
 import Balance from '../../components/balance';
@@ -48,7 +49,13 @@ const Transactions: React.FC = () => {
   const handleSaveMnemonicConfirm = async () => {
     await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
   };
-  const handleReceive = () => showSaveMnemonicModal(true);
+  const handleReceive = () => {
+    if (!app.isWalletVerified) {
+      showSaveMnemonicModal(true);
+    } else {
+      history.push(RECEIVE_ROUTE);
+    }
+  };
   const handleSend = () => {
     dispatch(setAsset(state.assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);

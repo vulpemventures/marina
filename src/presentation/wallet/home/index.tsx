@@ -3,6 +3,7 @@ import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
 import {
   BACKUP_UNLOCK_ROUTE,
+  RECEIVE_ROUTE,
   SELECT_ASSET_ROUTE,
   SEND_CONFIRMATION_ROUTE,
   TRANSACTIONS_ROUTE,
@@ -48,7 +49,13 @@ const Home: React.FC = () => {
   const handleSaveMnemonicConfirm = async () => {
     await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
   };
-  const handleReceive = () => showSaveMnemonicModal(true);
+  const handleReceive = () => {
+    if (!app.isWalletVerified) {
+      showSaveMnemonicModal(true);
+    } else {
+      history.push(RECEIVE_ROUTE);
+    }
+  };
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
   // Populate ref div with svg animation
