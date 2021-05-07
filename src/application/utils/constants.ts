@@ -2,7 +2,6 @@ import { Network } from '../../domain/app/value-objects';
 import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 import blockstreamAssetHashes from '../constants/blockstream_asset_hash.json';
 
-
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
   '50': 0.1,
