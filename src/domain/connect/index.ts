@@ -10,6 +10,10 @@ export type ConnectData = {
     recipient?: string;
     pset?: string;
   };
+  msg?: {
+    hostname?: string;
+    message?: string;
+  }
 };
 
 export type ConnectDataByNetwork = Record<Network['value'], ConnectData>;

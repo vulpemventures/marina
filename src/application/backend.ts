@@ -3,6 +3,7 @@ import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
   address,
+  networks,
   AddressInterface,
   decodePset,
   fetchAndUnblindUtxos,
@@ -26,6 +27,7 @@ import { Network } from '../domain/app/value-objects';
 import { Assets, AssetsByNetwork } from '../domain/asset';
 import { ConnectDataByNetwork } from '../domain/connect';
 import { repos } from '../infrastructure';
+import { signMessageWithMnemonic } from './utils/message';
 
 const POPUP_HTML = 'popup.html';
 
@@ -383,6 +385,69 @@ export default class Backend {
                 return handleError(id, e);
               }
 
+            case Marina.prototype.signMessage.name:
+              try {
+                if (!(await this.isCurentSiteEnabled(network))) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                if (!params || params.length !== 1 || params.some((p) => p === null)) {
+                  return handleError(id, new Error('Missing params'));
+                }
+                const hostname = await getCurrentUrl();
+                const [message] = params;
+                await repos.connect.updateConnectData((data) => {
+                  data[network].msg = {
+                    hostname: hostname,
+                    message: message,
+                  };
+                  return data;
+                });
+                await showPopup(`connect/sign-msg`);
+
+                const rawTx = await this.waitForEvent(Marina.prototype.signMessage.name);
+
+                return handleResponse(id, rawTx);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case 'SIGN_MESSAGE_RESPONSE':
+              try {
+                const [accepted, password] = params;
+
+                // exit early if user rejected the signature
+                if (!accepted) {
+                  // Flush msg data
+                  await repos.connect.updateConnectData((data) => {
+                    data[network].msg = undefined;
+                    return data;
+                  });
+                  // respond to the injected script
+                  this.emitter.emit(
+                    Marina.prototype.signMessage.name,
+                    new Error('User rejected the signature request')
+                  );
+                  // repond to the popup so it can be closed
+                  return handleResponse(id);
+                }
+
+                const connectDataByNetwork = await repos.connect.getConnectData();
+                const { msg } = connectDataByNetwork[network];
+
+                if (!msg || !msg.message) throw new Error('Message data are missing');
+
+                const message = connectDataByNetwork[network].msg!.message as string;
+                // SIGN THE MESSAGE WITH FIRST ADDRESS FROM HD WALLET
+                const signedMsg = await signMsgWithPassword(message, password);
+
+                // respond to the injected script
+                this.emitter.emit(Marina.prototype.signMessage.name, signedMsg);
+
+                return handleResponse(id);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
             //
             default:
               return handleError(id, new Error('Method not implemented.'));
@@ -455,6 +520,18 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
     wallet.confidentialAddresses,
     app.network.value
   );
+}
+
+async function signMsgWithPassword(message: string, password: string): Promise<{ signature: string; address: string }> {
+  let mnemonic = '';
+  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
+  try {
+    mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+  } catch (e: any) {
+    throw new Error('Invalid password');
+  }
+  const liquidJSNet = networks[app.network.value];
+  return await signMessageWithMnemonic(message, mnemonic, liquidJSNet);
 }
 
 async function getCurrentNetwork(): Promise<Network['value']> {
