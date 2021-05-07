@@ -14,7 +14,7 @@
     "quantity": 10
   },
   {
-    "assetImgPath": "assets/images/liquid-assets/liquid-tether.png",
+    "assetImgPath": "assets/images/liquid-assets/liquid-tether.svg",
     "assetName": "Tether",
     "assetTicker": "USDt",
     "assetHash": "9999437ead76b94dc2a175b47adfcd192a23bf17f15152d869480e8ac44bb6fa",
