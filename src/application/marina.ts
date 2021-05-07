@@ -1,4 +1,10 @@
-import { MarinaProvider, AddressInterface, TransactionHex, PsetBase64, SignedMessage } from 'marina-provider';
+import {
+  MarinaProvider,
+  AddressInterface,
+  TransactionHex,
+  PsetBase64,
+  SignedMessage,
+} from 'marina-provider';
 import WindowProxy from './proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {

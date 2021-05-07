@@ -13,7 +13,7 @@ export type ConnectData = {
   msg?: {
     hostname?: string;
     message?: string;
-  }
+  };
 };
 
 export type ConnectDataByNetwork = Record<Network['value'], ConnectData>;

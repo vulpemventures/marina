@@ -522,7 +522,10 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
   );
 }
 
-async function signMsgWithPassword(message: string, password: string): Promise<{ signature: string; address: string }> {
+async function signMsgWithPassword(
+  message: string,
+  password: string
+): Promise<{ signature: string; address: string }> {
   let mnemonic = '';
   const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
   try {

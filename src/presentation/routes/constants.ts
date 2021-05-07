@@ -4,7 +4,6 @@ const CONNECT_SPEND_ROUTE = '/connect/spend';
 const CONNECT_SPEND_PSET_ROUTE = '/connect/spend-pset';
 const CONNECT_SIGN_MSG_ROUTE = '/connect/sign-msg';
 
-
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
 const INITIALIZE_CREATE_PASSWORD_ROUTE = '/initialize/create-password';

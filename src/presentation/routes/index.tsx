@@ -117,7 +117,6 @@ const Routes: React.FC = () => {
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
-
     </Switch>
   );
 };

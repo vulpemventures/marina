@@ -1,8 +1,6 @@
-import React, { useRef, useContext, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import { AppContext } from '../../application/store/context';
-import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
@@ -13,9 +11,9 @@ const ConnectSignMsg: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [msg, setMsg] = useState<
     | {
-      hostname?: string;
-      message?: string;
-    }
+        hostname?: string;
+        message?: string;
+      }
     | undefined
   >(undefined);
 
@@ -70,10 +68,7 @@ const ConnectSignMsg: React.FC = () => {
 
           <p className="mt-4 text-base font-medium">Requests you to sign a message</p>
 
-          <p className="text-small mt-2 font-medium">
-            {' '}
-            {msg?.message}
-          </p>
+          <p className="text-small mt-2 font-medium"> {msg?.message}</p>
 
           <div className="bottom-24 container absolute right-0 flex justify-between">
             <Button isOutline={true} onClick={handleReject} textBase={true}>
