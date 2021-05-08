@@ -5,6 +5,7 @@ import {
   CONNECT_ENABLE_ROUTE,
   CONNECT_SPEND_ROUTE,
   CONNECT_SPEND_PSET_ROUTE,
+  CONNECT_SIGN_MSG_ROUTE,
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_SELECT_ACTION_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
@@ -40,6 +41,7 @@ import {
 import ConnectEnable from '../connect/enable';
 import ConnectSpend from '../connect/spend';
 import ConnectSpendPset from '../connect/spend-pset';
+import ConnectSignMsg from '../connect/sign-msg';
 
 // Onboarding
 import Welcome from '../onboarding/welcome';
@@ -114,6 +116,7 @@ const Routes: React.FC = () => {
       <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnable} />
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
+      <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
     </Switch>
   );
 };

@@ -31,7 +31,7 @@ export default class WindowProxy {
         name: name,
         params: params || [],
       },
-      '*'
+      window.location.origin
     );
   }
 }
