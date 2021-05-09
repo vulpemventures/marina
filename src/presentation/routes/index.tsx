@@ -106,7 +106,7 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
-      <ProtectedRoute exact path={SETTINGS_TERMS_ROUTE} comp={SettingsTerms} />
+      <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
       {/*Connect*/}
