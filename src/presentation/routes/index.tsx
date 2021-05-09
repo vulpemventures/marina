@@ -71,7 +71,6 @@ import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
 import SettingsNetworks from '../settings/networks';
-import SettingsAbout from '../settings/about';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 

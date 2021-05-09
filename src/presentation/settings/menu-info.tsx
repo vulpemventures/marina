@@ -1,10 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import ShellPopUp from '../components/shell-popup';
-import {
-  SETTINGS_CREDITS_ROUTE,
-  SETTINGS_TERMS_ROUTE,
-} from '../routes/constants';
+import { SETTINGS_CREDITS_ROUTE, SETTINGS_TERMS_ROUTE } from '../routes/constants';
 
 const SettingsMenuInfo: React.FC = () => {
   const history = useHistory();
