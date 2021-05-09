@@ -168,7 +168,7 @@ export default class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
-                const addrs = xpub.getAddresses();
+                const addrs = await xpub.getAddresses();
                 return handleResponse(id, addrs);
               } catch (e: any) {
                 return handleError(id, e);
