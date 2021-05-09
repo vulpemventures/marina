@@ -69,8 +69,8 @@ const TermsOfService: React.FC = () => {
         <br />
         It is your responsibility to carefully guard your mnemonics and password and any other means
         we may provide for you to secure and access your Wallet. If you forget or lose your means of
-        authentication Marina has no way to recover them for you and you may permanently lose
-        access to any funds you have stored in your Wallet.
+        authentication Marina has no way to recover them for you and you may permanently lose access
+        to any funds you have stored in your Wallet.
       </p>
 
       <h2 className="font-regular my-8 text-base text-left">5. Accuracy of materials</h2>
