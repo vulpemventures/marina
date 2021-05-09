@@ -6,7 +6,7 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { AppContext } from '../../../application/store/context';
-import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
+import { INITIALIZE_SEED_PHRASE_ROUTE, SETTINGS_TERMS_ROUTE } from '../../routes/constants';
 import { DispatchOrThunk } from '../../../domain/common';
 import { setPassword } from '../../../application/store/actions/onboarding';
 
@@ -88,10 +88,7 @@ const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
             type="checkbox"
           />
           {'I’ve read and accept the '}
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-          <a className="text-primary" href="#">
-            terms and conditions
-          </a>
+          <OpenTerms />
         </label>
         {errors.acceptTerms && touched.acceptTerms && (
           <p className="text-red h-10 mt-2 text-xs">{errors.acceptTerms}</p>
@@ -139,6 +136,26 @@ const WalletCreate: React.FC<WalletCreateFormProps> = () => {
       <h1 className="mb-5 text-3xl font-medium">Create password</h1>
       <WalletCreateEnhancedForm dispatch={dispatch} history={history} />
     </Shell>
+  );
+};
+
+const OpenTerms: React.FC = () => {
+  const history = useHistory();
+
+  const handleClick = (e: any) => {
+    e.preventDefault();
+
+    history.push({
+      pathname: SETTINGS_TERMS_ROUTE,
+      state: { isFullScreen: true },
+    });
+  };
+
+  return (
+    /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
+    <a className="text-primary" href="#" onClick={handleClick}>
+      terms os service
+    </a>
   );
 };
 

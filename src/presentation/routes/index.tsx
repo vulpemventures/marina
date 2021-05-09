@@ -29,7 +29,6 @@ import {
   SETTINGS_CURRENCY_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
-  SETTINGS_ABOUT_ROUTE,
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SEND_END_OF_FLOW_ROUTE,
@@ -72,7 +71,6 @@ import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
 import SettingsNetworks from '../settings/networks';
-import SettingsAbout from '../settings/about';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 
@@ -107,9 +105,8 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} comp={SettingsCurrency} />
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
-      <ProtectedRoute exact path={SETTINGS_ABOUT_ROUTE} comp={SettingsAbout} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
-      <ProtectedRoute exact path={SETTINGS_TERMS_ROUTE} comp={SettingsTerms} />
+      <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
       {/*Connect*/}
