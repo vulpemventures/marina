@@ -29,7 +29,6 @@ import {
   SETTINGS_CURRENCY_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
-  SETTINGS_ABOUT_ROUTE,
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SEND_END_OF_FLOW_ROUTE,
@@ -107,7 +106,6 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} comp={SettingsCurrency} />
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
-      <ProtectedRoute exact path={SETTINGS_ABOUT_ROUTE} comp={SettingsAbout} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_TERMS_ROUTE} comp={SettingsTerms} />
       {/*Login*/}

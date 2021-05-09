@@ -42,7 +42,6 @@ const SETTINGS_EXPLORER_ROUTE = '/settings/settings/explorer';
 const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
 //
 const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
-const SETTINGS_ABOUT_ROUTE = '/settings/info/about';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 
@@ -83,7 +82,6 @@ export {
   SETTINGS_CURRENCY_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
-  SETTINGS_ABOUT_ROUTE,
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
 };
