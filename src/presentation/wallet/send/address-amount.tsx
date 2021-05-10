@@ -38,8 +38,6 @@ interface AddressAmountFormProps {
   state: IAppState;
 }
 
-
-
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
   const { errors, handleChange, handleBlur, handleSubmit, isSubmitting, touched, values } = props;
 
@@ -155,7 +153,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return (
             value !== undefined &&
-            value <= fromSatoshi(props.balances[props.state.transaction.asset], props.assetPrecision)
+            value <=
+              fromSatoshi(props.balances[props.state.transaction.asset], props.assetPrecision)
           );
         }),
     }),
@@ -183,14 +182,20 @@ const AddressAmount: React.FC = () => {
   const [state, dispatch] = useContext(AppContext);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
-  const assetPrecision = state.assets[state.app.network.value][state.transaction.asset]?.precision ?? '';
+  const assetPrecision =
+    state.assets[state.app.network.value][state.transaction.asset]?.precision ?? '';
 
   const handleBackBtn = () => {
     dispatch(
       flushTx(() => {
         history.push({
           pathname: TRANSACTIONS_ROUTE,
-          state: { assetHash: state.transaction.asset, assetTicker, assetPrecision, assetsBalance: balances },
+          state: {
+            assetHash: state.transaction.asset,
+            assetTicker,
+            assetPrecision,
+            assetsBalance: balances,
+          },
         });
       })
     );
