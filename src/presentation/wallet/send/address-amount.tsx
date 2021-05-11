@@ -21,7 +21,7 @@ import {
   nextAddressForWallet,
 } from '../../../application/utils';
 import { Address } from '../../../domain/wallet/value-objects';
-import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
+import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../../utils';
 
 interface AddressAmountFormValues {
   address: string;
@@ -32,6 +32,7 @@ interface AddressAmountFormValues {
 
 interface AddressAmountFormProps {
   balances: { [assetHash: string]: number };
+  assetPrecision: number;
   dispatch(param: DispatchOrThunk): any;
   history: RouteComponentProps['history'];
   state: IAppState;
@@ -145,14 +146,15 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
       amount: Yup.number()
         .required('Please enter a valid amount')
-        .min(0.00000001, 'Amount should be at least 1 satoshi')
+        .min(getMinAmountFromPrecision(props.assetPrecision), 'Amount should be at least 1 satoshi')
         .test('too-many-digits', 'Too many digits', (value) => {
           return value !== undefined && value.toString().length < 14;
         })
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return (
             value !== undefined &&
-            value <= fromSatoshi(props.balances[props.state.transaction.asset])
+            value <=
+              fromSatoshi(props.balances[props.state.transaction.asset], props.assetPrecision)
           );
         }),
     }),
@@ -180,13 +182,20 @@ const AddressAmount: React.FC = () => {
   const [state, dispatch] = useContext(AppContext);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
+  const assetPrecision =
+    state.assets[state.app.network.value][state.transaction.asset]?.precision ?? '';
 
   const handleBackBtn = () => {
     dispatch(
       flushTx(() => {
         history.push({
           pathname: TRANSACTIONS_ROUTE,
-          state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
+          state: {
+            assetHash: state.transaction.asset,
+            assetTicker,
+            assetPrecision,
+            assetsBalance: balances,
+          },
         });
       })
     );
@@ -206,7 +215,7 @@ const AddressAmount: React.FC = () => {
     >
       <Balance
         assetHash={state.transaction.asset}
-        assetBalance={formatDecimalAmount(fromSatoshi(balances[state.transaction.asset] ?? 0))}
+        assetBalance={fromSatoshi(balances[state.transaction.asset] ?? 0, assetPrecision)}
         assetImgPath={
           state.app.network.value === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
@@ -223,6 +232,7 @@ const AddressAmount: React.FC = () => {
         history={history}
         state={state}
         balances={balances}
+        assetPrecision={assetPrecision}
       />
     </ShellPopUp>
   );

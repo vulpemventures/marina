@@ -61,3 +61,7 @@ export const formatAssetName = (name?: string): string => {
   }
   return assetName;
 };
+
+export const getMinAmountFromPrecision = (precision: number) => {
+  return 1 * Math.pow(10, -precision);
+};
