@@ -9,6 +9,7 @@ import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes
 import { AppContext } from '../../../application/store/context';
 import {
   getAllAssetBalances,
+  setAddress,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
   setPendingTx,
@@ -130,11 +131,8 @@ const ChooseFee: React.FC = () => {
           try {
             const wallet: IWallet = { ...wallets[0] };
             const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-            dispatch(
-              setFeeChangeAddress(
-                Address.create(feeChangeAddress.value, feeChangeAddress.derivationPath)
-              )
-            );
+            dispatch(setFeeChangeAddress(feeChangeAddress));
+            dispatch(setAddress(feeChangeAddress));
           } catch (error) {
             console.log(error);
             setErrorMessage(error.message);
