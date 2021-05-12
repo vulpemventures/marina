@@ -1,3 +1,4 @@
+import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
 
 export interface OnboardingState {
@@ -7,14 +8,14 @@ export interface OnboardingState {
   restored: boolean;
 }
 
-export const onboardingInitState: OnboardingState = {
+const onboardingInitState: OnboardingState = {
   mnemonic: '',
   password: '',
   verified: false,
   restored: false,
 };
 
-export const onboardingReducer = (state: OnboardingState, [type, payload]: [string, any]): any => {
+export function onboardingReducer(state: OnboardingState = onboardingInitState, { type, payload }: AnyAction): OnboardingState {
   switch (type) {
     case ACTION_TYPES.ONBOARDING_SET_PASSWORD: {
       return {

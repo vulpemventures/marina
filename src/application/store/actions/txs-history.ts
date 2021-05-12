@@ -1,7 +1,6 @@
 import {
   INIT_TXS_HISTORY,
   TXS_HISTORY_SET_TXS_SUCCESS,
-  TXS_HISTORY_UPDATE_FAILURE,
 } from './action-types';
 import { Action, IAppState, Thunk } from '../../../domain/common';
 import {
@@ -102,7 +101,6 @@ export function updateTxsHistory(
       await repos.txsHistory.addTxsHistory(txs, app.network.value);
       onSuccess?.(txs);
     } catch (error) {
-      dispatch([TXS_HISTORY_UPDATE_FAILURE, { error }]);
       onError?.(error);
     }
   };

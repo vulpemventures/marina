@@ -1,8 +1,17 @@
+import { Network } from './../../../domain/app/value-objects/network';
 import { IApp } from '../../../domain/app/app';
-import * as ACTION_TYPES from '../actions/action-types';
 import { IError } from '../../../domain/common';
+import { AnyAction } from 'redux';
+import * as ACTION_TYPES from '../actions/action-types';
 
-export const appReducer = (state: IApp, [type, payload]: [string, any]): IApp => {
+const appInitState: IApp = {
+  isOnboardingCompleted: false,
+  isAuthenticated: false,
+  isWalletVerified: false,
+  network: Network.create((process.env.NETWORK || 'liquid') as Network['value']),
+}
+
+export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
   switch (type) {
     case ACTION_TYPES.INIT_APP: {
       return {

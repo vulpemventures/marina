@@ -4,7 +4,6 @@ import { Action, IAppState, Thunk } from '../../../domain/common';
 import {
   ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
   ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
-  ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE,
   ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
   INIT_ASSETS,
 } from './action-types';
@@ -123,7 +122,6 @@ export function updateAllAssetInfos(
         onSuccess?.(assets);
       }
     } catch (error) {
-      dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE, { error }]);
       onError?.(error);
     }
   };
@@ -144,7 +142,6 @@ export function updateAllAssetInfosFromStorage(
       dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, { assets: assetsFromRepo }]);
       onSuccess?.(assetsFromRepo);
     } catch (error) {
-      dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE, { error }]);
       onError?.(error);
     }
   };

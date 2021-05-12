@@ -1,8 +1,11 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { IError } from '../../../domain/common';
+import { AnyAction } from 'redux';
 
-export const walletReducer = (state: IWallet[], [type, payload]: [string, any]): IWallet[] => {
+export type WalletState = IWallet[];
+
+export function walletReducer(state: WalletState = [], { type, payload }: AnyAction): WalletState {
   switch (type) {
     case ACTION_TYPES.INIT_WALLET: {
       const firstWallet: IWallet = {
@@ -19,7 +22,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -34,6 +36,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_CREATE_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -42,7 +45,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -58,6 +60,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_RESTORE_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -66,7 +69,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     case ACTION_TYPES.WALLET_DERIVE_ADDRESS_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -75,6 +77,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_DERIVE_ADDRESS_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -83,7 +86,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     case ACTION_TYPES.WALLET_SET_ADDRESS_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -100,7 +102,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     case ACTION_TYPES.WALLET_SET_PENDING_TX_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -108,6 +109,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_SET_PENDING_TX_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -115,6 +117,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_UNSET_PENDING_TX_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -122,6 +125,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_UNSET_PENDING_TX_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -130,7 +134,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     case ACTION_TYPES.WALLET_SET_UTXOS_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -139,6 +142,7 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       };
       return Object.assign([], state, [firstWallet]);
     }
+
     case ACTION_TYPES.WALLET_SET_UTXOS_FAILURE: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -147,7 +151,6 @@ export const walletReducer = (state: IWallet[], [type, payload]: [string, any]):
       return Object.assign([], state, [firstWallet]);
     }
 
-    //
     default: {
       return state;
     }

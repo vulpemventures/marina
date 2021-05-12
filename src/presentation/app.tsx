@@ -16,6 +16,8 @@ import {
   initWallet,
 } from '../application/store/actions';
 import useLottieLoader from './hooks/use-lottie-loader';
+import { Provider } from 'react-redux';
+import { Store } from 'webext-redux';
 
 const App: React.FC = () => {
   const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
@@ -61,9 +63,9 @@ const App: React.FC = () => {
 
   return (
     <HashRouter hashType="noslash">
-      <AppContext.Provider value={[state, dispatch]}>
+      <Provider value={[state, dispatch]}>
         <Routes />
-      </AppContext.Provider>
+      </Provider>
     </HashRouter>
   );
 };

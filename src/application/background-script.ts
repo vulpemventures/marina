@@ -9,7 +9,6 @@ import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
-
 let welcomeTabID: number | undefined = undefined;
 
 /**

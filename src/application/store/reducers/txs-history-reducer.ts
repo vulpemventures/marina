@@ -1,10 +1,10 @@
 import * as ACTION_TYPES from '../actions/action-types';
-import { IError } from '../../../domain/common';
-import { TxsHistory, TxsHistoryByNetwork } from '../../../domain/transaction';
+import { TxsHistoryByNetwork } from '../../../domain/transaction';
+import { AnyAction } from 'redux';
 
-export const txsHistoryInitState: TxsHistoryByNetwork = { regtest: {}, liquid: {} };
+const txsHistoryInitState: TxsHistoryByNetwork = { regtest: {}, liquid: {} };
 
-export const txsHistoryReducer = (state: TxsHistory, [type, payload]: [string, any]): any => {
+export function txsHistoryReducer(state: TxsHistoryByNetwork = txsHistoryInitState, { type, payload }: AnyAction): TxsHistoryByNetwork {
   switch (type) {
     case ACTION_TYPES.INIT_TXS_HISTORY: {
       return {
@@ -24,14 +24,6 @@ export const txsHistoryReducer = (state: TxsHistory, [type, payload]: [string, a
       return { regtest: newRegtestTxsHistory, liquid: newLiquidTxsHistory };
     }
 
-    case ACTION_TYPES.TXS_HISTORY_UPDATE_FAILURE: {
-      return {
-        ...state,
-        errors: { message: payload.error.message } as IError,
-      };
-    }
-
-    //
     default:
       return state;
   }

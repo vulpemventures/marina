@@ -1,8 +1,8 @@
+import { AnyAction } from 'redux';
 import { AssetsByNetwork } from '../../../domain/asset';
-import { IError } from '../../../domain/common';
 import * as ACTION_TYPES from '../actions/action-types';
 
-export const assetInitState: AssetsByNetwork = {
+const assetInitState: AssetsByNetwork = {
   liquid: {
     ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2: {
       name: 'Tether USD',
@@ -24,18 +24,11 @@ export const assetInitState: AssetsByNetwork = {
   },
 };
 
-export const assetReducer = (state: AssetsByNetwork, [type, payload]: [string, any]): any => {
+export function assetReducer(state: AssetsByNetwork = assetInitState, { type, payload }: AnyAction): AssetsByNetwork {
   switch (type) {
     case ACTION_TYPES.ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS: {
       return payload.assets;
     }
-    case ACTION_TYPES.ASSET_UPDATE_ALL_ASSET_INFOS_FAILURE: {
-      return {
-        ...state,
-        errors: { assets: { message: payload.error.message } as IError },
-      };
-    }
-
     default:
       return state;
   }

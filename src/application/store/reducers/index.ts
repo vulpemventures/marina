@@ -1,38 +1,33 @@
-import combineReducers from 'react-combine-reducers';
-import { appReducer as reducer } from './app-reducer';
-import { assetInitState, assetReducer } from './asset-reducer';
-import { onboardingReducer, onboardingInitState } from './onboarding-reducer';
+import { assetReducer } from './asset-reducer';
+import { onboardingReducer } from './onboarding-reducer';
 import { walletReducer } from './wallet-reducer';
-import { IWallet } from '../../../domain/wallet/wallet';
-import { IApp } from '../../../domain/app/app';
-import { transactionInitState, transactionReducer } from './transaction-reducer';
-import { txsHistoryInitState, txsHistoryReducer } from './txs-history-reducer';
-import { Network } from '../../../domain/app/value-objects';
-import { devAppInitState, devWalletInitState } from '../../../../test/fixtures/initial-dev-state';
+import { transactionReducer } from './transaction-reducer';
+import { txsHistoryReducer } from './txs-history-reducer';
+import { combineReducers } from 'redux';
+import { appReducer } from './app-reducer';
 
-export let walletInitState: IWallet[];
-export let appInitState: IApp;
 
-if (process.env.SKIP_ONBOARDING) {
-  walletInitState = [devWalletInitState];
-  appInitState = devAppInitState;
-} else {
-  walletInitState = [];
-  appInitState = {
-    isOnboardingCompleted: false,
-    isAuthenticated: false,
-    isWalletVerified: false,
-    network: Network.create((process.env.NETWORK || 'liquid') as Network['value']),
-  };
-}
+// TODO : uncomment / remove 
+// if (process.env.SKIP_ONBOARDING) {
+//   walletInitState = [devWalletInitState];
+//   appInitState = devAppInitState;
+// } else {
+//   walletInitState = [];
+//   appInitState = {
+//     isOnboardingCompleted: false,
+//     isAuthenticated: false,
+//     isWalletVerified: false,
+//     network: Network.create((process.env.NETWORK || 'liquid') as Network['value']),
+//   };
+// }
 
-const [appReducer, appInitialState] = combineReducers({
-  app: [reducer, appInitState],
-  assets: [assetReducer, assetInitState],
-  onboarding: [onboardingReducer, onboardingInitState],
-  transaction: [transactionReducer, transactionInitState],
-  txsHistory: [txsHistoryReducer, txsHistoryInitState],
-  wallets: [walletReducer, walletInitState],
+const marinaReducer = combineReducers({
+  app: appReducer,
+  assets: assetReducer,
+  onboarding: onboardingReducer,
+  transaction: transactionReducer,
+  txsHistory: txsHistoryReducer,
+  wallets: walletReducer,
 });
 
-export { appReducer, appInitialState };
+export default marinaReducer;

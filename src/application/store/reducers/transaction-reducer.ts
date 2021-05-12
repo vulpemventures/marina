@@ -1,6 +1,7 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
 import { Address } from '../../../domain/wallet/value-objects';
+import { AnyAction } from 'redux';
 
 export interface TransactionState {
   asset: string;
@@ -13,7 +14,7 @@ export interface TransactionState {
   taxiTopup: TopupWithAssetReply.AsObject;
 }
 
-export const transactionInitState: TransactionState = {
+const transactionInitState: TransactionState = {
   asset: '',
   receipientAddress: undefined,
   changeAddress: undefined,
@@ -24,10 +25,10 @@ export const transactionInitState: TransactionState = {
   taxiTopup: {} as TopupWithAssetReply.AsObject,
 };
 
-export const transactionReducer = (
-  state: TransactionState,
-  [type, payload]: [string, any]
-): any => {
+export function transactionReducer(
+  state: TransactionState = transactionInitState,
+  { type, payload }: AnyAction
+): TransactionState {
   switch (type) {
     case ACTION_TYPES.PENDING_TX_SET_ASSET: {
       return {
@@ -77,7 +78,6 @@ export const transactionReducer = (
       };
     }
 
-    //
     default:
       return state;
   }
