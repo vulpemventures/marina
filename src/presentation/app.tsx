@@ -6,8 +6,6 @@ import { BrowserStorageAssetsRepo } from '../infrastructure/assets/browser-stora
 import { BrowserStorageConnectRepo } from '../infrastructure/connect/browser-storage-connect-repository';
 import { BrowserStorageTxsHistoryRepo } from '../infrastructure/txs-history/browser-storage-txs-history-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
-import { appInitialState, appReducer } from '../application/store/reducers';
-import { AppContext } from '../application/store/context';
 import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
 import {
   initApp,
@@ -16,8 +14,6 @@ import {
   initWallet,
 } from '../application/store/actions';
 import useLottieLoader from './hooks/use-lottie-loader';
-import { Provider } from 'react-redux';
-import { Store } from 'webext-redux';
 
 const App: React.FC = () => {
   const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
@@ -63,9 +59,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter hashType="noslash">
-      <Provider value={[state, dispatch]}>
-        <Routes />
-      </Provider>
+      <Routes />
     </HashRouter>
   );
 };

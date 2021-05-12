@@ -1,6 +1,4 @@
 import { App } from '../domain/app/app';
-import { appInitState, walletInitState } from '../application/store/reducers';
-import { assetInitState } from '../application/store/reducers/asset-reducer';
 import { IWallet, Wallet } from '../domain/wallet/wallet';
 import { Repositories } from '../domain/common';
 

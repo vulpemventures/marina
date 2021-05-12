@@ -6,10 +6,14 @@ import { repos } from '../infrastructure';
 import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
+import { wrapStore } from 'webext-redux';
+import marinaStore from './store/store';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
+
+wrapStore(marinaStore); // wrap store to proxy store
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
