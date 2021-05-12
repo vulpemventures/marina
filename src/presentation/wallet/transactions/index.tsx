@@ -176,7 +176,8 @@ const Transactions: React.FC = () => {
           <div>
             <p className="text-base font-medium">Amount</p>
             <p className="text-xs font-light">
-              {fromSatoshiStr(modalTxDetails?.amount ?? 0)} {state.assetTicker}
+              {fromSatoshiStr(modalTxDetails?.amount ?? 0, state.assetPrecision)}{' '}
+              {state.assetTicker}
             </p>
           </div>
           <div>

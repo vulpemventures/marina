@@ -15,6 +15,7 @@ import {
   setAddressesAndAmount,
 } from '../../../application/store/actions';
 import {
+  defaultPrecision,
   imgPathMapMainnet,
   imgPathMapRegtest,
   isValidAddressForNetwork,
@@ -27,6 +28,7 @@ interface AddressAmountFormValues {
   address: string;
   amount: number;
   assetTicker: string;
+  assetPrecision: number;
   balances: { [assetHash: string]: number };
 }
 
@@ -130,6 +132,9 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     assetTicker:
       props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
       '',
+    assetPrecision:
+      props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.precision ??
+      defaultPrecision,
     balances: props.balances,
   }),
 
@@ -166,7 +171,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       setAddressesAndAmount(
         Address.create(values.address),
         Address.create(changeAddress.value, changeAddress.derivationPath),
-        toSatoshi(values.amount)
+        toSatoshi(values.amount, values.assetPrecision)
       )
     );
     props.history.push({
@@ -183,7 +188,7 @@ const AddressAmount: React.FC = () => {
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
   const assetPrecision =
-    state.assets[state.app.network.value][state.transaction.asset]?.precision ?? '';
+    state.assets[state.app.network.value][state.transaction.asset]?.precision ?? defaultPrecision;
 
   const handleBackBtn = () => {
     dispatch(

@@ -30,8 +30,8 @@ export function decimalCount(num: number) {
   return 0;
 }
 
-export function toSatoshi(x: number, y: number = defaultPrecision): number {
-  return new Decimal(x).mul(Decimal.pow(10, y)).toNumber();
+export function toSatoshi(fractional: number, precision: number = defaultPrecision): number {
+  return new Decimal(fractional).mul(Decimal.pow(10, precision)).toNumber();
 }
 
 // Converting to string will trim trailing zeros

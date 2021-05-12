@@ -61,14 +61,16 @@ const Confirmation: React.FC = () => {
       <div className="bg-gradient-to-r from-secondary to-primary flex flex-row items-center justify-between h-12 px-4 mt-4 rounded-full">
         <span className="text-lg font-medium">Amount</span>
         <span className="text-base font-medium text-white">
-          {fromSatoshiStr(sendAmount)} {assets[app.network.value][sendAsset]?.ticker}
+          {fromSatoshiStr(sendAmount, assets[app.network.value][sendAsset]?.precision)}{' '}
+          {assets[app.network.value][sendAsset]?.ticker}
         </span>
       </div>
 
       <div className="flex flex-row items-end justify-between px-3 mt-10">
         <span className="text-lg font-medium">Fee</span>
         <span className="font-regular text-base">
-          {fromSatoshiStr(feeAmount)} {assets[app.network.value][feeAsset]?.ticker}
+          {fromSatoshiStr(feeAmount, assets[app.network.value][feeAsset]?.precision)}{' '}
+          {assets[app.network.value][feeAsset]?.ticker}
         </span>
       </div>
 
