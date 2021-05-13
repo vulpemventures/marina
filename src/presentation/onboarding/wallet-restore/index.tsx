@@ -1,14 +1,16 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory, RouteComponentProps } from 'react-router-dom';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../../application/store/context';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { DispatchOrThunk, IError } from '../../../domain/common';
+import { IError } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { setRestored } from '../../../application/store/actions/onboarding';
+import { ProxyStoreDispatch } from '../..';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../application/store/store';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -19,7 +21,7 @@ interface WalletRestoreFormValues {
 
 interface WalletRestoreFormProps {
   ctxErrors?: Record<string, IError>;
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
 }
 
@@ -154,8 +156,8 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
   const history = useHistory();
-  const [{ wallets }, dispatch] = useContext(AppContext);
-  const errors = wallets?.[0]?.errors;
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+  const errors = useSelector((state: RootState) => state.wallets[0]?.errors);
 
   return (
     <Shell>

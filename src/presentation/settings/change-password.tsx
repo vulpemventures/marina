@@ -1,13 +1,13 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../application/store/context';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
 import Input from '../components/input';
-import { DispatchOrThunk } from '../../domain/common';
 import { DEFAULT_ROUTE } from '../routes/constants';
+import { ProxyStoreDispatch } from '..';
+import { useDispatch } from 'react-redux';
 
 interface SettingsChangePasswordFormValues {
   currentPassword: string;
@@ -16,7 +16,7 @@ interface SettingsChangePasswordFormValues {
 }
 
 interface SettingsChangePasswordFormProps {
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
 }
 
@@ -111,7 +111,7 @@ const SettingsChangePasswordEnhancedForm = withFormik<
 
 const SettingsChangePassword: React.FC = () => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (
     <ShellPopUp

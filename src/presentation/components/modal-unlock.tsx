@@ -5,6 +5,7 @@ import Button from './button';
 import Input from './input';
 import Modal from './modal';
 import { DebouncedFunc } from 'lodash';
+
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
   password: string;

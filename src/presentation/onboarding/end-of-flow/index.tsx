@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import {
   createWallet,
+  onBoardingCompleted,
   restoreWallet,
   verifyWalletSuccess,
 } from '../../../application/store/actions';
-import { flush } from '../../../application/store/actions/onboarding';
+import { flushOnboarding } from '../../../application/store/actions/onboarding';
 import { OnboardingState } from '../../../application/store/reducers/onboarding-reducer';
 import { WalletState } from '../../../application/store/reducers/wallet-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
@@ -14,12 +16,12 @@ import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 
 export interface EndOfFlowProps {
-  dispatch: ProxyStoreDispatch;
   wallets: WalletState;
   onboarding: OnboardingState;
 }
 
-const EndOfFlow: React.FC<EndOfFlowProps> = ({ dispatch, wallets, onboarding }) => {
+const EndOfFlowView: React.FC<EndOfFlowProps> = ({ wallets, onboarding }) => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
 
   // Populate ref div with svg animation
@@ -28,19 +30,15 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ dispatch, wallets, onboarding }) 
 
   useEffect(() => {
     if (wallets.length <= 0) {
-      const onError = (err: Error) => console.log(err);
       const dispatchOnboardingCompleted = () => {
         // Startup alarms to fetch utxos & set the popup page
         (async () => {
           await provisionBackgroundScript();
         })().catch(console.error);
 
-        return dispatch(
-          onboardingComplete(() => {
-            dispatch(flush());
-            setIsLoading(false);
-          }, onError)
-        );
+        dispatch(onBoardingCompleted());
+        dispatch(flushOnboarding());
+        setIsLoading(false);
       };
       let creator = createWallet;
       if (onboarding.restored) {
@@ -58,7 +56,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ dispatch, wallets, onboarding }) 
               dispatchOnboardingCompleted();
             }
           },
-          onError
+          console.error
         )
       );
     }
@@ -82,4 +80,4 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ dispatch, wallets, onboarding }) 
   );
 };
 
-export default EndOfFlow;
+export default EndOfFlowView;

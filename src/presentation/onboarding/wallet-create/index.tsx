@@ -1,24 +1,19 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
 import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { AppContext } from '../../../application/store/context';
 import { INITIALIZE_SEED_PHRASE_ROUTE, SETTINGS_TERMS_ROUTE } from '../../routes/constants';
-import { DispatchOrThunk } from '../../../domain/common';
 import { setPassword } from '../../../application/store/actions/onboarding';
+import { ProxyStoreDispatch } from '../..';
+import { useDispatch } from 'react-redux';
 
 interface WalletCreateFormValues {
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
-}
-
-interface WalletCreateFormProps {
-  dispatch(param: DispatchOrThunk): any;
-  history: RouteComponentProps['history'];
 }
 
 const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
@@ -102,6 +97,11 @@ const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
   );
 };
 
+interface WalletCreateFormProps {
+  dispatch: ProxyStoreDispatch;
+  history: RouteComponentProps['history'];
+}
+
 const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateFormValues>({
   mapPropsToValues: (): WalletCreateFormValues => ({
     confirmPassword: '',
@@ -129,8 +129,9 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
 })(WalletCreateForm);
 
 const WalletCreate: React.FC<WalletCreateFormProps> = () => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+
   return (
     <Shell className="space-y-10">
       <h1 className="mb-5 text-3xl font-medium">Create password</h1>

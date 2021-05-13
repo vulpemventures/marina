@@ -1,9 +1,11 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { AppContext } from '../../application/store/context';
 import { flushTx, updateUtxosAssetsBalances } from '../../application/store/actions';
+import { useDispatch, useSelector } from 'react-redux';
+import { ProxyStoreDispatch } from '..';
+import { RootState } from '../../application/store/store';
 
 interface Props {
   backBtnCb?: () => void;
@@ -25,7 +27,9 @@ const ShellPopUp: React.FC<Props> = ({
   refreshCb,
 }: Props) => {
   const history = useHistory();
-  const [{ wallets }, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+  const wallet = useSelector((state: RootState) => state.wallets[0]);
+
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
@@ -36,7 +40,7 @@ const ShellPopUp: React.FC<Props> = ({
     if (history.location.pathname === '/') {
       dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
     }
-    if (wallets[0].pendingTx) {
+    if (wallet.pendingTx) {
       dispatch(flushTx(() => history.push(DEFAULT_ROUTE)));
     } else {
       history.push(DEFAULT_ROUTE);

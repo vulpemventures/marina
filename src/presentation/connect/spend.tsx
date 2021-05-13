@@ -1,15 +1,18 @@
-import React, { useRef, useContext, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import { AppContext } from '../../application/store/context';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../application/store/store';
 
 const ConnectSpend: React.FC = () => {
-  const [{ app, assets }] = useContext(AppContext);
+  const app = useSelector((state: RootState) => state.app);
+  const assets = useSelector((state: RootState) => state.assets);
+
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [tx, setTx] = useState<

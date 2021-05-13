@@ -1,14 +1,15 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
 import ShellPopUp from '../components/shell-popup';
 import Input from '../components/input';
-import { DispatchOrThunk } from '../../domain/common';
-import { AppContext } from '../../application/store/context';
 import Button from '../components/button';
 import { esploraURL } from '../utils';
 import { Network } from '../../domain/app/value-objects';
+import { ProxyStoreDispatch } from '..';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../application/store/store';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;
@@ -16,7 +17,7 @@ interface SettingsExplorerFormValues {
 }
 
 interface SettingsExplorerFormProps {
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
   network: Network['value'];
 }
@@ -87,7 +88,8 @@ const SettingsExplorerEnhancedForm = withFormik<
 
 const SettingsExplorer: React.FC = () => {
   const history = useHistory();
-  const [{ app }, dispatch] = useContext(AppContext);
+  const app = useSelector((state: RootState) => state.app);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (
     <ShellPopUp

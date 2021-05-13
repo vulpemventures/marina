@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react';
+import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
-import { AppContext } from '../../application/store/context';
+import { ProxyStoreDispatch } from '..';
 import { logOut } from '../../application/store/actions';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
@@ -16,7 +17,8 @@ interface Props {
 }
 const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const ref = useRef<HTMLDivElement | null>(null);
   useOnClickOutside(ref, useCallback(handleClose, [ref, handleClose]));
   const handleSecurity = () => history.push(SETTINGS_MENU_SECURITY_ROUTE);

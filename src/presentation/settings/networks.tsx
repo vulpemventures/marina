@@ -1,6 +1,8 @@
-import React, { useContext } from 'react';
-import { AppContext } from '../../application/store/context';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { ProxyStoreDispatch } from '..';
 import { changeNetwork } from '../../application/store/actions';
+import { RootState } from '../../application/store/store';
 import { Network } from '../../domain/app/value-objects';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
@@ -9,12 +11,9 @@ import { formatNetwork } from '../utils';
 const SettingsNetworks: React.FC = () => {
   const networks = ['liquid', 'regtest'];
   const formattedNetworks = networks.map((n) => formatNetwork(n));
-  const [
-    {
-      app: { network },
-    },
-    dispatch,
-  ] = useContext(AppContext);
+  const network = useSelector((state: RootState) => state.app.network);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const selectedNetwork = formatNetwork(network.value);
   const setSelectedValue = (net: Network['value']) =>
     dispatch(

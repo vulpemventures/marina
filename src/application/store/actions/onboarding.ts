@@ -29,6 +29,6 @@ export function setRestored(password: string, mnemonic: string): ThunkAction<voi
   };
 }
 
-export function flush(): AnyAction {
+export function flushOnboarding(): AnyAction {
   return { type: ONBOARDING_FLUSH }
 }

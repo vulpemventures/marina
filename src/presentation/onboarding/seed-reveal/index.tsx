@@ -7,14 +7,21 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { AppContext } from '../../../application/store/context';
 import { setMnemonic } from '../../../application/store/actions/onboarding';
 import RevealMnemonic from '../../components/reveal-mnemonic';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
+import { OnboardingState } from '../../../application/store/reducers/onboarding-reducer';
 
-const SeedReveal: React.FC = () => {
+export interface SeedRevealProps {
+  onboarding: OnboardingState;
+}
+
+const SeedRevealView: React.FC<SeedRevealProps> = ({ onboarding }) => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const history = useHistory();
   const [revealed, setRevealed] = useState(false);
-  const [{ onboarding }, dispatch] = useContext(AppContext);
 
   useEffect(() => {
     if (onboarding.mnemonic === '') {
@@ -51,4 +58,5 @@ const SeedReveal: React.FC = () => {
     </Shell>
   );
 };
-export default SeedReveal;
+
+export default SeedRevealView;

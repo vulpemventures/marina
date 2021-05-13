@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import cx from 'classnames';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../utils';
-import { AppContext } from '../../application/store/context';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../application/store/store';
 
 interface Props {
   assetBalance: string | number;
@@ -23,7 +24,8 @@ const Balance: React.FC<Props> = ({
   assetTicker,
   assetHash,
 }) => {
-  const [{ app }] = useContext(AppContext);
+  const network = useSelector((state: RootState) => state.app.network);
+
   /* let formattedFiatBalance;
   if (fiatCurrency === '$') {
     formattedFiatBalance = `$${fiatBalance} USD`;
@@ -33,7 +35,7 @@ const Balance: React.FC<Props> = ({
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[app.network.value]}/asset/${assetHash}`,
+      url: `${esploraURL[network.value]}/asset/${assetHash}`,
       active: false,
     });
 
