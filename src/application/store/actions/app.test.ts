@@ -1,12 +1,6 @@
-import { changeNetwork, initApp, logIn, logOut, onboardingComplete, verifyWallet } from './app';
+import { changeNetwork, logIn, logOut, onboardingComplete, verifyWallet } from './app';
 import { Network } from '../../../domain/app/value-objects';
 import { repos } from '../../../infrastructure';
-import { appInitialState, appReducer } from '../reducers';
-import { assetInitState } from '../reducers/asset-reducer';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
-import { transactionInitState } from '../reducers/transaction-reducer';
-import { txsHistoryInitState } from '../reducers/txs-history-reducer';
-import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
 import { testWallet } from '../../../../test/fixtures/test-wallet';
 import {
   testAppDTO,

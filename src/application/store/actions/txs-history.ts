@@ -1,8 +1,9 @@
+import { ThunkAction } from 'redux-thunk';
+import { AnyAction } from 'redux';
 import {
-  INIT_TXS_HISTORY,
   TXS_HISTORY_SET_TXS_SUCCESS,
 } from './action-types';
-import { Action, IAppState, Thunk } from '../../../domain/common';
+import { IAppState } from '../../../domain/common';
 import {
   BlindingKeyGetter,
   fetchAndUnblindTxsGenerator,
@@ -12,16 +13,9 @@ import {
   networks,
 } from 'ldk';
 import { explorerApiUrl, IdentityRestorerFromState } from '../../utils';
-import { TxsHistory, TxsHistoryByNetwork } from '../../../domain/transaction';
+import { TxsHistory } from '../../../domain/transaction';
 import { address as addressLDK } from 'liquidjs-lib';
-
-export function initTxsHistoryByNetwork(
-  txsHistoryByNetwork: TxsHistoryByNetwork
-): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([INIT_TXS_HISTORY, { ...txsHistoryByNetwork }]);
-  };
-}
+import { RootState } from '../store';
 
 /**
  * Update transaction history of current network
@@ -31,8 +25,8 @@ export function initTxsHistoryByNetwork(
 export function updateTxsHistory(
   onSuccess?: (txs: TxsHistory) => void,
   onError?: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     try {
       const { app, txsHistory, wallets } = getState();
       // Initialize txs to txsHistory shallow clone
@@ -94,11 +88,9 @@ export function updateTxsHistory(
         const tx = it.value;
         // Update all txsHistory state at each single new tx
         txs[tx.txid] = tx;
-        dispatch([TXS_HISTORY_SET_TXS_SUCCESS, { txs, network: app.network.value }]);
+        dispatch({ type: TXS_HISTORY_SET_TXS_SUCCESS, payload: { txs, network: app.network.value } });
         it = await next();
       }
-      // Update browser storage with all tx history of this network
-      await repos.txsHistory.addTxsHistory(txs, app.network.value);
       onSuccess?.(txs);
     } catch (error) {
       onError?.(error);

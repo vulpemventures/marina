@@ -24,11 +24,6 @@ export interface IError {
   stack: string;
 }
 
-// State Management
-export type Action<T = unknown> = [string, Record<string, T>?];
-
-export type Dispatch<A> = (value: A) => void;
-
 export type Repositories = {
   app: IAppRepository;
   assets: IAssetsRepository;
@@ -36,9 +31,3 @@ export type Repositories = {
   txsHistory: ITxsHistoryRepository;
   wallet: IWalletRepository;
 };
-
-export interface Thunk<S, A> {
-  (dispatch: Dispatch<A | Thunk<S, A>>, getState: () => S, repositories: Repositories): void;
-}
-
-export type DispatchOrThunk = Dispatch<Action> | Thunk<IAppState, Action>;

@@ -1,5 +1,6 @@
+import { ThunkAction } from 'redux-thunk';
+import { RootState } from './../store';
 import {
-  INIT_APP,
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
   VERIFICATION_SUCCESS,
@@ -11,105 +12,56 @@ import {
   CHANGE_NETWORK_SUCCESS,
   CHANGE_NETWORK_FAILURE,
 } from './action-types';
-import { Action, IAppState, Thunk } from '../../../domain/common';
-import { App, IApp } from '../../../domain/app/app';
+import { IAppState } from '../../../domain/common';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
 import { Network } from '../../../domain/app/value-objects';
 import { setIdleAction } from '../../utils/idle';
+import { ActionCreator, AnyAction } from 'redux';
 
-export function initApp(app: IApp): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([INIT_APP, { ...app }]);
-  };
-}
+export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
+  type: VERIFICATION_SUCCESS,
+})
 
-export function verifyWallet(
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
-    try {
-      await repos.app.updateApp(
-        (app: App): App => {
-          app.props.isWalletVerified = true;
-          return app;
-        }
-      );
+export const verifyWalletFailure: ActionCreator<AnyAction> = (error: Error) => ({
+  type: VERIFICATION_FAILURE,
+  payload: { error }
+})
 
-      dispatch([VERIFICATION_SUCCESS]);
-      onSuccess();
-    } catch (error) {
-      dispatch([VERIFICATION_FAILURE, { error }]);
-      onError(error);
-    }
-  };
-}
+export const onBoardingCompleted = (): AnyAction => ({
+  type: ONBOARDING_COMPLETETED
+})
 
-export function onboardingComplete(
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
-    try {
-      await repos.app.updateApp(
-        (app: App): App => {
-          app.props.isOnboardingCompleted = true;
-          return app;
-        }
-      );
+export const onBoardingFailure = (error: Error): AnyAction => ({
+  type: ONBOARDING_FAILURE,
+  payload: { error }
+})
 
-      dispatch([ONBOARDING_COMPLETETED]);
-      onSuccess();
-    } catch (error) {
-      dispatch([ONBOARDING_FAILURE, { error }]);
-      onError(error);
-    }
-  };
-}
 
 export function logIn(
   password: string,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     try {
       const { wallets } = getState();
       if (wallets.length <= 0) {
-        throw new Error('Wallet does not exist');
+        throw ('Wallet does not exist');
       }
       const wallet = wallets[0];
-
       const h = hash(Password.create(password));
       if (wallet.passwordHash.value !== h.value) {
         throw new Error('Invalid password');
       }
 
-      await repos.app.updateApp(
-        (app: App): App => {
-          app.props.isAuthenticated = true;
-          return app;
-        }
-      );
-
-      dispatch([AUTHENTICATION_SUCCESS]);
-
+      dispatch({ type: AUTHENTICATION_SUCCESS });
       setIdleAction(() => {
-        repos.app
-          .updateApp(
-            (app: App): App => {
-              app.props.isAuthenticated = false;
-              return app;
-            }
-          )
-          .then(() => dispatch([LOGOUT_SUCCESS]))
-          .catch(console.error);
+        dispatch({ type: LOGOUT_SUCCESS });
       });
-
       onSuccess();
     } catch (error) {
-      dispatch([AUTHENTICATION_FAILURE, { error }]);
+      dispatch({ type: AUTHENTICATION_FAILURE, payload: { error } });
       onError(error);
     }
   };
@@ -118,20 +70,13 @@ export function logIn(
 export function logOut(
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, _, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch) => {
     try {
-      await repos.app.updateApp(
-        (app: App): App => {
-          app.props.isAuthenticated = false;
-          return app;
-        }
-      );
-
-      dispatch([LOGOUT_SUCCESS]);
+      dispatch({ type: LOGOUT_SUCCESS });
       onSuccess();
     } catch (error) {
-      dispatch([LOGOUT_FAILURE, { error }]);
+      dispatch({ type: LOGOUT_FAILURE, payload: { error } });
       onError(error);
     }
   };
@@ -141,20 +86,13 @@ export function changeNetwork(
   network: Network,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, _, repos) => {
+): ThunkAction<void, IAppState, void, AnyAction> {
+  return async (dispatch) => {
     try {
-      await repos.app.updateApp(
-        (app: App): App => {
-          app.props.network = network;
-          return app;
-        }
-      );
-
-      dispatch([CHANGE_NETWORK_SUCCESS, { network }]);
+      dispatch({ type: CHANGE_NETWORK_SUCCESS, payload: { network } });
       onSuccess();
     } catch (error) {
-      dispatch([CHANGE_NETWORK_FAILURE, { error }]);
+      dispatch({ type: CHANGE_NETWORK_FAILURE, payload: { error } });
       onError(error);
     }
   };

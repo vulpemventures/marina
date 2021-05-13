@@ -1,7 +1,9 @@
+import { ThunkAction } from 'redux-thunk';
 import { AddressInterface, fetchAndUnblindUtxos, isBlindedUtxo, UtxoInterface } from 'ldk';
-import { Action, IAppState, Thunk } from '../../../domain/common';
 import { explorerApiUrl, toStringOutpoint } from '../../utils';
 import { WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './action-types';
+import { AnyAction } from 'redux';
+import { RootState } from '../store';
 
 /**
  * Check that utxoMapStore and fetchedUtxos have the same set of utxos
@@ -32,8 +34,8 @@ export function setUtxos(
   addressesWithBlindingKeys: AddressInterface[],
   onSuccess?: () => void,
   onError?: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     const { app, wallets } = getState();
     const newMap = new Map(wallets[0].utxoMap);
     try {
@@ -68,32 +70,10 @@ export function setUtxos(
         if (!isPresent) newMap.delete(storedUtxoOutpoint);
       });
 
-      await repos.wallet.setUtxos(newMap);
-      dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: newMap }]);
+      dispatch({ type: WALLET_SET_UTXOS_SUCCESS, payload: { utxoMap: newMap } });
       onSuccess?.();
     } catch (error) {
-      dispatch([WALLET_SET_UTXOS_FAILURE, { error }]);
-      onError?.(error);
-    }
-  };
-}
-
-/**
- * Set utxos to store from browser storage
- * @param onSuccess
- * @param onError
- */
-export function setUtxosFromStorage(
-  onSuccess?: () => void,
-  onError?: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
-    try {
-      const utxoMapFromRepo = await repos.wallet.getUtxos();
-      dispatch([WALLET_SET_UTXOS_SUCCESS, { utxoMap: utxoMapFromRepo }]);
-      onSuccess?.();
-    } catch (error) {
-      dispatch([WALLET_SET_UTXOS_FAILURE, { error }]);
+      dispatch({ type: WALLET_SET_UTXOS_FAILURE, payload: { error } });
       onError?.(error);
     }
   };

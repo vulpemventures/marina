@@ -1,79 +1,13 @@
 import axios from 'axios';
 import { Assets, AssetsByNetwork } from '../../../domain/asset';
-import { Action, IAppState, Thunk } from '../../../domain/common';
+import { IAppState } from '../../../domain/common';
 import {
-  ASSET_GET_ALL_ASSET_BALANCES_FAILURE,
-  ASSET_GET_ALL_ASSET_BALANCES_SUCCESS,
   ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
-  INIT_ASSETS,
 } from './action-types';
-import { explorerApiUrl, lbtcAssetByNetwork } from '../../utils';
-
-export function initAssets(assets: AssetsByNetwork): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([INIT_ASSETS, { ...assets }]);
-  };
-}
-
-/**
- * Extract balances from all unblinded utxos in state
- * @param onSuccess
- * @param onError
- */
-export function getAllAssetBalances(
-  onSuccess: (balances: { [assetHash: string]: number }) => void,
-  onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return (dispatch, getState) => {
-    const { app, wallets } = getState();
-    const balances = Array.from(wallets[0].utxoMap.values()).reduce((acc, curr) => {
-      if (!curr.asset || !curr.value) {
-        dispatch([ASSET_GET_ALL_ASSET_BALANCES_FAILURE]);
-        onError(new Error(`Missing utxo info. Asset: ${curr.asset}, Value: ${curr.value}`));
-        return acc;
-      }
-      let value = curr.value;
-      if (curr.asset in acc) {
-        // If multiple utxos of the same asset then add their values
-        value = acc[curr.asset] + curr.value;
-      }
-      acc = { ...acc, [curr.asset]: value };
-      return acc;
-    }, {} as { [assetHash: string]: number });
-
-    if (Object.keys(balances).length === 0) {
-      const lbtcHash = lbtcAssetByNetwork(app.network.value);
-      onSuccess({ [lbtcHash]: 0 });
-    } else {
-      onSuccess(balances);
-    }
-    // Dispatch event simply for debugging. No balance state is kept outside utxos
-    dispatch([ASSET_GET_ALL_ASSET_BALANCES_SUCCESS]);
-  };
-}
-
-/**
- * Get L-BTC balance
- * @param onSuccess
- * @param onError
- */
-export function getLiquidBitcoinBalance(
-  onSuccess: (balance: number) => void,
-  onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return (dispatch, getState) => {
-    const { app, wallets } = getState();
-    const balance =
-      [...wallets[0].utxoMap.values()].find(
-        (utxo) => utxo.asset === lbtcAssetByNetwork(app.network.value)
-      )?.value ?? 0;
-    if (balance) {
-      onSuccess(balance / Math.pow(10, 8));
-    } else {
-      onError(new Error('Cannot fetch L-BTC balance'));
-    }
-  };
-}
+import { explorerApiUrl } from '../../utils';
+import { AnyAction } from 'redux';
+import { RootState } from '../store';
+import { ThunkAction } from 'redux-thunk';
 
 /**
  * Update stored asset's info for all assets in wallet
@@ -83,8 +17,8 @@ export function getLiquidBitcoinBalance(
 export function updateAllAssetInfos(
   onSuccess?: (assetInfos: AssetsByNetwork) => void,
   onError?: (err: Error) => void
-): Thunk<IAppState, Action<AssetsByNetwork>> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     try {
       const { app, assets, wallets } = getState();
       const assetsFromUtxos: Assets = await Promise.all(
@@ -115,32 +49,11 @@ export function updateAllAssetInfos(
           assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };
         }
         const newAssets: AssetsByNetwork = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
-        await repos.assets.updateAssets(() => newAssets);
-        dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, { assets: newAssets }]);
+        dispatch({ type: ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, payload: { assets: newAssets } });
         onSuccess?.(newAssets);
       } else {
         onSuccess?.(assets);
       }
-    } catch (error) {
-      onError?.(error);
-    }
-  };
-}
-
-/**
- * Update stored asset's info for all assets in wallet from storage
- * @param onSuccess
- * @param onError
- */
-export function updateAllAssetInfosFromStorage(
-  onSuccess?: (assetInfos: AssetsByNetwork) => void,
-  onError?: (err: Error) => void
-): Thunk<IAppState, Action<AssetsByNetwork>> {
-  return async (dispatch, getState, repos) => {
-    try {
-      const assetsFromRepo = await repos.assets.getAssets();
-      dispatch([ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, { assets: assetsFromRepo }]);
-      onSuccess?.(assetsFromRepo);
     } catch (error) {
       onError?.(error);
     }

@@ -5,36 +5,30 @@ import {
   ONBOARDING_SET_RESTORED,
   ONBOARDING_FLUSH,
 } from './action-types';
-import { Action, IAppState, Thunk } from '../../../domain/common';
+import { AnyAction } from 'redux';
+import { ThunkAction } from 'redux-thunk';
+import { RootState } from '../store';
 
-export function setPassword(password: string): Thunk<IAppState, Action> {
+export function setPassword(password: string): AnyAction {
+  return { type: ONBOARDING_SET_PASSWORD, payload: { password } }
+}
+
+export function setMnemonic(mnemonic: string): AnyAction {
+  return { type: ONBOARDING_SET_MNEMONIC, payload: { mnemonic } };
+}
+
+export function setVerified(): AnyAction {
+  return { type: ONBOARDING_SET_VERIFIED }
+};
+
+export function setRestored(password: string, mnemonic: string): ThunkAction<void, RootState, void, AnyAction> {
   return (dispatch) => {
-    dispatch([ONBOARDING_SET_PASSWORD, { password }]);
+    dispatch({ type: ONBOARDING_SET_PASSWORD, payload: { password } });
+    dispatch({ type: ONBOARDING_SET_MNEMONIC, payload: { mnemonic } });
+    dispatch({ type: ONBOARDING_SET_RESTORED });
   };
 }
 
-export function setMnemonic(mnemonic: string): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([ONBOARDING_SET_MNEMONIC, { mnemonic }]);
-  };
-}
-
-export function setVerified(): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([ONBOARDING_SET_VERIFIED]);
-  };
-}
-
-export function setRestored(password: string, mnemonic: string): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([ONBOARDING_SET_PASSWORD, { password }]);
-    dispatch([ONBOARDING_SET_MNEMONIC, { mnemonic }]);
-    dispatch([ONBOARDING_SET_RESTORED]);
-  };
-}
-
-export function flush(): Thunk<IAppState, Action> {
-  return (dispatch) => {
-    dispatch([ONBOARDING_FLUSH]);
-  };
+export function flush(): AnyAction {
+  return { type: ONBOARDING_FLUSH }
 }

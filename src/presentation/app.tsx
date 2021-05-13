@@ -7,12 +7,7 @@ import { BrowserStorageConnectRepo } from '../infrastructure/connect/browser-sto
 import { BrowserStorageTxsHistoryRepo } from '../infrastructure/txs-history/browser-storage-txs-history-repository';
 import { BrowserStorageWalletRepo } from '../infrastructure/wallet/browser/browser-storage-wallet-repository';
 import useThunkReducer from '../application/store/reducers/use-thunk-reducer';
-import {
-  initApp,
-  initAssets,
-  initTxsHistoryByNetwork,
-  initWallet,
-} from '../application/store/actions';
+import { initAssets, initTxsHistoryByNetwork, initWallet } from '../application/store/actions';
 import useLottieLoader from './hooks/use-lottie-loader';
 
 const App: React.FC = () => {

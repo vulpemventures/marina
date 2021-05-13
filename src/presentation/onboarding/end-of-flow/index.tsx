@@ -1,19 +1,25 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ProxyStoreDispatch } from '../..';
 import {
   createWallet,
-  onboardingComplete,
   restoreWallet,
-  verifyWallet,
+  verifyWalletSuccess,
 } from '../../../application/store/actions';
 import { flush } from '../../../application/store/actions/onboarding';
-import { AppContext } from '../../../application/store/context';
+import { OnboardingState } from '../../../application/store/reducers/onboarding-reducer';
+import { WalletState } from '../../../application/store/reducers/wallet-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 
-const EndOfFlow: React.FC = () => {
-  const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
+export interface EndOfFlowProps {
+  dispatch: ProxyStoreDispatch;
+  wallets: WalletState;
+  onboarding: OnboardingState;
+}
+
+const EndOfFlow: React.FC<EndOfFlowProps> = ({ dispatch, wallets, onboarding }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Populate ref div with svg animation
@@ -40,13 +46,14 @@ const EndOfFlow: React.FC = () => {
       if (onboarding.restored) {
         creator = restoreWallet;
       }
+
       dispatch(
         creator(
           Password.create(onboarding.password),
           Mnemonic.create(onboarding.mnemonic),
           () => {
             if (onboarding.verified) {
-              dispatch(verifyWallet(dispatchOnboardingCompleted, onError));
+              dispatch(verifyWalletSuccess());
             } else {
               dispatchOnboardingCompleted();
             }

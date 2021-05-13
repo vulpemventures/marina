@@ -1,3 +1,5 @@
+import { RootState } from './../store';
+import { ThunkAction } from 'redux-thunk';
 import { EsploraIdentityRestorer, IdentityOpts, IdentityType, Mnemonic, UtxoInterface } from 'ldk';
 import {
   INIT_WALLET,
@@ -14,9 +16,7 @@ import {
   WALLET_UNSET_PENDING_TX_FAILURE,
   WALLET_UNSET_PENDING_TX_SUCCESS,
 } from './action-types';
-import { Action, IAppState, Thunk } from '../../../domain/common';
 import { encrypt, hash, nextAddressForWallet } from '../../utils';
-import { IWallet } from '../../../domain/wallet/wallet';
 import {
   Address,
   MasterBlindingKey,
@@ -25,28 +25,29 @@ import {
   Password,
 } from '../../../domain/wallet/value-objects';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
+import { AnyAction } from 'redux';
 
-export function initWallet(wallet: IWallet): Thunk<IAppState, Action> {
-  return (dispatch, getState) => {
-    const { wallets } = getState();
-    if (wallets.length <= 0) {
-      dispatch([INIT_WALLET, { ...wallet }]);
-    }
-  };
-}
+const walletAlreadyExistError = new Error(
+  'Wallet already exists. Remove the extension from the browser first to create a new one'
+);
 
+/**
+ * Create a new wallet and add it to store
+ * @param password 
+ * @param mnemonic 
+ * @param onSuccess 
+ * @param onError 
+ */
 export function createWallet(
   password: Password,
   mnemonic: Mnemo,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     const { app, wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-      throw new Error(
-        'Wallet already exists. Remove the extension from the browser first to create a new one'
-      );
+      throw walletAlreadyExistError;
     }
 
     try {
@@ -64,48 +65,44 @@ export function createWallet(
       const confidentialAddresses: Address[] = [];
       const utxoMap = new Map<string, UtxoInterface>();
 
-      await repos.wallet.getOrCreateWallet({
-        masterXPub,
-        masterBlindingKey,
-        encryptedMnemonic,
-        passwordHash,
-        confidentialAddresses,
-        utxoMap,
-      });
-
       // Update React state
-      dispatch([
-        WALLET_CREATE_SUCCESS,
-        {
+      const walletCreateSuccessAction: AnyAction = {
+        type: WALLET_CREATE_SUCCESS,
+        payload: {
           confidentialAddresses,
           encryptedMnemonic,
           masterXPub,
           masterBlindingKey,
           passwordHash,
           utxoMap,
-        },
-      ]);
-
+        }
+      }
+      dispatch(walletCreateSuccessAction);
       onSuccess();
     } catch (error) {
-      dispatch([WALLET_CREATE_FAILURE, { error }]);
+      dispatch({ type: WALLET_CREATE_FAILURE, payload: { error } });
       onError(error);
     }
   };
 }
 
+/**
+ * Restore wallet from existing mnemonic
+ * @param password 
+ * @param mnemonic 
+ * @param onSuccess 
+ * @param onError 
+ */
 export function restoreWallet(
   password: Password,
   mnemonic: Mnemo,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     const { app, wallets } = getState();
     if (wallets.length > 0 && wallets[0].encryptedMnemonic) {
-      throw new Error(
-        'Wallet already exists. Remove the extension from the browser first to create a new one'
-      );
+      throw walletAlreadyExistError
     }
 
     const chain = app.network.value;
@@ -140,18 +137,9 @@ export function restoreWallet(
 
       const utxoMap = new Map<string, UtxoInterface>();
 
-      await repos.wallet.getOrCreateWallet({
-        masterXPub,
-        masterBlindingKey,
-        encryptedMnemonic,
-        passwordHash,
-        confidentialAddresses,
-        utxoMap,
-      });
-
-      dispatch([
-        WALLET_RESTORE_SUCCESS,
-        {
+      dispatch({
+        type: WALLET_RESTORE_SUCCESS,
+        payload: {
           masterXPub,
           masterBlindingKey,
           encryptedMnemonic,
@@ -159,21 +147,27 @@ export function restoreWallet(
           confidentialAddresses,
           utxoMap,
         },
-      ]);
+      });
       onSuccess();
     } catch (error) {
-      dispatch([WALLET_RESTORE_FAILURE, { error }]);
+      dispatch({ type: WALLET_RESTORE_FAILURE, payload: { error } });
       onError(error);
     }
   };
 }
 
+/**
+ * Derive a new address and persist it in store
+ * @param change 
+ * @param onSuccess 
+ * @param onError 
+ */
 export function deriveNewAddress(
   change: boolean,
   onSuccess: (address: Address) => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     const { app, wallets } = getState();
     if (!wallets?.[0].masterXPub || !wallets?.[0].masterBlindingKey) {
       throw new Error('Cannot derive new address');
@@ -182,12 +176,11 @@ export function deriveNewAddress(
     try {
       const addr = await nextAddressForWallet(wallets[0], app.network.value, change);
       const address = Address.create(addr.value, addr.derivationPath);
-      await repos.wallet.addDerivedAddress(address);
       // Update React state
-      dispatch([WALLET_DERIVE_ADDRESS_SUCCESS, { address }]);
+      dispatch({ type: WALLET_DERIVE_ADDRESS_SUCCESS, payload: { address } });
       onSuccess(address);
     } catch (error) {
-      dispatch([WALLET_DERIVE_ADDRESS_FAILURE, { error }]);
+      dispatch({ type: WALLET_DERIVE_ADDRESS_FAILURE, payload: { error } });
       onError(error);
     }
   };
@@ -197,15 +190,13 @@ export function setAddress(
   address: Address,
   onSuccess?: (address: Address) => void,
   onError?: (error: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, _, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch) => {
     try {
-      // TODO: rename to addAddress()
-      await repos.wallet.addDerivedAddress(address);
-      dispatch([WALLET_SET_ADDRESS_SUCCESS, { address }]);
+      dispatch({ type: WALLET_SET_ADDRESS_SUCCESS, payload: { address } });
       onSuccess?.(address);
     } catch (error) {
-      dispatch([WALLET_SET_ADDRESS_FAILURE, { error }]);
+      dispatch({ type: WALLET_SET_ADDRESS_FAILURE, payload: { error } });
       onError?.(error);
     }
   };
@@ -215,18 +206,17 @@ export function setPendingTx(
   tx: Transaction,
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     const { wallets } = getState();
     if (wallets.length <= 0) {
       throw new Error('Wallet does not exist');
     }
     try {
-      await repos.wallet.setPendingTx(tx);
-      dispatch([WALLET_SET_PENDING_TX_SUCCESS, { pendingTx: tx }]);
+      dispatch({ type: WALLET_SET_PENDING_TX_SUCCESS, payload: { pendingTx: tx } });
       onSuccess();
     } catch (error) {
-      dispatch([WALLET_SET_PENDING_TX_FAILURE, { error }]);
+      dispatch({ type: WALLET_SET_PENDING_TX_FAILURE, payload: { error } });
       onError(error);
     }
   };
@@ -235,8 +225,8 @@ export function setPendingTx(
 export function unsetPendingTx(
   onSuccess: () => void,
   onError: (err: Error) => void
-): Thunk<IAppState, Action> {
-  return async (dispatch, getState, repos) => {
+): ThunkAction<void, RootState, void, AnyAction> {
+  return async (dispatch, getState) => {
     const { wallets } = getState();
     if (wallets.length <= 0) {
       throw new Error('Wallet does not exist');
@@ -246,11 +236,10 @@ export function unsetPendingTx(
       if (!wallet.pendingTx) {
         return;
       }
-      await repos.wallet.setPendingTx();
-      dispatch([WALLET_UNSET_PENDING_TX_SUCCESS]);
+      dispatch({ type: WALLET_UNSET_PENDING_TX_SUCCESS });
       onSuccess();
     } catch (error) {
-      dispatch([WALLET_UNSET_PENDING_TX_FAILURE, { error }]);
+      dispatch({ type: WALLET_UNSET_PENDING_TX_FAILURE, payload: { error } });
       onError(error);
     }
   };
