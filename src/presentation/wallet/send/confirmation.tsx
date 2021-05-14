@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useLocation, useHistory } from 'react-router';
-import { AppContext } from '../../../application/store/context';
+import { AppContext } from '../../../application/redux/context';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';

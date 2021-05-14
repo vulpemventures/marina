@@ -7,11 +7,11 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { setMnemonic } from '../../../application/store/actions/onboarding';
+import { setMnemonic } from '../../../application/redux/actions/onboarding';
 import RevealMnemonic from '../../components/reveal-mnemonic';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
-import { OnboardingState } from '../../../application/store/reducers/onboarding-reducer';
+import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 
 export interface SeedRevealProps {
   onboarding: OnboardingState;

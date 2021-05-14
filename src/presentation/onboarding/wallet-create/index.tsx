@@ -6,7 +6,7 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { INITIALIZE_SEED_PHRASE_ROUTE, SETTINGS_TERMS_ROUTE } from '../../routes/constants';
-import { setPassword } from '../../../application/store/actions/onboarding';
+import { setPassword } from '../../../application/redux/actions/onboarding';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
 

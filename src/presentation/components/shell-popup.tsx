@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { flushTx, updateUtxosAssetsBalances } from '../../application/store/actions';
+import { flushTx, updateUtxosAssetsBalances } from '../../application/redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '..';
-import { RootState } from '../../application/store/store';
+import { RootState } from '../../application/redux/store';
 
 interface Props {
   backBtnCb?: () => void;

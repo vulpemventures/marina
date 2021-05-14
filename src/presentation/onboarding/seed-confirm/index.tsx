@@ -4,10 +4,10 @@ import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { setVerified } from '../../../application/store/actions/onboarding';
+import { setVerified } from '../../../application/redux/actions/onboarding';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
-import { OnboardingState } from '../../../application/store/reducers/onboarding-reducer';
+import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 
 const NULL_ERROR = '';
 const ERROR_MSG = 'Invalid mnemonic';

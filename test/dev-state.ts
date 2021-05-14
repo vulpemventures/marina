@@ -1,5 +1,5 @@
 import { faucet, fetchUtxos, mint } from './_regtest';
-import { deriveNewAddress, setUtxos } from '../src/application/store/actions';
+import { deriveNewAddress, setUtxos } from '../src/application/redux/actions';
 import { xpubWalletFromAddresses } from '../src/application/utils';
 import { Thunk, IAppState, Action } from '../src/domain/common';
 import { Address } from '../src/domain/wallet/value-objects';

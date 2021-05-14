@@ -7,7 +7,7 @@ import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 import { wrapStore } from 'webext-redux';
-import marinaStore from './store/store';
+import marinaStore from './redux/store';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes

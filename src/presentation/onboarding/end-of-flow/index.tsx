@@ -6,10 +6,10 @@ import {
   onBoardingCompleted,
   restoreWallet,
   verifyWalletSuccess,
-} from '../../../application/store/actions';
-import { flushOnboarding } from '../../../application/store/actions/onboarding';
-import { OnboardingState } from '../../../application/store/reducers/onboarding-reducer';
-import { WalletState } from '../../../application/store/reducers/wallet-reducer';
+} from '../../../application/redux/actions';
+import { flushOnboarding } from '../../../application/redux/actions/onboarding';
+import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
+import { WalletState } from '../../../application/redux/reducers/wallet-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';

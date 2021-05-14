@@ -3,7 +3,7 @@ import cx from 'classnames';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../utils';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../application/store/store';
+import { RootState } from '../../application/redux/store';
 
 interface Props {
   assetBalance: string | number;

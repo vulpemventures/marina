@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import thunkMiddleware from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { applyMiddleware, Store } from 'webext-redux';
-import { RootState } from '../application/store/store';
+import { RootState } from '../application/redux/store';
 import App from './app';
 
 const store = new Store<RootState, AnyAction>(); // proxy store

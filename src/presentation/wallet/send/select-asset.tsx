@@ -4,8 +4,8 @@ import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants
 import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
-import { AppContext } from '../../../application/store/context';
-import { getAllAssetBalances, setAsset, unsetPendingTx } from '../../../application/store/actions';
+import { AppContext } from '../../../application/redux/context';
+import { getAllAssetBalances, setAsset, unsetPendingTx } from '../../../application/redux/actions';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 
 const SelectAsset: React.FC = () => {

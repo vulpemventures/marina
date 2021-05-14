@@ -6,8 +6,8 @@ import Button from '../../components/button';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
-import { deriveNewAddress, flushTx, setAddress } from '../../../application/store/actions';
+import { AppContext } from '../../../application/redux/context';
+import { deriveNewAddress, flushTx, setAddress } from '../../../application/redux/actions';
 import { Address } from '../../../domain/wallet/value-objects';
 
 interface LocationState {

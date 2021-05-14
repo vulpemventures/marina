@@ -9,7 +9,7 @@ import { esploraURL } from '../utils';
 import { Network } from '../../domain/app/value-objects';
 import { ProxyStoreDispatch } from '..';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../application/store/store';
+import { RootState } from '../../application/redux/store';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;

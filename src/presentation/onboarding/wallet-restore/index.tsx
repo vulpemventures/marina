@@ -7,10 +7,10 @@ import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { IError } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { setRestored } from '../../../application/store/actions/onboarding';
+import { setRestored } from '../../../application/redux/actions/onboarding';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../application/store/store';
+import { RootState } from '../../../application/redux/store';
 
 interface WalletRestoreFormValues {
   mnemonic: string;

@@ -3,7 +3,7 @@ import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
 import { broadcastTx, explorerApiUrl } from '../../../application/utils';
-import { AppContext } from '../../../application/store/context';
+import { AppContext } from '../../../application/redux/context';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { Address } from '../../../domain/wallet/value-objects';
 

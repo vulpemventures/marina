@@ -18,8 +18,8 @@ import {
   testTxsHistoryUpdated1,
 } from '../../test/fixtures/test-txs-history';
 import { testWallet, testWalletDTO, testWalletProps } from '../../test/fixtures/test-wallet';
-import { assetInitState } from '../application/store/reducers/asset-reducer';
-import { txsHistoryInitState } from '../application/store/reducers/txs-history-reducer';
+import { assetInitState } from '../application/redux/reducers/asset-reducer';
+import { txsHistoryInitState } from '../application/redux/reducers/txs-history-reducer';
 import { TxsHistoryByNetwork } from '../domain/transaction';
 import { repos } from './index';
 import { BrowserStorageTxsHistoryRepo } from './txs-history/browser-storage-txs-history-repository';

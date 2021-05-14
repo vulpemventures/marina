@@ -7,7 +7,7 @@ import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../application/store/store';
+import { RootState } from '../../application/redux/store';
 
 const ConnectSpend: React.FC = () => {
   const app = useSelector((state: RootState) => state.app);
