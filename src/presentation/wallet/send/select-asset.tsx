@@ -1,17 +1,29 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
-import { AppContext } from '../../../application/redux/context';
-import { getAllAssetBalances, setAsset, unsetPendingTx } from '../../../application/redux/actions';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { Network } from '../../../domain/app/value-objects';
+import { IWallet } from '../../../domain/wallet/wallet';
+import { AssetsByNetwork } from '../../../domain/asset';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
+import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import { setAsset } from '../../../application/redux/actions/transaction';
+import { unsetPendingTx } from '../../../application/redux/actions/wallet';
 
-const SelectAsset: React.FC = () => {
+export interface SelectAssetProps {
+  network: Network['value'];
+  wallet: IWallet;
+  assets: AssetsByNetwork;
+  balances: BalancesByAsset;
+}
+
+const SelectAsset: React.FC<SelectAssetProps> = ({ network, wallet, assets, balances }) => {
   const history = useHistory();
-  const [{ app, assets, wallets }, dispatch] = useContext(AppContext);
-  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -20,24 +32,17 @@ const SelectAsset: React.FC = () => {
   >([]);
 
   useEffect(() => {
-    dispatch(
-      getAllAssetBalances(
-        (balances) => setAssetsBalance(balances),
-        (error) => console.log(error)
-      )
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     const terms: [
       name: string,
       ticker: string,
       precision: number,
       index: number
-    ][] = Object.entries(
-      assets[app.network.value]
-    ).map(([hash, { name, ticker, precision }], index) => [name, ticker, precision, index]);
+    ][] = Object.entries(assets[network]).map(([_, { name, ticker, precision }], index) => [
+      name,
+      ticker,
+      precision,
+      index,
+    ]);
 
     const results = terms.filter((t) => {
       return (
@@ -59,7 +64,7 @@ const SelectAsset: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
   const handleBackBtn = () => {
-    if (wallets[0].pendingTx) {
+    if (wallet.pendingTx) {
       dispatch(
         unsetPendingTx(
           () => {
@@ -95,16 +100,15 @@ const SelectAsset: React.FC = () => {
           {searchResults.map((r) => (
             <ButtonAsset
               assetImgPath={
-                app.network.value === 'regtest'
+                network === 'regtest'
                   ? imgPathMapRegtest[r[1]] ?? imgPathMapRegtest['']
-                  : imgPathMapMainnet[Object.keys(assets[app.network.value])[r[3]]] ??
-                    imgPathMapMainnet['']
+                  : imgPathMapMainnet[Object.keys(assets[network])[r[3]]] ?? imgPathMapMainnet['']
               }
-              assetHash={Object.keys(assets[app.network.value])[r[3]]}
+              assetHash={Object.keys(assets[network])[r[3]]}
               assetName={r[0]}
               assetTicker={r[1]}
               assetPrecision={r[2]}
-              quantity={assetsBalance[Object.keys(assets[app.network.value])[r[3]]] ?? 0}
+              quantity={balances[Object.keys(assets[network])[r[3]]] ?? 0}
               key={`${r[1]}_${r[3]}`}
               handleClick={({ assetHash }) => handleSend(assetHash as string)}
             />

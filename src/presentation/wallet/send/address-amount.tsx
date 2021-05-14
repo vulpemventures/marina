@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
@@ -8,11 +8,6 @@ import { IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import {
-  flushTx,
-  getAllAssetBalances,
-  setAddressesAndAmount,
-} from '../../../application/redux/actions';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
@@ -24,6 +19,8 @@ import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../application/redux/store';
+import { flushTx, setAddressesAndAmount } from '../../../application/redux/actions/transaction';
+import { balances } from '../../../application/redux/selectors/balance.selector';
 
 interface AddressAmountFormValues {
   address: string;
@@ -181,9 +178,9 @@ const AddressAmount: React.FC = () => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const state = useSelector((state: RootState) => state);
+  const assetsBalance = useSelector(balances);
   const { assets, transaction, app } = state;
 
-  const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const assetTicker = assets[app.network.value][transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
@@ -191,16 +188,11 @@ const AddressAmount: React.FC = () => {
       flushTx(() => {
         history.push({
           pathname: TRANSACTIONS_ROUTE,
-          state: { assetHash: transaction.asset, assetTicker, assetsBalance: balances },
+          state: { assetHash: transaction.asset, assetTicker, assetsBalance },
         });
       })
     );
   };
-
-  useEffect(() => {
-    dispatch(getAllAssetBalances(setBalances, console.log));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <ShellPopUp
@@ -211,7 +203,7 @@ const AddressAmount: React.FC = () => {
     >
       <Balance
         assetHash={transaction.asset}
-        assetBalance={formatDecimalAmount(fromSatoshi(balances[transaction.asset] ?? 0))}
+        assetBalance={formatDecimalAmount(fromSatoshi(assetsBalance[transaction.asset] ?? 0))}
         assetImgPath={
           app.network.value === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
@@ -227,7 +219,7 @@ const AddressAmount: React.FC = () => {
         dispatch={dispatch}
         history={history}
         state={state}
-        balances={balances}
+        balances={assetsBalance}
       />
     </ShellPopUp>
   );

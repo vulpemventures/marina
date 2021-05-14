@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -6,18 +6,27 @@ import Button from '../../components/button';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/redux/context';
-import { deriveNewAddress, flushTx, setAddress } from '../../../application/redux/actions';
 import { Address } from '../../../domain/wallet/value-objects';
+import { Network } from '../../../domain/app/value-objects';
+import { IWallet } from '../../../domain/wallet/wallet';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
+import { flushTx } from '../../../application/redux/actions/transaction';
+import { deriveNewAddress, setAddress } from '../../../application/redux/actions/wallet';
 
 interface LocationState {
   changeAddress?: Address;
   txid: string;
 }
 
-const PaymentSuccess: React.FC = () => {
-  const [{ app, wallets }, dispatch] = useContext(AppContext);
+export interface PaymentSuccessProps {
+  network: Network['value'];
+  wallet: IWallet;
+}
+
+const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
   const { state } = useLocation<LocationState>();
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
 
   // Populate ref div with svg animation
@@ -26,7 +35,7 @@ const PaymentSuccess: React.FC = () => {
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[app.network.value]}/tx/${state.txid}`,
+      url: `${esploraURL[network]}/tx/${state.txid}`,
       active: false,
     });
 
@@ -41,7 +50,7 @@ const PaymentSuccess: React.FC = () => {
         setAddress(
           state.changeAddress,
           () => {
-            if (wallets[0].pendingTx?.props.feeAsset !== wallets[0].pendingTx?.props.sendAsset) {
+            if (wallet.pendingTx?.props.feeAsset !== wallet.pendingTx?.props.sendAsset) {
               dispatch(deriveNewAddress(true, onSuccess, console.error));
             } else {
               onSuccess();

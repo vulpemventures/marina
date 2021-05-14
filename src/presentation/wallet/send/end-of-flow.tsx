@@ -1,6 +1,5 @@
-import React, { useRef, useContext, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useHistory } from 'react-router';
-import { AppContext } from '../../../application/redux/context';
 import { Password } from '../../../domain/wallet/value-objects';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
@@ -15,12 +14,17 @@ import {
 } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
+import { IWallet } from '../../../domain/wallet/wallet';
+import { Network } from '../../../domain/app/value-objects';
 
-const EndOfFlow: React.FC = () => {
+export interface EndOfFlowProps {
+  wallet: IWallet;
+  network: Network['value'];
+}
+
+const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
   const history = useHistory();
-  const [{ wallets, app }] = useContext(AppContext);
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
-  const wallet = wallets[0];
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
@@ -33,17 +37,17 @@ const EndOfFlow: React.FC = () => {
       }
       const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
       const { props } = wallet.pendingTx!;
-      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, app.network.value);
+      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, network);
       tx = await blindAndSignPset(
         mnemonic,
         wallet.masterBlindingKey.value,
         wallet.confidentialAddresses,
-        app.network.value,
+        network,
         props.value,
         outputsToBlind,
         outPubkeys
       );
-      const txid = await broadcastTx(explorerApiUrl[app.network.value], tx);
+      const txid = await broadcastTx(explorerApiUrl[network], tx);
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
         state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },

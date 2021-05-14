@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
-import {
-  createWallet,
-  onBoardingCompleted,
-  restoreWallet,
-  verifyWalletSuccess,
-} from '../../../application/redux/actions';
+import { onBoardingCompleted, verifyWalletSuccess } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
+import { createWallet, restoreWallet } from '../../../application/redux/actions/wallet';
 import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 import { WalletState } from '../../../application/redux/reducers/wallet-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
@@ -20,7 +16,7 @@ export interface EndOfFlowProps {
   onboarding: OnboardingState;
 }
 
-const EndOfFlowView: React.FC<EndOfFlowProps> = ({ wallets, onboarding }) => {
+const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -80,4 +76,4 @@ const EndOfFlowView: React.FC<EndOfFlowProps> = ({ wallets, onboarding }) => {
   );
 };
 
-export default EndOfFlowView;
+export default EndOfFlowOnboardingView;

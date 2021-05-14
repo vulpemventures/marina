@@ -1,14 +1,13 @@
 import { connect } from "react-redux"
-import ChooseFeeView, { ChooseFeeProps } from "../../../presentation/wallet/send/choose-fee"
+import ConfirmationView, { ConfirmationProps } from "../../../presentation/wallet/send/confirmation"
 import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): ChooseFeeProps => ({
+const mapStateToProps = (state: RootState): ConfirmationProps => ({
   wallet: state.wallets[0],
   network: state.app.network.value,
-  transaction: state.transaction,
   assets: state.assets,
 })
 
-const ChooseFee = connect(mapStateToProps)(ChooseFeeView)
+const Confirmation = connect(mapStateToProps)(ConfirmationView)
 
-export default ChooseFee
+export default Confirmation

@@ -1,12 +1,12 @@
 import { connect } from "react-redux"
-import EndOfFlowView, { EndOfFlowProps } from "../../../presentation/onboarding/end-of-flow"
+import EndOfFlow, { EndOfFlowProps } from "../../../presentation/wallet/send/end-of-flow"
 import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): EndOfFlowProps => ({
-  wallets: state.wallets,
-  onboarding: state.onboarding,
+  wallet: state.wallets[0],
+  network: state.app.network.value,
 })
 
-const EndOfFlow = connect(mapStateToProps)(EndOfFlowView)
+const SendEndOfFlow = connect(mapStateToProps)(EndOfFlow)
 
-export default EndOfFlow
+export default SendEndOfFlow

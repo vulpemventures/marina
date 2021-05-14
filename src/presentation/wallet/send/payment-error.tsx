@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
 import { broadcastTx, explorerApiUrl } from '../../../application/utils';
-import { AppContext } from '../../../application/redux/context';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { Address } from '../../../domain/wallet/value-objects';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../application/redux/store';
 
 interface LocationState {
   changeAddress?: Address;
@@ -16,10 +17,10 @@ interface LocationState {
 const PaymentError: React.FC = () => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
-  const [{ app }] = useContext(AppContext);
+  const network = useSelector((state: RootState) => state.app.network.value);
 
   const handleRetry = () =>
-    broadcastTx(explorerApiUrl[app.network.value], state.tx)
+    broadcastTx(explorerApiUrl[network], state.tx)
       .then((txid) => {
         history.push({
           pathname: SEND_PAYMENT_SUCCESS_ROUTE,

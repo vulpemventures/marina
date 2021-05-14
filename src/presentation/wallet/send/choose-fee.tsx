@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
 import { browser } from 'webextension-polyfill-ts';
@@ -6,13 +6,6 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import {
-  getAllAssetBalances,
-  setFeeAssetAndAmount,
-  setFeeChangeAddress,
-  setPendingTx,
-  setTopup,
-} from '../../../application/redux/actions';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { Address } from '../../../domain/wallet/value-objects';
 import {
@@ -27,7 +20,6 @@ import {
   nextAddressForWallet,
   taxiURL,
   usdtAssetHash,
-  utxoMapToArray,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -37,6 +29,13 @@ import { AssetsByNetwork } from '../../../domain/asset';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
+import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import {
+  setFeeAssetAndAmount,
+  setFeeChangeAddress,
+  setTopup,
+} from '../../../application/redux/actions/transaction';
+import { setPendingTx } from '../../../application/redux/actions/wallet';
 
 interface LocationState {
   changeAddress: Address;
@@ -47,20 +46,26 @@ export interface ChooseFeeProps {
   assets: AssetsByNetwork;
   transaction: TransactionState;
   wallet: IWallet;
+  balances: BalancesByAsset;
 }
 
-const ChooseFeeView: React.FC<ChooseFeeProps> = ({ network, assets, transaction, wallet }) => {
+const ChooseFeeView: React.FC<ChooseFeeProps> = ({
+  network,
+  assets,
+  transaction,
+  wallet,
+  balances,
+}) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const { state } = useLocation<LocationState>();
+
   const [feeCurrency, setFeeCurrency] = useState<string>('');
   const [feeLevel, setFeeLevel] = useState<string>('');
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
-  //const [isWarningFee] = useState<boolean>(true);
-  const unspents = utxoMapToArray(wallet.utxoMap);
-  const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
+  const unspents = Array.from(wallet.utxoMap.values());
   const [errorMessage, setErrorMessage] = useState('');
 
   // Populate ref div with svg animations
@@ -89,11 +94,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({ network, assets, transaction,
     ],
     [transaction.amountInSatoshi, transaction.asset, transaction.receipientAddress]
   );
-
-  useEffect(() => {
-    dispatch(getAllAssetBalances(setBalances, (error) => setErrorMessage(error.message)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (supportedAssets.length <= 0) {
