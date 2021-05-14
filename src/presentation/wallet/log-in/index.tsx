@@ -2,19 +2,19 @@ import React, { useContext } from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../../application/store/context';
-import { logIn } from '../../../application/store/actions';
+import { logIn } from '../../../application/redux/actions';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
-import { DispatchOrThunk } from '../../../domain/common';
 import Input from '../../components/input';
+import { ProxyStoreDispatch } from '../..';
+import { useDispatch } from 'react-redux';
 
 interface LogInFormValues {
   password: string;
 }
 
 interface LogInFormProps {
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
 }
 
@@ -64,7 +64,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
 
 const LogIn: React.FC = () => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (
     <>

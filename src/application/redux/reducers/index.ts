@@ -1,11 +1,13 @@
 import { assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
-import { walletReducer } from './wallet-reducer';
+import { walletReducer, WalletState } from './wallet-reducer';
 import { transactionReducer } from './transaction-reducer';
 import { txsHistoryReducer } from './txs-history-reducer';
 import { combineReducers } from 'redux';
 import { appReducer } from './app-reducer';
-
+import { persistReducer } from 'redux-persist';
+import { localStorage } from 'redux-persist-webextension-storage'
+import { PersistConfig } from 'redux-persist/es/types';
 
 // TODO : uncomment / remove 
 // if (process.env.SKIP_ONBOARDING) {
@@ -21,13 +23,18 @@ import { appReducer } from './app-reducer';
 //   };
 // }
 
+const localStorageConfig = {
+  key: 'localStorage',
+  storage: localStorage,
+}
+
 const marinaReducer = combineReducers({
-  app: appReducer,
+  app: persistReducer(localStorageConfig, appReducer),
   assets: assetReducer,
   onboarding: onboardingReducer,
-  transaction: transactionReducer,
-  txsHistory: txsHistoryReducer,
-  wallets: walletReducer,
+  transaction: persistReducer(localStorageConfig, transactionReducer),
+  txsHistory: persistReducer(localStorageConfig, txsHistoryReducer),
+  wallets: persistReducer(localStorageConfig, walletReducer),
 });
 
 export default marinaReducer;

@@ -1,4 +1,4 @@
-import { RootState } from './../store';
+import { RootState } from '../store';
 import { ThunkAction } from 'redux-thunk';
 import { EsploraIdentityRestorer, IdentityOpts, IdentityType, Mnemonic, UtxoInterface } from 'ldk';
 import {

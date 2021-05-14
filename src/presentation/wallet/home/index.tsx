@@ -14,8 +14,7 @@ import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnem
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { AppContext } from '../../../application/store/context';
-import { flush, updateUtxosAssetsBalances } from '../../../application/store/actions';
+import { updateUtxosAssetsBalances } from '../../../application/redux/actions';
 import { createDevState } from '../../../../test/dev-state';
 import { fromSatoshiStr } from '../../utils';
 import {
@@ -23,10 +22,23 @@ import {
   imgPathMapRegtest,
   lbtcAssetByNetwork,
 } from '../../../application/utils';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
+import { IApp } from '../../../domain/app/app';
+import { AssetsByNetwork } from '../../../domain/asset';
+import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
+import { IWallet } from '../../../domain/wallet/wallet';
 
-const Home: React.FC = () => {
+export interface HomeProps {
+  app: IApp;
+  assets: AssetsByNetwork;
+  transaction: TransactionState;
+  wallet: IWallet;
+}
+
+const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
   const history = useHistory();
-  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;
@@ -87,7 +99,7 @@ const Home: React.FC = () => {
   }, []);
 
   // If extension was closed when a tx is pending then navigate to confirmation route
-  if (wallets[0].pendingTx) {
+  if (wallet.pendingTx) {
     history.push(SEND_CONFIRMATION_ROUTE);
     return <></>;
   }

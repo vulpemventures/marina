@@ -2,15 +2,17 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
-import { deriveNewAddress } from '../../../application/store/actions';
+import { deriveNewAddress } from '../../../application/redux/actions';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
 
 const Receive: React.FC = () => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);

@@ -25,12 +25,12 @@ export function compareUtxos(
 }
 
 /**
- * Set utxos to store and browser storage
+ * Fetch and Set utxos to store and browser storage
  * @param addressesWithBlindingKeys
  * @param onSuccess
  * @param onError
  */
-export function setUtxos(
+export function updateUtxos(
   addressesWithBlindingKeys: AddressInterface[],
   onSuccess?: () => void,
   onError?: (err: Error) => void

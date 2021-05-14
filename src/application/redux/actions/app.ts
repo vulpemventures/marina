@@ -1,5 +1,5 @@
 import { ThunkAction } from 'redux-thunk';
-import { RootState } from './../store';
+import { RootState } from '../store';
 import {
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,

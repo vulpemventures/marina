@@ -6,14 +6,13 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
 import {
   getAllAssetBalances,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
   setPendingTx,
   setTopup,
-} from '../../../application/store/actions';
+} from '../../../application/redux/actions';
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { Address } from '../../../domain/wallet/value-objects';
 import {
@@ -33,14 +32,26 @@ import {
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IWallet } from '../../../domain/wallet/wallet';
+import { Network } from '../../../domain/app/value-objects';
+import { AssetsByNetwork } from '../../../domain/asset';
+import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
 
 interface LocationState {
   changeAddress: Address;
 }
 
-const ChooseFee: React.FC = () => {
+export interface ChooseFeeProps {
+  network: Network['value'];
+  assets: AssetsByNetwork;
+  transaction: TransactionState;
+  wallet: IWallet;
+}
+
+const ChooseFeeView: React.FC<ChooseFeeProps> = ({ network, assets, transaction, wallet }) => {
   const history = useHistory();
-  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const { state } = useLocation<LocationState>();
   const [feeCurrency, setFeeCurrency] = useState<string>('');
   const [feeLevel, setFeeLevel] = useState<string>('');
@@ -48,7 +59,7 @@ const ChooseFee: React.FC = () => {
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
   //const [isWarningFee] = useState<boolean>(true);
-  const unspents = utxoMapToArray(wallets[0].utxoMap);
+  const unspents = utxoMapToArray(wallet.utxoMap);
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -87,9 +98,9 @@ const ChooseFee: React.FC = () => {
   useEffect(() => {
     if (supportedAssets.length <= 0) {
       void (async (): Promise<void> => {
-        let allAssets: string[] = [lbtcAssetByNetwork(app.network.value)];
+        let allAssets: string[] = [lbtcAssetByNetwork(network)];
         try {
-          const taxiAssets: string[] = await fetchAssetsFromTaxi(taxiURL[app.network.value]);
+          const taxiAssets: string[] = await fetchAssetsFromTaxi(taxiURL[network]);
           allAssets = allAssets.concat(taxiAssets);
         } catch (error) {
           let msg = error.message;
@@ -103,7 +114,7 @@ const ChooseFee: React.FC = () => {
         }
       })();
     }
-  }, [app.network.value, supportedAssets.length]);
+  }, [network, supportedAssets.length]);
 
   // Set feeCurrency when balances and supportedAssets are ready (or change)
   useEffect(() => {
@@ -128,8 +139,7 @@ const ChooseFee: React.FC = () => {
       void (async (): Promise<void> => {
         if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
           try {
-            const wallet: IWallet = { ...wallets[0] };
-            const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
+            const feeChangeAddress = await nextAddressForWallet(wallet, network, true);
             dispatch(
               setFeeChangeAddress(
                 Address.create(feeChangeAddress.value, feeChangeAddress.derivationPath)
@@ -144,12 +154,12 @@ const ChooseFee: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    app.network.value,
+    network,
     feeCurrency,
     supportedAssets.length,
     transaction.asset,
     transaction.feeChangeAddress,
-    wallets,
+    wallet,
   ]);
 
   // Build regular tx (no taxi)
@@ -159,11 +169,11 @@ const ChooseFee: React.FC = () => {
         feeCurrency === transaction.asset ||
         (transaction.feeChangeAddress && transaction.feeChangeAddress.value !== '')
       ) {
-        if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
+        if (feeCurrency === lbtcAssetByNetwork(network)) {
           // this check prevents to build a tx in case the fee change address isn't
           // yet available but needed for the tx.
           try {
-            const w = walletFromCoins(unspents, app.network.value);
+            const w = walletFromCoins(unspents, network);
 
             const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
             if (currentSatsPerByte !== satsPerByte) {
@@ -186,7 +196,7 @@ const ChooseFee: React.FC = () => {
       }
     }
   }, [
-    app.network.value,
+    network,
     changeAddressGetter,
     feeCurrency,
     feeLevel,
@@ -207,11 +217,11 @@ const ChooseFee: React.FC = () => {
     void (async (): Promise<void> => {
       if (
         feeCurrency &&
-        feeCurrency !== lbtcAssetByNetwork(app.network.value) &&
+        feeCurrency !== lbtcAssetByNetwork(network) &&
         Object.keys(transaction.taxiTopup).length === 0
       ) {
         try {
-          const taxiTopup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeCurrency);
+          const taxiTopup = await fetchTopupFromTaxi(taxiURL[network], feeCurrency);
           dispatch(setTopup(taxiTopup));
         } catch (error) {
           console.error(error.message);
@@ -220,13 +230,13 @@ const ChooseFee: React.FC = () => {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [app.network.value, feeCurrency, transaction.taxiTopup]);
+  }, [network, feeCurrency, transaction.taxiTopup]);
 
   // Fill Taxi tx
   useEffect(() => {
     if (
       Object.keys(transaction.taxiTopup).length !== 0 &&
-      feeCurrency === usdtAssetHash(assets[app.network.value])
+      feeCurrency === usdtAssetHash(assets[network])
     ) {
       const taxiPayout = {
         value: transaction.taxiTopup.topup?.assetAmount,
@@ -249,7 +259,7 @@ const ChooseFee: React.FC = () => {
       }
     }
   }, [
-    app.network.value,
+    network,
     assets,
     changeAddressGetter,
     feeCurrency,
@@ -262,7 +272,7 @@ const ChooseFee: React.FC = () => {
 
   const handleConfirm = () => {
     let feeAmount: number;
-    if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
+    if (feeCurrency === lbtcAssetByNetwork(network)) {
       feeAmount = feeAmountFromTx(unsignedPendingTx);
     } else {
       feeAmount = transaction.taxiTopup?.topup?.assetAmount as number;
@@ -312,20 +322,11 @@ const ChooseFee: React.FC = () => {
     }
   };
 
-  /* const warningFee = (
-    <div className="flex flex-row gap-2 mt-5">
-      <img className="w-4 h-4" src={'assets/images/warning.svg'} alt="warning" />
-      <p className="font-regular text-xs text-left">
-        9.99862 L-BTC will be sent in order to cover fee
-      </p>
-    </div>
-  ); */
-
   // Choose Fee buttons
   const chooseFeeLbtcButton = (
     <Button
       className="flex-1"
-      isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
+      isOutline={feeCurrency !== lbtcAssetByNetwork(network)}
       key={1}
       onClick={handlePayFees}
       roundedMd={true}
@@ -338,7 +339,7 @@ const ChooseFee: React.FC = () => {
   const chooseFeeUsdtButton = (
     <Button
       className="flex-1"
-      isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
+      isOutline={feeCurrency === lbtcAssetByNetwork(network)}
       key={2}
       onClick={handlePayFees}
       roundedMd={true}
@@ -376,13 +377,12 @@ const ChooseFee: React.FC = () => {
       <Balance
         assetBalance={formatDecimalAmount(fromSatoshi(balances[feeCurrency] ?? 0))}
         assetImgPath={
-          app.network.value === 'regtest'
-            ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-              imgPathMapRegtest['']
+          network === 'regtest'
+            ? imgPathMapRegtest[assets[network][feeCurrency]?.ticker] ?? imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetHash={transaction.asset}
-        assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
+        assetTicker={assets[network][feeCurrency]?.ticker ?? ''}
         className="mt-4"
         fiatBalance={120}
         fiatCurrency="$"
@@ -398,7 +398,7 @@ const ChooseFee: React.FC = () => {
         </div>
       </div>
 
-      {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
+      {feeCurrency && feeCurrency === lbtcAssetByNetwork(network) && (
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
@@ -444,7 +444,7 @@ const ChooseFee: React.FC = () => {
         </div> */}
         </>
       )}
-      {feeCurrency && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
+      {feeCurrency && feeCurrency !== lbtcAssetByNetwork(network) && (
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
@@ -473,4 +473,4 @@ const ChooseFee: React.FC = () => {
     </ShellPopUp>
   );
 };
-export default ChooseFee;
+export default ChooseFeeView;

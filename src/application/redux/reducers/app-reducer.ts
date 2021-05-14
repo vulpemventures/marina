@@ -1,4 +1,4 @@
-import { Network } from './../../../domain/app/value-objects/network';
+import { Network } from '../../../domain/app/value-objects/network';
 import { IApp } from '../../../domain/app/app';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';

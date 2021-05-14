@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { Assets, AssetsByNetwork } from '../../../domain/asset';
-import { IAppState } from '../../../domain/common';
 import {
   ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
 } from './action-types';

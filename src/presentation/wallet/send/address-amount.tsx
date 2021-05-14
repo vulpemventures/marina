@@ -4,8 +4,7 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { SEND_CHOOSE_FEE_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
-import { DispatchOrThunk, IAppState } from '../../../domain/common';
+import { IAppState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -13,7 +12,7 @@ import {
   flushTx,
   getAllAssetBalances,
   setAddressesAndAmount,
-} from '../../../application/store/actions';
+} from '../../../application/redux/actions';
 import {
   imgPathMapMainnet,
   imgPathMapRegtest,
@@ -22,6 +21,9 @@ import {
 } from '../../../application/utils';
 import { Address } from '../../../domain/wallet/value-objects';
 import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
+import { ProxyStoreDispatch } from '../..';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../application/redux/store';
 
 interface AddressAmountFormValues {
   address: string;
@@ -32,7 +34,7 @@ interface AddressAmountFormValues {
 
 interface AddressAmountFormProps {
   balances: { [assetHash: string]: number };
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
   state: IAppState;
 }
@@ -177,16 +179,19 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
 const AddressAmount: React.FC = () => {
   const history = useHistory();
-  const [state, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+  const state = useSelector((state: RootState) => state);
+  const { assets, transaction, app } = state;
+
   const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
-  const assetTicker = state.assets[state.app.network.value][state.transaction.asset]?.ticker ?? '';
+  const assetTicker = assets[app.network.value][transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
     dispatch(
       flushTx(() => {
         history.push({
           pathname: TRANSACTIONS_ROUTE,
-          state: { assetHash: state.transaction.asset, assetTicker, assetsBalance: balances },
+          state: { assetHash: transaction.asset, assetTicker, assetsBalance: balances },
         });
       })
     );
@@ -205,12 +210,12 @@ const AddressAmount: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetHash={state.transaction.asset}
-        assetBalance={formatDecimalAmount(fromSatoshi(balances[state.transaction.asset] ?? 0))}
+        assetHash={transaction.asset}
+        assetBalance={formatDecimalAmount(fromSatoshi(balances[transaction.asset] ?? 0))}
         assetImgPath={
-          state.app.network.value === 'regtest'
+          app.network.value === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
-            : imgPathMapMainnet[state.transaction.asset] ?? imgPathMapMainnet['']
+            : imgPathMapMainnet[transaction.asset] ?? imgPathMapMainnet['']
         }
         assetTicker={assetTicker}
         className="mt-4"

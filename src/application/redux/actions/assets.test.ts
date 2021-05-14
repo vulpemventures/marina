@@ -1,13 +1,9 @@
 import axios from 'axios';
 import { AddressInterface } from 'ldk';
-import { getAllAssetBalances, updateAllAssetInfos } from './assets';
-import { setUtxos } from './utxos';
+import { updateAllAssetInfos } from './assets';
+import { updateUtxos } from './utxos';
 import { createWallet } from './wallet';
-import { appInitialState, appReducer } from '../reducers';
 import { mockThunkReducer } from '../reducers/mock-use-thunk-reducer';
-import { assetInitState } from '../reducers/asset-reducer';
-import { onboardingInitState } from '../reducers/onboarding-reducer';
-import { txsHistoryInitState } from '../reducers/txs-history-reducer';
 import { repos } from '../../../infrastructure';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import { testWalletDTO, testWalletProps } from '../../../../test/fixtures/test-wallet';
@@ -90,7 +86,7 @@ describe('Assets Actions', () => {
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          setUtxos(
+          updateUtxos(
             [
               {
                 confidentialAddress: keyPair1Addr.confidentialAddress,
@@ -189,7 +185,7 @@ describe('Assets Actions', () => {
     const setUtxosAction = function () {
       return new Promise((resolve, reject) => {
         store.dispatch(
-          setUtxos(
+          updateUtxos(
             [
               {
                 confidentialAddress: keyPairAddr.confidentialAddress,
