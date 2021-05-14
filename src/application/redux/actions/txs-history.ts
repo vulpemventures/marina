@@ -3,7 +3,6 @@ import { AnyAction } from 'redux';
 import {
   TXS_HISTORY_SET_TXS_SUCCESS,
 } from './action-types';
-import { IAppState } from '../../../domain/common';
 import {
   BlindingKeyGetter,
   fetchAndUnblindTxsGenerator,

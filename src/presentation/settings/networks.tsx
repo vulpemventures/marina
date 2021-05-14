@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '..';
-import { changeNetwork } from '../../application/redux/actions';
+import { changeNetwork } from '../../application/redux/actions/app';
 import { RootState } from '../../application/redux/store';
 import { Network } from '../../domain/app/value-objects';
 import Select from '../components/select';

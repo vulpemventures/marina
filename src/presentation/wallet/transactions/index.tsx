@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
@@ -10,11 +10,16 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
-import { setAsset, updateTxsHistory } from '../../../application/redux/actions';
-import { AppContext } from '../../../application/redux/context';
 import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { esploraURL, fromSatoshiStr } from '../../utils';
-import { TxDisplayInterface } from '../../../domain/transaction';
+import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
+import { AssetsByNetwork } from '../../../domain/asset';
+import { Network } from '../../../domain/app/value-objects';
+import { Address } from '../../../domain/wallet/value-objects';
+import { setAsset } from '../../../application/redux/actions/transaction';
+import { updateTxsHistory } from '../../../application/redux/actions/txs-history';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../..';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -23,13 +28,20 @@ interface LocationState {
   assetPrecision: number;
 }
 
-const Transactions: React.FC = () => {
+export interface TransactionsProps {
+  addresses: Address[];
+  assets: AssetsByNetwork;
+  txsHistory: TxsHistory;
+  network: Network['value'];
+}
+
+const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHistory, network }) => {
   const history = useHistory();
-  const [{ app, assets, txsHistory, wallets }, dispatch] = useContext(AppContext);
-  const { confidentialAddresses } = wallets[0];
   const { state } = useLocation<LocationState>();
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const assetImgPath =
-    app.network.value === 'regtest'
+    network === 'regtest'
       ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
       : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
 
@@ -51,7 +63,7 @@ const Transactions: React.FC = () => {
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
   const handleOpenExplorer = async (url?: string) => {
     if (!url) {
-      url = `${esploraURL[app.network.value]}/tx/${modalTxDetails?.txId}`;
+      url = `${esploraURL[network]}/tx/${modalTxDetails?.txId}`;
     }
 
     await browser.tabs.create({ url, active: false });
@@ -66,40 +78,29 @@ const Transactions: React.FC = () => {
   }, []);
 
   /**
- 
-   /**
-   * Log errors if any
-   */
-  useEffect(() => {
-    if (txsHistory.errors && txsHistory.errors.message.length > 0)
-      console.error(txsHistory.errors?.message);
-  }, [txsHistory.errors]);
-
-  /**
    * Generate transaction list for current asset
    * Will render new button tx as soon as data is ready
    * @returns Memoized widgets
    */
   const buttonTransactions = useMemo(() => {
-    //
     const openTxDetailsModal = (txId: string) => {
       showTxDetailsModal(true);
       const txsByTxId = getTxsDetails(
-        Object.values(txsHistory[app.network.value]),
-        app.network.value,
-        confidentialAddresses,
-        assets[app.network.value]
+        Object.values(txsHistory[network]),
+        network,
+        addresses,
+        assets[network]
       ).byTxId;
       setmodalTxDetails(txsByTxId[txId]);
     };
-    //
+
     const txsByAssets = getTxsDetails(
-      Object.values(txsHistory[app.network.value]),
-      app.network.value,
-      confidentialAddresses,
-      assets[app.network.value]
+      Object.values(txsHistory[network]),
+      network,
+      addresses,
+      assets[network]
     ).byAsset;
-    //
+
     return (
       txsByAssets[state.assetHash]
         // Descending order
@@ -119,9 +120,9 @@ const Transactions: React.FC = () => {
         ))
     );
   }, [
-    app.network.value,
+    network,
     assets,
-    confidentialAddresses,
+    addresses,
     state.assetHash,
     state.assetTicker,
     state.assetPrecision,
@@ -183,7 +184,7 @@ const Transactions: React.FC = () => {
             <p className="text-base font-medium">Fee</p>
             <p className="text-xs font-light">
               {fromSatoshiStr(modalTxDetails?.fee ?? 0)}{' '}
-              {assets[app.network.value][modalTxDetails?.feeAsset ?? '']?.ticker ?? ''}
+              {assets[network][modalTxDetails?.feeAsset ?? '']?.ticker ?? ''}
             </p>
           </div>
           <div>

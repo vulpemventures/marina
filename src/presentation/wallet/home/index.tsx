@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { browser } from 'webextension-polyfill-ts';
 import {
@@ -14,7 +14,6 @@ import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnem
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { updateUtxosAssetsBalances } from '../../../application/redux/actions';
 import { createDevState } from '../../../../test/dev-state';
 import { fromSatoshiStr } from '../../utils';
 import {
@@ -28,6 +27,7 @@ import { IApp } from '../../../domain/app/app';
 import { AssetsByNetwork } from '../../../domain/asset';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
+import { flushTx } from '../../../application/redux/actions/transaction';
 
 export interface HomeProps {
   app: IApp;
@@ -70,31 +70,11 @@ const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
       dispatch(createDevState());
     }
 
-    // Poll the browser storage to check for new utxos
-    const updateUtxos = () => {
-      console.log('updating utxo state...');
-      dispatch(
-        updateUtxosAssetsBalances(
-          false,
-          (balances) => setAssetsBalance(balances),
-          (error) => console.error(error.message)
-        )
-      );
-    };
-    const utxosInterval = setInterval(updateUtxos, 2500);
-    // update at first component mount
-    updateUtxos();
-
     // Flush last sent tx
     if (transaction.asset !== '') {
-      dispatch(flush());
+      dispatch(flushTx());
       browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
     }
-
-    //Clean up can be done like this
-    return () => {
-      clearInterval(utxosInterval);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

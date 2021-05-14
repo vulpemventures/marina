@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { flushTx, updateUtxosAssetsBalances } from '../../application/redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '..';
 import { RootState } from '../../application/redux/store';
+import { flushTx } from '../../application/redux/actions/transaction';
 
 interface Props {
   backBtnCb?: () => void;
@@ -38,7 +38,7 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
+      // dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
     }
     if (wallet.pendingTx) {
       dispatch(flushTx(() => history.push(DEFAULT_ROUTE)));

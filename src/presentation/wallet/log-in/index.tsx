@@ -1,13 +1,13 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
-import { logIn } from '../../../application/redux/actions';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
+import { logIn } from '../../../application/redux/actions/app';
 
 interface LogInFormValues {
   password: string;

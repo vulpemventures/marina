@@ -1,13 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { deriveNewAddress } from '../../../application/redux/actions';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
+import { deriveNewAddress } from '../../../application/redux/actions/wallet';
 
 const Receive: React.FC = () => {
   const history = useHistory();
