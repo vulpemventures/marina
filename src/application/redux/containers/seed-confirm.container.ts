@@ -3,7 +3,7 @@ import SeedConfirmView, { SeedConfirmProps } from "../../../presentation/onboard
 import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): SeedConfirmProps => ({
-  onboarding: state.onboarding,
+  onboardingMnemonic: state.onboarding.mnemonic,
 })
 
 const SeedConfirm = connect(mapStateToProps)(SeedConfirmView)

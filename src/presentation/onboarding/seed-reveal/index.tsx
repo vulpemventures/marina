@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
-import * as bip39 from 'bip39';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Button from '../../components/button';
 import {
@@ -7,27 +6,15 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { setMnemonic } from '../../../application/redux/actions/onboarding';
 import RevealMnemonic from '../../components/reveal-mnemonic';
-import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
-import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 
 export interface SeedRevealProps {
-  onboarding: OnboardingState;
+  onboardingMnemonic: string;
 }
 
-const SeedRevealView: React.FC<SeedRevealProps> = ({ onboarding }) => {
-  const dispatch = useDispatch<ProxyStoreDispatch>();
-
+const SeedRevealView: React.FC<SeedRevealProps> = ({ onboardingMnemonic }) => {
   const history = useHistory();
   const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    if (onboarding.mnemonic === '') {
-      dispatch(setMnemonic(bip39.generateMnemonic()));
-    }
-  });
 
   const handleRemindMe = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   const handleNext = () => history.push(INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE);
@@ -40,7 +27,7 @@ const SeedRevealView: React.FC<SeedRevealProps> = ({ onboarding }) => {
         <div className="max-w-prose w-96 flex flex-col justify-center h-32">
           {revealed ? (
             <div className="border-primary p-4 text-base font-medium text-left border-2 rounded-md shadow-md">
-              {onboarding.mnemonic || 'Loading...'}
+              {onboardingMnemonic || 'Loading...'}
             </div>
           ) : (
             <RevealMnemonic className="w-96 h-32 shadow-md" onClick={handleClickReveal} />

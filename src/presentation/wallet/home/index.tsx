@@ -14,7 +14,6 @@ import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnem
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { createDevState } from '../../../../test/dev-state';
 import { fromSatoshiStr } from '../../utils';
 import {
   imgPathMapMainnet,
@@ -23,20 +22,20 @@ import {
 } from '../../../application/utils';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
-import { IApp } from '../../../domain/app/app';
 import { AssetsByNetwork } from '../../../domain/asset';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { flushTx } from '../../../application/redux/actions/transaction';
+import { Network } from '../../../domain/app/value-objects';
 
 export interface HomeProps {
-  app: IApp;
+  network: Network;
   assets: AssetsByNetwork;
   transaction: TransactionState;
   wallet: IWallet;
 }
 
-const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
+const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
@@ -66,14 +65,9 @@ const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
   useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
-    if (process.env.SKIP_ONBOARDING) {
-      dispatch(createDevState());
-    }
-
     // Flush last sent tx
     if (transaction.asset !== '') {
-      dispatch(flushTx());
-      browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
+      flushTx(dispatch);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -89,12 +83,12 @@ const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
     return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   } else {
     // Generate list of Asset/Balance buttons
-    buttonList = Object.entries(assets[app.network.value] || {}).map(
+    buttonList = Object.entries(assets[network.value] || {}).map(
       ([hash, { name, ticker, precision }]) => {
         return (
           <ButtonAsset
             assetImgPath={
-              app.network.value === 'regtest'
+              network.value === 'regtest'
                 ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
                 : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
             }
@@ -121,8 +115,8 @@ const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
       <div className="h-popupContent flex flex-col justify-between">
         <div>
           <Balance
-            assetHash={lbtcAssetByNetwork(app.network.value)}
-            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
+            assetHash={lbtcAssetByNetwork(network.value)}
+            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(network.value)] ?? 0)}
             assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
             assetTicker="L-BTC"
             bigBalanceText={true}
@@ -149,4 +143,4 @@ const Home: React.FC<HomeProps> = ({ app, assets, transaction, wallet }) => {
   );
 };
 
-export default Home;
+export default HomeView;

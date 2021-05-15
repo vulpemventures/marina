@@ -6,9 +6,10 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { INITIALIZE_SEED_PHRASE_ROUTE, SETTINGS_TERMS_ROUTE } from '../../routes/constants';
-import { setPassword } from '../../../application/redux/actions/onboarding';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
+import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
+import { generateMnemonic } from 'bip39';
 
 interface WalletCreateFormValues {
   password: string;
@@ -121,7 +122,7 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(setPassword(values.password));
+    props.dispatch(setPasswordAndOnboardingMnemonic(values.password, generateMnemonic()));
     props.history.push(INITIALIZE_SEED_PHRASE_ROUTE);
   },
 

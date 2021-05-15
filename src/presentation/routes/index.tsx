@@ -51,7 +51,7 @@ import EndOfFlow from '../../application/redux/containers/end-of-flow-onboarding
 import SeedReveal from '../../application/redux/containers/seed-reveal.container';
 import SeedConfirm from '../../application/redux/containers/seed-confirm.container';
 // Wallet
-import Home from '../wallet/home';
+import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
 import Transactions from '../wallet/transactions';
 import Receive from '../wallet/receive';

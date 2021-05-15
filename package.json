@@ -12,7 +12,7 @@
     "lint:fix": "eslint --fix --ext .ts,.tsx src test",
     "prettier": "prettier --write src test",
     "prettier:check": "prettier --check src test",
-    "run:firefox": "web-ext run --firefox=firefoxdeveloperedition --firefox-profile=dev --source-dir dist",
+    "run:firefox": "web-ext run --browser-console --firefox=firefoxdeveloperedition --firefox-profile=dev --source-dir dist",
     "run:firefox-linux": "web-ext run --firefox=/opt/firefox/firefox --firefox-profile=dev --source-dir dist",
     "run:brave-linux": "web-ext run --target chromium --chromium-binary '/usr/bin/brave' --source-dir dist",
     "run:chrome-linux": "web-ext run --target chromium --chromium-binary chromium --source-dir dist",

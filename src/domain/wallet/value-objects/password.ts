@@ -22,6 +22,7 @@ export class Password extends ValueObject<PasswordProps> {
   }
 
   public static create(password: PasswordProps['value']): Password {
+    console.log(password);
     if (password === undefined || password === null || !this.isAppropriateLength(password)) {
       throw new Error('Password must be 8 chars min');
     } else {

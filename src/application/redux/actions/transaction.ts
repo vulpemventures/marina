@@ -13,6 +13,7 @@ import { Address } from '../../../domain/wallet/value-objects';
 import { unsetPendingTx } from './wallet';
 import { AnyAction } from 'redux';
 import { RootState } from '../store';
+import { ProxyStoreDispatch } from '../../../presentation';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -54,25 +55,10 @@ export function setTopup(
  * Flush both 'wallets[0].pendingTx' and 'transaction' state
  * Unset badge
  */
-export function flushTx(
-  onSuccess?: () => void,
-  onError?: (err: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
-  return (dispatch) => {
-    dispatch(
-      // Unset 'wallets[0].pendingTx'
-      unsetPendingTx(
-        () => {
-          // Unset state 'transaction'
-          dispatch(flushPendingTx());
-          browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
-          onSuccess?.();
-        },
-        (error) => {
-          console.error(error);
-          onError?.(error);
-        }
-      )
-    );
-  };
+export async function flushTx(
+  dispatch: ProxyStoreDispatch
+) {
+  await dispatch(unsetPendingTx());
+  await dispatch(flushPendingTx());
+  browser.browserAction.setBadgeText({ text: '' }).catch(() => ({}));
 }

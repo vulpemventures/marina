@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { onBoardingCompleted, verifyWalletSuccess } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
@@ -7,6 +7,8 @@ import { createWallet, restoreWallet } from '../../../application/redux/actions/
 import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 import { WalletState } from '../../../application/redux/reducers/wallet-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
+import { createWalletFromMnemonic } from '../../../application/utils/wallet';
+import { Network } from '../../../domain/app/value-objects';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -14,9 +16,10 @@ import useLottieLoader from '../../hooks/use-lottie-loader';
 export interface EndOfFlowProps {
   wallets: WalletState;
   onboarding: OnboardingState;
+  network: Network['value'];
 }
 
-const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding }) => {
+const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding, network }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,35 +29,35 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding
 
   useEffect(() => {
     if (wallets.length <= 0) {
-      const dispatchOnboardingCompleted = () => {
+      const dispatchOnboardingCompleted = async () => {
         // Startup alarms to fetch utxos & set the popup page
         (async () => {
           await provisionBackgroundScript();
         })().catch(console.error);
 
-        dispatch(onBoardingCompleted());
-        dispatch(flushOnboarding());
+        await dispatch(onBoardingCompleted());
+        await dispatch(flushOnboarding());
         setIsLoading(false);
       };
-      let creator = createWallet;
-      if (onboarding.restored) {
-        creator = restoreWallet;
-      }
 
-      dispatch(
-        creator(
+      try {
+        console.log(network);
+        const walletData = createWalletFromMnemonic(
           Password.create(onboarding.password),
           Mnemonic.create(onboarding.mnemonic),
-          () => {
-            if (onboarding.verified) {
-              dispatch(verifyWalletSuccess());
-            } else {
-              dispatchOnboardingCompleted();
-            }
-          },
-          console.error
-        )
-      );
+          network
+        );
+
+        let createAction = onboarding.restored
+          ? restoreWallet(walletData)
+          : createWallet(walletData);
+
+        dispatch(createAction)
+          .then(() => dispatchOnboardingCompleted())
+          .catch(console.error);
+      } catch (err) {
+        console.error(err);
+      }
     }
   });
 

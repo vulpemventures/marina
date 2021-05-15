@@ -17,17 +17,11 @@ const onboardingInitState: OnboardingState = {
 
 export function onboardingReducer(state: OnboardingState = onboardingInitState, { type, payload }: AnyAction): OnboardingState {
   switch (type) {
-    case ACTION_TYPES.ONBOARDING_SET_PASSWORD: {
+    case ACTION_TYPES.ONBOARDING_SET_MNEMONIC_AND_PASSWORD: {
       return {
         ...state,
         verified: false,
         password: payload.password,
-      };
-    }
-    case ACTION_TYPES.ONBOARDING_SET_MNEMONIC: {
-      return {
-        ...state,
-        verified: false,
         mnemonic: payload.mnemonic,
       };
     }

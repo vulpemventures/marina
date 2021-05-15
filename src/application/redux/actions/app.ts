@@ -1,3 +1,4 @@
+import { PasswordHash } from './../../../domain/wallet/value-objects/password-hash';
 import { ThunkAction } from 'redux-thunk';
 import { RootState } from '../store';
 import {
@@ -16,7 +17,6 @@ import { IAppState } from '../../../domain/common';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
 import { Network } from '../../../domain/app/value-objects';
-import { setIdleAction } from '../../utils/idle';
 import { ActionCreator, AnyAction } from 'redux';
 
 export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
@@ -40,31 +40,18 @@ export const onBoardingFailure = (error: Error): AnyAction => ({
 
 export function logIn(
   password: string,
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
-  return async (dispatch, getState) => {
-    try {
-      const { wallets } = getState();
-      if (wallets.length <= 0) {
-        throw ('Wallet does not exist');
-      }
-      const wallet = wallets[0];
-      const h = hash(Password.create(password));
-      if (wallet.passwordHash.value !== h.value) {
-        throw new Error('Invalid password');
-      }
-
-      dispatch({ type: AUTHENTICATION_SUCCESS });
-      setIdleAction(() => {
-        dispatch({ type: LOGOUT_SUCCESS });
-      });
-      onSuccess();
-    } catch (error) {
-      dispatch({ type: AUTHENTICATION_FAILURE, payload: { error } });
-      onError(error);
+  passwordHash: PasswordHash,
+): AnyAction {
+  try {
+    const h = hash(Password.create(password));
+    if (passwordHash.props.value !== h.value) {
+      return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
     }
-  };
+
+    return { type: AUTHENTICATION_SUCCESS };
+  } catch (error) {
+    return { type: AUTHENTICATION_FAILURE, payload: { error } };
+  }
 }
 
 export function logOut(

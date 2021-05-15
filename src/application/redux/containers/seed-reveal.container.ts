@@ -3,7 +3,7 @@ import SeedRevealView, { SeedRevealProps } from "../../../presentation/onboardin
 import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): SeedRevealProps => ({
-  onboarding: state.onboarding,
+  onboardingMnemonic: state.onboarding.mnemonic,
 })
 
 const SeedReveal = connect(mapStateToProps)(SeedRevealView)

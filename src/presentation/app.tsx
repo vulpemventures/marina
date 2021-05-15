@@ -4,15 +4,13 @@ import Routes from './routes';
 import useLottieLoader from './hooks/use-lottie-loader';
 
 const App: React.FC = () => {
-  const [fetchedFromRepo, setFetchedFromRepo] = useState(false);
-
   // Populate ref div with svg animation
   const mermaidLoaderRef = React.useRef(null);
   useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
-  if (!fetchedFromRepo) {
-    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
-  }
+  // if (!fetchedFromRepo) {
+  //   return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
+  // }
 
   return (
     <HashRouter hashType="noslash">

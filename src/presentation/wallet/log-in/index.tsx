@@ -6,8 +6,15 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { ProxyStoreDispatch } from '../..';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
+import { RootState } from '../../../application/redux/store';
+import { PasswordHash } from '../../../domain/wallet/value-objects';
+import { setIdleAction } from '../../../application/utils';
+import {
+  AUTHENTICATION_SUCCESS,
+  LOGOUT_SUCCESS,
+} from '../../../application/redux/actions/action-types';
 
 interface LogInFormValues {
   password: string;
@@ -16,6 +23,7 @@ interface LogInFormValues {
 interface LogInFormProps {
   dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
+  passwordHash: PasswordHash;
 }
 
 const LogInForm = (props: FormikProps<LogInFormValues>) => {
@@ -49,21 +57,27 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   }),
 
   handleSubmit: (values, { props, setErrors, setSubmitting }) => {
-    const onSuccess = () => {
+    const logInAction = logIn(values.password, props.passwordHash);
+    props.dispatch(logInAction).catch(console.error);
+
+    if (logInAction.type === AUTHENTICATION_SUCCESS) {
       props.history.push(DEFAULT_ROUTE);
-    };
-    const onError = (err: Error) => {
+      setIdleAction(() => {
+        props.dispatch({ type: LOGOUT_SUCCESS });
+      });
+    } else {
+      const err = logInAction.payload.error;
       setErrors({ password: err.message });
       setSubmitting(false);
-      console.log(err);
-    };
-    props.dispatch(logIn(values.password, onSuccess, onError));
+      console.error(logInAction.payload.error);
+    }
   },
   displayName: 'LogInForm',
 })(LogInForm);
 
 const LogIn: React.FC = () => {
   const history = useHistory();
+  const passwordHash = useSelector((state: RootState) => state.wallets[0].passwordHash);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (
@@ -85,7 +99,7 @@ const LogIn: React.FC = () => {
         <h2 className="text-grayLight text-lg font-medium">
           The ultimate gateway to access the Liquid Network
         </h2>
-        <LogInEnhancedForm dispatch={dispatch} history={history} />
+        <LogInEnhancedForm dispatch={dispatch} history={history} passwordHash={passwordHash} />
         {/* <Link className="text-primary block font-bold text-left" to={RESTORE_VAULT_ROUTE}>
           Restore account
         </Link> */}

@@ -2,8 +2,6 @@ import { browser, Idle } from 'webextension-polyfill-ts';
 import { App } from '../domain/app/app';
 import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { repos } from '../infrastructure';
-import { initPersistentStore } from '../infrastructure/init-persistent-store';
 import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 import { wrapStore } from 'webext-redux';
@@ -25,7 +23,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install':
-        await initPersistentStore(repos);
 
         // this is for development only
         if (process.env.SKIP_ONBOARDING) {
@@ -33,7 +30,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           return;
         }
 
-        // run onboarding flow on fullscreen
+        // run onboarding flow on fullscreen$
         welcomeTabID = await openInitializeWelcomeRoute();
         break;
       // TODO: on update, open new tab to tell users about the new features and any fixed issues
@@ -51,6 +48,7 @@ browser.runtime.onStartup.addListener(() => {
   (async () => {
     // Everytime the browser starts up we need to set up the popup page
     await browser.browserAction.setPopup({ popup: 'popup.html' });
+    console.log('popup set')
   })().catch(console.error);
 });
 
@@ -71,7 +69,6 @@ browser.browserAction.onClicked.addListener(() => {
     // onboarding page again.
     const store = await browser.storage.local.get('wallets');
     if (store.wallets === undefined || store.wallets.length <= 0) {
-      await initPersistentStore(repos);
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     }

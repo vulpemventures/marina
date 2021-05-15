@@ -7,20 +7,19 @@ import Shell from '../../components/shell';
 import { setVerified } from '../../../application/redux/actions/onboarding';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
-import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 
 const NULL_ERROR = '';
 const ERROR_MSG = 'Invalid mnemonic';
 
 export interface SeedConfirmProps {
-  onboarding: OnboardingState;
+  onboardingMnemonic: string;
 }
 
-const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboarding }) => {
+const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
 
-  const mnemonic: string[] = onboarding.mnemonic.trim().split(' ');
+  const mnemonic: string[] = onboardingMnemonic.trim().split(' ');
   const mnemonicRandomized = shuffleMnemonic([...mnemonic]);
 
   const [wordsList, setWordsList] = useState(mnemonicRandomized);
