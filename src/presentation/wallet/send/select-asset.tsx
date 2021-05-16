@@ -15,13 +15,13 @@ import { setAsset } from '../../../application/redux/actions/transaction';
 import { unsetPendingTx } from '../../../application/redux/actions/wallet';
 
 export interface SelectAssetProps {
-  network: Network['value'];
+  network: Network;
   wallet: IWallet;
   assets: AssetsByNetwork;
   balances: BalancesByAsset;
 }
 
-const SelectAsset: React.FC<SelectAssetProps> = ({ network, wallet, assets, balances }) => {
+const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, balances }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -37,7 +37,7 @@ const SelectAsset: React.FC<SelectAssetProps> = ({ network, wallet, assets, bala
       ticker: string,
       precision: number,
       index: number
-    ][] = Object.entries(assets[network]).map(([_, { name, ticker, precision }], index) => [
+    ][] = Object.entries(assets[network.value]).map(([_, { name, ticker, precision }], index) => [
       name,
       ticker,
       precision,
@@ -59,25 +59,16 @@ const SelectAsset: React.FC<SelectAssetProps> = ({ network, wallet, assets, bala
     setSearchTerm(searchTerm);
   };
 
-  const handleSend = (assetHash: string) => {
-    dispatch(setAsset(assetHash));
+  const handleSend = async (assetHash: string) => {
+    await dispatch(setAsset(assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
+
   const handleBackBtn = () => {
     if (wallet.pendingTx) {
-      dispatch(
-        unsetPendingTx(
-          () => {
-            history.push(DEFAULT_ROUTE);
-          },
-          (err: Error) => {
-            console.log(err);
-          }
-        )
-      );
-    } else {
-      history.push(DEFAULT_ROUTE);
+      dispatch(unsetPendingTx());
     }
+    history.push(DEFAULT_ROUTE);
   };
 
   return (
@@ -100,15 +91,16 @@ const SelectAsset: React.FC<SelectAssetProps> = ({ network, wallet, assets, bala
           {searchResults.map((r) => (
             <ButtonAsset
               assetImgPath={
-                network === 'regtest'
+                network.value === 'regtest'
                   ? imgPathMapRegtest[r[1]] ?? imgPathMapRegtest['']
-                  : imgPathMapMainnet[Object.keys(assets[network])[r[3]]] ?? imgPathMapMainnet['']
+                  : imgPathMapMainnet[Object.keys(assets[network.value])[r[3]]] ??
+                    imgPathMapMainnet['']
               }
-              assetHash={Object.keys(assets[network])[r[3]]}
+              assetHash={Object.keys(assets[network.value])[r[3]]}
               assetName={r[0]}
               assetTicker={r[1]}
               assetPrecision={r[2]}
-              quantity={balances[Object.keys(assets[network])[r[3]]] ?? 0}
+              quantity={balances[Object.keys(assets[network.value])[r[3]]] ?? 0}
               key={`${r[1]}_${r[3]}`}
               handleClick={({ assetHash }) => handleSend(assetHash as string)}
             />
@@ -119,4 +111,4 @@ const SelectAsset: React.FC<SelectAssetProps> = ({ network, wallet, assets, bala
   );
 };
 
-export default SelectAsset;
+export default SelectAssetView;

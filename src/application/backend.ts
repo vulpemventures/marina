@@ -537,7 +537,7 @@ async function signMsgWithPassword(
   return await signMessageWithMnemonic(message, mnemonic, liquidJSNet);
 }
 
-async function getCurrentNetwork(): Promise<Network['value']> {
+async function getCurrentNetwork(): Promise<NetworkValue> {
   const app = await repos.app.getApp();
   return app.network.value;
 }

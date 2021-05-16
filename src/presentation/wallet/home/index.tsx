@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { browser } from 'webextension-polyfill-ts';
 import {
   RECEIVE_ROUTE,
   SELECT_ASSET_ROUTE,
@@ -26,21 +25,23 @@ import { AssetsByNetwork } from '../../../domain/asset';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { flushTx } from '../../../application/redux/actions/transaction';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
+import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 
 export interface HomeProps {
-  network: Network;
+  network: NetworkValue;
   assets: AssetsByNetwork;
   transaction: TransactionState;
   wallet: IWallet;
+  assetsBalance: BalancesByAsset;
 }
 
-const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet }) => {
+const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, assetsBalance }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;
+  console.log(assets, network);
 
   const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number }) => {
     const { assetHash, assetTicker, assetPrecision } = asset;
@@ -83,12 +84,12 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet })
     return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   } else {
     // Generate list of Asset/Balance buttons
-    buttonList = Object.entries(assets[network.value] || {}).map(
+    buttonList = Object.entries(assets[network] || {}).map(
       ([hash, { name, ticker, precision }]) => {
         return (
           <ButtonAsset
             assetImgPath={
-              network.value === 'regtest'
+              network === 'regtest'
                 ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
                 : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
             }
@@ -110,13 +111,12 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet })
       backgroundImagePath="/assets/images/popup/bg-home.png"
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       hasBackBtn={false}
-      refreshCb={setAssetsBalance}
     >
       <div className="h-popupContent flex flex-col justify-between">
         <div>
           <Balance
-            assetHash={lbtcAssetByNetwork(network.value)}
-            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(network.value)] ?? 0)}
+            assetHash={lbtcAssetByNetwork(network)}
+            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(network)] ?? 0)}
             assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
             assetTicker="L-BTC"
             bigBalanceText={true}

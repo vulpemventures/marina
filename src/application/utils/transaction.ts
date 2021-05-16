@@ -156,7 +156,7 @@ export const isChange = (a: Address): boolean | null =>
 
 export const extractInfoFromRawTxData = (
   tx: TxInterface,
-  network: Network['value'],
+  network: NetworkValue,
   addresses: Address[],
   assetsInStore: Assets
 ): {
@@ -207,15 +207,15 @@ export const extractInfoFromRawTxData = (
         try {
           assetsVin.add((vin[i].prevout as UnblindedOutputInterface).asset);
           // eslint-disable-next-line no-empty
-        } catch (_) {}
+        } catch (_) { }
       }
     }
     asset =
       assetsVin.size === 1
         ? (usdtAssetHash(assetsInStore) as string)
         : assetsVin.size === 2
-        ? lbtcAssetByNetwork(network)
-        : 'muliple assets';
+          ? lbtcAssetByNetwork(network)
+          : 'muliple assets';
 
     if (asset === lbtcAssetByNetwork(network)) {
       // Calculate payment amount for lbtc payment
@@ -466,7 +466,7 @@ export const extractInfoFromRawTxData = (
  */
 export const getTxsDetails = (
   txs: TxInterface[],
-  network: Network['value'],
+  network: NetworkValue,
   addresses: Address[],
   assets: Assets
 ) => {

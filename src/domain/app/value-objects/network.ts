@@ -1,20 +1,13 @@
-import { ValueObject } from '../../core/ValueObject';
+export type NetworkValue = 'regtest' | 'liquid'
 
-interface NetworkProps {
-  [key: string]: any;
-  value: 'regtest' | 'liquid';
-}
+export class Network {
+  value: NetworkValue = 'liquid';
 
-export class Network extends ValueObject<NetworkProps> {
-  get value(): 'regtest' | 'liquid' {
-    return this.props.value;
+  private constructor(network: NetworkValue) {
+    this.value = network;
   }
 
-  private constructor(network: Network['value']) {
-    super({ value: network });
-  }
-
-  public static create(network: Network['value']): Network {
+  public static create(network: string): Network {
     if (network !== 'regtest' && network !== 'liquid') {
       throw new Error('Network must be either liquid or regtest');
     }

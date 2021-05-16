@@ -16,7 +16,7 @@ import {
 import { IAppState } from '../../../domain/common';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 import { ActionCreator, AnyAction } from 'redux';
 
 export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({

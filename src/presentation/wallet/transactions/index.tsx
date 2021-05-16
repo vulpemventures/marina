@@ -14,7 +14,7 @@ import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../ap
 import { esploraURL, fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
 import { AssetsByNetwork } from '../../../domain/asset';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 import { Address } from '../../../domain/wallet/value-objects';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import { updateTxsHistory } from '../../../application/redux/actions/txs-history';
@@ -32,7 +32,7 @@ export interface TransactionsProps {
   addresses: Address[];
   assets: AssetsByNetwork;
   txsHistory: TxsHistory;
-  network: Network['value'];
+  network: NetworkValue;
 }
 
 const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHistory, network }) => {

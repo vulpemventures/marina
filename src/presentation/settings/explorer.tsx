@@ -13,13 +13,13 @@ import { RootState } from '../../application/redux/store';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;
-  network: Network['value'];
+  network: NetworkValue;
 }
 
 interface SettingsExplorerFormProps {
   dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
-  network: Network['value'];
+  network: NetworkValue;
 }
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {

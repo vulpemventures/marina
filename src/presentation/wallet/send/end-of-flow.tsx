@@ -15,11 +15,11 @@ import {
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
 import { IWallet } from '../../../domain/wallet/wallet';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 
 export interface EndOfFlowProps {
   wallet: IWallet;
-  network: Network['value'];
+  network: NetworkValue;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {

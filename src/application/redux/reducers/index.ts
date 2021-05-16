@@ -16,7 +16,7 @@ import { appReducer } from './app-reducer';
 //     isOnboardingCompleted: false,
 //     isAuthenticated: false,
 //     isWalletVerified: false,
-//     network: Network.create((process.env.NETWORK || 'liquid') as Network['value']),
+//     network: Network.create((process.env.NETWORK || 'liquid') as NetworkValue),
 //   };
 // }
 

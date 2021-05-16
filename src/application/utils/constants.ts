@@ -13,7 +13,7 @@ export const taxiURL: Record<string, string> = {
   liquid: 'https://grpc.liquid.taxi',
 };
 
-export const explorerApiUrl: Record<Network['value'], string> = {
+export const explorerApiUrl: Record<NetworkValue, string> = {
   regtest: 'http://localhost:3001',
   liquid: 'https://blockstream.info/liquid/api',
 };

@@ -4,7 +4,7 @@ import { IError } from '../common';
 
 export type TxsHistory = Record<TxInterface['txid'], TxInterface>;
 
-export type TxsHistoryByNetwork = Record<Network['value'], TxsHistory> &
+export type TxsHistoryByNetwork = Record<NetworkValue, TxsHistory> &
   Partial<Record<'errors', IError>>;
 
 export type TxType = 'receive' | 'send';

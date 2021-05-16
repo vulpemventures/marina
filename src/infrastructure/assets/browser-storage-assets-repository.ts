@@ -4,7 +4,7 @@ import { IAssetsRepository } from '../../domain/asset/i-assets-repository';
 import { Network } from '../../domain/app/value-objects';
 
 export class BrowserStorageAssetsRepo implements IAssetsRepository {
-  async addAssets(assets: Assets, network: Network['value']): Promise<void> {
+  async addAssets(assets: Assets, network: NetworkValue): Promise<void> {
     if (!network) throw new Error('Network is required');
     try {
       const currentAssets = await this.getAssets();

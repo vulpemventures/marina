@@ -9,7 +9,7 @@ interface ValueObjectProps {
 
 export abstract class ValueObject<T extends ValueObjectProps> {
   // TODO: make props private? Confusing redundancy
-  public props: T;
+  props: T;
 
   protected constructor(props: T) {
     this.props = {

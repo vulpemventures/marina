@@ -8,7 +8,7 @@ const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
   isWalletVerified: false,
-  network: Network.create((process.env.NETWORK || 'liquid') as Network['value']),
+  network: Network.create((process.env.NETWORK || 'liquid')),
 }
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {

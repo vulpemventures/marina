@@ -7,7 +7,7 @@ import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Address } from '../../../domain/wallet/value-objects';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
@@ -20,11 +20,11 @@ interface LocationState {
 }
 
 export interface PaymentSuccessProps {
-  network: Network['value'];
+  network: Network;
   wallet: IWallet;
 }
 
-const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
+const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
@@ -35,7 +35,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[network]}/tx/${state.txid}`,
+      url: `${esploraURL[network.value]}/tx/${state.txid}`,
       active: false,
     });
 
@@ -43,26 +43,14 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
 
   // Cleanup and change address derivation
   useEffect(() => {
-    const onSuccess = () => dispatch(flushTx());
     // persist change addresses before unsetting the pending tx
     if (state.changeAddress?.value) {
-      dispatch(
-        setAddress(
-          state.changeAddress,
-          () => {
-            if (wallet.pendingTx?.props.feeAsset !== wallet.pendingTx?.props.sendAsset) {
-              dispatch(deriveNewAddress(true, onSuccess, console.error));
-            } else {
-              onSuccess();
-            }
-          },
-          console.log
-        )
-      );
-    } else {
-      // Asset balance sent in full, no change
-      onSuccess();
+      if (wallet.pendingTx?.props.feeAsset !== wallet.pendingTx?.props.sendAsset) {
+        deriveNewAddress(wallet, network, true).then(dispatch);
+      }
+      dispatch(setAddress(state.changeAddress));
     }
+    flushTx(dispatch);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -86,4 +74,4 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
   );
 };
 
-export default PaymentSuccess;
+export default PaymentSuccessView;

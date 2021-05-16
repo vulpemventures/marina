@@ -1,15 +1,11 @@
-import { RootState } from '../store';
-import { ThunkAction } from 'redux-thunk';
+import { ActionWithPayload } from '../store';
 import {
   WALLET_CREATE_SUCCESS,
   WALLET_DERIVE_ADDRESS_FAILURE,
   WALLET_DERIVE_ADDRESS_SUCCESS,
   WALLET_RESTORE_SUCCESS,
-  WALLET_SET_ADDRESS_FAILURE,
   WALLET_SET_ADDRESS_SUCCESS,
-  WALLET_SET_PENDING_TX_FAILURE,
   WALLET_SET_PENDING_TX_SUCCESS,
-  WALLET_UNSET_PENDING_TX_FAILURE,
   WALLET_UNSET_PENDING_TX_SUCCESS,
 } from './action-types';
 import { nextAddressForWallet } from '../../utils';
@@ -19,10 +15,8 @@ import {
 import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
-
-const walletAlreadyExistError = new Error(
-  'Wallet already exists. Remove the extension from the browser first to create a new one'
-);
+import { IWallet } from '../../../domain/wallet/wallet';
+import { NetworkValue } from '../../../domain/app/value-objects';
 
 export function createWallet(
   walletData: WalletData
@@ -48,64 +42,29 @@ export function restoreWallet(
  * @param onSuccess 
  * @param onError 
  */
-export function deriveNewAddress(
+export async function deriveNewAddress(
+  wallet: IWallet,
+  network: Network,
   change: boolean,
-  onSuccess: (address: Address) => void,
-  onError: (err: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
-  return async (dispatch, getState) => {
-    const { app, wallets } = getState();
-    if (!wallets?.[0].masterXPub || !wallets?.[0].masterBlindingKey) {
-      throw new Error('Cannot derive new address');
-    }
-
-    try {
-      const addr = await nextAddressForWallet(wallets[0], app.network.value, change);
-      const address = Address.create(addr.value, addr.derivationPath);
-      // Update React state
-      dispatch({ type: WALLET_DERIVE_ADDRESS_SUCCESS, payload: { address } });
-      onSuccess(address);
-    } catch (error) {
-      dispatch({ type: WALLET_DERIVE_ADDRESS_FAILURE, payload: { error } });
-      onError(error);
-    }
-  };
+): Promise<ActionWithPayload<{ address?: Address, error?: any }>> {
+  try {
+    const addr = await nextAddressForWallet(wallet, network.value, change);
+    const address = Address.create(addr.value, addr.derivationPath);
+    // Update React state
+    return { type: WALLET_DERIVE_ADDRESS_SUCCESS, payload: { address } };
+  } catch (error) {
+    return { type: WALLET_DERIVE_ADDRESS_FAILURE, payload: { error } }
+  }
 }
 
-export function setAddress(
-  address: Address,
-  onSuccess?: (address: Address) => void,
-  onError?: (error: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
-  return async (dispatch) => {
-    try {
-      dispatch({ type: WALLET_SET_ADDRESS_SUCCESS, payload: { address } });
-      onSuccess?.(address);
-    } catch (error) {
-      dispatch({ type: WALLET_SET_ADDRESS_FAILURE, payload: { error } });
-      onError?.(error);
-    }
-  };
+export function setAddress(address: Address): ActionWithPayload<{ address?: Address, error?: any }> {
+  return {
+    type: WALLET_SET_ADDRESS_SUCCESS, payload: { address }
+  }
 }
 
-export function setPendingTx(
-  tx: Transaction,
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
-  return async (dispatch, getState) => {
-    const { wallets } = getState();
-    if (wallets.length <= 0) {
-      throw new Error('Wallet does not exist');
-    }
-    try {
-      dispatch({ type: WALLET_SET_PENDING_TX_SUCCESS, payload: { pendingTx: tx } });
-      onSuccess();
-    } catch (error) {
-      dispatch({ type: WALLET_SET_PENDING_TX_FAILURE, payload: { error } });
-      onError(error);
-    }
-  };
+export function setPendingTx(tx: Transaction): AnyAction {
+  return { type: WALLET_SET_PENDING_TX_SUCCESS, payload: { pendingTx: tx } }
 }
 
 export function unsetPendingTx(): AnyAction {

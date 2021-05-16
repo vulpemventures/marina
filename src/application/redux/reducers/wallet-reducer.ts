@@ -7,21 +7,6 @@ export type WalletState = IWallet[];
 
 export function walletReducer(state: WalletState = [], { type, payload }: AnyAction): WalletState {
   switch (type) {
-    case ACTION_TYPES.INIT_WALLET: {
-      const firstWallet: IWallet = {
-        ...state[0],
-        errors: undefined,
-        masterXPub: payload.masterXPub,
-        masterBlindingKey: payload.masterBlindingKey,
-        encryptedMnemonic: payload.encryptedMnemonic,
-        passwordHash: payload.passwordHash,
-        confidentialAddresses: payload.confidentialAddresses,
-        utxoMap: payload.utxoMap,
-        pendingTx: payload.pendingTx,
-      };
-      return Object.assign([], state, [firstWallet]);
-    }
-
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       const firstWallet: IWallet = {
         ...state[0],
@@ -31,7 +16,7 @@ export function walletReducer(state: WalletState = [], { type, payload }: AnyAct
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        utxoMap: payload.utxoMap,
+        utxoMap: {},
         pendingTx: undefined,
       };
       return Object.assign([], state, [firstWallet]);
@@ -55,7 +40,7 @@ export function walletReducer(state: WalletState = [], { type, payload }: AnyAct
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        utxoMap: payload.utxoMap,
+        utxoMap: {},
         pendingTx: undefined,
       };
       return Object.assign([], state, [firstWallet]);

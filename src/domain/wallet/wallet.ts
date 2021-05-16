@@ -25,7 +25,7 @@ export interface IWallet {
   passwordHash: PasswordHash;
   pendingTx?: Transaction;
   restored?: boolean;
-  utxoMap: Map<string, UtxoInterface>;
+  utxoMap: Record<string, UtxoInterface>;
 }
 
 /**
@@ -63,7 +63,7 @@ export class Wallet extends Entity<IWallet> {
     return this.props.pendingTx;
   }
 
-  get utxoMap(): Map<string, UtxoInterface> {
+  get utxoMap(): Record<string, UtxoInterface> {
     return this.props.utxoMap;
   }
 

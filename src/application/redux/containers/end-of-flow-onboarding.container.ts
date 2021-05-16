@@ -3,11 +3,11 @@ import EndOfFlowOnboardingView, { EndOfFlowProps } from "../../../presentation/o
 import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): EndOfFlowProps => {
-  console.log(state)
+  console.log(state.app.network.value)
   return {
     wallets: state.wallets,
     onboarding: state.onboarding,
-    network: state.app.network.props.value
+    network: state.app.network.value
   }
 }
 

@@ -5,7 +5,7 @@ import { ConnectData, ConnectDataByNetwork } from '../../domain/connect';
 import { parse, stringify } from '../../application/utils/browser-storage-converters';
 
 export class BrowserStorageConnectRepo implements IConnectRepository {
-  async addConnectData(data: ConnectData, network: Network['value']): Promise<void> {
+  async addConnectData(data: ConnectData, network: NetworkValue): Promise<void> {
     if (!network) throw new Error('Network is required');
     try {
       const currentConnectData = await this.getConnectData();

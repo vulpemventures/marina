@@ -7,7 +7,7 @@ import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils
 import { fromSatoshiStr } from '../../utils';
 import { Address } from '../../../domain/wallet/value-objects';
 import { IWallet } from '../../../domain/wallet/wallet';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 import { AssetsByNetwork } from '../../../domain/asset';
 
 interface LocationState {
@@ -16,7 +16,7 @@ interface LocationState {
 
 export interface ConfirmationProps {
   wallet: IWallet;
-  network: Network['value'];
+  network: NetworkValue;
   assets: AssetsByNetwork;
 }
 

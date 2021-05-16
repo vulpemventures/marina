@@ -4,4 +4,4 @@ export type Assets = {
   [hash: string]: { name: string; precision: number; ticker: string };
 };
 
-export type AssetsByNetwork = Record<Network['value'], Assets>;
+export type AssetsByNetwork = Record<NetworkValue, Assets>;

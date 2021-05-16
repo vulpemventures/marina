@@ -8,7 +8,7 @@ import { OnboardingState } from '../../../application/redux/reducers/onboarding-
 import { WalletState } from '../../../application/redux/reducers/wallet-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
 import Shell from '../../components/shell';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -16,7 +16,7 @@ import useLottieLoader from '../../hooks/use-lottie-loader';
 export interface EndOfFlowProps {
   wallets: WalletState;
   onboarding: OnboardingState;
-  network: Network['value'];
+  network: NetworkValue;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding, network }) => {
@@ -41,7 +41,6 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding
       };
 
       try {
-        console.log(network);
         const walletData = createWalletFromMnemonic(
           Password.create(onboarding.password),
           Mnemonic.create(onboarding.mnemonic),

@@ -16,4 +16,4 @@ export type ConnectData = {
   };
 };
 
-export type ConnectDataByNetwork = Record<Network['value'], ConnectData>;
+export type ConnectDataByNetwork = Record<NetworkValue, ConnectData>;

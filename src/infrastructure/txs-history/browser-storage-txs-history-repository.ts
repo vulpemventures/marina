@@ -18,7 +18,7 @@ export class BrowserStorageTxsHistoryRepo implements ITxsHistoryRepository {
    * @param txsHistory
    * @param network
    */
-  async addTxsHistory(txsHistory: TxsHistory, network: Network['value']): Promise<void> {
+  async addTxsHistory(txsHistory: TxsHistory, network: NetworkValue): Promise<void> {
     try {
       if (!network) {
         throw new Error('Network is required');

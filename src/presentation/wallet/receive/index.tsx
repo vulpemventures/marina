@@ -8,8 +8,16 @@ import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { deriveNewAddress } from '../../../application/redux/actions/wallet';
+import { NetworkValue } from '../../../domain/app/value-objects';
+import { IWallet } from '../../../domain/wallet/wallet';
+import { WALLET_DERIVE_ADDRESS_SUCCESS } from '../../../application/redux/actions/action-types';
 
-const Receive: React.FC = () => {
+export interface ReceiveProps {
+  network: Network;
+  wallet: IWallet;
+}
+
+const ReceiveView: React.FC<ReceiveProps> = ({ network, wallet }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -26,9 +34,15 @@ const Receive: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(deriveNewAddress(false, (addr) => setConfidentialAddress(addr.value), console.log));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    (async () => {
+      const action = await deriveNewAddress(wallet, network, false);
+      await dispatch(action);
+      if (action.type === WALLET_DERIVE_ADDRESS_SUCCESS) {
+        const address = action.payload.address;
+        setConfidentialAddress(address?.value || '');
+      }
+    })();
+  });
 
   return (
     <ShellPopUp
@@ -69,4 +83,4 @@ const Receive: React.FC = () => {
   );
 };
 
-export default Receive;
+export default ReceiveView;

@@ -54,13 +54,13 @@ import SeedConfirm from '../../application/redux/containers/seed-confirm.contain
 import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
 import Transactions from '../wallet/transactions';
-import Receive from '../wallet/receive';
-import SelectAsset from '../wallet/send/select-asset';
+import Receive from '../../application/redux/containers/receive.container';
+import SelectAsset from '../../application/redux/containers/select-asset.container';
 import AddressAmount from '../wallet/send/address-amount';
 import ChooseFee from '../../application/redux/containers/choose-fee.container';
 import Confirmation from '../../application/redux/containers/confirmation.container';
 import SendEndOfFlow from '../../application/redux/containers/end-of-flow.container';
-import PaymentSuccess from '../wallet/send/payment-success';
+import PaymentSuccess from '../../application/redux/containers/payment-success.container';
 import PaymentError from '../wallet/send/payment-error';
 // Settings
 import SettingsMenuSecurity from '../settings/menu-security';

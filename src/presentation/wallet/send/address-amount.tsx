@@ -184,14 +184,11 @@ const AddressAmount: React.FC = () => {
   const assetTicker = assets[app.network.value][transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
-    dispatch(
-      flushTx(() => {
-        history.push({
-          pathname: TRANSACTIONS_ROUTE,
-          state: { assetHash: transaction.asset, assetTicker, assetsBalance },
-        });
-      })
-    );
+    flushTx(dispatch);
+    history.push({
+      pathname: TRANSACTIONS_ROUTE,
+      state: { assetHash: transaction.asset, assetTicker, assetsBalance },
+    });
   };
 
   return (

@@ -9,8 +9,8 @@ export type BalancesByAsset = { [assetHash: string]: number };
  * @param onError
  */
 export function balances(state: RootState): BalancesByAsset {
-  const utxos = state.wallets[0].utxoMap.values();
-  const balances = Array.from(utxos).reduce((acc, curr) => {
+  const utxos = Object.values(state.wallets[0].utxoMap);
+  const balancesFromUtxos = utxos.reduce((acc, curr) => {
     if (!curr.asset || !curr.value) {
       return acc;
     }
@@ -22,5 +22,5 @@ export function balances(state: RootState): BalancesByAsset {
     return { [lbtcHash]: 0 };
   };
 
-  return balances;
+  return balancesFromUtxos;
 }

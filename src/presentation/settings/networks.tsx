@@ -15,10 +15,10 @@ const SettingsNetworks: React.FC = () => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const selectedNetwork = formatNetwork(network.value);
-  const setSelectedValue = (net: Network['value']) =>
+  const setSelectedValue = (net: NetworkValue) =>
     dispatch(
       changeNetwork(
-        Network.create(net.toLowerCase() as Network['value']),
+        Network.create(net.toLowerCase() as NetworkValue),
         () => ({}),
         (err: Error) => console.log(err)
       )

@@ -3,8 +3,9 @@ import { MasterXPub } from './../../domain/wallet/value-objects/master-extended-
 import { EncryptedMnemonic } from './../../domain/wallet/value-objects/encrypted-mnemonic';
 import { Address } from './../../domain/wallet/value-objects/address';
 import { MasterBlindingKey, Mnemonic as Mnemo, Password } from '../../domain/wallet/value-objects';
-import { Mnemonic, UtxoInterface, IdentityType } from 'ldk';
+import { Mnemonic, IdentityType } from 'ldk';
 import { encrypt, hash } from './crypto';
+import { NetworkValue } from '../../domain/app/value-objects';
 
 export interface WalletData {
   confidentialAddresses: Address[];
@@ -12,13 +13,12 @@ export interface WalletData {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
-  utxoMap: Map<string, UtxoInterface>;
 }
 
 export function createWalletFromMnemonic(
   password: Password,
   mnemonic: Mnemo,
-  chain: 'liquid' | 'regtest'
+  chain: NetworkValue,
 ): WalletData {
   const mnemonicWallet = new Mnemonic({
     chain,
@@ -31,7 +31,6 @@ export function createWalletFromMnemonic(
   const encryptedMnemonic = encrypt(mnemonic, password);
   const passwordHash = hash(password);
   const confidentialAddresses: Address[] = [];
-  const utxoMap = new Map<string, UtxoInterface>();
 
   // Update React state
   return {
@@ -40,6 +39,5 @@ export function createWalletFromMnemonic(
     masterXPub,
     masterBlindingKey,
     passwordHash,
-    utxoMap,
   }
 }

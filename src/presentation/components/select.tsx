@@ -4,7 +4,7 @@ import { Network } from '../../domain/app/value-objects';
 interface Props {
   data: string[];
   selectedValue: string;
-  setSelectedValue: (v: Network['value']) => void;
+  setSelectedValue: (v: NetworkValue) => void;
 }
 
 const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue }) => {

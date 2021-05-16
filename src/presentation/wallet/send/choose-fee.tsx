@@ -24,7 +24,7 @@ import {
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IWallet } from '../../../domain/wallet/wallet';
-import { Network } from '../../../domain/app/value-objects';
+import { NetworkValue } from '../../../domain/app/value-objects';
 import { AssetsByNetwork } from '../../../domain/asset';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { useDispatch } from 'react-redux';
@@ -42,7 +42,7 @@ interface LocationState {
 }
 
 export interface ChooseFeeProps {
-  network: Network['value'];
+  network: NetworkValue;
   assets: AssetsByNetwork;
   transaction: TransactionState;
   wallet: IWallet;
@@ -136,11 +136,11 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
    */
   useEffect(() => {
     if (supportedAssets.length > 0) {
-      void (async (): Promise<void> => {
+      void (async () => {
         if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
           try {
             const feeChangeAddress = await nextAddressForWallet(wallet, network, true);
-            dispatch(
+            await dispatch(
               setFeeChangeAddress(
                 Address.create(feeChangeAddress.value, feeChangeAddress.derivationPath)
               )
@@ -214,7 +214,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
   // Fetch topup utxo from Taxi
   useEffect(() => {
-    void (async (): Promise<void> => {
+    void (async () => {
       if (
         feeCurrency &&
         feeCurrency !== lbtcAssetByNetwork(network) &&
@@ -222,7 +222,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       ) {
         try {
           const taxiTopup = await fetchTopupFromTaxi(taxiURL[network], feeCurrency);
-          dispatch(setTopup(taxiTopup));
+          await dispatch(setTopup(taxiTopup));
         } catch (error) {
           console.error(error.message);
           setErrorMessage(error.message);
@@ -270,7 +270,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     unspents,
   ]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     let feeAmount: number;
     if (feeCurrency === lbtcAssetByNetwork(network)) {
       feeAmount = feeAmountFromTx(unsignedPendingTx);
@@ -282,31 +282,28 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     const totalSats = feeAmount + transaction.amountInSatoshi;
     const balanceAsset = balances[transaction.asset];
 
-    dispatch(
-      setPendingTx(
-        Transaction.create({
-          value: unsignedPendingTx,
-          sendAddress: transaction.receipientAddress?.value ?? '',
-          sendAsset: transaction.asset,
-          sendAmount: transaction.amountInSatoshi,
-          feeAsset: feeCurrency,
-          feeAmount: feeAmount,
-          changeAddress: totalSats === balanceAsset ? undefined : state.changeAddress,
-        }),
-        () => {
-          dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
-          history.push({
-            pathname: SEND_CONFIRMATION_ROUTE,
-            state: { changeAddress: state.changeAddress },
-          });
-          browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
-        },
-        (error) => {
-          console.log(error);
-          setErrorMessage(error.message);
-        }
-      )
-    );
+    const tx = Transaction.create({
+      value: unsignedPendingTx,
+      sendAddress: transaction.receipientAddress?.value ?? '',
+      sendAsset: transaction.asset,
+      sendAmount: transaction.amountInSatoshi,
+      feeAsset: feeCurrency,
+      feeAmount: feeAmount,
+      changeAddress: totalSats === balanceAsset ? undefined : state.changeAddress,
+    });
+
+    try {
+      await dispatch(setPendingTx(tx));
+      await dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
+      browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
+      history.push({
+        pathname: SEND_CONFIRMATION_ROUTE,
+        state: { changeAddress: state.changeAddress },
+      });
+    } catch (error) {
+      console.log(error);
+      setErrorMessage(error.message);
+    }
   };
 
   const handleBackBtn = () => {
