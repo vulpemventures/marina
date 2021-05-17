@@ -24,7 +24,6 @@ import {
 } from './utils';
 import { Address, Password } from '../domain/wallet/value-objects';
 import { Assets, AssetsByNetwork } from '../domain/asset';
-import { ConnectDataByNetwork } from '../domain/connect';
 import { signMessageWithMnemonic } from './utils/message';
 import marinaStore from './redux/store';
 import { disableWebsite, enableWebsite, flushMsg, flushTx, setMsg, setTx, setTxData } from './redux/actions/connect';
@@ -77,8 +76,6 @@ export default class Backend {
       // params is the list of arguments from the method
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          let enableSitePending: string = '';
-
           switch (name) {
             case Marina.prototype.getNetwork.name:
               try {
@@ -98,7 +95,6 @@ export default class Backend {
             case Marina.prototype.enable.name:
               try {
                 const hostname = await getCurrentUrl();
-                enableSitePending = hostname;
                 await showPopup(`connect/enable`);
                 await this.waitForEvent(Marina.prototype.enable.name);
                 return handleResponse(id);
@@ -112,7 +108,6 @@ export default class Backend {
 
                 // exit early if users rejected
                 if (!accepted) {
-                  enableSitePending = '';
                   // respond to the injecteded sript
                   this.emitter.emit(
                     Marina.prototype.enable.name,
@@ -490,6 +485,7 @@ async function getCoins(): Promise<UtxoInterface[]> {
 
 export async function updateUtxos() {
   try {
+    console.log('update utxos')
     const xpub = await getXpub();
     const addrs = await xpub.getAddresses();
     const wallet = marinaStore.getState().wallets[0];

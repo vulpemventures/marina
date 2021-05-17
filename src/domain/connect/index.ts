@@ -2,7 +2,6 @@ import { NetworkValue } from '../app/value-objects';
 
 export type ConnectData = {
   enabledSites: string[];
-  enableSitePending: string;
   tx?: {
     amount?: string;
     assetHash?: string;
@@ -18,7 +17,6 @@ export type ConnectData = {
 
 export function newEmptyConnectData(): ConnectData {
   return {
-    enableSitePending: '',
     enabledSites: []
   }
 }
