@@ -1,11 +1,10 @@
 import { browser, Idle } from 'webextension-polyfill-ts';
-import { App } from '../domain/app/app';
 import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { BrowserStorageAppRepo } from '../infrastructure/app/browser/browser-storage-app-repository';
 import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 import { wrapStore } from 'webext-redux';
 import marinaStore from './redux/store';
+import { logOut } from './redux/actions/app';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -80,14 +79,8 @@ try {
   browser.idle.onStateChanged.addListener(function (newState: Idle.IdleState) {
     if (newState !== 'active') {
       browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
-
       // this will handle the logout when the extension is closed
-      new BrowserStorageAppRepo()
-        .updateApp((app: App) => {
-          app.props.isAuthenticated = false;
-          return app;
-        })
-        .catch(console.error);
+      marinaStore.dispatch(logOut())
     }
   });
 } catch (error) {

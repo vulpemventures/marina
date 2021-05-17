@@ -1,6 +1,6 @@
 import { assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
-import { walletReducer, WalletState } from './wallet-reducer';
+import { walletReducer } from './wallet-reducer';
 import { transactionReducer } from './transaction-reducer';
 import { txsHistoryReducer } from './txs-history-reducer';
 import { combineReducers } from 'redux';

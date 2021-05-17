@@ -1,6 +1,4 @@
 import { PasswordHash } from './../../../domain/wallet/value-objects/password-hash';
-import { ThunkAction } from 'redux-thunk';
-import { RootState } from '../store';
 import {
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
@@ -9,14 +7,11 @@ import {
   ONBOARDING_COMPLETETED,
   ONBOARDING_FAILURE,
   LOGOUT_SUCCESS,
-  LOGOUT_FAILURE,
   CHANGE_NETWORK_SUCCESS,
-  CHANGE_NETWORK_FAILURE,
 } from './action-types';
-import { IAppState } from '../../../domain/common';
 import { hash } from '../../utils/crypto';
 import { Password } from '../../../domain/wallet/value-objects';
-import { NetworkValue } from '../../../domain/app/value-objects';
+import { Network } from '../../../domain/app/value-objects';
 import { ActionCreator, AnyAction } from 'redux';
 
 export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
@@ -54,33 +49,12 @@ export function logIn(
   }
 }
 
-export function logOut(
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
-  return async (dispatch) => {
-    try {
-      dispatch({ type: LOGOUT_SUCCESS });
-      onSuccess();
-    } catch (error) {
-      dispatch({ type: LOGOUT_FAILURE, payload: { error } });
-      onError(error);
-    }
-  };
+export function logOut(): AnyAction {
+  return { type: LOGOUT_SUCCESS }
 }
 
 export function changeNetwork(
   network: Network,
-  onSuccess: () => void,
-  onError: (err: Error) => void
-): ThunkAction<void, IAppState, void, AnyAction> {
-  return async (dispatch) => {
-    try {
-      dispatch({ type: CHANGE_NETWORK_SUCCESS, payload: { network } });
-      onSuccess();
-    } catch (error) {
-      dispatch({ type: CHANGE_NETWORK_FAILURE, payload: { error } });
-      onError(error);
-    }
-  };
+): AnyAction {
+  return { type: CHANGE_NETWORK_SUCCESS, payload: { network } }
 }
