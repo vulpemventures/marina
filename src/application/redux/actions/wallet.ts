@@ -48,11 +48,12 @@ export async function deriveNewAddress(
   change: boolean,
 ): Promise<ActionWithPayload<{ address?: Address, error?: any }>> {
   try {
-    const addr = await nextAddressForWallet(wallet, network.value, change);
-    const address = Address.create(addr.value, addr.derivationPath);
+    const address = await nextAddressForWallet(wallet, network.value, change);
+    console.log(address);
     // Update React state
     return { type: WALLET_DERIVE_ADDRESS_SUCCESS, payload: { address } };
   } catch (error) {
+    console.error(error);
     return { type: WALLET_DERIVE_ADDRESS_FAILURE, payload: { error } }
   }
 }

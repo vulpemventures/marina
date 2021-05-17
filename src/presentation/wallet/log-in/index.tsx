@@ -56,9 +56,9 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .min(8, 'Password should be 8 characters minimum.'),
   }),
 
-  handleSubmit: (values, { props, setErrors, setSubmitting }) => {
+  handleSubmit: async (values, { props, setErrors, setSubmitting }) => {
     const logInAction = logIn(values.password, props.passwordHash);
-    props.dispatch(logInAction).catch(console.error);
+    await props.dispatch(logInAction);
 
     if (logInAction.type === AUTHENTICATION_SUCCESS) {
       props.history.push(DEFAULT_ROUTE);

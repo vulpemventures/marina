@@ -9,6 +9,7 @@ export async function nextAddressForWallet(
   change: boolean
 ): Promise<Address> {
   const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
+  console.log(confidentialAddresses, masterBlindingKey.value, masterXPub.value);
   const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
   // Restore wallet from MasterPublicKey
   const pubKeyWallet = new MasterPublicKey({
@@ -21,6 +22,7 @@ export async function nextAddressForWallet(
     },
     initializeFromRestorer: true,
   });
+  console.log(pubKeyWallet)
   const isRestored = await pubKeyWallet.isRestored;
   if (!isRestored) {
     throw new Error('Failed to restore wallet');
@@ -90,14 +92,15 @@ export async function xpubWalletFromAddresses(
 }
 
 export class IdentityRestorerFromState implements IdentityRestorerInterface {
-  private addresses: string[];
+  private addresses: string[] = [];
 
   constructor(addresses: string[]) {
     this.addresses = addresses;
   }
 
   async addressHasBeenUsed(address: string): Promise<boolean> {
-    return Promise.resolve(this.addresses.includes(address));
+    if (this.addresses.length === 0) return false
+    return this.addresses.includes(address);
   }
 
   async addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]> {

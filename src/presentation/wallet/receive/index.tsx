@@ -39,6 +39,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ network, wallet }) => {
       await dispatch(action);
       if (action.type === WALLET_DERIVE_ADDRESS_SUCCESS) {
         const address = action.payload.address;
+        console.log(address);
         setConfidentialAddress(address?.value || '');
       }
     })();
