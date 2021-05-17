@@ -4,7 +4,7 @@ import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): EndOfFlowProps => ({
   wallet: state.wallets[0],
-  network: state.app.network.value,
+  network: state.app.network,
 })
 
 const SendEndOfFlow = connect(mapStateToProps)(EndOfFlow)

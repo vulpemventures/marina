@@ -4,7 +4,7 @@ import { balances } from "../selectors/balance.selector"
 import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): HomeProps => ({
-  network: state.app.network.value,
+  network: state.app.network,
   assets: state.assets,
   transaction: state.transaction,
   wallet: state.wallets[0],

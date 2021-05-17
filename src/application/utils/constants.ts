@@ -1,6 +1,6 @@
-import { Network } from '../../domain/app/value-objects';
 import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 import blockstreamAssetHashes from '../constants/blockstream_asset_hash.json';
+import { Network } from '../../domain/network';
 
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
@@ -13,7 +13,7 @@ export const taxiURL: Record<string, string> = {
   liquid: 'https://grpc.liquid.taxi',
 };
 
-export const explorerApiUrl: Record<NetworkValue, string> = {
+export const explorerApiUrl: Record<Network, string> = {
   regtest: 'http://localhost:3001',
   liquid: 'https://blockstream.info/liquid/api',
 };

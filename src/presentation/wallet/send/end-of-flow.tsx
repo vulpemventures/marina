@@ -15,6 +15,7 @@ import { debounce } from 'lodash';
 import { IWallet } from '../../../domain/wallet';
 import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
+import { match } from '../../../domain/password-hash';
 
 export interface EndOfFlowProps {
   wallet: IWallet;
@@ -32,7 +33,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
     let tx = '';
     try {
       const pass = createPassword(password);
-      if (!wallet.passwordHash.match(pass)) {
+      if (!match(password, wallet.passwordHash)) {
         throw new Error('Invalid password');
       }
 

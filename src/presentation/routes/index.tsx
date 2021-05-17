@@ -37,7 +37,7 @@ import {
 } from './constants';
 
 // Connect
-import ConnectEnable from '../connect/enable';
+import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
 import ConnectSpendPset from '../connect/spend-pset';
 import ConnectSignMsg from '../connect/sign-msg';
@@ -110,7 +110,7 @@ const Routes: React.FC = () => {
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
       {/*Connect*/}
-      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnable} />
+      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />

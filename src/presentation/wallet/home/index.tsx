@@ -41,7 +41,6 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, a
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;
-  console.log(assets, network);
 
   const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number }) => {
     const { assetHash, assetTicker, assetPrecision } = asset;

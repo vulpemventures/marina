@@ -5,7 +5,7 @@ import { RootState } from "../store"
 
 const mapStateToProps = (state: RootState): ChooseFeeProps => ({
   wallet: state.wallets[0],
-  network: state.app.network.value,
+  network: state.app.network,
   transaction: state.transaction,
   assets: state.assets,
   balances: balances(state),

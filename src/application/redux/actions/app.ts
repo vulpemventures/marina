@@ -11,7 +11,7 @@ import {
 import { ActionCreator, AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
 import { Password } from '../../../domain/password';
-import { PasswordHash } from '../../../domain/password-hash';
+import { match, PasswordHash } from '../../../domain/password-hash';
 
 export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
   type: VERIFICATION_SUCCESS,
@@ -37,7 +37,7 @@ export function logIn(
   passwordHash: PasswordHash,
 ): AnyAction {
   try {
-    if (!passwordHash.match(password)) {
+    if (!match(password, passwordHash)) {
       return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
     }
 

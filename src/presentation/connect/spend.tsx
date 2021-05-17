@@ -1,41 +1,29 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
-import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../application/redux/store';
+import {
+  connectWithConnectData,
+  WithConnectDataProps,
+} from '../../application/redux/containers/with-connect-data.container';
 
-const ConnectSpend: React.FC = () => {
+const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const app = useSelector((state: RootState) => state.app);
   const assets = useSelector((state: RootState) => state.assets);
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [tx, setTx] = useState<
-    | {
-        hostname?: string;
-        amount?: string;
-        assetHash?: string;
-        recipient?: string;
-      }
-    | undefined
-  >(undefined);
-
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      const network = (await repos.app.getApp()).network.value;
-      const data = await repos.connect.getConnectData();
-      setTx(data[network].tx);
-    })();
-  }, []);
 
   const windowProxy = new WindowProxy();
 
-  const assetTicker = tx?.assetHash ? assets[app.network.value][tx.assetHash]?.ticker : 'Unknown';
+  const assetTicker = connectData.tx?.assetHash
+    ? assets[app.network][connectData.tx.assetHash]?.ticker
+    : 'Unknown';
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
@@ -73,19 +61,19 @@ const ConnectSpend: React.FC = () => {
     >
       {error.length === 0 ? (
         <>
-          <h1 className="mt-8 text-2xl font-medium break-all">{tx?.hostname}</h1>
+          <h1 className="mt-8 text-2xl font-medium break-all">{connectData.tx?.hostname}</h1>
 
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
           <div className="container flex justify-between mt-16">
-            <span className="text-lg font-medium">{tx?.amount}</span>
+            <span className="text-lg font-medium">{connectData.tx?.amount}</span>
             <span className="text-lg font-medium">{assetTicker}</span>
           </div>
 
           <div className="container flex items-baseline justify-between mt-4">
             <span className="mr-2 text-lg font-medium">To: </span>
             <span className="font-small text-sm break-all">
-              {formatAddress(tx?.recipient ?? '')}
+              {formatAddress(connectData.tx?.recipient ?? '')}
             </span>
           </div>
 
@@ -121,4 +109,4 @@ const ConnectSpend: React.FC = () => {
   );
 };
 
-export default ConnectSpend;
+export default connectWithConnectData(ConnectSpend);

@@ -1,6 +1,6 @@
 import { fromXpub, IdentityRestorerInterface, IdentityType, MasterPublicKey, Mnemonic } from 'ldk';
 import { IdentityInterface } from 'ldk/dist/identity/identity';
-import { Address } from '../../domain/address';
+import { Address, createAddress } from '../../domain/address';
 import { IWallet } from '../../domain/wallet';
 
 export async function nextAddressForWallet(
@@ -9,7 +9,6 @@ export async function nextAddressForWallet(
   change: boolean
 ): Promise<Address> {
   const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
-  console.log(confidentialAddresses, masterBlindingKey.value, masterXPub.value);
   const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
   // Restore wallet from MasterPublicKey
   const pubKeyWallet = new MasterPublicKey({
@@ -17,12 +16,11 @@ export async function nextAddressForWallet(
     restorer,
     type: IdentityType.MasterPublicKey,
     value: {
-      masterPublicKey: fromXpub(masterXPub.value, chain),
-      masterBlindingKey: masterBlindingKey.value,
+      masterPublicKey: fromXpub(masterXPub, chain),
+      masterBlindingKey: masterBlindingKey,
     },
     initializeFromRestorer: true,
   });
-  console.log(pubKeyWallet)
   const isRestored = await pubKeyWallet.isRestored;
   if (!isRestored) {
     throw new Error('Failed to restore wallet');
@@ -43,7 +41,7 @@ export async function nextAddressForWallet(
     };
   }
 
-  return Address.create(nextAddress.confidentialAddress, nextAddress.derivationPath);
+  return createAddress(nextAddress.confidentialAddress, nextAddress.derivationPath);
 }
 
 export async function mnemonicWalletFromAddresses(

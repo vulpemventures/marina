@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import { repos } from '../../infrastructure';
 import WindowProxy from '../../application/proxy';
+import { browser } from 'webextension-polyfill-ts';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
-const ConnectEnable: React.FC = () => {
+const ConnectEnableView: React.FC = () => {
   const [hostname, setHostname] = useState<string>('');
 
   useEffect(() => {
-    void (async (): Promise<void> => {
-      const network = (await repos.app.getApp()).network.value;
-      const data = await repos.connect.getConnectData();
-      const hostname = data[network].enableSitePending;
-      setHostname(hostname);
+    void (async () => {
+      const [currentTab] = await browser.tabs.query({ currentWindow: true, active: true });
+      if (!currentTab.url) throw new Error('No active tab available');
+      const url = new URL(currentTab.url);
+      setHostname(url.hostname);
     })();
-  }, []);
+  });
 
   const windowProxy = new WindowProxy();
 
@@ -68,4 +68,4 @@ const ConnectEnable: React.FC = () => {
   );
 };
 
-export default ConnectEnable;
+export default ConnectEnableView;
