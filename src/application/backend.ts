@@ -486,9 +486,9 @@ async function getCoins(): Promise<UtxoInterface[]> {
 
 export async function updateUtxos() {
   try {
-    console.log('update utxos')
     const xpub = await getXpub();
     const addrs = await xpub.getAddresses();
+    console.log('update utxos', addrs);
     const wallet = marinaStore.getState().wallets[0];
     const network = getCurrentNetwork()
     const newMap = { ...wallet.utxoMap };

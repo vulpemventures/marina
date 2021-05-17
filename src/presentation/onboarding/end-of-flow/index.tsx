@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
-import { onBoardingCompleted, verifyWalletSuccess } from '../../../application/redux/actions/app';
+import { onBoardingCompleted } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { createWallet, restoreWallet } from '../../../application/redux/actions/wallet';
 import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
@@ -29,37 +29,37 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallets, onboarding
   useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
-    if (wallets.length <= 0) {
-      const dispatchOnboardingCompleted = async () => {
-        // Startup alarms to fetch utxos & set the popup page
-        (async () => {
+    (async () => {
+      if (wallets.length <= 0) {
+        const dispatchOnboardingCompleted = async () => {
+          // Startup alarms to fetch utxos & set the popup page
           await provisionBackgroundScript();
-        })().catch(console.error);
 
-        await dispatch(onBoardingCompleted());
-        await dispatch(flushOnboarding());
-        setIsLoading(false);
-      };
+          await dispatch(onBoardingCompleted());
+          await dispatch(flushOnboarding());
+          setIsLoading(false);
+        };
 
-      try {
-        const walletData = createWalletFromMnemonic(
-          createPassword(onboarding.password),
-          createMnemonic(onboarding.mnemonic),
-          network
-        );
+        try {
+          const walletData = await createWalletFromMnemonic(
+            createPassword(onboarding.password),
+            createMnemonic(onboarding.mnemonic),
+            network
+          );
 
-        let createAction = onboarding.restored
-          ? restoreWallet(walletData)
-          : createWallet(walletData);
+          let createAction = onboarding.restored
+            ? restoreWallet(walletData)
+            : createWallet(walletData);
 
-        dispatch(createAction)
-          .then(() => dispatchOnboardingCompleted())
-          .catch(console.error);
-      } catch (err) {
-        console.error(err);
+          dispatch(createAction)
+            .then(() => dispatchOnboardingCompleted())
+            .catch(console.error);
+        } catch (err) {
+          console.error(err);
+        }
       }
-    }
-  });
+    })().catch(console.error);
+  }, []);
 
   if (isLoading) {
     return (
