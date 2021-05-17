@@ -23,11 +23,14 @@ import {
   xpubWalletFromAddresses,
 } from './utils';
 import { Address, Password } from '../domain/wallet/value-objects';
-import { Network } from '../domain/app/value-objects';
 import { Assets, AssetsByNetwork } from '../domain/asset';
 import { ConnectDataByNetwork } from '../domain/connect';
-import { repos } from '../infrastructure';
 import { signMessageWithMnemonic } from './utils/message';
+import marinaStore from './redux/store';
+import { disableWebsite, enableWebsite, flushMsg, flushTx, setMsg, setTx, setTxData } from './redux/actions/connect';
+import { NetworkValue } from '../domain/app/value-objects';
+import { ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './redux/actions/action-types';
+import { setAddress } from './redux/actions/wallet';
 
 const POPUP_HTML = 'popup.html';
 
@@ -51,29 +54,19 @@ export default class Backend {
   }
 
   async enableSite(network: 'liquid' | 'regtest') {
-    await repos.connect.updateConnectData((data: ConnectDataByNetwork) => {
-      if (!data[network].enabledSites.includes(data[network].enableSitePending)) {
-        data[network].enabledSites.push(data[network].enableSitePending);
-        data[network].enableSitePending = '';
-      }
-      return data;
-    });
+    const hostname = await getCurrentUrl();
+    marinaStore.dispatch(enableWebsite(hostname, network));
   }
 
   async disableSite(network: 'liquid' | 'regtest') {
     const hostname = await getCurrentUrl();
-    await repos.connect.updateConnectData((data: ConnectDataByNetwork) => {
-      if (data[network].enabledSites.includes(hostname)) {
-        data[network].enabledSites.splice(data[network].enabledSites.indexOf(hostname), 1);
-      }
-      return data;
-    });
+    marinaStore.dispatch(disableWebsite(hostname, network));
   }
 
   async isCurentSiteEnabled(network: 'liquid' | 'regtest') {
     const hostname = await getCurrentUrl();
-    const data = await repos.connect.getConnectData();
-    return data[network].enabledSites.includes(hostname);
+    const enabledSites = marinaStore.getState().connect[network].enabledSites
+    return enabledSites.includes(hostname);
   }
 
   start() {
@@ -84,25 +77,19 @@ export default class Backend {
       // params is the list of arguments from the method
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          let network: 'regtest' | 'liquid';
-
-          try {
-            network = await getCurrentNetwork();
-          } catch (e: any) {
-            return handleError(id, e);
-          }
+          let enableSitePending: string = '';
 
           switch (name) {
             case Marina.prototype.getNetwork.name:
               try {
-                return handleResponse(id, network);
+                return handleResponse(id, getCurrentNetwork());
               } catch (e: any) {
                 return handleError(id, e);
               }
 
             case Marina.prototype.isEnabled.name:
               try {
-                const isEnabled = await this.isCurentSiteEnabled(network);
+                const isEnabled = await this.isCurentSiteEnabled(getCurrentNetwork());
                 return handleResponse(id, isEnabled);
               } catch (e: any) {
                 return handleError(id, e);
@@ -111,15 +98,9 @@ export default class Backend {
             case Marina.prototype.enable.name:
               try {
                 const hostname = await getCurrentUrl();
-                await repos.connect.updateConnectData((data) => {
-                  data[network].enableSitePending = hostname;
-                  return data;
-                });
-
+                enableSitePending = hostname;
                 await showPopup(`connect/enable`);
-
                 await this.waitForEvent(Marina.prototype.enable.name);
-
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -131,10 +112,7 @@ export default class Backend {
 
                 // exit early if users rejected
                 if (!accepted) {
-                  await repos.connect.updateConnectData((data) => {
-                    data[network].enableSitePending = '';
-                    return data;
-                  });
+                  enableSitePending = '';
                   // respond to the injecteded sript
                   this.emitter.emit(
                     Marina.prototype.enable.name,
@@ -145,7 +123,7 @@ export default class Backend {
                 }
 
                 // persist the site
-                await this.enableSite(network);
+                await this.enableSite(getCurrentNetwork());
                 // respond to the injecteded sript
                 this.emitter.emit(Marina.prototype.enable.name);
                 // repond to the popup so it can be closed
@@ -156,7 +134,7 @@ export default class Backend {
 
             case Marina.prototype.disable.name:
               try {
-                await this.disableSite(network);
+                await this.disableSite(getCurrentNetwork());
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -164,7 +142,7 @@ export default class Backend {
 
             case Marina.prototype.getAddresses.name:
               try {
-                if (!(await this.isCurentSiteEnabled(network))) {
+                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -176,7 +154,7 @@ export default class Backend {
 
             case Marina.prototype.getNextAddress.name:
               try {
-                if (!(await this.isCurentSiteEnabled(network))) {
+                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -189,7 +167,7 @@ export default class Backend {
 
             case Marina.prototype.getNextChangeAddress.name:
               try {
-                if (!(await this.isCurentSiteEnabled(network))) {
+                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -202,7 +180,7 @@ export default class Backend {
 
             case Marina.prototype.signTransaction.name:
               try {
-                if (!(await this.isCurentSiteEnabled(network))) {
+                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 if (!params || params.length !== 1 || params.some((p) => p === null)) {
@@ -210,13 +188,7 @@ export default class Backend {
                 }
                 const hostname = await getCurrentUrl();
                 const [tx] = params;
-                await repos.connect.updateConnectData((data) => {
-                  data[network].tx = {
-                    hostname: hostname,
-                    pset: tx,
-                  };
-                  return data;
-                });
+                marinaStore.dispatch(setTx(hostname, tx, getCurrentNetwork()))
                 await showPopup(`connect/spend-pset`);
 
                 const rawTx = await this.waitForEvent(Marina.prototype.signTransaction.name);
@@ -229,14 +201,12 @@ export default class Backend {
             case 'SIGN_TRANSACTION_RESPONSE':
               try {
                 const [accepted, password] = params;
+                const network = getCurrentNetwork();
 
                 // exit early if user rejected the transaction
                 if (!accepted) {
                   // Flush tx data
-                  await repos.connect.updateConnectData((data) => {
-                    data[network].tx = undefined;
-                    return data;
-                  });
+                  marinaStore.dispatch(flushTx(network))
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.signTransaction.name,
@@ -246,14 +216,11 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const connectDataByNetwork = await repos.connect.getConnectData();
-                const { tx } = connectDataByNetwork[network];
-
+                const { tx } = marinaStore.getState().connect[network]
                 if (!tx || !tx.pset) throw new Error('Transaction data are missing');
 
-                const psetBase64 = connectDataByNetwork[network].tx!.pset as string;
                 const mnemo = await getMnemonic(password);
-                const signedTx = await mnemo.signPset(psetBase64);
+                const signedTx = await mnemo.signPset(tx.pset);
 
                 // respond to the injected script
                 this.emitter.emit(Marina.prototype.signTransaction.name, signedTx);
@@ -264,6 +231,7 @@ export default class Backend {
               }
 
             case Marina.prototype.sendTransaction.name:
+              const network = getCurrentNetwork();
               try {
                 if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
@@ -273,25 +241,14 @@ export default class Backend {
                 }
                 const [recipientAddress, amountInSatoshis, assetHash]: string[] = params;
                 const hostname = await getCurrentUrl();
-                await repos.connect.updateConnectData((data) => {
-                  data[network].tx = {
-                    hostname: hostname,
-                    recipient: recipientAddress,
-                    amount: amountInSatoshis,
-                    assetHash: assetHash,
-                  };
-                  return data;
-                });
+                marinaStore.dispatch(setTxData(hostname, recipientAddress, amountInSatoshis, assetHash, network))
                 await showPopup(`connect/spend`);
 
                 const txid = await this.waitForEvent(Marina.prototype.sendTransaction.name);
 
                 return handleResponse(id, txid);
               } catch (e: any) {
-                await repos.connect.updateConnectData((data) => {
-                  data[network].tx = undefined;
-                  return data;
-                });
+                marinaStore.dispatch(flushTx(network))
                 return handleError(id, e);
               }
 
@@ -299,14 +256,12 @@ export default class Backend {
             case 'SEND_TRANSACTION_RESPONSE':
               try {
                 const [accepted, password] = params;
+                const network = getCurrentNetwork();
 
                 // exit early if user rejected the transaction
                 if (!accepted) {
                   // Flush tx data
-                  await repos.connect.updateConnectData((data) => {
-                    data[network].tx = undefined;
-                    return data;
-                  });
+                  marinaStore.dispatch(flushTx(network));
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.sendTransaction.name,
@@ -316,9 +271,7 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const connectDataByNetwork = await repos.connect.getConnectData();
-                const { tx } = connectDataByNetwork[network];
-
+                const { tx } = marinaStore.getState().connect[network];
                 if (!tx || !tx.amount || !tx.assetHash || !tx.recipient)
                   throw new Error('Transaction data are missing');
 
@@ -371,10 +324,7 @@ export default class Backend {
                 await persistAddress(changeAddress);
 
                 // Flush tx data
-                await repos.connect.updateConnectData((data) => {
-                  data[network].tx = undefined;
-                  return data;
-                });
+                marinaStore.dispatch(flushTx(getCurrentNetwork()));
 
                 // respond to the injected script
                 this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
@@ -387,6 +337,7 @@ export default class Backend {
 
             case Marina.prototype.signMessage.name:
               try {
+                const network = getCurrentNetwork();
                 if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
@@ -395,13 +346,7 @@ export default class Backend {
                 }
                 const hostname = await getCurrentUrl();
                 const [message] = params;
-                await repos.connect.updateConnectData((data) => {
-                  data[network].msg = {
-                    hostname: hostname,
-                    message: message,
-                  };
-                  return data;
-                });
+                marinaStore.dispatch(setMsg(hostname, message, network))
                 await showPopup(`connect/sign-msg`);
 
                 const rawTx = await this.waitForEvent(Marina.prototype.signMessage.name);
@@ -418,10 +363,7 @@ export default class Backend {
                 // exit early if user rejected the signature
                 if (!accepted) {
                   // Flush msg data
-                  await repos.connect.updateConnectData((data) => {
-                    data[network].msg = undefined;
-                    return data;
-                  });
+                  marinaStore.dispatch(flushMsg(getCurrentNetwork()));
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.signMessage.name,
@@ -431,14 +373,12 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const connectDataByNetwork = await repos.connect.getConnectData();
-                const { msg } = connectDataByNetwork[network];
 
+                const { msg } = marinaStore.getState().connect[getCurrentNetwork()];
                 if (!msg || !msg.message) throw new Error('Message data are missing');
 
-                const message = connectDataByNetwork[network].msg!.message as string;
                 // SIGN THE MESSAGE WITH FIRST ADDRESS FROM HD WALLET
-                const signedMsg = await signMsgWithPassword(message, password);
+                const signedMsg = await signMsgWithPassword(msg.message, password);
 
                 // respond to the injected script
                 this.emitter.emit(Marina.prototype.signMessage.name, signedMsg);
@@ -493,7 +433,8 @@ export function showPopup(path?: string): Promise<Windows.Window> {
 }
 
 async function getXpub(): Promise<IdentityInterface> {
-  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
+  const { app, wallets } = marinaStore.getState();
+  const wallet = wallets[0];
   return await xpubWalletFromAddresses(
     wallet.masterXPub.value,
     wallet.masterBlindingKey.value,
@@ -503,12 +444,13 @@ async function getXpub(): Promise<IdentityInterface> {
 }
 
 async function persistAddress(addr: AddressInterface): Promise<void> {
-  await repos.wallet.addDerivedAddress(Address.create(addr.confidentialAddress));
+  marinaStore.dispatch(setAddress(Address.create(addr.confidentialAddress)));
 }
 
 async function getMnemonic(password: string): Promise<IdentityInterface> {
   let mnemonic = '';
-  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
+  const { app, wallets } = marinaStore.getState();
+  const wallet = wallets[0];
   try {
     mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
   } catch (e: any) {
@@ -527,66 +469,68 @@ async function signMsgWithPassword(
   password: string
 ): Promise<{ signature: string; address: string }> {
   let mnemonic = '';
-  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
   try {
+    const wallet = marinaStore.getState().wallets[0];
     mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
   } catch (e: any) {
     throw new Error('Invalid password');
   }
-  const liquidJSNet = networks[app.network.value];
+  const liquidJSNet = networks[getCurrentNetwork()];
   return await signMessageWithMnemonic(message, mnemonic, liquidJSNet);
 }
 
-async function getCurrentNetwork(): Promise<NetworkValue> {
-  const app = await repos.app.getApp();
-  return app.network.value;
+function getCurrentNetwork(): NetworkValue {
+  return marinaStore.getState().app.network.value;
 }
 
 async function getCoins(): Promise<UtxoInterface[]> {
-  const wallet = await repos.wallet.getOrCreateWallet();
-  return Array.from(wallet.utxoMap.values());
+  const wallet = marinaStore.getState().wallets[0];
+  return Object.values(wallet.utxoMap);
 }
 
 export async function updateUtxos() {
-  const xpub = await getXpub();
-  const addrs = await xpub.getAddresses();
-  const [app, wallet] = await Promise.all([repos.app.getApp(), repos.wallet.getOrCreateWallet()]);
-  const newMap = new Map(wallet.utxoMap);
-  // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
-  const fetchedUtxos = await fetchAndUnblindUtxos(
-    addrs,
-    explorerApiUrl[app.network.value],
-    // Skip fetch and unblind if utxo exists in storage
-    (utxo) =>
-      Array.from(wallet.utxoMap.keys()).some((outpoint) => `${utxo.txid}:${utxo.vout}` === outpoint)
-  );
-  if (fetchedUtxos.every((u) => isBlindedUtxo(u)) && fetchedUtxos.length === wallet.utxoMap.size)
-    return;
-  // Add to newMap fetched utxo(s) not present in storage
-  fetchedUtxos.forEach((fetchedUtxo) => {
-    const isPresent = Array.from(wallet.utxoMap.keys()).some(
-      (storedUtxoOutpoint) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
+  try {
+    const xpub = await getXpub();
+    const addrs = await xpub.getAddresses();
+    const wallet = marinaStore.getState().wallets[0];
+    const network = getCurrentNetwork()
+    const newMap = { ...wallet.utxoMap };
+    // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
+    const fetchedUtxos = await fetchAndUnblindUtxos(
+      addrs,
+      explorerApiUrl[network],
+      // Skip fetch and unblind if utxo exists in storage
+      (utxo) =>
+        Object.keys(wallet.utxoMap).some((outpoint) => `${utxo.txid}:${utxo.vout}` === outpoint)
     );
-    if (!isPresent) newMap.set(toStringOutpoint(fetchedUtxo), fetchedUtxo);
-  });
-  // Delete from newMap utxo(s) not present in fetched utxos
-  Array.from(newMap.keys()).forEach((storedUtxoOutpoint) => {
-    const isPresent = fetchedUtxos.some(
-      (fetchedUtxo) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
-    );
-    if (!isPresent) newMap.delete(storedUtxoOutpoint);
-  });
-  await repos.wallet.setUtxos(newMap);
+    if (fetchedUtxos.every((u) => isBlindedUtxo(u)) && fetchedUtxos.length === Object.keys(wallet.utxoMap).length)
+      return;
+    // Add to newMap fetched utxo(s) not present in storage
+    fetchedUtxos.forEach((fetchedUtxo) => {
+      const isPresent = Object.keys(wallet.utxoMap).some(
+        (storedUtxoOutpoint) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
+      );
+      if (!isPresent) newMap[toStringOutpoint(fetchedUtxo)] = fetchedUtxo;
+    });
+    // Delete from newMap utxo(s) not present in fetched utxos
+    Object.keys(newMap).forEach((storedUtxoOutpoint) => {
+      const isPresent = fetchedUtxos.some(
+        (fetchedUtxo) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
+      );
+      if (!isPresent) delete newMap[storedUtxoOutpoint];
+    });
+
+    marinaStore.dispatch({ type: WALLET_SET_UTXOS_SUCCESS, payload: { utxoMap: newMap } })
+  } catch (error) {
+    marinaStore.dispatch({ type: WALLET_SET_UTXOS_FAILURE, payload: { error } });
+  }
 }
 
 export async function updateAllAssetInfos() {
-  const [app, assets, wallet] = await Promise.all([
-    repos.app.getApp(),
-    repos.assets.getAssets(),
-    repos.wallet.getOrCreateWallet(),
-  ]);
+  const { app, assets, wallets } = marinaStore.getState();
+  const wallet = wallets[0];
   const assetsFromUtxos: Assets = await Promise.all(
-    [...wallet.utxoMap.values()].map(async ({ asset }) =>
+    [...Object.values(wallet.utxoMap)].map(async ({ asset }) =>
       // If asset in store don't fetch
       !((asset as string) in assets[app.network.value])
         ? (await axios.get(`${explorerApiUrl[app.network.value]}/asset/${asset}`)).data
@@ -613,6 +557,7 @@ export async function updateAllAssetInfos() {
       assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };
     }
     const newAssets: AssetsByNetwork = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
-    await repos.assets.updateAssets(() => newAssets);
+
+    marinaStore.dispatch({ type: ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, payload: { assets: newAssets } });
   }
 }

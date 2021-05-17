@@ -7,7 +7,7 @@ import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Address } from '../../../domain/wallet/value-objects';
-import { NetworkValue } from '../../../domain/app/value-objects';
+import { Network } from '../../../domain/app/value-objects';
 import { IWallet } from '../../../domain/wallet/wallet';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';

@@ -65,7 +65,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const [satsPerByte, setSatsPerByte] = useState<number>(0);
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
-  const unspents = Array.from(wallet.utxoMap.values());
+  const unspents = Object.values(wallet.utxoMap);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Populate ref div with svg animations
@@ -84,7 +84,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
   );
 
-  const receipients: RecipientInterface[] = useMemo(
+  const recipients: RecipientInterface[] = useMemo(
     () => [
       {
         asset: transaction.asset,
@@ -179,7 +179,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
             if (currentSatsPerByte !== satsPerByte) {
               const tx: string = w.buildTx(
                 w.createTx(),
-                receipients,
+                recipients,
                 greedyCoinSelector(),
                 changeAddressGetter,
                 true,
@@ -200,7 +200,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     changeAddressGetter,
     feeCurrency,
     feeLevel,
-    receipients,
+    recipients,
     satsPerByte,
     supportedAssets,
     supportedAssets.length,
@@ -247,7 +247,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         const tx: string = fillTaxiTx(
           transaction.taxiTopup.topup?.partial as string,
           unspents,
-          receipients,
+          recipients,
           taxiPayout,
           greedyCoinSelector(),
           changeAddressGetter
@@ -263,7 +263,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     assets,
     changeAddressGetter,
     feeCurrency,
-    receipients,
+    recipients,
     transaction.asset,
     transaction.feeChangeAddress,
     transaction.taxiTopup,

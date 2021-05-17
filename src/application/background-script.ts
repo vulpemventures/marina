@@ -48,7 +48,6 @@ browser.runtime.onStartup.addListener(() => {
   (async () => {
     // Everytime the browser starts up we need to set up the popup page
     await browser.browserAction.setPopup({ popup: 'popup.html' });
-    console.log('popup set')
   })().catch(console.error);
 });
 
@@ -67,8 +66,7 @@ browser.browserAction.onClicked.addListener(() => {
     // the wallet creation process, we let user re-open it
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
-    const store = await browser.storage.local.get('wallets');
-    if (store.wallets === undefined || store.wallets.length <= 0) {
+    if (marinaStore.getState().wallets.length <= 0) {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     }

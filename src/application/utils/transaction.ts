@@ -19,7 +19,7 @@ import { Address } from '../../domain/wallet/value-objects';
 import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { lbtcAssetByNetwork, usdtAssetHash } from './network';
-import { Network } from '../../domain/app/value-objects';
+import { NetworkValue } from '../../domain/app/value-objects';
 import {
   TxDisplayInterface,
   TxsByAssetsInterface,

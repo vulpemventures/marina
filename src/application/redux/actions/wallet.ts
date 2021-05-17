@@ -16,7 +16,7 @@ import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { IWallet } from '../../../domain/wallet/wallet';
-import { NetworkValue } from '../../../domain/app/value-objects';
+import { Network } from '../../../domain/app/value-objects';
 
 export function createWallet(
   walletData: WalletData
