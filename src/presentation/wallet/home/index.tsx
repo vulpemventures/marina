@@ -21,15 +21,15 @@ import {
 } from '../../../application/utils';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
-import { AssetsByNetwork } from '../../../domain/asset';
+import { AssetsByNetwork } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { IWallet } from '../../../domain/wallet/wallet';
+import { IWallet } from '../../../domain/wallet';
 import { flushTx } from '../../../application/redux/actions/transaction';
-import { NetworkValue } from '../../../domain/app/value-objects';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import { Network } from '../../../domain/network';
 
 export interface HomeProps {
-  network: NetworkValue;
+  network: Network;
   assets: AssetsByNetwork;
   transaction: TransactionState;
   wallet: IWallet;

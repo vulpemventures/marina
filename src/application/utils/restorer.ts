@@ -1,7 +1,7 @@
 import { fromXpub, IdentityRestorerInterface, IdentityType, MasterPublicKey, Mnemonic } from 'ldk';
 import { IdentityInterface } from 'ldk/dist/identity/identity';
-import { Address } from '../../domain/wallet/value-objects';
-import { IWallet } from '../../domain/wallet/wallet';
+import { Address } from '../../domain/address';
+import { IWallet } from '../../domain/wallet';
 
 export async function nextAddressForWallet(
   wallet: IWallet,

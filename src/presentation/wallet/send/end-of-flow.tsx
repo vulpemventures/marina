@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { useHistory } from 'react-router';
-import { Password } from '../../../domain/wallet/value-objects';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
@@ -10,16 +9,16 @@ import {
   broadcastTx,
   decrypt,
   explorerApiUrl,
-  hash,
 } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
-import { IWallet } from '../../../domain/wallet/wallet';
-import { NetworkValue } from '../../../domain/app/value-objects';
+import { IWallet } from '../../../domain/wallet';
+import { Network } from '../../../domain/network';
+import { createPassword } from '../../../domain/password';
 
 export interface EndOfFlowProps {
   wallet: IWallet;
-  network: NetworkValue;
+  network: Network;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
@@ -32,18 +31,22 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
   const handleUnlock = async (password: string) => {
     let tx = '';
     try {
-      if (!wallet.passwordHash.equals(hash(Password.create(password)))) {
+      const pass = createPassword(password);
+      if (!wallet.passwordHash.match(pass)) {
         throw new Error('Invalid password');
       }
-      const mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
-      const { props } = wallet.pendingTx!;
-      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(props, network);
+
+      const pendingTx = wallet.pendingTx;
+      if (!pendingTx) throw new Error('pending tx is undefined');
+
+      const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
+      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(pendingTx, network);
       tx = await blindAndSignPset(
         mnemonic,
-        wallet.masterBlindingKey.value,
+        wallet.masterBlindingKey,
         wallet.confidentialAddresses,
         network,
-        props.value,
+        pendingTx.pset,
         outputsToBlind,
         outPubkeys
       );

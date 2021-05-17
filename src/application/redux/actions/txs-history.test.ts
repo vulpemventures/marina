@@ -16,7 +16,7 @@ import { deriveNewAddress } from './wallet';
 import { confidentialAddresses } from '../../../../test/fixtures/wallet.json';
 import { transactionInitState } from '../reducers/transaction-reducer';
 import { testTx, testTxsHistoryByNetworkDTO } from '../../../../test/fixtures/test-txs-history';
-import { IAppState } from '../../../domain/common';
+import { RootReducerState } from '../../../domain/common';
 
 jest.mock('uuid');
 
@@ -72,7 +72,7 @@ describe('Transaction History Actions', () => {
         store.dispatch(
           updateTxsHistory(
             () => {
-              const { txsHistory } = store.getState() as IAppState;
+              const { txsHistory } = store.getState() as RootReducerState;
               resolve(txsHistory.regtest[txid]);
             },
             (err: Error) => reject(err.message)

@@ -1,4 +1,4 @@
-import { NetworkValue } from '../app/value-objects';
+import { Network } from "./network";
 
 export type ConnectData = {
   enabledSites: string[];
@@ -21,4 +21,4 @@ export function newEmptyConnectData(): ConnectData {
   }
 }
 
-export type ConnectDataByNetwork = Record<NetworkValue, ConnectData>;
+export type ConnectDataByNetwork = Record<Network, ConnectData>;

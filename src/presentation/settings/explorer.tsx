@@ -6,20 +6,20 @@ import ShellPopUp from '../components/shell-popup';
 import Input from '../components/input';
 import Button from '../components/button';
 import { esploraURL } from '../utils';
-import { Network } from '../../domain/app/value-objects';
 import { ProxyStoreDispatch } from '..';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../application/redux/store';
+import { Network } from '../../domain/network';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;
-  network: NetworkValue;
+  network: Network;
 }
 
 interface SettingsExplorerFormProps {
   dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
-  network: NetworkValue;
+  network: Network;
 }
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
@@ -97,11 +97,7 @@ const SettingsExplorer: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Explorer"
     >
-      <SettingsExplorerEnhancedForm
-        dispatch={dispatch}
-        history={history}
-        network={app.network.value}
-      />
+      <SettingsExplorerEnhancedForm dispatch={dispatch} history={history} network={app.network} />
     </ShellPopUp>
   );
 };

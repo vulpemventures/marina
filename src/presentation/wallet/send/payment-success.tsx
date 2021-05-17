@@ -6,13 +6,13 @@ import Button from '../../components/button';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { Address } from '../../../domain/wallet/value-objects';
-import { Network } from '../../../domain/app/value-objects';
-import { IWallet } from '../../../domain/wallet/wallet';
+import { IWallet } from '../../../domain/wallet';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { flushTx } from '../../../application/redux/actions/transaction';
 import { deriveNewAddress, setAddress } from '../../../application/redux/actions/wallet';
+import { Address } from '../../../domain/address';
+import { Network } from '../../../domain/network';
 
 interface LocationState {
   changeAddress?: Address;
@@ -35,7 +35,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) 
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[network.value]}/tx/${state.txid}`,
+      url: `${esploraURL[network]}/tx/${state.txid}`,
       active: false,
     });
 
@@ -45,7 +45,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) 
   useEffect(() => {
     // persist change addresses before unsetting the pending tx
     if (state.changeAddress?.value) {
-      if (wallet.pendingTx?.props.feeAsset !== wallet.pendingTx?.props.sendAsset) {
+      if (wallet.pendingTx?.feeAsset !== wallet.pendingTx?.sendAsset) {
         deriveNewAddress(wallet, network, true).then(dispatch);
       }
       dispatch(setAddress(state.changeAddress));

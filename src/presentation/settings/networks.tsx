@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '..';
 import { changeNetwork } from '../../application/redux/actions/app';
 import { RootState } from '../../application/redux/store';
-import { Network } from '../../domain/app/value-objects';
+import { createNetwork, Network } from '../../domain/network';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
@@ -14,15 +14,9 @@ const SettingsNetworks: React.FC = () => {
   const network = useSelector((state: RootState) => state.app.network);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const selectedNetwork = formatNetwork(network.value);
-  const setSelectedValue = (net: NetworkValue) =>
-    dispatch(
-      changeNetwork(
-        Network.create(net.toLowerCase() as NetworkValue),
-        () => ({}),
-        (err: Error) => console.log(err)
-      )
-    );
+  const selectedNetwork = formatNetwork(network);
+  const setSelectedValue = (net: Network) =>
+    dispatch(changeNetwork(createNetwork(net.toLowerCase())));
 
   return (
     <ShellPopUp

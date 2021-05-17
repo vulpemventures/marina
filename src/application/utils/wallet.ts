@@ -1,11 +1,13 @@
-import { PasswordHash } from './../../domain/wallet/value-objects/password-hash';
-import { MasterXPub } from './../../domain/wallet/value-objects/master-extended-pub';
-import { EncryptedMnemonic } from './../../domain/wallet/value-objects/encrypted-mnemonic';
-import { Address } from './../../domain/wallet/value-objects/address';
-import { MasterBlindingKey, Mnemonic as Mnemo, Password } from '../../domain/wallet/value-objects';
+import { createMasterXPub, MasterXPub } from '../../domain/master-extended-pub';
+import { EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
+import { Address } from '../../domain/address';
 import { Mnemonic, IdentityType } from 'ldk';
 import { encrypt, hash } from './crypto';
-import { NetworkValue } from '../../domain/app/value-objects';
+import { Network } from '../../domain/network';
+import { PasswordHash } from '../../domain/password-hash';
+import { Mnemonic as Mnemo } from '../../domain/mnemonic';
+import { createMasterBlindingKey, MasterBlindingKey } from '../../domain/master-blinding-key';
+import { Password } from '../../domain/password';
 
 export interface WalletData {
   confidentialAddresses: Address[];
@@ -18,16 +20,16 @@ export interface WalletData {
 export function createWalletFromMnemonic(
   password: Password,
   mnemonic: Mnemo,
-  chain: NetworkValue,
+  chain: Network,
 ): WalletData {
   const mnemonicWallet = new Mnemonic({
     chain,
     type: IdentityType.Mnemonic,
-    value: { mnemonic: mnemonic.value },
+    value: { mnemonic },
   });
 
-  const masterXPub = MasterXPub.create(mnemonicWallet.masterPublicKey);
-  const masterBlindingKey = MasterBlindingKey.create(mnemonicWallet.masterBlindingKey);
+  const masterXPub = createMasterXPub(mnemonicWallet.masterPublicKey);
+  const masterBlindingKey = createMasterBlindingKey(mnemonicWallet.masterBlindingKey);
   const encryptedMnemonic = encrypt(mnemonic, password);
   const passwordHash = hash(password);
   const confidentialAddresses: Address[] = [];

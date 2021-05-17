@@ -1,4 +1,4 @@
-import { AssetsByNetwork } from '../../src/domain/asset';
+import { AssetsByNetwork } from '../../src/domain/assets';
 
 export const testAssets: AssetsByNetwork = {
   liquid: {

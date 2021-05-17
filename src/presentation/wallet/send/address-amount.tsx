@@ -4,7 +4,7 @@ import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { SEND_CHOOSE_FEE_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
-import { IAppState } from '../../../domain/common';
+import { RootReducerState } from '../../../domain/common';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -14,13 +14,13 @@ import {
   isValidAddressForNetwork,
   nextAddressForWallet,
 } from '../../../application/utils';
-import { Address } from '../../../domain/wallet/value-objects';
 import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../application/redux/store';
 import { flushTx, setAddressesAndAmount } from '../../../application/redux/actions/transaction';
 import { balances } from '../../../application/redux/selectors/balance.selector';
+import { createAddress } from '../../../domain/address';
 
 interface AddressAmountFormValues {
   address: string;
@@ -33,7 +33,7 @@ interface AddressAmountFormProps {
   balances: { [assetHash: string]: number };
   dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
-  state: IAppState;
+  state: RootReducerState;
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
@@ -126,8 +126,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         ? fromSatoshi(props.state.transaction.amountInSatoshi)
         : (('' as unknown) as number),
     assetTicker:
-      props.state.assets[props.state.app.network.value][props.state.transaction.asset]?.ticker ??
-      '',
+      props.state.assets[props.state.app.network][props.state.transaction.asset]?.ticker ?? '',
     balances: props.balances,
   }),
 
@@ -138,8 +137,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         .test(
           'valid-address',
           'Address is not valid',
-          (value) =>
-            value !== undefined && isValidAddressForNetwork(value, props.state.app.network.value)
+          (value) => value !== undefined && isValidAddressForNetwork(value, props.state.app.network)
         ),
 
       amount: Yup.number()
@@ -158,11 +156,11 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
   handleSubmit: async (values, { props }) => {
     const { wallets, app } = props.state;
-    const changeAddress = await nextAddressForWallet(wallets[0], app.network.value, true);
+    const changeAddress = await nextAddressForWallet(wallets[0], app.network, true);
     props.dispatch(
       setAddressesAndAmount(
-        Address.create(values.address),
-        Address.create(changeAddress.value, changeAddress.derivationPath),
+        createAddress(values.address),
+        createAddress(changeAddress.value, changeAddress.derivationPath),
         toSatoshi(values.amount)
       )
     );
@@ -181,7 +179,7 @@ const AddressAmount: React.FC = () => {
   const assetsBalance = useSelector(balances);
   const { assets, transaction, app } = state;
 
-  const assetTicker = assets[app.network.value][transaction.asset]?.ticker ?? '';
+  const assetTicker = assets[app.network][transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
     flushTx(dispatch);
@@ -202,7 +200,7 @@ const AddressAmount: React.FC = () => {
         assetHash={transaction.asset}
         assetBalance={formatDecimalAmount(fromSatoshi(assetsBalance[transaction.asset] ?? 0))}
         assetImgPath={
-          app.network.value === 'regtest'
+          app.network === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
             : imgPathMapMainnet[transaction.asset] ?? imgPathMapMainnet['']
         }

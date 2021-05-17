@@ -1,4 +1,4 @@
-import { IWallet } from '../../src/domain/wallet/wallet';
+import { IWallet } from '../../src/domain/wallet';
 import {
   EncryptedMnemonic,
   MasterBlindingKey,
@@ -7,7 +7,7 @@ import {
 } from '../../src/domain/wallet/value-objects';
 import { encryptedMnemonic, masterBlindingKey, masterXPub, passwordHash } from './wallet.json';
 import { UtxoInterface } from 'ldk';
-import { IApp } from '../../src/domain/app/app';
+import { IApp } from '../../src/domain/app';
 import { Network } from '../../src/domain/app/value-objects';
 
 export const devWalletInitState: IWallet = {

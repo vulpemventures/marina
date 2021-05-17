@@ -9,12 +9,13 @@ import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
 import { RootState } from '../../../application/redux/store';
-import { PasswordHash } from '../../../domain/wallet/value-objects';
 import { setIdleAction } from '../../../application/utils';
 import {
   AUTHENTICATION_SUCCESS,
   LOGOUT_SUCCESS,
 } from '../../../application/redux/actions/action-types';
+import { PasswordHash } from '../../../domain/password-hash';
+import { createPassword } from '../../../domain/password';
 
 interface LogInFormValues {
   password: string;
@@ -57,7 +58,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   }),
 
   handleSubmit: async (values, { props, setErrors, setSubmitting }) => {
-    const logInAction = logIn(values.password, props.passwordHash);
+    const logInAction = logIn(createPassword(values.password), props.passwordHash);
     await props.dispatch(logInAction);
 
     if (logInAction.type === AUTHENTICATION_SUCCESS) {

@@ -1,6 +1,6 @@
 import { browser } from 'webextension-polyfill-ts';
 
-import Broker from './broker';
+import Broker from '../application/broker';
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 if (doctypeCheck() && suffixCheck() && documentElementCheck()) {

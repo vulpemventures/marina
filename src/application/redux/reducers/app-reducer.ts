@@ -1,5 +1,5 @@
-import { Network } from '../../../domain/app/value-objects/network';
-import { IApp } from '../../../domain/app/app';
+import { createNetwork } from '../../../domain/network';
+import { IApp } from '../../../domain/app';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
@@ -8,7 +8,7 @@ const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
   isWalletVerified: false,
-  network: Network.create((process.env.NETWORK || 'liquid')),
+  network: createNetwork((process.env.NETWORK || 'liquid')),
 }
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {

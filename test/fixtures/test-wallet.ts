@@ -1,6 +1,6 @@
 import { UtxoInterface } from 'ldk';
 import { WalletDTO } from '../../src/application/dtos/wallet-dto';
-import { IWallet, Wallet } from '../../src/domain/wallet/wallet';
+import { IWallet, Wallet } from '../../src/domain/wallet';
 import {
   Address,
   EncryptedMnemonic,

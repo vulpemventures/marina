@@ -1,4 +1,4 @@
-import { Password } from './password';
+import { Password } from '../../password';
 
 test('Should be able to create a password', () => {
   const password = Password.create('pass1234');

@@ -15,23 +15,23 @@ import {
 } from 'ldk';
 import { address as addressLDK, confidential } from 'liquidjs-lib';
 import { mnemonicWalletFromAddresses } from './restorer';
-import { Address } from '../../domain/wallet/value-objects';
-import { TransactionProps } from '../../domain/wallet/value-objects/transaction';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { lbtcAssetByNetwork, usdtAssetHash } from './network';
-import { NetworkValue } from '../../domain/app/value-objects';
 import {
+  Transaction,
   TxDisplayInterface,
   TxsByAssetsInterface,
   TxsByTxIdInterface,
   TxStatus,
   TxType,
 } from '../../domain/transaction';
-import { Assets } from '../../domain/asset';
+import { IAssets } from '../../domain/assets';
 import { esploraURL } from '../../presentation/utils';
+import { Network } from '../../domain/network';
+import { Address } from '../../domain/address';
 
 export const blindingInfoFromPendingTx = (
-  { value, sendAddress, feeAsset, changeAddress }: TransactionProps,
+  { pset, sendAddress, feeAsset, changeAddress }: Transaction,
   network: string
 ): any => {
   if (!changeAddress) {
@@ -41,8 +41,8 @@ export const blindingInfoFromPendingTx = (
   const outPubkeys: Map<number, string> = new Map();
   const blindReceipientOutput = isConfidentialAddress(sendAddress);
 
-  const receipientOutIndex = outputIndexFromAddress(value, sendAddress);
-  const changeOutIndex = outputIndexFromAddress(value, changeAddress.unconfidentialAddress!);
+  const receipientOutIndex = outputIndexFromAddress(pset, sendAddress);
+  const changeOutIndex = outputIndexFromAddress(pset, changeAddress.unconfidentialAddress!);
 
   outPubkeys.set(changeOutIndex, changeAddress.blindingKey!.toString('hex'));
 
@@ -51,7 +51,7 @@ export const blindingInfoFromPendingTx = (
     outPubkeys.set(receipientOutIndex, receipientBlindingKey);
   }
 
-  const tx = psetToUnsignedTx(value);
+  const tx = psetToUnsignedTx(pset);
 
   const lbtcAsset: string = lbtcAssetByNetwork(network);
   const payFeesWithTaxi: boolean = feeAsset !== lbtcAsset;
@@ -156,9 +156,9 @@ export const isChange = (a: Address): boolean | null =>
 
 export const extractInfoFromRawTxData = (
   tx: TxInterface,
-  network: NetworkValue,
+  network: Network,
   addresses: Address[],
-  assetsInStore: Assets
+  assetsInStore: IAssets
 ): {
   address: string;
   amount: number;
@@ -466,9 +466,9 @@ export const extractInfoFromRawTxData = (
  */
 export const getTxsDetails = (
   txs: TxInterface[],
-  network: NetworkValue,
+  network: Network,
   addresses: Address[],
-  assets: Assets
+  assets: IAssets
 ) => {
   const txArray = txs?.map(
     (tx: TxInterface): TxDisplayInterface => {

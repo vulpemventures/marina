@@ -1,4 +1,4 @@
-import { MasterBlindingKey } from './master-blinding-key';
+import { MasterBlindingKey } from '../../master-blinding-key';
 import { masterBlindingKey } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create a master blinding key', () => {

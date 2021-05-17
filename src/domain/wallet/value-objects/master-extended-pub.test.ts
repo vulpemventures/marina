@@ -1,4 +1,4 @@
-import { MasterXPub } from './master-extended-pub';
+import { MasterXPub } from '../../master-extended-pub';
 import { masterXPub } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create a MasterXPub', () => {

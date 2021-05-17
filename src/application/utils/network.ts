@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { networks } from 'ldk';
-import { Assets } from '../../domain/asset';
+import { IAssets } from '../../domain/assets';
 
 export const broadcastTx = async (baseUrl: string, txHex: string): Promise<string> => {
   const response = await axios.post(`${baseUrl}/tx`, txHex);
@@ -18,6 +18,6 @@ export const lbtcAssetByNetwork = (net: string): string => {
   return networks.liquid.assetHash;
 };
 
-export const usdtAssetHash = (assets: Assets): string | undefined => {
+export const usdtAssetHash = (assets: IAssets): string | undefined => {
   return Object.entries(assets).find(([_, { ticker }]) => ticker === 'USDt')?.[0];
 };

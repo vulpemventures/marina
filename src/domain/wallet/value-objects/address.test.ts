@@ -1,4 +1,4 @@
-import { Address } from './address';
+import { Address } from '../../address';
 import { addresses } from '../../../../test/fixtures/addresses.json';
 
 describe('Address - Regtest', () => {

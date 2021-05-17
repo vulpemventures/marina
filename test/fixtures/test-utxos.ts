@@ -6,7 +6,7 @@ import {
   MasterBlindingKey,
   PasswordHash,
 } from '../../src/domain/wallet/value-objects';
-import { IWallet, Wallet } from '../../src/domain/wallet/wallet';
+import { IWallet, Wallet } from '../../src/domain/wallet';
 import { encryptedMnemonic, masterXPub, masterBlindingKey, passwordHash } from './wallet.json';
 
 // Mock for UniqueEntityID

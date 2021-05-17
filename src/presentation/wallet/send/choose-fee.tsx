@@ -6,8 +6,6 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import { Transaction } from '../../../domain/wallet/value-objects/transaction';
-import { Address } from '../../../domain/wallet/value-objects';
 import {
   feeAmountFromTx,
   feeLevelToSatsPerByte,
@@ -23,9 +21,8 @@ import {
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { IWallet } from '../../../domain/wallet/wallet';
-import { NetworkValue } from '../../../domain/app/value-objects';
-import { AssetsByNetwork } from '../../../domain/asset';
+import { IWallet } from '../../../domain/wallet';
+import { AssetsByNetwork } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
@@ -36,13 +33,16 @@ import {
   setTopup,
 } from '../../../application/redux/actions/transaction';
 import { setPendingTx } from '../../../application/redux/actions/wallet';
+import { Network } from '../../../domain/network';
+import { Address, createAddress } from '../../../domain/address';
+import { createTransaction } from '../../../domain/transaction';
 
 interface LocationState {
   changeAddress: Address;
 }
 
 export interface ChooseFeeProps {
-  network: NetworkValue;
+  network: Network;
   assets: AssetsByNetwork;
   transaction: TransactionState;
   wallet: IWallet;
@@ -142,7 +142,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
             const feeChangeAddress = await nextAddressForWallet(wallet, network, true);
             await dispatch(
               setFeeChangeAddress(
-                Address.create(feeChangeAddress.value, feeChangeAddress.derivationPath)
+                createAddress(feeChangeAddress.value, feeChangeAddress.derivationPath)
               )
             );
           } catch (error) {
@@ -282,8 +282,8 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     const totalSats = feeAmount + transaction.amountInSatoshi;
     const balanceAsset = balances[transaction.asset];
 
-    const tx = Transaction.create({
-      value: unsignedPendingTx,
+    const tx = createTransaction({
+      pset: unsignedPendingTx,
       sendAddress: transaction.receipientAddress?.value ?? '',
       sendAsset: transaction.asset,
       sendAmount: transaction.amountInSatoshi,

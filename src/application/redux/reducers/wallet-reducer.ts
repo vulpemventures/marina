@@ -1,5 +1,5 @@
 import * as ACTION_TYPES from '../actions/action-types';
-import { IWallet } from '../../../domain/wallet/wallet';
+import { IWallet } from '../../../domain/wallet';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 

@@ -1,4 +1,4 @@
-import { EncryptedMnemonic } from './encrypted-mnemonic';
+import { EncryptedMnemonic } from '../../encrypted-mnemonic';
 import { encryptedMnemonic } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create an encrypted mnemonic', () => {

@@ -1,4 +1,4 @@
-import { Mnemonic } from './mnemonic';
+import { Mnemonic } from '../../mnemonic';
 import { mnemonic } from '../../../../test/fixtures/wallet.json';
 
 test('Should be able to create a mnemonic', () => {

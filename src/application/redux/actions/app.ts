@@ -1,4 +1,3 @@
-import { PasswordHash } from './../../../domain/wallet/value-objects/password-hash';
 import {
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
@@ -9,10 +8,10 @@ import {
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
 } from './action-types';
-import { hash } from '../../utils/crypto';
-import { Password } from '../../../domain/wallet/value-objects';
-import { Network } from '../../../domain/app/value-objects';
 import { ActionCreator, AnyAction } from 'redux';
+import { Network } from '../../../domain/network';
+import { Password } from '../../../domain/password';
+import { PasswordHash } from '../../../domain/password-hash';
 
 export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
   type: VERIFICATION_SUCCESS,
@@ -34,12 +33,11 @@ export const onBoardingFailure = (error: Error): AnyAction => ({
 
 
 export function logIn(
-  password: string,
+  password: Password,
   passwordHash: PasswordHash,
 ): AnyAction {
   try {
-    const h = hash(Password.create(password));
-    if (passwordHash.value !== h.value) {
+    if (!passwordHash.match(password)) {
       return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
     }
 

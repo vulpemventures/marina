@@ -1,4 +1,4 @@
-import { TransactionDTO } from '../../domain/wallet/value-objects/transaction';
+import { TransactionDTO } from "../../domain/transaction";
 
 export interface WalletDTO {
   confidentialAddresses: [address: string, derivationPath?: string][];
@@ -8,5 +8,4 @@ export interface WalletDTO {
   passwordHash: string;
   pendingTx?: TransactionDTO;
   utxoMap: string;
-  walletId: string;
 }

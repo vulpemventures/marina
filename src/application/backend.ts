@@ -22,14 +22,15 @@ import {
   toStringOutpoint,
   xpubWalletFromAddresses,
 } from './utils';
-import { Address, Password } from '../domain/wallet/value-objects';
-import { Assets, AssetsByNetwork } from '../domain/asset';
+import { IAssets, AssetsByNetwork } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
 import marinaStore from './redux/store';
 import { disableWebsite, enableWebsite, flushMsg, flushTx, setMsg, setTx, setTxData } from './redux/actions/connect';
-import { NetworkValue } from '../domain/app/value-objects';
 import { ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
+import { Network } from '../domain/network';
+import { createAddress } from '../domain/address';
+import { createPassword } from '../domain/password';
 
 const POPUP_HTML = 'popup.html';
 
@@ -431,15 +432,15 @@ async function getXpub(): Promise<IdentityInterface> {
   const { app, wallets } = marinaStore.getState();
   const wallet = wallets[0];
   return await xpubWalletFromAddresses(
-    wallet.masterXPub.value,
-    wallet.masterBlindingKey.value,
+    wallet.masterXPub,
+    wallet.masterBlindingKey,
     wallet.confidentialAddresses,
-    app.network.value
+    app.network
   );
 }
 
 async function persistAddress(addr: AddressInterface): Promise<void> {
-  marinaStore.dispatch(setAddress(Address.create(addr.confidentialAddress)));
+  marinaStore.dispatch(setAddress(createAddress(addr.confidentialAddress)));
 }
 
 async function getMnemonic(password: string): Promise<IdentityInterface> {
@@ -447,15 +448,15 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
   const { app, wallets } = marinaStore.getState();
   const wallet = wallets[0];
   try {
-    mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
   return await mnemonicWalletFromAddresses(
     mnemonic,
-    wallet.masterBlindingKey.value,
+    wallet.masterBlindingKey,
     wallet.confidentialAddresses,
-    app.network.value
+    app.network
   );
 }
 
@@ -466,7 +467,7 @@ async function signMsgWithPassword(
   let mnemonic = '';
   try {
     const wallet = marinaStore.getState().wallets[0];
-    mnemonic = decrypt(wallet.encryptedMnemonic, Password.create(password)).value;
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
@@ -474,8 +475,8 @@ async function signMsgWithPassword(
   return await signMessageWithMnemonic(message, mnemonic, liquidJSNet);
 }
 
-function getCurrentNetwork(): NetworkValue {
-  return marinaStore.getState().app.network.value;
+function getCurrentNetwork(): Network {
+  return marinaStore.getState().app.network;
 }
 
 async function getCoins(): Promise<UtxoInterface[]> {
@@ -525,11 +526,11 @@ export async function updateUtxos() {
 export async function updateAllAssetInfos() {
   const { app, assets, wallets } = marinaStore.getState();
   const wallet = wallets[0];
-  const assetsFromUtxos: Assets = await Promise.all(
+  const assetsFromUtxos: IAssets = await Promise.all(
     [...Object.values(wallet.utxoMap)].map(async ({ asset }) =>
       // If asset in store don't fetch
-      !((asset as string) in assets[app.network.value])
-        ? (await axios.get(`${explorerApiUrl[app.network.value]}/asset/${asset}`)).data
+      !((asset as string) in assets[app.network])
+        ? (await axios.get(`${explorerApiUrl[app.network]}/asset/${asset}`)).data
         : undefined
     )
   ).then((assetInfos) =>
@@ -540,14 +541,14 @@ export async function updateAllAssetInfos() {
           ...acc,
           [asset_id]: { name, ticker, precision },
         }),
-        {} as Assets
+        {} as IAssets
       )
   );
   // Update stores
   if (Object.keys(assetsFromUtxos).length) {
     let assetInfosLiquid = assets.liquid;
     let assetInfosRegtest = assets.regtest;
-    if (app.network.value === 'liquid') {
+    if (app.network === 'liquid') {
       assetInfosLiquid = { ...assets.liquid, ...assetsFromUtxos };
     } else {
       assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };

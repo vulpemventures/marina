@@ -8,9 +8,9 @@ import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { deriveNewAddress } from '../../../application/redux/actions/wallet';
-import { IWallet } from '../../../domain/wallet/wallet';
+import { IWallet } from '../../../domain/wallet';
 import { WALLET_DERIVE_ADDRESS_SUCCESS } from '../../../application/redux/actions/action-types';
-import { Network } from '../../../domain/app/value-objects';
+import { Network } from '../../../domain/network';
 
 export interface ReceiveProps {
   network: Network;

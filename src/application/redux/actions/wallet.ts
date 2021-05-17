@@ -9,14 +9,12 @@ import {
   WALLET_UNSET_PENDING_TX_SUCCESS,
 } from './action-types';
 import { nextAddressForWallet } from '../../utils';
-import {
-  Address,
-} from '../../../domain/wallet/value-objects';
-import { Transaction } from '../../../domain/wallet/value-objects/transaction';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
-import { IWallet } from '../../../domain/wallet/wallet';
-import { Network } from '../../../domain/app/value-objects';
+import { IWallet } from '../../../domain/wallet';
+import { Network } from '../../../domain/network';
+import { Address } from '../../../domain/address';
+import { Transaction } from '../../../domain/transaction';
 
 export function createWallet(
   walletData: WalletData
@@ -48,7 +46,7 @@ export async function deriveNewAddress(
   change: boolean,
 ): Promise<ActionWithPayload<{ address?: Address, error?: any }>> {
   try {
-    const address = await nextAddressForWallet(wallet, network.value, change);
+    const address = await nextAddressForWallet(wallet, network, change);
     console.log(address);
     // Update React state
     return { type: WALLET_DERIVE_ADDRESS_SUCCESS, payload: { address } };

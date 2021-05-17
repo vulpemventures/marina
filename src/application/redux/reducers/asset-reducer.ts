@@ -1,5 +1,5 @@
 import { AnyAction } from 'redux';
-import { AssetsByNetwork } from '../../../domain/asset';
+import { AssetsByNetwork } from '../../../domain/assets';
 import * as ACTION_TYPES from '../actions/action-types';
 
 const assetInitState: AssetsByNetwork = {

@@ -13,13 +13,13 @@ import ShellPopUp from '../../components/shell-popup';
 import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { esploraURL, fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
-import { AssetsByNetwork } from '../../../domain/asset';
-import { NetworkValue } from '../../../domain/app/value-objects';
-import { Address } from '../../../domain/wallet/value-objects';
+import { AssetsByNetwork } from '../../../domain/assets';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import { updateTxsHistory } from '../../../application/redux/actions/txs-history';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
+import { Network } from '../../../domain/network';
+import { Address } from '../../../domain/address';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -32,7 +32,7 @@ export interface TransactionsProps {
   addresses: Address[];
   assets: AssetsByNetwork;
   txsHistory: TxsHistory;
-  network: NetworkValue;
+  network: Network;
 }
 
 const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHistory, network }) => {

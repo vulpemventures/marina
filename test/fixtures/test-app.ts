@@ -1,6 +1,6 @@
 import { AppDTO } from '../../src/application/dtos/app-dto';
-import { App, IApp } from '../../src/domain/app/app';
-import { Network } from '../../src/domain/app/value-objects';
+import { IApp } from '../../src/domain/app';
+import { createNetwork, Network } from '../../src/domain/app/value-objects';
 
 // Mock for UniqueEntityID
 jest.mock('uuid');
@@ -19,7 +19,7 @@ export const testAppProps: IApp = {
   isAuthenticated: false,
   isOnboardingCompleted: false,
   isWalletVerified: false,
-  network: Network.create('regtest'),
+  network: createNetwork('regtest'),
 };
 export const testApp: App = App.createApp(testAppProps);
 

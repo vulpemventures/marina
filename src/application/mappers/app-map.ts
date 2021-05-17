@@ -1,23 +1,23 @@
-import { App } from '../../domain/app/app';
-import { Network } from '../../domain/app/value-objects';
+import { IApp } from '../../domain/app';
+import { createNetwork } from '../../domain/network';
 import { AppDTO } from '../dtos/app-dto';
 
 export class AppMap {
-  public static toDTO(app: App): AppDTO {
+  public static toDTO(app: IApp): AppDTO {
     return {
       isAuthenticated: app.isAuthenticated,
       isWalletVerified: app.isWalletVerified,
       isOnboardingCompleted: app.isOnboardingCompleted,
-      network: app.network.value,
+      network: app.network,
     };
   }
 
-  public static toDomain(raw: AppDTO): App {
-    return App.createApp({
+  public static toDomain(raw: AppDTO): IApp {
+    return {
       isAuthenticated: raw.isAuthenticated,
       isWalletVerified: raw.isWalletVerified,
       isOnboardingCompleted: raw.isOnboardingCompleted,
-      network: Network.create(raw.network),
-    });
+      network: createNetwork(raw.network),
+    };
   }
 }

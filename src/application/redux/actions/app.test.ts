@@ -1,5 +1,5 @@
 import { changeNetwork, logIn, logOut, onboardingComplete, verifyWallet } from './app';
-import { NetworkValue } from '../../../domain/app/value-objects';
+import { Network } from '../../../domain/app/value-objects';
 import { repos } from '../../../infrastructure';
 import { testWallet } from '../../../../test/fixtures/test-wallet';
 import {

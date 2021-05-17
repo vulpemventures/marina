@@ -5,10 +5,10 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
-import { Address } from '../../../domain/wallet/value-objects';
-import { IWallet } from '../../../domain/wallet/wallet';
-import { NetworkValue } from '../../../domain/app/value-objects';
-import { AssetsByNetwork } from '../../../domain/asset';
+import { IWallet } from '../../../domain/wallet';
+import { AssetsByNetwork } from '../../../domain/assets';
+import { Network } from '../../../domain/network';
+import { Address } from '../../../domain/address';
 
 interface LocationState {
   changeAddress: Address;
@@ -16,7 +16,7 @@ interface LocationState {
 
 export interface ConfirmationProps {
   wallet: IWallet;
-  network: NetworkValue;
+  network: Network;
   assets: AssetsByNetwork;
 }
 

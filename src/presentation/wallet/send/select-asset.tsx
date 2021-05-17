@@ -5,14 +5,14 @@ import ButtonAsset from '../../components/button-asset';
 import InputIcon from '../../components/input-icon';
 import ShellPopUp from '../../components/shell-popup';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
-import { Network } from '../../../domain/app/value-objects';
-import { IWallet } from '../../../domain/wallet/wallet';
-import { AssetsByNetwork } from '../../../domain/asset';
+import { IWallet } from '../../../domain/wallet';
+import { AssetsByNetwork } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import { unsetPendingTx } from '../../../application/redux/actions/wallet';
+import { Network } from '../../../domain/network';
 
 export interface SelectAssetProps {
   network: Network;
@@ -37,7 +37,7 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, 
       ticker: string,
       precision: number,
       index: number
-    ][] = Object.entries(assets[network.value]).map(([_, { name, ticker, precision }], index) => [
+    ][] = Object.entries(assets[network]).map(([_, { name, ticker, precision }], index) => [
       name,
       ticker,
       precision,
@@ -91,16 +91,15 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, 
           {searchResults.map((r) => (
             <ButtonAsset
               assetImgPath={
-                network.value === 'regtest'
+                network === 'regtest'
                   ? imgPathMapRegtest[r[1]] ?? imgPathMapRegtest['']
-                  : imgPathMapMainnet[Object.keys(assets[network.value])[r[3]]] ??
-                    imgPathMapMainnet['']
+                  : imgPathMapMainnet[Object.keys(assets[network])[r[3]]] ?? imgPathMapMainnet['']
               }
-              assetHash={Object.keys(assets[network.value])[r[3]]}
+              assetHash={Object.keys(assets[network])[r[3]]}
               assetName={r[0]}
               assetTicker={r[1]}
               assetPrecision={r[2]}
-              quantity={balances[Object.keys(assets[network.value])[r[3]]] ?? 0}
+              quantity={balances[Object.keys(assets[network])[r[3]]] ?? 0}
               key={`${r[1]}_${r[3]}`}
               handleClick={({ assetHash }) => handleSend(assetHash as string)}
             />
