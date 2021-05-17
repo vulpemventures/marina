@@ -1,22 +1,18 @@
-import { ValueObject } from '../../core/ValueObject';
 import { isValidXpub, toXpub } from 'ldk';
 
-interface MasterXPubProps {
-  [key: string]: any;
-  value: string;
-}
+export class MasterXPub {
+  private _value: string;
 
-export class MasterXPub extends ValueObject<MasterXPubProps> {
   get value(): string {
-    return this.props.value;
+    return this._value;
   }
 
   // Can't use the `new` keyword from outside the scope of the class.
-  private constructor(masterXPub: MasterXPubProps['value']) {
-    super({ value: masterXPub });
+  private constructor(masterXPub: string) {
+    this._value = masterXPub;
   }
 
-  public static create(masterXPub: MasterXPubProps['value']): MasterXPub {
+  public static create(masterXPub: string): MasterXPub {
     if (isValidXpub(masterXPub) || isValidXpub(toXpub(masterXPub))) {
       return new MasterXPub(masterXPub);
     } else {

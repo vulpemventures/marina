@@ -1,4 +1,3 @@
-import { ValueObject } from '../../core/ValueObject';
 import { address, decodePset } from 'ldk';
 import { Address } from './address';
 
@@ -23,7 +22,9 @@ export interface TransactionDTO {
   changeAddress?: [address: string, derivationPath?: string];
 }
 
-export class Transaction extends ValueObject<TransactionProps> {
+export class Transaction {
+  private props: TransactionProps;
+
   get value(): string {
     return this.props.value;
   }
@@ -54,15 +55,7 @@ export class Transaction extends ValueObject<TransactionProps> {
 
   // Can't use the `new` keyword from outside the scope of the class.
   private constructor(props: TransactionProps) {
-    super({
-      value: props.value,
-      sendAddress: props.sendAddress,
-      sendAsset: props.sendAsset,
-      sendAmount: props.sendAmount,
-      feeAsset: props.feeAsset,
-      feeAmount: props.feeAmount,
-      changeAddress: props.changeAddress,
-    });
+    this.props = props;
   }
 
   private static isValidTx(tx: string): boolean {

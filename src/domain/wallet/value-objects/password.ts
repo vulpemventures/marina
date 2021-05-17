@@ -1,29 +1,23 @@
-import { ValueObject } from '../../core/ValueObject';
-
-interface PasswordProps {
-  [key: string]: any;
-  value: string;
-}
-
-export class Password extends ValueObject<PasswordProps> {
-  public static minLength = 8;
+export class Password {
+  public static MIN_LENGTH = 8;
+  private _value: string;
 
   get value(): string {
-    return this.props.value;
+    return this._value;
   }
 
   // Can't use the `new` keyword from outside the scope of the class.
-  private constructor(props: PasswordProps['value']) {
-    super({ value: props });
+  private constructor(props: string) {
+    this._value = props;
   }
 
   private static isAppropriateLength(password: string): boolean {
-    return password.length >= this.minLength;
+    return password.length >= Password.MIN_LENGTH;
   }
 
-  public static create(password: PasswordProps['value']): Password {
+  public static create(password: string): Password {
     console.log(password);
-    if (password === undefined || password === null || !this.isAppropriateLength(password)) {
+    if (password === undefined || password === null || !Password.isAppropriateLength(password)) {
       throw new Error('Password must be 8 chars min');
     } else {
       return new Password(password);

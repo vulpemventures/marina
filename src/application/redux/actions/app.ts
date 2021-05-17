@@ -39,7 +39,7 @@ export function logIn(
 ): AnyAction {
   try {
     const h = hash(Password.create(password));
-    if (passwordHash.props.value !== h.value) {
+    if (passwordHash.value !== h.value) {
       return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
     }
 

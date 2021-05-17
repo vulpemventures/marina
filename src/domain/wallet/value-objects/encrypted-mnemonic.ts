@@ -1,21 +1,16 @@
-import { ValueObject } from '../../core/ValueObject';
+export class EncryptedMnemonic {
+  private _value: string;
 
-interface EncryptedMnemonicProps {
-  [key: string]: any;
-  value: string;
-}
-
-export class EncryptedMnemonic extends ValueObject<EncryptedMnemonicProps> {
   get value(): string {
-    return this.props.value;
+    return this._value;
   }
 
   // Can't use the `new` keyword from outside the scope of the class.
-  private constructor(props: EncryptedMnemonicProps['value']) {
-    super({ value: props });
+  private constructor(value: string) {
+    this._value = value;
   }
 
-  public static create(encryptedMnemonic: EncryptedMnemonicProps['value']): EncryptedMnemonic {
+  public static create(encryptedMnemonic: string): EncryptedMnemonic {
     if (
       encryptedMnemonic === undefined ||
       encryptedMnemonic === null ||

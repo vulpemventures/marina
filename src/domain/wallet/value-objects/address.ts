@@ -1,8 +1,6 @@
-import { ValueObject } from '../../core/ValueObject';
 import { address as addressLDK } from 'ldk';
 
 interface AddressProps {
-  [key: string]: any;
   // Blinding Public Key
   blindingKey?: Buffer;
   derivationPath?: string;
@@ -10,7 +8,9 @@ interface AddressProps {
   unconfidentialAddress?: string;
 }
 
-export class Address extends ValueObject<AddressProps> {
+export class Address {
+  private props: AddressProps;
+
   get value(): string {
     return this.props.value;
   }
@@ -29,12 +29,12 @@ export class Address extends ValueObject<AddressProps> {
 
   // Can't use the `new` keyword from outside the scope of the class.
   private constructor(props: AddressProps) {
-    super({
+    this.props = {
       value: props.value,
       blindingKey: props.blindingKey,
       derivationPath: props.derivationPath,
       unconfidentialAddress: props.unconfidentialAddress,
-    });
+    };
   }
 
   public static create(

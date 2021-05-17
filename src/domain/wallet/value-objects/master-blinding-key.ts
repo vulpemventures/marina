@@ -1,22 +1,18 @@
-import { ValueObject } from '../../core/ValueObject';
 import { isValidExtendedBlindKey } from 'ldk';
 
-interface MasterBlindingKeyProps {
-  [key: string]: any;
-  value: string;
-}
+export class MasterBlindingKey {
+  private _value: string;
 
-export class MasterBlindingKey extends ValueObject<MasterBlindingKeyProps> {
   get value(): string {
-    return this.props.value;
+    return this._value;
   }
 
   // Can't use the `new` keyword from outside the scope of the class.
-  private constructor(masterBlindingKey: MasterBlindingKeyProps['value']) {
-    super({ value: masterBlindingKey });
+  private constructor(masterBlindingKey: string) {
+    this._value = masterBlindingKey;
   }
 
-  public static create(masterBlindingKey: MasterBlindingKeyProps['value']): MasterBlindingKey {
+  public static create(masterBlindingKey: string): MasterBlindingKey {
     if (isValidExtendedBlindKey(masterBlindingKey)) {
       return new MasterBlindingKey(masterBlindingKey);
     } else {
