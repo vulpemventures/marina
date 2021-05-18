@@ -47,7 +47,6 @@ export async function deriveNewAddress(
 ): Promise<ActionWithPayload<{ address?: Address, error?: any }>> {
   try {
     const address = await nextAddressForWallet(wallet, network, change);
-    console.log(address);
     // Update React state
     return { type: WALLET_DERIVE_ADDRESS_SUCCESS, payload: { address } };
   } catch (error) {

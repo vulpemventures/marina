@@ -30,7 +30,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
     // Hack to wait for new value to be applied
     // https://github.com/formium/formik/issues/529
     await Promise.resolve();
-    submitForm().catch(console.log);
+    submitForm().catch(console.error);
   };
 
   return (

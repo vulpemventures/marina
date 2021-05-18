@@ -126,7 +126,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
             alt="liquid bitcoin logo"
           />
           <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>
-          <p className="text-xs font-light">{modalTxDetails?.blockTime?.format('d MMMM YYYY')}</p>
+          <p className="text-xs font-light">{modalTxDetails?.blockTime?.format('DD MMMM YYYY')}</p>
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
           <div className="flex flex-row">
@@ -138,7 +138,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
               <p className="text-base font-medium">Amount</p>
               <p className="text-xs font-light">
                 {fromSatoshiStr(transfer.amount)}{' '}
-                {assets[transfer.asset].ticker ?? transfer.asset.slice(0, 4)}
+                {assets[transfer.asset]?.ticker ?? transfer.asset.slice(0, 4)}
               </p>
             </div>
           ))}

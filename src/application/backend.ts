@@ -493,7 +493,6 @@ export async function updateUtxos() {
   try {
     const xpub = await getXpub();
     const addrs = await xpub.getAddresses();
-    console.log('update utxos');
     if (addrs.length === 0) return;
     const wallet = marinaStore.getState().wallet;
     const network = getCurrentNetwork()

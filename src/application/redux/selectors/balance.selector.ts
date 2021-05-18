@@ -9,9 +9,7 @@ export type BalancesByAsset = { [assetHash: string]: number };
  * @param onError
  */
 export function balances(state: RootReducerState): BalancesByAsset {
-  console.log('BALANCE SELECTOR')
   const utxos = Object.values(state.wallet.utxoMap);
-  console.log(utxos)
   const balancesFromUtxos = utxos.reduce((acc, curr) => {
     if (!curr.asset || !curr.value) {
       return acc;
@@ -19,7 +17,6 @@ export function balances(state: RootReducerState): BalancesByAsset {
     return { ...acc, [curr.asset]: curr.value + (curr.asset in acc ? acc[curr.asset] : 0) }
   }, {} as BalancesByAsset)
 
-  console.log(balancesFromUtxos)
   if (Object.keys(balancesFromUtxos).length === 0) {
     const lbtcHash = lbtcAssetByNetwork(state.app.network);
     return { [lbtcHash]: 0 };

@@ -31,7 +31,7 @@ const ButtonTransaction: React.FC<Props> = ({
       <div className="flex items-center">
         <TxIcon txType={tx.type} />
         <span className="text-grayDark items-center mr-2 text-sm font-medium text-left">
-          {tx.blockTime?.format('d MMMM YYYY')}
+          {tx.blockTime?.format('DD MMMM YYYY')}
         </span>
       </div>
       <div className="flex">
