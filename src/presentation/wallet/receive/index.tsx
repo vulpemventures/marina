@@ -11,6 +11,7 @@ import { deriveNewAddress } from '../../../application/redux/actions/wallet';
 import { IWallet } from '../../../domain/wallet';
 import { WALLET_DERIVE_ADDRESS_SUCCESS } from '../../../application/redux/actions/action-types';
 import { Network } from '../../../domain/network';
+import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
 
 export interface ReceiveProps {
   network: Network;
@@ -37,6 +38,9 @@ const ReceiveView: React.FC<ReceiveProps> = ({ network, wallet }) => {
     (async () => {
       const action = await deriveNewAddress(wallet, network, false);
       await dispatch(action);
+      setTimeout(() => {
+        dispatch(launchUtxosUpdater());
+      }, 3000);
       if (action.type === WALLET_DERIVE_ADDRESS_SUCCESS) {
         const address = action.payload.address;
         setConfidentialAddress(address?.value || '');

@@ -2,7 +2,7 @@ import axios from 'axios';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
-  address,
+  address as addressLDK,
   networks,
   AddressInterface,
   decodePset,
@@ -13,11 +13,18 @@ import {
   psetToUnsignedTx,
   UtxoInterface,
   walletFromCoins,
+  MasterPublicKey,
+  IdentityType,
+  fromXpub,
+  BlindingKeyGetter,
+  address,
+  fetchAndUnblindTxsGenerator,
 } from 'ldk';
 import Marina from './marina';
 import {
   decrypt,
   explorerApiUrl,
+  IdentityRestorerFromState,
   mnemonicWalletFromAddresses,
   toStringOutpoint,
   xpubWalletFromAddresses,
@@ -25,12 +32,13 @@ import {
 import { IAssets, AssetsByNetwork } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
 import { disableWebsite, enableWebsite, flushMsg, flushTx, setMsg, setTx, setTxData } from './redux/actions/connect';
-import { ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './redux/actions/action-types';
+import { ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, TXS_HISTORY_SET_TXS_SUCCESS, WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
+import { TxsHistory } from '../domain/transaction';
 
 const POPUP_HTML = 'popup.html';
 
@@ -486,7 +494,8 @@ export async function updateUtxos() {
   try {
     const xpub = await getXpub();
     const addrs = await xpub.getAddresses();
-    console.log('update utxos', addrs);
+    console.log('update utxos');
+    if (addrs.length === 0) return;
     const wallet = marinaStore.getState().wallet;
     const network = getCurrentNetwork()
     const newMap = { ...wallet.utxoMap };
@@ -553,5 +562,75 @@ export async function updateAllAssetInfos() {
     const newAssets: AssetsByNetwork = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
 
     marinaStore.dispatch({ type: ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, payload: { assets: newAssets } });
+  }
+}
+
+export async function updateTxsHistory() {
+  try {
+    const { app, txsHistory, wallet } = marinaStore.getState();
+    // Initialize txs to txsHistory shallow clone
+    const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
+
+    const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
+    const addresses = confidentialAddresses.map((addr) => addr.value);
+    const restorer = new IdentityRestorerFromState(addresses);
+    const pubKeyWallet = new MasterPublicKey({
+      chain: app.network,
+      restorer,
+      type: IdentityType.MasterPublicKey,
+      value: {
+        masterPublicKey: fromXpub(masterXPub, app.network),
+        masterBlindingKey: masterBlindingKey,
+      },
+      initializeFromRestorer: true
+    });
+
+    const isRestored = await pubKeyWallet.isRestored;
+    if (!isRestored) {
+      throw new Error('Failed to restore wallet');
+    }
+
+    const addressInterfaces = await pubKeyWallet.getAddresses();
+    const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
+      try {
+        const address = addressLDK.fromOutputScript(
+          Buffer.from(script, 'hex'),
+          networks[app.network]
+        );
+        return addressInterfaces.find(
+          (addr) =>
+            addressLDK.fromConfidential(addr.confidentialAddress).unconfidentialAddress ===
+            address
+        )?.blindingPrivateKey;
+      } catch (_) {
+        return undefined;
+      }
+    };
+
+    const txsGen = fetchAndUnblindTxsGenerator(
+      addresses,
+      identityBlindKeyGetter,
+      explorerApiUrl[app.network],
+      // Check if tx exists in React state
+      (tx) => txsHistory[app.network][tx.txid] !== undefined
+    );
+
+    const next = () => txsGen.next();
+    let it = await next();
+
+    // If no new tx already in state then return txsHistory of current network
+    if (it.done) {
+      return;
+    }
+
+    while (!it.done) {
+      const tx = it.value;
+      // Update all txsHistory state at each single new tx
+      txs[tx.txid] = tx;
+      marinaStore.dispatch({ type: TXS_HISTORY_SET_TXS_SUCCESS, payload: { txs, network: app.network } });
+      it = await next();
+    }
+  } catch (error) {
+    console.error(error);
   }
 }

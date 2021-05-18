@@ -14,8 +14,7 @@ import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../ap
 import { esploraURL, fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
 import { AssetsByNetwork } from '../../../domain/assets';
-import { setAsset } from '../../../application/redux/actions/transaction';
-import { updateTxsHistory } from '../../../application/redux/actions/txs-history';
+import { launchTxsUpdater, setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { Network } from '../../../domain/network';
@@ -73,7 +72,7 @@ const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHisto
    * Update txs history once at first render
    */
   useEffect(() => {
-    dispatch(updateTxsHistory());
+    dispatch(launchTxsUpdater());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

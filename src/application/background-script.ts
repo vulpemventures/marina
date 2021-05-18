@@ -1,18 +1,25 @@
 import { browser, Idle } from 'webextension-polyfill-ts';
-import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
+import { IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
+import Backend from './backend';
 import { wrapStore } from 'webext-redux';
 import { logOut } from './redux/actions/app';
 import { marinaStore } from './redux/store';
+import { UPDATE_ASSETS, UPDATE_TXS, UPDATE_UTXOS } from './redux/actions/action-types';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
-
-
 wrapStore(marinaStore) // wrap store to proxy store
+
+setInterval(() => marinaStore.dispatch({ type: UPDATE_UTXOS }), 30_000)
+setInterval(() => marinaStore.dispatch({ type: UPDATE_TXS }), 60_000)
+setInterval(() => marinaStore.dispatch({ type: UPDATE_ASSETS }), 30_000)
+
+// We start listening and handling messages from injected script
+const backend = new Backend();
+backend.start();
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -34,13 +41,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         // run onboarding flow on fullscreen$
         welcomeTabID = await openInitializeWelcomeRoute();
         break;
-      // TODO: on update, open new tab to tell users about the new features and any fixed issues
-      // case 'update':
-      //   {
-      //     const url = browser.runtime.getURL('updated.html');
-      //     browser.tabs.create({ url }).catch(console.log);
-      //   }
-      //   break;
     }
   })().catch(console.error);
 });
@@ -56,8 +56,6 @@ browser.runtime.onStartup.addListener(() => {
 // popup is set at the end of onboarding workflow
 browser.browserAction.onClicked.addListener(() => {
   (async () => {
-    console.log('clicked');
-    console.log(marinaStore.getState())
     // here we prevent to open many onboarding pages fullscreen
     // in case we have one active already in the current tab
     const tabs = await browser.tabs.query({ currentWindow: true });
@@ -94,29 +92,6 @@ try {
   console.error(error);
 }
 
-/**
- * Fetch and update utxos on recurrent basis
- * The alarms can be triggered every minute, not less
- * To give more frequent updates we use setInterval
- * However this can be killed randmoly by the browser
- * therefore we keep this local variable to check
- * if is going on. if not we will at least recover each
- * other minute when the alarm is fired off
- */
-
-let utxosInterval: NodeJS.Timer | number | undefined;
-
-browser.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'UPDATE_UTXOS') {
-    if (!utxosInterval) {
-      utxosInterval = setAsyncInterval(async () => {
-        await updateUtxos();
-        await updateAllAssetInfos();
-      }, 5000);
-    }
-  }
-});
-
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
   const { id } = await browser.tabs.create({ url });
@@ -124,7 +99,3 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
 }
 
 
-// We start listening and handling messages from injected script
-const backend = new Backend();
-
-backend.start();

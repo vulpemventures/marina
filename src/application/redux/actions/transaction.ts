@@ -6,6 +6,8 @@ import {
   PENDING_TX_SET_FEE_CHANGE_ADDRESS,
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
   PENDING_TX_SET_TAXI_TOPUP,
+  UPDATE_TXS,
+  UPDATE_ASSETS,
 } from './action-types';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
 import { unsetPendingTx } from './wallet';
@@ -55,4 +57,14 @@ export async function flushTx(
   await dispatch(unsetPendingTx());
   await dispatch(flushPendingTx());
   browser.browserAction.setBadgeText({ text: '' }).catch(() => ({}));
+}
+
+export function launchTxsUpdater(): AnyAction {
+  return {
+    type: UPDATE_TXS
+  }
+}
+
+export function launchAssets(): AnyAction {
+  return { type: UPDATE_ASSETS }
 }
