@@ -3,7 +3,7 @@ import { onboardingReducer } from './onboarding-reducer';
 import { walletReducer } from './wallet-reducer';
 import { transactionReducer, TransactionState } from './transaction-reducer';
 import { txsHistoryReducer } from './txs-history-reducer';
-import { AnyAction, combineReducers, Reducer } from 'redux';
+import { AnyAction, combineReducers, Middleware, Reducer } from 'redux';
 import { appReducer } from './app-reducer';
 import { connectDataReducer } from './connect-data-reducer';
 import { Storage } from 'redux-persist';
@@ -14,6 +14,7 @@ import { IApp } from '../../../domain/app';
 import { TxsHistoryByNetwork } from '../../../domain/transaction';
 import { AssetsByNetwork } from '../../../domain/assets';
 import { IWallet } from '../../../domain/wallet';
+import { RootReducerState } from '../../../domain/common';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {

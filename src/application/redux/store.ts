@@ -1,5 +1,4 @@
-import { RootReducerState } from './../../domain/common';
-import { createStore, applyMiddleware, Middleware } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { alias } from 'webext-redux';
 import marinaReducer from './reducers';
 import { updateAllAssetInfos, updateUtxos } from '../backend';
@@ -13,10 +12,6 @@ const backgroundAliases = {
 const create = () => createStore(marinaReducer,
   applyMiddleware(alias(backgroundAliases)),
 );
-
-const logger: Middleware<{}, RootReducerState> = store => next => action => {
-  console.log(action.type)
-}
 
 export const marinaStore = create();
 export const persistor = persistStore(marinaStore);
