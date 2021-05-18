@@ -5,12 +5,11 @@ import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { IError } from '../../../domain/common';
+import { IError, RootReducerState } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../application/redux/store';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -158,7 +157,7 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-  const errors = useSelector((state: RootState) => state.wallets[0]?.errors);
+  const errors = useSelector((state: RootReducerState) => state.wallet?.errors);
 
   return (
     <Shell>

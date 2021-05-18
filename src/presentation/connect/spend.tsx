@@ -6,15 +6,15 @@ import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../application/redux/store';
+import { RootReducerState } from '../../application/redux/store';
 import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
-  const app = useSelector((state: RootState) => state.app);
-  const assets = useSelector((state: RootState) => state.assets);
+  const app = useSelector((state: RootReducerState) => state.app);
+  const assets = useSelector((state: RootReducerState) => state.assets);
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');

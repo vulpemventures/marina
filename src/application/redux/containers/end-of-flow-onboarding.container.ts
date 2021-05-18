@@ -1,10 +1,10 @@
 import { connect } from "react-redux"
+import { RootReducerState } from "../../../domain/common"
 import EndOfFlowOnboardingView, { EndOfFlowProps } from "../../../presentation/onboarding/end-of-flow"
-import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): EndOfFlowProps => {
+const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
   return {
-    wallets: state.wallets,
+    wallet: state.wallet,
     onboarding: state.onboarding,
     network: state.app.network
   }

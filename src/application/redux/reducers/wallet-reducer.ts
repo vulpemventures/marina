@@ -3,13 +3,20 @@ import { IWallet } from '../../../domain/wallet';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 
-export type WalletState = IWallet[];
+const initialStateWallet: IWallet = {
+  confidentialAddresses: [],
+  encryptedMnemonic: '',
+  masterXPub: '',
+  masterBlindingKey: '',
+  passwordHash: '',
+  utxoMap: {},
+}
 
-export function walletReducer(state: WalletState = [], { type, payload }: AnyAction): WalletState {
+export function walletReducer(state: IWallet = initialStateWallet, { type, payload }: AnyAction): IWallet {
   switch (type) {
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: undefined,
         masterXPub: payload.masterXPub,
         masterBlindingKey: payload.masterBlindingKey,
@@ -19,20 +26,18 @@ export function walletReducer(state: WalletState = [], { type, payload }: AnyAct
         utxoMap: {},
         pendingTx: undefined,
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_CREATE_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { create: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: undefined,
         restored: true,
         masterXPub: payload.masterXPub,
@@ -43,97 +48,85 @@ export function walletReducer(state: WalletState = [], { type, payload }: AnyAct
         utxoMap: {},
         pendingTx: undefined,
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_RESTORE_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { restore: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_DERIVE_ADDRESS_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: undefined,
-        confidentialAddresses: state[0].confidentialAddresses.concat([payload.address]),
+        confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_DERIVE_ADDRESS_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { address: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_SET_ADDRESS_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: undefined,
-        confidentialAddresses: state[0].confidentialAddresses.concat([payload.address]),
+        confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
       };
-      return Object.assign([], state, [firstWallet]);
     }
     case ACTION_TYPES.WALLET_SET_ADDRESS_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { address: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_SET_PENDING_TX_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         pendingTx: payload.pendingTx,
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_SET_PENDING_TX_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { setPendingTx: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_UNSET_PENDING_TX_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         pendingTx: undefined,
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_UNSET_PENDING_TX_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { unsetPendingTx: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_SET_UTXOS_SUCCESS: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: undefined,
         utxoMap: payload.utxoMap,
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     case ACTION_TYPES.WALLET_SET_UTXOS_FAILURE: {
-      const firstWallet: IWallet = {
-        ...state[0],
+      return {
+        ...state,
         errors: { utxos: { message: payload.error.message } as IError },
       };
-      return Object.assign([], state, [firstWallet]);
     }
 
     default: {

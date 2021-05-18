@@ -1,8 +1,8 @@
 import { connect } from "react-redux"
+import { RootReducerState } from "../../../domain/common"
 import SeedConfirmView, { SeedConfirmProps } from "../../../presentation/onboarding/seed-confirm"
-import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): SeedConfirmProps => ({
+const mapStateToProps = (state: RootReducerState): SeedConfirmProps => ({
   onboardingMnemonic: state.onboarding.mnemonic,
 })
 

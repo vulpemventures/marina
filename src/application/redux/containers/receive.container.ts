@@ -1,10 +1,10 @@
 import { connect } from "react-redux"
+import { RootReducerState } from "../../../domain/common"
 import ReceiveView, { ReceiveProps } from "../../../presentation/wallet/receive"
-import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): ReceiveProps => ({
+const mapStateToProps = (state: RootReducerState): ReceiveProps => ({
   network: state.app.network,
-  wallet: state.wallets[0]
+  wallet: state.wallet
 })
 
 const Receive = connect(mapStateToProps)(ReceiveView)

@@ -38,6 +38,7 @@ export interface HomeProps {
 
 const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, assetsBalance }) => {
   const history = useHistory();
+  console.log(assetsBalance);
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;

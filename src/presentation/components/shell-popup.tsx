@@ -4,8 +4,8 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '..';
-import { RootState } from '../../application/redux/store';
 import { flushTx } from '../../application/redux/actions/transaction';
+import { RootReducerState } from '../../domain/common';
 
 interface Props {
   backBtnCb?: () => void;
@@ -28,7 +28,7 @@ const ShellPopUp: React.FC<Props> = ({
 }: Props) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const wallet = useSelector((state: RootState) => state.wallets[0]);
+  const wallet = useSelector((state: RootReducerState) => state.wallet);
 
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
@@ -41,10 +41,9 @@ const ShellPopUp: React.FC<Props> = ({
       // dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
     }
     if (wallet.pendingTx) {
-      dispatch(flushTx(() => history.push(DEFAULT_ROUTE)));
-    } else {
-      history.push(DEFAULT_ROUTE);
+      flushTx(dispatch);
     }
+    history.push(DEFAULT_ROUTE);
   };
   const handleBackBtn = () => {
     if (backBtnCb) {

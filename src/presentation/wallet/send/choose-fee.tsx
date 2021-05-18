@@ -77,9 +77,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const changeAddressGetter = useCallback(
     (asset: string): string => {
       if (asset === transaction.asset) {
-        return transaction.changeAddress!.value;
+        return transaction.changeAddress.value;
       }
-      return transaction.feeChangeAddress!.value;
+      return transaction.feeChangeAddress.value;
     },
     [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
   );

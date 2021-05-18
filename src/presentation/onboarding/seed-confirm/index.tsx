@@ -26,9 +26,9 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => 
   const [selected, setSelected] = useState([] as string[]);
   const [error, setError] = useState(NULL_ERROR);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selected.join(' ') === mnemonic.join(' ')) {
-      dispatch(setVerified());
+      await dispatch(setVerified());
       history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     }
 

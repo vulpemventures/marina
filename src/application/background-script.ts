@@ -3,14 +3,16 @@ import { setAsyncInterval, IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend, { updateAllAssetInfos, updateUtxos } from './backend';
 import { wrapStore } from 'webext-redux';
-import marinaStore from './redux/store';
 import { logOut } from './redux/actions/app';
+import { marinaStore } from './redux/store';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
-wrapStore(marinaStore); // wrap store to proxy store
+
+
+wrapStore(marinaStore) // wrap store to proxy store
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -65,7 +67,7 @@ browser.browserAction.onClicked.addListener(() => {
     // the wallet creation process, we let user re-open it
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
-    if (marinaStore.getState().wallets.length <= 0) {
+    if (marinaStore.getState().wallet.encryptedMnemonic === '') {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     }
@@ -116,6 +118,8 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   return id;
 }
 
+
 // We start listening and handling messages from injected script
 const backend = new Backend();
+
 backend.start();

@@ -8,7 +8,6 @@ import Input from '../../components/input';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
-import { RootState } from '../../../application/redux/store';
 import { setIdleAction } from '../../../application/utils';
 import {
   AUTHENTICATION_SUCCESS,
@@ -16,6 +15,7 @@ import {
 } from '../../../application/redux/actions/action-types';
 import { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
+import { RootReducerState } from '../../../domain/common';
 
 interface LogInFormValues {
   password: string;
@@ -57,28 +57,27 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .min(8, 'Password should be 8 characters minimum.'),
   }),
 
-  handleSubmit: async (values, { props, setErrors, setSubmitting }) => {
+  handleSubmit: (values, { props, setErrors, setSubmitting }) => {
     const logInAction = logIn(createPassword(values.password), props.passwordHash);
-    await props.dispatch(logInAction);
-
-    if (logInAction.type === AUTHENTICATION_SUCCESS) {
-      props.history.push(DEFAULT_ROUTE);
-      setIdleAction(() => {
-        props.dispatch({ type: LOGOUT_SUCCESS });
-      });
-    } else {
-      const err = logInAction.payload.error;
-      setErrors({ password: err.message });
+    props.dispatch(logInAction).then(() => {
+      if (logInAction.type === AUTHENTICATION_SUCCESS) {
+        props.history.push(DEFAULT_ROUTE);
+        setIdleAction(() => {
+          props.dispatch({ type: LOGOUT_SUCCESS });
+        });
+      } else {
+        const err = logInAction.payload.error;
+        setErrors({ password: err.message });
+      }
       setSubmitting(false);
-      console.error(logInAction.payload.error);
-    }
+    });
   },
   displayName: 'LogInForm',
 })(LogInForm);
 
 const LogIn: React.FC = () => {
   const history = useHistory();
-  const passwordHash = useSelector((state: RootState) => state.wallets[0].passwordHash);
+  const passwordHash = useSelector((state: RootReducerState) => state.wallet.passwordHash);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (

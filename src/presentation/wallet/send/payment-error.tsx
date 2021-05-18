@@ -6,7 +6,7 @@ import { broadcastTx, explorerApiUrl } from '../../../application/utils';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { Address } from '../../../domain/wallet/value-objects';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../application/redux/store';
+import { RootReducerState } from '../../../application/redux/store';
 
 interface LocationState {
   changeAddress?: Address;
@@ -17,7 +17,7 @@ interface LocationState {
 const PaymentError: React.FC = () => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
-  const network = useSelector((state: RootState) => state.app.network.value);
+  const network = useSelector((state: RootReducerState) => state.app.network.value);
 
   const handleRetry = () =>
     broadcastTx(explorerApiUrl[network], state.tx)

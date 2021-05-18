@@ -17,7 +17,6 @@ import {
 import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
 import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../application/redux/store';
 import { flushTx, setAddressesAndAmount } from '../../../application/redux/actions/transaction';
 import { balances } from '../../../application/redux/selectors/balance.selector';
 import { createAddress } from '../../../domain/address';
@@ -155,8 +154,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     }),
 
   handleSubmit: async (values, { props }) => {
-    const { wallets, app } = props.state;
-    const changeAddress = await nextAddressForWallet(wallets[0], app.network, true);
+    const { wallet, app } = props.state;
+    const changeAddress = await nextAddressForWallet(wallet, app.network, true);
     props.dispatch(
       setAddressesAndAmount(
         createAddress(values.address),
@@ -175,7 +174,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 const AddressAmount: React.FC = () => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const state = useSelector((state: RootState) => state);
+  const state = useSelector((state: RootReducerState) => state);
   const assetsBalance = useSelector(balances);
   const { assets, transaction, app } = state;
 

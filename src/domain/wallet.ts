@@ -7,10 +7,6 @@ import { MasterXPub } from './master-extended-pub';
 import { PasswordHash } from './password-hash';
 import { Transaction } from './transaction';
 
-export interface IWallets {
-  wallets: IWallet[];
-}
-
 export interface IWallet {
   confidentialAddresses: Address[];
   encryptedMnemonic: EncryptedMnemonic;

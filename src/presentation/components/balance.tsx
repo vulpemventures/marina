@@ -3,7 +3,7 @@ import cx from 'classnames';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../utils';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../application/redux/store';
+import { RootReducerState } from '../../application/redux/store';
 
 interface Props {
   assetBalance: string | number;
@@ -24,7 +24,7 @@ const Balance: React.FC<Props> = ({
   assetTicker,
   assetHash,
 }) => {
-  const network = useSelector((state: RootState) => state.app.network);
+  const network = useSelector((state: RootReducerState) => state.app.network);
 
   /* let formattedFiatBalance;
   if (fiatCurrency === '$') {

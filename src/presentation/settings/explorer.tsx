@@ -8,7 +8,7 @@ import Button from '../components/button';
 import { esploraURL } from '../utils';
 import { ProxyStoreDispatch } from '..';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../application/redux/store';
+import { RootReducerState } from '../../application/redux/store';
 import { Network } from '../../domain/network';
 
 interface SettingsExplorerFormValues {
@@ -88,7 +88,7 @@ const SettingsExplorerEnhancedForm = withFormik<
 
 const SettingsExplorer: React.FC = () => {
   const history = useHistory();
-  const app = useSelector((state: RootState) => state.app);
+  const app = useSelector((state: RootReducerState) => state.app);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (

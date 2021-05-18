@@ -38,7 +38,6 @@ export async function createWalletFromMnemonic(
   const encryptedMnemonic = encrypt(mnemonic, password);
   const passwordHash = hash(password);
   const addresses = (await mnemonicWallet.getAddresses()).map(a => createAddress(a.confidentialAddress, a.derivationPath))
-  console.log(addresses);
 
   // Update React state
   return {

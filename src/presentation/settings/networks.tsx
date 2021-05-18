@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '..';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { RootState } from '../../application/redux/store';
+import { RootReducerState } from '../../application/redux/store';
 import { createNetwork, Network } from '../../domain/network';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
@@ -11,7 +11,7 @@ import { formatNetwork } from '../utils';
 const SettingsNetworks: React.FC = () => {
   const networks = ['liquid', 'regtest'];
   const formattedNetworks = networks.map((n) => formatNetwork(n));
-  const network = useSelector((state: RootState) => state.app.network);
+  const network = useSelector((state: RootReducerState) => state.app.network);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const selectedNetwork = formatNetwork(network);

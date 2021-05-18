@@ -1,4 +1,3 @@
-import { ThunkAction } from 'redux-thunk';
 import { browser } from 'webextension-polyfill-ts';
 import {
   PENDING_TX_SET_ASSET,
@@ -9,11 +8,10 @@ import {
   PENDING_TX_SET_TAXI_TOPUP,
 } from './action-types';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
-import { Address } from '../../../domain/wallet/value-objects';
 import { unsetPendingTx } from './wallet';
 import { AnyAction } from 'redux';
-import { RootState } from '../store';
 import { ProxyStoreDispatch } from '../../../presentation';
+import { Address } from '../../../domain/address';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -51,10 +49,6 @@ export function setTopup(
   return ({ type: PENDING_TX_SET_TAXI_TOPUP, payload: { taxiTopup } });
 }
 
-/**
- * Flush both 'wallets[0].pendingTx' and 'transaction' state
- * Unset badge
- */
 export async function flushTx(
   dispatch: ProxyStoreDispatch
 ) {

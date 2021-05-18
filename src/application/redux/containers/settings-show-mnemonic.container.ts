@@ -1,9 +1,9 @@
 import { connect } from "react-redux"
+import { RootReducerState } from "../../../domain/common";
 import SettingsShowMnemonicView, { SettingsShowMnemonicProps } from "../../../presentation/settings/show-mnemonic"
-import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): SettingsShowMnemonicProps => ({
-  wallet: state.wallets[0],
+const mapStateToProps = (state: RootReducerState): SettingsShowMnemonicProps => ({
+  wallet: state.wallet,
 })
 
 const SettingsShowMnemonic = connect(mapStateToProps)(SettingsShowMnemonicView)

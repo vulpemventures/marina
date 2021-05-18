@@ -4,6 +4,8 @@ import { OnboardingState } from '../application/redux/reducers/onboarding-reduce
 import { TransactionState } from '../application/redux/reducers/transaction-reducer';
 import { AssetsByNetwork } from './assets';
 import { TxsHistoryByNetwork } from './transaction';
+import { Action } from 'redux';
+import { ConnectDataByNetwork } from './connect';
 
 export interface RootReducerState {
   app: IApp;
@@ -11,7 +13,12 @@ export interface RootReducerState {
   onboarding: OnboardingState;
   transaction: TransactionState;
   txsHistory: TxsHistoryByNetwork;
-  wallets: IWallet[];
+  wallet: IWallet;
+  connect: ConnectDataByNetwork;
+}
+
+export interface ActionWithPayload<T> extends Action<string> {
+  payload: T;
 }
 
 export interface IError {

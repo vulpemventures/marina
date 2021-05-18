@@ -24,13 +24,13 @@ import {
 } from './utils';
 import { IAssets, AssetsByNetwork } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
-import marinaStore from './redux/store';
 import { disableWebsite, enableWebsite, flushMsg, flushTx, setMsg, setTx, setTxData } from './redux/actions/connect';
 import { ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
+import { marinaStore } from './redux/store';
 
 const POPUP_HTML = 'popup.html';
 
@@ -429,8 +429,7 @@ export function showPopup(path?: string): Promise<Windows.Window> {
 }
 
 async function getXpub(): Promise<IdentityInterface> {
-  const { app, wallets } = marinaStore.getState();
-  const wallet = wallets[0];
+  const { app, wallet } = marinaStore.getState();
   return await xpubWalletFromAddresses(
     wallet.masterXPub,
     wallet.masterBlindingKey,
@@ -445,8 +444,7 @@ async function persistAddress(addr: AddressInterface): Promise<void> {
 
 async function getMnemonic(password: string): Promise<IdentityInterface> {
   let mnemonic = '';
-  const { app, wallets } = marinaStore.getState();
-  const wallet = wallets[0];
+  const { app, wallet } = marinaStore.getState();
   try {
     mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
@@ -466,7 +464,7 @@ async function signMsgWithPassword(
 ): Promise<{ signature: string; address: string }> {
   let mnemonic = '';
   try {
-    const wallet = marinaStore.getState().wallets[0];
+    const wallet = marinaStore.getState().wallet;
     mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
@@ -480,7 +478,7 @@ function getCurrentNetwork(): Network {
 }
 
 async function getCoins(): Promise<UtxoInterface[]> {
-  const wallet = marinaStore.getState().wallets[0];
+  const wallet = marinaStore.getState().wallet;
   return Object.values(wallet.utxoMap);
 }
 
@@ -489,7 +487,7 @@ export async function updateUtxos() {
     const xpub = await getXpub();
     const addrs = await xpub.getAddresses();
     console.log('update utxos', addrs);
-    const wallet = marinaStore.getState().wallets[0];
+    const wallet = marinaStore.getState().wallet;
     const network = getCurrentNetwork()
     const newMap = { ...wallet.utxoMap };
     // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
@@ -524,8 +522,7 @@ export async function updateUtxos() {
 }
 
 export async function updateAllAssetInfos() {
-  const { app, assets, wallets } = marinaStore.getState();
-  const wallet = wallets[0];
+  const { app, assets, wallet } = marinaStore.getState();
   const assetsFromUtxos: IAssets = await Promise.all(
     [...Object.values(wallet.utxoMap)].map(async ({ asset }) =>
       // If asset in store don't fetch

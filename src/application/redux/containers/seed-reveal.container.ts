@@ -1,8 +1,8 @@
 import { connect } from "react-redux"
+import { RootReducerState } from "../../../domain/common"
 import SeedRevealView, { SeedRevealProps } from "../../../presentation/onboarding/seed-reveal"
-import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): SeedRevealProps => ({
+const mapStateToProps = (state: RootReducerState): SeedRevealProps => ({
   onboardingMnemonic: state.onboarding.mnemonic,
 })
 

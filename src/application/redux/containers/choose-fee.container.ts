@@ -1,9 +1,9 @@
 import { connect } from "react-redux"
+import { RootReducerState } from "../../../domain/common"
 import ConfirmationView, { ConfirmationProps } from "../../../presentation/wallet/send/confirmation"
-import { RootState } from "../store"
 
-const mapStateToProps = (state: RootState): ConfirmationProps => ({
-  wallet: state.wallets[0],
+const mapStateToProps = (state: RootReducerState): ConfirmationProps => ({
+  wallet: state.wallet,
   network: state.app.network,
   assets: state.assets,
 })

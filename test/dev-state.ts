@@ -1,4 +1,4 @@
-// import { RootState } from './../src/application/redux/store';
+// import { RootReducerState } from './../src/application/redux/store';
 // import { faucet, fetchUtxos, mint } from './_regtest';
 // import { xpubWalletFromAddresses } from '../src/application/utils';
 // import { Address } from '../src/domain/wallet/value-objects';
@@ -8,7 +8,7 @@
 // export function createDevState(
 //   onSuccess?: () => void,
 //   onError?: (err: Error) => void
-// ): ThunkAction<void, RootState, void, AnyAction> {
+// ): ThunkAction<void, RootReducerState, void, AnyAction> {
 //   return async (dispatch, getState) => {
 //     const { wallets } = getState();
 //     const firstWallet = wallets[0];

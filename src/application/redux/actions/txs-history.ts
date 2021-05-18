@@ -14,7 +14,7 @@ import {
 import { explorerApiUrl, IdentityRestorerFromState } from '../../utils';
 import { TxsHistory } from '../../../domain/transaction';
 import { address as addressLDK } from 'liquidjs-lib';
-import { RootState } from '../store';
+import { RootReducerState } from '../../../domain/common';
 
 /**
  * Update transaction history of current network
@@ -24,13 +24,13 @@ import { RootState } from '../store';
 export function updateTxsHistory(
   onSuccess?: (txs: TxsHistory) => void,
   onError?: (err: Error) => void
-): ThunkAction<void, RootState, void, AnyAction> {
+): ThunkAction<void, RootReducerState, void, AnyAction> {
   return async (dispatch, getState) => {
     try {
-      const { app, txsHistory, wallets } = getState();
+      const { app, txsHistory, wallet } = getState();
       // Initialize txs to txsHistory shallow clone
       const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
-      const { confidentialAddresses, masterBlindingKey, masterXPub } = wallets[0];
+      const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
       const addresses = confidentialAddresses.map((addr) => addr.value);
       const restorer = new IdentityRestorerFromState(addresses);
       const pubKeyWallet = new MasterPublicKey({
