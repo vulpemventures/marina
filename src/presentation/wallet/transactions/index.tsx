@@ -16,10 +16,9 @@ import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
 import { launchTxsUpdater, setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { Network } from '../../../domain/network';
-import { Address } from '../../../domain/address';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };

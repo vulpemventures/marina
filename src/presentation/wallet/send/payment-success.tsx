@@ -8,11 +8,11 @@ import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { IWallet } from '../../../domain/wallet';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { flushTx } from '../../../application/redux/actions/transaction';
 import { deriveNewAddress, setAddress } from '../../../application/redux/actions/wallet';
 import { Address } from '../../../domain/address';
 import { Network } from '../../../domain/network';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface LocationState {
   changeAddress?: Address;

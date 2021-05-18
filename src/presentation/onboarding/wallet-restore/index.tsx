@@ -8,8 +8,8 @@ import Shell from '../../components/shell';
 import { IError, RootReducerState } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
-import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface WalletRestoreFormValues {
   mnemonic: string;

@@ -6,10 +6,10 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { INITIALIZE_SEED_PHRASE_ROUTE, SETTINGS_TERMS_ROUTE } from '../../routes/constants';
-import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
 import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
 import { generateMnemonic } from 'bip39';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface WalletCreateFormValues {
   password: string;

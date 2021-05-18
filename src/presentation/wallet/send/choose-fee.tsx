@@ -22,10 +22,9 @@ import {
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IWallet } from '../../../domain/wallet';
-import { AssetsByNetwork } from '../../../domain/assets';
+import { IAssets } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import {
   setFeeAssetAndAmount,
@@ -36,6 +35,7 @@ import { setPendingTx } from '../../../application/redux/actions/wallet';
 import { Network } from '../../../domain/network';
 import { Address, createAddress } from '../../../domain/address';
 import { createTransaction } from '../../../domain/transaction';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface LocationState {
   changeAddress: Address;
@@ -43,7 +43,7 @@ interface LocationState {
 
 export interface ChooseFeeProps {
   network: Network;
-  assets: AssetsByNetwork;
+  assets: IAssets;
   transaction: TransactionState;
   wallet: IWallet;
   balances: BalancesByAsset;
@@ -234,10 +234,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
   // Fill Taxi tx
   useEffect(() => {
-    if (
-      Object.keys(transaction.taxiTopup).length !== 0 &&
-      feeCurrency === usdtAssetHash(assets[network])
-    ) {
+    if (Object.keys(transaction.taxiTopup).length !== 0 && feeCurrency === usdtAssetHash(assets)) {
       const taxiPayout = {
         value: transaction.taxiTopup.topup?.assetAmount,
         asset: transaction.taxiTopup.topup?.assetHash,
@@ -375,11 +372,11 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         assetBalance={formatDecimalAmount(fromSatoshi(balances[feeCurrency] ?? 0))}
         assetImgPath={
           network === 'regtest'
-            ? imgPathMapRegtest[assets[network][feeCurrency]?.ticker] ?? imgPathMapRegtest['']
+            ? imgPathMapRegtest[assets[feeCurrency]?.ticker] ?? imgPathMapRegtest['']
             : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
         }
         assetHash={transaction.asset}
-        assetTicker={assets[network][feeCurrency]?.ticker ?? ''}
+        assetTicker={assets[feeCurrency]?.ticker ?? ''}
         className="mt-4"
         fiatBalance={120}
         fiatCurrency="$"

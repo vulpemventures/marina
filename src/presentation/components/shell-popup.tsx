@@ -3,9 +3,9 @@ import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '..';
 import { flushTx } from '../../application/redux/actions/transaction';
 import { RootReducerState } from '../../domain/common';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 
 interface Props {
   backBtnCb?: () => void;

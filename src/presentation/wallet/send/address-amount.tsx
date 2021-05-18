@@ -15,11 +15,11 @@ import {
   nextAddressForWallet,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
-import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
 import { flushTx, setAddressesAndAmount } from '../../../application/redux/actions/transaction';
 import { balances } from '../../../application/redux/selectors/balance.selector';
 import { createAddress } from '../../../domain/address';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface AddressAmountFormValues {
   address: string;

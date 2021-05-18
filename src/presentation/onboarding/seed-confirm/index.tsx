@@ -5,8 +5,8 @@ import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import { setVerified } from '../../../application/redux/actions/onboarding';
-import { ProxyStoreDispatch } from '../..';
 import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 const NULL_ERROR = '';
 const ERROR_MSG = 'Invalid mnemonic';

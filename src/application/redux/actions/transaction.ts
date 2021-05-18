@@ -12,8 +12,8 @@ import {
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
 import { unsetPendingTx } from './wallet';
 import { AnyAction } from 'redux';
-import { ProxyStoreDispatch } from '../../../presentation';
 import { Address } from '../../../domain/address';
+import { ProxyStoreDispatch } from '../proxyStore';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };

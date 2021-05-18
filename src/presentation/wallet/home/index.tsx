@@ -20,13 +20,13 @@ import {
   lbtcAssetByNetwork,
 } from '../../../application/utils';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { AssetsByNetwork } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { IWallet } from '../../../domain/wallet';
 import { flushTx } from '../../../application/redux/actions/transaction';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { Network } from '../../../domain/network';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 export interface HomeProps {
   network: Network;
@@ -38,7 +38,6 @@ export interface HomeProps {
 
 const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, assetsBalance }) => {
   const history = useHistory();
-  console.log(assetsBalance);
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;

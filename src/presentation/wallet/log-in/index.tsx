@@ -5,7 +5,6 @@ import * as Yup from 'yup';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import Input from '../../components/input';
-import { ProxyStoreDispatch } from '../..';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
 import { setIdleAction } from '../../../application/utils';
@@ -16,6 +15,7 @@ import {
 import { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
 import { RootReducerState } from '../../../domain/common';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface LogInFormValues {
   password: string;

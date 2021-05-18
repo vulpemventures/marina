@@ -8,11 +8,11 @@ import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils
 import { IWallet } from '../../../domain/wallet';
 import { AssetsByNetwork } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import { unsetPendingTx } from '../../../application/redux/actions/wallet';
 import { Network } from '../../../domain/network';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 export interface SelectAssetProps {
   network: Network;

@@ -6,12 +6,12 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { deriveNewAddress } from '../../../application/redux/actions/wallet';
 import { IWallet } from '../../../domain/wallet';
 import { WALLET_DERIVE_ADDRESS_SUCCESS } from '../../../application/redux/actions/action-types';
 import { Network } from '../../../domain/network';
 import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 export interface ReceiveProps {
   network: Network;

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../..';
 import { onBoardingCompleted } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
 import { createWallet, restoreWallet } from '../../../application/redux/actions/wallet';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
 import { provisionBackgroundScript } from '../../../application/utils/provision';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';

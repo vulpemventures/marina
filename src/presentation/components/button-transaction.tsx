@@ -36,7 +36,7 @@ const ButtonTransaction: React.FC<Props> = ({
       </div>
       <div className="flex">
         <div className="text-primary whitespace-nowrap text-sm font-medium">
-          {transfer ? (transfer.amount > 0 ? '+' : '-') : ''}
+          {transfer ? (transfer.amount > 0 ? '+' : '') : ''}
           {transfer ? formatDecimalAmount(fromSatoshi(transfer.amount, assetPrecision)) : '??'}{' '}
           {assetTicker}
         </div>

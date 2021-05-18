@@ -6,8 +6,8 @@ import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
 import Input from '../components/input';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { ProxyStoreDispatch } from '..';
 import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 
 interface SettingsChangePasswordFormValues {
   currentPassword: string;

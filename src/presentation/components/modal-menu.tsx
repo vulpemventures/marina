@@ -1,8 +1,8 @@
 import React, { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
-import { ProxyStoreDispatch } from '..';
 import { logOut } from '../../application/redux/actions/app';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
   DEFAULT_ROUTE,
@@ -24,13 +24,10 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const handleSecurity = () => history.push(SETTINGS_MENU_SECURITY_ROUTE);
   const handleSettings = () => history.push(SETTINGS_MENU_SETTINGS_ROUTE);
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
-  const handleLogOut = () =>
-    dispatch(
-      logOut(
-        () => history.push(DEFAULT_ROUTE),
-        (err: Error) => console.log(err)
-      )
-    );
+  const handleLogOut = () => {
+    dispatch(logOut());
+    history.push(DEFAULT_ROUTE);
+  };
 
   if (!isOpen) {
     return <></>;

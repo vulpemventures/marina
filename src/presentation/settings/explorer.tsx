@@ -6,10 +6,10 @@ import ShellPopUp from '../components/shell-popup';
 import Input from '../components/input';
 import Button from '../components/button';
 import { esploraURL } from '../utils';
-import { ProxyStoreDispatch } from '..';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootReducerState } from '../../application/redux/store';
 import { Network } from '../../domain/network';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { RootReducerState } from '../../domain/common';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;

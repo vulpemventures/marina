@@ -1,8 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '..';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { RootReducerState } from '../../application/redux/store';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { RootReducerState } from '../../domain/common';
 import { createNetwork, Network } from '../../domain/network';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';

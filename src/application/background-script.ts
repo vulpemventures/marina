@@ -2,16 +2,15 @@ import { browser, Idle } from 'webextension-polyfill-ts';
 import { IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend from './backend';
-import { wrapStore } from 'webext-redux';
 import { logOut } from './redux/actions/app';
-import { marinaStore } from './redux/store';
+import { marinaStore, wrapMarinaStore } from './redux/store';
 import { UPDATE_ASSETS, UPDATE_TXS, UPDATE_UTXOS } from './redux/actions/action-types';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
-wrapStore(marinaStore) // wrap store to proxy store
+wrapMarinaStore(marinaStore) // wrap store to proxy store
 
 setInterval(() => marinaStore.dispatch({ type: UPDATE_UTXOS }), 30_000)
 setInterval(() => marinaStore.dispatch({ type: UPDATE_TXS }), 60_000)
