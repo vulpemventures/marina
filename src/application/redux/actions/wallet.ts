@@ -1,4 +1,3 @@
-import { ActionWithPayload } from '../store';
 import {
   WALLET_CREATE_SUCCESS,
   WALLET_DERIVE_ADDRESS_FAILURE,
@@ -15,6 +14,7 @@ import { IWallet } from '../../../domain/wallet';
 import { Network } from '../../../domain/network';
 import { Address } from '../../../domain/address';
 import { Transaction } from '../../../domain/transaction';
+import { ActionWithPayload } from '../../../domain/common';
 
 export function createWallet(
   walletData: WalletData

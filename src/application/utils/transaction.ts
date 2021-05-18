@@ -6,7 +6,6 @@ import {
   getUnblindURLFromTx,
   InputInterface,
   isBlindedOutputInterface,
-  makeUnblindURL,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
@@ -199,7 +198,7 @@ function txTypeFromTransfer(transfers: Transfer[]) {
     }
   }
 
-  if (transfers.length == 2) {
+  if (transfers.length === 2) {
     return TxTypeEnum.Swap;
   }
 

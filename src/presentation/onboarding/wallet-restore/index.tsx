@@ -146,9 +146,12 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(setPasswordAndOnboardingMnemonic(values.password, values.mnemonic)).then(() => {
-      props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
-    });
+    props
+      .dispatch(setPasswordAndOnboardingMnemonic(values.password, values.mnemonic))
+      .then(() => {
+        props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+      })
+      .catch(console.error);
   },
 
   displayName: 'WalletRestoreForm',

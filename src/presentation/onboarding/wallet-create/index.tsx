@@ -122,7 +122,9 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(setPasswordAndOnboardingMnemonic(values.password, generateMnemonic()));
+    props
+      .dispatch(setPasswordAndOnboardingMnemonic(values.password, generateMnemonic()))
+      .catch(console.error);
     props.history.push(INITIALIZE_SEED_PHRASE_ROUTE);
   },
 

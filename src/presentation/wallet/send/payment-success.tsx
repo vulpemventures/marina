@@ -46,11 +46,11 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) 
     // persist change addresses before unsetting the pending tx
     if (state.changeAddress?.value) {
       if (wallet.pendingTx?.feeAsset !== wallet.pendingTx?.sendAsset) {
-        deriveNewAddress(wallet, network, true).then(dispatch);
+        deriveNewAddress(wallet, network, true).then(dispatch).catch(console.error);
       }
-      dispatch(setAddress(state.changeAddress));
+      dispatch(setAddress(state.changeAddress)).catch(console.error);
     }
-    flushTx(dispatch);
+    flushTx(dispatch).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

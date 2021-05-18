@@ -51,8 +51,8 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
   const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
   const handleReceive = () => showSaveMnemonicModal(true);
-  const handleSend = () => {
-    dispatch(setAsset(state.assetHash));
+  const handleSend = async () => {
+    await dispatch(setAsset(state.assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
@@ -69,7 +69,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
    * Update txs history once at first render
    */
   useEffect(() => {
-    dispatch(launchTxsUpdater());
+    dispatch(launchTxsUpdater()).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -133,8 +133,8 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
             <p className="text-primary text-base antialiased font-bold">Confirmed</p>
             <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
           </div>
-          {modalTxDetails?.transfers.map((transfer) => (
-            <div>
+          {modalTxDetails?.transfers.map((transfer, i) => (
+            <div key={i}>
               <p className="text-base font-medium">Amount</p>
               <p className="text-xs font-light">
                 {fromSatoshiStr(transfer.amount)}{' '}

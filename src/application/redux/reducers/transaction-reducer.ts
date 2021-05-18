@@ -1,7 +1,7 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
-import { Address } from '../../../domain/wallet/value-objects';
 import { AnyAction } from 'redux';
+import { Address } from '../../../domain/address';
 
 export interface TransactionState {
   asset: string;

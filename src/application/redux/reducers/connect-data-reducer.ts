@@ -20,7 +20,7 @@ export function connectDataReducer(state: ConnectDataByNetwork = connectDataInit
     case ACTION_TYPES.DISABLE_WEBSITE: {
       const current = state[payload.network as Network];
       return {
-        ...state, [payload.network]: { ...current, enabledSites: current.enabledSites.filter(v => v != payload.hostname) } as ConnectData
+        ...state, [payload.network]: { ...current, enabledSites: current.enabledSites.filter(v => v !== payload.hostname) } as ConnectData
       };
     }
 
@@ -28,13 +28,6 @@ export function connectDataReducer(state: ConnectDataByNetwork = connectDataInit
       const current = state[payload.network as Network];
       return {
         ...state, [payload.network]: { ...current, msg: { hostname: payload.hostname, message: payload.message } } as ConnectData
-      };
-    }
-
-    case ACTION_TYPES.FLUSH_MSG: {
-      const current = state[payload.network as Network];
-      return {
-        ...state, [payload.network]: { ...current, msg: undefined } as ConnectData
       };
     }
 

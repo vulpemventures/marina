@@ -67,7 +67,7 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, a
   useEffect(() => {
     // Flush last sent tx
     if (transaction.asset !== '') {
-      flushTx(dispatch);
+      flushTx(dispatch).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

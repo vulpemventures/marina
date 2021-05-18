@@ -24,7 +24,6 @@ const ShellPopUp: React.FC<Props> = ({
   className = '',
   currentPage,
   hasBackBtn = true,
-  refreshCb,
 }: Props) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -41,7 +40,7 @@ const ShellPopUp: React.FC<Props> = ({
       // dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
     }
     if (wallet.pendingTx) {
-      flushTx(dispatch);
+      flushTx(dispatch).catch(console.error);
     }
     history.push(DEFAULT_ROUTE);
   };

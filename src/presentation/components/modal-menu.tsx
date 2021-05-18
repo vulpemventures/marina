@@ -15,6 +15,7 @@ interface Props {
   isOpen: boolean;
   handleClose: () => any;
 }
+
 const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -25,7 +26,7 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const handleSettings = () => history.push(SETTINGS_MENU_SETTINGS_ROUTE);
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
   const handleLogOut = () => {
-    dispatch(logOut());
+    dispatch(logOut()).catch(console.error);
     history.push(DEFAULT_ROUTE);
   };
 

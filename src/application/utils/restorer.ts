@@ -96,9 +96,9 @@ export class IdentityRestorerFromState implements IdentityRestorerInterface {
     this.addresses = addresses;
   }
 
-  async addressHasBeenUsed(address: string): Promise<boolean> {
-    if (this.addresses.length === 0) return false
-    return this.addresses.includes(address);
+  addressHasBeenUsed(address: string): Promise<boolean> {
+    if (this.addresses.length === 0) return Promise.resolve(false)
+    return Promise.resolve(this.addresses.includes(address));
   }
 
   async addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]> {

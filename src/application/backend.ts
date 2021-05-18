@@ -103,7 +103,6 @@ export default class Backend {
 
             case Marina.prototype.enable.name:
               try {
-                const hostname = await getCurrentUrl();
                 await showPopup(`connect/enable`);
                 await this.waitForEvent(Marina.prototype.enable.name);
                 return handleResponse(id);
@@ -163,7 +162,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextAddress = await xpub.getNextAddress();
-                await persistAddress(nextAddress);
+                persistAddress(nextAddress);
                 return handleResponse(id, nextAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -176,7 +175,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextChangeAddress = await xpub.getNextChangeAddress();
-                await persistAddress(nextChangeAddress);
+                persistAddress(nextChangeAddress);
                 return handleResponse(id, nextChangeAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -280,7 +279,7 @@ export default class Backend {
                   throw new Error('Transaction data are missing');
 
                 const { assetHash, amount, recipient } = tx;
-                const coins = await getCoins();
+                const coins = getCoins();
                 const txBuilder = walletFromCoins(coins, network);
                 const mnemo = await getMnemonic(password);
                 const changeAddress = await mnemo.getNextChangeAddress();
@@ -325,7 +324,7 @@ export default class Backend {
                 const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
 
                 // if we reached this point we can persist the change address
-                await persistAddress(changeAddress);
+                persistAddress(changeAddress);
 
                 // Flush tx data
                 marinaStore.dispatch(flushTx(getCurrentNetwork()));
@@ -446,7 +445,7 @@ async function getXpub(): Promise<IdentityInterface> {
   );
 }
 
-async function persistAddress(addr: AddressInterface): Promise<void> {
+function persistAddress(addr: AddressInterface) {
   marinaStore.dispatch(setAddress(createAddress(addr.confidentialAddress)));
 }
 
@@ -485,7 +484,7 @@ function getCurrentNetwork(): Network {
   return marinaStore.getState().app.network;
 }
 
-async function getCoins(): Promise<UtxoInterface[]> {
+function getCoins(): UtxoInterface[] {
   const wallet = marinaStore.getState().wallet;
   return Object.values(wallet.utxoMap);
 }

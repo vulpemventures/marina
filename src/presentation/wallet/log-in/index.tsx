@@ -59,18 +59,21 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
 
   handleSubmit: (values, { props, setErrors, setSubmitting }) => {
     const logInAction = logIn(createPassword(values.password), props.passwordHash);
-    props.dispatch(logInAction).then(() => {
-      if (logInAction.type === AUTHENTICATION_SUCCESS) {
-        props.history.push(DEFAULT_ROUTE);
-        setIdleAction(() => {
-          props.dispatch({ type: LOGOUT_SUCCESS });
-        });
-      } else {
-        const err = logInAction.payload.error;
-        setErrors({ password: err.message });
-      }
-      setSubmitting(false);
-    });
+    props
+      .dispatch(logInAction)
+      .then(() => {
+        if (logInAction.type === AUTHENTICATION_SUCCESS) {
+          props.history.push(DEFAULT_ROUTE);
+          setIdleAction(() => {
+            props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
+          });
+        } else {
+          const err = logInAction.payload.error;
+          setErrors({ password: err.message });
+        }
+        setSubmitting(false);
+      })
+      .catch(console.error);
   },
   displayName: 'LogInForm',
 })(LogInForm);

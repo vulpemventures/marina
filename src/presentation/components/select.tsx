@@ -1,10 +1,10 @@
 import { Listbox } from '@headlessui/react';
-import { Network } from '../../domain/app/value-objects';
+import { Network } from '../../domain/network';
 
 interface Props {
   data: string[];
   selectedValue: string;
-  setSelectedValue: (v: NetworkValue) => void;
+  setSelectedValue: (v: Network) => void;
 }
 
 const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue }) => {

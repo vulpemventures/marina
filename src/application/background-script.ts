@@ -12,6 +12,10 @@ let welcomeTabID: number | undefined = undefined;
 
 wrapMarinaStore(marinaStore) // wrap store to proxy store
 
+marinaStore.dispatch({ type: UPDATE_UTXOS })
+marinaStore.dispatch({ type: UPDATE_ASSETS })
+marinaStore.dispatch({ type: UPDATE_TXS })
+
 setInterval(() => marinaStore.dispatch({ type: UPDATE_UTXOS }), 30_000)
 setInterval(() => marinaStore.dispatch({ type: UPDATE_TXS }), 60_000)
 setInterval(() => marinaStore.dispatch({ type: UPDATE_ASSETS }), 30_000)

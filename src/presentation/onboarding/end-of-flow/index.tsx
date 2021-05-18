@@ -31,32 +31,24 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallet, onboarding,
 
   useEffect(() => {
     (async () => {
-      const dispatchOnboardingCompleted = async () => {};
+      const walletData = await createWalletFromMnemonic(
+        createPassword(onboarding.password),
+        createMnemonic(onboarding.mnemonic),
+        network
+      );
 
-      try {
-        const walletData = await createWalletFromMnemonic(
-          createPassword(onboarding.password),
-          createMnemonic(onboarding.mnemonic),
-          network
-        );
+      const createAction = onboarding.restored
+        ? restoreWallet(walletData)
+        : createWallet(walletData);
 
-        const createAction = onboarding.restored
-          ? restoreWallet(walletData)
-          : createWallet(walletData);
+      await dispatch(createAction);
 
-        dispatch(createAction)
-          .then(() => dispatchOnboardingCompleted())
-          .catch(console.error);
-
-        // Startup alarms to fetch utxos & set the popup page
-        await provisionBackgroundScript();
-        await dispatch(onBoardingCompleted());
-        await dispatch(launchUtxosUpdater());
-        setIsLoading(false);
-        dispatch(flushOnboarding());
-      } catch (err) {
-        console.error(err);
-      }
+      // Startup alarms to fetch utxos & set the popup page
+      await provisionBackgroundScript();
+      await dispatch(onBoardingCompleted());
+      await dispatch(launchUtxosUpdater());
+      setIsLoading(false);
+      await dispatch(flushOnboarding());
     })().catch(console.error);
   }, []);
 

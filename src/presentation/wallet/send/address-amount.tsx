@@ -123,7 +123,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     amount:
       props.state.transaction.amountInSatoshi > 0
         ? fromSatoshi(props.state.transaction.amountInSatoshi)
-        : (('' as unknown) as number),
+        : ('' as unknown as number),
     assetTicker:
       props.state.assets[props.state.app.network][props.state.transaction.asset]?.ticker ?? '',
     balances: props.balances,
@@ -156,13 +156,15 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
   handleSubmit: async (values, { props }) => {
     const { wallet, app } = props.state;
     const changeAddress = await nextAddressForWallet(wallet, app.network, true);
-    props.dispatch(
-      setAddressesAndAmount(
-        createAddress(values.address),
-        createAddress(changeAddress.value, changeAddress.derivationPath),
-        toSatoshi(values.amount)
+    props
+      .dispatch(
+        setAddressesAndAmount(
+          createAddress(values.address),
+          createAddress(changeAddress.value, changeAddress.derivationPath),
+          toSatoshi(values.amount)
+        )
       )
-    );
+      .catch(console.error);
     props.history.push({
       pathname: SEND_CHOOSE_FEE_ROUTE,
       state: { changeAddress: changeAddress },
@@ -181,7 +183,7 @@ const AddressAmount: React.FC = () => {
   const assetTicker = assets[app.network][transaction.asset]?.ticker ?? '';
 
   const handleBackBtn = () => {
-    flushTx(dispatch);
+    flushTx(dispatch).catch(console.error);
     history.push({
       pathname: TRANSACTIONS_ROUTE,
       state: { assetHash: transaction.asset, assetTicker, assetsBalance },

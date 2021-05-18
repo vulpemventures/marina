@@ -13,12 +13,6 @@ const appInitState: IApp = {
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
   switch (type) {
-    case ACTION_TYPES.INIT_APP: {
-      return {
-        ...state,
-        ...payload,
-      };
-    }
     case ACTION_TYPES.AUTHENTICATION_SUCCESS: {
       return {
         ...state,

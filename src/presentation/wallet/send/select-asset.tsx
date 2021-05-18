@@ -32,17 +32,13 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, 
   >([]);
 
   useEffect(() => {
-    const terms: [
-      name: string,
-      ticker: string,
-      precision: number,
-      index: number
-    ][] = Object.entries(assets[network]).map(([_, { name, ticker, precision }], index) => [
-      name,
-      ticker,
-      precision,
-      index,
-    ]);
+    const terms: [name: string, ticker: string, precision: number, index: number][] =
+      Object.entries(assets[network]).map(([_, { name, ticker, precision }], index) => [
+        name,
+        ticker,
+        precision,
+        index,
+      ]);
 
     const results = terms.filter((t) => {
       return (
@@ -66,7 +62,7 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, 
 
   const handleBackBtn = () => {
     if (wallet.pendingTx) {
-      dispatch(unsetPendingTx());
+      dispatch(unsetPendingTx()).catch(console.error);
     }
     history.push(DEFAULT_ROUTE);
   };
