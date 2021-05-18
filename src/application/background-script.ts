@@ -12,10 +12,6 @@ let welcomeTabID: number | undefined = undefined;
 
 wrapMarinaStore(marinaStore) // wrap store to proxy store
 
-marinaStore.dispatch({ type: UPDATE_UTXOS })
-marinaStore.dispatch({ type: UPDATE_ASSETS })
-marinaStore.dispatch({ type: UPDATE_TXS })
-
 setInterval(() => marinaStore.dispatch({ type: UPDATE_UTXOS }), 30_000)
 setInterval(() => marinaStore.dispatch({ type: UPDATE_TXS }), 60_000)
 setInterval(() => marinaStore.dispatch({ type: UPDATE_ASSETS }), 30_000)
@@ -35,23 +31,10 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
       //On first install, open new tab for onboarding
       case 'install':
 
-        // this is for development only
-        if (process.env.SKIP_ONBOARDING) {
-          await browser.browserAction.setPopup({ popup: 'popup.html' });
-          return;
-        }
-
-        // run onboarding flow on fullscreen$
+        // run onboarding flow on fullscreen
         welcomeTabID = await openInitializeWelcomeRoute();
         break;
     }
-  })().catch(console.error);
-});
-
-browser.runtime.onStartup.addListener(() => {
-  (async () => {
-    // Everytime the browser starts up we need to set up the popup page
-    await browser.browserAction.setPopup({ popup: 'popup.html' });
   })().catch(console.error);
 });
 

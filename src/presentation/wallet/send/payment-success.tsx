@@ -8,11 +8,12 @@ import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { IWallet } from '../../../domain/wallet';
 import { useDispatch } from 'react-redux';
-import { flushTx } from '../../../application/redux/actions/transaction';
+import { flushTx, launchTxsUpdater } from '../../../application/redux/actions/transaction';
 import { deriveNewAddress, setAddress } from '../../../application/redux/actions/wallet';
 import { Address } from '../../../domain/address';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
 
 interface LocationState {
   changeAddress?: Address;
@@ -51,6 +52,9 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) 
       dispatch(setAddress(state.changeAddress)).catch(console.error);
     }
     flushTx(dispatch).catch(console.error);
+
+    dispatch(launchTxsUpdater()).catch(console.error);
+    dispatch(launchUtxosUpdater()).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
