@@ -53,7 +53,7 @@ import SeedConfirm from '../../application/redux/containers/seed-confirm.contain
 // Wallet
 import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
-import Transactions from '../wallet/transactions';
+import Transactions from '../../application/redux/containers/transactions.container';
 import Receive from '../../application/redux/containers/receive.container';
 import SelectAsset from '../../application/redux/containers/select-asset.container';
 import AddressAmount from '../wallet/send/address-amount';

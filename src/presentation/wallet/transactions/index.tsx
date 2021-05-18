@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
@@ -10,15 +10,16 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
-import { getTxsDetails, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { imgPathMapMainnet, imgPathMapRegtest, txTypeAsString } from '../../../application/utils';
 import { esploraURL, fromSatoshiStr } from '../../utils';
-import { TxDisplayInterface, TxsHistory } from '../../../domain/transaction';
-import { AssetsByNetwork } from '../../../domain/assets';
+import { TxDisplayInterface } from '../../../domain/transaction';
+import { IAssets } from '../../../domain/assets';
 import { launchTxsUpdater, setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../..';
 import { Network } from '../../../domain/network';
 import { Address } from '../../../domain/address';
+import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -28,13 +29,12 @@ interface LocationState {
 }
 
 export interface TransactionsProps {
-  addresses: Address[];
-  assets: AssetsByNetwork;
-  txsHistory: TxsHistory;
+  assets: IAssets;
+  transactions: TxDisplayInterface[];
   network: Network;
 }
 
-const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHistory, network }) => {
+const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, network }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -45,9 +45,7 @@ const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHisto
       : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
 
   // TxDetails Modal
-  const [isTxDetailsModalOpen, showTxDetailsModal] = useState(false);
   const [modalTxDetails, setmodalTxDetails] = useState<TxDisplayInterface>();
-  const closeTxDetailsModal = () => showTxDetailsModal(false);
 
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -76,58 +74,6 @@ const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHisto
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Generate transaction list for current asset
-   * Will render new button tx as soon as data is ready
-   * @returns Memoized widgets
-   */
-  const buttonTransactions = useMemo(() => {
-    const openTxDetailsModal = (txId: string) => {
-      showTxDetailsModal(true);
-      const txsByTxId = getTxsDetails(
-        Object.values(txsHistory[network]),
-        network,
-        addresses,
-        assets[network]
-      ).byTxId;
-      setmodalTxDetails(txsByTxId[txId]);
-    };
-
-    const txsByAssets = getTxsDetails(
-      Object.values(txsHistory[network]),
-      network,
-      addresses,
-      assets[network]
-    ).byAsset;
-
-    return (
-      txsByAssets[state.assetHash]
-        // Descending order
-        ?.sort((a, b) => b.blockTime - a.blockTime)
-        .map(({ amount, dateContracted, toSelf, type, txId }, index) => (
-          <ButtonTransaction
-            amount={amount ?? 0}
-            assetPrecision={state.assetPrecision}
-            assetTicker={state.assetTicker}
-            key={`${state.assetTicker}_${index}`}
-            handleClick={openTxDetailsModal}
-            toSelf={toSelf}
-            txDate={dateContracted}
-            txId={txId}
-            txType={type}
-          />
-        ))
-    );
-  }, [
-    network,
-    assets,
-    addresses,
-    state.assetHash,
-    state.assetTicker,
-    state.assetPrecision,
-    txsHistory,
-  ]);
-
   return (
     <ShellPopUp
       backBtnCb={handleBackBtn}
@@ -153,45 +99,60 @@ const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHisto
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
       <ButtonList title="Transactions" type="transactions">
-        {buttonTransactions}
+        {transactions
+          .filter(txHasAsset(state.assetHash))
+          // Descending order
+          .sort((a, b) => b.blockTime?.diff(a.blockTime) || 0)
+          .map((tx, index) => {
+            return (
+              <ButtonTransaction
+                assetHash={state.assetHash}
+                assetPrecision={state.assetPrecision}
+                assetTicker={state.assetTicker}
+                key={index}
+                handleClick={() => {
+                  setmodalTxDetails(tx);
+                }}
+                tx={tx}
+              />
+            );
+          })}
       </ButtonList>
 
-      <Modal isOpen={isTxDetailsModalOpen} onClose={closeTxDetailsModal}>
+      <Modal isOpen={modalTxDetails !== undefined} onClose={() => setmodalTxDetails(undefined)}>
         <div className="mx-auto text-center">
           <img
             className="w-8 h-8 mt-0.5 block mx-auto mb-2"
             src={assetImgPath}
             alt="liquid bitcoin logo"
           />
-          <p className="text-base font-medium">
-            {modalTxDetails?.type === 'receive' ? 'Received' : 'Send'}
-          </p>
-          <p className="text-xs font-light">{modalTxDetails?.date}</p>
+          <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>
+          <p className="text-xs font-light">{modalTxDetails?.blockTime?.format('d MMMM YYYY')}</p>
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
           <div className="flex flex-row">
             <p className="text-primary text-base antialiased font-bold">Confirmed</p>
             <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
           </div>
-          <div>
-            <p className="text-base font-medium">Amount</p>
-            <p className="text-xs font-light">
-              {fromSatoshiStr(modalTxDetails?.amount ?? 0)} {state.assetTicker}
-            </p>
-          </div>
+          {modalTxDetails?.transfers.map((transfer) => (
+            <div>
+              <p className="text-base font-medium">Amount</p>
+              <p className="text-xs font-light">
+                {fromSatoshiStr(transfer.amount)}{' '}
+                {assets[transfer.asset].ticker ?? transfer.asset.slice(0, 4)}
+              </p>
+            </div>
+          ))}
           <div>
             <p className="text-base font-medium">Fee</p>
-            <p className="text-xs font-light">
-              {fromSatoshiStr(modalTxDetails?.fee ?? 0)}{' '}
-              {assets[network][modalTxDetails?.feeAsset ?? '']?.ticker ?? ''}
-            </p>
+            <p className="text-xs font-light">{fromSatoshiStr(modalTxDetails?.fee || 0)} L-BTC</p>
           </div>
           <div>
             <p className="text-base font-medium">ID transaction</p>
             <p className="wrap text-xs font-light break-all">{modalTxDetails?.txId}</p>
           </div>
         </div>
-        <Button className="w-full" onClick={() => handleOpenExplorer(modalTxDetails?.unblindURL)}>
+        <Button className="w-full" onClick={() => handleOpenExplorer(modalTxDetails?.explorerURL)}>
           See in Explorer
         </Button>
       </Modal>
@@ -205,4 +166,4 @@ const Transactions: React.FC<TransactionsProps> = ({ addresses, assets, txsHisto
   );
 };
 
-export default Transactions;
+export default TransactionsView;

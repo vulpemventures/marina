@@ -8,24 +8,32 @@ export type TxsHistory = Record<TxInterface['txid'], TxInterface>;
 export type TxsHistoryByNetwork = Record<Network, TxsHistory> &
   Partial<Record<'errors', IError>>;
 
-export type TxType = 'receive' | 'send';
+export enum TxTypeEnum {
+  Unknow = 0,
+  Deposit = 1,
+  Withdraw = 2,
+  Swap = 3,
+}
 
-export type TxStatus = 'confirmed' | 'pending';
+export enum TxStatusEnum {
+  Confirmed = 1,
+  Pending = 0,
+}
+
+export interface Transfer {
+  asset: string;
+  // amount > 0 = received & amount < 0 = sent
+  amount: number;
+}
 
 export interface TxDisplayInterface {
-  address: string;
-  amount: number;
-  asset: string;
-  blockTime: number;
-  date: string;
-  dateContracted: string;
+  type: TxTypeEnum;
   fee: number;
-  feeAsset: string;
-  status: TxStatus;
   txId: string;
-  toSelf: boolean;
-  type: TxType;
-  unblindURL?: string;
+  status: TxStatusEnum;
+  transfers: Transfer[];
+  explorerURL: string;
+  blockTime?: moment.Moment;
 }
 
 export interface TxsByAssetsInterface {
