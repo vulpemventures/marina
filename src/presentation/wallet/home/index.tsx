@@ -27,6 +27,7 @@ import { flushTx } from '../../../application/redux/actions/transaction';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { updateTaxiAssets } from '../../../application/redux/actions/taxi';
 
 export interface HomeProps {
   network: Network;

@@ -16,6 +16,7 @@ import { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
 import { RootReducerState } from '../../../domain/common';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { updateTaxiAssets } from '../../../application/redux/actions/taxi';
 
 interface LogInFormValues {
   password: string;
@@ -63,6 +64,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .dispatch(logInAction)
       .then(() => {
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
+          props.dispatch(updateTaxiAssets());
           props.history.push(DEFAULT_ROUTE);
           setIdleAction(() => {
             props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
@@ -103,9 +105,6 @@ const LogIn: React.FC = () => {
           The ultimate gateway to access the Liquid Network
         </h2>
         <LogInEnhancedForm dispatch={dispatch} history={history} passwordHash={passwordHash} />
-        {/* <Link className="text-primary block font-bold text-left" to={RESTORE_VAULT_ROUTE}>
-          Restore account
-        </Link> */}
       </div>
     </>
   );

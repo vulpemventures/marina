@@ -20,6 +20,7 @@ import { flushTx, setAddressesAndAmount } from '../../../application/redux/actio
 import { balances } from '../../../application/redux/selectors/balance.selector';
 import { createAddress } from '../../../domain/address';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { setAddress } from '../../../application/redux/actions/wallet';
 
 interface AddressAmountFormValues {
   address: string;
@@ -156,15 +157,18 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
   handleSubmit: async (values, { props }) => {
     const { wallet, app } = props.state;
     const changeAddress = await nextAddressForWallet(wallet, app.network, true);
+    await props.dispatch(setAddress(changeAddress)); // persist address in wallet
+
     await props
       .dispatch(
         setAddressesAndAmount(
           createAddress(values.address),
-          createAddress(changeAddress.value, changeAddress.derivationPath),
+          changeAddress,
           toSatoshi(values.amount)
         )
       )
       .catch(console.error);
+
     props.history.push({
       pathname: SEND_CHOOSE_FEE_ROUTE,
       state: { changeAddress: changeAddress },

@@ -19,7 +19,6 @@ export default class WindowProxy {
         }
       );
 
-      console.log('before call')
       // forward the method call to the content script via message passing
       this.call(id, name, params);
     });

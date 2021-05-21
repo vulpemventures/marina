@@ -40,6 +40,9 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
       const pendingTx = wallet.pendingTx;
       if (!pendingTx) throw new Error('pending tx is undefined');
 
+      if (pendingTx.changeAddress) {
+      }
+
       const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
       const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(pendingTx, network);
       tx = await blindAndSignPset(

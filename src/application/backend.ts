@@ -108,7 +108,6 @@ export default class Backend {
             case 'ENABLE_RESPONSE':
               try {
                 const [accepted] = params;
-                console.log(accepted)
 
                 // exit early if users rejected
                 if (!accepted) {
@@ -126,9 +125,7 @@ export default class Backend {
                 const hostname = state.connect[network].hostnameSelected;
 
                 // persist the site
-                console.log('test')
                 marinaStore.dispatch(enableWebsite(hostname, network));
-                console.log('test')
                 marinaStore.dispatch(flushSelectedHostname(network))
                 // respond to the injecteded sript
                 this.emitter.emit(Marina.prototype.enable.name);

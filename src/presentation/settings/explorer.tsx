@@ -79,7 +79,6 @@ const SettingsExplorerEnhancedForm = withFormik<
   }),
 
   handleSubmit: (values, { props }) => {
-    console.log('submit');
     //props.history.push(DEFAULT_ROUTE);
   },
 

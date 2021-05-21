@@ -6,7 +6,6 @@ import { logOut } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
 import { launchAssets, launchTxsUpdater } from './redux/actions/transaction';
 import { launchUtxosUpdater } from './redux/actions/utxos';
-import { updateTaxiAssets } from './redux/actions/taxi';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -26,7 +25,6 @@ browser.alarms.onAlarm.addListener((alarm) => {
       marinaStore.dispatch(launchAssets());
       marinaStore.dispatch(launchTxsUpdater());
       marinaStore.dispatch(launchUtxosUpdater());
-      marinaStore.dispatch(updateTaxiAssets());
       break;
 
     default:

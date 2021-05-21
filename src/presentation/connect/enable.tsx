@@ -25,7 +25,6 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
   const handleConnect = async () => {
     try {
-      console.log('send');
       await windowProxy.proxy('ENABLE_RESPONSE', [true]);
       window.close();
     } catch (e) {

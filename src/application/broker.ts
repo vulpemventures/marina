@@ -13,7 +13,6 @@ export default class Broker {
 
   onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
     // emit event when background script reponds
-    console.log('message', message)
     this.emitter.emit(message.id, message.payload);
   }
 
@@ -27,7 +26,6 @@ export default class Broker {
 
         const { id, name, params } = event.data;
         if (!id || !name) return;
-        console.log('event', event)
         // forward message to the background script
         this.port.postMessage({
           id,

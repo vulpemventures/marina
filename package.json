@@ -35,7 +35,7 @@
     "watchskip": "npm run clean && npm run copy-assets && SKIP_ONBOARDING=true run-p watch:**",
     "watch": "npm run clean && npm run copy-assets && run-p watch:**",
     "watch:html": "NETWORK=regtest parcel watch public/*.html",
-    "watch:scripts": "NETWORK=regtest parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
+    "watch:scripts": "parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "watchliquid": "npm run clean && npm run copy-assets && run-p watchliquid:**",
     "watchliquid:html": "parcel watch public/*.html",
     "watchliquid:scripts": "parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
