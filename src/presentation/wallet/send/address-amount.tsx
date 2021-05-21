@@ -156,7 +156,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
   handleSubmit: async (values, { props }) => {
     const { wallet, app } = props.state;
     const changeAddress = await nextAddressForWallet(wallet, app.network, true);
-    props
+    await props
       .dispatch(
         setAddressesAndAmount(
           createAddress(values.address),
@@ -207,8 +207,6 @@ const AddressAmount: React.FC = () => {
         }
         assetTicker={assetTicker}
         className="mt-4"
-        fiatBalance={120}
-        fiatCurrency="$"
       />
 
       <AddressAmountEnhancedForm

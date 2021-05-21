@@ -70,7 +70,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const [feeCurrency, setFeeCurrency] = useState<string>(lbtcAssetHash);
   const [feeLevel] = useState<string>('50');
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState();
 
   // Populate ref div with svg animations
   const mermaidLoaderRef = React.useRef(null);
@@ -78,15 +78,13 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
 
-  const changeAddressGetter: ChangeAddressFromAssetGetter = useCallback(
-    (asset: string) => {
-      if (asset === transaction.asset) {
-        return transaction.changeAddress?.value;
-      }
-      return transaction.feeChangeAddress?.value;
-    },
-    [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
-  );
+  const changeAddressGetter: ChangeAddressFromAssetGetter = (asset: string) => {
+    if (asset.valueOf() === transaction.asset.valueOf()) {
+      console.log(transaction.changeAddress?.value);
+      return transaction.changeAddress?.value;
+    }
+    return transaction.feeChangeAddress?.value;
+  };
 
   const recipients: RecipientInterface[] = useMemo(
     () => [
@@ -102,6 +100,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   // Build regular tx (no taxi)
   useEffect(() => {
     (async () => {
+      console.log('flag');
       if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
         // make sure we have the change fee address
         try {
@@ -109,24 +108,32 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           await dispatch(setFeeChangeAddress(feeChangeAddress));
           await dispatch(setAddress(feeChangeAddress));
         } catch (error) {
-          console.log(error);
+          console.error(error);
           setErrorMessage(error.message);
         }
       }
 
       if (feeCurrency === lbtcAssetByNetwork(network)) {
-        // no taxi
-        const w = walletFromCoins(Object.values(wallet.utxoMap), network);
-        const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
-        const tx: string = w.buildTx(
-          w.createTx(),
-          recipients,
-          greedyCoinSelector(),
-          changeAddressGetter,
-          true,
-          currentSatsPerByte
-        );
-        setUnsignedPendingTx(tx);
+        try {
+          // no taxi
+          console.log(feeCurrency);
+          const w = walletFromCoins(Object.values(wallet.utxoMap), network);
+          const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
+          console.log(Object.values(wallet.utxoMap));
+          const tx: string = w.buildTx(
+            w.createTx(),
+            recipients,
+            greedyCoinSelector(),
+            changeAddressGetter,
+            true,
+            currentSatsPerByte
+          );
+          setUnsignedPendingTx(tx);
+          console.log(tx);
+        } catch (error) {
+          console.error(error);
+          setErrorMessage(error);
+        }
 
         return;
       }
@@ -206,20 +213,18 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     }
   };
 
-  // Choose Fee buttons
-  const feeButton = (assetHash: string) => (
-    <Button
-      className="flex-1"
-      isOutline={feeCurrency.valueOf() === assetHash.valueOf()}
-      key={assetHash}
-      onClick={() => handlePayFees(assetHash)}
-      roundedMd={true}
-      textBase={true}
-      extraData={assetHash}
-    >
-      {assets[assetHash]?.ticker || assetHash.slice(0, 4).toUpperCase()}
-    </Button>
-  );
+  const getFeeCurrencyImgPath = (): string => {
+    let img: string | undefined = imgPathMapMainnet[feeCurrency];
+    if (network === 'regtest') {
+      img = imgPathMapRegtest[assets[feeCurrency]?.ticker];
+    }
+
+    if (!img) {
+      return imgPathMapMainnet[''];
+    }
+
+    return img;
+  };
 
   return (
     <ShellPopUp
@@ -230,11 +235,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     >
       <Balance
         assetBalance={formatDecimalAmount(fromSatoshi(balances[feeCurrency] ?? 0))}
-        assetImgPath={
-          network === 'regtest'
-            ? imgPathMapRegtest[assets[feeCurrency]?.ticker] ?? imgPathMapRegtest['']
-            : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
-        }
+        assetImgPath={getFeeCurrencyImgPath()}
         assetHash={transaction.asset}
         assetTicker={assets[feeCurrency]?.ticker ?? ''}
         className="mt-4"
@@ -246,11 +247,23 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           I pay fee in:
         </p>
         <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-          {[feeButton(lbtcAssetHash)].push(...taxiAssets.map(feeButton))}
+          {[lbtcAssetHash, ...taxiAssets].map((assetHash) => (
+            <Button
+              className="flex-1"
+              isOutline={feeCurrency.valueOf() !== assetHash.valueOf()}
+              key={assetHash}
+              onClick={() => handlePayFees(assetHash)}
+              roundedMd={true}
+              textBase={true}
+              extraData={assetHash}
+            >
+              {assets[assetHash]?.ticker || assetHash.slice(0, 4).toUpperCase()}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {feeCurrency && unsignedPendingTx ? (
+      {feeCurrency && unsignedPendingTx.length > 0 ? (
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
@@ -259,9 +272,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
                 ? `${fromSatoshiStr(feeAmountFromTx(unsignedPendingTx))} L-BTC`
                 : `${fromSatoshiStr(transaction?.taxiTopup.topup?.assetAmount || 0)} USDt *`}
             </span>
-            {errorMessage.length && (
-              <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
-            )}
           </div>
           {taxiAssets.includes(feeCurrency) && (
             <p className="text-primary mt-3.5 text-xs font-medium text-left">
@@ -271,6 +281,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         </>
       ) : (
         <div className="h-10 mx-auto" ref={circleLoaderRef} />
+      )}
+      {errorMessage && (
+        <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
       )}
 
       <Button
