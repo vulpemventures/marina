@@ -31,7 +31,7 @@ import {
 } from './utils';
 import { IAssets, AssetsByNetwork } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
-import { disableWebsite, enableWebsite, flushMsg, flushTx, setMsg, setTx, setTxData } from './redux/actions/connect';
+import { disableWebsite, enableWebsite, flushMsg, flushSelectedHostname, flushTx, selectHostname, setMsg, setTx, setTxData } from './redux/actions/connect';
 import { ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS, TXS_HISTORY_SET_TXS_SUCCESS, WALLET_SET_UTXOS_FAILURE, WALLET_SET_UTXOS_SUCCESS } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
 import { Network } from '../domain/network';
@@ -59,16 +59,6 @@ export default class Backend {
       };
       this.emitter.once(event, handleEvent);
     });
-  }
-
-  async enableSite(network: 'liquid' | 'regtest') {
-    const hostname = await getCurrentUrl();
-    marinaStore.dispatch(enableWebsite(hostname, network));
-  }
-
-  async disableSite(network: 'liquid' | 'regtest') {
-    const hostname = await getCurrentUrl();
-    marinaStore.dispatch(disableWebsite(hostname, network));
   }
 
   async isCurentSiteEnabled(network: 'liquid' | 'regtest') {
@@ -103,6 +93,8 @@ export default class Backend {
 
             case Marina.prototype.enable.name:
               try {
+                const url = await getCurrentUrl()
+                marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
                 await showPopup(`connect/enable`);
                 await this.waitForEvent(Marina.prototype.enable.name);
                 return handleResponse(id);
@@ -113,6 +105,7 @@ export default class Backend {
             case 'ENABLE_RESPONSE':
               try {
                 const [accepted] = params;
+                console.log(accepted)
 
                 // exit early if users rejected
                 if (!accepted) {
@@ -125,8 +118,15 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
+                const state = marinaStore.getState();
+                const network = state.app.network;
+                const hostname = state.connect[network].hostnameSelected;
+
                 // persist the site
-                await this.enableSite(getCurrentNetwork());
+                console.log('test')
+                marinaStore.dispatch(enableWebsite(hostname, network));
+                console.log('test')
+                marinaStore.dispatch(flushSelectedHostname(network))
                 // respond to the injecteded sript
                 this.emitter.emit(Marina.prototype.enable.name);
                 // repond to the popup so it can be closed
@@ -137,7 +137,9 @@ export default class Backend {
 
             case Marina.prototype.disable.name:
               try {
-                await this.disableSite(getCurrentNetwork());
+                const hostname = await getCurrentUrl()
+                const network = marinaStore.getState().app.network;
+                marinaStore.dispatch(disableWebsite(hostname, network));
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -405,7 +407,7 @@ export default class Backend {
 
       //
       const handleError = (id: string, e: Error) => {
-        console.error(e.stack);
+        console.error(e);
         port.postMessage({
           id,
           payload: { success: false, error: e.message },

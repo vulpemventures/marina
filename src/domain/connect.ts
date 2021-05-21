@@ -2,6 +2,7 @@ import { Network } from "./network";
 
 export type ConnectData = {
   enabledSites: string[];
+  hostnameSelected: string;
   tx?: {
     amount?: string;
     assetHash?: string;
@@ -17,7 +18,8 @@ export type ConnectData = {
 
 export function newEmptyConnectData(): ConnectData {
   return {
-    enabledSites: []
+    enabledSites: [],
+    hostnameSelected: '',
   }
 }
 

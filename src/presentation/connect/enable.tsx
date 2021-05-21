@@ -3,21 +3,15 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import WindowProxy from '../../application/proxy';
 import { browser } from 'webextension-polyfill-ts';
+import { useSelector } from 'react-redux';
+import {
+  connectWithConnectData,
+  WithConnectDataProps,
+} from '../../application/redux/containers/with-connect-data.container';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
-const ConnectEnableView: React.FC = () => {
-  const [hostname, setHostname] = useState<string>('');
-
-  useEffect(() => {
-    void (async () => {
-      const [currentTab] = await browser.tabs.query({ currentWindow: true, active: true });
-      if (!currentTab.url) throw new Error('No active tab available');
-      const url = new URL(currentTab.url);
-      setHostname(url.hostname);
-    })();
-  });
-
+const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const windowProxy = new WindowProxy();
 
   const handleReject = async () => {
@@ -31,6 +25,7 @@ const ConnectEnableView: React.FC = () => {
 
   const handleConnect = async () => {
     try {
+      console.log('send');
       await windowProxy.proxy('ENABLE_RESPONSE', [true]);
       window.close();
     } catch (e) {
@@ -43,7 +38,7 @@ const ConnectEnableView: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Enable"
     >
-      <h1 className="mt-8 text-2xl font-medium break-all">{hostname}</h1>
+      <h1 className="mt-8 text-2xl font-medium break-all">{connectData.hostnameSelected}</h1>
 
       <p className="mt-4 text-base font-medium">Connect with Marina</p>
 
@@ -68,4 +63,4 @@ const ConnectEnableView: React.FC = () => {
   );
 };
 
-export default ConnectEnableView;
+export default connectWithConnectData(ConnectEnableView);

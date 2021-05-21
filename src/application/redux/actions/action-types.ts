@@ -59,3 +59,5 @@ export const SET_TX = 'SET_TX';
 export const FLUSH_TX = 'FLUSH_TX';
 export const SET_MSG = 'SET_MSG';
 export const FLUSH_MSG = 'FLUSH_MSG';
+export const SELECT_HOSTNAME = 'SELECT_HOSTNAME';
+export const FLUSH_SELECTED_HOSTNAME = 'FLUSH_SELECTED_HOSTNAME';

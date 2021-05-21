@@ -4,7 +4,10 @@ import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend from './backend';
 import { logOut } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
-import { UPDATE_ASSETS, UPDATE_TXS, UPDATE_UTXOS } from './redux/actions/action-types';
+import { launchAssets, launchTxsUpdater } from './redux/actions/transaction';
+import { launchUtxosUpdater } from './redux/actions/utxos';
+
+const UPDATE_ALARM = 'UPDATE_ALARM';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -12,9 +15,23 @@ let welcomeTabID: number | undefined = undefined;
 
 wrapMarinaStore(marinaStore) // wrap store to proxy store
 
-setInterval(() => marinaStore.dispatch({ type: UPDATE_UTXOS }), 30_000)
-setInterval(() => marinaStore.dispatch({ type: UPDATE_TXS }), 60_000)
-setInterval(() => marinaStore.dispatch({ type: UPDATE_ASSETS }), 30_000)
+browser.alarms.create(UPDATE_ALARM, {
+  when: Date.now(),
+  periodInMinutes: 1,
+});
+
+browser.alarms.onAlarm.addListener((alarm) => {
+  switch (alarm.name) {
+    case UPDATE_ALARM:
+      marinaStore.dispatch(launchAssets());
+      marinaStore.dispatch(launchTxsUpdater());
+      marinaStore.dispatch(launchUtxosUpdater());
+      break;
+
+    default:
+      break;
+  }
+})
 
 // We start listening and handling messages from injected script
 const backend = new Backend();
@@ -30,7 +47,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install':
-
         // run onboarding flow on fullscreen
         welcomeTabID = await openInitializeWelcomeRoute();
         break;

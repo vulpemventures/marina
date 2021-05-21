@@ -1,7 +1,7 @@
 import { AnyAction } from "redux";
 import { ConnectData } from "../../../domain/connect";
 import { Network } from "../../../domain/network";
-import { DISABLE_WEBSITE, ENABLE_WEBSITE, FLUSH_MSG, FLUSH_TX, SET_MSG, SET_TX } from "./action-types";
+import { DISABLE_WEBSITE, ENABLE_WEBSITE, FLUSH_MSG, FLUSH_SELECTED_HOSTNAME, FLUSH_TX, SELECT_HOSTNAME, SET_MSG, SET_TX } from "./action-types";
 
 export function enableWebsite(hostname: string, network: Network): AnyAction {
   return {
@@ -49,5 +49,19 @@ export function setTxData(hostname: string, recipient: string, amount: string, a
   return {
     type: SET_TX,
     payload: { hostname, recipient, amount, assetHash, network } as ConnectData['tx']
+  }
+}
+
+export function selectHostname(hostname: string, network: Network): AnyAction {
+  return {
+    type: SELECT_HOSTNAME,
+    payload: { hostname, network },
+  }
+}
+
+export function flushSelectedHostname(network: Network): AnyAction {
+  return {
+    type: FLUSH_SELECTED_HOSTNAME,
+    payload: { network }
   }
 }

@@ -45,6 +45,20 @@ export function connectDataReducer(state: ConnectDataByNetwork = connectDataInit
       };
     }
 
+    case ACTION_TYPES.SELECT_HOSTNAME: {
+      const current = state[payload.network as Network];
+      return {
+        ...state, [payload.network]: { ...current, hostnameSelected: payload.hostname } as ConnectData
+      }
+    }
+
+    case ACTION_TYPES.FLUSH_SELECTED_HOSTNAME: {
+      const current = state[payload.network as Network];
+      return {
+        ...state, [payload.network]: { ...current, hostnameSelected: '' } as ConnectData
+      }
+    }
+
     default:
       return state;
   }
