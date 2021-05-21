@@ -55,7 +55,6 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) 
 
     dispatch(launchTxsUpdater()).catch(console.error);
     dispatch(launchUtxosUpdater()).catch(console.error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

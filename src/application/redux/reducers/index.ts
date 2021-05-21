@@ -14,6 +14,7 @@ import { IApp } from '../../../domain/app';
 import { TxsHistoryByNetwork } from '../../../domain/transaction';
 import { AssetsByNetwork } from '../../../domain/assets';
 import { IWallet } from '../../../domain/wallet';
+import { taxiReducer, TaxiState } from './taxi-reducer';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -42,6 +43,7 @@ const marinaReducer = combineReducers({
   transaction: persist(transactionReducer, 'transaction') as Reducer<TransactionState, AnyAction>,
   txsHistory: persist(txsHistoryReducer, 'txsHistory') as Reducer<TxsHistoryByNetwork, AnyAction>,
   wallet: persist(walletReducer, 'wallet') as Reducer<IWallet, AnyAction>,
+  taxi: persist(taxiReducer, 'taxi') as Reducer<TaxiState, AnyAction>,
   connect: connectDataReducer,
 });
 

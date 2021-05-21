@@ -47,7 +47,6 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, 
       );
     });
     setSearchResults(results);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

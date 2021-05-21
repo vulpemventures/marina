@@ -6,6 +6,7 @@ import { AssetsByNetwork } from './assets';
 import { TxsHistoryByNetwork } from './transaction';
 import { Action } from 'redux';
 import { ConnectDataByNetwork } from './connect';
+import { TaxiState } from '../application/redux/reducers/taxi-reducer';
 
 export interface RootReducerState {
   app: IApp;
@@ -15,6 +16,7 @@ export interface RootReducerState {
   txsHistory: TxsHistoryByNetwork;
   wallet: IWallet;
   connect: ConnectDataByNetwork;
+  taxi: TaxiState;
 }
 
 export interface ActionWithPayload<T> extends Action<string> {

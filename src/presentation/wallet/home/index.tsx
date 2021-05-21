@@ -69,7 +69,6 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, a
     if (transaction.asset !== '') {
       flushTx(dispatch).catch(console.error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // If extension was closed when a tx is pending then navigate to confirmation route

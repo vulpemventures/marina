@@ -61,3 +61,7 @@ export const SET_MSG = 'SET_MSG';
 export const FLUSH_MSG = 'FLUSH_MSG';
 export const SELECT_HOSTNAME = 'SELECT_HOSTNAME';
 export const FLUSH_SELECTED_HOSTNAME = 'FLUSH_SELECTED_HOSTNAME';
+
+// Taxi
+export const SET_TAXI_ASSETS = 'SET_TAXI_ASSETS';
+export const UPDATE_TAXI_ASSETS = 'UPDATE_TAXI_ASSETS';

@@ -70,7 +70,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
    */
   useEffect(() => {
     dispatch(launchTxsUpdater()).catch(console.error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

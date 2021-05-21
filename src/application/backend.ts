@@ -24,8 +24,10 @@ import Marina from './marina';
 import {
   decrypt,
   explorerApiUrl,
+  fetchAssetsFromTaxi,
   IdentityRestorerFromState,
   mnemonicWalletFromAddresses,
+  taxiURL,
   toStringOutpoint,
   xpubWalletFromAddresses,
 } from './utils';
@@ -39,6 +41,7 @@ import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { TxsHistory } from '../domain/transaction';
+import { setTaxiAssets } from './redux/actions/taxi';
 
 const POPUP_HTML = 'popup.html';
 
@@ -633,4 +636,18 @@ export async function updateTxsHistory() {
   } catch (error) {
     console.error(error);
   }
+}
+
+export async function fetchAndSetTaxiAssets() {
+  const state = marinaStore.getState();
+  const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);
+
+  const currentAssets = state.taxi.taxiAssets;
+  const sortAndJoin = (a: string[]) => a.sort().join('');
+
+  if (sortAndJoin(currentAssets) === sortAndJoin(assets)) {
+    return; // skip if same assets state
+  }
+
+  marinaStore.dispatch(setTaxiAssets(assets));
 }
