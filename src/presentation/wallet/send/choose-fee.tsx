@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import {
   ChangeAddressFromAssetGetter,
@@ -103,10 +103,14 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       try {
         setErrorMessage(undefined);
         if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
-          // make sure we have the change fee address
-          const feeChangeAddress = await nextAddressForWallet(wallet, network, true);
-          await dispatch(setFeeChangeAddress(feeChangeAddress));
-          await dispatch(setAddress(feeChangeAddress));
+          try {
+            const feeChangeAddress = await nextAddressForWallet(wallet, network, true);
+            dispatch(setFeeChangeAddress(feeChangeAddress));
+            dispatch(setAddress(feeChangeAddress));
+          } catch (error) {
+            console.log(error);
+            setErrorMessage(error.message);
+          }
         }
 
         if (feeCurrency === lbtcAssetByNetwork(network)) {

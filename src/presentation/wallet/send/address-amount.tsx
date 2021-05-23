@@ -9,12 +9,13 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import {
+  defaultPrecision,
   imgPathMapMainnet,
   imgPathMapRegtest,
   isValidAddressForNetwork,
   nextAddressForWallet,
 } from '../../../application/utils';
-import { formatDecimalAmount, fromSatoshi, toSatoshi } from '../../utils';
+import { getMinAmountFromPrecision, fromSatoshi, toSatoshi } from '../../utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { flushTx, setAddressesAndAmount } from '../../../application/redux/actions/transaction';
 import { balances } from '../../../application/redux/selectors/balance.selector';
@@ -26,12 +27,14 @@ interface AddressAmountFormValues {
   address: string;
   amount: number;
   assetTicker: string;
+  assetPrecision: number;
   balances: { [assetHash: string]: number };
 }
 
 interface AddressAmountFormProps {
   balances: { [assetHash: string]: number };
   dispatch: ProxyStoreDispatch;
+  assetPrecision: number;
   history: RouteComponentProps['history'];
   state: RootReducerState;
 }
@@ -127,6 +130,9 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         : ('' as unknown as number),
     assetTicker:
       props.state.assets[props.state.app.network][props.state.transaction.asset]?.ticker ?? '',
+    assetPrecision:
+      props.state.assets[props.state.app.network][props.state.transaction.asset]?.precision ??
+      defaultPrecision,
     balances: props.balances,
   }),
 
@@ -142,14 +148,15 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
       amount: Yup.number()
         .required('Please enter a valid amount')
-        .min(0.00000001, 'Amount should be at least 1 satoshi')
+        .min(getMinAmountFromPrecision(props.assetPrecision), 'Amount should be at least 1 satoshi')
         .test('too-many-digits', 'Too many digits', (value) => {
           return value !== undefined && value.toString().length < 14;
         })
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return (
             value !== undefined &&
-            value <= fromSatoshi(props.balances[props.state.transaction.asset])
+            value <=
+              fromSatoshi(props.balances[props.state.transaction.asset], props.assetPrecision)
           );
         }),
     }),
@@ -184,7 +191,9 @@ const AddressAmount: React.FC = () => {
   const assetsBalance = useSelector(balances);
   const { assets, transaction, app } = state;
 
-  const assetTicker = assets[app.network][transaction.asset]?.ticker ?? '';
+  const assetTicker =
+    assets[app.network][transaction.asset]?.ticker ?? transaction.asset.slice(0, 4);
+  const assetPrecision = assets[app.network][transaction.asset]?.precision ?? defaultPrecision;
 
   const handleBackBtn = () => {
     flushTx(dispatch).catch(console.error);
@@ -202,8 +211,8 @@ const AddressAmount: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetHash={transaction.asset}
-        assetBalance={formatDecimalAmount(fromSatoshi(assetsBalance[transaction.asset] ?? 0))}
+        assetHash={state.transaction.asset}
+        assetBalance={fromSatoshi(assetsBalance[state.transaction.asset] ?? 0, assetPrecision)}
         assetImgPath={
           app.network === 'regtest'
             ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
@@ -218,6 +227,7 @@ const AddressAmount: React.FC = () => {
         history={history}
         state={state}
         balances={assetsBalance}
+        assetPrecision={assetPrecision}
       />
     </ShellPopUp>
   );

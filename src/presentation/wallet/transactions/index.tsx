@@ -88,8 +88,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
         assetImgPath={assetImgPath}
         assetTicker={state.assetTicker}
         bigBalanceText={true}
-        fiatBalance={120}
-        fiatCurrency="$"
       />
 
       <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
@@ -136,7 +134,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
             <div key={i}>
               <p className="text-base font-medium">Amount</p>
               <p className="text-xs font-light">
-                {fromSatoshiStr(transfer.amount)}{' '}
+                {fromSatoshiStr(transfer.amount, assets[transfer.asset]?.precision)}{' '}
                 {assets[transfer.asset]?.ticker ?? transfer.asset.slice(0, 4)}
               </p>
             </div>
