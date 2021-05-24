@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { useDispatch, useSelector } from 'react-redux';
-import { flushTx } from '../../application/redux/actions/transaction';
-import { RootReducerState } from '../../domain/common';
+import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { launchUtxosUpdater } from '../../application/redux/actions/utxos';
 
 interface Props {
   backBtnCb?: () => void;
@@ -27,7 +26,6 @@ const ShellPopUp: React.FC<Props> = ({
 }: Props) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const wallet = useSelector((state: RootReducerState) => state.wallet);
 
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
@@ -37,10 +35,7 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      // dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
-    }
-    if (wallet.pendingTx) {
-      flushTx(dispatch).catch(console.error);
+      dispatch(launchUtxosUpdater()).catch(console.error);
     }
     history.push(DEFAULT_ROUTE);
   };
