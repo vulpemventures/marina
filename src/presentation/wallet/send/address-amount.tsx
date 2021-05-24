@@ -37,7 +37,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
   const assetPrecision = assets[transaction.sendAsset]?.precision ?? defaultPrecision;
 
   const handleBackBtn = () => {
-    dispatch(flushPendingTx());
+    dispatch(flushPendingTx()).catch(console.error);
     history.push({
       pathname: TRANSACTIONS_ROUTE,
       state: { assetHash: transaction.sendAsset, assetTicker, balances },

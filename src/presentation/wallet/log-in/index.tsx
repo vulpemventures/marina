@@ -64,7 +64,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .dispatch(logInAction)
       .then(() => {
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
-          props.dispatch(updateTaxiAssets());
+          props.dispatch(updateTaxiAssets()).catch(console.error);
           props.history.push(DEFAULT_ROUTE);
           setIdleAction(() => {
             props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);

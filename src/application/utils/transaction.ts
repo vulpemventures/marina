@@ -15,7 +15,6 @@ import {
 import { confidential } from 'liquidjs-lib';
 import { mnemonicWalletFromAddresses } from './restorer';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
-import { lbtcAssetByNetwork } from './network';
 import {
   Transfer,
   TxDisplayInterface,

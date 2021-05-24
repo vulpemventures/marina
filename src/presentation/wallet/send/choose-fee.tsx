@@ -94,7 +94,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   );
 
   useEffect(() => {
-    updatePendingTx();
+    updatePendingTx().catch(console.error);
   }, [feeCurrency]);
 
   const updatePendingTx = async () => {
@@ -147,7 +147,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         };
 
         const tx: string = fillTaxiTx(
-          taxiTopup.topup.partial as string,
+          taxiTopup.topup.partial,
           Object.values(wallet.utxoMap),
           recipients,
           taxiPayout,

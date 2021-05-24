@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import WindowProxy from '../../application/proxy';
-import { browser } from 'webextension-polyfill-ts';
-import { useSelector } from 'react-redux';
 import {
   connectWithConnectData,
   WithConnectDataProps,

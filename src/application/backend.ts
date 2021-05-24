@@ -13,9 +13,6 @@ import {
   psetToUnsignedTx,
   UtxoInterface,
   walletFromCoins,
-  MasterPublicKey,
-  IdentityType,
-  fromXpub,
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
@@ -25,7 +22,6 @@ import {
   decrypt,
   explorerApiUrl,
   fetchAssetsFromTaxi,
-  IdentityRestorerFromState,
   mnemonicWalletFromAddresses,
   taxiURL,
   toStringOutpoint,
@@ -236,8 +232,8 @@ export default class Backend {
               }
 
             case Marina.prototype.sendTransaction.name:
-              const network = getCurrentNetwork();
               try {
+                const network = getCurrentNetwork();
                 if (!(await this.isCurentSiteEnabled(network))) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
@@ -253,7 +249,7 @@ export default class Backend {
 
                 return handleResponse(id, txid);
               } catch (e: any) {
-                marinaStore.dispatch(flushTx(network))
+                marinaStore.dispatch(flushTx(getCurrentNetwork()))
                 return handleError(id, e);
               }
 

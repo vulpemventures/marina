@@ -62,7 +62,7 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, a
   useEffect(() => {
     // Flush last sent tx
     if (transaction.sendAsset !== '') {
-      dispatch(flushPendingTx());
+      dispatch(flushPendingTx()).catch(console.error);
     }
   }, []);
 
