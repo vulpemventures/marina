@@ -15,19 +15,11 @@ import {
 import { confidential } from 'liquidjs-lib';
 import { mnemonicWalletFromAddresses } from './restorer';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
-import {
-  Transfer,
-  TxDisplayInterface,
-  TxStatusEnum,
-  TxTypeEnum,
-} from '../../domain/transaction';
+import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
 import { Address } from '../../domain/address';
 import moment from 'moment';
 
-export function outPubKeysMap(
-  pset: string,
-  outputAddresses: string[]
-): Map<number, string> {
+export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
 
   for (const outAddr of outputAddresses) {
@@ -35,12 +27,12 @@ export function outPubKeysMap(
     if (index === -1) continue;
     if (isConfidentialAddress(outAddr)) {
       const blindingPublicKey = blindingKeyFromAddress(outAddr);
-      outPubkeys.set(index, blindingPublicKey)
+      outPubkeys.set(index, blindingPublicKey);
     }
   }
 
-  return outPubkeys
-};
+  return outPubkeys;
+}
 
 export const blindAndSignPset = async (
   mnemonic: string,
@@ -110,21 +102,16 @@ export const isChange = (a: Address): boolean | null =>
  * @param tx txInterface
  * @param walletScripts the wallet's scripts i.e wallet scripts from wallet's addresses.
  */
-export function toDisplayTransaction(
-  tx: TxInterface,
-  walletScripts: string[]
-): TxDisplayInterface {
+export function toDisplayTransaction(tx: TxInterface, walletScripts: string[]): TxDisplayInterface {
   const transfers = getTransfers(tx.vin, tx.vout, walletScripts);
   return {
     txId: tx.txid,
-    blockTime: tx.status.blockTime
-      ? moment(tx.status.blockTime * 1000)
-      : undefined,
+    blockTime: tx.status.blockTime ? moment(tx.status.blockTime * 1000) : undefined,
     status: tx.status.confirmed ? TxStatusEnum.Confirmed : TxStatusEnum.Pending,
     fee: tx.fee,
     transfers,
     type: txTypeFromTransfer(transfers),
-    explorerURL: getUnblindURLFromTx(tx, 'https://blockstream.info/liquid')
+    explorerURL: getUnblindURLFromTx(tx, 'https://blockstream.info/liquid'),
   };
 }
 
@@ -159,14 +146,12 @@ function txTypeFromTransfer(transfers: Transfer[]) {
   return TxTypeEnum.Unknow;
 }
 
-
-
 /**
  * Take two vectors: vin and vout representing a transaction
  * then, using the whole list of a wallet's script, we return a set of Transfers
- * @param vin 
- * @param vout 
- * @param walletScripts 
+ * @param vin
+ * @param vout
+ * @param walletScripts
  */
 function getTransfers(
   vin: Array<InputInterface>,
@@ -176,9 +161,7 @@ function getTransfers(
   const transfers: Transfer[] = [];
 
   const addToTransfers = (amount: number, asset: string) => {
-    const transferIndex = transfers.findIndex(
-      (t) => t.asset.valueOf() === asset.valueOf()
-    );
+    const transferIndex = transfers.findIndex((t) => t.asset.valueOf() === asset.valueOf());
 
     if (transferIndex >= 0) {
       transfers[transferIndex].amount += amount;
@@ -192,10 +175,7 @@ function getTransfers(
   };
 
   for (const input of vin) {
-    if (
-      !isBlindedOutputInterface(input.prevout) &&
-      walletScripts.includes(input.prevout.script)
-    ) {
+    if (!isBlindedOutputInterface(input.prevout) && walletScripts.includes(input.prevout.script)) {
       addToTransfers(-1 * input.prevout.value, input.prevout.asset);
     }
   }

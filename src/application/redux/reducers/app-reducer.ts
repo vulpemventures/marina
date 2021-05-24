@@ -8,8 +8,8 @@ const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
   isWalletVerified: false,
-  network: createNetwork((process.env.NETWORK || 'liquid')),
-}
+  network: createNetwork(process.env.NETWORK || 'liquid'),
+};
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
   switch (type) {
@@ -76,4 +76,4 @@ export function appReducer(state: IApp = appInitState, { type, payload }: AnyAct
     default:
       return state;
   }
-};
+}

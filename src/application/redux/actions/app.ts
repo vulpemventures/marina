@@ -15,27 +15,23 @@ import { match, PasswordHash } from '../../../domain/password-hash';
 
 export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
   type: VERIFICATION_SUCCESS,
-})
+});
 
 export const verifyWalletFailure: ActionCreator<AnyAction> = (error: Error) => ({
   type: VERIFICATION_FAILURE,
-  payload: { error }
-})
+  payload: { error },
+});
 
 export const onBoardingCompleted = (): AnyAction => ({
-  type: ONBOARDING_COMPLETETED
-})
+  type: ONBOARDING_COMPLETETED,
+});
 
 export const onBoardingFailure = (error: Error): AnyAction => ({
   type: ONBOARDING_FAILURE,
-  payload: { error }
-})
+  payload: { error },
+});
 
-
-export function logIn(
-  password: Password,
-  passwordHash: PasswordHash,
-): AnyAction {
+export function logIn(password: Password, passwordHash: PasswordHash): AnyAction {
   try {
     if (!match(password, passwordHash)) {
       return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
@@ -48,11 +44,9 @@ export function logIn(
 }
 
 export function logOut(): AnyAction {
-  return { type: LOGOUT_SUCCESS }
+  return { type: LOGOUT_SUCCESS };
 }
 
-export function changeNetwork(
-  network: Network,
-): AnyAction {
-  return { type: CHANGE_NETWORK_SUCCESS, payload: { network } }
+export function changeNetwork(network: Network): AnyAction {
+  return { type: CHANGE_NETWORK_SUCCESS, payload: { network } };
 }

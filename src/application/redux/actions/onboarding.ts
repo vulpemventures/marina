@@ -6,8 +6,8 @@ import {
 import { AnyAction } from 'redux';
 
 export function setVerified(): AnyAction {
-  return { type: ONBOARDING_SET_VERIFIED }
-};
+  return { type: ONBOARDING_SET_VERIFIED };
+}
 
 export function setPasswordAndOnboardingMnemonic(password: string, mnemonic: string): AnyAction {
   return {
@@ -17,5 +17,5 @@ export function setPasswordAndOnboardingMnemonic(password: string, mnemonic: str
 }
 
 export function flushOnboarding(): AnyAction {
-  return { type: ONBOARDING_FLUSH }
+  return { type: ONBOARDING_FLUSH };
 }

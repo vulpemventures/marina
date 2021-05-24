@@ -5,8 +5,7 @@ import { Network } from './network';
 
 export type TxsHistory = Record<TxInterface['txid'], TxInterface>;
 
-export type TxsHistoryByNetwork = Record<Network, TxsHistory> &
-  Partial<Record<'errors', IError>>;
+export type TxsHistoryByNetwork = Record<Network, TxsHistory> & Partial<Record<'errors', IError>>;
 
 export enum TxTypeEnum {
   Unknow = 0,
@@ -110,6 +109,6 @@ export function createTransaction(props: Transaction): Transaction {
   } else if (props.changeAddress && !isValidAddress(props.changeAddress.value)) {
     throw new Error('Transaction must be a valid base64 encoded PSET');
   } else {
-    return props
+    return props;
   }
 }

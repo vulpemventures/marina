@@ -8,6 +8,6 @@ export function createEncryptedMnemonic(encryptedMnemonic: string): EncryptedMne
   ) {
     throw new Error('Encrypted mnemonic must be between 160 between and 192 chars');
   } else {
-    return encryptedMnemonic
+    return encryptedMnemonic;
   }
 }

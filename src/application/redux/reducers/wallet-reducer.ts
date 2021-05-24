@@ -10,9 +10,12 @@ const initialStateWallet: IWallet = {
   masterBlindingKey: '',
   passwordHash: '',
   utxoMap: {},
-}
+};
 
-export function walletReducer(state: IWallet = initialStateWallet, { type, payload }: AnyAction): IWallet {
+export function walletReducer(
+  state: IWallet = initialStateWallet,
+  { type, payload }: AnyAction
+): IWallet {
   switch (type) {
     case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
       return {
@@ -89,4 +92,4 @@ export function walletReducer(state: IWallet = initialStateWallet, { type, paylo
       return state;
     }
   }
-};
+}

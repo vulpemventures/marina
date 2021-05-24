@@ -24,7 +24,10 @@ const assetInitState: AssetsByNetwork = {
   },
 };
 
-export function assetReducer(state: AssetsByNetwork = assetInitState, { type, payload }: AnyAction): AssetsByNetwork {
+export function assetReducer(
+  state: AssetsByNetwork = assetInitState,
+  { type, payload }: AnyAction
+): AssetsByNetwork {
   switch (type) {
     case ACTION_TYPES.ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS: {
       return payload.assets;
@@ -32,4 +35,4 @@ export function assetReducer(state: AssetsByNetwork = assetInitState, { type, pa
     default:
       return state;
   }
-};
+}

@@ -4,9 +4,8 @@ export type MasterBlindingKey = string;
 
 export function createMasterBlindingKey(masterBlindingKey: string): MasterBlindingKey {
   if (isValidExtendedBlindKey(masterBlindingKey)) {
-    return masterBlindingKey
+    return masterBlindingKey;
   } else {
     throw new Error('MasterBlindingKey is invalid');
   }
 }
-

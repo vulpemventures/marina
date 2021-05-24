@@ -16,4 +16,3 @@ export interface IWallet {
   restored?: boolean;
   utxoMap: Record<string, UtxoInterface>;
 }
-

@@ -1,7 +1,7 @@
 import { RootReducerState } from './../../domain/common';
 import { serializerAndDeserializer } from './store';
-import { AnyAction } from "redux";
-import { Store } from "webext-redux";
+import { AnyAction } from 'redux';
+import { Store } from 'webext-redux';
 
 export type ProxyStoreDispatch = (action: AnyAction) => Promise<void>;
 

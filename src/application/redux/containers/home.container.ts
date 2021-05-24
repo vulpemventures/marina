@@ -1,7 +1,7 @@
 import { RootReducerState } from './../../../domain/common';
-import { connect } from "react-redux"
-import HomeView, { HomeProps } from "../../../presentation/wallet/home"
-import { balancesSelector } from "../selectors/balance.selector"
+import { connect } from 'react-redux';
+import HomeView, { HomeProps } from '../../../presentation/wallet/home';
+import { balancesSelector } from '../selectors/balance.selector';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => ({
   network: state.app.network,
@@ -9,8 +9,8 @@ const mapStateToProps = (state: RootReducerState): HomeProps => ({
   transaction: state.transaction,
   wallet: state.wallet,
   assetsBalance: balancesSelector(state),
-})
+});
 
-const Home = connect(mapStateToProps)(HomeView)
+const Home = connect(mapStateToProps)(HomeView);
 
-export default Home
+export default Home;

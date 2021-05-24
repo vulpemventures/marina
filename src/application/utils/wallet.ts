@@ -21,7 +21,7 @@ export interface WalletData {
 export async function createWalletFromMnemonic(
   password: Password,
   mnemonic: Mnemo,
-  chain: Network,
+  chain: Network
 ): Promise<WalletData> {
   const mnemonicWallet = new Mnemonic({
     chain,
@@ -37,7 +37,9 @@ export async function createWalletFromMnemonic(
   const masterBlindingKey = createMasterBlindingKey(mnemonicWallet.masterBlindingKey);
   const encryptedMnemonic = encrypt(mnemonic, password);
   const passwordHash = hash(password);
-  const addresses = (await mnemonicWallet.getAddresses()).map(a => createAddress(a.confidentialAddress, a.derivationPath))
+  const addresses = (await mnemonicWallet.getAddresses()).map((a) =>
+    createAddress(a.confidentialAddress, a.derivationPath)
+  );
 
   // Update React state
   return {
@@ -46,5 +48,5 @@ export async function createWalletFromMnemonic(
     masterXPub,
     masterBlindingKey,
     passwordHash,
-  }
+  };
 }

@@ -1,4 +1,4 @@
-import { Network } from "./network";
+import { Network } from './network';
 
 export type ConnectData = {
   enabledSites: string[];
@@ -20,7 +20,7 @@ export function newEmptyConnectData(): ConnectData {
   return {
     enabledSites: [],
     hostnameSelected: '',
-  }
+  };
 }
 
 export type ConnectDataByNetwork = Record<Network, ConnectData>;

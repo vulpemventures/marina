@@ -15,7 +15,10 @@ const onboardingInitState: OnboardingState = {
   restored: false,
 };
 
-export function onboardingReducer(state: OnboardingState = onboardingInitState, { type, payload }: AnyAction): OnboardingState {
+export function onboardingReducer(
+  state: OnboardingState = onboardingInitState,
+  { type, payload }: AnyAction
+): OnboardingState {
   switch (type) {
     case ACTION_TYPES.ONBOARDING_SET_MNEMONIC_AND_PASSWORD: {
       return {
@@ -43,4 +46,4 @@ export function onboardingReducer(state: OnboardingState = onboardingInitState, 
     default:
       return state;
   }
-};
+}

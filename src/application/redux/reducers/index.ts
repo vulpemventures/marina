@@ -18,23 +18,24 @@ import { taxiReducer, TaxiState } from './taxi-reducer';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
-    const value = (await browser.storage.local.get(key));
+    const value = await browser.storage.local.get(key);
     return parse(value[key] || '');
   },
   setItem: async (key: string, value: any) => {
-    const map = { [key]: stringify(value) }
+    const map = { [key]: stringify(value) };
     await browser.storage.local.set(map);
   },
-  removeItem: async (key: string) => browser.storage.local.remove(key)
-}
+  removeItem: async (key: string) => browser.storage.local.remove(key),
+};
 
 const localStorageConfig = (key: string) => ({
   key,
   storage: browserLocalStorage,
-  version: 0
-})
+  version: 0,
+});
 
-const persist = (reducer: Reducer, key: string): Reducer => persistReducer(localStorageConfig(key), reducer)
+const persist = (reducer: Reducer, key: string): Reducer =>
+  persistReducer(localStorageConfig(key), reducer);
 
 const marinaReducer = combineReducers({
   app: persist(appReducer, 'app') as Reducer<IApp, AnyAction>,

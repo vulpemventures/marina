@@ -83,10 +83,10 @@ export function transactionReducer(
       return {
         ...state,
         pset: payload.pset,
-      }
+      };
     }
 
     default:
       return state;
   }
-};
+}

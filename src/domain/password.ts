@@ -1,4 +1,3 @@
-
 export type Password = string;
 
 export function createPassword(password: string): Password {

@@ -3,7 +3,7 @@ import { IdentityInterface } from 'ldk/dist/identity/identity';
 import { Address } from '../../domain/address';
 
 export async function waitForRestoration(identity: IdentityInterface) {
-  await identity.isRestored
+  await identity.isRestored;
 }
 
 export async function mnemonicWalletFromAddresses(
@@ -35,7 +35,7 @@ export class IdentityRestorerFromState implements IdentityRestorerInterface {
   }
 
   addressHasBeenUsed(address: string): Promise<boolean> {
-    if (this.addresses.length === 0) return Promise.resolve(false)
+    if (this.addresses.length === 0) return Promise.resolve(false);
     return Promise.resolve(this.addresses.includes(address));
   }
 

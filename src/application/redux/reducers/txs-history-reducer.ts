@@ -4,7 +4,10 @@ import { AnyAction } from 'redux';
 
 const txsHistoryInitState: TxsHistoryByNetwork = { regtest: {}, liquid: {} };
 
-export function txsHistoryReducer(state: TxsHistoryByNetwork = txsHistoryInitState, { type, payload }: AnyAction): TxsHistoryByNetwork {
+export function txsHistoryReducer(
+  state: TxsHistoryByNetwork = txsHistoryInitState,
+  { type, payload }: AnyAction
+): TxsHistoryByNetwork {
   switch (type) {
     case ACTION_TYPES.INIT_TXS_HISTORY: {
       return {
@@ -27,4 +30,4 @@ export function txsHistoryReducer(state: TxsHistoryByNetwork = txsHistoryInitSta
     default:
       return state;
   }
-};
+}

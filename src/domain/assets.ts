@@ -1,4 +1,4 @@
-import { Network } from "./network";
+import { Network } from './network';
 
 export type IAssets = {
   [hash: string]: { name: string; precision: number; ticker: string };

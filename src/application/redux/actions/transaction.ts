@@ -32,36 +32,33 @@ export function setFeeChangeAddress(feeChangeAddress: Address): AnyAction {
   return { type: PENDING_TX_SET_FEE_CHANGE_ADDRESS, payload: { feeChangeAddress } };
 }
 
-export function setFeeAssetAndAmount(
-  feeAsset: string,
-  feeAmountInSatoshi: number
-): AnyAction {
+export function setFeeAssetAndAmount(feeAsset: string, feeAmountInSatoshi: number): AnyAction {
   return { type: PENDING_TX_SET_FEE_AMOUNT_AND_ASSET, payload: { feeAsset, feeAmountInSatoshi } };
 }
 
 export function flushPendingTx(): AnyAction {
-  return ({ type: PENDING_TX_FLUSH });
+  return { type: PENDING_TX_FLUSH };
 }
 
 export function setTopup(
   taxiTopup: TopupWithAssetReply.AsObject | Record<string, never>
 ): AnyAction {
-  return ({ type: PENDING_TX_SET_TAXI_TOPUP, payload: { taxiTopup } });
+  return { type: PENDING_TX_SET_TAXI_TOPUP, payload: { taxiTopup } };
 }
 
 export function launchTxsUpdater(): AnyAction {
   return {
-    type: UPDATE_TXS
-  }
+    type: UPDATE_TXS,
+  };
 }
 
 export function launchAssets(): AnyAction {
-  return { type: UPDATE_ASSETS }
+  return { type: UPDATE_ASSETS };
 }
 
 export function setPset(pset: string): AnyAction {
   return {
     type: PENDING_TX_SET_PSET,
-    payload: { pset }
-  }
+    payload: { pset },
+  };
 }

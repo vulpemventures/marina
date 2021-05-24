@@ -5,8 +5,8 @@ export interface TaxiState {
 }
 
 const initState: TaxiState = {
-  taxiAssets: []
-}
+  taxiAssets: [],
+};
 
 export function taxiReducer(state: TaxiState = initState, { type, payload }: AnyAction): TaxiState {
   switch (type) {

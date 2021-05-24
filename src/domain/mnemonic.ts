@@ -8,14 +8,14 @@ export function createMnemonic(mnemo: string): Mnemonic {
 
   try {
     // Mnemonic validation, network doesn't matter
-    new MnemonicTdex({ // TODO rename
+    new MnemonicTdex({
+      // TODO rename
       chain: 'liquid',
       type: IdentityType.Mnemonic,
       value: { mnemonic },
     } as IdentityOpts);
-    return mnemonic
+    return mnemonic;
   } catch (err) {
     throw new Error(err.message);
   }
 }
-

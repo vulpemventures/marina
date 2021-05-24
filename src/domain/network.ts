@@ -1,4 +1,4 @@
-export type Network = 'regtest' | 'liquid'
+export type Network = 'regtest' | 'liquid';
 
 export function createNetwork(network: string): Network {
   if (network !== 'regtest' && network !== 'liquid') {

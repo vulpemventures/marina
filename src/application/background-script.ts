@@ -12,7 +12,7 @@ const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 const UPDATE_ALARM = 'UPDATE_ALARM';
 let welcomeTabID: number | undefined = undefined;
 
-wrapMarinaStore(marinaStore) // wrap store to proxy store
+wrapMarinaStore(marinaStore); // wrap store to proxy store
 
 browser.alarms.create(UPDATE_ALARM, {
   when: Date.now(),
@@ -29,7 +29,7 @@ browser.alarms.onAlarm.addListener((alarm) => {
     default:
       break;
   }
-})
+});
 
 // We start listening and handling messages from injected script
 const backend = new Backend();
@@ -71,7 +71,7 @@ browser.browserAction.onClicked.addListener(() => {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {
-      await browser.browserAction.setPopup({ popup: 'popup.html' })
+      await browser.browserAction.setPopup({ popup: 'popup.html' });
       await browser.browserAction.openPopup();
     }
   })().catch(console.error);
@@ -85,7 +85,7 @@ try {
     if (newState !== 'active') {
       browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
       // this will handle the logout when the extension is closed
-      marinaStore.dispatch(logOut())
+      marinaStore.dispatch(logOut());
     }
   });
 } catch (error) {
@@ -97,5 +97,3 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const { id } = await browser.tabs.create({ url });
   return id;
 }
-
-
