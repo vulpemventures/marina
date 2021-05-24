@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
-import { DEFAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
@@ -26,7 +25,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey }) => {
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);
   const handleExpand = () => setAddressExpanded(true);
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  const handleBackBtn = () => history.goBack();
   const handleCopy = () => {
     navigator.clipboard.writeText(confidentialAddress).then(
       () => setButtonText('Copied'),

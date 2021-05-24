@@ -1,6 +1,5 @@
 import React from 'react';
 import { useHistory } from 'react-router';
-import { TRANSACTIONS_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
 import { defaultPrecision, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
@@ -38,10 +37,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
 
   const handleBackBtn = () => {
     dispatch(flushPendingTx()).catch(console.error);
-    history.push({
-      pathname: TRANSACTIONS_ROUTE,
-      state: { assetHash: transaction.sendAsset, assetTicker, balances },
-    });
+    history.goBack();
   };
 
   return (
