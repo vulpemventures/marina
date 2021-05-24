@@ -3,7 +3,6 @@ import { RootReducerState } from "../../../domain/common"
 import PaymentSuccessView, { PaymentSuccessProps } from "../../../presentation/wallet/send/payment-success"
 
 const mapStateToProps = (state: RootReducerState): PaymentSuccessProps => ({
-  wallet: state.wallet,
   network: state.app.network,
 })
 

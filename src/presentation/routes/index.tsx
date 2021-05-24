@@ -56,7 +56,7 @@ import LogIn from '../wallet/log-in';
 import Transactions from '../../application/redux/containers/transactions.container';
 import Receive from '../../application/redux/containers/receive.container';
 import SelectAsset from '../../application/redux/containers/select-asset.container';
-import AddressAmount from '../wallet/send/address-amount';
+import AddressAmount from '../../application/redux/containers/address-amount.container';
 import ChooseFee from '../../application/redux/containers/choose-fee.container';
 import Confirmation from '../../application/redux/containers/confirmation.container';
 import SendEndOfFlow from '../../application/redux/containers/end-of-flow.container';

@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import {
-  RECEIVE_ROUTE,
-  SELECT_ASSET_ROUTE,
-  SEND_CONFIRMATION_ROUTE,
-  TRANSACTIONS_ROUTE,
-} from '../../routes/constants';
+import { RECEIVE_ROUTE, SELECT_ASSET_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
@@ -23,11 +18,10 @@ import { useDispatch } from 'react-redux';
 import { AssetsByNetwork } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { IWallet } from '../../../domain/wallet';
-import { flushTx } from '../../../application/redux/actions/transaction';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { updateTaxiAssets } from '../../../application/redux/actions/taxi';
+import { flushPendingTx } from '../../../application/redux/actions/transaction';
 
 export interface HomeProps {
   network: Network;
@@ -67,16 +61,10 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, a
 
   useEffect(() => {
     // Flush last sent tx
-    if (transaction.asset !== '') {
-      flushTx(dispatch).catch(console.error);
+    if (transaction.sendAsset !== '') {
+      dispatch(flushPendingTx());
     }
   }, []);
-
-  // If extension was closed when a tx is pending then navigate to confirmation route
-  if (wallet.pendingTx) {
-    history.push(SEND_CONFIRMATION_ROUTE);
-    return <></>;
-  }
 
   if (Object.keys(assetsBalance).length === 0) {
     // Lottie mermaid animation

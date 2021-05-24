@@ -5,7 +5,6 @@ import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
 import { PasswordHash } from './password-hash';
-import { Transaction } from './transaction';
 
 export interface IWallet {
   confidentialAddresses: Address[];
@@ -14,7 +13,6 @@ export interface IWallet {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
-  pendingTx?: Transaction;
   restored?: boolean;
   utxoMap: Record<string, UtxoInterface>;
 }

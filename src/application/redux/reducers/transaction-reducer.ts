@@ -4,23 +4,24 @@ import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
 
 export interface TransactionState {
-  asset: string;
-  receipientAddress?: Address;
-  changeAddress?: Address;
-  feeChangeAddress?: Address;
-  amountInSatoshi: number;
-  feeAmountInSatoshi: number;
+  sendAsset: string;
+  sendAmount: number;
+  feeAmount: number;
   feeAsset: string;
   taxiTopup: TopupWithAssetReply.AsObject;
+  pset?: string;
+  sendAddress?: Address;
+  changeAddress?: Address;
+  feeChangeAddress?: Address;
 }
 
 const transactionInitState: TransactionState = {
-  asset: '',
-  receipientAddress: undefined,
+  sendAsset: '',
+  sendAddress: undefined,
   changeAddress: undefined,
   feeChangeAddress: undefined,
-  amountInSatoshi: 0,
-  feeAmountInSatoshi: 0,
+  sendAmount: 0,
+  feeAmount: 0,
   feeAsset: '',
   taxiTopup: {} as TopupWithAssetReply.AsObject,
 };
@@ -33,23 +34,23 @@ export function transactionReducer(
     case ACTION_TYPES.PENDING_TX_SET_ASSET: {
       return {
         ...state,
-        asset: payload.asset,
-        receipientAddress: undefined,
+        sendAsset: payload.asset,
+        sendAddress: undefined,
         changeAddress: undefined,
         feeChangeAddress: undefined,
-        amountInSatoshi: 0,
-        feeAmountInSatoshi: 0,
+        sendAmount: 0,
+        feeAmount: 0,
         feeAsset: '',
       };
     }
     case ACTION_TYPES.PENDING_TX_SET_ADDRESSES_AND_AMOUNT: {
       return {
         ...state,
-        receipientAddress: payload.receipientAddress,
+        sendAddress: payload.receipientAddress,
         changeAddress: payload.changeAddress,
-        amountInSatoshi: payload.amountInSatoshi,
+        sendAmount: payload.amountInSatoshi,
         feeChangeAddress: undefined,
-        feeAmountInSatoshi: 0,
+        feeAmount: 0,
         feeAsset: '',
       };
     }
@@ -63,7 +64,7 @@ export function transactionReducer(
     case ACTION_TYPES.PENDING_TX_SET_FEE_AMOUNT_AND_ASSET: {
       return {
         ...state,
-        feeAmountInSatoshi: payload.feeAmountInSatoshi,
+        feeAmount: payload.feeAmountInSatoshi,
         feeAsset: payload.feeAsset,
       };
     }
@@ -76,6 +77,13 @@ export function transactionReducer(
         ...state,
         taxiTopup: payload.taxiTopup,
       };
+    }
+
+    case ACTION_TYPES.PENDING_TX_SET_PSET: {
+      return {
+        ...state,
+        pset: payload.pset,
+      }
     }
 
     default:

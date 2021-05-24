@@ -6,20 +6,19 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
-import { deriveNewAddress } from '../../../application/redux/actions/wallet';
-import { IWallet } from '../../../domain/wallet';
-import { WALLET_DERIVE_ADDRESS_SUCCESS } from '../../../application/redux/actions/action-types';
-import { Network } from '../../../domain/network';
 import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { launchAssets, launchTxsUpdater } from '../../../application/redux/actions/transaction';
+import { launchAssets } from '../../../application/redux/actions/transaction';
+import { MasterPublicKey } from 'ldk';
+import { waitForRestoration } from '../../../application/utils';
+import { setAddress } from '../../../application/redux/actions/wallet';
+import { createAddress } from '../../../domain/address';
 
 export interface ReceiveProps {
-  network: Network;
-  wallet: IWallet;
+  pubKey: MasterPublicKey;
 }
 
-const ReceiveView: React.FC<ReceiveProps> = ({ network, wallet }) => {
+const ReceiveView: React.FC<ReceiveProps> = ({ pubKey }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -37,17 +36,14 @@ const ReceiveView: React.FC<ReceiveProps> = ({ network, wallet }) => {
 
   useEffect(() => {
     (async () => {
-      const action = await deriveNewAddress(wallet, network, false);
-      await dispatch(action);
+      await waitForRestoration(pubKey);
+      const addr = await pubKey.getNextAddress();
+      setConfidentialAddress(addr.confidentialAddress);
+      await dispatch(setAddress(createAddress(addr.confidentialAddress, addr.derivationPath))); // persist address
       setTimeout(() => {
         dispatch(launchUtxosUpdater()).catch(console.error);
         dispatch(launchAssets()).catch(console.error);
-        dispatch(launchTxsUpdater()).catch(console.error);
       }, 3000);
-      if (action.type === WALLET_DERIVE_ADDRESS_SUCCESS) {
-        const address = action.payload.address;
-        setConfidentialAddress(address?.value || '');
-      }
     })().catch(console.error);
   }, []);
 

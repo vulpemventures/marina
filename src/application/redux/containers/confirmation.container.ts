@@ -3,9 +3,9 @@ import { RootReducerState } from "../../../domain/common"
 import ConfirmationView, { ConfirmationProps } from "../../../presentation/wallet/send/confirmation"
 
 const mapStateToProps = (state: RootReducerState): ConfirmationProps => ({
-  wallet: state.wallet,
+  transaction: state.transaction,
   network: state.app.network,
-  assets: state.assets,
+  assets: state.assets[state.app.network],
 })
 
 const Confirmation = connect(mapStateToProps)(ConfirmationView)

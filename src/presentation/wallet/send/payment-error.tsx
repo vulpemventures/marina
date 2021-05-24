@@ -5,11 +5,9 @@ import Button from '../../components/button';
 import { broadcastTx, explorerApiUrl } from '../../../application/utils';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useSelector } from 'react-redux';
-import { Address } from '../../../domain/address';
 import { RootReducerState } from '../../../domain/common';
 
 interface LocationState {
-  changeAddress?: Address;
   error: string;
   tx: string;
 }
@@ -24,7 +22,7 @@ const PaymentError: React.FC = () => {
       .then((txid) => {
         history.push({
           pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-          state: { changeAddress: state.changeAddress, txid: txid },
+          state: { txid },
         });
       })
       .catch((error) => {
@@ -34,7 +32,6 @@ const PaymentError: React.FC = () => {
   const handleBackBtn = () => {
     history.push({
       pathname: SEND_CONFIRMATION_ROUTE,
-      state: { changeAddress: state.changeAddress },
     });
   };
 

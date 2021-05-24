@@ -29,7 +29,6 @@ import {
   mnemonicWalletFromAddresses,
   taxiURL,
   toStringOutpoint,
-  xpubWalletFromAddresses,
 } from './utils';
 import { IAssets, AssetsByNetwork } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
@@ -42,6 +41,7 @@ import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { TxsHistory } from '../domain/transaction';
 import { setTaxiAssets } from './redux/actions/taxi';
+import { masterPubKeySelector } from './redux/selectors/wallet.selector';
 
 const POPUP_HTML = 'popup.html';
 
@@ -438,13 +438,9 @@ export function showPopup(path?: string): Promise<Windows.Window> {
 }
 
 async function getXpub(): Promise<IdentityInterface> {
-  const { app, wallet } = marinaStore.getState();
-  return await xpubWalletFromAddresses(
-    wallet.masterXPub,
-    wallet.masterBlindingKey,
-    wallet.confidentialAddresses,
-    app.network
-  );
+  const xPubKey = masterPubKeySelector(marinaStore.getState());
+  await xPubKey.isRestored;
+  return xPubKey;
 }
 
 function persistAddress(addr: AddressInterface) {
@@ -504,8 +500,10 @@ export async function updateUtxos() {
       addrs,
       explorerApiUrl[network],
       // Skip fetch and unblind if utxo exists in storage
-      (utxo) =>
-        Object.keys(wallet.utxoMap).some((outpoint) => `${utxo.txid}:${utxo.vout}` === outpoint)
+      (utxo) => {
+        const outpoint = toStringOutpoint(utxo);
+        return wallet.utxoMap[outpoint] !== undefined;
+      }
     );
     if (fetchedUtxos.every((u) => isBlindedUtxo(u)) && fetchedUtxos.length === Object.keys(wallet.utxoMap).length)
       return;
@@ -571,24 +569,9 @@ export async function updateTxsHistory() {
     // Initialize txs to txsHistory shallow clone
     const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
 
-    const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
+    const { confidentialAddresses } = wallet;
     const addresses = confidentialAddresses.map((addr) => addr.value);
-    const restorer = new IdentityRestorerFromState(addresses);
-    const pubKeyWallet = new MasterPublicKey({
-      chain: app.network,
-      restorer,
-      type: IdentityType.MasterPublicKey,
-      value: {
-        masterPublicKey: fromXpub(masterXPub, app.network),
-        masterBlindingKey: masterBlindingKey,
-      },
-      initializeFromRestorer: true
-    });
-
-    const isRestored = await pubKeyWallet.isRestored;
-    if (!isRestored) {
-      throw new Error('Failed to restore wallet');
-    }
+    const pubKeyWallet = await getXpub()
 
     const addressInterfaces = await pubKeyWallet.getAddresses();
     const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
@@ -615,8 +598,7 @@ export async function updateTxsHistory() {
       (tx) => txsHistory[app.network][tx.txid] !== undefined
     );
 
-    const next = () => txsGen.next();
-    let it = await next();
+    let it = await txsGen.next();
 
     // If no new tx already in state then return txsHistory of current network
     if (it.done) {
@@ -628,7 +610,7 @@ export async function updateTxsHistory() {
       // Update all txsHistory state at each single new tx
       txs[tx.txid] = tx;
       marinaStore.dispatch({ type: TXS_HISTORY_SET_TXS_SUCCESS, payload: { txs, network: app.network } });
-      it = await next();
+      it = await txsGen.next();
     }
   } catch (error) {
     console.error(error);

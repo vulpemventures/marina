@@ -24,7 +24,6 @@ export function walletReducer(state: IWallet = initialStateWallet, { type, paylo
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: {},
-        pendingTx: undefined,
       };
     }
 
@@ -46,7 +45,6 @@ export function walletReducer(state: IWallet = initialStateWallet, { type, paylo
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: {},
-        pendingTx: undefined,
       };
     }
 
@@ -57,21 +55,6 @@ export function walletReducer(state: IWallet = initialStateWallet, { type, paylo
       };
     }
 
-    case ACTION_TYPES.WALLET_DERIVE_ADDRESS_SUCCESS: {
-      return {
-        ...state,
-        errors: undefined,
-        confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
-      };
-    }
-
-    case ACTION_TYPES.WALLET_DERIVE_ADDRESS_FAILURE: {
-      return {
-        ...state,
-        errors: { address: { message: payload.error.message } as IError },
-      };
-    }
-
     case ACTION_TYPES.WALLET_SET_ADDRESS_SUCCESS: {
       return {
         ...state,
@@ -79,38 +62,11 @@ export function walletReducer(state: IWallet = initialStateWallet, { type, paylo
         confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
       };
     }
+
     case ACTION_TYPES.WALLET_SET_ADDRESS_FAILURE: {
       return {
         ...state,
         errors: { address: { message: payload.error.message } as IError },
-      };
-    }
-
-    case ACTION_TYPES.WALLET_SET_PENDING_TX_SUCCESS: {
-      return {
-        ...state,
-        pendingTx: payload.pendingTx,
-      };
-    }
-
-    case ACTION_TYPES.WALLET_SET_PENDING_TX_FAILURE: {
-      return {
-        ...state,
-        errors: { setPendingTx: { message: payload.error.message } as IError },
-      };
-    }
-
-    case ACTION_TYPES.WALLET_UNSET_PENDING_TX_SUCCESS: {
-      return {
-        ...state,
-        pendingTx: undefined,
-      };
-    }
-
-    case ACTION_TYPES.WALLET_UNSET_PENDING_TX_FAILURE: {
-      return {
-        ...state,
-        errors: { unsetPendingTx: { message: payload.error.message } as IError },
       };
     }
 

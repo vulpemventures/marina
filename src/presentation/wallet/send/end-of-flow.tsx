@@ -5,10 +5,10 @@ import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import {
   blindAndSignPset,
-  blindingInfoFromPendingTx,
   broadcastTx,
   decrypt,
   explorerApiUrl,
+  outPubKeysMap,
 } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
@@ -20,9 +20,11 @@ import { match } from '../../../domain/password-hash';
 export interface EndOfFlowProps {
   wallet: IWallet;
   network: Network;
+  pset?: string;
+  outputAddresses: string[];
 }
 
-const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
+const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network, pset, outputAddresses }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
 
@@ -31,33 +33,31 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
 
   const handleUnlock = async (password: string) => {
     let tx = '';
+    if (!pset) return;
     try {
       const pass = createPassword(password);
       if (!match(password, wallet.passwordHash)) {
         throw new Error('Invalid password');
       }
 
-      const pendingTx = wallet.pendingTx;
-      if (!pendingTx) throw new Error('pending tx is undefined');
-
-      if (pendingTx.changeAddress) {
-      }
-
       const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
-      const { outputsToBlind, outPubkeys } = blindingInfoFromPendingTx(pendingTx, network);
+      const outputPubKeys = outPubKeysMap(pset, outputAddresses);
+      const outputsToBlind = Array.from(outputPubKeys.keys());
+
       tx = await blindAndSignPset(
         mnemonic,
         wallet.masterBlindingKey,
         wallet.confidentialAddresses,
         network,
-        pendingTx.pset,
+        pset,
         outputsToBlind,
-        outPubkeys
+        outputPubKeys
       );
+
       const txid = await broadcastTx(explorerApiUrl[network], tx);
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { changeAddress: wallet.pendingTx?.changeAddress, txid: txid },
+        state: { txid },
       });
     } catch (error) {
       return history.push({
@@ -65,7 +65,6 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network }) => {
         state: {
           tx: tx,
           error: error.message,
-          changeAddress: wallet.pendingTx?.changeAddress,
         },
       });
     }

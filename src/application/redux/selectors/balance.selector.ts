@@ -8,7 +8,7 @@ export type BalancesByAsset = { [assetHash: string]: number };
  * @param onSuccess
  * @param onError
  */
-export function balances(state: RootReducerState): BalancesByAsset {
+export function balancesSelector(state: RootReducerState): BalancesByAsset {
   const utxos = Object.values(state.wallet.utxoMap);
   const balancesFromUtxos = utxos.reduce((acc, curr) => {
     if (!curr.asset || !curr.value) {

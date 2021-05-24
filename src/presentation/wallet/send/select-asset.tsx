@@ -10,7 +10,6 @@ import { AssetsByNetwork } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
-import { unsetPendingTx } from '../../../application/redux/actions/wallet';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
@@ -60,9 +59,6 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, wallet, assets, 
   };
 
   const handleBackBtn = () => {
-    if (wallet.pendingTx) {
-      dispatch(unsetPendingTx()).catch(console.error);
-    }
     history.push(DEFAULT_ROUTE);
   };
 

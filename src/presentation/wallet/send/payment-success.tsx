@@ -6,26 +6,21 @@ import Button from '../../components/button';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { IWallet } from '../../../domain/wallet';
 import { useDispatch } from 'react-redux';
-import { flushTx, launchTxsUpdater } from '../../../application/redux/actions/transaction';
-import { deriveNewAddress, setAddress } from '../../../application/redux/actions/wallet';
-import { Address } from '../../../domain/address';
+import { flushPendingTx, launchTxsUpdater } from '../../../application/redux/actions/transaction';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
 
 interface LocationState {
-  changeAddress?: Address;
   txid: string;
 }
 
 export interface PaymentSuccessProps {
   network: Network;
-  wallet: IWallet;
 }
 
-const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) => {
+const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network }) => {
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
@@ -44,17 +39,11 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network, wallet }) 
 
   // Cleanup and change address derivation
   useEffect(() => {
-    // persist change addresses before unsetting the pending tx
-    if (state.changeAddress?.value) {
-      if (wallet.pendingTx?.feeAsset !== wallet.pendingTx?.sendAsset) {
-        deriveNewAddress(wallet, network, true).then(dispatch).catch(console.error);
-      }
-      dispatch(setAddress(state.changeAddress)).catch(console.error);
-    }
-    flushTx(dispatch).catch(console.error);
-
-    dispatch(launchTxsUpdater()).catch(console.error);
-    dispatch(launchUtxosUpdater()).catch(console.error);
+    void (async () => {
+      await dispatch(flushPendingTx());
+      await dispatch(launchUtxosUpdater()).catch(console.error);
+      await dispatch(launchTxsUpdater()).catch(console.error);
+    })();
   }, []);
 
   return (
