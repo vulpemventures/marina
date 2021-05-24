@@ -15,6 +15,7 @@ import { TxsHistoryByNetwork } from '../../../domain/transaction';
 import { AssetsByNetwork } from '../../../domain/assets';
 import { IWallet } from '../../../domain/wallet';
 import { taxiReducer, TaxiState } from './taxi-reducer';
+import { ConnectData } from '../../../domain/connect';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -28,14 +29,15 @@ const browserLocalStorage: Storage = {
   removeItem: async (key: string) => browser.storage.local.remove(key),
 };
 
-const localStorageConfig = (key: string) => ({
+const localStorageConfig = (key: string, whitelist?: string[]) => ({
   key,
   storage: browserLocalStorage,
   version: 0,
+  whitelist,
 });
 
-const persist = (reducer: Reducer, key: string): Reducer =>
-  persistReducer(localStorageConfig(key), reducer);
+const persist = (reducer: Reducer, key: string, whitelist?: string[]): Reducer =>
+  persistReducer(localStorageConfig(key, whitelist), reducer);
 
 const marinaReducer = combineReducers({
   app: persist(appReducer, 'app') as Reducer<IApp, AnyAction>,
@@ -45,7 +47,10 @@ const marinaReducer = combineReducers({
   txsHistory: persist(txsHistoryReducer, 'txsHistory') as Reducer<TxsHistoryByNetwork, AnyAction>,
   wallet: persist(walletReducer, 'wallet') as Reducer<IWallet, AnyAction>,
   taxi: persist(taxiReducer, 'taxi') as Reducer<TaxiState, AnyAction>,
-  connect: connectDataReducer,
+  connect: persist(connectDataReducer, 'connect', ['enabledSites']) as Reducer<
+    ConnectData,
+    AnyAction
+  >,
 });
 
 export default marinaReducer;

@@ -30,9 +30,7 @@ import { IAssets, AssetsByNetwork } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
 import {
   disableWebsite,
-  enableWebsite,
   flushMsg,
-  flushSelectedHostname,
   flushTx,
   selectHostname,
   setMsg,
@@ -75,9 +73,10 @@ export default class Backend {
     });
   }
 
-  async isCurentSiteEnabled(network: 'liquid' | 'regtest') {
+  async isCurentSiteEnabled() {
     const hostname = await getCurrentUrl();
-    const enabledSites = marinaStore.getState().connect[network].enabledSites;
+    const state = marinaStore.getState();
+    const enabledSites = state.connect.enabledSites[state.app.network];
     return enabledSites.includes(hostname);
   }
 
@@ -99,7 +98,7 @@ export default class Backend {
 
             case Marina.prototype.isEnabled.name:
               try {
-                const isEnabled = await this.isCurentSiteEnabled(getCurrentNetwork());
+                const isEnabled = await this.isCurentSiteEnabled();
                 return handleResponse(id, isEnabled);
               } catch (e: any) {
                 return handleError(id, e);
@@ -111,36 +110,6 @@ export default class Backend {
                 marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
                 await showPopup(`connect/enable`);
                 await this.waitForEvent(Marina.prototype.enable.name);
-                return handleResponse(id);
-              } catch (e: any) {
-                return handleError(id, e);
-              }
-
-            case 'ENABLE_RESPONSE':
-              try {
-                const [accepted] = params;
-
-                // exit early if users rejected
-                if (!accepted) {
-                  // respond to the injecteded sript
-                  this.emitter.emit(
-                    Marina.prototype.enable.name,
-                    new Error('User rejected the connection request')
-                  );
-                  // repond to the popup so it can be closed
-                  return handleResponse(id);
-                }
-
-                const state = marinaStore.getState();
-                const network = state.app.network;
-                const hostname = state.connect[network].hostnameSelected;
-
-                // persist the site
-                marinaStore.dispatch(enableWebsite(hostname, network));
-                marinaStore.dispatch(flushSelectedHostname(network));
-                // respond to the injecteded sript
-                this.emitter.emit(Marina.prototype.enable.name);
-                // repond to the popup so it can be closed
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -158,7 +127,7 @@ export default class Backend {
 
             case Marina.prototype.getAddresses.name:
               try {
-                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
+                if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -170,7 +139,7 @@ export default class Backend {
 
             case Marina.prototype.getNextAddress.name:
               try {
-                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
+                if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -183,7 +152,7 @@ export default class Backend {
 
             case Marina.prototype.getNextChangeAddress.name:
               try {
-                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
+                if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const xpub = await getXpub();
@@ -196,7 +165,7 @@ export default class Backend {
 
             case Marina.prototype.signTransaction.name:
               try {
-                if (!(await this.isCurentSiteEnabled(getCurrentNetwork()))) {
+                if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 if (!params || params.length !== 1 || params.some((p) => p === null)) {
@@ -204,7 +173,7 @@ export default class Backend {
                 }
                 const hostname = await getCurrentUrl();
                 const [tx] = params;
-                marinaStore.dispatch(setTx(hostname, tx, getCurrentNetwork()));
+                marinaStore.dispatch(setTx(hostname, tx));
                 await showPopup(`connect/spend-pset`);
 
                 const rawTx = await this.waitForEvent(Marina.prototype.signTransaction.name);
@@ -217,12 +186,11 @@ export default class Backend {
             case 'SIGN_TRANSACTION_RESPONSE':
               try {
                 const [accepted, password] = params;
-                const network = getCurrentNetwork();
 
                 // exit early if user rejected the transaction
                 if (!accepted) {
                   // Flush tx data
-                  marinaStore.dispatch(flushTx(network));
+                  marinaStore.dispatch(flushTx());
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.signTransaction.name,
@@ -232,7 +200,7 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const { tx } = marinaStore.getState().connect[network];
+                const { tx } = marinaStore.getState().connect;
                 if (!tx || !tx.pset) throw new Error('Transaction data are missing');
 
                 const mnemo = await getMnemonic(password);
@@ -249,7 +217,7 @@ export default class Backend {
             case Marina.prototype.sendTransaction.name:
               try {
                 const network = getCurrentNetwork();
-                if (!(await this.isCurentSiteEnabled(network))) {
+                if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 if (!params || params.length !== 3 || params.some((p) => p === null)) {
@@ -266,7 +234,7 @@ export default class Backend {
 
                 return handleResponse(id, txid);
               } catch (e: any) {
-                marinaStore.dispatch(flushTx(getCurrentNetwork()));
+                marinaStore.dispatch(flushTx());
                 return handleError(id, e);
               }
 
@@ -279,7 +247,7 @@ export default class Backend {
                 // exit early if user rejected the transaction
                 if (!accepted) {
                   // Flush tx data
-                  marinaStore.dispatch(flushTx(network));
+                  marinaStore.dispatch(flushTx());
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.sendTransaction.name,
@@ -289,7 +257,7 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const { tx } = marinaStore.getState().connect[network];
+                const { tx } = marinaStore.getState().connect;
                 if (!tx || !tx.amount || !tx.assetHash || !tx.recipient)
                   throw new Error('Transaction data are missing');
 
@@ -342,7 +310,7 @@ export default class Backend {
                 persistAddress(changeAddress);
 
                 // Flush tx data
-                marinaStore.dispatch(flushTx(getCurrentNetwork()));
+                marinaStore.dispatch(flushTx());
 
                 // respond to the injected script
                 this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
@@ -355,8 +323,7 @@ export default class Backend {
 
             case Marina.prototype.signMessage.name:
               try {
-                const network = getCurrentNetwork();
-                if (!(await this.isCurentSiteEnabled(network))) {
+                if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 if (!params || params.length !== 1 || params.some((p) => p === null)) {
@@ -364,7 +331,7 @@ export default class Backend {
                 }
                 const hostname = await getCurrentUrl();
                 const [message] = params;
-                marinaStore.dispatch(setMsg(hostname, message, network));
+                marinaStore.dispatch(setMsg(hostname, message));
                 await showPopup(`connect/sign-msg`);
 
                 const rawTx = await this.waitForEvent(Marina.prototype.signMessage.name);
@@ -381,7 +348,7 @@ export default class Backend {
                 // exit early if user rejected the signature
                 if (!accepted) {
                   // Flush msg data
-                  marinaStore.dispatch(flushMsg(getCurrentNetwork()));
+                  marinaStore.dispatch(flushMsg());
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.signMessage.name,
@@ -391,7 +358,7 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const { msg } = marinaStore.getState().connect[getCurrentNetwork()];
+                const { msg } = marinaStore.getState().connect;
                 if (!msg || !msg.message) throw new Error('Message data are missing');
 
                 // SIGN THE MESSAGE WITH FIRST ADDRESS FROM HD WALLET

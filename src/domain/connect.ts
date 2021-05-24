@@ -1,7 +1,7 @@
 import { Network } from './network';
 
 export type ConnectData = {
-  enabledSites: string[];
+  enabledSites: Record<Network, string[]>;
   hostnameSelected: string;
   tx?: {
     amount?: string;
@@ -18,9 +18,10 @@ export type ConnectData = {
 
 export function newEmptyConnectData(): ConnectData {
   return {
-    enabledSites: [],
+    enabledSites: {
+      liquid: [],
+      regtest: [],
+    },
     hostnameSelected: '',
   };
 }
-
-export type ConnectDataByNetwork = Record<Network, ConnectData>;

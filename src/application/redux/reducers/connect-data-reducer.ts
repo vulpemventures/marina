@@ -1,80 +1,69 @@
 import { Network } from './../../../domain/network';
 import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
-import { ConnectData, ConnectDataByNetwork, newEmptyConnectData } from '../../../domain/connect';
+import { ConnectData, newEmptyConnectData } from '../../../domain/connect';
 
-const connectDataInitState: ConnectDataByNetwork = {
-  regtest: newEmptyConnectData(),
-  liquid: newEmptyConnectData(),
-};
+const connectDataInitState: ConnectData = newEmptyConnectData();
 
 export function connectDataReducer(
-  state: ConnectDataByNetwork = connectDataInitState,
+  state: ConnectData = connectDataInitState,
   { type, payload }: AnyAction
-): ConnectDataByNetwork {
+): ConnectData {
   switch (type) {
     case ACTION_TYPES.ENABLE_WEBSITE: {
-      const current = state[payload.Network as Network];
       return {
         ...state,
-        [payload.network]: {
-          ...current,
-          enabledSites: [...current.enabledSites, payload.hostname],
-        } as ConnectData,
+        enabledSites: {
+          ...state.enabledSites,
+          [payload.network]: [...state.enabledSites[payload.network as Network], payload.hostname],
+        },
       };
     }
 
     case ACTION_TYPES.DISABLE_WEBSITE: {
-      const current = state[payload.network as Network];
       return {
         ...state,
-        [payload.network]: {
-          ...current,
-          enabledSites: current.enabledSites.filter((v) => v !== payload.hostname),
-        } as ConnectData,
+        enabledSites: {
+          ...state.enabledSites,
+          [payload.network]: state.enabledSites[payload.network as Network].filter(
+            (v) => v !== payload.hostname
+          ),
+        },
       };
     }
 
     case ACTION_TYPES.SET_MSG: {
-      const current = state[payload.network as Network];
       return {
         ...state,
-        [payload.network]: {
-          ...current,
-          msg: { hostname: payload.hostname, message: payload.message },
-        } as ConnectData,
+        msg: { hostname: payload.hostname, message: payload.message },
       };
     }
 
     case ACTION_TYPES.FLUSH_MSG: {
-      const current = state[payload.network as Network];
       return {
         ...state,
-        [payload.network]: { ...current, msg: undefined } as ConnectData,
+        msg: undefined,
       };
     }
 
     case ACTION_TYPES.SET_TX: {
-      const current = state[payload.network as Network];
       return {
         ...state,
-        [payload.network]: { ...current, tx: payload } as ConnectData,
+        tx: payload,
       };
     }
 
     case ACTION_TYPES.SELECT_HOSTNAME: {
-      const current = state[payload.network as Network];
       return {
         ...state,
-        [payload.network]: { ...current, hostnameSelected: payload.hostname } as ConnectData,
+        hostnameSelected: payload.hostname,
       };
     }
 
     case ACTION_TYPES.FLUSH_SELECTED_HOSTNAME: {
-      const current = state[payload.network as Network];
       return {
         ...state,
-        [payload.network]: { ...current, hostnameSelected: '' } as ConnectData,
+        hostnameSelected: '',
       };
     }
 

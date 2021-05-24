@@ -26,31 +26,29 @@ export function disableWebsite(hostname: string, network: Network): AnyAction {
   };
 }
 
-export function setMsg(hostname: string, message: string, network: Network): AnyAction {
+export function setMsg(hostname: string, message: string): AnyAction {
   return {
     type: SET_MSG,
-    payload: { hostname, message, network },
+    payload: { hostname, message },
   };
 }
 
-export function flushMsg(network: Network): AnyAction {
+export function flushMsg(): AnyAction {
   return {
     type: FLUSH_MSG,
-    payload: { network },
   };
 }
 
-export function flushTx(network: Network): AnyAction {
+export function flushTx(): AnyAction {
   return {
     type: FLUSH_TX,
-    payload: { network },
   };
 }
 
-export function setTx(hostname: string, pset: string, network: Network): AnyAction {
+export function setTx(hostname: string, pset: string): AnyAction {
   return {
     type: SET_TX,
-    payload: { hostname, pset, network } as ConnectData['tx'],
+    payload: { hostname, pset } as ConnectData['tx'],
   };
 }
 

@@ -1,29 +1,29 @@
 import React from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import WindowProxy from '../../application/proxy';
 import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
+import { useDispatch, useSelector } from 'react-redux';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
+import { RootReducerState } from '../../domain/common';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
 const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
-  const windowProxy = new WindowProxy();
+  const network = useSelector((state: RootReducerState) => state.app.network);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const handleReject = async () => {
-    try {
-      await windowProxy.proxy('ENABLE_RESPONSE', [false]);
-      window.close();
-    } catch (e) {
-      console.error(e);
-    }
+  const handleReject = () => {
+    window.close();
   };
 
   const handleConnect = async () => {
     try {
-      await windowProxy.proxy('ENABLE_RESPONSE', [true]);
+      await dispatch(enableWebsite(connectData.hostnameSelected, network));
+      await dispatch(flushSelectedHostname(network));
       window.close();
     } catch (e) {
       console.error(e);

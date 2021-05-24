@@ -1,3 +1,4 @@
+import { ConnectData } from './connect';
 import { IWallet } from './wallet';
 import { IApp } from './app';
 import { OnboardingState } from '../application/redux/reducers/onboarding-reducer';
@@ -5,7 +6,6 @@ import { TransactionState } from '../application/redux/reducers/transaction-redu
 import { AssetsByNetwork } from './assets';
 import { TxsHistoryByNetwork } from './transaction';
 import { Action } from 'redux';
-import { ConnectDataByNetwork } from './connect';
 import { TaxiState } from '../application/redux/reducers/taxi-reducer';
 
 export interface RootReducerState {
@@ -15,7 +15,7 @@ export interface RootReducerState {
   transaction: TransactionState;
   txsHistory: TxsHistoryByNetwork;
   wallet: IWallet;
-  connect: ConnectDataByNetwork;
+  connect: ConnectData;
   taxi: TaxiState;
 }
 
