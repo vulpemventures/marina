@@ -201,7 +201,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   };
 
   const getFeeCurrencyImgPath = (): string => {
-    let img: string | undefined = imgPathMapMainnet[feeCurrency || ''];
+    let img: string = imgPathMapMainnet[feeCurrency || ''];
     if (network === 'regtest') {
       img = imgPathMapRegtest[assets[feeCurrency || '']?.ticker];
     }
