@@ -76,7 +76,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
 
   const changeAddressGetter: ChangeAddressFromAssetGetter = (asset: string) => {
-    if (asset.valueOf() === transaction.sendAsset.valueOf()) {
+    if (asset === transaction.sendAsset) {
       return transaction.changeAddress?.value;
     }
     return transaction.feeChangeAddress?.value;
@@ -237,7 +237,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           {[lbtcAssetHash, ...taxiAssets].map((assetHash) => (
             <Button
               className="flex-1"
-              isOutline={feeCurrency?.valueOf() !== assetHash.valueOf()}
+              isOutline={feeCurrency !== assetHash}
               key={assetHash}
               onClick={() => handlePayFees(assetHash)}
               roundedMd={true}

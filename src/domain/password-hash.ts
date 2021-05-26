@@ -4,7 +4,7 @@ import { Password } from './password';
 export type PasswordHash = string;
 
 export function match(password: Password, passwordHash: PasswordHash) {
-  return hash(password).valueOf() === passwordHash.valueOf();
+  return hash(password) === passwordHash;
 }
 
 export function createPasswordHash(passwordHash: string): PasswordHash {

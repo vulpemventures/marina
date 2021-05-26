@@ -2,6 +2,8 @@ import {
   address as addrLDK,
   addToTx,
   BlindedOutputInterface,
+  ChangeAddressFromAssetGetter,
+  CoinSelector,
   decodePset,
   getUnblindURLFromTx,
   InputInterface,
@@ -34,7 +36,7 @@ export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<numb
   return outPubkeys;
 }
 
-export const blindAndSignPset = async (
+export async function blindAndSignPset(
   mnemonic: string,
   masterBlindingKey: string,
   addresses: Address[],
@@ -42,7 +44,7 @@ export const blindAndSignPset = async (
   psetBase64: string,
   outputsToBlind: number[],
   outPubkeys: Map<number, string>
-): Promise<string> => {
+): Promise<string> {
   const mnemonicWallet = await mnemonicWalletFromAddresses(
     mnemonic,
     masterBlindingKey,
@@ -65,14 +67,14 @@ export const blindAndSignPset = async (
   return ptx.finalizeAllInputs().extractTransaction().toHex();
 };
 
-export const fillTaxiTx = (
+export function fillTaxiTx(
   psetBase64: string,
   unspents: UtxoInterface[],
   receipients: RecipientInterface[],
   taxiPayout: RecipientInterface,
-  coinSelector: any,
-  changeAddressGetter: any
-): string => {
+  coinSelector: CoinSelector,
+  changeAddressGetter: ChangeAddressFromAssetGetter,
+): string {
   const { selectedUtxos, changeOutputs } = coinSelector(
     unspents,
     receipients.concat(taxiPayout),
@@ -161,7 +163,7 @@ function getTransfers(
   const transfers: Transfer[] = [];
 
   const addToTransfers = (amount: number, asset: string) => {
-    const transferIndex = transfers.findIndex((t) => t.asset.valueOf() === asset.valueOf());
+    const transferIndex = transfers.findIndex((t) => t.asset === asset);
 
     if (transferIndex >= 0) {
       transfers[transferIndex].amount += amount;
