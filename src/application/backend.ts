@@ -423,7 +423,8 @@ async function getXpub(): Promise<IdentityInterface> {
 }
 
 function persistAddress(addr: AddressInterface) {
-  marinaStore.dispatch(setAddress(createAddress(addr.confidentialAddress)));
+  const action = setAddress(createAddress(addr.confidentialAddress, addr.derivationPath));
+  marinaStore.dispatch(action);
 }
 
 async function getMnemonic(password: string): Promise<IdentityInterface> {
@@ -517,8 +518,8 @@ export async function updateAllAssetInfos() {
       // If asset in store don't fetch
       !((asset as string) in assets[app.network])
         ? (
-            await axios.get(`${explorerApiUrl[app.network]}/asset/${asset}`)
-          ).data
+          await axios.get(`${explorerApiUrl[app.network]}/asset/${asset}`)
+        ).data
         : undefined
     )
   ).then((assetInfos) =>
