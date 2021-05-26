@@ -6,7 +6,6 @@ import {
   networks,
   AddressInterface,
   decodePset,
-  fetchAndUnblindUtxos,
   greedyCoinSelector,
   IdentityInterface,
   isBlindedUtxo,
@@ -16,6 +15,7 @@ import {
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
+  fetchAndUnblindUtxosGenerator,
 } from 'ldk';
 import Marina from './marina';
 import {
@@ -40,8 +40,6 @@ import {
 import {
   ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
   TXS_HISTORY_SET_TXS_SUCCESS,
-  WALLET_SET_UTXOS_FAILURE,
-  WALLET_SET_UTXOS_SUCCESS,
 } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
 import { Network } from '../domain/network';
@@ -51,6 +49,7 @@ import { marinaStore } from './redux/store';
 import { TxsHistory } from '../domain/transaction';
 import { setTaxiAssets } from './redux/actions/taxi';
 import { masterPubKeySelector } from './redux/selectors/wallet.selector';
+import { addUtxo, deleteUtxo } from './redux/actions/utxos';
 
 const POPUP_HTML = 'popup.html';
 
@@ -467,50 +466,66 @@ function getCoins(): UtxoInterface[] {
   return Object.values(wallet.utxoMap);
 }
 
+/**
+ * fetch and unblind the utxos and then refresh it.
+ */
 export async function updateUtxos() {
   try {
     const xpub = await getXpub();
-    const addrs = await xpub.getAddresses();
+    const addrs = (await xpub.getAddresses()).reverse();
     if (addrs.length === 0) return;
+
     const wallet = marinaStore.getState().wallet;
+    const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
+      txid,
+      vout,
+    }));
     const network = getCurrentNetwork();
-    const newMap = { ...wallet.utxoMap };
+
     // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
-    const fetchedUtxos = await fetchAndUnblindUtxos(
+    const utxos = fetchAndUnblindUtxosGenerator(
       addrs,
       explorerApiUrl[network],
-      // Skip fetch and unblind if utxo exists in storage
+      // Skip unblinding if utxo exists in current state
       (utxo) => {
         const outpoint = toStringOutpoint(utxo);
         return wallet.utxoMap[outpoint] !== undefined;
       }
     );
-    if (
-      fetchedUtxos.every((u) => isBlindedUtxo(u)) &&
-      fetchedUtxos.length === Object.keys(wallet.utxoMap).length
-    )
-      return;
-    // Add to newMap fetched utxo(s) not present in storage
-    fetchedUtxos.forEach((fetchedUtxo) => {
-      const isPresent = Object.keys(wallet.utxoMap).some(
-        (storedUtxoOutpoint) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
-      );
-      if (!isPresent) newMap[toStringOutpoint(fetchedUtxo)] = fetchedUtxo;
-    });
-    // Delete from newMap utxo(s) not present in fetched utxos
-    Object.keys(newMap).forEach((storedUtxoOutpoint) => {
-      const isPresent = fetchedUtxos.some(
-        (fetchedUtxo) => storedUtxoOutpoint === toStringOutpoint(fetchedUtxo)
-      );
-      if (!isPresent) delete newMap[storedUtxoOutpoint];
-    });
 
-    marinaStore.dispatch({ type: WALLET_SET_UTXOS_SUCCESS, payload: { utxoMap: newMap } });
+    const skippedOutpoints: string[] = []; // for deleting
+
+    let utxoIterator = await utxos.next();
+    while (!utxoIterator.done) {
+      const utxo = utxoIterator.value;
+      if (!isBlindedUtxo(utxo)) {
+        marinaStore.dispatch(addUtxo(utxo));
+      } else {
+        skippedOutpoints.push(toStringOutpoint(utxo));
+      }
+      utxoIterator = await utxos.next();
+    }
+
+    if (utxoIterator.done) {
+      console.info(`number of utxos fetched: ${utxoIterator.value.numberOfUtxos}`);
+      for (const err of utxoIterator.value.errors) {
+        console.error(err);
+      }
+    }
+
+    for (const outpoint of currentOutpoints) {
+      if (skippedOutpoints.includes(toStringOutpoint(outpoint))) continue;
+      // if not skipped, it means the utxo has been spent
+      marinaStore.dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
+    }
   } catch (error) {
-    marinaStore.dispatch({ type: WALLET_SET_UTXOS_FAILURE, payload: { error } });
+    console.error(error);
   }
 }
 
+/**
+ * fetch the asset infos from explorer (ticker, precision etc...)
+ */
 export async function updateAllAssetInfos() {
   const { app, assets, wallet } = marinaStore.getState();
   const assetsFromUtxos: IAssets = await Promise.all(
@@ -518,8 +533,8 @@ export async function updateAllAssetInfos() {
       // If asset in store don't fetch
       !((asset as string) in assets[app.network])
         ? (
-          await axios.get(`${explorerApiUrl[app.network]}/asset/${asset}`)
-        ).data
+            await axios.get(`${explorerApiUrl[app.network]}/asset/${asset}`)
+          ).data
         : undefined
     )
   ).then((assetInfos) =>
@@ -551,6 +566,9 @@ export async function updateAllAssetInfos() {
   }
 }
 
+/**
+ * use fetchAndUnblindTxsGenerator to update the tx history
+ */
 export async function updateTxsHistory() {
   try {
     const { app, txsHistory, wallet } = marinaStore.getState();
@@ -607,6 +625,10 @@ export async function updateTxsHistory() {
   }
 }
 
+/**
+ * fetch assets from taxi daemon endpoint (make a grpc call)
+ * and then set assets in store.
+ */
 export async function fetchAndSetTaxiAssets() {
   const state = marinaStore.getState();
   const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);

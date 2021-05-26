@@ -1,7 +1,9 @@
+import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IWallet } from '../../../domain/wallet';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
+import { UtxoInterface } from 'ldk';
 
 const initialStateWallet: IWallet = {
   confidentialAddresses: [],
@@ -73,18 +75,24 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.WALLET_SET_UTXOS_SUCCESS: {
+    case ACTION_TYPES.ADD_UTXO: {
       return {
         ...state,
-        errors: undefined,
-        utxoMap: payload.utxoMap,
+        utxoMap: {
+          ...state.utxoMap,
+          [toStringOutpoint(payload.utxo as UtxoInterface)]: payload.utxo,
+        },
       };
     }
 
-    case ACTION_TYPES.WALLET_SET_UTXOS_FAILURE: {
+    case ACTION_TYPES.DELETE_UTXO: {
+      const {
+        [toStringOutpoint({ txid: payload.txid, vout: payload.vout })]: deleted,
+        ...utxoMap
+      } = state.utxoMap;
       return {
         ...state,
-        errors: { utxos: { message: payload.error.message } as IError },
+        utxoMap,
       };
     }
 

@@ -1,6 +1,3 @@
-import { toOutpoint, UtxoInterface } from 'ldk';
-
-export const toStringOutpoint = (utxo: UtxoInterface) => {
-  const outpoint = toOutpoint(utxo);
+export const toStringOutpoint = (outpoint: { txid: string; vout: number }) => {
   return `${outpoint.txid}:${outpoint.vout}`;
 };
