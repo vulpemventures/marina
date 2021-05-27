@@ -65,7 +65,7 @@ export async function blindAndSignPset(
     throw new Error('Transaction containes invalid signatures');
   }
   return ptx.finalizeAllInputs().extractTransaction().toHex();
-};
+}
 
 export function fillTaxiTx(
   psetBase64: string,
@@ -73,7 +73,7 @@ export function fillTaxiTx(
   receipients: RecipientInterface[],
   taxiPayout: RecipientInterface,
   coinSelector: CoinSelector,
-  changeAddressGetter: ChangeAddressFromAssetGetter,
+  changeAddressGetter: ChangeAddressFromAssetGetter
 ): string {
   const { selectedUtxos, changeOutputs } = coinSelector(
     unspents,
@@ -81,7 +81,7 @@ export function fillTaxiTx(
     changeAddressGetter
   );
   return addToTx(psetBase64, selectedUtxos, receipients.concat(changeOutputs));
-};
+}
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);

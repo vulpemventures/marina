@@ -8,12 +8,15 @@ import { masterPubKeySelector } from '../selectors/wallet.selector';
 const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   wallet: state.wallet,
   network: state.app.network,
-  transaction: state.transaction,
   assets: state.assets[state.app.network],
   balances: balancesSelector(state),
   taxiAssets: state.taxi.taxiAssets,
   lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
   masterPubKey: masterPubKeySelector(state),
+  sendAddress: state.transaction.sendAddress,
+  changeAddress: state.transaction.changeAddress,
+  sendAsset: state.transaction.sendAsset,
+  sendAmount: state.transaction.sendAmount,
 });
 
 const ChooseFee = connect(mapStateToProps)(ChooseFeeView);

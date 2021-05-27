@@ -1,5 +1,4 @@
 import * as ACTION_TYPES from '../actions/action-types';
-import { TopupWithAssetReply } from 'taxi-protobuf/generated/js/taxi_pb';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
 
@@ -8,7 +7,6 @@ export interface TransactionState {
   sendAmount: number;
   feeAmount: number;
   feeAsset: string;
-  taxiTopup: TopupWithAssetReply.AsObject;
   pset?: string;
   sendAddress?: Address;
   changeAddress?: Address;
@@ -23,7 +21,6 @@ const transactionInitState: TransactionState = {
   sendAmount: 0,
   feeAmount: 0,
   feeAsset: '',
-  taxiTopup: {} as TopupWithAssetReply.AsObject,
 };
 
 export function transactionReducer(
@@ -70,13 +67,6 @@ export function transactionReducer(
     }
     case ACTION_TYPES.PENDING_TX_FLUSH: {
       return transactionInitState;
-    }
-
-    case ACTION_TYPES.PENDING_TX_SET_TAXI_TOPUP: {
-      return {
-        ...state,
-        taxiTopup: payload.taxiTopup,
-      };
     }
 
     case ACTION_TYPES.PENDING_TX_SET_PSET: {
