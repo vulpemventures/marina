@@ -158,7 +158,7 @@ const OpenTerms: React.FC = () => {
   return (
     /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
     <a className="text-primary" href="#" onClick={handleClick}>
-      terms os service
+      terms of service
     </a>
   );
 };
