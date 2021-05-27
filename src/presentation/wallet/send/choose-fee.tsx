@@ -135,7 +135,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     let taxiTopup = topup;
     if (!taxiTopup || feeCurrency !== taxiTopup.assetHash) {
       taxiTopup = (await fetchTopupFromTaxi(taxiURL[network], feeCurrency)).topup;
-      console.log(taxiTopup);
       setTopup(taxiTopup);
     }
 
@@ -188,16 +187,19 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       } else {
         feeAmount = topup?.assetAmount || 0;
       }
+
       await Promise.all([
         dispatch(setPset(unsignedPendingTx)),
         dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount)),
       ]);
+
       if (feeChange) {
         await Promise.all([
           dispatch(setFeeChangeAddress(feeChange)),
           dispatch(setAddress(feeChange)),
         ]);
       }
+
       browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,

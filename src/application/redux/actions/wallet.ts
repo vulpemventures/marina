@@ -26,7 +26,6 @@ export function restoreWallet(walletData: WalletData): AnyAction {
 export function setAddress(
   address: Address
 ): ActionWithPayload<{ address?: Address; error?: any }> {
-  console.log(address, addressLDK.toOutputScript(address.value));
   return {
     type: WALLET_SET_ADDRESS_SUCCESS,
     payload: { address },

@@ -632,7 +632,6 @@ export async function updateTxsHistory() {
 export async function fetchAndSetTaxiAssets() {
   const state = marinaStore.getState();
   const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);
-  console.log('assets: ', assets);
 
   const currentAssets = state.taxi.taxiAssets;
   const sortAndJoin = (a: string[]) => a.sort().join('');
@@ -641,6 +640,5 @@ export async function fetchAndSetTaxiAssets() {
     return; // skip if same assets state
   }
 
-  console.log(assets);
   marinaStore.dispatch(setTaxiAssets(assets));
 }
