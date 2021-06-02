@@ -27,6 +27,21 @@ const assetInitState: IAssets = {
     name: 'Blockstream Sticker Token',
     precision: 0,
     ticker: 'B-STK',
+  },
+  '97972e506598ca0b5ddc27ba259a93c174d5048803cc1422fd251d78506cc3c8': {
+    name: 'Blockstream Sticker Token',
+    precision: 0,
+    ticker: 'B-STK',
+  },
+  '8f181f7e4d761ace65c102a01686fda561ab7034c39e0f8d23b8b926f2a620c2': {
+    name: 'Blockstream Hat',
+    precision: 0,
+    ticker: 'B-HAT'
+  },
+  '958ec94440de773b5f2d811848f88bc1da5b46f0554b6cc6414dc4c5504994b9': {
+    name: 'Blockstream Hat',
+    precision: 0,
+    ticker: 'B-HAT'
   }
 };
 
