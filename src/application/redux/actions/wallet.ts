@@ -1,4 +1,3 @@
-import { address as addressLDK } from 'ldk';
 import {
   WALLET_CREATE_SUCCESS,
   WALLET_RESTORE_SUCCESS,

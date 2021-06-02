@@ -5,7 +5,6 @@ import {
   PENDING_TX_SET_FEE_CHANGE_ADDRESS,
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
   UPDATE_TXS,
-  UPDATE_ASSETS,
   PENDING_TX_SET_PSET,
 } from './action-types';
 import { AnyAction } from 'redux';
@@ -42,10 +41,6 @@ export function launchTxsUpdater(): AnyAction {
   return {
     type: UPDATE_TXS,
   };
-}
-
-export function launchAssets(): AnyAction {
-  return { type: UPDATE_ASSETS };
 }
 
 export function setPset(pset: string): AnyAction {

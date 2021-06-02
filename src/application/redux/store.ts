@@ -1,5 +1,4 @@
 import {
-  UPDATE_ASSETS,
   UPDATE_TAXI_ASSETS,
   UPDATE_TXS,
   UPDATE_UTXOS,
@@ -9,7 +8,6 @@ import { alias, wrapStore } from 'webext-redux';
 import marinaReducer from './reducers';
 import {
   fetchAndSetTaxiAssets,
-  updateAllAssetInfos,
   updateTxsHistory,
   updateUtxos,
 } from '../backend';
@@ -23,7 +21,6 @@ export const serializerAndDeserializer = {
 
 const backgroundAliases = {
   [UPDATE_UTXOS]: () => updateUtxos(),
-  [UPDATE_ASSETS]: () => updateAllAssetInfos(),
   [UPDATE_TXS]: () => updateTxsHistory(),
   [UPDATE_TAXI_ASSETS]: () => fetchAndSetTaxiAssets(),
 };

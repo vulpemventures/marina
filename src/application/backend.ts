@@ -1,3 +1,4 @@
+import { defaultPrecision } from './utils/constants';
 import axios from 'axios';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
@@ -26,7 +27,6 @@ import {
   taxiURL,
   toStringOutpoint,
 } from './utils';
-import { IAssets } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
 import {
   disableWebsite,
@@ -38,7 +38,6 @@ import {
   setTxData,
 } from './redux/actions/connect';
 import {
-  ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
   TXS_HISTORY_SET_TXS_SUCCESS,
 } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
@@ -50,6 +49,7 @@ import { TxsHistory } from '../domain/transaction';
 import { setTaxiAssets } from './redux/actions/taxi';
 import { masterPubKeySelector } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo } from './redux/actions/utxos';
+import { addAsset } from './redux/actions/asset';
 
 const POPUP_HTML = 'popup.html';
 
@@ -475,7 +475,8 @@ export async function updateUtxos() {
     const addrs = (await xpub.getAddresses()).reverse();
     if (addrs.length === 0) return;
 
-    const wallet = marinaStore.getState().wallet;
+    const { wallet, app } = marinaStore.getState();
+    const explorer = explorerApiUrl[app.network];
     const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
       txid,
       vout,
@@ -499,6 +500,7 @@ export async function updateUtxos() {
     while (!utxoIterator.done) {
       const utxo = utxoIterator.value;
       if (!isBlindedUtxo(utxo)) {
+        if (utxo.asset) await fetchAssetInfos(utxo.asset, explorer).catch(console.error);
         marinaStore.dispatch(addUtxo(utxo));
       } else {
         skippedOutpoints.push(toStringOutpoint(utxo));
@@ -526,44 +528,21 @@ export async function updateUtxos() {
 /**
  * fetch the asset infos from explorer (ticker, precision etc...)
  */
-export async function updateAllAssetInfos() {
-  const { app, assets, wallet } = marinaStore.getState();
-  const assetsFromUtxos: IAssets = await Promise.all(
-    [...Object.values(wallet.utxoMap)].map(async ({ asset }) =>
-      // If asset in store don't fetch
-      !((asset as string) in assets)
-        ? (
-          await axios.get(`${explorerApiUrl}/asset/${asset}`)
-        ).data
-        : undefined
-    )
-  ).then((assetInfos) =>
-    assetInfos
-      .filter((a) => a !== undefined)
-      .reduce(
-        (acc, { asset_id, name, ticker, precision }) => ({
-          ...acc,
-          [asset_id]: { name, ticker, precision },
-        }),
-        {} as IAssets
-      )
-  );
-  // Update stores
-  if (Object.keys(assetsFromUtxos).length) {
-    let assetInfosLiquid = assets.liquid;
-    let assetInfosRegtest = assets.regtest;
-    if (app.network === 'liquid') {
-      assetInfosLiquid = { ...assets.liquid, ...assetsFromUtxos };
-    } else {
-      assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };
-    }
-    const newAssets: IAssets = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
+async function fetchAssetInfos(assetHash: string, explorerUrl: string) {
+  const assetsState = marinaStore.getState().assets;
+  if (assetsState[assetHash] !== undefined) return; // do not update
 
-    marinaStore.dispatch({
-      type: ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
-      payload: { assets: newAssets },
-    });
-  }
+
+  const assetInfos = (
+    await axios.get(`${explorerUrl}/asset/${assetHash}`)
+  ).data
+
+  console.info('update ', assetHash, ' assetInfo = ', assetInfos)
+  const name = assetInfos?.name ? assetInfos.name : 'Unknown';
+  const ticker = assetInfos?.ticker ? assetInfos.ticker : assetHash.slice(0, 4).toUpperCase();
+  const precision = assetInfos?.precision ? assetInfos.precision : defaultPrecision;
+
+  marinaStore.dispatch(addAsset(assetHash, { name, ticker, precision }));
 }
 
 /**

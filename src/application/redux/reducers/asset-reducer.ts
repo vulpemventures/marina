@@ -3,7 +3,7 @@ import { IAssets } from '../../../domain/assets';
 import * as ACTION_TYPES from '../actions/action-types';
 
 const assetInitState: IAssets = {
-  ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2: {
+  'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2': {
     name: 'Tether USD',
     precision: 8,
     ticker: 'USDt',
@@ -18,6 +18,16 @@ const assetInitState: IAssets = {
     precision: 8,
     ticker: 'L-BTC',
   },
+  'e73d75039ba1372d7726b92463fe0f18dadc3d4586faa6a76457f922153e1890': {
+    name: 'Moloch\'s Hammer',
+    ticker: 'MMoHa',
+    precision: 0,
+  },
+  'ea79766f9ac8fec6bc484b8f081af5b7bb2f87576e6e2918819ae6d98048a94d': {
+    name: 'Blockstream Sticker Token',
+    precision: 0,
+    ticker: 'B-STK',
+  }
 };
 
 export function assetReducer(
@@ -25,8 +35,11 @@ export function assetReducer(
   { type, payload }: AnyAction
 ): IAssets {
   switch (type) {
-    case ACTION_TYPES.ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS: {
-      return payload.assets;
+    case ACTION_TYPES.ADD_ASSET: {
+      return {
+        ...state,
+        [payload.assetHash]: payload.asset
+      }
     }
     default:
       return state;
