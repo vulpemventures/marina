@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
-import { defaultPrecision, imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { fromSatoshi } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
@@ -12,13 +12,14 @@ import AddressAmountEnhancedForm from '../../components/address-amount-form';
 import { MasterPublicKey } from 'ldk';
 import { Network } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { IAssets } from '../../../domain/assets';
+import { Asset, IAssets } from '../../../domain/assets';
 
 export interface AddressAmountProps {
   masterPubKey: MasterPublicKey;
   network: Network;
   transaction: TransactionState;
   balances: BalancesByAsset;
+  transactionAsset: Asset;
   assets: IAssets;
 }
 
@@ -27,13 +28,11 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
   network,
   transaction,
   balances,
+  transactionAsset,
   assets,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-
-  const assetTicker = assets[transaction.sendAsset]?.ticker ?? transaction.sendAsset.slice(0, 4);
-  const assetPrecision = assets[transaction.sendAsset]?.precision ?? defaultPrecision;
 
   const handleBackBtn = () => {
     dispatch(flushPendingTx()).catch(console.error);
@@ -49,13 +48,13 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
     >
       <Balance
         assetHash={transaction.sendAsset}
-        assetBalance={fromSatoshi(balances[transaction.sendAsset] ?? 0, assetPrecision)}
+        assetBalance={fromSatoshi(balances[transaction.sendAsset] ?? 0, transactionAsset.precision)}
         assetImgPath={
           network === 'regtest'
-            ? imgPathMapRegtest[assetTicker] ?? imgPathMapRegtest['']
+            ? imgPathMapRegtest[transactionAsset.ticker] ?? imgPathMapRegtest['']
             : imgPathMapMainnet[transaction.sendAsset] ?? imgPathMapMainnet['']
         }
-        assetTicker={assetTicker}
+        assetTicker={transactionAsset.ticker}
         className="mt-4"
       />
 
@@ -67,7 +66,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
         network={network}
         pubKey={masterPubKey}
         assets={assets}
-        assetPrecision={assetPrecision}
+        assetPrecision={transactionAsset.precision}
       />
     </ShellPopUp>
   );

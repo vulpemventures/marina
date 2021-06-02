@@ -5,17 +5,17 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
-import { IAssets } from '../../../domain/assets';
+import { AssetGetter } from '../../../domain/assets';
 import { Network } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 
 export interface ConfirmationProps {
   network: Network;
-  assets: IAssets;
   transaction: TransactionState;
+  getAsset: AssetGetter;
 }
 
-const ConfirmationView: React.FC<ConfirmationProps> = ({ network, assets, transaction }) => {
+const ConfirmationView: React.FC<ConfirmationProps> = ({ network, getAsset, transaction }) => {
   const history = useHistory();
   const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = transaction;
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
@@ -28,12 +28,12 @@ const ConfirmationView: React.FC<ConfirmationProps> = ({ network, assets, transa
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Confirmation"
     >
-      <h1 className="text-2xl">{assets[sendAsset]?.name}</h1>
+      <h1 className="text-2xl">{getAsset(sendAsset).name}</h1>
       <img
         className="w-11 mt-0.5 block mx-auto mb-2"
         src={
           network === 'regtest'
-            ? imgPathMapRegtest[assets[sendAsset]?.ticker] ?? imgPathMapRegtest['']
+            ? imgPathMapRegtest[getAsset(sendAsset).ticker] ?? imgPathMapRegtest['']
             : imgPathMapMainnet[sendAsset] ?? imgPathMapMainnet['']
         }
         alt="liquid asset logo"
@@ -47,14 +47,14 @@ const ConfirmationView: React.FC<ConfirmationProps> = ({ network, assets, transa
       <div className="bg-gradient-to-r from-secondary to-primary flex flex-row items-center justify-between h-12 px-4 mt-4 rounded-full">
         <span className="text-lg font-medium">Amount</span>
         <span className="text-base font-medium text-white">
-          {fromSatoshiStr(sendAmount, assets[sendAsset]?.precision)} {assets[sendAsset]?.ticker}
+          {fromSatoshiStr(sendAmount, getAsset(sendAsset).precision)} {getAsset(sendAsset).ticker}
         </span>
       </div>
 
       <div className="flex flex-row items-end justify-between px-3 mt-10">
         <span className="text-lg font-medium">Fee</span>
         <span className="font-regular text-base">
-          {fromSatoshiStr(feeAmount, assets[feeAsset]?.precision)} {assets[feeAsset]?.ticker}
+          {fromSatoshiStr(feeAmount, getAsset(feeAsset).precision)} {getAsset(feeAsset).ticker}
         </span>
       </div>
 

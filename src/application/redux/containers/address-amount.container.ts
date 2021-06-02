@@ -1,4 +1,5 @@
 import { connect } from 'react-redux';
+import { assetGetterFromIAssets } from '../../../domain/assets';
 import { RootReducerState } from '../../../domain/common';
 import AddressAmountView, {
   AddressAmountProps,
@@ -9,9 +10,10 @@ import { masterPubKeySelector } from '../selectors/wallet.selector';
 const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
   network: state.app.network,
   transaction: state.transaction,
-  assets: state.assets[state.app.network],
+  assets: state.assets,
   balances: balancesSelector(state),
   masterPubKey: masterPubKeySelector(state),
+  transactionAsset: assetGetterFromIAssets(state.assets)(state.transaction.sendAsset)
 });
 
 const AddressAmount = connect(mapStateToProps)(AddressAmountView);

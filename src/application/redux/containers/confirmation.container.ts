@@ -1,4 +1,5 @@
 import { connect } from 'react-redux';
+import { assetGetterFromIAssets } from '../../../domain/assets';
 import { RootReducerState } from '../../../domain/common';
 import ConfirmationView, {
   ConfirmationProps,
@@ -7,7 +8,7 @@ import ConfirmationView, {
 const mapStateToProps = (state: RootReducerState): ConfirmationProps => ({
   transaction: state.transaction,
   network: state.app.network,
-  assets: state.assets[state.app.network],
+  getAsset: assetGetterFromIAssets(state.assets),
 });
 
 const Confirmation = connect(mapStateToProps)(ConfirmationView);

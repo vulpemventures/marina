@@ -1,7 +1,22 @@
-import { Network } from './network';
-
+import { defaultPrecision } from './../application/utils/constants';
 export type IAssets = {
-  [hash: string]: { name: string; precision: number; ticker: string };
+  [hash: string]: Asset;
 };
 
-export type AssetsByNetwork = Record<Network, IAssets>;
+export type Asset = {
+  name: string; precision: number; ticker: string
+}
+
+export type AssetGetter = (assetHash: string) => Asset & { assetHash: string }
+
+export function assetGetterFromIAssets(assets: IAssets): AssetGetter {
+  return (assetHash: string) => {
+    const a = assets[assetHash]
+    return {
+      assetHash,
+      ticker: a ? a.ticker : assetHash.slice(0, 4).toUpperCase(),
+      precision: a ? a.precision : defaultPrecision,
+      name: a ? a.name : 'Unknown'
+    }
+  }
+}

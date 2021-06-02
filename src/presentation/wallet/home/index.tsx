@@ -15,23 +15,21 @@ import {
   lbtcAssetByNetwork,
 } from '../../../application/utils';
 import { useDispatch } from 'react-redux';
-import { AssetsByNetwork } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { IWallet } from '../../../domain/wallet';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
+import { AssetGetter } from '../../../domain/assets';
 
 export interface HomeProps {
   network: Network;
-  assets: AssetsByNetwork;
+  getAsset: AssetGetter;
   transaction: TransactionState;
-  wallet: IWallet;
   assetsBalance: BalancesByAsset;
 }
 
-const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, assetsBalance }) => {
+const HomeView: React.FC<HomeProps> = ({ network, getAsset, transaction, assetsBalance }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -71,26 +69,25 @@ const HomeView: React.FC<HomeProps> = ({ network, assets, transaction, wallet, a
     return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
   } else {
     // Generate list of Asset/Balance buttons
-    buttonList = Object.entries(assets[network] || {}).map(
-      ([hash, { name, ticker, precision }]) => {
-        return (
-          <ButtonAsset
-            assetImgPath={
-              network === 'regtest'
-                ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
-                : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
-            }
-            assetHash={hash}
-            assetName={name}
-            assetTicker={ticker}
-            assetPrecision={precision}
-            quantity={assetsBalance[hash] ?? 0}
-            key={hash}
-            handleClick={handleAssetBalanceButtonClick}
-          />
-        );
-      }
-    );
+    buttonList = Object.entries(assetsBalance).map(([asset, balance]) => {
+      const { ticker, precision, name } = getAsset(asset);
+      return (
+        <ButtonAsset
+          assetImgPath={
+            network === 'regtest'
+              ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
+              : imgPathMapMainnet[asset] ?? imgPathMapMainnet['']
+          }
+          assetHash={asset}
+          assetName={name || 'unknown'}
+          assetTicker={ticker}
+          assetPrecision={precision}
+          quantity={balance}
+          key={asset}
+          handleClick={handleAssetBalanceButtonClick}
+        />
+      );
+    });
   }
 
   return (

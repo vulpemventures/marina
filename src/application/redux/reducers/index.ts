@@ -12,10 +12,10 @@ import { browser } from 'webextension-polyfill-ts';
 import persistReducer from 'redux-persist/es/persistReducer';
 import { IApp } from '../../../domain/app';
 import { TxsHistoryByNetwork } from '../../../domain/transaction';
-import { AssetsByNetwork } from '../../../domain/assets';
 import { IWallet } from '../../../domain/wallet';
 import { taxiReducer, TaxiState } from './taxi-reducer';
 import { ConnectData } from '../../../domain/connect';
+import { IAssets } from '../../../domain/assets';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -41,7 +41,7 @@ const persist = (reducer: Reducer, key: string, whitelist?: string[]): Reducer =
 
 const marinaReducer = combineReducers({
   app: persist(appReducer, 'app') as Reducer<IApp, AnyAction>,
-  assets: persist(assetReducer, 'assets') as Reducer<AssetsByNetwork, AnyAction>,
+  assets: persist(assetReducer, 'assets') as Reducer<IAssets, AnyAction>,
   onboarding: onboardingReducer,
   transaction: persist(transactionReducer, 'transaction') as Reducer<TransactionState, AnyAction>,
   txsHistory: persist(txsHistoryReducer, 'txsHistory') as Reducer<TxsHistoryByNetwork, AnyAction>,

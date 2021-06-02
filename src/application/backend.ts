@@ -26,7 +26,7 @@ import {
   taxiURL,
   toStringOutpoint,
 } from './utils';
-import { IAssets, AssetsByNetwork } from '../domain/assets';
+import { IAssets } from '../domain/assets';
 import { signMessageWithMnemonic } from './utils/message';
 import {
   disableWebsite,
@@ -531,10 +531,10 @@ export async function updateAllAssetInfos() {
   const assetsFromUtxos: IAssets = await Promise.all(
     [...Object.values(wallet.utxoMap)].map(async ({ asset }) =>
       // If asset in store don't fetch
-      !((asset as string) in assets[app.network])
+      !((asset as string) in assets)
         ? (
-            await axios.get(`${explorerApiUrl[app.network]}/asset/${asset}`)
-          ).data
+          await axios.get(`${explorerApiUrl}/asset/${asset}`)
+        ).data
         : undefined
     )
   ).then((assetInfos) =>
@@ -557,7 +557,7 @@ export async function updateAllAssetInfos() {
     } else {
       assetInfosRegtest = { ...assets.regtest, ...assetsFromUtxos };
     }
-    const newAssets: AssetsByNetwork = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
+    const newAssets: IAssets = { liquid: assetInfosLiquid, regtest: assetInfosRegtest };
 
     marinaStore.dispatch({
       type: ASSET_UPDATE_ALL_ASSET_INFOS_SUCCESS,
