@@ -18,31 +18,6 @@ const assetInitState: IAssets = {
     precision: 8,
     ticker: 'L-BTC',
   },
-  'e73d75039ba1372d7726b92463fe0f18dadc3d4586faa6a76457f922153e1890': {
-    name: 'Moloch\'s Hammer',
-    ticker: 'MMoHa',
-    precision: 0,
-  },
-  'ea79766f9ac8fec6bc484b8f081af5b7bb2f87576e6e2918819ae6d98048a94d': {
-    name: 'Blockstream Sticker Token',
-    precision: 0,
-    ticker: 'B-STK',
-  },
-  '97972e506598ca0b5ddc27ba259a93c174d5048803cc1422fd251d78506cc3c8': {
-    name: 'Blockstream Sticker Token',
-    precision: 0,
-    ticker: 'B-STK',
-  },
-  '8f181f7e4d761ace65c102a01686fda561ab7034c39e0f8d23b8b926f2a620c2': {
-    name: 'Blockstream Hat',
-    precision: 0,
-    ticker: 'B-HAT'
-  },
-  '958ec94440de773b5f2d811848f88bc1da5b46f0554b6cc6414dc4c5504994b9': {
-    name: 'Blockstream Hat',
-    precision: 0,
-    ticker: 'B-HAT'
-  }
 };
 
 export function assetReducer(
