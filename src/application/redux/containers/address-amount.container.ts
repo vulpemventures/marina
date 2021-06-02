@@ -13,7 +13,7 @@ const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
   assets: state.assets,
   balances: balancesSelector(state),
   masterPubKey: masterPubKeySelector(state),
-  transactionAsset: assetGetterFromIAssets(state.assets)(state.transaction.sendAsset)
+  transactionAsset: assetGetterFromIAssets(state.assets)(state.transaction.sendAsset),
 });
 
 const AddressAmount = connect(mapStateToProps)(AddressAmountView);

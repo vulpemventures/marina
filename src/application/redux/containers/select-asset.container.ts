@@ -11,7 +11,7 @@ const mapStateToProps = (state: RootReducerState): SelectAssetProps => {
     network: state.app.network,
     balanceAssets: Object.keys(balances).map(getAsset),
     balances,
-  }
+  };
 };
 
 const Home = connect(mapStateToProps)(SelectAssetView);

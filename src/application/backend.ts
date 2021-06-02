@@ -37,9 +37,7 @@ import {
   setTx,
   setTxData,
 } from './redux/actions/connect';
-import {
-  TXS_HISTORY_SET_TXS_SUCCESS,
-} from './redux/actions/action-types';
+import { TXS_HISTORY_SET_TXS_SUCCESS } from './redux/actions/action-types';
 import { setAddress } from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
@@ -532,12 +530,9 @@ async function fetchAssetInfos(assetHash: string, explorerUrl: string) {
   const assetsState = marinaStore.getState().assets;
   if (assetsState[assetHash] !== undefined) return; // do not update
 
+  const assetInfos = (await axios.get(`${explorerUrl}/asset/${assetHash}`)).data;
 
-  const assetInfos = (
-    await axios.get(`${explorerUrl}/asset/${assetHash}`)
-  ).data
-
-  console.info('update ', assetHash, ' assetInfo = ', assetInfos)
+  console.info('update ', assetHash, ' assetInfo = ', assetInfos);
   const name = assetInfos?.name ? assetInfos.name : 'Unknown';
   const ticker = assetInfos?.ticker ? assetInfos.ticker : assetHash.slice(0, 4).toUpperCase();
   const precision = assetInfos?.precision ? assetInfos.precision : defaultPrecision;

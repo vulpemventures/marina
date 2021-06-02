@@ -8,7 +8,7 @@ const mapStateToProps = (state: RootReducerState): HomeProps => ({
   network: state.app.network,
   transaction: state.transaction,
   assetsBalance: balancesSelector(state),
-  getAsset: assetGetterFromIAssets(state.assets)
+  getAsset: assetGetterFromIAssets(state.assets),
 });
 
 const Home = connect(mapStateToProps)(HomeView);

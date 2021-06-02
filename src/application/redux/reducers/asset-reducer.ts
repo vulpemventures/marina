@@ -3,7 +3,7 @@ import { IAssets } from '../../../domain/assets';
 import * as ACTION_TYPES from '../actions/action-types';
 
 const assetInitState: IAssets = {
-  'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2': {
+  ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2: {
     name: 'Tether USD',
     precision: 8,
     ticker: 'USDt',
@@ -28,8 +28,8 @@ export function assetReducer(
     case ACTION_TYPES.ADD_ASSET: {
       return {
         ...state,
-        [payload.assetHash]: payload.asset
-      }
+        [payload.assetHash]: payload.asset,
+      };
     }
     default:
       return state;
