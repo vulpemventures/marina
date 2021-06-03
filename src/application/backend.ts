@@ -535,7 +535,7 @@ async function fetchAssetInfos(assetHash: string, explorerUrl: string) {
   console.info('update ', assetHash, ' assetInfo = ', assetInfos);
   const name = assetInfos?.name ? assetInfos.name : 'Unknown';
   const ticker = assetInfos?.ticker ? assetInfos.ticker : assetHash.slice(0, 4).toUpperCase();
-  const precision = assetInfos?.precision ? assetInfos.precision : defaultPrecision;
+  const precision = assetInfos.precision !== undefined ? assetInfos.precision : defaultPrecision;
 
   marinaStore.dispatch(addAsset(assetHash, { name, ticker, precision }));
 }
