@@ -505,8 +505,7 @@ export function updateUtxos(): ThunkAction<void, RootReducerState, any, AnyActio
         if (!isBlindedUtxo(utxo)) {
           if (utxo.asset) {
             const assets = getState().assets;
-            await fetchAssetInfos(utxo.asset, explorer, assets, dispatch)
-              .catch(console.error);
+            await fetchAssetInfos(utxo.asset, explorer, assets, dispatch).catch(console.error);
           }
           dispatch(addUtxo(utxo));
         } else {
@@ -530,13 +529,18 @@ export function updateUtxos(): ThunkAction<void, RootReducerState, any, AnyActio
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 }
 
 /**
  * fetch the asset infos from explorer (ticker, precision etc...)
  */
-async function fetchAssetInfos(assetHash: string, explorerUrl: string, assetsState: IAssets, dispatch: Dispatch) {
+async function fetchAssetInfos(
+  assetHash: string,
+  explorerUrl: string,
+  assetsState: IAssets,
+  dispatch: Dispatch
+) {
   if (assetsState[assetHash] !== undefined) return; // do not update
 
   const assetInfos = (await axios.get(`${explorerUrl}/asset/${assetHash}`)).data;
@@ -570,7 +574,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
           );
           return addressInterfaces.find(
             (addr) =>
-              addressLDK.fromConfidential(addr.confidentialAddress).unconfidentialAddress === address
+              addressLDK.fromConfidential(addr.confidentialAddress).unconfidentialAddress ===
+              address
           )?.blindingPrivateKey;
         } catch (_) {
           return undefined;
@@ -605,7 +610,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 }
 
 /**
@@ -625,5 +630,5 @@ export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any
     }
 
     dispatch(setTaxiAssets(assets));
-  }
+  };
 }

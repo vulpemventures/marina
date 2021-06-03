@@ -1,3 +1,4 @@
+import { defaultPrecision } from './../application/utils/constants';
 export type IAssets = Record<string, Asset>;
 
 export type Asset = {
@@ -14,7 +15,7 @@ export function assetGetterFromIAssets(assets: IAssets): AssetGetter {
     return {
       assetHash,
       ticker: a ? a.ticker : assetHash.slice(0, 4).toUpperCase(),
-      precision: a.precision,
+      precision: a ? a.precision : defaultPrecision,
       name: a ? a.name : 'Unknown',
     };
   };

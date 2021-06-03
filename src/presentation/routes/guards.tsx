@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Route, Redirect, RouteProps, RouteComponentProps, useParams } from 'react-router-dom';
-import { RootReducerState } from '../../application/redux/store';
+import { RootReducerState } from '../../domain/common';
 import { CONNECT_ENABLE_ROUTE, CONNECT_SPEND_ROUTE } from './constants';
 
 const ALLOWED_REDIRECT_ROUTE = [CONNECT_ENABLE_ROUTE, CONNECT_SPEND_ROUTE];

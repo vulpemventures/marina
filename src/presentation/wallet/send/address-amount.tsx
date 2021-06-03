@@ -13,6 +13,7 @@ import { MasterPublicKey } from 'ldk';
 import { Network } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset, IAssets } from '../../../domain/assets';
+import { DEFAULT_ROUTE } from '../../routes/constants';
 
 export interface AddressAmountProps {
   masterPubKey: MasterPublicKey;
@@ -36,7 +37,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
 
   const handleBackBtn = () => {
     dispatch(flushPendingTx()).catch(console.error);
-    history.goBack();
+    history.push(DEFAULT_ROUTE);
   };
 
   return (
