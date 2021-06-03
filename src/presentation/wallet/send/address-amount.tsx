@@ -35,8 +35,8 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const handleBackBtn = () => {
-    dispatch(flushPendingTx()).catch(console.error);
+  const handleBackBtn = async () => {
+    await dispatch(flushPendingTx()).catch(console.error);
     history.push(DEFAULT_ROUTE);
   };
 

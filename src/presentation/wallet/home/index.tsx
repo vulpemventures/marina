@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { RECEIVE_ROUTE, SELECT_ASSET_ROUTE, TRANSACTIONS_ROUTE } from '../../routes/constants';
+import {
+  RECEIVE_ROUTE,
+  SELECT_ASSET_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+  SEND_CHOOSE_FEE_ROUTE,
+  SEND_CONFIRMATION_ROUTE,
+  TRANSACTIONS_ROUTE,
+} from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
@@ -14,24 +21,20 @@ import {
   imgPathMapRegtest,
   lbtcAssetByNetwork,
 } from '../../../application/utils';
-import { useDispatch } from 'react-redux';
-import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
+import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { Network } from '../../../domain/network';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { AssetGetter } from '../../../domain/assets';
 
 export interface HomeProps {
   network: Network;
   getAsset: AssetGetter;
-  transaction: TransactionState;
+  transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
 }
 
-const HomeView: React.FC<HomeProps> = ({ network, getAsset, transaction, assetsBalance }) => {
+const HomeView: React.FC<HomeProps> = ({ network, getAsset, transactionStep, assetsBalance }) => {
   const history = useHistory();
-  const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   let buttonList;
 
@@ -58,9 +61,16 @@ const HomeView: React.FC<HomeProps> = ({ network, getAsset, transaction, assetsB
   useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
-    // Flush last sent tx
-    if (transaction.sendAsset !== '') {
-      dispatch(flushPendingTx()).catch(console.error);
+    switch (transactionStep) {
+      case 'address-amount':
+        history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+        break;
+      case 'choose-fee':
+        history.push(SEND_CHOOSE_FEE_ROUTE);
+        break;
+      case 'confirmation':
+        history.push(SEND_CONFIRMATION_ROUTE);
+        break;
     }
   }, []);
 

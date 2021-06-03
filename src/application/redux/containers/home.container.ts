@@ -6,7 +6,7 @@ import { assetGetterFromIAssets } from '../../../domain/assets';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => ({
   network: state.app.network,
-  transaction: state.transaction,
+  transactionStep: state.transaction.step,
   assetsBalance: balancesSelector(state),
   getAsset: assetGetterFromIAssets(state.assets),
 });

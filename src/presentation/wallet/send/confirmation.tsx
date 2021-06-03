@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
-import { SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
 import { AssetGetter } from '../../../domain/assets';
@@ -19,7 +19,7 @@ const ConfirmationView: React.FC<ConfirmationProps> = ({ network, getAsset, tran
   const history = useHistory();
   const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = transaction;
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
-  const handleBackBtn = () => history.goBack();
+  const handleBackBtn = () => history.push(SEND_CHOOSE_FEE_ROUTE);
 
   return (
     <ShellPopUp

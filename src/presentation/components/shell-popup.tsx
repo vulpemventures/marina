@@ -5,7 +5,7 @@ import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { updateUtxos } from '../../application/redux/actions/utxos';
-import { UpdateTxs } from '../../application/redux/actions/transaction';
+import { flushPendingTx, UpdateTxs } from '../../application/redux/actions/transaction';
 
 interface Props {
   backBtnCb?: () => void;
@@ -33,12 +33,13 @@ const ShellPopUp: React.FC<Props> = ({
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
   //
-  const goToHome = () => {
+  const goToHome = async () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
       dispatch(updateUtxos()).catch(console.error);
       dispatch(UpdateTxs()).catch(console.error);
     }
+    await dispatch(flushPendingTx());
     history.push(DEFAULT_ROUTE);
   };
   const handleBackBtn = () => {

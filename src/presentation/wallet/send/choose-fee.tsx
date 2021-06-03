@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { greedyCoinSelector, MasterPublicKey, RecipientInterface, walletFromCoins } from 'ldk';
-import { browser } from 'webextension-polyfill-ts';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -63,7 +62,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const [feeCurrency, setFeeCurrency] = useState<string | undefined>();
+  const [feeCurrency, setFeeCurrency] = useState<string | undefined>(lbtcAssetHash);
   const [feeLevel] = useState<string>('50');
   const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -200,7 +199,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         ]);
       }
 
-      browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,
       });
