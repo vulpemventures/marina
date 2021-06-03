@@ -5,6 +5,7 @@ import marinaReducer from './reducers';
 import { fetchAndSetTaxiAssets, updateTxsHistory, updateUtxos } from '../backend';
 import persistStore from 'redux-persist/es/persistStore';
 import { parse, stringify } from '../utils/browser-storage-converters';
+import thunk from 'redux-thunk';
 
 export const serializerAndDeserializer = {
   serializer: (payload: any) => stringify(payload),
@@ -17,7 +18,7 @@ const backgroundAliases = {
   [UPDATE_TAXI_ASSETS]: () => fetchAndSetTaxiAssets(),
 };
 
-const create = () => createStore(marinaReducer, applyMiddleware(alias(backgroundAliases)));
+const create = () => createStore(marinaReducer, applyMiddleware(alias(backgroundAliases), thunk));
 
 export const marinaStore = create();
 export const persistor = persistStore(marinaStore);

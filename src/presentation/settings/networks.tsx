@@ -2,8 +2,8 @@ import React from 'react';
 import { EsploraIdentityRestorer, fromXpub, IdentityType, MasterPublicKey } from 'ldk';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { launchAssets, launchTxsUpdater } from '../../application/redux/actions/transaction';
-import { launchUtxosUpdater } from '../../application/redux/actions/utxos';
+import { UpdateTxs } from '../../application/redux/actions/transaction';
+import { updateUtxos } from '../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { explorerApiUrl } from '../../application/utils';
 import { RootReducerState } from '../../domain/common';
@@ -35,9 +35,8 @@ const SettingsNetworks: React.FC = () => {
     });
 
     await pukKey.isRestored;
-    await dispatch(launchTxsUpdater()).catch(console.error);
-    await dispatch(launchUtxosUpdater()).catch(console.error);
-    await dispatch(launchAssets()).catch(console.error);
+    await dispatch(UpdateTxs()).catch(console.error);
+    await dispatch(updateUtxos()).catch(console.error);
   };
 
   return (

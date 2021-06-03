@@ -2,7 +2,7 @@ import { UtxoInterface } from 'ldk';
 import { AnyAction } from 'redux';
 import { ADD_UTXO, DELETE_UTXO, UPDATE_UTXOS } from './action-types';
 
-export function launchUtxosUpdater(): AnyAction {
+export function updateUtxos(): AnyAction {
   return { type: UPDATE_UTXOS };
 }
 

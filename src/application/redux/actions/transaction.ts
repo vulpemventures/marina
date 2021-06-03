@@ -37,7 +37,7 @@ export function flushPendingTx(): AnyAction {
   return { type: PENDING_TX_FLUSH };
 }
 
-export function launchTxsUpdater(): AnyAction {
+export function UpdateTxs(): AnyAction {
   return {
     type: UPDATE_TXS,
   };

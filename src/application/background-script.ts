@@ -4,8 +4,8 @@ import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend from './backend';
 import { logOut } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
-import { launchAssets, launchTxsUpdater } from './redux/actions/transaction';
-import { launchUtxosUpdater } from './redux/actions/utxos';
+import { UpdateTxs } from './redux/actions/transaction';
+import { updateUtxos } from './redux/actions/utxos';
 import { updateTaxiAssets } from './redux/actions/taxi';
 
 // MUST be > 15 seconds
@@ -23,9 +23,8 @@ browser.alarms.create(UPDATE_ALARM, {
 browser.alarms.onAlarm.addListener((alarm) => {
   switch (alarm.name) {
     case UPDATE_ALARM:
-      marinaStore.dispatch(launchTxsUpdater());
-      marinaStore.dispatch(launchUtxosUpdater());
-      marinaStore.dispatch(launchAssets());
+      marinaStore.dispatch(UpdateTxs());
+      marinaStore.dispatch(updateUtxos());
       marinaStore.dispatch(updateTaxiAssets());
       break;
 

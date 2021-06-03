@@ -65,6 +65,7 @@
     "react-router-dom": "^5.2.0",
     "redux": "^4.1.0",
     "redux-persist": "^6.0.0",
+    "redux-thunk": "^2.3.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.1.2",
     "taxi-protobuf": "vulpemventures/taxi-protobuf",
     "uuid": "^8.3.2",

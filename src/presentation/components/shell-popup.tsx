@@ -4,8 +4,8 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { launchUtxosUpdater } from '../../application/redux/actions/utxos';
-import { launchTxsUpdater } from '../../application/redux/actions/transaction';
+import { updateUtxos } from '../../application/redux/actions/utxos';
+import { UpdateTxs } from '../../application/redux/actions/transaction';
 
 interface Props {
   backBtnCb?: () => void;
@@ -36,8 +36,8 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(launchUtxosUpdater()).catch(console.error);
-      dispatch(launchTxsUpdater()).catch(console.error);
+      dispatch(updateUtxos()).catch(console.error);
+      dispatch(UpdateTxs()).catch(console.error);
     }
     history.push(DEFAULT_ROUTE);
   };

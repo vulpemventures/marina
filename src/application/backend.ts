@@ -1,3 +1,4 @@
+import { RootReducerState } from './../domain/common';
 import { defaultPrecision } from './utils/constants';
 import axios from 'axios';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
@@ -48,6 +49,9 @@ import { setTaxiAssets } from './redux/actions/taxi';
 import { masterPubKeySelector } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
+import { ThunkAction } from 'redux-thunk';
+import { AnyAction, Dispatch } from 'redux';
+import { IAssets } from '../domain/assets';
 
 const POPUP_HTML = 'popup.html';
 
@@ -467,135 +471,140 @@ function getCoins(): UtxoInterface[] {
 /**
  * fetch and unblind the utxos and then refresh it.
  */
-export async function updateUtxos() {
-  try {
-    const xpub = await getXpub();
-    const addrs = (await xpub.getAddresses()).reverse();
-    if (addrs.length === 0) return;
+export function updateUtxos(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return async (dispatch, getState) => {
+    try {
+      const xpub = await getXpub();
+      const addrs = (await xpub.getAddresses()).reverse();
+      if (addrs.length === 0) return;
 
-    const { wallet, app } = marinaStore.getState();
-    const explorer = explorerApiUrl[app.network];
-    const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
-      txid,
-      vout,
-    }));
-    const network = getCurrentNetwork();
+      const { wallet, app } = getState();
+      const explorer = explorerApiUrl[app.network];
+      const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
+        txid,
+        vout,
+      }));
+      const network = getCurrentNetwork();
 
-    // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
-    const utxos = fetchAndUnblindUtxosGenerator(
-      addrs,
-      explorerApiUrl[network],
-      // Skip unblinding if utxo exists in current state
-      (utxo) => {
-        const outpoint = toStringOutpoint(utxo);
-        return wallet.utxoMap[outpoint] !== undefined;
+      // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
+      const utxos = fetchAndUnblindUtxosGenerator(
+        addrs,
+        explorerApiUrl[network],
+        // Skip unblinding if utxo exists in current state
+        (utxo) => {
+          const outpoint = toStringOutpoint(utxo);
+          return wallet.utxoMap[outpoint] !== undefined;
+        }
+      );
+
+      const skippedOutpoints: string[] = []; // for deleting
+
+      let utxoIterator = await utxos.next();
+      while (!utxoIterator.done) {
+        const utxo = utxoIterator.value;
+        if (!isBlindedUtxo(utxo)) {
+          if (utxo.asset) {
+            const assets = getState().assets;
+            await fetchAssetInfos(utxo.asset, explorer, assets, dispatch)
+              .catch(console.error);
+          }
+          dispatch(addUtxo(utxo));
+        } else {
+          skippedOutpoints.push(toStringOutpoint(utxo));
+        }
+        utxoIterator = await utxos.next();
       }
-    );
 
-    const skippedOutpoints: string[] = []; // for deleting
-
-    let utxoIterator = await utxos.next();
-    while (!utxoIterator.done) {
-      const utxo = utxoIterator.value;
-      if (!isBlindedUtxo(utxo)) {
-        if (utxo.asset) await fetchAssetInfos(utxo.asset, explorer).catch(console.error);
-        marinaStore.dispatch(addUtxo(utxo));
-      } else {
-        skippedOutpoints.push(toStringOutpoint(utxo));
+      if (utxoIterator.done) {
+        console.info(`number of utxos fetched: ${utxoIterator.value.numberOfUtxos}`);
+        for (const err of utxoIterator.value.errors) {
+          console.error(err);
+        }
       }
-      utxoIterator = await utxos.next();
-    }
 
-    if (utxoIterator.done) {
-      console.info(`number of utxos fetched: ${utxoIterator.value.numberOfUtxos}`);
-      for (const err of utxoIterator.value.errors) {
-        console.error(err);
+      for (const outpoint of currentOutpoints) {
+        if (skippedOutpoints.includes(toStringOutpoint(outpoint))) continue;
+        // if not skipped, it means the utxo has been spent
+        dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
       }
+    } catch (error) {
+      console.error(error);
     }
-
-    for (const outpoint of currentOutpoints) {
-      if (skippedOutpoints.includes(toStringOutpoint(outpoint))) continue;
-      // if not skipped, it means the utxo has been spent
-      marinaStore.dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
-    }
-  } catch (error) {
-    console.error(error);
   }
 }
 
 /**
  * fetch the asset infos from explorer (ticker, precision etc...)
  */
-async function fetchAssetInfos(assetHash: string, explorerUrl: string) {
-  const assetsState = marinaStore.getState().assets;
+async function fetchAssetInfos(assetHash: string, explorerUrl: string, assetsState: IAssets, dispatch: Dispatch) {
   if (assetsState[assetHash] !== undefined) return; // do not update
 
   const assetInfos = (await axios.get(`${explorerUrl}/asset/${assetHash}`)).data;
-
-  console.info('update ', assetHash, ' assetInfo = ', assetInfos);
   const name = assetInfos?.name ? assetInfos.name : 'Unknown';
   const ticker = assetInfos?.ticker ? assetInfos.ticker : assetHash.slice(0, 4).toUpperCase();
   const precision = assetInfos.precision !== undefined ? assetInfos.precision : defaultPrecision;
 
-  marinaStore.dispatch(addAsset(assetHash, { name, ticker, precision }));
+  dispatch(addAsset(assetHash, { name, ticker, precision }));
 }
 
 /**
  * use fetchAndUnblindTxsGenerator to update the tx history
  */
-export async function updateTxsHistory() {
-  try {
-    const { app, txsHistory, wallet } = marinaStore.getState();
-    // Initialize txs to txsHistory shallow clone
-    const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
+export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return async (dispatch, getState) => {
+    try {
+      const { app, txsHistory, wallet } = getState();
+      // Initialize txs to txsHistory shallow clone
+      const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
 
-    const { confidentialAddresses } = wallet;
-    const addresses = confidentialAddresses.map((addr) => addr.value);
-    const pubKeyWallet = await getXpub();
+      const { confidentialAddresses } = wallet;
+      const addresses = confidentialAddresses.map((addr) => addr.value);
+      const pubKeyWallet = await getXpub();
 
-    const addressInterfaces = await pubKeyWallet.getAddresses();
-    const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
-      try {
-        const address = addressLDK.fromOutputScript(
-          Buffer.from(script, 'hex'),
-          networks[app.network]
-        );
-        return addressInterfaces.find(
-          (addr) =>
-            addressLDK.fromConfidential(addr.confidentialAddress).unconfidentialAddress === address
-        )?.blindingPrivateKey;
-      } catch (_) {
-        return undefined;
+      const addressInterfaces = await pubKeyWallet.getAddresses();
+      const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
+        try {
+          const address = addressLDK.fromOutputScript(
+            Buffer.from(script, 'hex'),
+            networks[app.network]
+          );
+          return addressInterfaces.find(
+            (addr) =>
+              addressLDK.fromConfidential(addr.confidentialAddress).unconfidentialAddress === address
+          )?.blindingPrivateKey;
+        } catch (_) {
+          return undefined;
+        }
+      };
+
+      const txsGen = fetchAndUnblindTxsGenerator(
+        addresses,
+        identityBlindKeyGetter,
+        explorerApiUrl[app.network],
+        // Check if tx exists in React state
+        (tx) => txsHistory[app.network][tx.txid] !== undefined
+      );
+
+      let it = await txsGen.next();
+
+      // If no new tx already in state then return txsHistory of current network
+      if (it.done) {
+        return;
       }
-    };
 
-    const txsGen = fetchAndUnblindTxsGenerator(
-      addresses,
-      identityBlindKeyGetter,
-      explorerApiUrl[app.network],
-      // Check if tx exists in React state
-      (tx) => txsHistory[app.network][tx.txid] !== undefined
-    );
-
-    let it = await txsGen.next();
-
-    // If no new tx already in state then return txsHistory of current network
-    if (it.done) {
-      return;
+      while (!it.done) {
+        const tx = it.value;
+        // Update all txsHistory state at each single new tx
+        txs[tx.txid] = tx;
+        dispatch({
+          type: TXS_HISTORY_SET_TXS_SUCCESS,
+          payload: { txs, network: app.network },
+        });
+        it = await txsGen.next();
+      }
+    } catch (error) {
+      console.error(error);
     }
-
-    while (!it.done) {
-      const tx = it.value;
-      // Update all txsHistory state at each single new tx
-      txs[tx.txid] = tx;
-      marinaStore.dispatch({
-        type: TXS_HISTORY_SET_TXS_SUCCESS,
-        payload: { txs, network: app.network },
-      });
-      it = await txsGen.next();
-    }
-  } catch (error) {
-    console.error(error);
   }
 }
 
@@ -603,16 +612,18 @@ export async function updateTxsHistory() {
  * fetch assets from taxi daemon endpoint (make a grpc call)
  * and then set assets in store.
  */
-export async function fetchAndSetTaxiAssets() {
-  const state = marinaStore.getState();
-  const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);
+export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);
 
-  const currentAssets = state.taxi.taxiAssets;
-  const sortAndJoin = (a: string[]) => a.sort().join('');
+    const currentAssets = state.taxi.taxiAssets;
+    const sortAndJoin = (a: string[]) => a.sort().join('');
 
-  if (sortAndJoin(currentAssets) === sortAndJoin(assets)) {
-    return; // skip if same assets state
+    if (sortAndJoin(currentAssets) === sortAndJoin(assets)) {
+      return; // skip if same assets state
+    }
+
+    dispatch(setTaxiAssets(assets));
   }
-
-  marinaStore.dispatch(setTaxiAssets(assets));
 }

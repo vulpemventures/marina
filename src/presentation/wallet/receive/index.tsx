@@ -5,9 +5,8 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
-import { launchUtxosUpdater } from '../../../application/redux/actions/utxos';
+import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { launchAssets } from '../../../application/redux/actions/transaction';
 import { MasterPublicKey } from 'ldk';
 import { waitForRestoration } from '../../../application/utils';
 import { setAddress } from '../../../application/redux/actions/wallet';
@@ -40,8 +39,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey }) => {
       setConfidentialAddress(addr.confidentialAddress);
       await dispatch(setAddress(createAddress(addr.confidentialAddress, addr.derivationPath))); // persist address
       setTimeout(() => {
-        dispatch(launchUtxosUpdater()).catch(console.error);
-        dispatch(launchAssets()).catch(console.error);
+        dispatch(updateUtxos()).catch(console.error);
       }, 3000);
     })().catch(console.error);
   }, []);
