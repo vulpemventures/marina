@@ -16,27 +16,29 @@ import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { fromSatoshiStr } from '../../utils';
-import {
-  imgPathMapMainnet,
-  imgPathMapRegtest,
-  lbtcAssetByNetwork,
-} from '../../../application/utils';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { Network } from '../../../domain/network';
 import { AssetGetter } from '../../../domain/assets';
+import { Network } from '../../../domain/network';
 
 export interface HomeProps {
+  lbtcAssetHash: string;
   network: Network;
   getAsset: AssetGetter;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
 }
 
-const HomeView: React.FC<HomeProps> = ({ network, getAsset, transactionStep, assetsBalance }) => {
+const HomeView: React.FC<HomeProps> = ({
+  lbtcAssetHash,
+  getAsset,
+  transactionStep,
+  assetsBalance,
+  network,
+}) => {
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  let buttonList;
 
   const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number }) => {
     const { assetHash, assetTicker, assetPrecision } = asset;
@@ -74,32 +76,6 @@ const HomeView: React.FC<HomeProps> = ({ network, getAsset, transactionStep, ass
     }
   }, []);
 
-  if (Object.keys(assetsBalance).length === 0) {
-    // Lottie mermaid animation
-    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
-  } else {
-    // Generate list of Asset/Balance buttons
-    buttonList = Object.entries(assetsBalance).map(([asset, balance]) => {
-      const { ticker, precision, name } = getAsset(asset);
-      return (
-        <ButtonAsset
-          assetImgPath={
-            network === 'regtest'
-              ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
-              : imgPathMapMainnet[asset] ?? imgPathMapMainnet['']
-          }
-          assetHash={asset}
-          assetName={name || 'unknown'}
-          assetTicker={ticker}
-          assetPrecision={precision}
-          quantity={balance}
-          key={asset}
-          handleClick={handleAssetBalanceButtonClick}
-        />
-      );
-    });
-  }
-
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-home.png"
@@ -109,8 +85,8 @@ const HomeView: React.FC<HomeProps> = ({ network, getAsset, transactionStep, ass
       <div className="h-popupContent flex flex-col justify-between">
         <div>
           <Balance
-            assetHash={lbtcAssetByNetwork(network)}
-            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(network)] ?? 0)}
+            assetHash={lbtcAssetHash}
+            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetHash] ?? 0)}
             assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
             assetTicker="L-BTC"
             bigBalanceText={true}
@@ -123,7 +99,27 @@ const HomeView: React.FC<HomeProps> = ({ network, getAsset, transactionStep, ass
           <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
           <ButtonList title="Assets" type="assets">
-            {buttonList}
+            {Object.entries(assetsBalance)
+              .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
+              .map(([asset, balance]) => {
+                const { ticker, precision, name } = getAsset(asset);
+                return (
+                  <ButtonAsset
+                    assetImgPath={
+                      network === 'regtest'
+                        ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
+                        : imgPathMapMainnet[asset] ?? imgPathMapMainnet['']
+                    }
+                    assetHash={asset}
+                    assetName={name || 'unknown'}
+                    assetTicker={ticker}
+                    assetPrecision={precision}
+                    quantity={balance}
+                    key={asset}
+                    handleClick={handleAssetBalanceButtonClick}
+                  />
+                );
+              })}
           </ButtonList>
         </div>
       </div>
