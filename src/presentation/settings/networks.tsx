@@ -1,5 +1,5 @@
 import React from 'react';
-import { EsploraIdentityRestorer, fromXpub, IdentityType, MasterPublicKey } from 'ldk';
+import { EsploraIdentityRestorer, IdentityType, MasterPublicKey } from 'ldk';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
 import { UpdateTxs } from '../../application/redux/actions/transaction';
@@ -28,7 +28,7 @@ const SettingsNetworks: React.FC = () => {
       restorer,
       type: IdentityType.MasterPublicKey,
       value: {
-        masterPublicKey: fromXpub(wallet.masterXPub, net),
+        masterPublicKey: wallet.masterXPub,
         masterBlindingKey: wallet.masterBlindingKey,
       },
       initializeFromRestorer: true,

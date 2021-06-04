@@ -1,5 +1,5 @@
 import { IdentityRestorerFromState } from './../../utils/restorer';
-import { address, fromXpub, IdentityType, MasterPublicKey } from 'ldk';
+import { address, IdentityType, MasterPublicKey } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
 
 export function walletScripts(state: RootReducerState): string[] {
@@ -18,7 +18,7 @@ export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
     restorer,
     type: IdentityType.MasterPublicKey,
     value: {
-      masterPublicKey: fromXpub(masterXPub, network),
+      masterPublicKey: masterXPub,
       masterBlindingKey: masterBlindingKey,
     },
     initializeFromRestorer: true,
