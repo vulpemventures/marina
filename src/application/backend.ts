@@ -638,22 +638,24 @@ export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any
   };
 }
 
-export function startAlarmUpdater() {
-  browser.alarms.create(UPDATE_ALARM, {
-    when: Date.now(),
-    periodInMinutes: 4,
-  });
+export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return (dispatch) => {
+    browser.alarms.create(UPDATE_ALARM, {
+      when: Date.now(),
+      periodInMinutes: 4,
+    });
 
-  browser.alarms.onAlarm.addListener((alarm) => {
-    switch (alarm.name) {
-      case UPDATE_ALARM:
-        marinaStore.dispatch(updateTxs());
-        marinaStore.dispatch(updateUtxos());
-        marinaStore.dispatch(updateTaxiAssets());
-        break;
+    browser.alarms.onAlarm.addListener((alarm) => {
+      switch (alarm.name) {
+        case UPDATE_ALARM:
+          dispatch(updateTxs());
+          dispatch(updateUtxos());
+          dispatch(updateTaxiAssets());
+          break;
 
-      default:
-        break;
-    }
-  });
+        default:
+          break;
+      }
+    });
+  }
 }
