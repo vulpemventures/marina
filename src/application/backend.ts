@@ -657,5 +657,5 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
           break;
       }
     });
-  }
+  };
 }
