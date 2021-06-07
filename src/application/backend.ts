@@ -45,15 +45,17 @@ import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { TxsHistory } from '../domain/transaction';
-import { setTaxiAssets } from './redux/actions/taxi';
+import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
 import { masterPubKeySelector } from './redux/selectors/wallet.selector';
-import { addUtxo, deleteUtxo } from './redux/actions/utxos';
+import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
+import { updateTxs } from './redux/actions/transaction';
 
 const POPUP_HTML = 'popup.html';
+const UPDATE_ALARM = 'UPDATE_ALARM';
 
 export default class Backend {
   private emitter: SafeEventEmitter;
@@ -471,7 +473,7 @@ function getCoins(): UtxoInterface[] {
 /**
  * fetch and unblind the utxos and then refresh it.
  */
-export function updateUtxos(): ThunkAction<void, RootReducerState, any, AnyAction> {
+export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
       const xpub = await getXpub();
@@ -631,4 +633,24 @@ export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any
 
     dispatch(setTaxiAssets(assets));
   };
+}
+
+export function startAlarmUpdater() {
+  browser.alarms.create(UPDATE_ALARM, {
+    when: Date.now(),
+    periodInMinutes: 4,
+  });
+
+  browser.alarms.onAlarm.addListener((alarm) => {
+    switch (alarm.name) {
+      case UPDATE_ALARM:
+        marinaStore.dispatch(updateTxs());
+        marinaStore.dispatch(updateUtxos());
+        marinaStore.dispatch(updateTaxiAssets());
+        break;
+
+      default:
+        break;
+    }
+  });
 }

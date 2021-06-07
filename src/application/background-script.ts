@@ -4,34 +4,12 @@ import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend from './backend';
 import { logOut } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
-import { UpdateTxs } from './redux/actions/transaction';
-import { updateUtxos } from './redux/actions/utxos';
-import { updateTaxiAssets } from './redux/actions/taxi';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
-const UPDATE_ALARM = 'UPDATE_ALARM';
 let welcomeTabID: number | undefined = undefined;
 
 wrapMarinaStore(marinaStore); // wrap store to proxy store
-
-browser.alarms.create(UPDATE_ALARM, {
-  when: Date.now(),
-  periodInMinutes: 4,
-});
-
-browser.alarms.onAlarm.addListener((alarm) => {
-  switch (alarm.name) {
-    case UPDATE_ALARM:
-      marinaStore.dispatch(UpdateTxs());
-      marinaStore.dispatch(updateUtxos());
-      marinaStore.dispatch(updateTaxiAssets());
-      break;
-
-    default:
-      break;
-  }
-});
 
 // We start listening and handling messages from injected script
 const backend = new Backend();

@@ -7,7 +7,7 @@ import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
-import { flushPendingTx, UpdateTxs } from '../../../application/redux/actions/transaction';
+import { flushPendingTx, updateTxs } from '../../../application/redux/actions/transaction';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { updateUtxos } from '../../../application/redux/actions/utxos';
@@ -42,7 +42,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network }) => {
     void (async () => {
       await dispatch(flushPendingTx());
       await dispatch(updateUtxos()).catch(console.error);
-      await dispatch(UpdateTxs()).catch(console.error);
+      await dispatch(updateTxs()).catch(console.error);
     })();
   }, []);
 
