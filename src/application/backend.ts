@@ -476,11 +476,13 @@ function getCoins(): UtxoInterface[] {
 export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
+      const { wallet, app } = getState();
+      if (!app.isAuthenticated) return;
+
       const xpub = await getXpub();
       const addrs = (await xpub.getAddresses()).reverse();
       if (addrs.length === 0) return;
 
-      const { wallet, app } = getState();
       const explorer = explorerApiUrl[app.network];
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
@@ -560,6 +562,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
   return async (dispatch, getState) => {
     try {
       const { app, txsHistory, wallet } = getState();
+      if (!app.isAuthenticated) return;
       // Initialize txs to txsHistory shallow clone
       const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
 

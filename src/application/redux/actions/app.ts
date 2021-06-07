@@ -7,6 +7,7 @@ import {
   ONBOARDING_FAILURE,
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
+  START_PERIODIC_UPDATE,
 } from './action-types';
 import { ActionCreator, AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
@@ -49,4 +50,8 @@ export function logOut(): AnyAction {
 
 export function changeNetwork(network: Network): AnyAction {
   return { type: CHANGE_NETWORK_SUCCESS, payload: { network } };
+}
+
+export function startPeriodicUpdate(): AnyAction {
+  return { type: START_PERIODIC_UPDATE };
 }
