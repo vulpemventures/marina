@@ -5,11 +5,12 @@ interface Props {
   data: string[];
   selectedValue: string;
   setSelectedValue: (v: Network) => void;
+  disabled: boolean;
 }
 
-const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue }) => {
+const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue, disabled }) => {
   return (
-    <Listbox value={selectedValue} onChange={setSelectedValue}>
+    <Listbox value={selectedValue} onChange={setSelectedValue} disabled={disabled}>
       {({ open }) => (
         <>
           <Listbox.Button className="border-primary ring-primary focus:ring-primary focus:border-primary focus:outline-none flex flex-row justify-between w-full px-3 py-2.5 border-2 rounded-md">
