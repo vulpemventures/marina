@@ -1,23 +1,12 @@
-import {
-  WALLET_CREATE_SUCCESS,
-  WALLET_RESTORE_SUCCESS,
-  WALLET_SET_ADDRESS_SUCCESS,
-} from './action-types';
+import { WALLET_SET_ADDRESS_SUCCESS, WALLET_SET_DATA } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { Address } from '../../../domain/address';
 import { ActionWithPayload } from '../../../domain/common';
 
-export function createWallet(walletData: WalletData): AnyAction {
+export function setWalletData(walletData: WalletData): AnyAction {
   return {
-    type: WALLET_CREATE_SUCCESS,
-    payload: walletData,
-  };
-}
-
-export function restoreWallet(walletData: WalletData): AnyAction {
-  return {
-    type: WALLET_RESTORE_SUCCESS,
+    type: WALLET_SET_DATA,
     payload: walletData,
   };
 }

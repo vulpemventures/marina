@@ -1,7 +1,6 @@
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IWallet } from '../../../domain/wallet';
-import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 
@@ -19,44 +18,15 @@ export function walletReducer(
   { type, payload }: AnyAction
 ): IWallet {
   switch (type) {
-    case ACTION_TYPES.WALLET_CREATE_SUCCESS: {
+    case ACTION_TYPES.WALLET_SET_DATA: {
       return {
         ...state,
-        errors: undefined,
         masterXPub: payload.masterXPub,
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
         utxoMap: {},
-      };
-    }
-
-    case ACTION_TYPES.WALLET_CREATE_FAILURE: {
-      return {
-        ...state,
-        errors: { create: { message: payload.error.message } as IError },
-      };
-    }
-
-    case ACTION_TYPES.WALLET_RESTORE_SUCCESS: {
-      return {
-        ...state,
-        errors: undefined,
-        restored: true,
-        masterXPub: payload.masterXPub,
-        masterBlindingKey: payload.masterBlindingKey,
-        encryptedMnemonic: payload.encryptedMnemonic,
-        passwordHash: payload.passwordHash,
-        confidentialAddresses: payload.confidentialAddresses,
-        utxoMap: {},
-      };
-    }
-
-    case ACTION_TYPES.WALLET_RESTORE_FAILURE: {
-      return {
-        ...state,
-        errors: { restore: { message: payload.error.message } as IError },
       };
     }
 
@@ -65,13 +35,6 @@ export function walletReducer(
         ...state,
         errors: undefined,
         confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
-      };
-    }
-
-    case ACTION_TYPES.WALLET_SET_ADDRESS_FAILURE: {
-      return {
-        ...state,
-        errors: { address: { message: payload.error.message } as IError },
       };
     }
 
