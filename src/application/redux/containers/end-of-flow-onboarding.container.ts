@@ -6,7 +6,6 @@ import EndOfFlowOnboardingView, {
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
   return {
-    wallet: state.wallet,
     onboarding: state.onboarding,
     network: state.app.network,
   };

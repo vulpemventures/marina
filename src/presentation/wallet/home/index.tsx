@@ -14,7 +14,6 @@ import ButtonList from '../../components/button-list';
 import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
-import useLottieLoader from '../../hooks/use-lottie-loader';
 import { fromSatoshiStr } from '../../utils';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
@@ -57,10 +56,6 @@ const HomeView: React.FC<HomeProps> = ({
   const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
-
-  // Populate ref div with svg animation
-  const mermaidLoaderRef = React.useRef(null);
-  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     switch (transactionStep) {

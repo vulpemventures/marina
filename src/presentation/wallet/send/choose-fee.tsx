@@ -70,10 +70,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const [feeChange, setFeeChange] = useState<Address>();
   const [topup, setTopup] = useState<Topup.AsObject>();
 
-  // Populate ref div with svg animations
-  const mermaidLoaderRef = React.useRef(null);
   const circleLoaderRef = React.useRef(null);
-  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
 
   useEffect(() => {

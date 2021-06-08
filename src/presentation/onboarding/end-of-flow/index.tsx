@@ -11,23 +11,17 @@ import { createWalletFromMnemonic } from '../../../application/utils/wallet';
 import { createMnemonic } from '../../../domain/mnemonic';
 import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
-import { IWallet } from '../../../domain/wallet';
+import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
-import useLottieLoader from '../../hooks/use-lottie-loader';
 
 export interface EndOfFlowProps {
-  wallet: IWallet;
   onboarding: OnboardingState;
   network: Network;
 }
 
-const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallet, onboarding, network }) => {
+const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ onboarding, network }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
-
-  // Populate ref div with svg animation
-  const mermaidLoaderRef = React.useRef(null);
-  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
 
   useEffect(() => {
     (async () => {
@@ -53,9 +47,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ wallet, onboarding,
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen p-24" ref={mermaidLoaderRef} />
-    );
+    return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
   }
 
   return (
