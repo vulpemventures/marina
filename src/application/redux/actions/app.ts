@@ -2,9 +2,7 @@ import {
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
   VERIFICATION_SUCCESS,
-  VERIFICATION_FAILURE,
   ONBOARDING_COMPLETETED,
-  ONBOARDING_FAILURE,
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
   START_PERIODIC_UPDATE,
@@ -18,18 +16,8 @@ export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
   type: VERIFICATION_SUCCESS,
 });
 
-export const verifyWalletFailure: ActionCreator<AnyAction> = (error: Error) => ({
-  type: VERIFICATION_FAILURE,
-  payload: { error },
-});
-
 export const onBoardingCompleted = (): AnyAction => ({
   type: ONBOARDING_COMPLETETED,
-});
-
-export const onBoardingFailure = (error: Error): AnyAction => ({
-  type: ONBOARDING_FAILURE,
-  payload: { error },
 });
 
 export function logIn(password: Password, passwordHash: PasswordHash): AnyAction {
