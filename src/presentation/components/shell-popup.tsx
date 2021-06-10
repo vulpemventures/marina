@@ -8,6 +8,7 @@ import { updateUtxos } from '../../application/redux/actions/utxos';
 import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
 
 interface Props {
+  btnDisabled?: boolean;
   backBtnCb?: () => void;
   backgroundImagePath?: string;
   children: React.ReactNode;
@@ -24,6 +25,7 @@ const ShellPopUp: React.FC<Props> = ({
   className = '',
   currentPage,
   hasBackBtn = true,
+  btnDisabled = false,
 }: Props) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -54,6 +56,7 @@ const ShellPopUp: React.FC<Props> = ({
   if (hasBackBtn && !currentPage) {
     nav = (
       <button
+        disabled={btnDisabled}
         className="focus:outline-none flex items-center justify-center w-full h-8"
         onClick={handleBackBtn}
       >
@@ -67,7 +70,7 @@ const ShellPopUp: React.FC<Props> = ({
   } else if (hasBackBtn && currentPage) {
     nav = (
       <span className="flex items-center justify-center w-full h-8">
-        <button className="focus:outline-none" onClick={handleBackBtn}>
+        <button disabled={btnDisabled} className="focus:outline-none" onClick={handleBackBtn}>
           <img
             className="top-13 absolute left-0 w-5 ml-4"
             src="assets/images/chevron-left.svg"
@@ -87,10 +90,10 @@ const ShellPopUp: React.FC<Props> = ({
     <div id="shell-popup" className="grid h-screen">
       <header>
         <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center justify-between h-12 border-b-2">
-          <button onClick={goToHome}>
+          <button disabled={btnDisabled} onClick={goToHome}>
             <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
           </button>
-          <button onClick={openMenuModal}>
+          <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>
         </div>

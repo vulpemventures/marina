@@ -76,6 +76,7 @@ const SettingsNetworks: React.FC = () => {
 
   return (
     <ShellPopUp
+      btnDisabled={isLoading}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Networks"
