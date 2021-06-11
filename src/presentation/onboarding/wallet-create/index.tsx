@@ -1,24 +1,20 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
 import cx from 'classnames';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { AppContext } from '../../../application/store/context';
 import { INITIALIZE_SEED_PHRASE_ROUTE, SETTINGS_TERMS_ROUTE } from '../../routes/constants';
-import { DispatchOrThunk } from '../../../domain/common';
-import { setPassword } from '../../../application/store/actions/onboarding';
+import { useDispatch } from 'react-redux';
+import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
+import { generateMnemonic } from 'bip39';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface WalletCreateFormValues {
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
-}
-
-interface WalletCreateFormProps {
-  dispatch(param: DispatchOrThunk): any;
-  history: RouteComponentProps['history'];
 }
 
 const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
@@ -102,6 +98,11 @@ const WalletCreateForm = (props: FormikProps<WalletCreateFormValues>) => {
   );
 };
 
+interface WalletCreateFormProps {
+  dispatch: ProxyStoreDispatch;
+  history: RouteComponentProps['history'];
+}
+
 const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateFormValues>({
   mapPropsToValues: (): WalletCreateFormValues => ({
     confirmPassword: '',
@@ -121,7 +122,9 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(setPassword(values.password));
+    props
+      .dispatch(setPasswordAndOnboardingMnemonic(values.password, generateMnemonic()))
+      .catch(console.error);
     props.history.push(INITIALIZE_SEED_PHRASE_ROUTE);
   },
 
@@ -129,8 +132,9 @@ const WalletCreateEnhancedForm = withFormik<WalletCreateFormProps, WalletCreateF
 })(WalletCreateForm);
 
 const WalletCreate: React.FC<WalletCreateFormProps> = () => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+
   return (
     <Shell className="space-y-10">
       <h1 className="mb-5 text-3xl font-medium">Create password</h1>
@@ -154,7 +158,7 @@ const OpenTerms: React.FC = () => {
   return (
     /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
     <a className="text-primary" href="#" onClick={handleClick}>
-      terms os service
+      terms of service
     </a>
   );
 };

@@ -1,11 +1,14 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { AppContext } from '../../application/store/context';
-import { flushTx, updateUtxosAssetsBalances } from '../../application/store/actions';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { updateUtxos } from '../../application/redux/actions/utxos';
+import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
 
 interface Props {
+  btnDisabled?: boolean;
   backBtnCb?: () => void;
   backgroundImagePath?: string;
   children: React.ReactNode;
@@ -22,25 +25,24 @@ const ShellPopUp: React.FC<Props> = ({
   className = '',
   currentPage,
   hasBackBtn = true,
-  refreshCb,
+  btnDisabled = false,
 }: Props) => {
   const history = useHistory();
-  const [{ wallets }, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
   //
-  const goToHome = () => {
+  const goToHome = async () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(updateUtxosAssetsBalances(true, refreshCb, (error) => console.log(error)));
+      dispatch(updateUtxos()).catch(console.error);
+      dispatch(updateTxs()).catch(console.error);
     }
-    if (wallets[0].pendingTx) {
-      dispatch(flushTx(() => history.push(DEFAULT_ROUTE)));
-    } else {
-      history.push(DEFAULT_ROUTE);
-    }
+    await dispatch(flushPendingTx());
+    history.push(DEFAULT_ROUTE);
   };
   const handleBackBtn = () => {
     if (backBtnCb) {
@@ -54,6 +56,7 @@ const ShellPopUp: React.FC<Props> = ({
   if (hasBackBtn && !currentPage) {
     nav = (
       <button
+        disabled={btnDisabled}
         className="focus:outline-none flex items-center justify-center w-full h-8"
         onClick={handleBackBtn}
       >
@@ -67,7 +70,7 @@ const ShellPopUp: React.FC<Props> = ({
   } else if (hasBackBtn && currentPage) {
     nav = (
       <span className="flex items-center justify-center w-full h-8">
-        <button className="focus:outline-none" onClick={handleBackBtn}>
+        <button disabled={btnDisabled} className="focus:outline-none" onClick={handleBackBtn}>
           <img
             className="top-13 absolute left-0 w-5 ml-4"
             src="assets/images/chevron-left.svg"
@@ -87,10 +90,10 @@ const ShellPopUp: React.FC<Props> = ({
     <div id="shell-popup" className="grid h-screen">
       <header>
         <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center justify-between h-12 border-b-2">
-          <button onClick={goToHome}>
+          <button disabled={btnDisabled} onClick={goToHome}>
             <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
           </button>
-          <button onClick={openMenuModal}>
+          <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>
         </div>

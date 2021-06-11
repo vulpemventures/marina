@@ -1,14 +1,3 @@
-import { toOutpoint, UtxoInterface } from 'ldk';
-
-export const utxoMapToArray = (utxoMap: Map<string, UtxoInterface>): UtxoInterface[] => {
-  const utxos: UtxoInterface[] = [];
-  utxoMap.forEach((utxo) => {
-    utxos.push(utxo);
-  });
-  return utxos;
-};
-
-export const toStringOutpoint = (utxo: UtxoInterface) => {
-  const outpoint = toOutpoint(utxo);
+export const toStringOutpoint = (outpoint: { txid: string; vout: number }) => {
   return `${outpoint.txid}:${outpoint.vout}`;
 };

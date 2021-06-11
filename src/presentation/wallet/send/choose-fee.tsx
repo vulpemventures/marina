@@ -1,368 +1,235 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useHistory, useLocation } from 'react-router';
-import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
-import { browser } from 'webextension-polyfill-ts';
+import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router';
+import { greedyCoinSelector, MasterPublicKey, RecipientInterface, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
-import {
-  getAllAssetBalances,
-  setAddress,
-  setFeeAssetAndAmount,
-  setFeeChangeAddress,
-  setPendingTx,
-  setTopup,
-} from '../../../application/store/actions';
-import { Transaction } from '../../../domain/wallet/value-objects/transaction';
-import { Address } from '../../../domain/wallet/value-objects';
 import {
   feeAmountFromTx,
   feeLevelToSatsPerByte,
-  fetchAssetsFromTaxi,
   fetchTopupFromTaxi,
   fillTaxiTx,
   imgPathMapMainnet,
   imgPathMapRegtest,
   lbtcAssetByNetwork,
-  nextAddressForWallet,
   taxiURL,
-  usdtAssetHash,
-  utxoMapToArray,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { IWallet } from '../../../domain/wallet/wallet';
+import { IWallet } from '../../../domain/wallet';
+import { IAssets } from '../../../domain/assets';
+import { useDispatch } from 'react-redux';
+import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import {
+  setFeeAssetAndAmount,
+  setFeeChangeAddress,
+  setPset,
+} from '../../../application/redux/actions/transaction';
+import { setAddress } from '../../../application/redux/actions/wallet';
+import { Network } from '../../../domain/network';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { Address, createAddress } from '../../../domain/address';
+import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 
-interface LocationState {
-  changeAddress: Address;
+export interface ChooseFeeProps {
+  network: Network;
+  assets: IAssets;
+  changeAddress?: Address;
+  sendAmount: number;
+  sendAddress?: Address;
+  sendAsset: string;
+  wallet: IWallet;
+  balances: BalancesByAsset;
+  taxiAssets: string[];
+  lbtcAssetHash: string;
+  masterPubKey: MasterPublicKey;
 }
 
-const ChooseFee: React.FC = () => {
+const ChooseFeeView: React.FC<ChooseFeeProps> = ({
+  network,
+  assets,
+  changeAddress,
+  sendAmount,
+  sendAddress,
+  sendAsset,
+  wallet,
+  balances,
+  taxiAssets,
+  lbtcAssetHash,
+  masterPubKey,
+}) => {
   const history = useHistory();
-  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
-  const { state } = useLocation<LocationState>();
-  const [feeCurrency, setFeeCurrency] = useState<string>('');
-  const [feeLevel, setFeeLevel] = useState<string>('');
-  const [satsPerByte, setSatsPerByte] = useState<number>(0);
-  const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
-  const [supportedAssets, setSupportedAssets] = useState<string[]>([]);
-  //const [isWarningFee] = useState<boolean>(true);
-  const unspents = utxoMapToArray(wallets[0].utxoMap);
-  const [balances, setBalances] = useState<{ [assetHash: string]: number }>({});
-  const [errorMessage, setErrorMessage] = useState('');
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  // Populate ref div with svg animations
-  const mermaidLoaderRef = React.useRef(null);
+  const [feeCurrency, setFeeCurrency] = useState<string | undefined>(lbtcAssetHash);
+  const [feeLevel] = useState<string>('50');
+  const [unsignedPendingTx, setUnsignedPendingTx] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [loading, setLoading] = useState(false);
+  const [feeChange, setFeeChange] = useState<Address>();
+  const [topup, setTopup] = useState<Topup.AsObject>();
+
   const circleLoaderRef = React.useRef(null);
-  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
 
-  const changeAddressGetter = useCallback(
-    (asset: string): string => {
-      if (asset === transaction.asset) {
-        return transaction.changeAddress!.value;
-      }
-      return transaction.feeChangeAddress!.value;
-    },
-    [transaction.asset, transaction.changeAddress, transaction.feeChangeAddress]
-  );
-
-  const receipients: RecipientInterface[] = useMemo(
-    () => [
-      {
-        asset: transaction.asset,
-        value: transaction.amountInSatoshi,
-        address: transaction.receipientAddress?.value ?? '',
-      },
-    ],
-    [transaction.amountInSatoshi, transaction.asset, transaction.receipientAddress]
-  );
-
   useEffect(() => {
-    dispatch(getAllAssetBalances(setBalances, (error) => setErrorMessage(error.message)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!loading) updatePendingTx().catch(console.error);
+  }, [feeCurrency]);
 
-  useEffect(() => {
-    if (supportedAssets.length <= 0) {
-      void (async (): Promise<void> => {
-        let allAssets: string[] = [lbtcAssetByNetwork(app.network.value)];
-        try {
-          const taxiAssets: string[] = await fetchAssetsFromTaxi(taxiURL[app.network.value]);
-          allAssets = allAssets.concat(taxiAssets);
-        } catch (error) {
-          let msg = error.message;
-          if (error.code === 2) {
-            msg = 'Taxi is not available';
-          }
-          setErrorMessage(msg);
-        } finally {
-          setSupportedAssets(allAssets);
-          setFeeLevel('50');
-        }
-      })();
-    }
-  }, [app.network.value, supportedAssets.length]);
+  const updatePendingTx = async () => {
+    if (!feeCurrency) return;
+    setLoading(true);
+    setErrorMessage(undefined);
+    try {
+      if (!sendAddress) throw new Error('sendAddress is undefined');
 
-  // Set feeCurrency when balances and supportedAssets are ready (or change)
-  useEffect(() => {
-    if (Object.keys(balances).length === 0 || supportedAssets.length === 0) return;
-    // L-BTC if positive L-BTC balance only
-    if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
-      setFeeCurrency(supportedAssets[0]);
-    }
-    // USDt if positive USDt balance only
-    else if (!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
-      setFeeCurrency(supportedAssets[1]);
-    } else {
-      setFeeCurrency(supportedAssets[0]);
-    }
-  }, [balances, supportedAssets]);
-
-  /**
-   * Set fee change address
-   */
-  useEffect(() => {
-    if (supportedAssets.length > 0) {
-      void (async (): Promise<void> => {
-        if (feeCurrency !== transaction.asset && transaction.feeChangeAddress === undefined) {
-          try {
-            const wallet: IWallet = { ...wallets[0] };
-            const feeChangeAddress = await nextAddressForWallet(wallet, app.network.value, true);
-            dispatch(setFeeChangeAddress(feeChangeAddress));
-            dispatch(setAddress(feeChangeAddress));
-          } catch (error) {
-            console.log(error);
-            setErrorMessage(error.message);
-          }
-        }
-      })();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    app.network.value,
-    feeCurrency,
-    supportedAssets.length,
-    transaction.asset,
-    transaction.feeChangeAddress,
-    wallets,
-  ]);
-
-  // Build regular tx (no taxi)
-  useEffect(() => {
-    if (supportedAssets.length > 0) {
-      if (
-        feeCurrency === transaction.asset ||
-        (transaction.feeChangeAddress && transaction.feeChangeAddress.value !== '')
-      ) {
-        if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
-          // this check prevents to build a tx in case the fee change address isn't
-          // yet available but needed for the tx.
-          try {
-            const w = walletFromCoins(unspents, app.network.value);
-
-            const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
-            if (currentSatsPerByte !== satsPerByte) {
-              const tx: string = w.buildTx(
-                w.createTx(),
-                receipients,
-                greedyCoinSelector(),
-                changeAddressGetter,
-                true,
-                currentSatsPerByte
-              );
-              setUnsignedPendingTx(tx);
-              setSatsPerByte(currentSatsPerByte);
-            }
-          } catch (error) {
-            console.log(error);
-            setErrorMessage(error.message);
-          }
-        }
-      }
-    }
-  }, [
-    app.network.value,
-    changeAddressGetter,
-    feeCurrency,
-    feeLevel,
-    receipients,
-    satsPerByte,
-    supportedAssets,
-    supportedAssets.length,
-    transaction.amountInSatoshi,
-    transaction.asset,
-    transaction.changeAddress,
-    transaction.feeChangeAddress,
-    transaction.receipientAddress,
-    unspents,
-  ]);
-
-  // Fetch topup utxo from Taxi
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      if (
-        feeCurrency &&
-        feeCurrency !== lbtcAssetByNetwork(app.network.value) &&
-        Object.keys(transaction.taxiTopup).length === 0
-      ) {
-        try {
-          const taxiTopup = await fetchTopupFromTaxi(taxiURL[app.network.value], feeCurrency);
-          dispatch(setTopup(taxiTopup));
-        } catch (error) {
-          console.error(error.message);
-          setErrorMessage(error.message);
-        }
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [app.network.value, feeCurrency, transaction.taxiTopup]);
-
-  // Fill Taxi tx
-  useEffect(() => {
-    if (
-      Object.keys(transaction.taxiTopup).length !== 0 &&
-      feeCurrency === usdtAssetHash(assets[app.network.value])
-    ) {
-      const taxiPayout = {
-        value: transaction.taxiTopup.topup?.assetAmount,
-        asset: transaction.taxiTopup.topup?.assetHash,
-        address: '',
-      } as RecipientInterface;
-      try {
-        const tx: string = fillTaxiTx(
-          transaction.taxiTopup.topup?.partial as string,
-          unspents,
-          receipients,
-          taxiPayout,
-          greedyCoinSelector(),
-          changeAddressGetter
-        );
-        setUnsignedPendingTx(tx);
-      } catch (error) {
-        console.log(error);
-        setErrorMessage(error.message);
-      }
-    }
-  }, [
-    app.network.value,
-    assets,
-    changeAddressGetter,
-    feeCurrency,
-    receipients,
-    transaction.asset,
-    transaction.feeChangeAddress,
-    transaction.taxiTopup,
-    unspents,
-  ]);
-
-  const handleConfirm = () => {
-    let feeAmount: number;
-    if (feeCurrency === lbtcAssetByNetwork(app.network.value)) {
-      feeAmount = feeAmountFromTx(unsignedPendingTx);
-    } else {
-      feeAmount = transaction.taxiTopup?.topup?.assetAmount as number;
-    }
-
-    // If user empty asset balance we don't set the change address
-    const totalSats = feeAmount + transaction.amountInSatoshi;
-    const balanceAsset = balances[transaction.asset];
-
-    dispatch(
-      setPendingTx(
-        Transaction.create({
-          value: unsignedPendingTx,
-          sendAddress: transaction.receipientAddress?.value ?? '',
-          sendAsset: transaction.asset,
-          sendAmount: transaction.amountInSatoshi,
-          feeAsset: feeCurrency,
-          feeAmount: feeAmount,
-          changeAddress: totalSats === balanceAsset ? undefined : state.changeAddress,
-        }),
-        () => {
-          dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount));
-          history.push({
-            pathname: SEND_CONFIRMATION_ROUTE,
-            state: { changeAddress: state.changeAddress },
-          });
-          browser.browserAction.setBadgeText({ text: '1' }).catch((ignore) => ({}));
+      const recipients = [
+        {
+          asset: sendAsset,
+          value: sendAmount,
+          address: sendAddress.value,
         },
-        (error) => {
-          console.log(error);
-          setErrorMessage(error.message);
-        }
-      )
+      ];
+
+      if (feeCurrency === lbtcAssetByNetwork(network)) {
+        createTx(recipients);
+      } else if (taxiAssets.includes(feeCurrency)) {
+        await createTaxiTx(recipients);
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage((err as Error).message);
+      setFeeCurrency(undefined);
+      setFeeChange(undefined);
+      setTopup(undefined);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createTx = (recipients: RecipientInterface[]) => {
+    // no taxi
+    setFeeChange(undefined);
+    const w = walletFromCoins(Object.values(wallet.utxoMap), network);
+    const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
+    const tx: string = w.buildTx(
+      w.createTx(),
+      recipients,
+      greedyCoinSelector(),
+      () => changeAddress?.value,
+      true,
+      currentSatsPerByte
     );
+    setUnsignedPendingTx(tx);
+    return;
+  };
+
+  const createTaxiTx = async (recipients: RecipientInterface[]) => {
+    if (!feeCurrency) throw new Error('feeCurrency is undefined');
+
+    let taxiTopup = topup;
+    if (!taxiTopup || feeCurrency !== taxiTopup.assetHash) {
+      taxiTopup = (await fetchTopupFromTaxi(taxiURL[network], feeCurrency)).topup;
+      setTopup(taxiTopup);
+    }
+
+    if (!taxiTopup) {
+      throw new Error('Taxi topup is undefined');
+    }
+
+    const taxiPayout: RecipientInterface = {
+      value: taxiTopup.assetAmount,
+      asset: taxiTopup.assetHash,
+      address: '',
+    };
+
+    let nextChangeAddr = feeChange;
+    if (!nextChangeAddr) {
+      const next = await masterPubKey.getNextChangeAddress();
+      nextChangeAddr = createAddress(next.confidentialAddress, next.derivationPath);
+      setFeeChange(nextChangeAddr);
+    }
+
+    const changeGetter = (asset: string) => {
+      if (asset === sendAsset) {
+        return changeAddress?.value;
+      }
+      return nextChangeAddr?.value;
+    };
+
+    const tx: string = fillTaxiTx(
+      taxiTopup.partial,
+      Object.values(wallet.utxoMap),
+      recipients,
+      taxiPayout,
+      greedyCoinSelector(),
+      changeGetter
+    );
+
+    setUnsignedPendingTx(tx);
+    return;
+  };
+
+  // send the transaction
+  const handleConfirm = async () => {
+    if (!feeCurrency) return;
+
+    setLoading(true);
+    try {
+      let feeAmount: number;
+      if (feeCurrency === lbtcAssetByNetwork(network)) {
+        feeAmount = feeAmountFromTx(unsignedPendingTx);
+      } else {
+        feeAmount = topup?.assetAmount || 0;
+      }
+
+      await Promise.all([
+        dispatch(setPset(unsignedPendingTx)),
+        dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount)),
+      ]);
+
+      if (feeChange) {
+        await Promise.all([
+          dispatch(setFeeChangeAddress(feeChange)),
+          dispatch(setAddress(feeChange)),
+        ]);
+      }
+
+      history.push({
+        pathname: SEND_CONFIRMATION_ROUTE,
+      });
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackBtn = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
-  const handlePayFees = (e: any, assetHash: string) => {
+  const handlePayFees = (assetHash: string) => {
     if (feeCurrency !== assetHash) {
-      setFeeCurrency(assetHash);
       setUnsignedPendingTx('');
-      setSatsPerByte(0);
-      setTopup({});
+      setFeeCurrency(assetHash);
     }
   };
 
-  /* const warningFee = (
-    <div className="flex flex-row gap-2 mt-5">
-      <img className="w-4 h-4" src={'assets/images/warning.svg'} alt="warning" />
-      <p className="font-regular text-xs text-left">
-        9.99862 L-BTC will be sent in order to cover fee
-      </p>
-    </div>
-  ); */
+  const getFeeCurrencyImgPath = (): string => {
+    let img: string = imgPathMapMainnet[feeCurrency || ''];
+    if (network === 'regtest') {
+      img = imgPathMapRegtest[assets[feeCurrency || '']?.ticker];
+    }
 
-  // Choose Fee buttons
-  const chooseFeeLbtcButton = (
-    <Button
-      className="flex-1"
-      isOutline={feeCurrency !== lbtcAssetByNetwork(app.network.value)}
-      key={1}
-      onClick={handlePayFees}
-      roundedMd={true}
-      textBase={true}
-      extraData={supportedAssets[0]}
-    >
-      L-BTC
-    </Button>
-  );
-  const chooseFeeUsdtButton = (
-    <Button
-      className="flex-1"
-      isOutline={feeCurrency === lbtcAssetByNetwork(app.network.value)}
-      key={2}
-      onClick={handlePayFees}
-      roundedMd={true}
-      textBase={true}
-      extraData={supportedAssets[1]}
-    >
-      USDt
-    </Button>
-  );
-  let chooseFeeButtons;
-  // Show only L-BTC if positive L-BTC balance only
-  if (!!balances[supportedAssets[0]] && !balances[supportedAssets[1]]) {
-    chooseFeeButtons = chooseFeeLbtcButton;
-  }
-  // Show only USDt if positive USDt balance only
-  if (!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
-    chooseFeeButtons = chooseFeeUsdtButton;
-  }
-  // Show L-BTC and USDt if both have positive balances
-  if (!!balances[supportedAssets[0]] && !!balances[supportedAssets[1]]) {
-    chooseFeeButtons = [chooseFeeLbtcButton, chooseFeeUsdtButton];
-  }
+    if (!img) {
+      return imgPathMapMainnet[''];
+    }
 
-  if (supportedAssets.length <= 0) {
-    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
-  }
+    return img;
+  };
 
   return (
     <ShellPopUp
@@ -372,18 +239,11 @@ const ChooseFee: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={formatDecimalAmount(fromSatoshi(balances[feeCurrency] ?? 0))}
-        assetImgPath={
-          app.network.value === 'regtest'
-            ? imgPathMapRegtest[assets[app.network.value][feeCurrency]?.ticker] ??
-              imgPathMapRegtest['']
-            : imgPathMapMainnet[feeCurrency] ?? imgPathMapMainnet['']
-        }
-        assetHash={transaction.asset}
-        assetTicker={assets[app.network.value][feeCurrency]?.ticker ?? ''}
+        assetBalance={formatDecimalAmount(fromSatoshi(balances[feeCurrency || lbtcAssetHash] ?? 0))}
+        assetImgPath={getFeeCurrencyImgPath()}
+        assetHash={sendAsset}
+        assetTicker={assets[feeCurrency || '']?.ticker ?? ''}
         className="mt-4"
-        fiatBalance={120}
-        fiatCurrency="$"
       />
       <div className="w-48 mx-auto border-b-0.5 border-graySuperLight pt-2 mb-6" />
 
@@ -392,83 +252,53 @@ const ChooseFee: React.FC = () => {
           I pay fee in:
         </p>
         <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-          {chooseFeeButtons}
+          {[lbtcAssetHash, ...taxiAssets].map((assetHash) => (
+            <Button
+              className="flex-1"
+              isOutline={feeCurrency !== assetHash}
+              key={assetHash}
+              onClick={() => handlePayFees(assetHash)}
+              roundedMd={true}
+              textBase={true}
+              extraData={assetHash}
+              disabled={loading}
+            >
+              {assets[assetHash]?.ticker || assetHash.slice(0, 4).toUpperCase()}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {feeCurrency && feeCurrency === lbtcAssetByNetwork(app.network.value) && (
+      {feeCurrency && unsignedPendingTx.length > 0 && (
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
             <span className="font-regular mr-6 text-base">
-              {unsignedPendingTx ? (
-                `${fromSatoshiStr(feeAmountFromTx(unsignedPendingTx))} L-BTC`
-              ) : errorMessage.length ? (
-                <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
-              ) : (
-                <div className="h-10 mx-auto" ref={circleLoaderRef} />
-              )}
+              {!taxiAssets.includes(feeCurrency)
+                ? `${fromSatoshiStr(feeAmountFromTx(unsignedPendingTx))} L-BTC`
+                : `${fromSatoshiStr(topup?.assetAmount || 0)} USDt *`}
             </span>
           </div>
-          {/* <div
-          className={cx({
-            'track-50': feeLevel === '50',
-            'track-100': feeLevel === '100',
-          })}
-        >
-          <div className="text-primary flex flex-row justify-between mt-12 text-sm antialiased font-bold">
-            <span>Slow</span>
-            <span>Average</span>
-            <span>Fast</span>
-          </div>
-          <input
-            className="bg-graySuperLight focus:outline-none w-11/12"
-            min="0"
-            max="100"
-            onChange={(event) => setFeeLevel(event.target.value)}
-            step="50"
-            type="range"
-          />
-          <div className="text-gray mt-1 text-xs font-medium text-center">
-            {unsignedPendingTx ? (
-              <span className="mt-3">{`Fee: ${fromSatoshiStr(feeAmountFromTx(unsignedPendingTx))} L-BTC`}</span>
-            ) : errorMessage.length ? (
-              <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
-            ) : (
-              <div className="h-10 mx-auto" ref={circleLoaderRef} />
-            )}
-          </div>
-          {isWarningFee && warningFee}
-        </div> */}
+          {taxiAssets.includes(feeCurrency) && (
+            <p className="text-primary mt-3.5 text-xs font-medium text-left">
+              * Fee paid with Liquid taxi 🚕
+            </p>
+          )}
         </>
       )}
-      {feeCurrency && feeCurrency !== lbtcAssetByNetwork(app.network.value) && (
-        <>
-          <div className="flex flex-row items-baseline justify-between mt-12">
-            <span className="text-lg font-medium">Fee:</span>
-            <span className="font-regular mr-6 text-base">
-              {transaction.taxiTopup?.topup ? (
-                `${fromSatoshiStr(transaction.taxiTopup.topup.assetAmount)} USDt *`
-              ) : errorMessage.length ? (
-                <p className="text-red line-clamp-2 text-xs text-left break-all">{errorMessage}</p>
-              ) : (
-                <div className="h-10 mx-auto" ref={circleLoaderRef} />
-              )}
-            </span>
-          </div>
-          <p className="text-primary mt-3.5 text-xs font-medium text-left">
-            * Fee paid with Liquid taxi 🚕
-          </p>
-        </>
+      {errorMessage && (
+        <p className="text-red line-clamp-2 mt-3 text-xs text-left break-all">{errorMessage}</p>
       )}
+      {loading && <div className="h-10 mx-auto" ref={circleLoaderRef} />}
+
       <Button
         className="bottom-20 right-8 absolute"
         onClick={handleConfirm}
-        disabled={supportedAssets.length <= 0 || unsignedPendingTx === ''}
+        disabled={loading || feeCurrency === undefined || unsignedPendingTx === ''}
       >
         Confirm
       </Button>
     </ShellPopUp>
   );
 };
-export default ChooseFee;
+export default ChooseFeeView;

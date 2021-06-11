@@ -26,7 +26,6 @@ export default class Broker {
 
         const { id, name, params } = event.data;
         if (!id || !name) return;
-
         // forward message to the background script
         this.port.postMessage({
           id,

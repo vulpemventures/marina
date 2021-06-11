@@ -37,7 +37,7 @@ import {
 } from './constants';
 
 // Connect
-import ConnectEnable from '../connect/enable';
+import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
 import ConnectSpendPset from '../connect/spend-pset';
 import ConnectSignMsg from '../connect/sign-msg';
@@ -47,26 +47,26 @@ import Welcome from '../onboarding/welcome';
 import SelectAction from '../onboarding/select-action';
 import WalletRestore from '../onboarding/wallet-restore';
 import WalletCreate from '../onboarding/wallet-create';
-import EndOfFlow from '../onboarding/end-of-flow';
-import SeedReveal from '../onboarding/seed-reveal';
-import SeedConfirm from '../onboarding/seed-confirm';
+import EndOfFlow from '../../application/redux/containers/end-of-flow-onboarding.container';
+import SeedReveal from '../../application/redux/containers/seed-reveal.container';
+import SeedConfirm from '../../application/redux/containers/seed-confirm.container';
 // Wallet
-import Home from '../wallet/home';
+import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
-import Transactions from '../wallet/transactions';
-import Receive from '../wallet/receive';
-import SelectAsset from '../wallet/send/select-asset';
-import AddressAmount from '../wallet/send/address-amount';
-import ChooseFee from '../wallet/send/choose-fee';
-import Confirmation from '../wallet/send/confirmation';
-import SendEndOfFlow from '../wallet/send/end-of-flow';
-import PaymentSuccess from '../wallet/send/payment-success';
+import Transactions from '../../application/redux/containers/transactions.container';
+import Receive from '../../application/redux/containers/receive.container';
+import SelectAsset from '../../application/redux/containers/select-asset.container';
+import AddressAmount from '../../application/redux/containers/address-amount.container';
+import ChooseFee from '../../application/redux/containers/choose-fee.container';
+import Confirmation from '../../application/redux/containers/confirmation.container';
+import SendEndOfFlow from '../../application/redux/containers/end-of-flow.container';
+import PaymentSuccess from '../../application/redux/containers/payment-success.container';
 import PaymentError from '../wallet/send/payment-error';
 // Settings
 import SettingsMenuSecurity from '../settings/menu-security';
 import SettingsMenuSettings from '../settings/menu-settings';
 import SettingsMenuInfo from '../settings/menu-info';
-import SettingsShowMnemonic from '../settings/show-mnemonic';
+import SettingsShowMnemonic from '../../application/redux/containers/settings-show-mnemonic.container';
 import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
@@ -110,7 +110,7 @@ const Routes: React.FC = () => {
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
       {/*Connect*/}
-      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnable} />
+      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />

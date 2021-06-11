@@ -1,30 +1,17 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
+import {
+  connectWithConnectData,
+  WithConnectDataProps,
+} from '../../application/redux/containers/with-connect-data.container';
 
-const ConnectSpendPset: React.FC = () => {
+const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [tx, setTx] = useState<
-    | {
-        hostname?: string;
-        pset?: string;
-      }
-    | undefined
-  >(undefined);
-
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      const network = (await repos.app.getApp()).network.value;
-      const data = await repos.connect.getConnectData();
-      setTx(data[network].tx);
-    })();
-  }, []);
-
   const windowProxy = new WindowProxy();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
@@ -64,7 +51,7 @@ const ConnectSpendPset: React.FC = () => {
     >
       {error.length === 0 ? (
         <>
-          <h1 className="mt-8 text-2xl font-medium break-all">{tx?.hostname}</h1>
+          <h1 className="mt-8 text-2xl font-medium break-all">{connectData.tx?.hostname}</h1>
 
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
@@ -105,4 +92,4 @@ const ConnectSpendPset: React.FC = () => {
   );
 };
 
-export default ConnectSpendPset;
+export default connectWithConnectData(ConnectSpendPset);

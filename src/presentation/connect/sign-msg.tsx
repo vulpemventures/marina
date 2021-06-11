@@ -1,29 +1,17 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import { repos } from '../../infrastructure';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
+import {
+  connectWithConnectData,
+  WithConnectDataProps,
+} from '../../application/redux/containers/with-connect-data.container';
 
-const ConnectSignMsg: React.FC = () => {
+const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [msg, setMsg] = useState<
-    | {
-        hostname?: string;
-        message?: string;
-      }
-    | undefined
-  >(undefined);
-
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      const network = (await repos.app.getApp()).network.value;
-      const data = await repos.connect.getConnectData();
-      setMsg(data[network].msg);
-    })();
-  }, []);
 
   const windowProxy = new WindowProxy();
 
@@ -64,11 +52,11 @@ const ConnectSignMsg: React.FC = () => {
     >
       {error.length === 0 ? (
         <>
-          <h1 className="mt-8 text-2xl font-medium break-all">{msg?.hostname}</h1>
+          <h1 className="mt-8 text-2xl font-medium break-all">{connectData.msg?.hostname}</h1>
 
           <p className="mt-4 text-base font-medium">Requests you to sign a message</p>
 
-          <p className="text-small mt-2 font-medium"> {msg?.message}</p>
+          <p className="text-small mt-2 font-medium"> {connectData.msg?.message}</p>
 
           <div className="bottom-24 container absolute right-0 flex justify-between">
             <Button isOutline={true} onClick={handleReject} textBase={true}>
@@ -102,4 +90,4 @@ const ConnectSignMsg: React.FC = () => {
   );
 };
 
-export default ConnectSignMsg;
+export default connectWithConnectData(ConnectSignMsg);

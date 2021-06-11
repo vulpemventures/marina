@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -6,18 +6,23 @@ import Button from '../../components/button';
 import { browser } from 'webextension-polyfill-ts';
 import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
-import { deriveNewAddress, flushTx, setAddress } from '../../../application/store/actions';
-import { Address } from '../../../domain/wallet/value-objects';
+import { useDispatch } from 'react-redux';
+import { flushPendingTx, updateTxs } from '../../../application/redux/actions/transaction';
+import { Network } from '../../../domain/network';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { updateUtxos } from '../../../application/redux/actions/utxos';
 
 interface LocationState {
-  changeAddress?: Address;
   txid: string;
 }
 
-const PaymentSuccess: React.FC = () => {
-  const [{ app, wallets }, dispatch] = useContext(AppContext);
+export interface PaymentSuccessProps {
+  network: Network;
+}
+
+const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network }) => {
   const { state } = useLocation<LocationState>();
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
 
   // Populate ref div with svg animation
@@ -26,7 +31,7 @@ const PaymentSuccess: React.FC = () => {
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[app.network.value]}/tx/${state.txid}`,
+      url: `${esploraURL[network]}/tx/${state.txid}`,
       active: false,
     });
 
@@ -34,27 +39,11 @@ const PaymentSuccess: React.FC = () => {
 
   // Cleanup and change address derivation
   useEffect(() => {
-    const onSuccess = () => dispatch(flushTx());
-    // persist change addresses before unsetting the pending tx
-    if (state.changeAddress?.value) {
-      dispatch(
-        setAddress(
-          state.changeAddress,
-          () => {
-            if (wallets[0].pendingTx?.props.feeAsset !== wallets[0].pendingTx?.props.sendAsset) {
-              dispatch(deriveNewAddress(true, onSuccess, console.error));
-            } else {
-              onSuccess();
-            }
-          },
-          console.log
-        )
-      );
-    } else {
-      // Asset balance sent in full, no change
-      onSuccess();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void (async () => {
+      await dispatch(flushPendingTx());
+      await dispatch(updateUtxos()).catch(console.error);
+      await dispatch(updateTxs()).catch(console.error);
+    })();
   }, []);
 
   return (
@@ -77,4 +66,4 @@ const PaymentSuccess: React.FC = () => {
   );
 };
 
-export default PaymentSuccess;
+export default PaymentSuccessView;

@@ -1,37 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import { repos } from '../../infrastructure';
-import WindowProxy from '../../application/proxy';
+import {
+  connectWithConnectData,
+  WithConnectDataProps,
+} from '../../application/redux/containers/with-connect-data.container';
+import { useDispatch, useSelector } from 'react-redux';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
+import { RootReducerState } from '../../domain/common';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
-const ConnectEnable: React.FC = () => {
-  const [hostname, setHostname] = useState<string>('');
+const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
+  const network = useSelector((state: RootReducerState) => state.app.network);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  useEffect(() => {
-    void (async (): Promise<void> => {
-      const network = (await repos.app.getApp()).network.value;
-      const data = await repos.connect.getConnectData();
-      const hostname = data[network].enableSitePending;
-      setHostname(hostname);
-    })();
-  }, []);
-
-  const windowProxy = new WindowProxy();
-
-  const handleReject = async () => {
-    try {
-      await windowProxy.proxy('ENABLE_RESPONSE', [false]);
-      window.close();
-    } catch (e) {
-      console.error(e);
-    }
+  const handleReject = () => {
+    window.close();
   };
 
   const handleConnect = async () => {
     try {
-      await windowProxy.proxy('ENABLE_RESPONSE', [true]);
+      await dispatch(enableWebsite(connectData.hostnameSelected, network));
+      await dispatch(flushSelectedHostname(network));
       window.close();
     } catch (e) {
       console.error(e);
@@ -43,7 +35,7 @@ const ConnectEnable: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Enable"
     >
-      <h1 className="mt-8 text-2xl font-medium break-all">{hostname}</h1>
+      <h1 className="mt-8 text-2xl font-medium break-all">{connectData.hostnameSelected}</h1>
 
       <p className="mt-4 text-base font-medium">Connect with Marina</p>
 
@@ -68,4 +60,4 @@ const ConnectEnable: React.FC = () => {
   );
 };
 
-export default ConnectEnable;
+export default connectWithConnectData(ConnectEnableView);

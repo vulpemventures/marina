@@ -28,7 +28,7 @@ const Button: React.FC<Props> = ({
     'antialiased font-bold tracking-wider py-2 px-4 focus:outline-none focus:shadow-outline',
     className,
     { 'bg-primary text-white': !isOutline && !disabled },
-    { 'bg-grayLight text-white': !isOutline && disabled },
+    { 'bg-grayLight text-white': disabled },
     { 'text-primary bg-white shadow-innerBtnBorder': isOutline },
     { 'rounded-3xl': !roundedMd },
     { 'rounded-md': roundedMd },

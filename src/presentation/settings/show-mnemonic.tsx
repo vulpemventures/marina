@@ -1,23 +1,27 @@
-import React, { useRef, useContext, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { debounce } from 'lodash';
-import { AppContext } from '../../application/store/context';
-import { decrypt, hash } from '../../application/utils';
-import { Password } from '../../domain/wallet/value-objects';
+import { decrypt } from '../../application/utils';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
 import ShellPopUp from '../components/shell-popup';
+import { IWallet } from '../../domain/wallet';
+import { match } from '../../domain/password-hash';
+import { createPassword } from '../../domain/password';
 
-const SettingsShowMnemonic: React.FC = () => {
+export interface SettingsShowMnemonicProps {
+  wallet: IWallet;
+}
+
+const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet }) => {
   const [mnemonic, setMnemonic] = useState('');
-  const [{ wallets }] = useContext(AppContext);
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);
   const handleModalUnlockCancel = () => showUnlockModal(false);
   const handleShowMnemonic = (password: string) => {
-    if (!wallets[0].passwordHash.equals(hash(Password.create(password)))) {
+    if (!match(password, wallet.passwordHash)) {
       throw new Error('Invalid password');
     }
-    const mnemo = decrypt(wallets[0].encryptedMnemonic, Password.create(password)).value;
+    const mnemo = decrypt(wallet.encryptedMnemonic, createPassword(password));
     setMnemonic(mnemo);
     showUnlockModal(false);
   };
@@ -52,4 +56,4 @@ const SettingsShowMnemonic: React.FC = () => {
   );
 };
 
-export default SettingsShowMnemonic;
+export default SettingsShowMnemonicView;
