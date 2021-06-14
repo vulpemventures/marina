@@ -44,11 +44,7 @@ export async function blindAndSignPset(
   outputsToBlind: number[],
   outPubkeys: Map<number, string>
 ): Promise<string> {
-  const mnemonicWallet = await mnemonicWalletFromAddresses(
-    mnemonic,
-    addresses,
-    chain
-  );
+  const mnemonicWallet = await mnemonicWalletFromAddresses(mnemonic, addresses, chain);
 
   const blindedPset: string = await mnemonicWallet.blindPset(
     psetBase64,

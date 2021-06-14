@@ -11,6 +11,10 @@ const initialStateWallet: IWallet = {
   masterBlindingKey: '',
   passwordHash: '',
   utxoMap: {},
+  deepRestorer: {
+    gapLimit: 30,
+    isLoading: false,
+  },
 };
 
 export function walletReducer(
@@ -26,7 +30,6 @@ export function walletReducer(
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
         confidentialAddresses: payload.confidentialAddresses,
-        utxoMap: {},
       };
     }
 
@@ -59,6 +62,26 @@ export function walletReducer(
       };
     }
 
+    case ACTION_TYPES.SET_DEEP_RESTORER_GAP_LIMIT: {
+      return {
+        ...state,
+        deepRestorer: { ...state.deepRestorer, gapLimit: payload.gapLimit },
+      };
+    }
+
+    case ACTION_TYPES.SET_DEEP_RESTORER_IS_LOADING: {
+      return {
+        ...state,
+        deepRestorer: { ...state.deepRestorer, isLoading: payload.isLoading },
+      };
+    }
+
+    case ACTION_TYPES.SET_DEEP_RESTORER_ERROR: {
+      return {
+        ...state,
+        deepRestorer: { ...state.deepRestorer, error: payload.error },
+      };
+    }
     default: {
       return state;
     }

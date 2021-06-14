@@ -1,4 +1,5 @@
 import {
+  START_DEEP_RESTORATION,
   START_PERIODIC_UPDATE,
   UPDATE_TAXI_ASSETS,
   UPDATE_TXS,
@@ -12,6 +13,7 @@ import {
   updateTxsHistory,
   fetchAndUpdateUtxos,
   startAlarmUpdater,
+  deepRestorer,
 } from '../backend';
 import persistStore from 'redux-persist/es/persistStore';
 import { parse, stringify } from '../utils/browser-storage-converters';
@@ -27,6 +29,7 @@ const backgroundAliases = {
   [UPDATE_TXS]: () => updateTxsHistory(),
   [UPDATE_TAXI_ASSETS]: () => fetchAndSetTaxiAssets(),
   [START_PERIODIC_UPDATE]: () => startAlarmUpdater(),
+  [START_DEEP_RESTORATION]: () => deepRestorer(),
 };
 
 const create = () => createStore(marinaReducer, applyMiddleware(alias(backgroundAliases), thunk));

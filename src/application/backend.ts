@@ -19,6 +19,7 @@ import {
   fetchAndUnblindTxsGenerator,
   fetchAndUnblindUtxosGenerator,
   masterPubKeyRestorerFromState,
+  masterPubKeyRestorerFromEsplora,
 } from 'ldk';
 import Marina from './marina';
 import {
@@ -40,7 +41,12 @@ import {
   setTxData,
 } from './redux/actions/connect';
 import { TXS_HISTORY_SET_TXS_SUCCESS } from './redux/actions/action-types';
-import { setAddress } from './redux/actions/wallet';
+import {
+  setAddress,
+  setDeepRestorerError,
+  setDeepRestorerIsLoading,
+  setWalletData,
+} from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
@@ -440,11 +446,7 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
   } catch (e: any) {
     throw new Error('Invalid password');
   }
-  return await mnemonicWalletFromAddresses(
-    mnemonic,
-    wallet.confidentialAddresses,
-    app.network
-  );
+  return await mnemonicWalletFromAddresses(mnemonic, wallet.confidentialAddresses, app.network);
 }
 
 async function signMsgWithPassword(
@@ -659,5 +661,36 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
           break;
       }
     });
+  };
+}
+
+export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const { isLoading, gapLimit } = state.wallet.deepRestorer;
+    const network = state.app.network;
+    const toRestore = masterPubKeySelector(state);
+    if (isLoading) return;
+
+    try {
+      dispatch(setDeepRestorerIsLoading(true));
+      const opts = { gapLimit, esploraURL: explorerApiUrl[network] };
+      console.log(opts);
+      const publicKey = await masterPubKeyRestorerFromEsplora(toRestore)(opts);
+      dispatch(
+        setWalletData({
+          ...state.wallet,
+          confidentialAddresses: (await publicKey.getAddresses()).map((a) =>
+            createAddress(a.confidentialAddress, a.derivationPath)
+          ),
+        })
+      );
+
+      dispatch(setDeepRestorerError(undefined));
+    } catch (err) {
+      dispatch(setDeepRestorerError(err.message || err));
+    } finally {
+      dispatch(setDeepRestorerIsLoading(false));
+    }
   };
 }

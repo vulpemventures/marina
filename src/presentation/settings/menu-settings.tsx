@@ -3,6 +3,7 @@ import { useHistory } from 'react-router';
 import ShellPopUp from '../components/shell-popup';
 import {
   SETTINGS_CURRENCY_ROUTE,
+  SETTINGS_DEEP_RESTORER_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
 } from '../routes/constants';
@@ -12,6 +13,7 @@ const SettingsMenuSettings: React.FC = () => {
   const handleChangeCurrency = () => history.push(SETTINGS_CURRENCY_ROUTE);
   const handleExplorer = () => history.push(SETTINGS_EXPLORER_ROUTE);
   const handleNetworks = () => history.push(SETTINGS_NETWORKS_ROUTE);
+  const handleDeepRestorer = () => history.push(SETTINGS_DEEP_RESTORER_ROUTE);
 
   return (
     <ShellPopUp className="h-popupContent" currentPage="Settings">
@@ -33,6 +35,13 @@ const SettingsMenuSettings: React.FC = () => {
         <button onClick={handleNetworks}>
           <li className="settings-list-item">
             <span className="font-regular text-base">Networks</span>
+            <img className="w-5 h-5" src="assets/images/chevron-right.svg" alt="chevron" />
+          </li>
+        </button>
+
+        <button onClick={handleDeepRestorer}>
+          <li className="settings-list-item">
+            <span className="font-regular text-base">Deep Restorer</span>
             <img className="w-5 h-5" src="assets/images/chevron-right.svg" alt="chevron" />
           </li>
         </button>

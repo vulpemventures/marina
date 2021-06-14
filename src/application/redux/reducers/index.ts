@@ -29,15 +29,20 @@ const browserLocalStorage: Storage = {
   removeItem: async (key: string) => browser.storage.local.remove(key),
 };
 
-const localStorageConfig = (key: string, whitelist?: string[]) => ({
+const localStorageConfig = (key: string, whitelist?: string[], blacklist?: string[]) => ({
   key,
   storage: browserLocalStorage,
   version: 0,
   whitelist,
+  blacklist,
 });
 
-const persist = (reducer: Reducer, key: string, whitelist?: string[]): Reducer =>
-  persistReducer(localStorageConfig(key, whitelist), reducer);
+const persist = (
+  reducer: Reducer,
+  key: string,
+  whitelist?: string[],
+  blacklist?: string[]
+): Reducer => persistReducer(localStorageConfig(key, whitelist, blacklist), reducer);
 
 const marinaReducer = combineReducers({
   app: persist(appReducer, 'app') as Reducer<IApp, AnyAction>,
@@ -45,7 +50,10 @@ const marinaReducer = combineReducers({
   onboarding: onboardingReducer,
   transaction: persist(transactionReducer, 'transaction') as Reducer<TransactionState, AnyAction>,
   txsHistory: persist(txsHistoryReducer, 'txsHistory') as Reducer<TxsHistoryByNetwork, AnyAction>,
-  wallet: persist(walletReducer, 'wallet') as Reducer<IWallet, AnyAction>,
+  wallet: persist(walletReducer, 'wallet', undefined, ['deepRestorer']) as Reducer<
+    IWallet,
+    AnyAction
+  >,
   taxi: persist(taxiReducer, 'taxi') as Reducer<TaxiState, AnyAction>,
   connect: persist(connectDataReducer, 'connect', ['enabledSites']) as Reducer<
     ConnectData,

@@ -1,20 +1,19 @@
 import { Listbox } from '@headlessui/react';
-import { Network } from '../../domain/network';
 
 interface Props {
-  data: string[];
-  selectedValue: string;
-  setSelectedValue: (v: Network) => void;
+  list: string[];
+  selected: string;
+  onSelect: (v: string) => void;
   disabled: boolean;
 }
 
-const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue, disabled }) => {
+const Select: React.FC<Props> = ({ list, selected, onSelect, disabled }) => {
   return (
-    <Listbox value={selectedValue} onChange={setSelectedValue} disabled={disabled}>
+    <Listbox value={selected} onChange={onSelect} disabled={disabled}>
       {({ open }) => (
         <>
           <Listbox.Button className="border-primary ring-primary focus:ring-primary focus:border-primary focus:outline-none flex flex-row justify-between w-full px-3 py-2.5 border-2 rounded-md">
-            <span className="text-base font-medium">{selectedValue}</span>
+            <span className="text-base font-medium">{selected}</span>
             {open ? (
               <img src="assets/images/chevron-up.svg" alt="chevron" />
             ) : (
@@ -31,7 +30,7 @@ const Select: React.FC<Props> = ({ data, selectedValue, setSelectedValue, disabl
                 className="focus:outline-none px-3 py-2 text-left rounded-md shadow-lg"
                 static
               >
-                {data.map((item) => (
+                {list.map((item) => (
                   <Listbox.Option
                     className="focus:outline-none py-3 cursor-pointer"
                     key={item}

@@ -34,6 +34,7 @@ import {
   SEND_END_OF_FLOW_ROUTE,
   SEND_PAYMENT_SUCCESS_ROUTE,
   SEND_PAYMENT_ERROR_ROUTE,
+  SETTINGS_DEEP_RESTORER_ROUTE,
 } from './constants';
 
 // Connect
@@ -67,6 +68,7 @@ import SettingsMenuSecurity from '../settings/menu-security';
 import SettingsMenuSettings from '../settings/menu-settings';
 import SettingsMenuInfo from '../settings/menu-info';
 import SettingsShowMnemonic from '../../application/redux/containers/settings-show-mnemonic.container';
+import SettingsDeepRestorer from '../../application/redux/containers/deep-restorer.container';
 import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
@@ -106,6 +108,7 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
+      <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} comp={SettingsDeepRestorer} />
       <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />

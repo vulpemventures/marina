@@ -13,6 +13,10 @@ export interface IWallet {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
-  restored?: boolean;
   utxoMap: Record<string, UtxoInterface>;
+  deepRestorer: {
+    gapLimit: number;
+    isLoading: boolean;
+    error?: string;
+  };
 }

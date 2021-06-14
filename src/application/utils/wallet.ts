@@ -29,7 +29,10 @@ export async function createWalletFromMnemonic(
     opts: { mnemonic },
   });
 
-  const mnemonicIdentity = await mnemonicRestorerFromEsplora(toRestore)({ esploraURL: explorerApiUrl[chain], gapLimit: 20 })
+  const mnemonicIdentity = await mnemonicRestorerFromEsplora(toRestore)({
+    esploraURL: explorerApiUrl[chain],
+    gapLimit: 20,
+  });
   const masterXPub = createMasterXPub(mnemonicIdentity.masterPublicKey);
   const masterBlindingKey = createMasterBlindingKey(mnemonicIdentity.masterBlindingKey);
   const encryptedMnemonic = encrypt(mnemonic, password);

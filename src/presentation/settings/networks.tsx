@@ -83,9 +83,9 @@ const SettingsNetworks: React.FC = () => {
       <p className="font-regular my-8 text-base text-left">Select the network</p>
       <Select
         disabled={isLoading}
-        data={formattedNetworks}
-        selectedValue={selectedNetwork}
-        setSelectedValue={setSelectedValue}
+        list={formattedNetworks}
+        selected={selectedNetwork}
+        onSelect={setSelectedValue}
       />
 
       {isLoading && <p className="m-2">{loadingMsg || 'loading'}...</p>}

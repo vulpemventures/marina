@@ -15,7 +15,11 @@ export function encrypt(payload: Mnemonic, password: Password): EncryptedMnemoni
   return createEncryptedMnemonic(encrypted);
 }
 
-export function decrypt(encrypted: EncryptedMnemonic, password: Password, network: Network): Mnemonic {
+export function decrypt(
+  encrypted: EncryptedMnemonic,
+  password: Password,
+  network: Network
+): Mnemonic {
   const hash = crypto.createHash('sha1').update(password);
   const secret = hash.digest().slice(0, 16);
   const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
