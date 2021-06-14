@@ -18,6 +18,7 @@ import {
   address,
   fetchAndUnblindTxsGenerator,
   fetchAndUnblindUtxosGenerator,
+  masterPubKeyRestorerFromState,
 } from 'ldk';
 import Marina from './marina';
 import {
@@ -46,7 +47,7 @@ import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { TxsHistory } from '../domain/transaction';
 import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
-import { masterPubKeySelector } from './redux/selectors/wallet.selector';
+import { masterPubKeySelector, restorerOptsSelector } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
@@ -419,10 +420,11 @@ export function showPopup(path?: string): Promise<Windows.Window> {
   return browser.windows.create(options as any);
 }
 
-async function getXpub(): Promise<IdentityInterface> {
-  const xPubKey = masterPubKeySelector(marinaStore.getState());
-  await xPubKey.isRestored;
-  return xPubKey;
+function getXpub(): Promise<IdentityInterface> {
+  const state = marinaStore.getState();
+  const xPubKey = masterPubKeySelector(state);
+  const opts = restorerOptsSelector(state);
+  return masterPubKeyRestorerFromState(xPubKey)(opts);
 }
 
 function persistAddress(addr: AddressInterface) {
@@ -434,13 +436,12 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
   let mnemonic = '';
   const { app, wallet } = marinaStore.getState();
   try {
-    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), app.network);
   } catch (e: any) {
     throw new Error('Invalid password');
   }
   return await mnemonicWalletFromAddresses(
     mnemonic,
-    wallet.masterBlindingKey,
     wallet.confidentialAddresses,
     app.network
   );
@@ -451,14 +452,15 @@ async function signMsgWithPassword(
   password: string
 ): Promise<{ signature: string; address: string }> {
   let mnemonic = '';
+  const network = getCurrentNetwork();
   try {
-    const wallet = marinaStore.getState().wallet;
-    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
+    const { wallet } = marinaStore.getState();
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), network);
   } catch (e: any) {
     throw new Error('Invalid password');
   }
-  const liquidJSNet = networks[getCurrentNetwork()];
-  return await signMessageWithMnemonic(message, mnemonic, liquidJSNet);
+  const net = networks[network];
+  return await signMessageWithMnemonic(message, mnemonic, net);
 }
 
 function getCurrentNetwork(): Network {

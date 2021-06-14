@@ -1,7 +1,7 @@
 import { createMasterXPub, MasterXPub } from '../../domain/master-extended-pub';
 import { EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
 import { Address, createAddress } from '../../domain/address';
-import { Mnemonic, IdentityType, EsploraIdentityRestorer } from 'ldk';
+import { Mnemonic, IdentityType, mnemonicRestorerFromEsplora } from 'ldk';
 import { encrypt, hash } from './crypto';
 import { Network } from '../../domain/network';
 import { PasswordHash } from '../../domain/password-hash';
@@ -23,21 +23,18 @@ export async function createWalletFromMnemonic(
   mnemonic: Mnemo,
   chain: Network
 ): Promise<WalletData> {
-  const mnemonicWallet = new Mnemonic({
+  const toRestore = new Mnemonic({
     chain,
     type: IdentityType.Mnemonic,
-    value: { mnemonic },
-    restorer: new EsploraIdentityRestorer(explorerApiUrl[chain]),
-    initializeFromRestorer: true,
+    opts: { mnemonic },
   });
 
-  await mnemonicWallet.isRestored;
-
-  const masterXPub = createMasterXPub(mnemonicWallet.masterPublicKey);
-  const masterBlindingKey = createMasterBlindingKey(mnemonicWallet.masterBlindingKey);
+  const mnemonicIdentity = await mnemonicRestorerFromEsplora(toRestore)({ esploraURL: explorerApiUrl[chain], gapLimit: 20 })
+  const masterXPub = createMasterXPub(mnemonicIdentity.masterPublicKey);
+  const masterBlindingKey = createMasterBlindingKey(mnemonicIdentity.masterBlindingKey);
   const encryptedMnemonic = encrypt(mnemonic, password);
   const passwordHash = hash(password);
-  const addresses = (await mnemonicWallet.getAddresses()).map((a) =>
+  const addresses = (await mnemonicIdentity.getAddresses()).map((a) =>
     createAddress(a.confidentialAddress, a.derivationPath)
   );
 

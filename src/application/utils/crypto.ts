@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import { createEncryptedMnemonic, EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
 import { createMnemonic, Mnemonic } from '../../domain/mnemonic';
+import { Network } from '../../domain/network';
 import { Password } from '../../domain/password';
 import { createPasswordHash, PasswordHash } from '../../domain/password-hash';
 
@@ -14,13 +15,13 @@ export function encrypt(payload: Mnemonic, password: Password): EncryptedMnemoni
   return createEncryptedMnemonic(encrypted);
 }
 
-export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemonic {
+export function decrypt(encrypted: EncryptedMnemonic, password: Password, network: Network): Mnemonic {
   const hash = crypto.createHash('sha1').update(password);
   const secret = hash.digest().slice(0, 16);
   const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
   let decrypted = key.update(encrypted, 'hex', 'utf8');
   decrypted += key.final('utf8');
-  return createMnemonic(decrypted);
+  return createMnemonic(decrypted, network);
 }
 
 export function hash(text: Password): PasswordHash {

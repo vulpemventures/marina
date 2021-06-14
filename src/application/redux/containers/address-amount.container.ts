@@ -5,7 +5,7 @@ import AddressAmountView, {
   AddressAmountProps,
 } from '../../../presentation/wallet/send/address-amount';
 import { balancesSelector } from '../selectors/balance.selector';
-import { masterPubKeySelector } from '../selectors/wallet.selector';
+import { masterPubKeySelector, restorerOptsSelector } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
   network: state.app.network,
@@ -13,6 +13,7 @@ const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
   assets: state.assets,
   balances: balancesSelector(state),
   masterPubKey: masterPubKeySelector(state),
+  restorerOpts: restorerOptsSelector(state),
   transactionAsset: assetGetterFromIAssets(state.assets)(state.transaction.sendAsset),
 });
 

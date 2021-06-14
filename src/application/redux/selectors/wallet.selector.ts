@@ -1,5 +1,5 @@
-import { IdentityRestorerFromState } from './../../utils/restorer';
-import { address, IdentityType, MasterPublicKey } from 'ldk';
+import { address, IdentityType, MasterPublicKey, StateRestorerOpts } from 'ldk';
+import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { RootReducerState } from '../../../domain/common';
 
 export function walletScripts(state: RootReducerState): string[] {
@@ -9,20 +9,21 @@ export function walletScripts(state: RootReducerState): string[] {
 }
 
 export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
-  const { confidentialAddresses, masterBlindingKey, masterXPub } = state.wallet;
-  const stateAddresses = confidentialAddresses.map((addr) => addr.value);
-  const restorer = new IdentityRestorerFromState(stateAddresses);
+  const { masterBlindingKey, masterXPub } = state.wallet;
   const network = state.app.network;
   const pubKeyWallet = new MasterPublicKey({
     chain: network,
-    restorer,
     type: IdentityType.MasterPublicKey,
-    value: {
+    opts: {
       masterPublicKey: masterXPub,
       masterBlindingKey: masterBlindingKey,
     },
-    initializeFromRestorer: true,
   });
 
   return pubKeyWallet;
+}
+
+export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts {
+  const { confidentialAddresses } = state.wallet;
+  return getStateRestorerOptsFromAddresses(confidentialAddresses);
 }

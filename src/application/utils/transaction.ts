@@ -15,11 +15,11 @@ import {
   UtxoInterface,
 } from 'ldk';
 import { confidential } from 'liquidjs-lib';
-import { mnemonicWalletFromAddresses } from './restorer';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
 import { Address } from '../../domain/address';
 import moment from 'moment';
+import { mnemonicWalletFromAddresses } from './restorer';
 
 export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
@@ -38,7 +38,6 @@ export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<numb
 
 export async function blindAndSignPset(
   mnemonic: string,
-  masterBlindingKey: string,
   addresses: Address[],
   chain: string,
   psetBase64: string,
@@ -47,7 +46,6 @@ export async function blindAndSignPset(
 ): Promise<string> {
   const mnemonicWallet = await mnemonicWalletFromAddresses(
     mnemonic,
-    masterBlindingKey,
     addresses,
     chain
   );

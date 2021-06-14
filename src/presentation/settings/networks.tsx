@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EsploraIdentityRestorer, IdentityType, MasterPublicKey } from 'ldk';
+import { IdentityType, MasterPublicKey, masterPubKeyRestorerFromEsplora } from 'ldk';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
 import { updateTxs } from '../../application/redux/actions/transaction';
@@ -34,22 +34,21 @@ const SettingsNetworks: React.FC = () => {
       const newNetwork = createNetwork(net.toLowerCase());
       await dispatch(changeNetwork(newNetwork));
       setLoadingMsg('re-creating your master public key');
-      const restorer = new EsploraIdentityRestorer(explorerApiUrl[newNetwork]);
       const pubKey = new MasterPublicKey({
         chain: newNetwork,
-        restorer,
         type: IdentityType.MasterPublicKey,
-        value: {
+        opts: {
           masterPublicKey: wallet.masterXPub,
           masterBlindingKey: wallet.masterBlindingKey,
         },
-        initializeFromRestorer: true,
       });
 
       setLoadingMsg('restoring your wallet');
-      await pubKey.isRestored;
-      const restoredAddresses = await pubKey.getAddresses();
-      console.log(restoredAddresses);
+      const restoredPubKey = await masterPubKeyRestorerFromEsplora(pubKey)({
+        esploraURL: explorerApiUrl[newNetwork],
+        gapLimit: 20,
+      });
+      const restoredAddresses = await restoredPubKey.getAddresses();
       setLoadingMsg('updating wallet data');
       await dispatch(
         setWalletData({

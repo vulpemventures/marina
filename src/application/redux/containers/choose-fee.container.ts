@@ -3,7 +3,7 @@ import { RootReducerState } from '../../../domain/common';
 import ChooseFeeView, { ChooseFeeProps } from '../../../presentation/wallet/send/choose-fee';
 import { lbtcAssetByNetwork } from '../../utils';
 import { balancesSelector } from '../selectors/balance.selector';
-import { masterPubKeySelector } from '../selectors/wallet.selector';
+import { masterPubKeySelector, restorerOptsSelector } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   wallet: state.wallet,
@@ -13,6 +13,7 @@ const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   taxiAssets: state.taxi.taxiAssets,
   lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
   masterPubKey: masterPubKeySelector(state),
+  restorerOpts: restorerOptsSelector(state),
   sendAddress: state.transaction.sendAddress,
   changeAddress: state.transaction.changeAddress,
   sendAsset: state.transaction.sendAsset,

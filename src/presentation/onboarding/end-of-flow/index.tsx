@@ -27,7 +27,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ onboarding, network
     (async () => {
       const walletData = await createWalletFromMnemonic(
         createPassword(onboarding.password),
-        createMnemonic(onboarding.mnemonic),
+        createMnemonic(onboarding.mnemonic, network),
         network
       );
 

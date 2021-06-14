@@ -1,5 +1,5 @@
 import { FormikProps, withFormik } from 'formik';
-import { MasterPublicKey } from 'ldk';
+import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { RouteComponentProps } from 'react-router';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import cx from 'classnames';
@@ -9,11 +9,7 @@ import { setAddressesAndAmount } from '../../application/redux/actions/transacti
 import { createAddress } from '../../domain/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
-import {
-  defaultPrecision,
-  isValidAddressForNetwork,
-  waitForRestoration,
-} from '../../application/utils';
+import { defaultPrecision, isValidAddressForNetwork } from '../../application/utils';
 import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import { IAssets } from '../../domain/assets';
@@ -33,6 +29,7 @@ interface AddressAmountFormProps {
   assetPrecision: number;
   history: RouteComponentProps['history'];
   pubKey: MasterPublicKey;
+  restorerOpts: StateRestorerOpts;
   transaction: TransactionState;
   assets: IAssets;
   network: Network;
@@ -157,8 +154,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     }),
 
   handleSubmit: async (values, { props }) => {
-    await waitForRestoration(props.pubKey);
-    const changeAddressGenerated = await props.pubKey.getNextChangeAddress();
+    const masterPubKey = await masterPubKeyRestorerFromState(props.pubKey)(props.restorerOpts);
+    const changeAddressGenerated = await masterPubKey.getNextChangeAddress();
     const changeAddress = createAddress(
       changeAddressGenerated.confidentialAddress,
       changeAddressGenerated.derivationPath

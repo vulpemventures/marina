@@ -7,16 +7,16 @@ import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { MasterPublicKey } from 'ldk';
-import { waitForRestoration } from '../../../application/utils';
+import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { setAddress } from '../../../application/redux/actions/wallet';
 import { createAddress } from '../../../domain/address';
 
 export interface ReceiveProps {
   pubKey: MasterPublicKey;
+  restorerOpts: StateRestorerOpts;
 }
 
-const ReceiveView: React.FC<ReceiveProps> = ({ pubKey }) => {
+const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -34,13 +34,14 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey }) => {
 
   useEffect(() => {
     (async () => {
-      await waitForRestoration(pubKey);
-      const addr = await pubKey.getNextAddress();
+      const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
+      console.info(await publicKey.getAddresses());
+      const addr = await publicKey.getNextAddress();
       setConfidentialAddress(addr.confidentialAddress);
       await dispatch(setAddress(createAddress(addr.confidentialAddress, addr.derivationPath))); // persist address
       setTimeout(() => {
         dispatch(updateUtxos()).catch(console.error);
-      }, 3000);
+      }, 8000);
     })().catch(console.error);
   }, []);
 
