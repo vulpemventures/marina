@@ -56,6 +56,6 @@ export function setPset(pset: string): AnyAction {
 export function addTx(tx: TxDisplayInterface, network: Network): AnyAction {
   return {
     type: ADD_TX,
-    payload: { tx, network }
-  }
+    payload: { tx, network },
+  };
 }

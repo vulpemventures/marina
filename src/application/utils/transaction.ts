@@ -40,20 +40,16 @@ export async function blindAndSignPset(
   mnemonic: string,
   restorerOpts: StateRestorerOpts,
   chain: string,
-  psetBase64: string,
+  psetBase64: string
 ): Promise<string> {
   const mnemo = await mnemonicWallet(mnemonic, restorerOpts, chain);
 
-  const outputAddresses = (await mnemo.getAddresses()).map(a => a.confidentialAddress);
+  const outputAddresses = (await mnemo.getAddresses()).map((a) => a.confidentialAddress);
 
   const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses);
   const outputsToBlind = Array.from(outputPubKeys.keys());
 
-  const blindedPset: string = await mnemo.blindPset(
-    psetBase64,
-    outputsToBlind,
-    outputPubKeys
-  );
+  const blindedPset: string = await mnemo.blindPset(psetBase64, outputsToBlind, outputPubKeys);
 
   const signedPset: string = await mnemo.signPset(blindedPset);
 

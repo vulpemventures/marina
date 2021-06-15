@@ -43,7 +43,7 @@ export function walletReducer(
         restorerOpts: {
           ...state.restorerOpts,
           lastUsedInternalIndex: state.restorerOpts.lastUsedInternalIndex + 1,
-        }
+        },
       };
     }
 
@@ -53,7 +53,7 @@ export function walletReducer(
         restorerOpts: {
           ...state.restorerOpts,
           lastUsedExternalIndex: state.restorerOpts.lastUsedExternalIndex + 1,
-        }
+        },
       };
     }
 

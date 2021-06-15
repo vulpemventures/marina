@@ -12,7 +12,7 @@ export interface IWallet {
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
   utxoMap: Record<string, UtxoInterface>;
-  restorerOpts: StateRestorerOpts,
+  restorerOpts: StateRestorerOpts;
   deepRestorer: {
     gapLimit: number;
     isLoading: boolean;

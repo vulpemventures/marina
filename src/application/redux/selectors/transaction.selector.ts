@@ -3,7 +3,7 @@ import { TxDisplayInterface } from '../../../domain/transaction';
 
 export function walletTransactions(state: RootReducerState): TxDisplayInterface[] {
   const txs = Object.values(state.txsHistory[state.app.network]);
-  console.log('txs', txs)
+  console.log('txs', txs);
   return txs;
 }
 

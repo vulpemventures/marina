@@ -39,7 +39,9 @@ export async function createWalletFromMnemonic(
   const masterBlindingKey = createMasterBlindingKey(mnemonicIdentity.masterBlindingKey);
   const encryptedMnemonic = encrypt(mnemonic, password);
   const passwordHash = hash(password);
-  const addresses = (await mnemonicIdentity.getAddresses()).map(a => createAddress(a.confidentialAddress, a.derivationPath));
+  const addresses = (await mnemonicIdentity.getAddresses()).map((a) =>
+    createAddress(a.confidentialAddress, a.derivationPath)
+  );
 
   return {
     restorerOpts: getStateRestorerOptsFromAddresses(addresses),

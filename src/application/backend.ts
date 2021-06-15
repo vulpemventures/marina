@@ -579,7 +579,9 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       // Initialize txs to txsHistory shallow clone
       const pubKeyWallet = await getXpub();
       const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
-      const walletScripts = addressInterfaces.map(a => address.toOutputScript(a.confidentialAddress).toString('hex'));
+      const walletScripts = addressInterfaces.map((a) =>
+        address.toOutputScript(a.confidentialAddress).toString('hex')
+      );
 
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
@@ -598,7 +600,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       };
 
       const txsGen = fetchAndUnblindTxsGenerator(
-        addressInterfaces.map(a => a.confidentialAddress),
+        addressInterfaces.map((a) => a.confidentialAddress),
         identityBlindKeyGetter,
         explorerApiUrl[app.network],
         // Check if tx exists in React state
@@ -681,7 +683,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       const publicKey = await masterPubKeyRestorerFromEsplora(toRestore)(opts);
       const addresses = (await publicKey.getAddresses()).map((a) =>
         createAddress(a.confidentialAddress, a.derivationPath)
-      )
+      );
 
       const restorerOpts = getStateRestorerOptsFromAddresses(addresses);
 
