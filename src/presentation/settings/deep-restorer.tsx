@@ -33,7 +33,7 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Networks"
     >
-      <p className="font-regular my-8 text-base text-left">Select the network</p>
+      <p className="font-regular my-8 text-base text-left">Select the restoration gap limit</p>
       <Select
         disabled={restorationLoading || isLoading}
         list={['30', '60', '90']}
@@ -49,7 +49,7 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
 
       <Button
         className={'m-2'}
-        disabled={restorationLoading}
+        disabled={restorationLoading || isLoading}
         onClick={onClickRestore}
         type="submit"
       >
