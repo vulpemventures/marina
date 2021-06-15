@@ -1,15 +1,16 @@
 import {
   SET_DEEP_RESTORER_IS_LOADING,
-  WALLET_SET_ADDRESS_SUCCESS,
   WALLET_SET_DATA,
   SET_DEEP_RESTORER_GAP_LIMIT,
   SET_DEEP_RESTORER_ERROR,
   START_DEEP_RESTORATION,
+  NEW_ADDRESS_SUCCESS,
+  NEW_CHANGE_ADDRESS_SUCCESS,
+  SET_ADDRESSES,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { Address } from '../../../domain/address';
-import { ActionWithPayload } from '../../../domain/common';
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {
@@ -18,13 +19,19 @@ export function setWalletData(walletData: WalletData): AnyAction {
   };
 }
 
-export function setAddress(
-  address: Address
-): ActionWithPayload<{ address?: Address; error?: any }> {
+export function setAddresses(addresses: Address[]): AnyAction {
   return {
-    type: WALLET_SET_ADDRESS_SUCCESS,
-    payload: { address },
-  };
+    type: SET_ADDRESSES,
+    payload: { addresses }
+  }
+}
+
+export function incrementAddressIndex(address: Address): AnyAction {
+  return { type: NEW_ADDRESS_SUCCESS, payload: { address } };
+}
+
+export function incrementChangeAddressIndex(address: Address): AnyAction {
+  return { type: NEW_CHANGE_ADDRESS_SUCCESS, payload: { address } };
 }
 
 export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {

@@ -10,6 +10,7 @@ import {
   isBlindedOutputInterface,
   psetToUnsignedTx,
   RecipientInterface,
+  StateRestorerOpts,
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
@@ -19,9 +20,9 @@ import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
 import { Address } from '../../domain/address';
 import moment from 'moment';
-import { mnemonicWalletFromAddresses } from './restorer';
+import { mnemonicWallet } from './restorer';
 
-export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
+function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
 
   for (const outAddr of outputAddresses) {
@@ -38,21 +39,24 @@ export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<numb
 
 export async function blindAndSignPset(
   mnemonic: string,
-  addresses: Address[],
+  restorerOpts: StateRestorerOpts,
   chain: string,
   psetBase64: string,
-  outputsToBlind: number[],
-  outPubkeys: Map<number, string>
 ): Promise<string> {
-  const mnemonicWallet = await mnemonicWalletFromAddresses(mnemonic, addresses, chain);
+  const mnemo = await mnemonicWallet(mnemonic, restorerOpts, chain);
 
-  const blindedPset: string = await mnemonicWallet.blindPset(
+  const outputAddresses = (await mnemo.getAddresses()).map(a => a.confidentialAddress);
+
+  const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses);
+  const outputsToBlind = Array.from(outputPubKeys.keys());
+
+  const blindedPset: string = await mnemo.blindPset(
     psetBase64,
     outputsToBlind,
-    outPubkeys
+    outputPubKeys
   );
 
-  const signedPset: string = await mnemonicWallet.signPset(blindedPset);
+  const signedPset: string = await mnemo.signPset(blindedPset);
 
   const ptx = decodePset(signedPset);
   if (!ptx.validateSignaturesOfAllInputs()) {

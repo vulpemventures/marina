@@ -5,7 +5,7 @@ import { changeNetwork } from '../../application/redux/actions/app';
 import { updateTxs } from '../../application/redux/actions/transaction';
 import { updateUtxos } from '../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { explorerApiUrl } from '../../application/utils';
+import { explorerApiUrl, getStateRestorerOptsFromAddresses } from '../../application/utils';
 import { RootReducerState } from '../../domain/common';
 import { createNetwork } from '../../domain/network';
 import Select from '../components/select';
@@ -48,13 +48,14 @@ const SettingsNetworks: React.FC = () => {
         esploraURL: explorerApiUrl[newNetwork],
         gapLimit: 20,
       });
-      const restoredAddresses = await restoredPubKey.getAddresses();
+      const restoredAddresses = (await restoredPubKey.getAddresses()).map((a) =>
+        createAddress(a.confidentialAddress, a.derivationPath)
+      );
       setLoadingMsg('updating wallet data');
       await dispatch(
         setWalletData({
-          confidentialAddresses: restoredAddresses.map((a) =>
-            createAddress(a.confidentialAddress, a.derivationPath)
-          ),
+          restorerOpts: getStateRestorerOptsFromAddresses(restoredAddresses),
+          confidentialAddresses: restoredAddresses,
           encryptedMnemonic: wallet.encryptedMnemonic,
           masterBlindingKey: wallet.masterBlindingKey,
           masterXPub: wallet.masterXPub,

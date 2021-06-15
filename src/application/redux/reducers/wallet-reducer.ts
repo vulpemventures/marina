@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IWallet } from '../../../domain/wallet';
@@ -6,6 +7,10 @@ import { UtxoInterface } from 'ldk';
 
 const initialStateWallet: IWallet = {
   confidentialAddresses: [],
+  restorerOpts: {
+    lastUsedExternalIndex: 0,
+    lastUsedInternalIndex: 12,
+  },
   encryptedMnemonic: '',
   masterXPub: '',
   masterBlindingKey: '',
@@ -29,15 +34,36 @@ export function walletReducer(
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
-        confidentialAddresses: payload.confidentialAddresses,
+        restorerOpts: payload.restorerOpts,
       };
     }
 
-    case ACTION_TYPES.WALLET_SET_ADDRESS_SUCCESS: {
+    case ACTION_TYPES.SET_ADDRESSES: {
       return {
         ...state,
-        errors: undefined,
+        confidentialAddresses: payload.addresses
+      };
+    }
+
+    case ACTION_TYPES.NEW_CHANGE_ADDRESS_SUCCESS: {
+      return {
+        ...state,
         confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
+        restorerOpts: {
+          ...state.restorerOpts,
+          lastUsedInternalIndex: state.restorerOpts.lastUsedInternalIndex + 1,
+        }
+      };
+    }
+
+    case ACTION_TYPES.NEW_ADDRESS_SUCCESS: {
+      return {
+        ...state,
+        confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
+        restorerOpts: {
+          ...state.restorerOpts,
+          lastUsedExternalIndex: state.restorerOpts.lastUsedExternalIndex + 1,
+        }
       };
     }
 

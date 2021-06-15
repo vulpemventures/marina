@@ -33,11 +33,11 @@ import {
   setFeeChangeAddress,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { setAddress } from '../../../application/redux/actions/wallet';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
 
 export interface ChooseFeeProps {
   network: Network;
@@ -202,7 +202,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (feeChange) {
         await Promise.all([
           dispatch(setFeeChangeAddress(feeChange)),
-          dispatch(setAddress(feeChange)),
+          dispatch(incrementChangeAddressIndex(feeChange)),
         ]);
       }
 

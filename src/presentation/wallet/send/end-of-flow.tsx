@@ -3,28 +3,23 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import {
-  blindAndSignPset,
-  broadcastTx,
-  decrypt,
-  explorerApiUrl,
-  outPubKeysMap,
-} from '../../../application/utils';
+import { blindAndSignPset, broadcastTx, decrypt, explorerApiUrl } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
 import { IWallet } from '../../../domain/wallet';
 import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
 import { match } from '../../../domain/password-hash';
+import { StateRestorerOpts } from 'ldk';
 
 export interface EndOfFlowProps {
   wallet: IWallet;
   network: Network;
+  restorerOpts: StateRestorerOpts;
   pset?: string;
-  outputAddresses: string[];
 }
 
-const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network, pset, outputAddresses }) => {
+const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network, pset, restorerOpts }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
 
@@ -41,17 +36,8 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network, pset, outputAddr
       }
 
       const mnemonic = decrypt(wallet.encryptedMnemonic, pass, network);
-      const outputPubKeys = outPubKeysMap(pset, outputAddresses);
-      const outputsToBlind = Array.from(outputPubKeys.keys());
 
-      tx = await blindAndSignPset(
-        mnemonic,
-        wallet.confidentialAddresses,
-        network,
-        pset,
-        outputsToBlind,
-        outputPubKeys
-      );
+      tx = await blindAndSignPset(mnemonic, restorerOpts, network, pset);
 
       const txid = await broadcastTx(explorerApiUrl[network], tx);
       history.push({

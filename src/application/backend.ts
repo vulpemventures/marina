@@ -26,7 +26,8 @@ import {
   decrypt,
   explorerApiUrl,
   fetchAssetsFromTaxi,
-  mnemonicWalletFromAddresses,
+  getStateRestorerOptsFromAddresses,
+  mnemonicWallet,
   taxiURL,
   toStringOutpoint,
 } from './utils';
@@ -42,7 +43,8 @@ import {
 } from './redux/actions/connect';
 import { TXS_HISTORY_SET_TXS_SUCCESS } from './redux/actions/action-types';
 import {
-  setAddress,
+  incrementAddressIndex,
+  incrementChangeAddressIndex,
   setDeepRestorerError,
   setDeepRestorerIsLoading,
   setWalletData,
@@ -154,7 +156,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextAddress = await xpub.getNextAddress();
-                persistAddress(nextAddress);
+                persistAddress(nextAddress, false);
                 return handleResponse(id, nextAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -167,7 +169,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextChangeAddress = await xpub.getNextChangeAddress();
-                persistAddress(nextChangeAddress);
+                persistAddress(nextChangeAddress, true);
                 return handleResponse(id, nextChangeAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -317,7 +319,7 @@ export default class Backend {
                 const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
 
                 // if we reached this point we can persist the change address
-                persistAddress(changeAddress);
+                persistAddress(changeAddress, true);
 
                 // Flush tx data
                 marinaStore.dispatch(flushTx());
@@ -433,20 +435,28 @@ function getXpub(): Promise<IdentityInterface> {
   return masterPubKeyRestorerFromState(xPubKey)(opts);
 }
 
-function persistAddress(addr: AddressInterface) {
-  const action = setAddress(createAddress(addr.confidentialAddress, addr.derivationPath));
+function persistAddress(addr: AddressInterface, isChange: boolean) {
+  let action: AnyAction;
+  const address = createAddress(addr.confidentialAddress, addr.derivationPath);
+  if (isChange) {
+    action = incrementChangeAddressIndex(address);
+  } else {
+    action = incrementAddressIndex(address);
+  }
   marinaStore.dispatch(action);
 }
 
 async function getMnemonic(password: string): Promise<IdentityInterface> {
   let mnemonic = '';
-  const { app, wallet } = marinaStore.getState();
+  const state = marinaStore.getState();
+  const { wallet, app } = state;
   try {
     mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), app.network);
   } catch (e: any) {
     throw new Error('Invalid password');
   }
-  return await mnemonicWalletFromAddresses(mnemonic, wallet.confidentialAddresses, app.network);
+  const restorerOpts = restorerOptsSelector(state);
+  return await mnemonicWallet(mnemonic, restorerOpts, app.network);
 }
 
 async function signMsgWithPassword(
@@ -565,13 +575,11 @@ async function fetchAssetInfos(
 export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
-      const { app, txsHistory, wallet } = getState();
+      const { app, txsHistory } = getState();
       if (!app.isAuthenticated) return;
       // Initialize txs to txsHistory shallow clone
       const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
 
-      const { confidentialAddresses } = wallet;
-      const addresses = confidentialAddresses.map((addr) => addr.value);
       const pubKeyWallet = await getXpub();
 
       const addressInterfaces = await pubKeyWallet.getAddresses();
@@ -592,7 +600,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       };
 
       const txsGen = fetchAndUnblindTxsGenerator(
-        addresses,
+        addressInterfaces.map(a => a.confidentialAddress),
         identityBlindKeyGetter,
         explorerApiUrl[app.network],
         // Check if tx exists in React state
@@ -675,14 +683,18 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
     try {
       dispatch(setDeepRestorerIsLoading(true));
       const opts = { gapLimit, esploraURL: explorerApiUrl[network] };
-      console.log(opts);
       const publicKey = await masterPubKeyRestorerFromEsplora(toRestore)(opts);
+      const addresses = (await publicKey.getAddresses()).map((a) =>
+        createAddress(a.confidentialAddress, a.derivationPath)
+      )
+
+      const restorerOpts = getStateRestorerOptsFromAddresses(addresses);
+
       dispatch(
         setWalletData({
           ...state.wallet,
-          confidentialAddresses: (await publicKey.getAddresses()).map((a) =>
-            createAddress(a.confidentialAddress, a.derivationPath)
-          ),
+          restorerOpts,
+          confidentialAddresses: addresses,
         })
       );
 

@@ -1,4 +1,4 @@
-import { UtxoInterface } from 'ldk';
+import { UtxoInterface, StateRestorerOpts } from 'ldk';
 import { Address } from './address';
 import { IError } from './common';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
@@ -14,6 +14,7 @@ export interface IWallet {
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
   utxoMap: Record<string, UtxoInterface>;
+  restorerOpts: StateRestorerOpts,
   deepRestorer: {
     gapLimit: number;
     isLoading: boolean;

@@ -1,5 +1,4 @@
 import { address, IdentityType, MasterPublicKey, StateRestorerOpts } from 'ldk';
-import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { RootReducerState } from '../../../domain/common';
 
 export function walletScripts(state: RootReducerState): string[] {
@@ -24,6 +23,5 @@ export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
 }
 
 export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts {
-  const { confidentialAddresses } = state.wallet;
-  return getStateRestorerOptsFromAddresses(confidentialAddresses);
+  return state.wallet.restorerOpts;
 }

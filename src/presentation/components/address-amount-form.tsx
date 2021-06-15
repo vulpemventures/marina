@@ -4,7 +4,6 @@ import { RouteComponentProps } from 'react-router';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import cx from 'classnames';
 import Button from './button';
-import { setAddress } from '../../application/redux/actions/wallet';
 import { setAddressesAndAmount } from '../../application/redux/actions/transaction';
 import { createAddress } from '../../domain/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
@@ -14,6 +13,7 @@ import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import { IAssets } from '../../domain/assets';
 import { Network } from '../../domain/network';
+import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 
 interface AddressAmountFormValues {
   address: string;
@@ -161,7 +161,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(setAddress(changeAddress)); // persist address in wallet
+    await props.dispatch(incrementChangeAddressIndex(changeAddress)); // persist address in wallet
 
     await props
       .dispatch(

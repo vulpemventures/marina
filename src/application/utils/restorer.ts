@@ -27,9 +27,9 @@ export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRe
   };
 }
 
-export function mnemonicWalletFromAddresses(
+export function mnemonicWallet(
   mnemonic: string,
-  addresses: Address[],
+  restorerOpts: StateRestorerOpts,
   chain: string
 ): Promise<Mnemonic> {
   const mnemonicWallet = new Mnemonic({
@@ -38,6 +38,5 @@ export function mnemonicWalletFromAddresses(
     opts: { mnemonic },
   });
 
-  const optsRestorer = getStateRestorerOptsFromAddresses(addresses);
-  return mnemonicRestorerFromState(mnemonicWallet)(optsRestorer);
+  return mnemonicRestorerFromState(mnemonicWallet)(restorerOpts);
 }
