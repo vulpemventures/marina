@@ -161,7 +161,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(incrementChangeAddressIndex(changeAddress)); // persist address in wallet
+    await props.dispatch(incrementChangeAddressIndex()); // persist address in wallet
 
     await props
       .dispatch(

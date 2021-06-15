@@ -8,7 +8,7 @@ import { UtxoInterface } from 'ldk';
 const initialStateWallet: IWallet = {
   restorerOpts: {
     lastUsedExternalIndex: 0,
-    lastUsedInternalIndex: 12,
+    lastUsedInternalIndex: 0,
   },
   encryptedMnemonic: '',
   masterXPub: '',

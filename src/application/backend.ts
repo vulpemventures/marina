@@ -6,7 +6,6 @@ import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
   address as addressLDK,
   networks,
-  AddressInterface,
   decodePset,
   greedyCoinSelector,
   IdentityInterface,
@@ -155,7 +154,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextAddress = await xpub.getNextAddress();
-                persistAddress(nextAddress, false);
+                persistAddress(false);
                 return handleResponse(id, nextAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -168,7 +167,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextChangeAddress = await xpub.getNextChangeAddress();
-                persistAddress(nextChangeAddress, true);
+                persistAddress(true);
                 return handleResponse(id, nextChangeAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -318,7 +317,7 @@ export default class Backend {
                 const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
 
                 // if we reached this point we can persist the change address
-                persistAddress(changeAddress, true);
+                persistAddress(true);
 
                 // Flush tx data
                 marinaStore.dispatch(flushTx());
@@ -434,13 +433,12 @@ function getXpub(): Promise<IdentityInterface> {
   return masterPubKeyRestorerFromState(xPubKey)(opts);
 }
 
-function persistAddress(addr: AddressInterface, isChange: boolean) {
+function persistAddress(isChange: boolean) {
   let action: AnyAction;
-  const address = createAddress(addr.confidentialAddress, addr.derivationPath);
   if (isChange) {
-    action = incrementChangeAddressIndex(address);
+    action = incrementChangeAddressIndex();
   } else {
-    action = incrementAddressIndex(address);
+    action = incrementAddressIndex();
   }
   marinaStore.dispatch(action);
 }

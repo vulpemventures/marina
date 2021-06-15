@@ -9,7 +9,6 @@ import {
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
-import { Address } from '../../../domain/address';
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {
@@ -18,12 +17,12 @@ export function setWalletData(walletData: WalletData): AnyAction {
   };
 }
 
-export function incrementAddressIndex(address: Address): AnyAction {
-  return { type: NEW_ADDRESS_SUCCESS, payload: { address } };
+export function incrementAddressIndex(): AnyAction {
+  return { type: NEW_ADDRESS_SUCCESS };
 }
 
-export function incrementChangeAddressIndex(address: Address): AnyAction {
-  return { type: NEW_CHANGE_ADDRESS_SUCCESS, payload: { address } };
+export function incrementChangeAddressIndex(): AnyAction {
+  return { type: NEW_CHANGE_ADDRESS_SUCCESS };
 }
 
 export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {

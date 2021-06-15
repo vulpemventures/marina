@@ -8,7 +8,6 @@ import { useDispatch } from 'react-redux';
 import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
-import { createAddress } from '../../../domain/address';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 
 export interface ReceiveProps {
@@ -37,9 +36,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
       const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
       const addr = await publicKey.getNextAddress();
       setConfidentialAddress(addr.confidentialAddress);
-      await dispatch(
-        incrementAddressIndex(createAddress(addr.confidentialAddress, addr.derivationPath))
-      ); // persist address
+      await dispatch(incrementAddressIndex()); // persist address
       setTimeout(() => {
         dispatch(updateUtxos()).catch(console.error);
       }, 8000);

@@ -202,7 +202,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (feeChange) {
         await Promise.all([
           dispatch(setFeeChangeAddress(feeChange)),
-          dispatch(incrementChangeAddressIndex(feeChange)),
+          dispatch(incrementChangeAddressIndex()),
         ]);
       }
 
