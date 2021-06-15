@@ -6,7 +6,6 @@ import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 
 const initialStateWallet: IWallet = {
-  confidentialAddresses: [],
   restorerOpts: {
     lastUsedExternalIndex: 0,
     lastUsedInternalIndex: 12,
@@ -17,7 +16,7 @@ const initialStateWallet: IWallet = {
   passwordHash: '',
   utxoMap: {},
   deepRestorer: {
-    gapLimit: 30,
+    gapLimit: 20,
     isLoading: false,
   },
 };
@@ -38,17 +37,9 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.SET_ADDRESSES: {
-      return {
-        ...state,
-        confidentialAddresses: payload.addresses
-      };
-    }
-
     case ACTION_TYPES.NEW_CHANGE_ADDRESS_SUCCESS: {
       return {
         ...state,
-        confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
         restorerOpts: {
           ...state.restorerOpts,
           lastUsedInternalIndex: state.restorerOpts.lastUsedInternalIndex + 1,
@@ -59,7 +50,6 @@ export function walletReducer(
     case ACTION_TYPES.NEW_ADDRESS_SUCCESS: {
       return {
         ...state,
-        confidentialAddresses: state.confidentialAddresses.concat([payload.address]),
         restorerOpts: {
           ...state.restorerOpts,
           lastUsedExternalIndex: state.restorerOpts.lastUsedExternalIndex + 1,

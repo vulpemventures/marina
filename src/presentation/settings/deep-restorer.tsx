@@ -5,7 +5,6 @@ import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
 import Button from '../components/button';
-import { updateUtxos } from '../../application/redux/actions/utxos';
 
 export interface DeepRestorerProps {
   restorationLoading: boolean;
@@ -23,7 +22,6 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
 
   const onClickRestore = async () => {
     await dispatch(startDeepRestorer());
-    await dispatch(updateUtxos());
   };
 
   return (
@@ -36,13 +34,13 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
       <p className="font-regular my-8 text-base text-left">Select the restoration gap limit</p>
       <Select
         disabled={restorationLoading || isLoading}
-        list={['30', '60', '90']}
+        list={['20', '40', '80', '160']}
         selected={gapLimit.toString(10)}
         onSelect={(selectedGapLimit: string) => {
           if (isLoading) return;
           setIsLoading(true);
-          dispatch(setDeepRestorerGapLimit(parseInt(selectedGapLimit) as 30 | 60 | 90)).finally(
-            () => setIsLoading(false)
+          dispatch(setDeepRestorerGapLimit(parseInt(selectedGapLimit))).finally(() =>
+            setIsLoading(false)
           );
         }}
       />

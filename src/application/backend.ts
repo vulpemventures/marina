@@ -29,6 +29,7 @@ import {
   getStateRestorerOptsFromAddresses,
   mnemonicWallet,
   taxiURL,
+  toDisplayTransaction,
   toStringOutpoint,
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
@@ -41,7 +42,6 @@ import {
   setTx,
   setTxData,
 } from './redux/actions/connect';
-import { TXS_HISTORY_SET_TXS_SUCCESS } from './redux/actions/action-types';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
@@ -53,7 +53,6 @@ import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
-import { TxsHistory } from '../domain/transaction';
 import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
 import { masterPubKeySelector, restorerOptsSelector } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
@@ -61,7 +60,7 @@ import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
-import { updateTxs } from './redux/actions/transaction';
+import { addTx, updateTxs } from './redux/actions/transaction';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -578,11 +577,10 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       const { app, txsHistory } = getState();
       if (!app.isAuthenticated) return;
       // Initialize txs to txsHistory shallow clone
-      const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
-
       const pubKeyWallet = await getXpub();
+      const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
+      const walletScripts = addressInterfaces.map(a => address.toOutputScript(a.confidentialAddress).toString('hex'));
 
-      const addressInterfaces = await pubKeyWallet.getAddresses();
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
           const address = addressLDK.fromOutputScript(
@@ -617,11 +615,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       while (!it.done) {
         const tx = it.value;
         // Update all txsHistory state at each single new tx
-        txs[tx.txid] = tx;
-        dispatch({
-          type: TXS_HISTORY_SET_TXS_SUCCESS,
-          payload: { txs, network: app.network },
-        });
+        const toAdd = toDisplayTransaction(tx, walletScripts);
+        dispatch(addTx(toAdd, app.network));
         it = await txsGen.next();
       }
     } catch (error) {
@@ -698,6 +693,8 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
         })
       );
 
+      dispatch(updateUtxos());
+      dispatch(updateTxsHistory());
       dispatch(setDeepRestorerError(undefined));
     } catch (err) {
       dispatch(setDeepRestorerError(err.message || err));

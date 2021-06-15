@@ -6,9 +6,12 @@ import {
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
   UPDATE_TXS,
   PENDING_TX_SET_PSET,
+  ADD_TX,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
+import { TxDisplayInterface } from '../../../domain/transaction';
+import { Network } from '../../../domain/network';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -48,4 +51,11 @@ export function setPset(pset: string): AnyAction {
     type: PENDING_TX_SET_PSET,
     payload: { pset },
   };
+}
+
+export function addTx(tx: TxDisplayInterface, network: Network): AnyAction {
+  return {
+    type: ADD_TX,
+    payload: { tx, network }
+  }
 }

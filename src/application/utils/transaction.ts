@@ -19,7 +19,6 @@ import { confidential } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
 import { Address } from '../../domain/address';
-import moment from 'moment';
 import { mnemonicWallet } from './restorer';
 
 function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
@@ -106,7 +105,7 @@ export function toDisplayTransaction(tx: TxInterface, walletScripts: string[]): 
   const transfers = getTransfers(tx.vin, tx.vout, walletScripts);
   return {
     txId: tx.txid,
-    blockTime: tx.status.blockTime ? moment(tx.status.blockTime * 1000) : undefined,
+    blockTimeMs: tx.status.blockTime ? tx.status.blockTime * 1000 : undefined,
     status: tx.status.confirmed ? TxStatusEnum.Confirmed : TxStatusEnum.Pending,
     fee: tx.fee,
     transfers,

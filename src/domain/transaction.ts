@@ -1,9 +1,9 @@
-import { address, TxInterface, decodePset } from 'ldk';
+import { address, decodePset } from 'ldk';
 import { Address } from './address';
 import { IError } from './common';
 import { Network } from './network';
 
-export type TxsHistory = Record<TxInterface['txid'], TxInterface>;
+export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 
 export type TxsHistoryByNetwork = Record<Network, TxsHistory> & Partial<Record<'errors', IError>>;
 
@@ -32,7 +32,7 @@ export interface TxDisplayInterface {
   status: TxStatusEnum;
   transfers: Transfer[];
   explorerURL: string;
-  blockTime?: moment.Moment;
+  blockTimeMs?: number;
 }
 
 export interface TxsByAssetsInterface {

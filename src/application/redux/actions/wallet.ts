@@ -6,7 +6,6 @@ import {
   START_DEEP_RESTORATION,
   NEW_ADDRESS_SUCCESS,
   NEW_CHANGE_ADDRESS_SUCCESS,
-  SET_ADDRESSES,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
@@ -17,13 +16,6 @@ export function setWalletData(walletData: WalletData): AnyAction {
     type: WALLET_SET_DATA,
     payload: walletData,
   };
-}
-
-export function setAddresses(addresses: Address[]): AnyAction {
-  return {
-    type: SET_ADDRESSES,
-    payload: { addresses }
-  }
 }
 
 export function incrementAddressIndex(address: Address): AnyAction {
@@ -41,7 +33,7 @@ export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {
   };
 }
 
-export function setDeepRestorerGapLimit(gapLimit: 30 | 60 | 90): AnyAction {
+export function setDeepRestorerGapLimit(gapLimit: number): AnyAction {
   return {
     type: SET_DEEP_RESTORER_GAP_LIMIT,
     payload: { gapLimit },

@@ -50,7 +50,7 @@ const marinaReducer = combineReducers({
   onboarding: onboardingReducer,
   transaction: persist(transactionReducer, 'transaction') as Reducer<TransactionState, AnyAction>,
   txsHistory: persist(txsHistoryReducer, 'txsHistory') as Reducer<TxsHistoryByNetwork, AnyAction>,
-  wallet: persist(walletReducer, 'wallet', undefined, ['deepRestorer']) as Reducer<
+  wallet: persist(walletReducer, 'wallet', undefined, ['deepRestorer', 'confidentialAddresses']) as Reducer<
     IWallet,
     AnyAction
   >,

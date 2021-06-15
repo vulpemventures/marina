@@ -35,7 +35,6 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
   useEffect(() => {
     (async () => {
       const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
-      console.info(await publicKey.getAddresses());
       const addr = await publicKey.getNextAddress();
       setConfidentialAddress(addr.confidentialAddress);
       await dispatch(

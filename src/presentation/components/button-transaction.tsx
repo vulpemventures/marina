@@ -2,6 +2,7 @@ import React from 'react';
 import { TxDisplayInterface } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi } from '../utils';
 import TxIcon from './txIcon';
+import moment from 'moment';
 
 interface Props {
   assetHash: string;
@@ -31,7 +32,7 @@ const ButtonTransaction: React.FC<Props> = ({
       <div className="flex items-center">
         <TxIcon txType={tx.type} />
         <span className="text-grayDark items-center mr-2 text-sm font-medium text-left">
-          {tx.blockTime?.format('DD MMMM YYYY')}
+          {moment(tx.blockTimeMs).format('DD MMMM YYYY')}
         </span>
       </div>
       <div className="flex">

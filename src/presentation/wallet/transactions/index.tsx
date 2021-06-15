@@ -19,6 +19,7 @@ import { useDispatch } from 'react-redux';
 import { Network } from '../../../domain/network';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import moment from 'moment';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -98,7 +99,12 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
         {transactions
           .filter(txHasAsset(state.assetHash))
           // Descending order
-          .sort((a, b) => b.blockTime?.diff(a.blockTime) || 0)
+          .sort((a, b) => {
+            if (!a.blockTimeMs || !b.blockTimeMs) return 0;
+            const momentB = moment(b.blockTimeMs);
+            const momentA = moment(a.blockTimeMs);
+            return momentB.diff(momentA);
+          })
           .map((tx, index) => {
             return (
               <ButtonTransaction
@@ -123,7 +129,11 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
             alt="liquid bitcoin logo"
           />
           <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>
-          <p className="text-xs font-light">{modalTxDetails?.blockTime?.format('DD MMMM YYYY')}</p>
+          {modalTxDetails && modalTxDetails.blockTimeMs && (
+            <p className="text-xs font-light">
+              {moment(modalTxDetails.blockTimeMs).format('DD MMMM YYYY')}
+            </p>
+          )}
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
           <div className="flex flex-row">
