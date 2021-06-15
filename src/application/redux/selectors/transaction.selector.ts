@@ -2,9 +2,7 @@ import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
 
 export function walletTransactions(state: RootReducerState): TxDisplayInterface[] {
-  const txs = Object.values(state.txsHistory[state.app.network]);
-  console.log('txs', txs);
-  return txs;
+  return Object.values(state.txsHistory[state.app.network]);
 }
 
 export const txHasAsset = (assetHash: string) => (tx: TxDisplayInterface) => {
