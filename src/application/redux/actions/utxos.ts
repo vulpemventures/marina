@@ -15,5 +15,5 @@ export function deleteUtxo(txid: string, vout: number): AnyAction {
 }
 
 export function flushUtxos(): AnyAction {
-  return { type: FLUSH_UTXOS }
+  return { type: FLUSH_UTXOS };
 }

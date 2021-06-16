@@ -1,4 +1,6 @@
-import SettingsNetworksView, { SettingsNetworksProps } from './../../../presentation/settings/networks';
+import SettingsNetworksView, {
+  SettingsNetworksProps,
+} from './../../../presentation/settings/networks';
 import { connect } from 'react-redux';
 import { RootReducerState } from '../../../domain/common';
 

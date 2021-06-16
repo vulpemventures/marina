@@ -103,7 +103,7 @@ export function walletReducer(
       return {
         ...state,
         utxoMap: {},
-      }
+      };
     }
 
     default: {
