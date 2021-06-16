@@ -98,6 +98,14 @@ export function walletReducer(
         deepRestorer: { ...state.deepRestorer, error: payload.error },
       };
     }
+
+    case ACTION_TYPES.FLUSH_UTXOS: {
+      return {
+        ...state,
+        utxoMap: {},
+      }
+    }
+
     default: {
       return state;
     }

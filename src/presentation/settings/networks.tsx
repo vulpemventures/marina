@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
+import { flushUtxos } from '../../application/redux/actions/utxos';
 import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { RootReducerState } from '../../domain/common';
@@ -29,6 +30,7 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoad
     setIsLoading(true);
     const newNetwork = createNetwork(net.toLowerCase());
     await dispatch(changeNetwork(newNetwork));
+    await dispatch(flushUtxos());
     await dispatch(setDeepRestorerGapLimit(20));
     await dispatch(startDeepRestorer());
     setIsLoading(false);
