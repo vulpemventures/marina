@@ -47,6 +47,7 @@
     "@tailwindcss/postcss7-compat": "^2.1.2",
     "autoprefixer": "^9.8.6",
     "axios": "^0.21.1",
+    "bip39": "^3.0.4",
     "bitcoinjs-message": "^2.2.0",
     "decimal.js": "^10.2.1",
     "formik": "^2.2.6",
