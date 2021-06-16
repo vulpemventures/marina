@@ -72,7 +72,7 @@ import SettingsDeepRestorer from '../../application/redux/containers/deep-restor
 import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
-import SettingsNetworks from '../settings/networks';
+import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 

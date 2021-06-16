@@ -1,98 +1,58 @@
 import React, { useState } from 'react';
-import { IdentityType, MasterPublicKey, masterPubKeyRestorerFromEsplora } from 'ldk';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { updateTxs } from '../../application/redux/actions/transaction';
-import { updateUtxos } from '../../application/redux/actions/utxos';
+import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { explorerApiUrl, getStateRestorerOptsFromAddresses } from '../../application/utils';
 import { RootReducerState } from '../../domain/common';
 import { createNetwork } from '../../domain/network';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
-import { setWalletData } from '../../application/redux/actions/wallet';
-import { createAddress } from '../../domain/address';
 
 const networks = ['liquid', 'regtest'];
 const formattedNetworks = networks.map((n) => formatNetwork(n));
 
-const SettingsNetworks: React.FC = () => {
+export interface SettingsNetworksProps {
+  restorationLoading: boolean;
+  error?: string;
+}
+
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, error }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState<string>();
-  const [error, setError] = useState<any>();
 
   const network = useSelector((state: RootReducerState) => state.app.network);
-  const wallet = useSelector((state: RootReducerState) => state.wallet);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const selectedNetwork = formatNetwork(network);
 
   const setSelectedValue = async (net: string) => {
     setIsLoading(true);
-    try {
-      const newNetwork = createNetwork(net.toLowerCase());
-      await dispatch(changeNetwork(newNetwork));
-      setLoadingMsg('re-creating your master public key');
-      const pubKey = new MasterPublicKey({
-        chain: newNetwork,
-        type: IdentityType.MasterPublicKey,
-        opts: {
-          masterPublicKey: wallet.masterXPub,
-          masterBlindingKey: wallet.masterBlindingKey,
-        },
-      });
-
-      setLoadingMsg('restoring your wallet');
-      const restoredPubKey = await masterPubKeyRestorerFromEsplora(pubKey)({
-        esploraURL: explorerApiUrl[newNetwork],
-        gapLimit: 20,
-      });
-      const restoredAddresses = (await restoredPubKey.getAddresses()).map((a) =>
-        createAddress(a.confidentialAddress, a.derivationPath)
-      );
-      setLoadingMsg('updating wallet data');
-      await dispatch(
-        setWalletData({
-          restorerOpts: getStateRestorerOptsFromAddresses(restoredAddresses),
-          confidentialAddresses: restoredAddresses,
-          encryptedMnemonic: wallet.encryptedMnemonic,
-          masterBlindingKey: wallet.masterBlindingKey,
-          masterXPub: wallet.masterXPub,
-          passwordHash: wallet.passwordHash,
-        })
-      );
-
-      setLoadingMsg('fetching transactions');
-      await dispatch(updateTxs()).catch(console.error);
-      setLoadingMsg('fetching utxos');
-      await dispatch(updateUtxos()).catch(console.error);
-    } catch (error) {
-      setError(error);
-    } finally {
-      setIsLoading(false);
-    }
+    const newNetwork = createNetwork(net.toLowerCase());
+    await dispatch(changeNetwork(newNetwork));
+    await dispatch(setDeepRestorerGapLimit(20));
+    await dispatch(startDeepRestorer());
+    setIsLoading(false);
   };
 
   return (
     <ShellPopUp
-      btnDisabled={isLoading}
+      btnDisabled={isLoading || restorationLoading}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Networks"
     >
       <p className="font-regular my-8 text-base text-left">Select the network</p>
       <Select
-        disabled={isLoading}
+        disabled={isLoading || restorationLoading}
         list={formattedNetworks}
         selected={selectedNetwork}
         onSelect={setSelectedValue}
       />
 
-      {isLoading && <p className="m-2">{loadingMsg || 'loading'}...</p>}
+      {(isLoading || restorationLoading) && <p className="m-2">{'loading'}...</p>}
       {error && <p className="m-2">{error}</p>}
     </ShellPopUp>
   );
 };
 
-export default SettingsNetworks;
+export default SettingsNetworksView;

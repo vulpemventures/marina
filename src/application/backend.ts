@@ -695,6 +695,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
 
       dispatch(updateUtxos());
       dispatch(updateTxsHistory());
+
       dispatch(setDeepRestorerError(undefined));
     } catch (err) {
       dispatch(setDeepRestorerError(err.message || err));
