@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { onBoardingCompleted } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
-import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
-import { provisionBackgroundScript } from '../../../application/utils/provision';
+import { setUpPopup } from '../../../application/utils/popup';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
 import { createMnemonic } from '../../../domain/mnemonic';
 import { Network } from '../../../domain/network';
@@ -34,9 +33,8 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ onboarding, network
       await dispatch(setWalletData(walletData));
 
       // Startup alarms to fetch utxos & set the popup page
-      await provisionBackgroundScript();
+      await setUpPopup();
       await dispatch(onBoardingCompleted());
-      await dispatch(updateUtxos());
       setIsLoading(false);
       await dispatch(flushOnboarding());
     })().catch(console.error);

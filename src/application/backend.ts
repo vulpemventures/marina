@@ -516,7 +516,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {
-        const utxo = utxoIterator.value;
+        const utxo = utxoIterator?.value;
         if (!isBlindedUtxo(utxo)) {
           if (utxo.asset) {
             const assets = getState().assets;
@@ -647,10 +647,7 @@ export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any
 
 export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return (dispatch) => {
-    browser.alarms.create(UPDATE_ALARM, {
-      when: Date.now(),
-      periodInMinutes: 4,
-    });
+    dispatch(updateUtxos());
 
     browser.alarms.onAlarm.addListener((alarm) => {
       switch (alarm.name) {
@@ -663,6 +660,11 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
         default:
           break;
       }
+    });
+
+    browser.alarms.create(UPDATE_ALARM, {
+      when: Date.now(),
+      periodInMinutes: 4,
     });
   };
 }
