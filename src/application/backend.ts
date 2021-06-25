@@ -531,8 +531,8 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       if (utxoIterator.done) {
         console.info(`number of utxos fetched: ${utxoIterator.value.numberOfUtxos}`);
-        for (const err of utxoIterator.value.errors) {
-          console.error(err);
+        if (utxoIterator.value.errors) {
+          console.warn(`${utxoIterator.value.errors.length} errors occurs during utxos updater generator`)
         }
       }
 
@@ -542,7 +542,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
         dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
       }
     } catch (error) {
-      console.error(error);
+      console.error(`fetchAndUpdateUtxos error: ${error.message}`);
     }
   };
 }
@@ -620,7 +620,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
         it = await txsGen.next();
       }
     } catch (error) {
-      console.error(error);
+      console.error(`fetchAndUnblindTxs: ${error}`);
     }
   };
 }
