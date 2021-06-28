@@ -701,6 +701,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
 
       dispatch(updateUtxos());
       dispatch(updateTxsHistory());
+      dispatch(fetchAndSetTaxiAssets());
 
       dispatch(setDeepRestorerError(undefined));
     } catch (err) {
