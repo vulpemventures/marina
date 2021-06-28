@@ -16,9 +16,14 @@ import Shell from '../../components/shell';
 export interface EndOfFlowProps {
   onboarding: OnboardingState;
   network: Network;
+  explorerURL: string;
 }
 
-const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ onboarding, network }) => {
+const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
+  onboarding,
+  network,
+  explorerURL,
+}) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,7 +32,8 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({ onboarding, network
       const walletData = await createWalletFromMnemonic(
         createPassword(onboarding.password),
         createMnemonic(onboarding.mnemonic, network),
-        network
+        network,
+        explorerURL
       );
 
       await dispatch(setWalletData(walletData));

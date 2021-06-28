@@ -7,4 +7,5 @@ export interface IApp {
   isWalletVerified: boolean;
   isOnboardingCompleted: boolean;
   network: Network;
+  explorerByNetwork: Record<Network, string>;
 }

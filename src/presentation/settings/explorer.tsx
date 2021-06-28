@@ -5,11 +5,12 @@ import * as Yup from 'yup';
 import ShellPopUp from '../components/shell-popup';
 import Input from '../components/input';
 import Button from '../components/button';
-import { esploraURL } from '../utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { Network } from '../../domain/network';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { RootReducerState } from '../../domain/common';
+import { getExplorerURLSelector } from '../../application/redux/selectors/app.selector';
+import { setExplorer } from '../../application/redux/actions/app';
 
 interface SettingsExplorerFormValues {
   explorerUrl: string;
@@ -20,13 +21,18 @@ interface SettingsExplorerFormProps {
   dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
   network: Network;
+  explorerURL: string;
 }
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
-  const { handleSubmit, setFieldValue, submitForm, errors, values } = props;
+  const { handleSubmit, isSubmitting, setFieldValue, submitForm, errors, values } = props;
 
   const handleUseDefault = async () => {
-    setFieldValue('explorerUrl', esploraURL[values.network], false);
+    let defaultValue = 'https://blockstream.info/liquid/api';
+    if (values.network === 'regtest') {
+      defaultValue = 'http://localhost:3001';
+    }
+    setFieldValue('explorerUrl', defaultValue, false);
     // Hack to wait for new value to be applied
     // https://github.com/formium/formik/issues/529
     await Promise.resolve();
@@ -40,11 +46,6 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       </p>
       <Input name="explorerUrl" placeholder="Explorer URL" type="text" {...props} />
 
-      <p className="font-regular my-8 text-sm text-left">
-        Psst! It does not work yet! We hardcode Blockstream.info for Liquid and Nigiri default for
-        RegTest
-      </p>
-
       <div className="bottom-20 right-8 absolute flex justify-end">
         <div className="pr-1">
           <Button
@@ -56,7 +57,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
           </Button>
         </div>
         <div>
-          <Button disabled={!!errors.explorerUrl} type="submit">
+          <Button disabled={!!errors.explorerUrl || isSubmitting} type="submit">
             Update
           </Button>
         </div>
@@ -75,11 +76,11 @@ const SettingsExplorerEnhancedForm = withFormik<
   }),
 
   validationSchema: Yup.object().shape({
-    explorerUrl: Yup.string().required('An explorer URL is required').url('Invalid URL'),
+    explorerUrl: Yup.string().required('An explorer URL is required'),
   }),
 
-  handleSubmit: (values, { props }) => {
-    //props.history.push(DEFAULT_ROUTE);
+  handleSubmit: async (values, { props }) => {
+    await props.dispatch(setExplorer(values.explorerUrl, props.network));
   },
 
   displayName: 'SettingsExplorerForm',
@@ -88,6 +89,7 @@ const SettingsExplorerEnhancedForm = withFormik<
 const SettingsExplorer: React.FC = () => {
   const history = useHistory();
   const app = useSelector((state: RootReducerState) => state.app);
+  const explorerURL = useSelector(getExplorerURLSelector);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (
@@ -96,7 +98,14 @@ const SettingsExplorer: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Explorer"
     >
-      <SettingsExplorerEnhancedForm dispatch={dispatch} history={history} network={app.network} />
+      <SettingsExplorerEnhancedForm
+        dispatch={dispatch}
+        history={history}
+        network={app.network}
+        explorerURL={explorerURL}
+      />
+      <p className="mt-2 font-bold">Current explorer</p>
+      <p className="font-regular">{explorerURL}</p>
     </ShellPopUp>
   );
 };

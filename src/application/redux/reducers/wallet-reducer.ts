@@ -42,7 +42,7 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedInternalIndex: state.restorerOpts.lastUsedInternalIndex + 1,
+          lastUsedInternalIndex: (state.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
         },
       };
     }
@@ -52,7 +52,7 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedExternalIndex: state.restorerOpts.lastUsedExternalIndex + 1,
+          lastUsedExternalIndex: (state.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
         },
       };
     }

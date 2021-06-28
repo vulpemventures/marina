@@ -23,7 +23,6 @@ import {
 import Marina from './marina';
 import {
   decrypt,
-  explorerApiUrl,
   fetchAssetsFromTaxi,
   getStateRestorerOptsFromAddresses,
   mnemonicWallet,
@@ -60,6 +59,7 @@ import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
 import { addTx, updateTxs } from './redux/actions/transaction';
+import { getExplorerURLSelector } from './redux/selectors/app.selector';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -494,17 +494,17 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       const addrs = (await xpub.getAddresses()).reverse();
       if (addrs.length === 0) return;
 
-      const explorer = explorerApiUrl[app.network];
+      const explorer = getExplorerURLSelector(getState());
+
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
         vout,
       }));
-      const network = getCurrentNetwork();
 
       // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
       const utxos = fetchAndUnblindUtxosGenerator(
         addrs,
-        explorerApiUrl[network],
+        explorer,
         // Skip unblinding if utxo exists in current state
         (utxo) => {
           const outpoint = toStringOutpoint(utxo);
@@ -583,6 +583,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
         address.toOutputScript(a.confidentialAddress).toString('hex')
       );
 
+      const explorer = getExplorerURLSelector(getState());
+
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
           const address = addressLDK.fromOutputScript(
@@ -602,7 +604,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       const txsGen = fetchAndUnblindTxsGenerator(
         addressInterfaces.map((a) => a.confidentialAddress),
         identityBlindKeyGetter,
-        explorerApiUrl[app.network],
+        explorer,
         // Check if tx exists in React state
         (tx) => txsHistory[app.network][tx.txid] !== undefined
       );
@@ -675,13 +677,13 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
   return async (dispatch, getState) => {
     const state = getState();
     const { isLoading, gapLimit } = state.wallet.deepRestorer;
-    const network = state.app.network;
     const toRestore = masterPubKeySelector(state);
+    const explorer = getExplorerURLSelector(getState());
     if (isLoading) return;
 
     try {
       dispatch(setDeepRestorerIsLoading(true));
-      const opts = { gapLimit, esploraURL: explorerApiUrl[network] };
+      const opts = { gapLimit, esploraURL: explorer };
       const publicKey = await masterPubKeyRestorerFromEsplora(toRestore)(opts);
       const addresses = (await publicKey.getAddresses()).map((a) =>
         createAddress(a.confidentialAddress, a.derivationPath)

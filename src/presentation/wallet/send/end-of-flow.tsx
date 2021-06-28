@@ -3,7 +3,7 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import { blindAndSignPset, broadcastTx, decrypt, explorerApiUrl } from '../../../application/utils';
+import { blindAndSignPset, broadcastTx, decrypt } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
 import { IWallet } from '../../../domain/wallet';
@@ -17,9 +17,16 @@ export interface EndOfFlowProps {
   network: Network;
   restorerOpts: StateRestorerOpts;
   pset?: string;
+  explorerURL: string;
 }
 
-const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network, pset, restorerOpts }) => {
+const EndOfFlow: React.FC<EndOfFlowProps> = ({
+  wallet,
+  network,
+  pset,
+  restorerOpts,
+  explorerURL,
+}) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
 
@@ -39,7 +46,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ wallet, network, pset, restorerOp
 
       tx = await blindAndSignPset(mnemonic, restorerOpts, network, pset);
 
-      const txid = await broadcastTx(explorerApiUrl[network], tx);
+      const txid = await broadcastTx(explorerURL, tx);
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
         state: { txid },
