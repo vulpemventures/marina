@@ -122,7 +122,10 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
       props.transaction.sendAmount > 0
-        ? fromSatoshi(props.transaction.sendAmount)
+        ? fromSatoshi(
+            props.transaction.sendAmount,
+            props.assets[props.transaction.sendAsset].precision
+          )
         : ('' as unknown as number),
     assetTicker: props.assets[props.transaction.sendAsset]?.ticker ?? '',
     assetPrecision: props.assets[props.transaction.sendAsset]?.precision ?? defaultPrecision,
@@ -168,7 +171,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         setAddressesAndAmount(
           createAddress(values.address),
           changeAddress,
-          toSatoshi(values.amount)
+          toSatoshi(values.amount, values.assetPrecision)
         )
       )
       .catch(console.error);
