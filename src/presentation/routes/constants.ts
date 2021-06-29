@@ -44,6 +44,7 @@ const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
 const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
+const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
 
 export {
   //Connect
@@ -84,4 +85,5 @@ export {
   SETTINGS_NETWORKS_ROUTE,
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
+  SETTINGS_DEEP_RESTORER_ROUTE,
 };

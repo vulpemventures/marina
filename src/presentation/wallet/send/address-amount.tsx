@@ -9,7 +9,7 @@ import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import AddressAmountEnhancedForm from '../../components/address-amount-form';
-import { MasterPublicKey } from 'ldk';
+import { MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { Network } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset, IAssets } from '../../../domain/assets';
@@ -17,6 +17,7 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 
 export interface AddressAmountProps {
   masterPubKey: MasterPublicKey;
+  restorerOpts: StateRestorerOpts;
   network: Network;
   transaction: TransactionState;
   balances: BalancesByAsset;
@@ -26,6 +27,7 @@ export interface AddressAmountProps {
 
 const AddressAmountView: React.FC<AddressAmountProps> = ({
   masterPubKey,
+  restorerOpts,
   network,
   transaction,
   balances,
@@ -64,6 +66,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
         history={history}
         balances={balances}
         transaction={transaction}
+        restorerOpts={restorerOpts}
         network={network}
         pubKey={masterPubKey}
         assets={assets}

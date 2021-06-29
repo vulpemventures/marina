@@ -6,13 +6,19 @@ import {
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
   START_PERIODIC_UPDATE,
+  SET_EXPLORER,
 } from './action-types';
-import { ActionCreator, AnyAction } from 'redux';
+import { AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
 import { Password } from '../../../domain/password';
 import { match, PasswordHash } from '../../../domain/password-hash';
 
-export const verifyWalletSuccess: ActionCreator<AnyAction> = () => ({
+export const setExplorer = (explorer: string, network: Network): AnyAction => ({
+  type: SET_EXPLORER,
+  payload: { explorer, network },
+});
+
+export const verifyWalletSuccess = (): AnyAction => ({
   type: VERIFICATION_SUCCESS,
 });
 

@@ -1,8 +1,14 @@
-import { WALLET_SET_ADDRESS_SUCCESS, WALLET_SET_DATA } from './action-types';
+import {
+  SET_DEEP_RESTORER_IS_LOADING,
+  WALLET_SET_DATA,
+  SET_DEEP_RESTORER_GAP_LIMIT,
+  SET_DEEP_RESTORER_ERROR,
+  START_DEEP_RESTORATION,
+  NEW_ADDRESS_SUCCESS,
+  NEW_CHANGE_ADDRESS_SUCCESS,
+} from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
-import { Address } from '../../../domain/address';
-import { ActionWithPayload } from '../../../domain/common';
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {
@@ -11,11 +17,37 @@ export function setWalletData(walletData: WalletData): AnyAction {
   };
 }
 
-export function setAddress(
-  address: Address
-): ActionWithPayload<{ address?: Address; error?: any }> {
+export function incrementAddressIndex(): AnyAction {
+  return { type: NEW_ADDRESS_SUCCESS };
+}
+
+export function incrementChangeAddressIndex(): AnyAction {
+  return { type: NEW_CHANGE_ADDRESS_SUCCESS };
+}
+
+export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {
   return {
-    type: WALLET_SET_ADDRESS_SUCCESS,
-    payload: { address },
+    type: SET_DEEP_RESTORER_IS_LOADING,
+    payload: { isLoading },
+  };
+}
+
+export function setDeepRestorerGapLimit(gapLimit: number): AnyAction {
+  return {
+    type: SET_DEEP_RESTORER_GAP_LIMIT,
+    payload: { gapLimit },
+  };
+}
+
+export function setDeepRestorerError(error: Error | undefined): AnyAction {
+  return {
+    type: SET_DEEP_RESTORER_ERROR,
+    payload: { error: error?.message || '' },
+  };
+}
+
+export function startDeepRestorer(): AnyAction {
+  return {
+    type: START_DEEP_RESTORATION,
   };
 }

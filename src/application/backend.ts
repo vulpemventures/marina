@@ -6,7 +6,6 @@ import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
   address as addressLDK,
   networks,
-  AddressInterface,
   decodePset,
   greedyCoinSelector,
   IdentityInterface,
@@ -18,14 +17,17 @@ import {
   address,
   fetchAndUnblindTxsGenerator,
   fetchAndUnblindUtxosGenerator,
+  masterPubKeyRestorerFromState,
+  masterPubKeyRestorerFromEsplora,
 } from 'ldk';
 import Marina from './marina';
 import {
   decrypt,
-  explorerApiUrl,
   fetchAssetsFromTaxi,
-  mnemonicWalletFromAddresses,
+  getStateRestorerOptsFromAddresses,
+  mnemonicWallet,
   taxiURL,
+  toDisplayTransaction,
   toStringOutpoint,
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
@@ -38,21 +40,26 @@ import {
   setTx,
   setTxData,
 } from './redux/actions/connect';
-import { TXS_HISTORY_SET_TXS_SUCCESS } from './redux/actions/action-types';
-import { setAddress } from './redux/actions/wallet';
+import {
+  incrementAddressIndex,
+  incrementChangeAddressIndex,
+  setDeepRestorerError,
+  setDeepRestorerIsLoading,
+  setWalletData,
+} from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
-import { TxsHistory } from '../domain/transaction';
 import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
-import { masterPubKeySelector } from './redux/selectors/wallet.selector';
+import { masterPubKeySelector, restorerOptsSelector } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
-import { updateTxs } from './redux/actions/transaction';
+import { addTx, updateTxs } from './redux/actions/transaction';
+import { getExplorerURLSelector } from './redux/selectors/app.selector';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -147,7 +154,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextAddress = await xpub.getNextAddress();
-                persistAddress(nextAddress);
+                persistAddress(false);
                 return handleResponse(id, nextAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -160,7 +167,7 @@ export default class Backend {
                 }
                 const xpub = await getXpub();
                 const nextChangeAddress = await xpub.getNextChangeAddress();
-                persistAddress(nextChangeAddress);
+                persistAddress(true);
                 return handleResponse(id, nextChangeAddress);
               } catch (e: any) {
                 return handleError(id, e);
@@ -310,7 +317,7 @@ export default class Backend {
                 const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
 
                 // if we reached this point we can persist the change address
-                persistAddress(changeAddress);
+                persistAddress(true);
 
                 // Flush tx data
                 marinaStore.dispatch(flushTx());
@@ -419,31 +426,34 @@ export function showPopup(path?: string): Promise<Windows.Window> {
   return browser.windows.create(options as any);
 }
 
-async function getXpub(): Promise<IdentityInterface> {
-  const xPubKey = masterPubKeySelector(marinaStore.getState());
-  await xPubKey.isRestored;
-  return xPubKey;
+function getXpub(): Promise<IdentityInterface> {
+  const state = marinaStore.getState();
+  const xPubKey = masterPubKeySelector(state);
+  const opts = restorerOptsSelector(state);
+  return masterPubKeyRestorerFromState(xPubKey)(opts);
 }
 
-function persistAddress(addr: AddressInterface) {
-  const action = setAddress(createAddress(addr.confidentialAddress, addr.derivationPath));
+function persistAddress(isChange: boolean) {
+  let action: AnyAction;
+  if (isChange) {
+    action = incrementChangeAddressIndex();
+  } else {
+    action = incrementAddressIndex();
+  }
   marinaStore.dispatch(action);
 }
 
 async function getMnemonic(password: string): Promise<IdentityInterface> {
   let mnemonic = '';
-  const { app, wallet } = marinaStore.getState();
+  const state = marinaStore.getState();
+  const { wallet, app } = state;
   try {
     mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
-  return await mnemonicWalletFromAddresses(
-    mnemonic,
-    wallet.masterBlindingKey,
-    wallet.confidentialAddresses,
-    app.network
-  );
+  const restorerOpts = restorerOptsSelector(state);
+  return await mnemonicWallet(mnemonic, restorerOpts, app.network);
 }
 
 async function signMsgWithPassword(
@@ -451,14 +461,15 @@ async function signMsgWithPassword(
   password: string
 ): Promise<{ signature: string; address: string }> {
   let mnemonic = '';
+  const network = getCurrentNetwork();
   try {
-    const wallet = marinaStore.getState().wallet;
+    const { wallet } = marinaStore.getState();
     mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
-  const liquidJSNet = networks[getCurrentNetwork()];
-  return await signMessageWithMnemonic(message, mnemonic, liquidJSNet);
+  const net = networks[network];
+  return await signMessageWithMnemonic(message, mnemonic, net);
 }
 
 function getCurrentNetwork(): Network {
@@ -483,17 +494,17 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       const addrs = (await xpub.getAddresses()).reverse();
       if (addrs.length === 0) return;
 
-      const explorer = explorerApiUrl[app.network];
+      const explorer = getExplorerURLSelector(getState());
+
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
         vout,
       }));
-      const network = getCurrentNetwork();
 
       // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
       const utxos = fetchAndUnblindUtxosGenerator(
         addrs,
-        explorerApiUrl[network],
+        explorer,
         // Skip unblinding if utxo exists in current state
         (utxo) => {
           const outpoint = toStringOutpoint(utxo);
@@ -505,7 +516,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {
-        const utxo = utxoIterator.value;
+        const utxo = utxoIterator?.value;
         if (!isBlindedUtxo(utxo)) {
           if (utxo.asset) {
             const assets = getState().assets;
@@ -520,8 +531,10 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       if (utxoIterator.done) {
         console.info(`number of utxos fetched: ${utxoIterator.value.numberOfUtxos}`);
-        for (const err of utxoIterator.value.errors) {
-          console.error(err);
+        if (utxoIterator.value.errors) {
+          console.warn(
+            `${utxoIterator.value.errors.length} errors occurs during utxos updater generator`
+          );
         }
       }
 
@@ -531,7 +544,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
         dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
       }
     } catch (error) {
-      console.error(error);
+      console.error(`fetchAndUpdateUtxos error: ${error.message}`);
     }
   };
 }
@@ -561,16 +574,17 @@ async function fetchAssetInfos(
 export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
-      const { app, txsHistory, wallet } = getState();
+      const { app, txsHistory } = getState();
       if (!app.isAuthenticated) return;
       // Initialize txs to txsHistory shallow clone
-      const txs: TxsHistory = { ...txsHistory[app.network] } ?? {};
-
-      const { confidentialAddresses } = wallet;
-      const addresses = confidentialAddresses.map((addr) => addr.value);
       const pubKeyWallet = await getXpub();
+      const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
+      const walletScripts = addressInterfaces.map((a) =>
+        address.toOutputScript(a.confidentialAddress).toString('hex')
+      );
 
-      const addressInterfaces = await pubKeyWallet.getAddresses();
+      const explorer = getExplorerURLSelector(getState());
+
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
           const address = addressLDK.fromOutputScript(
@@ -588,9 +602,9 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       };
 
       const txsGen = fetchAndUnblindTxsGenerator(
-        addresses,
+        addressInterfaces.map((a) => a.confidentialAddress),
         identityBlindKeyGetter,
-        explorerApiUrl[app.network],
+        explorer,
         // Check if tx exists in React state
         (tx) => txsHistory[app.network][tx.txid] !== undefined
       );
@@ -605,15 +619,12 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       while (!it.done) {
         const tx = it.value;
         // Update all txsHistory state at each single new tx
-        txs[tx.txid] = tx;
-        dispatch({
-          type: TXS_HISTORY_SET_TXS_SUCCESS,
-          payload: { txs, network: app.network },
-        });
+        const toAdd = toDisplayTransaction(tx, walletScripts);
+        dispatch(addTx(toAdd, app.network));
         it = await txsGen.next();
       }
     } catch (error) {
-      console.error(error);
+      console.error(`fetchAndUnblindTxs: ${error}`);
     }
   };
 }
@@ -640,10 +651,7 @@ export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any
 
 export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return (dispatch) => {
-    browser.alarms.create(UPDATE_ALARM, {
-      when: Date.now(),
-      periodInMinutes: 4,
-    });
+    dispatch(updateUtxos());
 
     browser.alarms.onAlarm.addListener((alarm) => {
       switch (alarm.name) {
@@ -657,5 +665,49 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
           break;
       }
     });
+
+    browser.alarms.create(UPDATE_ALARM, {
+      when: Date.now(),
+      periodInMinutes: 4,
+    });
+  };
+}
+
+export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const { isLoading, gapLimit } = state.wallet.deepRestorer;
+    const toRestore = masterPubKeySelector(state);
+    const explorer = getExplorerURLSelector(getState());
+    if (isLoading) return;
+
+    try {
+      dispatch(setDeepRestorerIsLoading(true));
+      const opts = { gapLimit, esploraURL: explorer };
+      const publicKey = await masterPubKeyRestorerFromEsplora(toRestore)(opts);
+      const addresses = (await publicKey.getAddresses()).map((a) =>
+        createAddress(a.confidentialAddress, a.derivationPath)
+      );
+
+      const restorerOpts = getStateRestorerOptsFromAddresses(addresses);
+
+      dispatch(
+        setWalletData({
+          ...state.wallet,
+          restorerOpts,
+          confidentialAddresses: addresses,
+        })
+      );
+
+      dispatch(updateUtxos());
+      dispatch(updateTxsHistory());
+      dispatch(fetchAndSetTaxiAssets());
+
+      dispatch(setDeepRestorerError(undefined));
+    } catch (err) {
+      dispatch(setDeepRestorerError(err.message || err));
+    } finally {
+      dispatch(setDeepRestorerIsLoading(false));
+    }
   };
 }

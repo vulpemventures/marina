@@ -9,6 +9,10 @@ const appInitState: IApp = {
   isAuthenticated: false,
   isWalletVerified: false,
   network: createNetwork(process.env.NETWORK || 'liquid'),
+  explorerByNetwork: {
+    regtest: 'http://localhost:3001',
+    liquid: 'https://blockstream.info/liquid/api',
+  },
 };
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
@@ -50,6 +54,13 @@ export function appReducer(state: IApp = appInitState, { type, payload }: AnyAct
       return {
         ...state,
         network: payload.network,
+      };
+    }
+
+    case ACTION_TYPES.SET_EXPLORER: {
+      return {
+        ...state,
+        explorerByNetwork: { ...state.explorerByNetwork, [payload.network]: payload.explorer },
       };
     }
 

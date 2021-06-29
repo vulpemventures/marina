@@ -1,5 +1,5 @@
 import * as ACTION_TYPES from '../actions/action-types';
-import { TxsHistoryByNetwork } from '../../../domain/transaction';
+import { TxDisplayInterface, TxsHistoryByNetwork } from '../../../domain/transaction';
 import { AnyAction } from 'redux';
 
 const txsHistoryInitState: TxsHistoryByNetwork = { regtest: {}, liquid: {} };
@@ -9,20 +9,14 @@ export function txsHistoryReducer(
   { type, payload }: AnyAction
 ): TxsHistoryByNetwork {
   switch (type) {
-    case ACTION_TYPES.INIT_TXS_HISTORY: {
-      return {
-        ...state,
-        ...payload,
-      };
-    }
-
-    case ACTION_TYPES.TXS_HISTORY_SET_TXS_SUCCESS: {
+    case ACTION_TYPES.ADD_TX: {
       let newLiquidTxsHistory = state.liquid;
       let newRegtestTxsHistory = state.regtest;
+      const toAddTx = payload.tx as TxDisplayInterface;
       if (payload.network === 'liquid') {
-        newLiquidTxsHistory = { ...state.liquid, ...payload.txs };
+        newLiquidTxsHistory = { ...state.liquid, [toAddTx.txId]: toAddTx };
       } else {
-        newRegtestTxsHistory = { ...state.regtest, ...payload.txs };
+        newRegtestTxsHistory = { ...state.regtest, [toAddTx.txId]: toAddTx };
       }
       return { regtest: newRegtestTxsHistory, liquid: newLiquidTxsHistory };
     }

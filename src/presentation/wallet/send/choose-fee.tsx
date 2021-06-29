@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { greedyCoinSelector, MasterPublicKey, RecipientInterface, walletFromCoins } from 'ldk';
+import {
+  greedyCoinSelector,
+  masterPubKeyRestorerFromState,
+  MasterPublicKey,
+  RecipientInterface,
+  StateRestorerOpts,
+  walletFromCoins,
+} from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -26,11 +33,11 @@ import {
   setFeeChangeAddress,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { setAddress } from '../../../application/redux/actions/wallet';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
 
 export interface ChooseFeeProps {
   network: Network;
@@ -44,6 +51,7 @@ export interface ChooseFeeProps {
   taxiAssets: string[];
   lbtcAssetHash: string;
   masterPubKey: MasterPublicKey;
+  restorerOpts: StateRestorerOpts;
 }
 
 const ChooseFeeView: React.FC<ChooseFeeProps> = ({
@@ -58,6 +66,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   taxiAssets,
   lbtcAssetHash,
   masterPubKey,
+  restorerOpts,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -146,7 +155,8 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     let nextChangeAddr = feeChange;
     if (!nextChangeAddr) {
-      const next = await masterPubKey.getNextChangeAddress();
+      const restored = await masterPubKeyRestorerFromState(masterPubKey)(restorerOpts);
+      const next = await restored.getNextChangeAddress();
       nextChangeAddr = createAddress(next.confidentialAddress, next.derivationPath);
       setFeeChange(nextChangeAddr);
     }
@@ -192,7 +202,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (feeChange) {
         await Promise.all([
           dispatch(setFeeChangeAddress(feeChange)),
-          dispatch(setAddress(feeChange)),
+          dispatch(incrementChangeAddressIndex()),
         ]);
       }
 

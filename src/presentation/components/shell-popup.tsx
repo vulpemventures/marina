@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { updateUtxos } from '../../application/redux/actions/utxos';
 import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
+import { RootReducerState } from '../../domain/common';
 
 interface Props {
   btnDisabled?: boolean;
@@ -30,6 +31,9 @@ const ShellPopUp: React.FC<Props> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
+  const deepRestorerLoading = useSelector(
+    (state: RootReducerState) => state.wallet.deepRestorer.isLoading
+  );
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
@@ -90,9 +94,10 @@ const ShellPopUp: React.FC<Props> = ({
     <div id="shell-popup" className="grid h-screen">
       <header>
         <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center justify-between h-12 border-b-2">
-          <button disabled={btnDisabled} onClick={goToHome}>
+          <button onClick={goToHome}>
             <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
           </button>
+          {deepRestorerLoading && <span className="animate-pulse">Deep Restorer loading... </span>}
           <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>

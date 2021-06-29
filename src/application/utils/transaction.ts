@@ -10,18 +10,18 @@ import {
   isBlindedOutputInterface,
   psetToUnsignedTx,
   RecipientInterface,
+  StateRestorerOpts,
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
 } from 'ldk';
 import { confidential } from 'liquidjs-lib';
-import { mnemonicWalletFromAddresses } from './restorer';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
 import { Address } from '../../domain/address';
-import moment from 'moment';
+import { mnemonicWallet } from './restorer';
 
-export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
+function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
 
   for (const outAddr of outputAddresses) {
@@ -38,27 +38,20 @@ export function outPubKeysMap(pset: string, outputAddresses: string[]): Map<numb
 
 export async function blindAndSignPset(
   mnemonic: string,
-  masterBlindingKey: string,
-  addresses: Address[],
+  restorerOpts: StateRestorerOpts,
   chain: string,
-  psetBase64: string,
-  outputsToBlind: number[],
-  outPubkeys: Map<number, string>
+  psetBase64: string
 ): Promise<string> {
-  const mnemonicWallet = await mnemonicWalletFromAddresses(
-    mnemonic,
-    masterBlindingKey,
-    addresses,
-    chain
-  );
+  const mnemo = await mnemonicWallet(mnemonic, restorerOpts, chain);
 
-  const blindedPset: string = await mnemonicWallet.blindPset(
-    psetBase64,
-    outputsToBlind,
-    outPubkeys
-  );
+  const outputAddresses = (await mnemo.getAddresses()).map((a) => a.confidentialAddress);
 
-  const signedPset: string = await mnemonicWallet.signPset(blindedPset);
+  const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses);
+  const outputsToBlind = Array.from(outputPubKeys.keys());
+
+  const blindedPset: string = await mnemo.blindPset(psetBase64, outputsToBlind, outputPubKeys);
+
+  const signedPset: string = await mnemo.signPset(blindedPset);
 
   const ptx = decodePset(signedPset);
   if (!ptx.validateSignaturesOfAllInputs()) {
@@ -108,7 +101,7 @@ export function toDisplayTransaction(tx: TxInterface, walletScripts: string[]): 
   const transfers = getTransfers(tx.vin, tx.vout, walletScripts);
   return {
     txId: tx.txid,
-    blockTime: tx.status.blockTime ? moment(tx.status.blockTime * 1000) : undefined,
+    blockTimeMs: tx.status.blockTime ? tx.status.blockTime * 1000 : undefined,
     status: tx.status.confirmed ? TxStatusEnum.Confirmed : TxStatusEnum.Pending,
     fee: tx.fee,
     transfers,

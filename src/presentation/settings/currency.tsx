@@ -14,9 +14,10 @@ const SettingsCurrency: React.FC = () => {
     >
       <p className="font-regular my-8 text-base text-left">Choose the currency conversion</p>
       <Select
-        data={currencies}
-        selectedValue={selectedCurrency}
-        setSelectedValue={setSelectedCurrency}
+        list={currencies}
+        selected={selectedCurrency}
+        onSelect={setSelectedCurrency}
+        disabled={false}
       />
       <br />
       <p className="font-regular my-8 text-sm text-left">

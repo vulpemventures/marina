@@ -1,45 +1,42 @@
-import { IdentityRestorerInterface, IdentityType, Mnemonic } from 'ldk';
-import { IdentityInterface } from 'ldk/dist/identity/identity';
+import { StateRestorerOpts, Mnemonic, IdentityType, mnemonicRestorerFromState } from 'ldk';
 import { Address } from '../../domain/address';
 
-export async function waitForRestoration(identity: IdentityInterface) {
-  await identity.isRestored;
+export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRestorerOpts {
+  const derivationPaths = addresses.map((addr) => addr.derivationPath);
+
+  const indexes = [];
+  const changeIndexes = [];
+
+  for (const path of derivationPaths) {
+    if (!path) continue;
+    const splitted = path.split('/');
+    const isChange = splitted[splitted.length - 2] === '1';
+    const index = parseInt(splitted[splitted.length - 1]);
+
+    if (isChange) {
+      changeIndexes.push(index);
+      continue;
+    }
+
+    indexes.push(index);
+  }
+
+  return {
+    lastUsedExternalIndex: Math.max(...indexes),
+    lastUsedInternalIndex: Math.max(...changeIndexes),
+  };
 }
 
-export async function mnemonicWalletFromAddresses(
+export function mnemonicWallet(
   mnemonic: string,
-  masterBlindingKey: string,
-  addresses: Address[],
+  restorerOpts: StateRestorerOpts,
   chain: string
-): Promise<IdentityInterface> {
-  const restorer = new IdentityRestorerFromState(addresses.map((addr) => addr.value));
+): Promise<Mnemonic> {
   const mnemonicWallet = new Mnemonic({
     chain,
-    restorer,
     type: IdentityType.Mnemonic,
-    value: { mnemonic, masterBlindingKey },
-    initializeFromRestorer: true,
+    opts: { mnemonic },
   });
-  const isRestored = await mnemonicWallet.isRestored;
-  if (!isRestored) {
-    throw new Error('Failed to restore wallet');
-  }
-  return mnemonicWallet;
-}
 
-export class IdentityRestorerFromState implements IdentityRestorerInterface {
-  private addresses: string[] = [];
-
-  constructor(addresses: string[]) {
-    this.addresses = addresses;
-  }
-
-  addressHasBeenUsed(address: string): Promise<boolean> {
-    if (this.addresses.length === 0) return Promise.resolve(false);
-    return Promise.resolve(this.addresses.includes(address));
-  }
-
-  async addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]> {
-    return Promise.all(addresses.map((addr) => this.addressHasBeenUsed(addr)));
-  }
+  return mnemonicRestorerFromState(mnemonicWallet)(restorerOpts);
 }

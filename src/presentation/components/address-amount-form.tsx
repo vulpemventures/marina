@@ -1,23 +1,19 @@
 import { FormikProps, withFormik } from 'formik';
-import { MasterPublicKey } from 'ldk';
+import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { RouteComponentProps } from 'react-router';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import cx from 'classnames';
 import Button from './button';
-import { setAddress } from '../../application/redux/actions/wallet';
 import { setAddressesAndAmount } from '../../application/redux/actions/transaction';
 import { createAddress } from '../../domain/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
-import {
-  defaultPrecision,
-  isValidAddressForNetwork,
-  waitForRestoration,
-} from '../../application/utils';
+import { defaultPrecision, isValidAddressForNetwork } from '../../application/utils';
 import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import { IAssets } from '../../domain/assets';
 import { Network } from '../../domain/network';
+import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 
 interface AddressAmountFormValues {
   address: string;
@@ -33,6 +29,7 @@ interface AddressAmountFormProps {
   assetPrecision: number;
   history: RouteComponentProps['history'];
   pubKey: MasterPublicKey;
+  restorerOpts: StateRestorerOpts;
   transaction: TransactionState;
   assets: IAssets;
   network: Network;
@@ -125,7 +122,10 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
       props.transaction.sendAmount > 0
-        ? fromSatoshi(props.transaction.sendAmount)
+        ? fromSatoshi(
+            props.transaction.sendAmount,
+            props.assets[props.transaction.sendAsset].precision
+          )
         : ('' as unknown as number),
     assetTicker: props.assets[props.transaction.sendAsset]?.ticker ?? '',
     assetPrecision: props.assets[props.transaction.sendAsset]?.precision ?? defaultPrecision,
@@ -157,21 +157,21 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     }),
 
   handleSubmit: async (values, { props }) => {
-    await waitForRestoration(props.pubKey);
-    const changeAddressGenerated = await props.pubKey.getNextChangeAddress();
+    const masterPubKey = await masterPubKeyRestorerFromState(props.pubKey)(props.restorerOpts);
+    const changeAddressGenerated = await masterPubKey.getNextChangeAddress();
     const changeAddress = createAddress(
       changeAddressGenerated.confidentialAddress,
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(setAddress(changeAddress)); // persist address in wallet
+    await props.dispatch(incrementChangeAddressIndex()); // persist address in wallet
 
     await props
       .dispatch(
         setAddressesAndAmount(
           createAddress(values.address),
           changeAddress,
-          toSatoshi(values.amount)
+          toSatoshi(values.amount, values.assetPrecision)
         )
       )
       .catch(console.error);
