@@ -3,7 +3,6 @@ import { lbtcAssetByNetwork } from '../../utils';
 import { walletTransactions } from './transaction.selector';
 
 export type BalancesByAsset = { [assetHash: string]: number };
-
 /**
  * Extract balances from all unblinded utxos in state
  * @param onSuccess

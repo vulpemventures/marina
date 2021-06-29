@@ -9,8 +9,8 @@ export default class WindowProxy {
         (event: Event) => {
           const response = (event as CustomEvent).detail;
 
+          console.info(response)
           if (!response.success) return reject(new Error(response.error));
-
           return resolve(response.data);
         },
         {

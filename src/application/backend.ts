@@ -60,6 +60,8 @@ import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
 import { addTx, updateTxs } from './redux/actions/transaction';
 import { getExplorerURLSelector } from './redux/selectors/app.selector';
+import { walletTransactions } from './redux/selectors/transaction.selector';
+import { balancesSelector } from './redux/selectors/balance.selector';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -379,6 +381,39 @@ export default class Backend {
 
                 return handleResponse(id);
               } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getTransactions.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                const transactions = walletTransactions(marinaStore.getState());
+                return handleResponse(id, transactions);
+              } catch (e) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getCoins.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                const coins = Object.values(marinaStore.getState().wallet.utxoMap);
+                return handleResponse(id, coins);
+              } catch (e) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getBalances.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                const balances = balancesSelector(marinaStore.getState());
+                return handleResponse(id, balances);
+              } catch (e) {
                 return handleError(id, e);
               }
 
