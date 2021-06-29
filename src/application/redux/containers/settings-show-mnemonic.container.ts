@@ -6,7 +6,6 @@ import SettingsShowMnemonicView, {
 
 const mapStateToProps = (state: RootReducerState): SettingsShowMnemonicProps => ({
   wallet: state.wallet,
-  network: state.app.network,
 });
 
 const SettingsShowMnemonic = connect(mapStateToProps)(SettingsShowMnemonicView);

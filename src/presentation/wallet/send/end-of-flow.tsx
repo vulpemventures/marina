@@ -42,7 +42,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         throw new Error('Invalid password');
       }
 
-      const mnemonic = decrypt(wallet.encryptedMnemonic, pass, network);
+      const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
 
       tx = await blindAndSignPset(mnemonic, restorerOpts, network, pset);
 

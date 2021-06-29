@@ -448,7 +448,7 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
   const state = marinaStore.getState();
   const { wallet, app } = state;
   try {
-    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), app.network);
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
@@ -464,7 +464,7 @@ async function signMsgWithPassword(
   const network = getCurrentNetwork();
   try {
     const { wallet } = marinaStore.getState();
-    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), network);
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
