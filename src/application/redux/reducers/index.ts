@@ -43,10 +43,12 @@ function createLocalStorageConfig<S>(
     version,
     whitelist,
     blacklist,
-    migrate: (state: any) => ({
-      ...state,
-      ...initialState,
-    }),
+    migrate: (state: any) => {
+      return Promise.resolve({
+        ...state,
+        ...initialState,
+      });
+    },
   };
 }
 
