@@ -5,7 +5,7 @@ import { transactionInitState, transactionReducer, TransactionState } from './tr
 import { txsHistoryReducer, txsHistoryInitState } from './txs-history-reducer';
 import { AnyAction, combineReducers, Reducer } from 'redux';
 import { appInitState, appReducer } from './app-reducer';
-import { connectDataReducer } from './connect-data-reducer';
+import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
 import { Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
 import { browser } from 'webextension-polyfill-ts';
@@ -14,7 +14,7 @@ import { IApp } from '../../../domain/app';
 import { TxsHistoryByNetwork } from '../../../domain/transaction';
 import { IWallet } from '../../../domain/wallet';
 import { taxiReducer, TaxiState, taxiInitState } from './taxi-reducer';
-import { ConnectData, newEmptyConnectData } from '../../../domain/connect';
+import { ConnectData } from '../../../domain/connect';
 import { IAssets } from '../../../domain/assets';
 import { PersistConfig } from 'redux-persist/lib/types';
 
@@ -112,7 +112,7 @@ const marinaReducer = combineReducers({
     key: 'connect',
     whitelist: ['enabledSites'],
     version: 1,
-    initialState: newEmptyConnectData(),
+    initialState: connectDataInitState,
   }),
 });
 

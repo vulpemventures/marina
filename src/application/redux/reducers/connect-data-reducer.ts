@@ -3,7 +3,7 @@ import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
 import { ConnectData, newEmptyConnectData } from '../../../domain/connect';
 
-const connectDataInitState: ConnectData = newEmptyConnectData();
+export const connectDataInitState: ConnectData = newEmptyConnectData();
 
 export function connectDataReducer(
   state: ConnectData = connectDataInitState,
