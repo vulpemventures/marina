@@ -5,7 +5,7 @@ import { IWallet } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 
-const initialStateWallet: IWallet = {
+export const walletInitState: IWallet = {
   restorerOpts: {
     lastUsedExternalIndex: 0,
     lastUsedInternalIndex: 0,
@@ -22,7 +22,7 @@ const initialStateWallet: IWallet = {
 };
 
 export function walletReducer(
-  state: IWallet = initialStateWallet,
+  state: IWallet = walletInitState,
   { type, payload }: AnyAction
 ): IWallet {
   switch (type) {

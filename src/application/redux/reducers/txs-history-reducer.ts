@@ -2,7 +2,7 @@ import * as ACTION_TYPES from '../actions/action-types';
 import { TxDisplayInterface, TxsHistoryByNetwork } from '../../../domain/transaction';
 import { AnyAction } from 'redux';
 
-const txsHistoryInitState: TxsHistoryByNetwork = { regtest: {}, liquid: {} };
+export const txsHistoryInitState: TxsHistoryByNetwork = { regtest: {}, liquid: {} };
 
 export function txsHistoryReducer(
   state: TxsHistoryByNetwork = txsHistoryInitState,
