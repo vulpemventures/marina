@@ -9,7 +9,7 @@ import { connectDataReducer } from './connect-data-reducer';
 import { Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
 import { browser } from 'webextension-polyfill-ts';
-import persistReducer from 'redux-persist/es/persistReducer';
+import persistReducer, { PersistPartial } from 'redux-persist/es/persistReducer';
 import { IApp } from '../../../domain/app';
 import { TxsHistoryByNetwork } from '../../../domain/transaction';
 import { IWallet } from '../../../domain/wallet';
@@ -29,36 +29,60 @@ const browserLocalStorage: Storage = {
   removeItem: async (key: string) => browser.storage.local.remove(key),
 };
 
-const localStorageConfig = (key: string, whitelist?: string[], blacklist?: string[]) => ({
+const createLocalStorageConfig = (
+  key: string,
+  whitelist?: string[],
+  blacklist?: string[],
+  version = 0
+) => ({
   key,
   storage: browserLocalStorage,
-  version: 0,
+  version,
   whitelist,
   blacklist,
 });
 
-const persist = (
-  reducer: Reducer,
-  key: string,
-  whitelist?: string[],
-  blacklist?: string[]
-): Reducer => persistReducer(localStorageConfig(key, whitelist, blacklist), reducer);
+// custom persist reducer function
+function persist<S extends any>(opts: {
+  reducer: Reducer<S, AnyAction>;
+  key: string;
+  whitelist?: string[];
+  blacklist?: string[];
+  version?: number;
+}): Reducer<S & PersistPartial, AnyAction> {
+  return persistReducer(
+    createLocalStorageConfig(opts.key, opts.whitelist, opts.blacklist, opts.version),
+    opts.reducer
+  );
+}
 
 const marinaReducer = combineReducers({
-  app: persist(appReducer, 'app') as Reducer<IApp, AnyAction>,
-  assets: persist(assetReducer, 'assets') as Reducer<IAssets, AnyAction>,
+  app: persist<IApp>({ reducer: appReducer, key: 'app', version: 1 }),
+  assets: persist<IAssets>({ reducer: assetReducer, key: 'assets', version: 1 }),
   onboarding: onboardingReducer,
-  transaction: persist(transactionReducer, 'transaction') as Reducer<TransactionState, AnyAction>,
-  txsHistory: persist(txsHistoryReducer, 'txsHistory') as Reducer<TxsHistoryByNetwork, AnyAction>,
-  wallet: persist(walletReducer, 'wallet', undefined, ['deepRestorer']) as Reducer<
-    IWallet,
-    AnyAction
-  >,
-  taxi: persist(taxiReducer, 'taxi') as Reducer<TaxiState, AnyAction>,
-  connect: persist(connectDataReducer, 'connect', ['enabledSites']) as Reducer<
-    ConnectData,
-    AnyAction
-  >,
+  transaction: persist<TransactionState>({
+    reducer: transactionReducer,
+    key: 'transaction',
+    version: 1,
+  }),
+  txsHistory: persist<TxsHistoryByNetwork>({
+    reducer: txsHistoryReducer,
+    key: 'txsHistory',
+    version: 1,
+  }),
+  wallet: persist<IWallet>({
+    reducer: walletReducer,
+    key: 'wallet',
+    blacklist: ['deepRestorer'],
+    version: 1,
+  }),
+  taxi: persist<TaxiState>({ reducer: taxiReducer, key: 'taxi', version: 1 }),
+  connect: persist<ConnectData>({
+    reducer: connectDataReducer,
+    key: 'connect',
+    whitelist: ['enabledSites'],
+    version: 1,
+  }),
 });
 
 export default marinaReducer;
