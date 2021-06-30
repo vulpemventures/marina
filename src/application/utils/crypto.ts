@@ -31,3 +31,8 @@ export function decrypt(
 export function hash(text: Password): PasswordHash {
   return createPasswordHash(crypto.createHash('sha256').update(text).digest('hex'));
 }
+
+export function hashStrings(strings: string[]): string {
+  const toHash = strings.sort().join();
+  return crypto.createHash('sha1').update(toHash).digest('hex')
+}

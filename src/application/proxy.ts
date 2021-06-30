@@ -1,4 +1,15 @@
+import { ProxyStore } from './redux/proxyStore';
+
 export default class WindowProxy {
+  private txsHash: string = '';
+  private utxosHash: string = '';
+
+  constructor(store: ProxyStore) {
+    store.subscribe(function () {
+      store.getState()
+    })
+  }
+
   proxy(name: string, params: any[] = []): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = makeid(16);
