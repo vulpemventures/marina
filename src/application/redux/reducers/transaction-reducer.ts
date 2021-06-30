@@ -16,7 +16,7 @@ export interface TransactionState {
   feeChangeAddress?: Address;
 }
 
-const transactionInitState: TransactionState = {
+export const transactionInitState: TransactionState = {
   step: 'empty',
   sendAsset: '',
   sendAddress: undefined,

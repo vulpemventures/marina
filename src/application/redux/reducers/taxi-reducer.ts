@@ -4,11 +4,14 @@ export interface TaxiState {
   taxiAssets: string[];
 }
 
-const initState: TaxiState = {
+export const taxiInitState: TaxiState = {
   taxiAssets: [],
 };
 
-export function taxiReducer(state: TaxiState = initState, { type, payload }: AnyAction): TaxiState {
+export function taxiReducer(
+  state: TaxiState = taxiInitState,
+  { type, payload }: AnyAction
+): TaxiState {
   switch (type) {
     case SET_TAXI_ASSETS:
       return { ...state, taxiAssets: payload };
