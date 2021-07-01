@@ -1,3 +1,4 @@
+import { MarinaEvent } from './utils/marina-event';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime } from 'webextension-polyfill-ts';
 
@@ -12,6 +13,7 @@ export default class Broker {
   }
 
   onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
+    alert(message.id)
     // emit event when background script reponds
     this.emitter.emit(message.id, message.payload);
   }

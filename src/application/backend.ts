@@ -62,15 +62,21 @@ import { addTx, updateTxs } from './redux/actions/transaction';
 import { getExplorerURLSelector } from './redux/selectors/app.selector';
 import { walletTransactions } from './redux/selectors/transaction.selector';
 import { balancesSelector } from './redux/selectors/balance.selector';
+import { TxsHistory } from '../domain/transaction';
+import { compareTxsHistoryState, compareUtxoState, MarinaEvent } from './utils/marina-event';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
 export default class Backend {
   private emitter: SafeEventEmitter;
+  private utxoState: Record<string, UtxoInterface> = {};
+  private txsHistoryState: TxsHistory = {};
 
   constructor() {
     this.emitter = new SafeEventEmitter();
+
+
   }
 
   waitForEvent<T>(event: string): Promise<T> {
@@ -94,6 +100,25 @@ export default class Backend {
 
   start() {
     browser.runtime.onConnect.addListener((port: Runtime.Port) => {
+      // subscribe to marinaStore when port is connected
+      marinaStore.subscribe(() => {
+        const state = marinaStore.getState();
+        const newUtxoState = state.wallet.utxoMap;
+        const newTxsHistoryState = state.txsHistory[state.app.network];
+
+        const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
+        const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
+
+        const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents];
+
+        for (const event of events) {
+          handleResponse('marina_event', event)
+        }
+
+        this.utxoState = newUtxoState;
+        this.txsHistoryState = newTxsHistoryState;
+      })
+
       // We listen for API calls from injected Marina provider.
       // id is random identifier used as reference in the response
       // name is the name of the API method
@@ -416,7 +441,6 @@ export default class Backend {
               } catch (e) {
                 return handleError(id, e);
               }
-
             //
             default:
               return handleError(id, new Error('Method not implemented.'));
@@ -483,7 +507,7 @@ async function getMnemonic(password: string): Promise<IdentityInterface> {
   const state = marinaStore.getState();
   const { wallet, app } = state;
   try {
-    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), app.network);
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
@@ -499,7 +523,7 @@ async function signMsgWithPassword(
   const network = getCurrentNetwork();
   try {
     const { wallet } = marinaStore.getState();
-    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password), network);
+    mnemonic = decrypt(wallet.encryptedMnemonic, createPassword(password));
   } catch (e: any) {
     throw new Error('Invalid password');
   }
