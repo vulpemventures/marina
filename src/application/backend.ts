@@ -68,6 +68,8 @@ import { compareTxsHistoryState, compareUtxoState, MarinaEvent } from './utils/m
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
+export const MARINA_EVENT = 'marina_event';
+
 export default class Backend {
   private emitter: SafeEventEmitter;
   private utxoState: Record<string, UtxoInterface> = {};
@@ -75,8 +77,6 @@ export default class Backend {
 
   constructor() {
     this.emitter = new SafeEventEmitter();
-
-
   }
 
   waitForEvent<T>(event: string): Promise<T> {
@@ -110,13 +110,11 @@ export default class Backend {
         const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
 
         const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents];
-
-        for (const event of events) {
-          handleResponse('marina_event', event)
+        if (events.length > 0) {
+          handleResponse(MARINA_EVENT, events);
+          this.utxoState = newUtxoState;
+          this.txsHistoryState = newTxsHistoryState;
         }
-
-        this.utxoState = newUtxoState;
-        this.txsHistoryState = newTxsHistoryState;
       })
 
       // We listen for API calls from injected Marina provider.
@@ -448,12 +446,10 @@ export default class Backend {
         }
       );
 
-      //
       const handleResponse = (id: string, data?: any) => {
         port.postMessage({ id, payload: { success: true, data } });
       };
 
-      //
       const handleError = (id: string, e: Error) => {
         console.error(e);
         port.postMessage({

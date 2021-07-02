@@ -1,6 +1,6 @@
-import { MarinaEvent } from './utils/marina-event';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime } from 'webextension-polyfill-ts';
+import { MARINA_EVENT } from './backend';
 
 export default class Broker {
   private port: Runtime.Port;
@@ -13,12 +13,14 @@ export default class Broker {
   }
 
   onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
-    alert(message.id)
-    // emit event when background script reponds
     this.emitter.emit(message.id, message.payload);
   }
 
   start() {
+    this.emitter.on(MARINA_EVENT, (result: { success: boolean; data?: any }) => {
+      window.dispatchEvent(new CustomEvent(MARINA_EVENT, { detail: result }))
+    });
+
     // start listening for messages from the injected script in page
     window.addEventListener(
       'message',

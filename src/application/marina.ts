@@ -9,18 +9,15 @@ import {
 } from 'marina-provider';
 import { TxDisplayInterface } from '../domain/transaction';
 import WindowProxy from './proxy';
-import { MarinaEvent } from './utils/marina-event';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
   constructor() {
     super();
     console.log('test')
-    window.addEventListener("marina_event", (event: Event) => {
+    window.addEventListener('marina_event', (event: Event) => {
       console.info('event listener starts')
-      const marinaEvent = (event as CustomEvent).detail;
-      const { type, payload } = marinaEvent as MarinaEvent<any>;
-      console.info(type, payload);
-      alert(payload.toString())
+      const marinaEvents = (event as CustomEvent).detail;
+      console.log(marinaEvents);
     })
   }
 
