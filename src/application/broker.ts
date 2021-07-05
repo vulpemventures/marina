@@ -7,7 +7,6 @@ import {
   compareTxsHistoryState,
   compareUtxoState,
   MarinaEvent,
-  MarinaEventType,
 } from './utils/marina-event';
 import { UtxoInterface } from 'ldk';
 import { TxsHistory } from '../domain/transaction';
@@ -41,25 +40,9 @@ export default class Broker {
           this.txsHistoryState = newTxsHistoryState;
 
           for (const ev of events) {
-            switch (ev.type) {
-              case MarinaEventType.NEW_TX:
-                window.dispatchEvent(
-                  new CustomEvent('marina_event_new_tx', { detail: ev.payload })
-                );
-                break;
-              case MarinaEventType.NEW_UTXO:
-                window.dispatchEvent(
-                  new CustomEvent('marina_event_new_utxo', { detail: ev.payload })
-                );
-                break;
-              case MarinaEventType.SPENT_UTXO:
-                window.dispatchEvent(
-                  new CustomEvent('marina_event_spent_utxo', { detail: ev.payload })
-                );
-                break;
-              default:
-                break;
-            }
+            window.dispatchEvent(
+              new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, { detail: ev.payload })
+            );
           }
         });
       })

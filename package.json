@@ -55,7 +55,7 @@
     "ldk": "^0.3.7",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
-    "marina-provider": "^1.1.0",
+    "marina-provider": "github:louisinger/marina-provider#enrich-API",
     "moment": "^2.29.1",
     "postcss": "^7.0.35",
     "qrcode.react": "^1.0.1",

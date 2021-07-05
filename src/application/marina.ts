@@ -1,13 +1,14 @@
-import { BalancesByAsset } from './redux/selectors/balance.selector';
-import { UtxoInterface } from 'ldk';
 import {
   MarinaProvider,
   AddressInterface,
   TransactionHex,
   PsetBase64,
   SignedMessage,
+  Transaction,
+  Utxo,
+  Balance,
+  MarinaEventType
 } from 'marina-provider';
-import { TxDisplayInterface } from '../domain/transaction';
 import WindowProxy from './proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
@@ -63,19 +64,19 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.signMessage.name, [message]);
   }
 
-  getCoins(): Promise<UtxoInterface[]> {
+  getCoins(): Promise<Utxo[]> {
     return this.proxy(this.getCoins.name, []);
   }
 
-  getTransactions(): Promise<TxDisplayInterface[]> {
+  getTransactions(): Promise<Transaction[]> {
     return this.proxy(this.getTransactions.name, []);
   }
 
-  getBalances(): Promise<BalancesByAsset> {
+  getBalances(): Promise<Balance[]> {
     return this.proxy(this.getBalances.name, []);
   }
 
-  on(type: 'new_utxo' | 'new_tx' | 'spent_utxo', callback: (payload: any) => void) {
+  on(type: MarinaEventType, callback: (payload: any) => void) {
     return super.on(type, callback);
   }
 }

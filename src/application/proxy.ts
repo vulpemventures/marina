@@ -1,3 +1,5 @@
+import { MarinaEventType } from "marina-provider";
+
 export default class WindowProxy {
   proxy(name: string, params: any[] = []): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -34,8 +36,8 @@ export default class WindowProxy {
     );
   }
 
-  on(type: 'new_utxo' | 'new_tx' | 'spent_utxo', callback: (payload: any) => void) {
-    window.addEventListener(`marina_event_${type}`, (event: Event) => {
+  on(type: MarinaEventType, callback: (payload: any) => void) {
+    window.addEventListener(`marina_event_${type.toLowerCase()}`, (event: Event) => {
       const payload = (event as CustomEvent).detail;
       callback(payload);
     });

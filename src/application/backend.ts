@@ -57,11 +57,12 @@ import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
-import { IAssets } from '../domain/assets';
+import { assetGetterFromIAssets, IAssets } from '../domain/assets';
 import { addTx, updateTxs } from './redux/actions/transaction';
 import { getExplorerURLSelector } from './redux/selectors/app.selector';
 import { walletTransactions } from './redux/selectors/transaction.selector';
 import { balancesSelector } from './redux/selectors/balance.selector';
+import { Balance } from 'marina-provider';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -412,7 +413,15 @@ export default class Backend {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
                 const balances = balancesSelector(marinaStore.getState());
-                return handleResponse(id, balances);
+                const assetGetter = assetGetterFromIAssets(marinaStore.getState().assets);
+
+                const results: Balance[] = [];
+
+                for (const [assetHash, amount] of Object.entries(balances)) {
+                  results.push({ asset: assetGetter(assetHash), amount });
+                }
+
+                return handleResponse(id, results);
               } catch (e) {
                 return handleError(id, e);
               }
