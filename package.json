@@ -1,6 +1,6 @@
 {
   "name": "marina",
-  "version": "0.1.9",
+  "version": "0.2.2",
   "private": true,
   "scripts": {
     "build": "npm run clean && npm run copy-assets && run-p build:**",

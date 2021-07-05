@@ -4,7 +4,7 @@ import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
 
-const appInitState: IApp = {
+export const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
   isWalletVerified: false,
