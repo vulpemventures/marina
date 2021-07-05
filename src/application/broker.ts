@@ -4,6 +4,7 @@ import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime } from 'webextension-polyfill-ts';
 import { Store } from 'webext-redux';
 import {
+  compareEnabledWebsites,
   compareTxsHistoryState,
   compareUtxoState,
   MarinaEvent,
@@ -11,12 +12,14 @@ import {
 import { UtxoInterface } from 'ldk';
 import { TxsHistory } from '../domain/transaction';
 import { AnyAction } from 'redux';
+import { Network } from '../domain/network';
 
 export default class Broker {
   private port: Runtime.Port;
   private emitter: SafeEventEmitter;
   private utxoState: Record<string, UtxoInterface> = {};
   private txsHistoryState: TxsHistory = {};
+  private enabledWebsitesState: Record<Network, string[]> = { regtest: [], liquid: [] };
 
   constructor() {
     this.emitter = new SafeEventEmitter();
@@ -24,20 +27,31 @@ export default class Broker {
     this.port.onMessage.addListener((message) => this.onMessage(message));
 
     const store = new Store<RootReducerState, AnyAction>(serializerAndDeserializer);
+
     store
       .ready()
       .then(() => {
+        const state = store.getState();
+        // init the cached states
+        this.utxoState = state.wallet.utxoMap;
+        this.txsHistoryState = state.txsHistory[state.app.network];
+        this.enabledWebsitesState = state.connect.enabledSites;
+
         store.subscribe(() => {
           const state = store.getState();
           const newUtxoState = state.wallet.utxoMap;
           const newTxsHistoryState = state.txsHistory[state.app.network];
+          const newEnabledWebsites = state.connect.enabledSites;
 
           const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
           const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
+          const enabledAndDisabledEvents = compareEnabledWebsites(this.enabledWebsitesState, newEnabledWebsites);
 
-          const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents];
+          const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents, ...enabledAndDisabledEvents];
+
           this.utxoState = newUtxoState;
           this.txsHistoryState = newTxsHistoryState;
+          this.enabledWebsitesState = newEnabledWebsites;
 
           for (const ev of events) {
             window.dispatchEvent(
