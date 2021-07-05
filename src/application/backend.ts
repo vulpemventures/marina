@@ -99,6 +99,7 @@ export default class Backend {
   }
 
   start() {
+    let counter = 0;
     browser.runtime.onConnect.addListener((port: Runtime.Port) => {
       // subscribe to marinaStore when port is connected
       marinaStore.subscribe(() => {
@@ -110,8 +111,10 @@ export default class Backend {
         const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
 
         const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents];
+
         if (events.length > 0) {
-          handleResponse(MARINA_EVENT, events);
+          handleResponse(`${MARINA_EVENT}_${counter}`, events);
+          counter++;
           this.utxoState = newUtxoState;
           this.txsHistoryState = newTxsHistoryState;
         }

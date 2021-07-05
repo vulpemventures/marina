@@ -1,3 +1,4 @@
+import { WindowPostMessageStream } from '@metamask/post-message-stream';
 import { BalancesByAsset } from './redux/selectors/balance.selector';
 import { UtxoInterface } from 'ldk';
 import {
@@ -14,11 +15,8 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   constructor() {
     super();
     console.log('test')
-    window.addEventListener('marina_event', (event: Event) => {
-      console.info('event listener starts')
-      const marinaEvents = (event as CustomEvent).detail;
-      console.log(marinaEvents);
-    })
+    const stream = new WindowPostMessageStream({ name: 'streamInjectScript', target: 'streamContentScript' })
+    stream.on('marina_event', (data) => console.log(data))
   }
 
   enable(): Promise<void> {
