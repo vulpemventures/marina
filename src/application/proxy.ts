@@ -1,4 +1,4 @@
-import { MarinaEventType } from "marina-provider";
+import { MarinaEventType } from 'marina-provider';
 
 export default class WindowProxy {
   proxy(name: string, params: any[] = []): Promise<any> {

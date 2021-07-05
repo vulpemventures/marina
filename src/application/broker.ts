@@ -45,9 +45,16 @@ export default class Broker {
 
           const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
           const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
-          const enabledAndDisabledEvents = compareEnabledWebsites(this.enabledWebsitesState, newEnabledWebsites);
+          const enabledAndDisabledEvents = compareEnabledWebsites(
+            this.enabledWebsitesState,
+            newEnabledWebsites
+          );
 
-          const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents, ...enabledAndDisabledEvents];
+          const events: MarinaEvent<any>[] = [
+            ...utxosEvents,
+            ...txsEvents,
+            ...enabledAndDisabledEvents,
+          ];
 
           this.utxoState = newUtxoState;
           this.txsHistoryState = newTxsHistoryState;

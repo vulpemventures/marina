@@ -58,7 +58,10 @@ export function compareUtxoState(
   return events;
 }
 
-export function compareEnabledWebsites(oldState: Record<Network, string[]>, newState: Record<Network, string[]>) {
+export function compareEnabledWebsites(
+  oldState: Record<Network, string[]>,
+  newState: Record<Network, string[]>
+) {
   const events: (DisabledMarinaEvent | EnabledMarinaEvent)[] = [];
 
   for (const network of ['liquid', 'regtest'] as Network[]) {
