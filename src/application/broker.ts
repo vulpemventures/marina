@@ -1,26 +1,73 @@
-import { WindowPostMessageStream } from '@metamask/post-message-stream';
+import { serializerAndDeserializer } from './redux/store';
+import { RootReducerState } from './../domain/common';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { browser, Runtime } from 'webextension-polyfill-ts';
-import { MARINA_EVENT } from './backend';
+import { Store } from 'webext-redux';
+import {
+  compareTxsHistoryState,
+  compareUtxoState,
+  MarinaEvent,
+  MarinaEventType,
+} from './utils/marina-event';
+import { UtxoInterface } from 'ldk';
+import { TxsHistory } from '../domain/transaction';
+import { AnyAction } from 'redux';
 
 export default class Broker {
   private port: Runtime.Port;
   private emitter: SafeEventEmitter;
-  private stream: WindowPostMessageStream;
+  private utxoState: Record<string, UtxoInterface> = {};
+  private txsHistoryState: TxsHistory = {};
 
   constructor() {
     this.emitter = new SafeEventEmitter();
     this.port = browser.runtime.connect();
     this.port.onMessage.addListener((message) => this.onMessage(message));
-    this.stream = new WindowPostMessageStream({ target: 'streamInjectScript', name: 'streamContentScript' })
+
+    const store = new Store<RootReducerState, AnyAction>(serializerAndDeserializer);
+    store
+      .ready()
+      .then(() => {
+        store.subscribe(() => {
+          const state = store.getState();
+          const newUtxoState = state.wallet.utxoMap;
+          const newTxsHistoryState = state.txsHistory[state.app.network];
+
+          const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
+          const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
+
+          const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents];
+          this.utxoState = newUtxoState;
+          this.txsHistoryState = newTxsHistoryState;
+
+          for (const ev of events) {
+            switch (ev.type) {
+              case MarinaEventType.NEW_TX:
+                window.dispatchEvent(
+                  new CustomEvent('marina_event_new_tx', { detail: ev.payload })
+                );
+                break;
+              case MarinaEventType.NEW_UTXO:
+                window.dispatchEvent(
+                  new CustomEvent('marina_event_new_utxo', { detail: ev.payload })
+                );
+                break;
+              case MarinaEventType.SPENT_UTXO:
+                window.dispatchEvent(
+                  new CustomEvent('marina_event_spent_utxo', { detail: ev.payload })
+                );
+                break;
+              default:
+                break;
+            }
+          }
+        });
+      })
+      .catch(console.error);
   }
 
   onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
-    if (message.id.includes(MARINA_EVENT)) {
-      this.stream.write(message.payload.data);
-    } else {
-      this.emitter.emit(message.id, message.payload);
-    }
+    this.emitter.emit(message.id, message.payload);
   }
 
   start() {

@@ -1,4 +1,3 @@
-import { WindowPostMessageStream } from '@metamask/post-message-stream';
 import { BalancesByAsset } from './redux/selectors/balance.selector';
 import { UtxoInterface } from 'ldk';
 import {
@@ -12,13 +11,6 @@ import { TxDisplayInterface } from '../domain/transaction';
 import WindowProxy from './proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
-  constructor() {
-    super();
-    console.log('test')
-    const stream = new WindowPostMessageStream({ name: 'streamInjectScript', target: 'streamContentScript' })
-    stream.on('marina_event', (data) => console.log(data))
-  }
-
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
@@ -80,6 +72,10 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   getBalances(): Promise<BalancesByAsset> {
-    return this.proxy(this.getBalances.name, [])
+    return this.proxy(this.getBalances.name, []);
+  }
+
+  on(type: 'new_utxo' | 'new_tx' | 'spent_utxo', callback: (payload: any) => void) {
+    return super.on(type, callback);
   }
 }

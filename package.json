@@ -43,7 +43,6 @@
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
-    "@metamask/post-message-stream": "^4.0.0",
     "@metamask/safe-event-emitter": "^2.0.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",
     "autoprefixer": "^9.8.6",

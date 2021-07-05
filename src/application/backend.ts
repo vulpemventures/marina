@@ -62,18 +62,12 @@ import { addTx, updateTxs } from './redux/actions/transaction';
 import { getExplorerURLSelector } from './redux/selectors/app.selector';
 import { walletTransactions } from './redux/selectors/transaction.selector';
 import { balancesSelector } from './redux/selectors/balance.selector';
-import { TxsHistory } from '../domain/transaction';
-import { compareTxsHistoryState, compareUtxoState, MarinaEvent } from './utils/marina-event';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
-export const MARINA_EVENT = 'marina_event';
-
 export default class Backend {
   private emitter: SafeEventEmitter;
-  private utxoState: Record<string, UtxoInterface> = {};
-  private txsHistoryState: TxsHistory = {};
 
   constructor() {
     this.emitter = new SafeEventEmitter();
@@ -99,27 +93,7 @@ export default class Backend {
   }
 
   start() {
-    let counter = 0;
     browser.runtime.onConnect.addListener((port: Runtime.Port) => {
-      // subscribe to marinaStore when port is connected
-      marinaStore.subscribe(() => {
-        const state = marinaStore.getState();
-        const newUtxoState = state.wallet.utxoMap;
-        const newTxsHistoryState = state.txsHistory[state.app.network];
-
-        const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
-        const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
-
-        const events: MarinaEvent<any>[] = [...utxosEvents, ...txsEvents];
-
-        if (events.length > 0) {
-          handleResponse(`${MARINA_EVENT}_${counter}`, events);
-          counter++;
-          this.utxoState = newUtxoState;
-          this.txsHistoryState = newTxsHistoryState;
-        }
-      })
-
       // We listen for API calls from injected Marina provider.
       // id is random identifier used as reference in the response
       // name is the name of the API method

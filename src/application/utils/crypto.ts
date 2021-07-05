@@ -34,5 +34,5 @@ export function hash(text: Password): PasswordHash {
 
 export function hashStrings(strings: string[]): string {
   const toHash = strings.sort().join();
-  return crypto.createHash('sha1').update(toHash).digest('hex')
+  return crypto.createHash('sha1').update(toHash).digest('hex');
 }
