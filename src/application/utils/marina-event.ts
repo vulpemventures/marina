@@ -60,7 +60,8 @@ export function compareUtxoState(
 
 export function compareEnabledWebsites(
   oldState: Record<Network, string[]>,
-  newState: Record<Network, string[]>
+  newState: Record<Network, string[]>,
+  currentHostname: string,
 ) {
   const events: (DisabledMarinaEvent | EnabledMarinaEvent)[] = [];
 
@@ -81,5 +82,5 @@ export function compareEnabledWebsites(
     }
   }
 
-  return events;
+  return events.filter((ev) => ev.payload.hostname === currentHostname);
 }

@@ -3,8 +3,10 @@ import { browser } from 'webextension-polyfill-ts';
 import Broker from './broker';
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
+
 if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
-  const broker = new Broker();
+  const currentHostname = window.location.hostname;
+  const broker = new Broker(currentHostname);
   broker.start();
 
   injectScript(browser.extension.getURL('inject.js'));

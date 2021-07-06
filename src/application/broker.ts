@@ -21,7 +21,7 @@ export default class Broker {
   private txsHistoryState: TxsHistory = {};
   private enabledWebsitesState: Record<Network, string[]> = { regtest: [], liquid: [] };
 
-  constructor() {
+  constructor(currentHostname: string) {
     this.emitter = new SafeEventEmitter();
     this.port = browser.runtime.connect();
     this.port.onMessage.addListener((message) => this.onMessage(message));
@@ -47,7 +47,8 @@ export default class Broker {
           const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
           const enabledAndDisabledEvents = compareEnabledWebsites(
             this.enabledWebsitesState,
-            newEnabledWebsites
+            newEnabledWebsites,
+            currentHostname,
           );
 
           const events: MarinaEvent<any>[] = [
