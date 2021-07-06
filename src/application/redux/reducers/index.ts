@@ -30,14 +30,6 @@ const browserLocalStorage: Storage = {
   removeItem: async (key: string) => browser.storage.local.remove(key),
 };
 
-const localStorageConfig = (key: string, whitelist?: string[], blacklist?: string[]) => ({
-  key,
-  storage: browserLocalStorage,
-  version: 0,
-  whitelist,
-  blacklist,
-});
-
 function createLocalStorageConfig<S>(
   initialState: S,
   key: string,
