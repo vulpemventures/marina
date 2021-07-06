@@ -13,6 +13,7 @@ export type SpentUtxoMarinaEvent = MarinaEvent<Outpoint>;
 export type NewTxMarinaEvent = MarinaEvent<TxDisplayInterface>;
 export type EnabledMarinaEvent = MarinaEvent<{ network: Network; hostname: string }>;
 export type DisabledMarinaEvent = MarinaEvent<{ network: Network; hostname: string }>;
+export type NetworkMarinaEvent = MarinaEvent<Network>;
 
 // compare tx history states and return marina events
 export function compareTxsHistoryState(
@@ -61,7 +62,7 @@ export function compareUtxoState(
 export function compareEnabledWebsites(
   oldState: Record<Network, string[]>,
   newState: Record<Network, string[]>,
-  currentHostname: string,
+  currentHostname: string
 ) {
   const events: (DisabledMarinaEvent | EnabledMarinaEvent)[] = [];
 
@@ -83,4 +84,9 @@ export function compareEnabledWebsites(
   }
 
   return events.filter((ev) => ev.payload.hostname === currentHostname);
+}
+
+export function networkChange(oldNetwork: Network, newNetwork: Network): NetworkMarinaEvent[] {
+  if (oldNetwork !== newNetwork) return [{ type: 'NETWORK', payload: newNetwork }];
+  else return [];
 }

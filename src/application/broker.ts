@@ -8,6 +8,7 @@ import {
   compareTxsHistoryState,
   compareUtxoState,
   MarinaEvent,
+  networkChange,
 } from './utils/marina-event';
 import { UtxoInterface } from 'ldk';
 import { TxsHistory } from '../domain/transaction';
@@ -20,6 +21,7 @@ export default class Broker {
   private utxoState: Record<string, UtxoInterface> = {};
   private txsHistoryState: TxsHistory = {};
   private enabledWebsitesState: Record<Network, string[]> = { regtest: [], liquid: [] };
+  private network: Network = 'liquid';
 
   constructor(currentHostname: string) {
     this.emitter = new SafeEventEmitter();
@@ -36,30 +38,35 @@ export default class Broker {
         this.utxoState = state.wallet.utxoMap;
         this.txsHistoryState = state.txsHistory[state.app.network];
         this.enabledWebsitesState = state.connect.enabledSites;
+        this.network = state.app.network;
 
         store.subscribe(() => {
           const state = store.getState();
           const newUtxoState = state.wallet.utxoMap;
           const newTxsHistoryState = state.txsHistory[state.app.network];
           const newEnabledWebsites = state.connect.enabledSites;
+          const newNetwork = state.app.network;
 
           const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
           const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
           const enabledAndDisabledEvents = compareEnabledWebsites(
             this.enabledWebsitesState,
             newEnabledWebsites,
-            currentHostname,
+            currentHostname
           );
+          const networkEvents = networkChange(this.network, newNetwork);
 
           const events: MarinaEvent<any>[] = [
             ...utxosEvents,
             ...txsEvents,
             ...enabledAndDisabledEvents,
+            ...networkEvents,
           ];
 
           this.utxoState = newUtxoState;
           this.txsHistoryState = newTxsHistoryState;
           this.enabledWebsitesState = newEnabledWebsites;
+          this.network = newNetwork;
 
           for (const ev of events) {
             window.dispatchEvent(
