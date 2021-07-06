@@ -52,7 +52,11 @@ import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
-import { masterPubKeySelector, restorerOptsSelector, utxosSelector } from './redux/selectors/wallet.selector';
+import {
+  masterPubKeySelector,
+  restorerOptsSelector,
+  utxosSelector,
+} from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
