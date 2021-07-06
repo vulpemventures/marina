@@ -52,7 +52,7 @@ import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
-import { masterPubKeySelector, restorerOptsSelector } from './redux/selectors/wallet.selector';
+import { masterPubKeySelector, restorerOptsSelector, utxosSelector } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
@@ -401,7 +401,7 @@ export default class Backend {
                 if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
-                const coins = Object.values(marinaStore.getState().wallet.utxoMap);
+                const coins = utxosSelector(marinaStore.getState());
                 return handleResponse(id, coins);
               } catch (e) {
                 return handleError(id, e);
