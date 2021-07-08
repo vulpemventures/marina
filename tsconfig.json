@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "charset": "utf8",
+    "emitBOM": true,
     "checkJs": false,
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
