@@ -76,7 +76,6 @@
     "yup": "^0.32.9"
   },
   "devDependencies": {
-    "@babel/preset-env": "7.13.8",
     "@headlessui/react": "^1.1.1",
     "@tailwindcss/forms": "^0.3.2",
     "@tailwindcss/line-clamp": "^0.2.0",
