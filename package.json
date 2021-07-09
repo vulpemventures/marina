@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run clean && npm run copy-assets && run-p build:**",
     "build:html": "npx parcel build --no-cache public/*.html",
-    "build:scripts": "npx parcel build --no-cache src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
+    "build:scripts": "npx parcel build --no-cache --no-minify src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "clean": "rimraf dist",
     "copy-assets": "mkdir -p dist && cp public/manifest.json dist/ && cp -r public/assets dist/",
     "lint": "eslint --ext .ts,.tsx src test",
