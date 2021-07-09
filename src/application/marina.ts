@@ -79,4 +79,8 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   on(type: MarinaEventType, callback: (payload: any) => void) {
     return super.on(type, callback);
   }
+
+  off(id: string) {
+    super.off(id);
+  }
 }
