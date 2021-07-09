@@ -34,19 +34,19 @@ jobs:
           docker-compose -f  tmp/docker-compose.yml up -d
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: Bundle app
-        run: npm run build
+        run: yarn run build
       - name: Package the extension
-        run: npm run web-ext:build
+        run: yarn run web-ext:build
 
       - name: Lint
         run: |
-          npm run lint
-          npm run prettier:check
+          yarn lint
+          yarn prettier:check
 
       - name: Test
-        run: npm run test
+        run: yarn test
         env:
           CI: true
