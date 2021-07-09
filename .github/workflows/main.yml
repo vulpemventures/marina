@@ -22,7 +22,6 @@ jobs:
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
@@ -35,7 +34,7 @@ jobs:
           docker-compose -f  tmp/docker-compose.yml up -d
 
       - name: Install dependencies
-        run: npm install --ci
+        run: npm install
 
       - name: Bundle app
         run: npm run build
