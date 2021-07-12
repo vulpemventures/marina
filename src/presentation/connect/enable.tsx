@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import {
@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
 import { RootReducerState } from '../../domain/common';
+import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
@@ -19,21 +20,25 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const windowProxy = new WindowProxy();
 
   const handleReject = async () => {
-    window.close();
     await windowProxy.proxy('ENABLE_RESPONSE', [false]);
+    window.close();
   };
 
   const handleConnect = async () => {
     try {
       await dispatch(enableWebsite(connectData.hostnameSelected, network));
       await dispatch(flushSelectedHostname(network));
-      window.close();
       await windowProxy.proxy('ENABLE_RESPONSE', [true]);
-    } catch (e) {
       window.close();
+    } catch (e) {
       await windowProxy.proxy('ENABLE_RESPONSE', [false]);
+      window.close();
     }
   };
+
+  const debouncedHandleConnect = useRef(
+    debounce(handleConnect, 2000, { leading: true, trailing: false })
+  ).current;
 
   return (
     <ShellConnectPopup
@@ -57,7 +62,7 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
-        <Button onClick={handleConnect} textBase={true}>
+        <Button onClick={debouncedHandleConnect} textBase={true}>
           Connect
         </Button>
       </div>
