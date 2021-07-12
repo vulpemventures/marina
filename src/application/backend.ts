@@ -130,10 +130,34 @@ export default class Backend {
                   await this.waitForEvent(Marina.prototype.enable.name);
                   return handleResponse(id);
                 }
-                return handleError(id, new Error('current site is already enabled.'));
+                return handleError(id, new Error('current site is already enabled'));
               } catch (e: any) {
                 return handleError(id, e);
               }
+
+            case 'ENABLE_RESPONSE':
+              try {
+                const [accepted] = params;
+
+                // exit early if user rejected the transaction
+                if (!accepted) {
+                  // respond to the injected script
+                  this.emitter.emit(
+                    Marina.prototype.enable.name,
+                    new Error('User rejected the enable request')
+                  );
+                  // repond to the popup so it can be closed
+                  return handleResponse(id);
+                }
+
+                // respond to the injected script
+                this.emitter.emit(Marina.prototype.enable.name);
+
+                return handleResponse(id);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
 
             case Marina.prototype.disable.name:
               try {
