@@ -105,8 +105,6 @@ export default class Backend {
       // params is the list of arguments from the method
       port.onMessage.addListener(
         async ({ id, name, params }: { id: string; name: string; params: any[] }) => {
-          alert('message received: ' + id)
-
           switch (name) {
             case Marina.prototype.getNetwork.name:
               try {
@@ -130,7 +128,6 @@ export default class Backend {
                   marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
                   await showPopup(`connect/enable`);
                   await this.waitForEvent(Marina.prototype.enable.name);
-                  alert('end')
                   return handleResponse(id);
                 }
                 return handleError(id, new Error('current site is already enabled'));
@@ -466,7 +463,6 @@ export default class Backend {
       );
 
       const handleResponse = (id: string, data?: any) => {
-        alert('handle response' + id)
         port.postMessage({ id, payload: { success: true, data } });
       };
 
