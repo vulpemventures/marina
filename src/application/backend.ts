@@ -158,7 +158,6 @@ export default class Backend {
                 return handleError(id, e);
               }
 
-
             case Marina.prototype.disable.name:
               try {
                 const hostname = await getCurrentUrl();
