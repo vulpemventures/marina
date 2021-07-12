@@ -123,11 +123,14 @@ export default class Backend {
 
             case Marina.prototype.enable.name:
               try {
-                const url = await getCurrentUrl();
-                marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
-                await showPopup(`connect/enable`);
-                await this.waitForEvent(Marina.prototype.enable.name);
-                return handleResponse(id);
+                if (!(await this.isCurentSiteEnabled())) {
+                  const url = await getCurrentUrl();
+                  marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
+                  await showPopup(`connect/enable`);
+                  await this.waitForEvent(Marina.prototype.enable.name);
+                  return handleResponse(id);
+                }
+                return handleError(id, new Error('current site is already enabled.'));
               } catch (e: any) {
                 return handleError(id, e);
               }
