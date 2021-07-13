@@ -40,7 +40,8 @@
     "watchliquid:html": "npx parcel watch public/*.html",
     "watchliquid:scripts": "npx parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "web-ext:build": "web-ext build --source-dir dist --overwrite-dest --ignore-files report.html",
-    "web-ext:lint": "web-ext lint --source-dir dist"
+    "web-ext:lint": "web-ext lint --source-dir dist",
+    "cypress:open": "yarn run cypress open"
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",
@@ -77,8 +78,10 @@
   },
   "devDependencies": {
     "@headlessui/react": "^1.1.1",
+    "@poziworld/cypress-browser-extension-plugin": "^0.2.2",
     "@tailwindcss/forms": "^0.3.2",
     "@tailwindcss/line-clamp": "^0.2.0",
+    "@types/chai": "^4.2.21",
     "@types/classnames": "^2.3.1",
     "@types/jest": "^26.0.23",
     "@types/qrcode.react": "^1.0.1",
@@ -94,10 +97,13 @@
     "@types/yup": "^0.29.11",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
+    "chai": "^4.3.4",
     "classnames": "^2.3.1",
+    "cypress": "^7.7.0",
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^7.2.0",
     "eslint-config-react-app": "^6.0.0",
+    "eslint-plugin-cypress": "^2.11.3",
     "eslint-plugin-flowtype": "^5.7.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jest": "^24.3.6",
