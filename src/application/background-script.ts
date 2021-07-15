@@ -2,10 +2,11 @@ import { browser, Idle } from 'webextension-polyfill-ts';
 import { IDLE_MESSAGE_TYPE } from './utils';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend from './backend';
-import { logOut } from './redux/actions/app';
+import { logOut, onboardingCompleted } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
 import { setWalletData } from './redux/actions/wallet';
 import { testWalletData } from './constants/cypress';
+import { setUpPopup } from './utils/popup';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -30,6 +31,8 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
           marinaStore.dispatch(setWalletData(testWalletData));
+          await setUpPopup();
+          marinaStore.dispatch(onboardingCompleted());
           break;
         }
 

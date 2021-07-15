@@ -41,7 +41,8 @@
     "watchliquid:scripts": "npx parcel watch src/application/inject.ts src/application/background-script.ts src/application/content-script.ts",
     "web-ext:build": "web-ext build --source-dir dist --overwrite-dest --ignore-files report.html",
     "web-ext:lint": "web-ext lint --source-dir dist",
-    "cypress:open": "yarn run cypress open"
+    "cypress:open": "yarn run cypress open",
+    "cypress:build": "NODE_ENV=test NETWORK=regtest yarn build"
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",

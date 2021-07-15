@@ -22,7 +22,7 @@ export const verifyWalletSuccess = (): AnyAction => ({
   type: VERIFICATION_SUCCESS,
 });
 
-export const onBoardingCompleted = (): AnyAction => ({
+export const onboardingCompleted = (): AnyAction => ({
   type: ONBOARDING_COMPLETETED,
 });
 
