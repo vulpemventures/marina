@@ -36,6 +36,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         explorerURL
       );
 
+      console.log(walletData);
       await dispatch(setWalletData(walletData));
 
       // Startup alarms to fetch utxos & set the popup page

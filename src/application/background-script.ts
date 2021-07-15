@@ -4,6 +4,8 @@ import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import Backend from './backend';
 import { logOut } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
+import { setWalletData } from './redux/actions/wallet';
+import { testWalletData } from './constants/cypress';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -25,6 +27,12 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install':
+        // /!\ skip onboarding in test env
+        if (process.env.NODE_ENV === 'test') {
+          marinaStore.dispatch(setWalletData(testWalletData));
+          break;
+        }
+
         // run onboarding flow on fullscreen
         welcomeTabID = await openInitializeWelcomeRoute();
         break;

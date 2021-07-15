@@ -3,6 +3,7 @@ import { RootReducerState } from '../../../domain/common';
 
 export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
   const { masterBlindingKey, masterXPub } = state.wallet;
+  console.log(state.wallet);
   const network = state.app.network;
   const pubKeyWallet = new MasterPublicKey({
     chain: network,
