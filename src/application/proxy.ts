@@ -55,6 +55,11 @@ export default class WindowProxy {
   }
 
   on(type: MarinaEventType, callback: (payload: any) => void): EventListenerID {
+    if (!isMarinaEventType(type))
+      throw new Error(
+        'event type is wrong, please choose one of the following: "DISABLED" | "ENABLED" | "NEW_UTXO" | "NEW_TX" | "SPENT_UTXO" | "NETWORK"'
+      );
+
     const id = makeid(8);
     this.addEventListener(type, { id, listener: callback });
     return id;
@@ -100,4 +105,15 @@ export function makeid(length: number): string {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
+}
+
+function isMarinaEventType(str: string): str is MarinaEventType {
+  return (
+    str === 'DISABLED' ||
+    str === 'ENABLED' ||
+    str === 'NEW_UTXO' ||
+    str === 'NEW_TX' ||
+    str === 'SPENT_UTXO' ||
+    str === 'NETWORK'
+  );
 }
