@@ -8,7 +8,7 @@ describe('My First Test', () => {
 
     cy.get('.App')
       .find('.success')
-      .should('have.length', 10)
+      .should('have.length', 11)
 
     cy.get('.App')
       .find('.error')
