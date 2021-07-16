@@ -5,7 +5,7 @@ import Backend from './backend';
 import { logOut, onboardingCompleted } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
 import { setWalletData } from './redux/actions/wallet';
-import { testWalletData, testAppURL } from './constants/cypress';
+import { testWalletData } from './constants/cypress';
 import { setUpPopup } from './utils/popup';
 import { enableWebsite } from './redux/actions/connect';
 
@@ -32,9 +32,9 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
           marinaStore.dispatch(setWalletData(testWalletData));
+          marinaStore.dispatch(enableWebsite('louisinger.github.io', 'regtest')); // skip the enable step too
           await setUpPopup();
           marinaStore.dispatch(onboardingCompleted());
-          marinaStore.dispatch(enableWebsite(testAppURL, 'regtest')); // skip the enable step too
           break;
         }
 
