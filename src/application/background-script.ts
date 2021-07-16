@@ -5,8 +5,9 @@ import Backend from './backend';
 import { logOut, onboardingCompleted } from './redux/actions/app';
 import { marinaStore, wrapMarinaStore } from './redux/store';
 import { setWalletData } from './redux/actions/wallet';
-import { testWalletData } from './constants/cypress';
+import { testWalletData, testAppURL } from './constants/cypress';
 import { setUpPopup } from './utils/popup';
+import { enableWebsite } from './redux/actions/connect';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -33,6 +34,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           marinaStore.dispatch(setWalletData(testWalletData));
           await setUpPopup();
           marinaStore.dispatch(onboardingCompleted());
+          marinaStore.dispatch(enableWebsite(testAppURL, 'regtest')); // skip the enable step too
           break;
         }
 

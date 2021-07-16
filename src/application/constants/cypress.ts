@@ -14,3 +14,5 @@ export const testWalletData = {
   passwordHash: '8314b7cd43641c00d3389128fe0d8ff2c286d5bb42313fe88da1d6c88a60f48e',
   confidentialAddresses: [],
 };
+
+export const testAppURL = "https://louisinger.github.io/marina-api-test-app/";

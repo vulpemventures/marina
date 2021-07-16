@@ -1,12 +1,8 @@
-import { expect } from 'chai';
-import { MarinaProvider } from 'marina-provider';
-
-const extension = require('@poziworld/cypress-browser-extension-plugin/helpers')();
+import { testAppURL } from './../../src/application/constants/cypress';
 
 describe('My First Test', () => {
   it('Does not do much!', async () => {
-    const url = 'https://louisinger.github.io/marina-api-test-app/';
-    cy.visit(url);
+    cy.visit(testAppURL);
     cy.get('button').click();
     cy.wait(2000);
 
