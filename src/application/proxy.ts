@@ -16,6 +16,8 @@ const initialEventListeners: Record<MarinaEventType, MarinaEventListener[]> = {
   SPENT_UTXO: [],
 };
 
+const allEvents = Object.keys(initialEventListeners);
+
 export default class WindowProxy {
   private eventListeners: Record<MarinaEventType, MarinaEventListener[]> = initialEventListeners;
 
@@ -55,13 +57,12 @@ export default class WindowProxy {
   }
 
   on(type: MarinaEventType, callback: (payload: any) => void): EventListenerID {
-    if (!isMarinaEventType(type))
-      throw new Error(
-        'event type is wrong, please choose one of the following: "DISABLED" | "ENABLED" | "NEW_UTXO" | "NEW_TX" | "SPENT_UTXO" | "NETWORK"'
-      );
+    const uppercaseType = type.toUpperCase();
+    if (!isMarinaEventType(uppercaseType))
+      throw new Error(`event type is wrong, please choose one of the following: ${allEvents}`);
 
     const id = makeid(8);
-    this.addEventListener(type, { id, listener: callback });
+    this.addEventListener(uppercaseType, { id, listener: callback });
     return id;
   }
 
@@ -108,12 +109,5 @@ export function makeid(length: number): string {
 }
 
 function isMarinaEventType(str: string): str is MarinaEventType {
-  return (
-    str === 'DISABLED' ||
-    str === 'ENABLED' ||
-    str === 'NEW_UTXO' ||
-    str === 'NEW_TX' ||
-    str === 'SPENT_UTXO' ||
-    str === 'NETWORK'
-  );
+  return allEvents.includes(str);
 }
