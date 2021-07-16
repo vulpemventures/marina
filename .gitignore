@@ -47,3 +47,6 @@ tmp
 runtaxi.sh
 
 /taxid
+
+# cypress
+/cypress/videos

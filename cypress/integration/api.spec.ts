@@ -1,7 +1,7 @@
 import { testAppURL } from './../../src/application/constants/cypress';
 
 describe('My First Test', () => {
-  it('Does not do much!', async () => {
+  it('Marina test app API should pass', async () => {
     cy.visit(testAppURL);
     cy.get('button').click();
     cy.wait(2000);
