@@ -455,6 +455,19 @@ export default class Backend {
               } catch (e) {
                 return handleError(id, e);
               }
+
+            case Marina.prototype.isReady.name:
+              if (!(await this.isCurentSiteEnabled())) {
+                return handleError(id, new Error('User must authorize the current website'));
+              }
+
+              try {
+                await getXpub(); // check if Xpub is valid
+                return handleResponse(id, marinaStore.getState().app.isOnboardingCompleted);
+              } catch {
+                return handleResponse(id, false);
+              }
+
             //
             default:
               return handleError(id, new Error('Method not implemented.'));

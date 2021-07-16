@@ -83,4 +83,8 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   off(id: string) {
     super.off(id);
   }
+
+  isReady(): Promise<boolean> {
+    return this.proxy(this.isReady.name, []);
+  }
 }
