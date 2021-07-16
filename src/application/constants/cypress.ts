@@ -15,4 +15,4 @@ export const testWalletData = {
   confidentialAddresses: [],
 };
 
-export const testAppURL = "https://louisinger.github.io/marina-api-test-app/";
+export const testAppURL = 'https://louisinger.github.io/marina-api-test-app/';
