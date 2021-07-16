@@ -12,7 +12,8 @@
     "plugin:import/warnings",
     "plugin:import/errors",
     "plugin:import/typescript",
-    "prettier"
+    "prettier",
+    "plugin:cypress/recommended"
   ],
   "plugins": [
     "@typescript-eslint",
