@@ -32,7 +32,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
           marinaStore.dispatch(setWalletData(testWalletData));
-          marinaStore.dispatch(enableWebsite('louisinger.github.io', 'regtest')); // skip the enable step too
+          marinaStore.dispatch(enableWebsite('vulpemventures.github.io', 'regtest')); // skip the enable step too
           await setUpPopup();
           marinaStore.dispatch(onboardingCompleted());
           break;
