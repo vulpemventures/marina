@@ -28,7 +28,7 @@
     "start:skip-chrome-mac": "(sleep 10 && yarn run run:chrome-mac) & yarn run watchskip",
     "start:skip-brave-linux": "(sleep 10 && yarn run run:brave-linux) & yarn run watchskip",
     "start:skip-chrome-linux": "(sleep 10 && yarn run run:chrome-linux) & yarn run watchskip",
-    "test": "NETWORK=regtest jest --no-cache --verbose",
+    "test": "NETWORK=regtest jest --no-cache --verbose test/**.spec.ts",
     "test:report": "NETWORK=regtest jest --no-cache --verbose --reporters default jest-stare",
     "test:trace": "NETWORK=regtest node --trace-warnings node_modules/.bin/jest --no-cache --verbose",
     "test:watch": "NETWORK=regtest jest --no-cache --verbose --watch",
