@@ -10,8 +10,7 @@ async function startContentScript() {
   if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
     const currentHostname = window.location.hostname;
 
-    const broker = new Broker([await Broker.withProxyStore(currentHostname)]);
-
+    const broker = new Broker([await Broker.WithProxyStore(currentHostname)]);
     broker.start();
 
     injectScript(browser.extension.getURL('inject.js'));

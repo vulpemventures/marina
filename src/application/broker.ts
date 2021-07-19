@@ -43,7 +43,7 @@ export default class Broker {
    * + start the store's subscriber
    * @param hostname the injected script's hostname
    */
-  static async withProxyStore(hostname: string): Promise<BrokerOption> {
+  static async WithProxyStore(hostname: string): Promise<BrokerOption> {
     const s = new Store<RootReducerState, AnyAction>(serializerAndDeserializer);
     await s.ready();
 
