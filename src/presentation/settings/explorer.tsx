@@ -44,7 +44,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       <p className="font-regular my-8 text-base text-left">
         Enter the Explorer URL to retrieve Blockchain data
       </p>
-      <Input name="explorerUrl" placeholder="Explorer URL" type="text" {...props} />
+      <Input name="explorerUrl" placeholder="Esplora endpoint URL" type="text" {...props} />
 
       <div className="bottom-20 right-8 absolute flex justify-end">
         <div className="pr-1">
