@@ -15,6 +15,11 @@ import { TxsHistory } from '../domain/transaction';
 import { AnyAction } from 'redux';
 import { Network } from '../domain/network';
 
+interface Message {
+  id: string;
+  payload: { success: boolean; data?: any; error?: string };
+}
+
 export type BrokerOption = (broker: Broker) => void;
 
 export default class Broker {
@@ -31,7 +36,9 @@ export default class Broker {
   constructor(options: BrokerOption[] = []) {
     this.emitter = new SafeEventEmitter();
     this.port = browser.runtime.connect();
-    this.port.onMessage.addListener((message) => this.onMessage(message));
+    this.port.onMessage.addListener((message: Message) =>
+      this.emitter.emit(message.id, message.payload)
+    );
 
     for (const opt of options) {
       opt(this);
@@ -63,6 +70,8 @@ export default class Broker {
     };
   }
 
+  // start the store.subscribe function
+  // used in `Broker.WithProxyStore` option
   private subscribeToStoreEvents() {
     if (!this.store || !this.hostname) return;
 
@@ -102,20 +111,17 @@ export default class Broker {
     });
   }
 
-  onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {
-    this.emitter.emit(message.id, message.payload);
+  private sendMsgToInjectScript(message: Message) {
+    window.dispatchEvent(new CustomEvent(message.id, { detail: message.payload }));
   }
 
   start() {
     // start listening for messages from the injected script in page
     window.addEventListener(
       'message',
-      (event) => {
-        if (event.source !== window) return;
-        if (!event.data) return;
-
+      (event: MessageEvent<any>) => {
+        if (!isMessageEvent(event)) return;
         const { id, name, params } = event.data;
-        if (!id || !name) return;
         // forward message to the background script
         this.port.postMessage({
           id,
@@ -125,11 +131,18 @@ export default class Broker {
 
         // listen for events from the background script
         // we are going to notify the injected script in page we got a reponse
-        this.emitter.once(id, (result: { success: boolean; data?: any; error?: string }) =>
-          window.dispatchEvent(new CustomEvent(id, { detail: result }))
+        this.emitter.once(id, (payload: { success: boolean; data?: any; error?: string }) =>
+          this.sendMsgToInjectScript({ id, payload })
         );
       },
       false
     );
   }
+}
+
+// custom type guard for MessageEvent
+function isMessageEvent(
+  event: MessageEvent<any>
+): event is MessageEvent<{ id: string; name: string; params?: Array<any> }> {
+  return event.source === window && event.data && event.data.id && event.data.name;
 }
