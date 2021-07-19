@@ -13,7 +13,7 @@ export const appInitState: IApp = {
     regtest: 'http://localhost:3001',
     liquid: 'https://blockstream.info/liquid/api',
   },
-  webExplorer: 'https://blockstream.info/liquid/api',
+  webExplorer: 'https://blockstream.info/liquid',
 };
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {

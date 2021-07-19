@@ -27,7 +27,7 @@ interface SettingsExplorerFormProps {
   webExplorerURL: string;
 }
 
-const webExplorers = ['https://blockstream.info/liquid/api', 'https://mempool.splace/liquid/api'];
+const webExplorers = ['https://blockstream.info/liquid', 'https://mempool.space/liquid'];
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
   const { handleSubmit, isSubmitting, setFieldValue, submitForm, errors, values } = props;
@@ -47,9 +47,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="font-regular my-8 text-base text-left">
-        Esplora URL (Using to retrieve blockchain data)
-      </p>
+      <p className="font-sm mt-3 mb-1 text-base text-left">Web explorer for links</p>
       <Select
         list={webExplorers}
         selected={values.webExplorerURL}
@@ -57,9 +55,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
         disabled={false}
       />
 
-      <p className="font-regular my-1 text-base text-left">
-        Esplora URL (Using to retrieve blockchain data)
-      </p>
+      <p className="font-sm mt-8 mb-1 text-base text-left">Esplora URL</p>
       <Input name="explorerURL" placeholder="Esplora endpoint URL" type="text" {...props} />
 
       <div className="bottom-20 right-8 absolute flex justify-end">
