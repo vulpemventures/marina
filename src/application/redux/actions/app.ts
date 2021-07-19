@@ -7,21 +7,16 @@ import {
   CHANGE_NETWORK_SUCCESS,
   START_PERIODIC_UPDATE,
   SET_EXPLORER,
-  SET_WEB_EXPLORER,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
 import { Password } from '../../../domain/password';
 import { match, PasswordHash } from '../../../domain/password-hash';
+import { ExplorerURLs } from '../../../domain/app';
 
-export const setExplorer = (explorer: string, network: Network): AnyAction => ({
+export const setExplorer = (explorer: ExplorerURLs, network: Network): AnyAction => ({
   type: SET_EXPLORER,
   payload: { explorer, network },
-});
-
-export const setWebExplorer = (webExplorerURL: string): AnyAction => ({
-  type: SET_WEB_EXPLORER,
-  payload: { webExplorerURL },
 });
 
 export const verifyWalletSuccess = (): AnyAction => ({

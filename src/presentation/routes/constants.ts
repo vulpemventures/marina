@@ -39,6 +39,7 @@ const SETTINGS_CHANGE_PASSWORD_ROUTE = '/settings/security/change-password';
 const SETTINGS_MENU_SETTINGS_ROUTE = '/settings/settings';
 const SETTINGS_CURRENCY_ROUTE = '/settings/settings/currency';
 const SETTINGS_EXPLORER_ROUTE = '/settings/settings/explorer';
+const SETTINGS_CUSTOM_EXPLORER_ROUTE = '/settings/settings/explorer/custom';
 const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
 //
 const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
@@ -86,4 +87,5 @@ export {
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
+  SETTINGS_CUSTOM_EXPLORER_ROUTE,
 };
