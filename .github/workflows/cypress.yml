@@ -1,4 +1,4 @@
-name: Marina CI
+name: Marina Cypress CI
 
 on:
   push:
@@ -27,26 +27,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install Nigiri
-        run: |
-          mkdir -p tmp; cd tmp
-          curl https://travis.nigiri.network | bash; cd ..
-          docker-compose -f  tmp/docker-compose.yml up -d
-
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Bundle app
-        run: yarn run build
-      - name: Package the extension
-        run: yarn run web-ext:build
+      - name: Build the app for Cypress
+        run: yarn run cypress:build
 
-      - name: Lint
-        run: |
-          yarn lint
-          yarn prettier:check
-
-      - name: Test
-        run: yarn test
-        env:
-          CI: true
+      - name: Cypress test
+        run: yarn cypress:run

@@ -4,6 +4,10 @@ import {
   TransactionHex,
   PsetBase64,
   SignedMessage,
+  Transaction,
+  Utxo,
+  Balance,
+  MarinaEventType,
 } from 'marina-provider';
 import WindowProxy from './proxy';
 
@@ -58,5 +62,29 @@ export default class Marina extends WindowProxy implements MarinaProvider {
 
   signMessage(message: string): Promise<SignedMessage> {
     return this.proxy(this.signMessage.name, [message]);
+  }
+
+  getCoins(): Promise<Utxo[]> {
+    return this.proxy(this.getCoins.name, []);
+  }
+
+  getTransactions(): Promise<Transaction[]> {
+    return this.proxy(this.getTransactions.name, []);
+  }
+
+  getBalances(): Promise<Balance[]> {
+    return this.proxy(this.getBalances.name, []);
+  }
+
+  on(type: MarinaEventType, callback: (payload: any) => void) {
+    return super.on(type, callback);
+  }
+
+  off(id: string) {
+    super.off(id);
+  }
+
+  isReady(): Promise<boolean> {
+    return this.proxy(this.isReady.name, []);
   }
 }

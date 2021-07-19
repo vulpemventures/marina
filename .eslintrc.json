@@ -12,18 +12,21 @@
     "plugin:import/warnings",
     "plugin:import/errors",
     "plugin:import/typescript",
-    "prettier"
+    "prettier",
+    "plugin:cypress/recommended"
   ],
   "plugins": [
     "@typescript-eslint",
     "jest",
     "prettier",
-    "import"
+    "import",
+    "cypress"
   ],
   "env": {
     "browser": true,
     "es6": true,
-    "node": false
+    "node": false,
+    "cypress/globals": true
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -47,6 +50,11 @@
     "@typescript-eslint/no-unsafe-return": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/no-misused-promises": "off",
-    "react-hooks/exhaustive-deps": "off"
+    "react-hooks/exhaustive-deps": "off",
+    "cypress/no-assigning-return-values": "error",
+    "cypress/no-unnecessary-waiting": "error",
+    "cypress/assertion-before-screenshot": "warn",
+    "cypress/no-force": "warn",
+    "cypress/no-async-tests": "error"
   }
 }

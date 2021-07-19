@@ -52,14 +52,21 @@ import { createAddress } from '../domain/address';
 import { createPassword } from '../domain/password';
 import { marinaStore } from './redux/store';
 import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
-import { masterPubKeySelector, restorerOptsSelector } from './redux/selectors/wallet.selector';
+import {
+  masterPubKeySelector,
+  restorerOptsSelector,
+  utxosSelector,
+} from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
-import { IAssets } from '../domain/assets';
+import { assetGetterFromIAssets, IAssets } from '../domain/assets';
 import { addTx, updateTxs } from './redux/actions/transaction';
 import { getExplorerURLSelector } from './redux/selectors/app.selector';
+import { walletTransactions } from './redux/selectors/transaction.selector';
+import { balancesSelector } from './redux/selectors/balance.selector';
+import { Balance } from 'marina-provider';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -116,10 +123,36 @@ export default class Backend {
 
             case Marina.prototype.enable.name:
               try {
-                const url = await getCurrentUrl();
-                marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
-                await showPopup(`connect/enable`);
-                await this.waitForEvent(Marina.prototype.enable.name);
+                if (!(await this.isCurentSiteEnabled())) {
+                  const url = await getCurrentUrl();
+                  marinaStore.dispatch(selectHostname(url, marinaStore.getState().app.network));
+                  await showPopup(`connect/enable`);
+                  await this.waitForEvent(Marina.prototype.enable.name);
+                  return handleResponse(id);
+                }
+                return handleError(id, new Error('current site is already enabled'));
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
+            case 'ENABLE_RESPONSE':
+              try {
+                const [accepted] = params;
+
+                // exit early if user rejected the transaction
+                if (!accepted) {
+                  // respond to the injected script
+                  this.emitter.emit(
+                    Marina.prototype.enable.name,
+                    new Error('User rejected the enable request')
+                  );
+                  // repond to the popup so it can be closed
+                  return handleResponse(id);
+                }
+
+                // respond to the injected script
+                this.emitter.emit(Marina.prototype.enable.name);
+
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -382,6 +415,55 @@ export default class Backend {
                 return handleError(id, e);
               }
 
+            case Marina.prototype.getTransactions.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                const transactions = walletTransactions(marinaStore.getState());
+                return handleResponse(id, transactions);
+              } catch (e) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getCoins.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                const coins = utxosSelector(marinaStore.getState());
+                return handleResponse(id, coins);
+              } catch (e) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.getBalances.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+                const balances = balancesSelector(marinaStore.getState());
+                const assetGetter = assetGetterFromIAssets(marinaStore.getState().assets);
+
+                const results: Balance[] = [];
+
+                for (const [assetHash, amount] of Object.entries(balances)) {
+                  results.push({ asset: assetGetter(assetHash), amount });
+                }
+
+                return handleResponse(id, results);
+              } catch (e) {
+                return handleError(id, e);
+              }
+
+            case Marina.prototype.isReady.name:
+              try {
+                await getXpub(); // check if Xpub is valid
+                return handleResponse(id, marinaStore.getState().app.isOnboardingCompleted);
+              } catch {
+                return handleResponse(id, false);
+              }
+
             //
             default:
               return handleError(id, new Error('Method not implemented.'));
@@ -389,12 +471,10 @@ export default class Backend {
         }
       );
 
-      //
       const handleResponse = (id: string, data?: any) => {
         port.postMessage({ id, payload: { success: true, data } });
       };
 
-      //
       const handleError = (id: string, e: Error) => {
         console.error(e);
         port.postMessage({

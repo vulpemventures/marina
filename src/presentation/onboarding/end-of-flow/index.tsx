@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { onBoardingCompleted } from '../../../application/redux/actions/app';
+import { onboardingCompleted } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -40,7 +40,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
 
       // Startup alarms to fetch utxos & set the popup page
       await setUpPopup();
-      await dispatch(onBoardingCompleted());
+      await dispatch(onboardingCompleted());
       setIsLoading(false);
       await dispatch(flushOnboarding());
     })().catch(console.error);
