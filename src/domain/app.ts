@@ -14,24 +14,24 @@ export type ExplorerType = 'Blockstream' | 'Mempool' | 'Nigiri' | 'Custom';
 
 export interface ExplorerURLs {
   type: ExplorerType;
-  webExplorer: string;
-  explorer: string;
+  electrsURL: string;
+  esploraURL: string;
 }
 
 export const BlockstreamExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
-  webExplorer: 'https://blockstream.info/liquid',
-  explorer: 'https://blockstream.info/liquid/api',
+  electrsURL: 'https://blockstream.info/liquid',
+  esploraURL: 'https://blockstream.info/liquid/api',
 };
 
 export const NigiriDefaultExplorerURLs: ExplorerURLs = {
   type: 'Nigiri',
-  webExplorer: 'http://localhost:5001',
-  explorer: 'http://localhost:3001',
+  electrsURL: 'http://localhost:5001',
+  esploraURL: 'http://localhost:3001',
 };
 
 export const MempoolExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
-  webExplorer: 'https://mempool.space/liquid',
-  explorer: 'https://mempool.space/liquid/api',
+  electrsURL: 'https://mempool.space/liquid',
+  esploraURL: 'https://mempool.space/liquid/api',
 };

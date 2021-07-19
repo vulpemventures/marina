@@ -12,8 +12,8 @@ import ShellPopUp from '../components/shell-popup';
 import * as Yup from 'yup';
 
 interface SettingsExplorerFormValues {
-  explorerURL: string;
-  webExplorerURL: string;
+  esploraURL: string;
+  electrsURL: string;
   network: Network;
 }
 
@@ -30,15 +30,15 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
     <form onSubmit={handleSubmit}>
       <p className="font-sm mt-3 mb-1 text-base text-left">Custom explorer</p>
 
-      <p className="font-sm mt-8 mb-1 text-base text-left">Esplora endpoint</p>
-      <Input name="explorerURL" placeholder="Esplora endpoint URL" type="text" {...props} />
+      <p className="font-sm mt-8 mb-1 text-base text-left">Esplora URL</p>
+      <Input name="esploraURL" placeholder="Esplora valid endpoint" type="text" {...props} />
 
-      <p className="font-sm mt-8 mb-1 text-base text-left">Explorer for web links</p>
-      <Input name="webExplorerURL" placeholder="Web explorer endpoint" type="text" {...props} />
+      <p className="font-sm mt-8 mb-1 text-base text-left">Electrs URL</p>
+      <Input name="electrsURL" placeholder="Electrs valid endpoint" type="text" {...props} />
 
       <div className="bottom-20 right-8 absolute flex justify-end">
         <div>
-          <Button disabled={!!errors.explorerURL || isSubmitting} type="submit">
+          <Button disabled={!!errors.esploraURL || isSubmitting} type="submit">
             Update
           </Button>
         </div>
@@ -53,19 +53,19 @@ const SettingsExplorerEnhancedForm = withFormik<
 >({
   mapPropsToValues: (props): SettingsExplorerFormValues => ({
     network: props.network,
-    explorerURL: '',
-    webExplorerURL: '',
+    esploraURL: '',
+    electrsURL: '',
   }),
 
   validationSchema: Yup.object().shape({
-    explorerURL: Yup.string().required('An explorer URL is required'),
-    webExplorerURL: Yup.string().required('A web explorer URL is required'),
+    esploraURL: Yup.string().required('An explorer URL is required'),
+    electrsURL: Yup.string().required('A web explorer URL is required'),
   }),
 
   handleSubmit: async (values, { props }) => {
     await props.dispatch(
       setExplorer(
-        { type: 'Custom', explorer: values.explorerURL, webExplorer: values.webExplorerURL },
+        { type: 'Custom', esploraURL: values.esploraURL, electrsURL: values.electrsURL },
         props.network
       )
     );
