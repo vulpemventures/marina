@@ -13,7 +13,7 @@ const Select: React.FC<Props> = ({ list, selected, onSelect, disabled }) => {
       {({ open }) => (
         <>
           <Listbox.Button className="border-primary ring-primary focus:ring-primary focus:border-primary focus:outline-none flex flex-row justify-between w-full px-3 py-2.5 border-2 rounded-md">
-            <span className="text-base font-medium">{selected}</span>
+            <span className="font-md text-sm">{selected}</span>
             {open ? (
               <img src="assets/images/chevron-up.svg" alt="chevron" />
             ) : (

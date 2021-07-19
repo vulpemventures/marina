@@ -10,10 +10,12 @@ import { Network } from '../../domain/network';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { RootReducerState } from '../../domain/common';
 import { getExplorerURLSelector } from '../../application/redux/selectors/app.selector';
-import { setExplorer } from '../../application/redux/actions/app';
+import { setExplorer, setWebExplorer } from '../../application/redux/actions/app';
+import Select from '../components/select';
 
 interface SettingsExplorerFormValues {
-  explorerUrl: string;
+  explorerURL: string;
+  webExplorerURL: string;
   network: Network;
 }
 
@@ -22,7 +24,10 @@ interface SettingsExplorerFormProps {
   history: RouteComponentProps['history'];
   network: Network;
   explorerURL: string;
+  webExplorerURL: string;
 }
+
+const webExplorers = ['https://blockstream.info/liquid/api', 'https://mempool.splace/liquid/api'];
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
   const { handleSubmit, isSubmitting, setFieldValue, submitForm, errors, values } = props;
@@ -32,9 +37,10 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
     if (values.network === 'regtest') {
       defaultValue = 'http://localhost:3001';
     }
-    setFieldValue('explorerUrl', defaultValue, false);
-    // Hack to wait for new value to be applied
-    // https://github.com/formium/formik/issues/529
+    setFieldValue('explorerURL', defaultValue);
+    setFieldValue('webExplorerURL', webExplorers[0]);
+
+    // Hack to wait for new value to be applied - https://github.com/formium/formik/issues/529
     await Promise.resolve();
     submitForm().catch(console.error);
   };
@@ -42,9 +48,19 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
   return (
     <form onSubmit={handleSubmit}>
       <p className="font-regular my-8 text-base text-left">
-        Enter the Explorer URL to retrieve Blockchain data
+        Esplora URL (Using to retrieve blockchain data)
       </p>
-      <Input name="explorerUrl" placeholder="Esplora endpoint URL" type="text" {...props} />
+      <Select
+        list={webExplorers}
+        selected={values.webExplorerURL}
+        onSelect={(newValue: string) => setFieldValue('webExplorerURL', newValue)}
+        disabled={false}
+      />
+
+      <p className="font-regular my-1 text-base text-left">
+        Esplora URL (Using to retrieve blockchain data)
+      </p>
+      <Input name="explorerURL" placeholder="Esplora endpoint URL" type="text" {...props} />
 
       <div className="bottom-20 right-8 absolute flex justify-end">
         <div className="pr-1">
@@ -57,7 +73,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
           </Button>
         </div>
         <div>
-          <Button disabled={!!errors.explorerUrl || isSubmitting} type="submit">
+          <Button disabled={!!errors.explorerURL || isSubmitting} type="submit">
             Update
           </Button>
         </div>
@@ -72,15 +88,17 @@ const SettingsExplorerEnhancedForm = withFormik<
 >({
   mapPropsToValues: (props): SettingsExplorerFormValues => ({
     network: props.network,
-    explorerUrl: '',
+    explorerURL: props.explorerURL,
+    webExplorerURL: props.webExplorerURL,
   }),
 
   validationSchema: Yup.object().shape({
-    explorerUrl: Yup.string().required('An explorer URL is required'),
+    explorerURL: Yup.string().required('An explorer URL is required'),
   }),
 
   handleSubmit: async (values, { props }) => {
-    await props.dispatch(setExplorer(values.explorerUrl, props.network));
+    await props.dispatch(setWebExplorer(values.webExplorerURL));
+    await props.dispatch(setExplorer(values.explorerURL, props.network));
   },
 
   displayName: 'SettingsExplorerForm',
@@ -103,9 +121,8 @@ const SettingsExplorer: React.FC = () => {
         history={history}
         network={app.network}
         explorerURL={explorerURL}
+        webExplorerURL={app.webExplorer}
       />
-      <p className="mt-2 font-bold">Current explorer</p>
-      <p className="font-regular">{explorerURL}</p>
     </ShellPopUp>
   );
 };

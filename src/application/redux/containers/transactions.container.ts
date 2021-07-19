@@ -7,6 +7,7 @@ const mapStateToProps = (state: RootReducerState): TransactionsProps => ({
   assets: state.assets,
   network: state.app.network,
   transactions: walletTransactions(state),
+  webExplorerURL: state.app.webExplorer,
 });
 
 const Transactions = connect(mapStateToProps)(TransactionsView);

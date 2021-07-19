@@ -11,7 +11,7 @@ import Modal from '../../components/modal';
 import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import { imgPathMapMainnet, imgPathMapRegtest, txTypeAsString } from '../../../application/utils';
-import { esploraURL, fromSatoshiStr } from '../../utils';
+import { fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
 import { updateTxs, setAsset } from '../../../application/redux/actions/transaction';
@@ -32,9 +32,15 @@ export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
   network: Network;
+  webExplorerURL: string;
 }
 
-const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, network }) => {
+const TransactionsView: React.FC<TransactionsProps> = ({
+  assets,
+  transactions,
+  network,
+  webExplorerURL,
+}) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -58,11 +64,9 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
   };
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
-  const handleOpenExplorer = async (url?: string) => {
-    if (!url) {
-      url = `${esploraURL[network]}/tx/${modalTxDetails?.txId}`;
-    }
-
+  const handleOpenExplorer = async () => {
+    if (!modalTxDetails) return;
+    const url = `${webExplorerURL}${modalTxDetails.webExplorersBlinders}`;
     await browser.tabs.create({ url, active: false });
   };
 
@@ -158,7 +162,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({ assets, transactions, n
             <p className="wrap text-xs font-light break-all">{modalTxDetails?.txId}</p>
           </div>
         </div>
-        <Button className="w-full" onClick={() => handleOpenExplorer(modalTxDetails?.explorerURL)}>
+        <Button className="w-full" onClick={() => handleOpenExplorer()}>
           See in Explorer
         </Button>
       </Modal>

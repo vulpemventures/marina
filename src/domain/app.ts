@@ -8,4 +8,5 @@ export interface IApp {
   isOnboardingCompleted: boolean;
   network: Network;
   explorerByNetwork: Record<Network, string>;
+  webExplorer: string;
 }

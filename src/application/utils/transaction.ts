@@ -106,7 +106,7 @@ export function toDisplayTransaction(tx: TxInterface, walletScripts: string[]): 
     fee: tx.fee,
     transfers,
     type: txTypeFromTransfer(transfers),
-    explorerURL: getUnblindURLFromTx(tx, 'https://blockstream.info/liquid'),
+    webExplorersBlinders: getUnblindURLFromTx(tx, ''),
   };
 }
 

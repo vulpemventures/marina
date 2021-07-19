@@ -31,7 +31,7 @@ export interface TxDisplayInterface {
   txId: string;
   status: TxStatusEnum;
   transfers: Transfer[];
-  explorerURL: string;
+  webExplorersBlinders: string; // will be concat with webExplorerURL
   blockTimeMs?: number;
 }
 

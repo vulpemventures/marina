@@ -13,6 +13,7 @@ export const appInitState: IApp = {
     regtest: 'http://localhost:3001',
     liquid: 'https://blockstream.info/liquid/api',
   },
+  webExplorer: 'https://blockstream.info/liquid/api',
 };
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
@@ -61,6 +62,13 @@ export function appReducer(state: IApp = appInitState, { type, payload }: AnyAct
       return {
         ...state,
         explorerByNetwork: { ...state.explorerByNetwork, [payload.network]: payload.explorer },
+      };
+    }
+
+    case ACTION_TYPES.SET_WEB_EXPLORER: {
+      return {
+        ...state,
+        webExplorer: payload.webExplorerURL
       };
     }
 

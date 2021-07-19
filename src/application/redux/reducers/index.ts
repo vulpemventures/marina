@@ -74,7 +74,7 @@ function persist<S extends any>(opts: {
 }
 
 const marinaReducer = combineReducers({
-  app: persist<IApp>({ reducer: appReducer, key: 'app', version: 1, initialState: appInitState }),
+  app: persist<IApp>({ reducer: appReducer, key: 'app', version: 2, initialState: appInitState }),
   assets: persist<IAssets>({
     reducer: assetReducer,
     key: 'assets',
