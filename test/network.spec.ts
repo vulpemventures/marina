@@ -1,4 +1,4 @@
-import { createNetwork } from './network';
+import { createNetwork } from '../src/domain/network';
 
 test('Should be able to create a Network', () => {
   const liquid = createNetwork('liquid');

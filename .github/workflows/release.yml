@@ -46,9 +46,9 @@ jobs:
       # Build extension
       - name: Install and build
         run: |
-          npm install
-          npm run build
-          npm run web-ext:build
+          yarn install
+          yarn run build
+          yarn run web-ext:build
 
       # Release to github
       - name: Create Release

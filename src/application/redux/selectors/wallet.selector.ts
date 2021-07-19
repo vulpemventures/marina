@@ -1,8 +1,9 @@
-import { IdentityType, MasterPublicKey, StateRestorerOpts } from 'ldk';
+import { IdentityType, MasterPublicKey, StateRestorerOpts, UtxoInterface } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
 
 export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
   const { masterBlindingKey, masterXPub } = state.wallet;
+  console.log(state.wallet);
   const network = state.app.network;
   const pubKeyWallet = new MasterPublicKey({
     chain: network,
@@ -18,4 +19,8 @@ export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
 
 export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts {
   return state.wallet.restorerOpts;
+}
+
+export function utxosSelector(state: RootReducerState): UtxoInterface[] {
+  return Object.values(state.wallet.utxoMap);
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import {
@@ -9,14 +9,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
 import { RootReducerState } from '../../domain/common';
+import { debounce } from 'lodash';
+import WindowProxy from '../../application/proxy';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
 const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const network = useSelector((state: RootReducerState) => state.app.network);
   const dispatch = useDispatch<ProxyStoreDispatch>();
+  const windowProxy = new WindowProxy();
 
-  const handleReject = () => {
+  const handleReject = async () => {
+    await windowProxy.proxy('ENABLE_RESPONSE', [false]);
     window.close();
   };
 
@@ -24,11 +28,17 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
     try {
       await dispatch(enableWebsite(connectData.hostnameSelected, network));
       await dispatch(flushSelectedHostname(network));
+      await windowProxy.proxy('ENABLE_RESPONSE', [true]);
       window.close();
     } catch (e) {
-      console.error(e);
+      await windowProxy.proxy('ENABLE_RESPONSE', [false]);
+      window.close();
     }
   };
+
+  const debouncedHandleConnect = useRef(
+    debounce(handleConnect, 2000, { leading: true, trailing: false })
+  ).current;
 
   return (
     <ShellConnectPopup
@@ -52,7 +62,7 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
-        <Button onClick={handleConnect} textBase={true}>
+        <Button onClick={debouncedHandleConnect} textBase={true}>
           Connect
         </Button>
       </div>

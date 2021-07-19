@@ -5,13 +5,13 @@ Liquid Wallet browser extension
 == Testing out the extension
 
 .Build, watch and temporarily install the extension on Firefox
- npm run start
+ yarn run start
 
 .Or choose your platform
- npm run start:brave-linux
- npm run start:chrome-linux
- npm run start:brave-mac
- npm run start:chrome-mac
+ yarn run start:brave-linux
+ yarn run start:chrome-linux
+ yarn run start:brave-mac
+ yarn run start:chrome-mac
 
 .Development environment
 image::webext-parcel-watch.png[development environment]
@@ -20,7 +20,7 @@ image::webext-parcel-watch.png[development environment]
 == Packaging the extension
 
 .Turn the extesion into a package for submitting to addons.mozilla.org
- npm run web-ext:build
+ yarn run web-ext:build
 
 
 == Tech Stack
@@ -71,10 +71,10 @@ Safari web extensions are available in macOS 11 (Big Sur) and later, and in macO
 ** https://github.com/facebook/react/tree/master/packages/react-devtools#usage-with-react-dom
 
 .Lint and auto-fix the extension source
- npm run lint
+ yarn run lint
 
 .Validate the extension compiled source with web-ext
- npm run web-ext:lint
+ yarn run web-ext:lint
 
 
 == Inspecting browser storage

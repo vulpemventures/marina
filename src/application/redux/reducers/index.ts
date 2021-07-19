@@ -1,11 +1,8 @@
 import { assetInitState, assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
-import { walletInitState, walletReducer } from './wallet-reducer';
-import { transactionInitState, transactionReducer, TransactionState } from './transaction-reducer';
+import { transactionReducer, TransactionState, transactionInitState } from './transaction-reducer';
 import { txsHistoryReducer, txsHistoryInitState } from './txs-history-reducer';
 import { AnyAction, combineReducers, Reducer } from 'redux';
-import { appInitState, appReducer } from './app-reducer';
-import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
 import { Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
 import { browser } from 'webextension-polyfill-ts';
@@ -17,6 +14,9 @@ import { taxiReducer, TaxiState, taxiInitState } from './taxi-reducer';
 import { ConnectData } from '../../../domain/connect';
 import { IAssets } from '../../../domain/assets';
 import { PersistConfig } from 'redux-persist/lib/types';
+import { appReducer, appInitState } from './app-reducer';
+import { walletInitState, walletReducer } from './wallet-reducer';
+import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
