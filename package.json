@@ -43,7 +43,8 @@
     "web-ext:lint": "web-ext lint --source-dir dist",
     "cypress:open": "yarn cypress:build && yarn run cypress open",
     "cypress:build": "NODE_ENV=test NETWORK=regtest yarn build",
-    "cypress:run": "yarn run cypress run --browser chrome --config video=false"
+    "cypress:chrome": "yarn run cypress run --browser chrome --config video=false",
+    "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",
