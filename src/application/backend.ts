@@ -457,10 +457,6 @@ export default class Backend {
               }
 
             case Marina.prototype.isReady.name:
-              if (!(await this.isCurentSiteEnabled())) {
-                return handleError(id, new Error('User must authorize the current website'));
-              }
-
               try {
                 await getXpub(); // check if Xpub is valid
                 return handleResponse(id, marinaStore.getState().app.isOnboardingCompleted);
