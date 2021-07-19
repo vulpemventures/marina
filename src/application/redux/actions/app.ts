@@ -7,7 +7,7 @@ import {
   CHANGE_NETWORK_SUCCESS,
   START_PERIODIC_UPDATE,
   SET_EXPLORER,
-  SET_WEB_EXPLORER
+  SET_WEB_EXPLORER,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
@@ -21,8 +21,8 @@ export const setExplorer = (explorer: string, network: Network): AnyAction => ({
 
 export const setWebExplorer = (webExplorerURL: string): AnyAction => ({
   type: SET_WEB_EXPLORER,
-  payload: { webExplorerURL }
-})
+  payload: { webExplorerURL },
+});
 
 export const verifyWalletSuccess = (): AnyAction => ({
   type: VERIFICATION_SUCCESS,

@@ -68,7 +68,7 @@ export function appReducer(state: IApp = appInitState, { type, payload }: AnyAct
     case ACTION_TYPES.SET_WEB_EXPLORER: {
       return {
         ...state,
-        webExplorer: payload.webExplorerURL
+        webExplorer: payload.webExplorerURL,
       };
     }
 
