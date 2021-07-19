@@ -2,14 +2,20 @@ import { browser } from 'webextension-polyfill-ts';
 
 import Broker from './broker';
 
+// start the broker + inject the inject.js script
+startContentScript().catch(console.error);
+
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
+async function startContentScript() {
+  if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
+    const currentHostname = window.location.hostname;
 
-if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
-  const currentHostname = window.location.hostname;
-  const broker = new Broker(currentHostname);
-  broker.start();
+    const broker = new Broker([await Broker.withProxyStore(currentHostname)]);
 
-  injectScript(browser.extension.getURL('inject.js'));
+    broker.start();
+
+    injectScript(browser.extension.getURL('inject.js'));
+  }
 }
 
 function injectScript(script: string) {

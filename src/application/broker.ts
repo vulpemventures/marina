@@ -15,67 +15,91 @@ import { TxsHistory } from '../domain/transaction';
 import { AnyAction } from 'redux';
 import { Network } from '../domain/network';
 
+export type BrokerOption = (broker: Broker) => void;
+
 export default class Broker {
   private port: Runtime.Port;
   private emitter: SafeEventEmitter;
+  // for proxy store
+  private store?: Store<RootReducerState, AnyAction>;
+  private hostname?: string;
   private utxoState: Record<string, UtxoInterface> = {};
   private txsHistoryState: TxsHistory = {};
   private enabledWebsitesState: Record<Network, string[]> = { regtest: [], liquid: [] };
   private network: Network = 'liquid';
 
-  constructor(currentHostname: string) {
+  constructor(options: BrokerOption[] = []) {
     this.emitter = new SafeEventEmitter();
     this.port = browser.runtime.connect();
     this.port.onMessage.addListener((message) => this.onMessage(message));
 
-    const store = new Store<RootReducerState, AnyAction>(serializerAndDeserializer);
+    for (const opt of options) {
+      opt(this);
+    }
+  }
 
-    store
-      .ready()
-      .then(() => {
-        const state = store.getState();
-        // init the cached states
-        this.utxoState = state.wallet.utxoMap;
-        this.txsHistoryState = state.txsHistory[state.app.network];
-        this.enabledWebsitesState = state.connect.enabledSites;
-        this.network = state.app.network;
+  /**
+   * Set up a webext-redux Proxy store
+   * + start the store's subscriber
+   * @param hostname the injected script's hostname
+   */
+  static async withProxyStore(hostname: string): Promise<BrokerOption> {
+    const s = new Store<RootReducerState, AnyAction>(serializerAndDeserializer);
+    await s.ready();
 
-        store.subscribe(() => {
-          const state = store.getState();
-          const newUtxoState = state.wallet.utxoMap;
-          const newTxsHistoryState = state.txsHistory[state.app.network];
-          const newEnabledWebsites = state.connect.enabledSites;
-          const newNetwork = state.app.network;
+    return (b: Broker) => {
+      b.hostname = hostname;
+      b.store = s;
 
-          const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
-          const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
-          const enabledAndDisabledEvents = compareEnabledWebsites(
-            this.enabledWebsitesState,
-            newEnabledWebsites,
-            currentHostname
-          );
-          const networkEvents = networkChange(this.network, newNetwork);
+      const state = b.store.getState();
+      // init the cached states
+      b.utxoState = state.wallet.utxoMap;
+      b.txsHistoryState = state.txsHistory[state.app.network];
+      b.enabledWebsitesState = state.connect.enabledSites;
+      b.network = state.app.network;
 
-          const events: MarinaEvent<any>[] = [
-            ...utxosEvents,
-            ...txsEvents,
-            ...enabledAndDisabledEvents,
-            ...networkEvents,
-          ];
+      // start the subscriber
+      b.subscribeToStoreEvents();
+    };
+  }
 
-          this.utxoState = newUtxoState;
-          this.txsHistoryState = newTxsHistoryState;
-          this.enabledWebsitesState = newEnabledWebsites;
-          this.network = newNetwork;
+  private subscribeToStoreEvents() {
+    if (!this.store || !this.hostname) return;
 
-          for (const ev of events) {
-            window.dispatchEvent(
-              new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, { detail: ev.payload })
-            );
-          }
-        });
-      })
-      .catch(console.error);
+    this.store.subscribe(() => {
+      const state = this.store!.getState();
+      const newUtxoState = state.wallet.utxoMap;
+      const newTxsHistoryState = state.txsHistory[state.app.network];
+      const newEnabledWebsites = state.connect.enabledSites;
+      const newNetwork = state.app.network;
+
+      const utxosEvents = compareUtxoState(this.utxoState, newUtxoState);
+      const txsEvents = compareTxsHistoryState(this.txsHistoryState, newTxsHistoryState);
+      const enabledAndDisabledEvents = compareEnabledWebsites(
+        this.enabledWebsitesState,
+        newEnabledWebsites,
+        this.hostname!
+      );
+      const networkEvents = networkChange(this.network, newNetwork);
+
+      const events: MarinaEvent<any>[] = [
+        ...utxosEvents,
+        ...txsEvents,
+        ...enabledAndDisabledEvents,
+        ...networkEvents,
+      ];
+
+      this.utxoState = newUtxoState;
+      this.txsHistoryState = newTxsHistoryState;
+      this.enabledWebsitesState = newEnabledWebsites;
+      this.network = newNetwork;
+
+      for (const ev of events) {
+        window.dispatchEvent(
+          new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, { detail: ev.payload })
+        );
+      }
+    });
   }
 
   onMessage(message: { id: string; payload: { success: boolean; data?: any; error?: string } }) {

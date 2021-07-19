@@ -8,7 +8,7 @@ interface Props {
 }
 
 const ShellConnectPopup: React.FC<Props> = ({ children, className = '', currentPage }: Props) => {
-  const broker = new Broker(window.location.hostname);
+  const broker = new Broker();
   broker.start();
 
   // Prevent resize
