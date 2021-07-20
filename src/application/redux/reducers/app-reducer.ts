@@ -1,5 +1,5 @@
 import { createNetwork } from '../../../domain/network';
-import { IApp } from '../../../domain/app';
+import { BlockstreamExplorerURLs, IApp, NigiriDefaultExplorerURLs } from '../../../domain/app';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
@@ -10,8 +10,8 @@ export const appInitState: IApp = {
   isWalletVerified: false,
   network: createNetwork(process.env.NETWORK || 'liquid'),
   explorerByNetwork: {
-    regtest: 'http://localhost:3001',
-    liquid: 'https://blockstream.info/liquid/api',
+    regtest: NigiriDefaultExplorerURLs,
+    liquid: BlockstreamExplorerURLs,
   },
 };
 

@@ -5,25 +5,32 @@ interface Props {
   selected: string;
   onSelect: (v: string) => void;
   disabled: boolean;
+  onClick?: () => void;
 }
 
-const Select: React.FC<Props> = ({ list, selected, onSelect, disabled }) => {
+const Select: React.FC<Props> = ({ list, selected, onSelect, disabled, onClick }) => {
   return (
     <Listbox value={selected} onChange={onSelect} disabled={disabled}>
       {({ open }) => (
         <>
-          <Listbox.Button className="border-primary ring-primary focus:ring-primary focus:border-primary focus:outline-none flex flex-row justify-between w-full px-3 py-2.5 border-2 rounded-md">
-            <span className="text-base font-medium">{selected}</span>
-            {open ? (
-              <img src="assets/images/chevron-up.svg" alt="chevron" />
-            ) : (
-              <img
-                className="transform -rotate-90"
-                src="assets/images/chevron-left.svg"
-                alt="chevron"
-              />
-            )}
-          </Listbox.Button>
+          <div
+            onClick={() => {
+              if (onClick) onClick();
+            }}
+          >
+            <Listbox.Button className="border-primary ring-primary focus:ring-primary focus:border-primary focus:outline-none flex flex-row justify-between w-full px-3 py-2.5 border-2 rounded-md">
+              <span className="font-md text-sm">{selected}</span>
+              {open ? (
+                <img src="assets/images/chevron-up.svg" alt="chevron" />
+              ) : (
+                <img
+                  className="transform -rotate-90"
+                  src="assets/images/chevron-left.svg"
+                  alt="chevron"
+                />
+              )}
+            </Listbox.Button>
+          </div>
           {open && (
             <div>
               <Listbox.Options
