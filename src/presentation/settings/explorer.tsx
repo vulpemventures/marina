@@ -65,6 +65,7 @@ const SettingsExplorer: React.FC = () => {
     >
       <p className="font-sm mt-8 text-left">Select the explorer</p>
       <Select
+        onClick={() => setCustom(false)}
         list={explorerTypesForNetwork(network)}
         selected={app.explorerByNetwork[network].type}
         onSelect={onSelect}
