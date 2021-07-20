@@ -18,6 +18,7 @@ export interface EndOfFlowProps {
   restorerOpts: StateRestorerOpts;
   pset?: string;
   explorerURL: string;
+  recipientAddress?: string;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
@@ -26,6 +27,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   pset,
   restorerOpts,
   explorerURL,
+  recipientAddress,
 }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
@@ -35,7 +37,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
 
   const handleUnlock = async (password: string) => {
     let tx = '';
-    if (!pset) return;
+    if (!pset || !recipientAddress) return;
     try {
       const pass = createPassword(password);
       if (!match(password, wallet.passwordHash)) {
@@ -44,7 +46,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
 
       const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
 
-      tx = await blindAndSignPset(mnemonic, restorerOpts, network, pset);
+      tx = await blindAndSignPset(mnemonic, restorerOpts, network, pset, [recipientAddress]);
 
       const txid = await broadcastTx(explorerURL, tx);
       history.push({

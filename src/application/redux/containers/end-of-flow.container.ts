@@ -9,6 +9,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({
   restorerOpts: state.wallet.restorerOpts,
   pset: state.transaction.pset,
   explorerURL: getExplorerURLSelector(state),
+  recipientAddress: state.transaction.sendAddress?.value,
 });
 
 const SendEndOfFlow = connect(mapStateToProps)(EndOfFlow);
