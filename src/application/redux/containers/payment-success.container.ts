@@ -5,7 +5,7 @@ import PaymentSuccessView, {
 } from '../../../presentation/wallet/send/payment-success';
 
 const mapStateToProps = (state: RootReducerState): PaymentSuccessProps => ({
-  network: state.app.network,
+  electrsExplorerURL: state.app.explorerByNetwork[state.app.network].electrsURL,
 });
 
 const PaymentSuccess = connect(mapStateToProps)(PaymentSuccessView);

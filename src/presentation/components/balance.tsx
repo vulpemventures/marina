@@ -1,7 +1,6 @@
 import React from 'react';
 import cx from 'classnames';
 import { browser } from 'webextension-polyfill-ts';
-import { esploraURL } from '../utils';
 import { useSelector } from 'react-redux';
 import { RootReducerState } from '../../domain/common';
 
@@ -22,11 +21,13 @@ const Balance: React.FC<Props> = ({
   assetTicker,
   assetHash,
 }) => {
-  const network = useSelector((state: RootReducerState) => state.app.network);
+  const electrsURL = useSelector(
+    (state: RootReducerState) => state.app.explorerByNetwork[state.app.network].electrsURL
+  );
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[network]}/asset/${assetHash}`,
+      url: `${electrsURL}/asset/${assetHash}`,
       active: false,
     });
 

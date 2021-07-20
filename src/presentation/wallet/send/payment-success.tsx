@@ -4,11 +4,9 @@ import ShellPopUp from '../../components/shell-popup';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import Button from '../../components/button';
 import { browser } from 'webextension-polyfill-ts';
-import { esploraURL } from '../../utils';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx, updateTxs } from '../../../application/redux/actions/transaction';
-import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { updateUtxos } from '../../../application/redux/actions/utxos';
 
@@ -17,10 +15,10 @@ interface LocationState {
 }
 
 export interface PaymentSuccessProps {
-  network: Network;
+  electrsExplorerURL: string;
 }
 
-const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network }) => {
+const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL }) => {
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
@@ -31,7 +29,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ network }) => {
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${esploraURL[network]}/tx/${state.txid}`,
+      url: `${electrsExplorerURL}/tx/${state.txid}`,
       active: false,
     });
 
