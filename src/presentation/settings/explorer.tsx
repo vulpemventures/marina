@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ShellPopUp from '../components/shell-popup';
 import { useDispatch, useSelector } from 'react-redux';
 import { Network } from '../../domain/network';
@@ -13,8 +13,7 @@ import {
   MempoolExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/app';
-import { useHistory } from 'react-router';
-import { SETTINGS_CUSTOM_EXPLORER_ROUTE } from '../routes/constants';
+import SettingsCustomExplorerForm from '../components/explorer-custom-form';
 
 function explorerTypesForNetwork(network: Network): ExplorerType[] {
   switch (network) {
@@ -28,8 +27,9 @@ function explorerTypesForNetwork(network: Network): ExplorerType[] {
 }
 
 const SettingsExplorer: React.FC = () => {
-  const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+
+  const [custom, setCustom] = useState(false);
 
   const app = useSelector((state: RootReducerState) => state.app);
   const network = app.network;
@@ -50,7 +50,7 @@ const SettingsExplorer: React.FC = () => {
         handleChange(NigiriDefaultExplorerURLs).catch(console.error);
         break;
       case 'Custom':
-        history.push(SETTINGS_CUSTOM_EXPLORER_ROUTE);
+        setCustom(true);
         break;
       default:
         console.error('Invalid explorer type');
@@ -70,6 +70,14 @@ const SettingsExplorer: React.FC = () => {
         onSelect={onSelect}
         disabled={false}
       />
+
+      {custom && (
+        <SettingsCustomExplorerForm
+          onDone={() => setCustom(false)}
+          dispatch={dispatch}
+          network={network}
+        />
+      )}
     </ShellPopUp>
   );
 };

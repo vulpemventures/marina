@@ -35,7 +35,6 @@ import {
   SEND_PAYMENT_SUCCESS_ROUTE,
   SEND_PAYMENT_ERROR_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
-  SETTINGS_CUSTOM_EXPLORER_ROUTE,
 } from './constants';
 
 // Connect
@@ -73,7 +72,6 @@ import SettingsDeepRestorer from '../../application/redux/containers/deep-restor
 import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
-import SettingsCustomExplorer from '../settings/explorer-custom';
 import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
@@ -108,7 +106,6 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_CHANGE_PASSWORD_ROUTE} comp={SettingsChangePassword} />
       <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} comp={SettingsCurrency} />
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
-      <ProtectedRoute exact path={SETTINGS_CUSTOM_EXPLORER_ROUTE} comp={SettingsCustomExplorer} />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} comp={SettingsDeepRestorer} />

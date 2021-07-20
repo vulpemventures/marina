@@ -1,14 +1,10 @@
 import { FormikProps, withFormik } from 'formik';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RouteComponentProps, useHistory } from 'react-router';
 import { setExplorer } from '../../application/redux/actions/app';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { RootReducerState } from '../../domain/common';
 import { Network } from '../../domain/network';
-import Button from '../components/button';
-import Input from '../components/input';
-import ShellPopUp from '../components/shell-popup';
+import Button from './button';
+import Input from './input';
 import * as Yup from 'yup';
 
 interface SettingsExplorerFormValues {
@@ -19,8 +15,8 @@ interface SettingsExplorerFormValues {
 
 interface SettingsExplorerFormProps {
   dispatch: ProxyStoreDispatch;
-  history: RouteComponentProps['history'];
   network: Network;
+  onDone: () => void;
 }
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
@@ -28,12 +24,12 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="font-sm mt-3 mb-1 text-base text-left">Custom explorer</p>
+      <p className="font-sm mt-8 mb-1">Custom explorer</p>
 
-      <p className="font-sm mt-8 mb-1 text-base text-left">Esplora URL</p>
+      <p className="font-sm mt-5 mb-1 text-left">Esplora URL</p>
       <Input name="esploraURL" placeholder="Esplora valid endpoint" type="text" {...props} />
 
-      <p className="font-sm mt-8 mb-1 text-base text-left">Electrs URL</p>
+      <p className="font-sm mt-5 mb-1 text-left">Electrs URL</p>
       <Input name="electrsURL" placeholder="Electrs valid endpoint" type="text" {...props} />
 
       <div className="bottom-20 right-8 absolute flex justify-end">
@@ -47,7 +43,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
   );
 };
 
-const SettingsExplorerEnhancedForm = withFormik<
+const SettingsCustomExplorerForm = withFormik<
   SettingsExplorerFormProps,
   SettingsExplorerFormValues
 >({
@@ -70,28 +66,10 @@ const SettingsExplorerEnhancedForm = withFormik<
       )
     );
 
-    props.history.goBack();
+    props.onDone();
   },
 
   displayName: 'SettingsExplorerForm',
 })(SettingsExplorerForm);
 
-const SettingsCustomExplorer: React.FC = () => {
-  const history = useHistory();
-  const dispatch = useDispatch<ProxyStoreDispatch>();
-
-  const app = useSelector((state: RootReducerState) => state.app);
-  const network = app.network;
-
-  return (
-    <ShellPopUp
-      backgroundImagePath="/assets/images/popup/bg-sm.png"
-      className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="Explorer"
-    >
-      <SettingsExplorerEnhancedForm dispatch={dispatch} history={history} network={network} />
-    </ShellPopUp>
-  );
-};
-
-export default SettingsCustomExplorer;
+export default SettingsCustomExplorerForm;
