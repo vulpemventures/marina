@@ -32,10 +32,16 @@ blockstreamAssetHashes.forEach((assetHash: string) => {
   blockstreamAssets[assetHash] = 'assets/images/liquid-assets/blockstream.png';
 });
 
+const blockstreamJadeAsset: Record<string, string> = {
+  '78557eb89ea8439dc1a519f4eb0267c86b261068648a0f84a5c6b55ca39b66f1':
+    'assets/images/liquid-assets/blockstream-jade.svg',
+};
+
 export const imgPathMapMainnet: Record<string, string> = {
   ...featuredAssets,
   ...lightniteAssets,
   ...blockstreamAssets,
+  ...blockstreamJadeAsset,
 };
 
 export const imgPathMapRegtest: Record<string, string> = {
