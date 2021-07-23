@@ -592,12 +592,11 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
           const outpoint = toStringOutpoint(utxo);
           const skip = wallet.utxoMap[outpoint] !== undefined;
 
-          if (skip) skippedOutpoints.push(toStringOutpoint(utxo))
+          if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
 
-          return skip
+          return skip;
         }
       );
-
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {

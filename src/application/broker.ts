@@ -106,7 +106,9 @@ export default class Broker {
 
       for (const ev of events) {
         window.dispatchEvent(
-          new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, { detail: stringify(ev.payload) })
+          new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, {
+            detail: stringify(ev.payload),
+          })
         );
       }
     });
