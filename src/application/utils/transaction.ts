@@ -156,13 +156,15 @@ function getTransfers(
 ): Transfer[] {
   const transfers: Transfer[] = [];
 
-  const addToTransfers = (amount: number, asset: string) => {
+  const addToTransfers = (amount: number, asset: string, isFee = false) => {
     const transferIndex = transfers.findIndex((t) => t.asset === asset);
 
     if (transferIndex >= 0) {
       transfers[transferIndex].amount += amount;
       return;
     }
+
+    if (isFee) return;
 
     transfers.push({
       amount,
@@ -179,10 +181,9 @@ function getTransfers(
   for (const output of vout) {
     if (
       !isBlindedOutputInterface(output) &&
-      walletScripts.includes(output.script) &&
-      output.script !== ''
+      (output.script === '' || walletScripts.includes(output.script))
     ) {
-      addToTransfers(output.value, output.asset);
+      addToTransfers(output.value, output.asset, output.script === '');
     }
   }
 
