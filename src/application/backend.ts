@@ -581,6 +581,8 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
         vout,
       }));
 
+      const skippedOutpoints: string[] = []; // for deleting
+
       // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
       const utxos = fetchAndUnblindUtxosGenerator(
         addrs,
@@ -588,11 +590,14 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
         // Skip unblinding if utxo exists in current state
         (utxo) => {
           const outpoint = toStringOutpoint(utxo);
-          return wallet.utxoMap[outpoint] !== undefined;
+          const skip = wallet.utxoMap[outpoint] !== undefined;
+
+          if (skip) skippedOutpoints.push(toStringOutpoint(utxo))
+
+          return skip
         }
       );
 
-      const skippedOutpoints: string[] = []; // for deleting
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {
@@ -603,8 +608,6 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
             await fetchAssetInfos(utxo.asset, explorer, assets, dispatch).catch(console.error);
           }
           dispatch(addUtxo(utxo));
-        } else {
-          skippedOutpoints.push(toStringOutpoint(utxo));
         }
         utxoIterator = await utxos.next();
       }
