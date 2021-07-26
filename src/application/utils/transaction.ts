@@ -1,3 +1,4 @@
+import { liquid } from './../../../test/fixtures/network';
 import {
   address as addrLDK,
   addToTx,
@@ -156,15 +157,13 @@ function getTransfers(
 ): Transfer[] {
   const transfers: Transfer[] = [];
 
-  const addToTransfers = (amount: number, asset: string, isFee = false) => {
+  const addToTransfers = (amount: number, asset: string) => {
     const transferIndex = transfers.findIndex((t) => t.asset === asset);
 
     if (transferIndex >= 0) {
       transfers[transferIndex].amount += amount;
       return;
     }
-
-    if (isFee) return;
 
     transfers.push({
       amount,
@@ -178,14 +177,28 @@ function getTransfers(
     }
   }
 
+  let feeAmount = 0;
+  let feeAsset = liquid.assetHash;
+
   for (const output of vout) {
-    if (
-      !isBlindedOutputInterface(output) &&
-      (output.script === '' || walletScripts.includes(output.script))
-    ) {
-      addToTransfers(output.value, output.asset, output.script === '');
+    if (output.script === '') {
+      // handle the fee output
+      const feeOutput = output as UnblindedOutputInterface;
+      feeAmount = feeOutput.value;
+      feeAsset = feeOutput.asset;
+      continue;
+    }
+
+    if (!isBlindedOutputInterface(output) && walletScripts.includes(output.script)) {
+      addToTransfers(output.value, output.asset);
     }
   }
 
-  return transfers;
+  return transfers.filter((t) => {
+    if (t.asset === feeAsset && Math.abs(t.amount) === feeAmount) {
+      return false;
+    }
+
+    return true;
+  });
 }
