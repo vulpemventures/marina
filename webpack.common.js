@@ -1,18 +1,20 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { ProvidePlugin } = require('webpack');
 
 module.exports = {
   entry: {
-    popup: './src/presentation/index.tsx',
+    'index': './src/presentation/index.tsx',
     'background-script': './src/background-script.ts',
     'content-script': './src/content-script.ts',
     'inject-script': './src/inject-script',
   },
   module: {
-    rules: [{ test: /\.tsx?$/, loader: 'ts-loader', options: { allowTsInNodeModules: true } }],
+    rules: [
+      { test: /\.tsx?$/, loader: 'ts-loader', options: { allowTsInNodeModules: true } },
+      { test: /\.css$/i, include: path.resolve(__dirname, 'src'), use: ['style-loader', 'css-loader', 'postcss-loader'] },
+    ],
   },
   resolve: {
     fallback: { 
@@ -29,12 +31,9 @@ module.exports = {
       process: 'process/browser'
     }),
     new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
-    new HtmlWebpackPlugin({ template: 'src/popup.html' }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: './public/manifest.json' }, 
-        { from: './public/assets', to: 'assets' },
-        { from: './public/home.html' }
+        { from: './public' }, 
       ],
     }),
   ],
