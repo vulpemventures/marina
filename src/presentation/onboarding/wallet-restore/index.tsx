@@ -7,7 +7,10 @@ import Button from '../../components/button';
 import Shell from '../../components/shell';
 import { IError, RootReducerState } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
+import {
+  setPasswordAndOnboardingMnemonic,
+  setVerified,
+} from '../../../application/redux/actions/onboarding';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
@@ -145,13 +148,10 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
       .oneOf([Yup.ref('password'), null], 'Passwords must match'),
   }),
 
-  handleSubmit: (values, { props }) => {
-    props
-      .dispatch(setPasswordAndOnboardingMnemonic(values.password, values.mnemonic))
-      .then(() => {
-        props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
-      })
-      .catch(console.error);
+  handleSubmit: async (values, { props }) => {
+    await props.dispatch(setPasswordAndOnboardingMnemonic(values.password, values.mnemonic));
+    await props.dispatch(setVerified());
+    props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   },
 
   displayName: 'WalletRestoreForm',
