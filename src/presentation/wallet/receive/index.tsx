@@ -1,21 +1,29 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
-import { DEFAULT_ROUTE } from '../../routes/constants';
-import { AppContext } from '../../../application/store/context';
-import { deriveNewAddress } from '../../../application/store/actions';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
+import { useDispatch } from 'react-redux';
+import { updateUtxos } from '../../../application/redux/actions/utxos';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
+import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 
-const Receive: React.FC = () => {
+export interface ReceiveProps {
+  pubKey: MasterPublicKey;
+  restorerOpts: StateRestorerOpts;
+}
+
+const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);
   const handleExpand = () => setAddressExpanded(true);
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  const handleBackBtn = () => history.goBack();
   const handleCopy = () => {
     navigator.clipboard.writeText(confidentialAddress).then(
       () => setButtonText('Copied'),
@@ -24,8 +32,15 @@ const Receive: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(deriveNewAddress(false, (addr) => setConfidentialAddress(addr.value), console.log));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    (async () => {
+      const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
+      const addr = await publicKey.getNextAddress();
+      setConfidentialAddress(addr.confidentialAddress);
+      await dispatch(incrementAddressIndex()); // persist address
+      setTimeout(() => {
+        dispatch(updateUtxos()).catch(console.error);
+      }, 8000);
+    })().catch(console.error);
   }, []);
 
   return (
@@ -67,4 +82,4 @@ const Receive: React.FC = () => {
   );
 };
 
-export default Receive;
+export default ReceiveView;

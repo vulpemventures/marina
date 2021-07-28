@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { browser } from 'webextension-polyfill-ts';
 import {
   BACKUP_UNLOCK_ROUTE,
   RECEIVE_ROUTE,
   SELECT_ASSET_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+  SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
   TRANSACTIONS_ROUTE,
 } from '../../routes/constants';
@@ -14,23 +15,30 @@ import ButtonList from '../../components/button-list';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
-import useLottieLoader from '../../hooks/use-lottie-loader';
-import { AppContext } from '../../../application/store/context';
-import { flush, updateUtxosAssetsBalances } from '../../../application/store/actions';
-import { createDevState } from '../../../../test/dev-state';
 import { fromSatoshiStr } from '../../utils';
-import {
-  imgPathMapMainnet,
-  imgPathMapRegtest,
-  lbtcAssetByNetwork,
-} from '../../../application/utils';
+import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
+import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import { AssetGetter } from '../../../domain/assets';
+import { Network } from '../../../domain/network';
 
-const Home: React.FC = () => {
+export interface HomeProps {
+  lbtcAssetHash: string;
+  network: Network;
+  getAsset: AssetGetter;
+  transactionStep: PendingTxStep;
+  assetsBalance: BalancesByAsset;
+}
+
+const HomeView: React.FC<HomeProps> = ({
+  lbtcAssetHash,
+  getAsset,
+  transactionStep,
+  assetsBalance,
+  network,
+}) => {
   const history = useHistory();
-  const [{ app, assets, transaction, wallets }, dispatch] = useContext(AppContext);
-  const [assetsBalance, setAssetsBalance] = useState<{ [hash: string]: number }>({});
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  let buttonList;
 
   const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number }) => {
     const { assetHash, assetTicker, assetPrecision } = asset;
@@ -58,88 +66,31 @@ const Home: React.FC = () => {
   };
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
-  // Populate ref div with svg animation
-  const mermaidLoaderRef = React.useRef(null);
-  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
-
   useEffect(() => {
-    if (process.env.SKIP_ONBOARDING) {
-      dispatch(createDevState());
+    switch (transactionStep) {
+      case 'address-amount':
+        history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+        break;
+      case 'choose-fee':
+        history.push(SEND_CHOOSE_FEE_ROUTE);
+        break;
+      case 'confirmation':
+        history.push(SEND_CONFIRMATION_ROUTE);
+        break;
     }
-
-    // Poll the browser storage to check for new utxos
-    const updateUtxos = () => {
-      console.log('updating utxo state...');
-      dispatch(
-        updateUtxosAssetsBalances(
-          false,
-          (balances) => setAssetsBalance(balances),
-          (error) => console.error(error.message)
-        )
-      );
-    };
-    const utxosInterval = setInterval(updateUtxos, 2500);
-    // update at first component mount
-    updateUtxos();
-
-    // Flush last sent tx
-    if (transaction.asset !== '') {
-      dispatch(flush());
-      browser.browserAction.setBadgeText({ text: '' }).catch((ignore) => ({}));
-    }
-
-    //Clean up can be done like this
-    return () => {
-      clearInterval(utxosInterval);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // If extension was closed when a tx is pending then navigate to confirmation route
-  if (wallets[0].pendingTx) {
-    history.push(SEND_CONFIRMATION_ROUTE);
-    return <></>;
-  }
-
-  if (Object.keys(assetsBalance).length === 0) {
-    // Lottie mermaid animation
-    return <div className="flex items-center justify-center h-screen p-8" ref={mermaidLoaderRef} />;
-  } else {
-    // Generate list of Asset/Balance buttons
-    buttonList = Object.entries(assets[app.network.value] || {}).map(
-      ([hash, { name, ticker, precision }]) => {
-        return (
-          <ButtonAsset
-            assetImgPath={
-              app.network.value === 'regtest'
-                ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
-                : imgPathMapMainnet[hash] ?? imgPathMapMainnet['']
-            }
-            assetHash={hash}
-            assetName={name}
-            assetTicker={ticker}
-            assetPrecision={precision}
-            quantity={assetsBalance[hash] ?? 0}
-            key={hash}
-            handleClick={handleAssetBalanceButtonClick}
-          />
-        );
-      }
-    );
-  }
 
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-home.png"
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       hasBackBtn={false}
-      refreshCb={setAssetsBalance}
     >
       <div className="h-popupContent flex flex-col justify-between">
         <div>
           <Balance
-            assetHash={lbtcAssetByNetwork(app.network.value)}
-            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetByNetwork(app.network.value)] ?? 0)}
+            assetHash={lbtcAssetHash}
+            assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetHash] ?? 0)}
             assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
             assetTicker="L-BTC"
             bigBalanceText={true}
@@ -152,7 +103,27 @@ const Home: React.FC = () => {
           <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
           <ButtonList title="Assets" type="assets">
-            {buttonList}
+            {Object.entries(assetsBalance)
+              .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
+              .map(([asset, balance]) => {
+                const { ticker, precision, name } = getAsset(asset);
+                return (
+                  <ButtonAsset
+                    assetImgPath={
+                      network === 'regtest'
+                        ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
+                        : imgPathMapMainnet[asset] ?? imgPathMapMainnet['']
+                    }
+                    assetHash={asset}
+                    assetName={name || 'unknown'}
+                    assetTicker={ticker}
+                    assetPrecision={precision}
+                    quantity={balance}
+                    key={asset}
+                    handleClick={handleAssetBalanceButtonClick}
+                  />
+                );
+              })}
           </ButtonList>
         </div>
       </div>
@@ -166,4 +137,4 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default HomeView;

@@ -5,6 +5,7 @@ import {
   CONNECT_ENABLE_ROUTE,
   CONNECT_SPEND_ROUTE,
   CONNECT_SPEND_PSET_ROUTE,
+  CONNECT_SIGN_MSG_ROUTE,
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_SELECT_ACTION_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
@@ -28,19 +29,20 @@ import {
   SETTINGS_CURRENCY_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
-  SETTINGS_ABOUT_ROUTE,
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SEND_END_OF_FLOW_ROUTE,
   SEND_PAYMENT_SUCCESS_ROUTE,
   SEND_PAYMENT_ERROR_ROUTE,
   BACKUP_UNLOCK_ROUTE,
+  SETTINGS_DEEP_RESTORER_ROUTE,
 } from './constants';
 
 // Connect
-import ConnectEnable from '../connect/enable';
+import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
 import ConnectSpendPset from '../connect/spend-pset';
+import ConnectSignMsg from '../connect/sign-msg';
 
 // Onboarding
 import Welcome from '../onboarding/welcome';
@@ -52,27 +54,27 @@ import SeedReveal from '../onboarding/seed-reveal';
 import SeedConfirm from '../onboarding/seed-confirm';
 import BackUpUnlock from '../onboarding/backup-unlock';
 // Wallet
-import Home from '../wallet/home';
+import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
-import Transactions from '../wallet/transactions';
-import Receive from '../wallet/receive';
-import SelectAsset from '../wallet/send/select-asset';
-import AddressAmount from '../wallet/send/address-amount';
-import ChooseFee from '../wallet/send/choose-fee';
-import Confirmation from '../wallet/send/confirmation';
-import SendEndOfFlow from '../wallet/send/end-of-flow';
-import PaymentSuccess from '../wallet/send/payment-success';
+import Transactions from '../../application/redux/containers/transactions.container';
+import Receive from '../../application/redux/containers/receive.container';
+import SelectAsset from '../../application/redux/containers/select-asset.container';
+import AddressAmount from '../../application/redux/containers/address-amount.container';
+import ChooseFee from '../../application/redux/containers/choose-fee.container';
+import Confirmation from '../../application/redux/containers/confirmation.container';
+import SendEndOfFlow from '../../application/redux/containers/end-of-flow.container';
+import PaymentSuccess from '../../application/redux/containers/payment-success.container';
 import PaymentError from '../wallet/send/payment-error';
 // Settings
 import SettingsMenuSecurity from '../settings/menu-security';
 import SettingsMenuSettings from '../settings/menu-settings';
 import SettingsMenuInfo from '../settings/menu-info';
-import SettingsShowMnemonic from '../settings/show-mnemonic';
+import SettingsShowMnemonic from '../../application/redux/containers/settings-show-mnemonic.container';
+import SettingsDeepRestorer from '../../application/redux/containers/deep-restorer.container';
 import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
 import SettingsExplorer from '../settings/explorer';
-import SettingsNetworks from '../settings/networks';
-import SettingsAbout from '../settings/about';
+import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 
@@ -108,15 +110,16 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} comp={SettingsCurrency} />
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} comp={SettingsExplorer} />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
-      <ProtectedRoute exact path={SETTINGS_ABOUT_ROUTE} comp={SettingsAbout} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
-      <ProtectedRoute exact path={SETTINGS_TERMS_ROUTE} comp={SettingsTerms} />
+      <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} comp={SettingsDeepRestorer} />
+      <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
       {/*Connect*/}
-      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnable} />
+      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
+      <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
     </Switch>
   );
 };

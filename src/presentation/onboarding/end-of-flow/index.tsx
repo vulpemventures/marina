@@ -1,67 +1,53 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {
-  createWallet,
-  onboardingComplete,
-  restoreWallet,
-  verifyWallet,
-} from '../../../application/store/actions';
-import { flush } from '../../../application/store/actions/onboarding';
-import { AppContext } from '../../../application/store/context';
-import { provisionBackgroundScript } from '../../../application/utils/provision';
-import { Mnemonic, Password } from '../../../domain/wallet/value-objects';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { onboardingCompleted } from '../../../application/redux/actions/app';
+import { flushOnboarding } from '../../../application/redux/actions/onboarding';
+import { setWalletData } from '../../../application/redux/actions/wallet';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { OnboardingState } from '../../../application/redux/reducers/onboarding-reducer';
+import { setUpPopup } from '../../../application/utils/popup';
+import { createWalletFromMnemonic } from '../../../application/utils/wallet';
+import { createMnemonic } from '../../../domain/mnemonic';
+import { Network } from '../../../domain/network';
+import { createPassword } from '../../../domain/password';
+import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
-import useLottieLoader from '../../hooks/use-lottie-loader';
 
-const EndOfFlow: React.FC = () => {
-  const [{ wallets, onboarding }, dispatch] = useContext(AppContext);
+export interface EndOfFlowProps {
+  onboarding: OnboardingState;
+  network: Network;
+  explorerURL: string;
+}
+
+const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
+  onboarding,
+  network,
+  explorerURL,
+}) => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Populate ref div with svg animation
-  const mermaidLoaderRef = React.useRef(null);
-  useLottieLoader(mermaidLoaderRef, '/assets/animations/mermaid-loader.json');
-
   useEffect(() => {
-    if (wallets.length <= 0 || onboarding.isFromPopupFlow) {
-      const onError = (err: Error) => console.log(err);
-      const dispatchOnboardingCompleted = () => {
-        // Startup alarms to fetch utxos & set the popup page
-        (async () => {
-          await provisionBackgroundScript();
-        })().catch(console.error);
-
-        return dispatch(
-          onboardingComplete(() => {
-            dispatch(flush());
-            setIsLoading(false);
-          }, onError)
-        );
-      };
-      let creator = createWallet;
-      if (onboarding.restored) {
-        creator = restoreWallet;
-      }
-      dispatch(
-        creator(
-          Password.create(onboarding.password),
-          Mnemonic.create(onboarding.mnemonic),
-          () => {
-            if (onboarding.verified) {
-              dispatch(verifyWallet(dispatchOnboardingCompleted, onError));
-            } else {
-              dispatchOnboardingCompleted();
-            }
-          },
-          onError
-        )
+    (async () => {
+      const walletData = await createWalletFromMnemonic(
+        createPassword(onboarding.password),
+        createMnemonic(onboarding.mnemonic),
+        network,
+        explorerURL
       );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+      await dispatch(setWalletData(walletData));
+
+      // Startup alarms to fetch utxos & set the popup page
+      await setUpPopup();
+      await dispatch(onboardingCompleted());
+      setIsLoading(false);
+      await dispatch(flushOnboarding());
+    })().catch(console.error);
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen p-24" ref={mermaidLoaderRef} />
-    );
+    return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
   }
 
   return (
@@ -76,4 +62,4 @@ const EndOfFlow: React.FC = () => {
   );
 };
 
-export default EndOfFlow;
+export default EndOfFlowOnboardingView;

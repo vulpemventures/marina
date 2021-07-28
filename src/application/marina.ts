@@ -1,4 +1,14 @@
-import { MarinaProvider, AddressInterface } from 'marina-provider';
+import {
+  MarinaProvider,
+  AddressInterface,
+  TransactionHex,
+  PsetBase64,
+  SignedMessage,
+  Transaction,
+  Utxo,
+  Balance,
+  MarinaEventType,
+} from 'marina-provider';
 import WindowProxy from './proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
@@ -34,7 +44,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     throw new Error('Method not implemented.');
   }
 
-  blindTransaction(psetBase64: string): Promise<string> {
+  blindTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
     return this.proxy(this.blindTransaction.name, [psetBase64]);
   }
 
@@ -42,11 +52,39 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     recipientAddress: string,
     amountInSatoshis: number,
     assetHash: string
-  ): Promise<string> {
+  ): Promise<TransactionHex> {
     return this.proxy(this.sendTransaction.name, [recipientAddress, amountInSatoshis, assetHash]);
   }
 
-  signTransaction(psetBase64: string): Promise<string> {
+  signTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
     return this.proxy(this.signTransaction.name, [psetBase64]);
+  }
+
+  signMessage(message: string): Promise<SignedMessage> {
+    return this.proxy(this.signMessage.name, [message]);
+  }
+
+  getCoins(): Promise<Utxo[]> {
+    return this.proxy(this.getCoins.name, []);
+  }
+
+  getTransactions(): Promise<Transaction[]> {
+    return this.proxy(this.getTransactions.name, []);
+  }
+
+  getBalances(): Promise<Balance[]> {
+    return this.proxy(this.getBalances.name, []);
+  }
+
+  on(type: MarinaEventType, callback: (payload: any) => void) {
+    return super.on(type, callback);
+  }
+
+  off(id: string) {
+    super.off(id);
+  }
+
+  isReady(): Promise<boolean> {
+    return this.proxy(this.isReady.name, []);
   }
 }

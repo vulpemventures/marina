@@ -1,21 +1,31 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../../application/store/context';
-import { logIn } from '../../../application/store/actions';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
-import { DispatchOrThunk } from '../../../domain/common';
 import Input from '../../components/input';
+import { useDispatch, useSelector } from 'react-redux';
+import { logIn, startPeriodicUpdate } from '../../../application/redux/actions/app';
+import { setIdleAction } from '../../../application/utils';
+import {
+  AUTHENTICATION_SUCCESS,
+  LOGOUT_SUCCESS,
+} from '../../../application/redux/actions/action-types';
+import { PasswordHash } from '../../../domain/password-hash';
+import { createPassword } from '../../../domain/password';
+import { RootReducerState } from '../../../domain/common';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { updateTaxiAssets } from '../../../application/redux/actions/taxi';
 
 interface LogInFormValues {
   password: string;
 }
 
 interface LogInFormProps {
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
+  passwordHash: PasswordHash;
 }
 
 const LogInForm = (props: FormikProps<LogInFormValues>) => {
@@ -49,22 +59,32 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   }),
 
   handleSubmit: (values, { props, setErrors, setSubmitting }) => {
-    const onSuccess = () => {
-      props.history.push(DEFAULT_ROUTE);
-    };
-    const onError = (err: Error) => {
-      setErrors({ password: err.message });
-      setSubmitting(false);
-      console.log(err);
-    };
-    props.dispatch(logIn(values.password, onSuccess, onError));
+    const logInAction = logIn(createPassword(values.password), props.passwordHash);
+    props
+      .dispatch(logInAction)
+      .then(() => {
+        if (logInAction.type === AUTHENTICATION_SUCCESS) {
+          props.dispatch(updateTaxiAssets()).catch(console.error);
+          props.dispatch(startPeriodicUpdate()).catch(console.error);
+          props.history.push(DEFAULT_ROUTE);
+          setIdleAction(() => {
+            props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
+          });
+        } else {
+          const err = logInAction.payload.error;
+          setErrors({ password: err.message });
+        }
+        setSubmitting(false);
+      })
+      .catch(console.error);
   },
   displayName: 'LogInForm',
 })(LogInForm);
 
 const LogIn: React.FC = () => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const passwordHash = useSelector((state: RootReducerState) => state.wallet.passwordHash);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   return (
     <>
@@ -85,10 +105,7 @@ const LogIn: React.FC = () => {
         <h2 className="text-grayLight text-lg font-medium">
           The ultimate gateway to access the Liquid Network
         </h2>
-        <LogInEnhancedForm dispatch={dispatch} history={history} />
-        {/* <Link className="text-primary block font-bold text-left" to={RESTORE_VAULT_ROUTE}>
-          Restore account
-        </Link> */}
+        <LogInEnhancedForm dispatch={dispatch} history={history} passwordHash={passwordHash} />
       </div>
     </>
   );

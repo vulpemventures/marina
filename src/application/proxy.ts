@@ -1,4 +1,26 @@
+import { MarinaEventType } from 'marina-provider';
+
+type EventListenerID = string;
+
+type MarinaEventListener = {
+  id: EventListenerID;
+  listener: EventListener;
+};
+
+const initialEventListeners: Record<MarinaEventType, MarinaEventListener[]> = {
+  ENABLED: [],
+  DISABLED: [],
+  NETWORK: [],
+  NEW_TX: [],
+  NEW_UTXO: [],
+  SPENT_UTXO: [],
+};
+
+const allEvents = Object.keys(initialEventListeners);
+
 export default class WindowProxy {
+  private eventListeners: Record<MarinaEventType, MarinaEventListener[]> = initialEventListeners;
+
   proxy(name: string, params: any[] = []): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = makeid(16);
@@ -10,7 +32,6 @@ export default class WindowProxy {
           const response = (event as CustomEvent).detail;
 
           if (!response.success) return reject(new Error(response.error));
-
           return resolve(response.data);
         },
         {
@@ -31,8 +52,45 @@ export default class WindowProxy {
         name: name,
         params: params || [],
       },
-      '*'
+      window.location.origin
     );
+  }
+
+  on(type: MarinaEventType, callback: (payload: any) => void): EventListenerID {
+    const uppercaseType = type.toUpperCase();
+    if (!isMarinaEventType(uppercaseType))
+      throw new Error(`event type is wrong, please choose one of the following: ${allEvents}`);
+
+    const id = makeid(8);
+    this.addEventListener(uppercaseType, { id, listener: callback });
+    return id;
+  }
+
+  off(id: EventListenerID) {
+    this.removeEventListener(id);
+  }
+
+  // start the window listner for a given marina event type
+  private startWindowListener(type: MarinaEventType) {
+    window.addEventListener(`marina_event_${type.toLowerCase()}`, (event: Event) => {
+      const payload = (event as CustomEvent).detail;
+      for (const eventListener of this.eventListeners[type]) {
+        eventListener.listener(payload);
+      }
+    });
+  }
+
+  private addEventListener(type: MarinaEventType, listener: MarinaEventListener) {
+    this.eventListeners[type].push(listener);
+    if (this.eventListeners[type].length === 1) this.startWindowListener(type);
+  }
+
+  private removeEventListener(id: EventListenerID) {
+    for (const type of Object.keys(this.eventListeners) as MarinaEventType[]) {
+      this.eventListeners[type] = this.eventListeners[type].filter(
+        (eventListener) => eventListener.id !== id
+      );
+    }
   }
 }
 
@@ -48,4 +106,8 @@ export function makeid(length: number): string {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
+}
+
+function isMarinaEventType(str: string): str is MarinaEventType {
+  return allEvents.includes(str);
 }

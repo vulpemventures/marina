@@ -75,7 +75,5 @@ function toBuffer(hexString: string) {
   for (let i = 0; i < hexString.length; i += 2) {
     arr.push(parseInt(hexString.substr(i, 2), 16));
   }
-  // Using Uint8Array here would throw in BIP174 lib when building tx in ChooseFee
-  // https://github.com/bitcoinjs/bip174/blob/master/ts_src/lib/utils.ts#L125
   return Buffer.from(arr);
 }

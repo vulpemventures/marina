@@ -1,14 +1,15 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory, RouteComponentProps } from 'react-router-dom';
 import cx from 'classnames';
 import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { AppContext } from '../../../application/store/context';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { DispatchOrThunk, IError } from '../../../domain/common';
+import { IError, RootReducerState } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { setRestored } from '../../../application/store/actions/onboarding';
+import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
+import { useDispatch, useSelector } from 'react-redux';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 interface WalletRestoreFormValues {
   mnemonic: string;
@@ -19,7 +20,7 @@ interface WalletRestoreFormValues {
 
 interface WalletRestoreFormProps {
   ctxErrors?: Record<string, IError>;
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
 }
 
@@ -145,17 +146,21 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
   }),
 
   handleSubmit: (values, { props }) => {
-    props.dispatch(setRestored(values.password, values.mnemonic));
-    props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+    props
+      .dispatch(setPasswordAndOnboardingMnemonic(values.password, values.mnemonic))
+      .then(() => {
+        props.history.push(INITIALIZE_END_OF_FLOW_ROUTE);
+      })
+      .catch(console.error);
   },
 
   displayName: 'WalletRestoreForm',
 })(WalletRestoreForm);
 
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-  const [{ wallets }, dispatch] = useContext(AppContext);
-  const errors = wallets?.[0]?.errors;
+  const errors = useSelector((state: RootReducerState) => state.wallet?.errors);
 
   return (
     <Shell>

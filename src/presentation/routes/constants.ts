@@ -2,6 +2,7 @@
 const CONNECT_ENABLE_ROUTE = '/connect/enable';
 const CONNECT_SPEND_ROUTE = '/connect/spend';
 const CONNECT_SPEND_PSET_ROUTE = '/connect/spend-pset';
+const CONNECT_SIGN_MSG_ROUTE = '/connect/sign-msg';
 
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
@@ -40,15 +41,16 @@ const SETTINGS_EXPLORER_ROUTE = '/settings/settings/explorer';
 const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
 //
 const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
-const SETTINGS_ABOUT_ROUTE = '/settings/info/about';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
+const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
 
 export {
   //Connect
   CONNECT_ENABLE_ROUTE,
   CONNECT_SPEND_ROUTE,
   CONNECT_SPEND_PSET_ROUTE,
+  CONNECT_SIGN_MSG_ROUTE,
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
@@ -79,7 +81,7 @@ export {
   SETTINGS_CURRENCY_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
-  SETTINGS_ABOUT_ROUTE,
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
+  SETTINGS_DEEP_RESTORER_ROUTE,
 };

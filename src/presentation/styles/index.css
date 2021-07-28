@@ -162,3 +162,9 @@ scrollbar thumb {
   border-radius: 15px;
 }
 /**/
+
+/* Allow y-scroll on onboarding screens */
+#shell.grid-rows-pancakeStack {
+  overflow: auto;
+}
+/**/

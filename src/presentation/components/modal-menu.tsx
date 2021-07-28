@@ -1,7 +1,8 @@
-import React, { useCallback, useContext, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
+import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
-import { AppContext } from '../../application/store/context';
-import { logOut } from '../../application/store/actions';
+import { logOut } from '../../application/redux/actions/app';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
   DEFAULT_ROUTE,
@@ -14,21 +15,20 @@ interface Props {
   isOpen: boolean;
   handleClose: () => any;
 }
+
 const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const history = useHistory();
-  const [, dispatch] = useContext(AppContext);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const ref = useRef<HTMLDivElement | null>(null);
   useOnClickOutside(ref, useCallback(handleClose, [ref, handleClose]));
   const handleSecurity = () => history.push(SETTINGS_MENU_SECURITY_ROUTE);
   const handleSettings = () => history.push(SETTINGS_MENU_SETTINGS_ROUTE);
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
-  const handleLogOut = () =>
-    dispatch(
-      logOut(
-        () => history.push(DEFAULT_ROUTE),
-        (err: Error) => console.log(err)
-      )
-    );
+  const handleLogOut = () => {
+    dispatch(logOut()).catch(console.error);
+    history.push(DEFAULT_ROUTE);
+  };
 
   if (!isOpen) {
     return <></>;

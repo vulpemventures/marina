@@ -1,43 +1,32 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import cx from 'classnames';
 import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { AppContext } from '../../../application/store/context';
-import { setVerified } from '../../../application/store/actions/onboarding';
-
-function shuffleMnemonic(words: string[]): string[] {
-  // Defining function returning random value from i to N
-  const getRandomValue = (i: number, N: number) => Math.floor(Math.random() * (N - i) + i);
-  // Shuffle a pair of two elements at random position j
-  words.forEach(
-    (_, i, arr, j = getRandomValue(i, arr.length)) => ([arr[i], arr[j]] = [arr[j], arr[i]])
-  );
-
-  return words;
-}
-
-function drop(words: string[], index: number): string[] {
-  words.splice(index, 1);
-  return words;
-}
+import { setVerified } from '../../../application/redux/actions/onboarding';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 
 const NULL_ERROR = '';
 const ERROR_MSG = 'Invalid mnemonic';
 
-const SeedConfirm: React.FC = () => {
+export interface SeedConfirmProps {
+  onboardingMnemonic: string;
+}
+
+const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => {
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-  const [{ onboarding }, dispatch] = useContext(AppContext);
-  const mnemonic: string[] = onboarding.mnemonic.trim().split(' ');
+  const mnemonic: string[] = onboardingMnemonic.trim().split(' ');
   const mnemonicRandomized = shuffleMnemonic([...mnemonic]);
   const [wordsList, setWordsList] = useState(mnemonicRandomized);
   const [selected, setSelected] = useState([] as string[]);
   const [error, setError] = useState(NULL_ERROR);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selected.join(' ') === mnemonic.join(' ')) {
-      dispatch(setVerified());
+      await dispatch(setVerified());
       history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     }
 
@@ -113,4 +102,20 @@ const SeedConfirm: React.FC = () => {
   );
 };
 
-export default SeedConfirm;
+function shuffleMnemonic(words: string[]): string[] {
+  // Defining function returning random value from i to N
+  const getRandomValue = (i: number, N: number) => Math.floor(Math.random() * (N - i) + i);
+  // Shuffle a pair of two elements at random position j
+  words.forEach(
+    (_, i, arr, j = getRandomValue(i, arr.length)) => ([arr[i], arr[j]] = [arr[j], arr[i]])
+  );
+
+  return words;
+}
+
+function drop(words: string[], index: number): string[] {
+  words.splice(index, 1);
+  return words;
+}
+
+export default SeedConfirmView;

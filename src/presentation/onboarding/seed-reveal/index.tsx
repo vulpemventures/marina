@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
-import * as bip39 from 'bip39';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Button from '../../components/button';
 import {
@@ -7,20 +6,15 @@ import {
   INITIALIZE_END_OF_FLOW_ROUTE,
 } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { AppContext } from '../../../application/store/context';
-import { setMnemonic } from '../../../application/store/actions/onboarding';
 import RevealMnemonic from '../../components/reveal-mnemonic';
 
-const SeedReveal: React.FC = () => {
+export interface SeedRevealProps {
+  onboardingMnemonic: string;
+}
+
+const SeedRevealView: React.FC<SeedRevealProps> = ({ onboardingMnemonic }) => {
   const history = useHistory();
   const [revealed, setRevealed] = useState(false);
-  const [{ onboarding }, dispatch] = useContext(AppContext);
-
-  useEffect(() => {
-    if (onboarding.mnemonic === '') {
-      dispatch(setMnemonic(bip39.generateMnemonic()));
-    }
-  });
 
   const handleRemindMe = () => history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   const handleNext = () => history.push(INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE);
@@ -33,7 +27,7 @@ const SeedReveal: React.FC = () => {
         <div className="max-w-prose w-96 flex flex-col justify-center h-32">
           {revealed ? (
             <div className="border-primary p-4 text-base font-medium text-left border-2 rounded-md shadow-md">
-              {onboarding.mnemonic || 'Loading...'}
+              {onboardingMnemonic || 'Loading...'}
             </div>
           ) : (
             <RevealMnemonic className="w-96 h-32 shadow-md" onClick={handleClickReveal} />
@@ -53,4 +47,5 @@ const SeedReveal: React.FC = () => {
     </Shell>
   );
 };
-export default SeedReveal;
+
+export default SeedRevealView;

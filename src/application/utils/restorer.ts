@@ -1,106 +1,42 @@
-import { fromXpub, IdentityRestorerInterface, IdentityType, MasterPublicKey, Mnemonic } from 'ldk';
-import { IdentityInterface } from 'ldk/dist/identity/identity';
-import { Address } from '../../domain/wallet/value-objects';
-import { IWallet } from '../../domain/wallet/wallet';
+import { StateRestorerOpts, Mnemonic, IdentityType, mnemonicRestorerFromState } from 'ldk';
+import { Address } from '../../domain/address';
 
-export async function nextAddressForWallet(
-  wallet: IWallet,
-  chain: string,
-  change: boolean
-): Promise<Address> {
-  const { confidentialAddresses, masterBlindingKey, masterXPub } = wallet;
-  const restorer = new IdentityRestorerFromState(confidentialAddresses.map((addr) => addr.value));
-  // Restore wallet from MasterPublicKey
-  const pubKeyWallet = new MasterPublicKey({
-    chain,
-    restorer,
-    type: IdentityType.MasterPublicKey,
-    value: {
-      masterPublicKey: fromXpub(masterXPub.value, chain),
-      masterBlindingKey: masterBlindingKey.value,
-    },
-    initializeFromRestorer: true,
-  });
-  const isRestored = await pubKeyWallet.isRestored;
-  if (!isRestored) {
-    throw new Error('Failed to restore wallet');
+export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRestorerOpts {
+  const derivationPaths = addresses.map((addr) => addr.derivationPath);
+
+  const indexes = [];
+  const changeIndexes = [];
+
+  for (const path of derivationPaths) {
+    if (!path) continue;
+    const splitted = path.split('/');
+    const isChange = splitted[splitted.length - 2] === '1';
+    const index = parseInt(splitted[splitted.length - 1]);
+
+    if (isChange) {
+      changeIndexes.push(index);
+      continue;
+    }
+
+    indexes.push(index);
   }
 
-  let nextAddress;
-  if (change) {
-    const { confidentialAddress, derivationPath } = await pubKeyWallet.getNextChangeAddress();
-    nextAddress = {
-      confidentialAddress: confidentialAddress,
-      derivationPath: derivationPath,
-    };
-  } else {
-    const { confidentialAddress, derivationPath } = await pubKeyWallet.getNextAddress();
-    nextAddress = {
-      confidentialAddress: confidentialAddress,
-      derivationPath: derivationPath,
-    };
-  }
-
-  return Address.create(nextAddress.confidentialAddress, nextAddress.derivationPath);
+  return {
+    lastUsedExternalIndex: Math.max(...indexes),
+    lastUsedInternalIndex: Math.max(...changeIndexes),
+  };
 }
 
-export async function mnemonicWalletFromAddresses(
+export function mnemonicWallet(
   mnemonic: string,
-  masterBlindingKey: string,
-  addresses: Address[],
+  restorerOpts: StateRestorerOpts,
   chain: string
-): Promise<IdentityInterface> {
-  const restorer = new IdentityRestorerFromState(addresses.map((addr) => addr.value));
+): Promise<Mnemonic> {
   const mnemonicWallet = new Mnemonic({
     chain,
-    restorer,
     type: IdentityType.Mnemonic,
-    value: { mnemonic, masterBlindingKey },
-    initializeFromRestorer: true,
+    opts: { mnemonic },
   });
-  const isRestored = await mnemonicWallet.isRestored;
-  if (!isRestored) {
-    throw new Error('Failed to restore wallet');
-  }
-  return mnemonicWallet;
-}
 
-export async function xpubWalletFromAddresses(
-  masterXPub: string,
-  masterBlindingKey: string,
-  addresses: Address[],
-  chain: string
-): Promise<IdentityInterface> {
-  const restorer = new IdentityRestorerFromState(addresses.map((addr) => addr.value));
-  const xpubWallet = new MasterPublicKey({
-    chain,
-    restorer,
-    type: IdentityType.MasterPublicKey,
-    value: {
-      masterPublicKey: fromXpub(masterXPub, chain),
-      masterBlindingKey,
-    },
-    initializeFromRestorer: true,
-  });
-  const isRestored = await xpubWallet.isRestored;
-  if (!isRestored) {
-    throw new Error('Failed to restore wallet');
-  }
-  return xpubWallet;
-}
-
-export class IdentityRestorerFromState implements IdentityRestorerInterface {
-  private addresses: string[];
-
-  constructor(addresses: string[]) {
-    this.addresses = addresses;
-  }
-
-  async addressHasBeenUsed(address: string): Promise<boolean> {
-    return Promise.resolve(this.addresses.includes(address));
-  }
-
-  async addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]> {
-    return Promise.all(addresses.map((addr) => this.addressHasBeenUsed(addr)));
-  }
+  return mnemonicRestorerFromState(mnemonicWallet)(restorerOpts);
 }
