@@ -45,7 +45,9 @@
     "cypress:build": "NODE_ENV=test NETWORK=regtest yarn build",
     "cypress:run": "yarn cypress:chrome",
     "cypress:chrome": "yarn run cypress run --browser chrome --config video=false",
-    "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
+    "cypress:chromium": "yarn run cypress run --browser chromium --config video=false",
+    "webpack:start": "webpack --watch --config webpack.dev.js",
+    "webpack:build": "webpack --config webpack.prod.js"
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",
@@ -54,6 +56,8 @@
     "axios": "^0.21.1",
     "bip39": "^3.0.4",
     "bitcoinjs-message": "^2.2.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
     "decimal.js": "^10.2.1",
     "formik": "^2.2.6",
     "google-protobuf": "^3.15.8",
@@ -62,6 +66,7 @@
     "lottie-web": "^5.7.8",
     "marina-provider": "^1.2.0",
     "moment": "^2.29.1",
+    "path-browserify": "^1.0.1",
     "postcss": "^7.0.35",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.2",
@@ -73,6 +78,7 @@
     "redux": "^4.1.0",
     "redux-persist": "^6.0.0",
     "redux-thunk": "^2.3.0",
+    "stream-browserify": "^3.0.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.1.2",
     "taxi-protobuf": "vulpemventures/taxi-protobuf",
     "uuid": "^8.3.2",
@@ -103,6 +109,8 @@
     "@typescript-eslint/parser": "^4.22.0",
     "chai": "^4.3.4",
     "classnames": "^2.3.1",
+    "clean-webpack-plugin": "^4.0.0-alpha.0",
+    "copy-webpack-plugin": "^9.0.1",
     "cypress": "^7.7.0",
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^7.2.0",
@@ -115,6 +123,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.23.2",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "html-webpack-plugin": "^5.3.2",
     "jest": "^26.6.3",
     "jest-stare": "^2.2.2",
     "npm-run-all": "^4.1.5",
@@ -124,7 +133,10 @@
     "prettier-plugin-tailwind-css": "^1.5.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.5",
-    "typescript": "^4.2.4",
-    "web-ext": "^6.1.0"
+    "ts-loader": "^9.2.4",
+    "typescript": "^4.3.5",
+    "web-ext": "^6.1.0",
+    "webpack": "^5.47.0",
+    "webpack-cli": "^4.7.2"
   }
 }
