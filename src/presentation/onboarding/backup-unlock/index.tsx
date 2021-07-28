@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { RouteComponentProps, useHistory } from 'react-router-dom';
 import { FormikProps, withFormik } from 'formik';
 import * as Yup from 'yup';
@@ -6,17 +6,19 @@ import Shell from '../../components/shell';
 import Input from '../../components/input';
 import Button from '../../components/button';
 import { decrypt } from '../../../application/utils';
-import { AppContext } from '../../../application/store/context';
-import { EncryptedMnemonic, Password } from '../../../domain/wallet/value-objects';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
-import { setIsFromPopupFlow, setRestored } from '../../../application/store/actions/onboarding';
-import { DispatchOrThunk } from '../../../domain/common';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootReducerState } from '../../../domain/common';
+import { createPassword } from '../../../domain/password';
+import { setBackup } from '../../../application/redux/actions/onboarding';
 
 interface BackUpUnlockFormValues {
   password: string;
 }
 interface BackUpUnlockFormProps {
-  dispatch(param: DispatchOrThunk): any;
+  dispatch: ProxyStoreDispatch;
   encryptedMnemonic: EncryptedMnemonic;
   history: RouteComponentProps['history'];
 }
@@ -50,11 +52,10 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
       .min(8, 'Password should be 8 characters minimum'),
   }),
 
-  handleSubmit: (values, { props, setErrors }) => {
+  handleSubmit: async (values, { props, setErrors }) => {
     try {
-      const mnemonic = decrypt(props.encryptedMnemonic, Password.create(values.password));
-      props.dispatch(setRestored(values.password, mnemonic.value));
-      props.dispatch(setIsFromPopupFlow());
+      const mnemonic = decrypt(props.encryptedMnemonic, createPassword(values.password));
+      await props.dispatch(setBackup(mnemonic));
       return props.history.push(INITIALIZE_SEED_PHRASE_ROUTE);
     } catch (err) {
       console.error(err);
@@ -65,10 +66,10 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
   displayName: 'BackUpUnlockForm',
 })(BackUpUnlockForm);
 
-const BackUpUnlock: React.FC<BackUpUnlockFormProps> = () => {
+const BackUpUnlock: React.FC = () => {
   const history = useHistory();
-  const [{ wallets }, dispatch] = useContext(AppContext);
-  const { encryptedMnemonic } = wallets[0];
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+  const encryptedMnemonic = useSelector((s: RootReducerState) => s.wallet.encryptedMnemonic);
 
   return (
     <Shell hasBackBtn={false}>

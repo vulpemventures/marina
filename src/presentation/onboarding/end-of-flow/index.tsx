@@ -29,21 +29,24 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
 
   useEffect(() => {
     (async () => {
-      const walletData = await createWalletFromMnemonic(
-        createPassword(onboarding.password),
-        createMnemonic(onboarding.mnemonic),
-        network,
-        explorerURL
-      );
+      if (!onboarding.isFromPopupFlow) {
+        const walletData = await createWalletFromMnemonic(
+          createPassword(onboarding.password),
+          createMnemonic(onboarding.mnemonic),
+          network,
+          explorerURL
+        );
 
-      await dispatch(setWalletData(walletData));
+        await dispatch(setWalletData(walletData));
 
-      // Startup alarms to fetch utxos & set the popup page
-      await setUpPopup();
-      await dispatch(onboardingCompleted());
-      setIsLoading(false);
+        // Startup alarms to fetch utxos & set the popup page
+        await setUpPopup();
+        await dispatch(onboardingCompleted());
+      }
       await dispatch(flushOnboarding());
-    })().catch(console.error);
+    })()
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
   }, []);
 
   if (isLoading) {

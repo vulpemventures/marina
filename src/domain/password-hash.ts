@@ -1,10 +1,10 @@
-import { hash } from '../application/utils';
+import { hashPassword } from '../application/utils';
 import { Password } from './password';
 
 export type PasswordHash = string;
 
 export function match(password: Password, passwordHash: PasswordHash) {
-  return hash(password) === passwordHash;
+  return hashPassword(password) === passwordHash;
 }
 
 export function createPasswordHash(passwordHash: string): PasswordHash {

@@ -45,9 +45,11 @@ export function onboardingReducer(
     case ACTION_TYPES.ONBOARDING_FLUSH: {
       return onboardingInitState;
     }
+
     case ACTION_TYPES.ONBOARDING_SET_IS_FROM_POPUP_FLOW: {
       return {
         ...state,
+        mnemonic: payload.mnemonic,
         isFromPopupFlow: true,
       };
     }

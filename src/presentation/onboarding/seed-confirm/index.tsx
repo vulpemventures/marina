@@ -13,9 +13,10 @@ const ERROR_MSG = 'Invalid mnemonic';
 
 export interface SeedConfirmProps {
   onboardingMnemonic: string;
+  isFromPopupFlow: boolean;
 }
 
-const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => {
+const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFromPopupFlow }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
   const mnemonic: string[] = onboardingMnemonic.trim().split(' ');
@@ -51,7 +52,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => 
   };
 
   return (
-    <Shell className="space-y-5" hasBackBtn={!onboarding.isFromPopupFlow}>
+    <Shell className="space-y-5" hasBackBtn={!isFromPopupFlow}>
       <h1 className="text-3xl font-medium">{'Confirm your secret mnemonic phrase'}</h1>
       <p className="text-base">
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}

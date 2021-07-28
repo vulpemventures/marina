@@ -21,6 +21,7 @@ import { PendingTxStep } from '../../../application/redux/reducers/transaction-r
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
 import { Network } from '../../../domain/network';
+import { browser } from 'webextension-polyfill-ts';
 
 export interface HomeProps {
   lbtcAssetHash: string;
@@ -28,6 +29,7 @@ export interface HomeProps {
   getAsset: AssetGetter;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
+  isWalletVerified: boolean;
 }
 
 const HomeView: React.FC<HomeProps> = ({
@@ -36,6 +38,7 @@ const HomeView: React.FC<HomeProps> = ({
   transactionStep,
   assetsBalance,
   network,
+  isWalletVerified,
 }) => {
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -54,16 +57,19 @@ const HomeView: React.FC<HomeProps> = ({
   };
 
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+
   const handleSaveMnemonicConfirm = async () => {
     await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
   };
+
   const handleReceive = () => {
-    if (!app.isWalletVerified) {
+    if (!isWalletVerified) {
       showSaveMnemonicModal(true);
     } else {
       history.push(RECEIVE_ROUTE);
     }
   };
+
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import SeedConfirmView, { SeedConfirmProps } from '../../../presentation/onboard
 
 const mapStateToProps = (state: RootReducerState): SeedConfirmProps => ({
   onboardingMnemonic: state.onboarding.mnemonic,
+  isFromPopupFlow: state.onboarding.isFromPopupFlow,
 });
 
 const SeedConfirm = connect(mapStateToProps)(SeedConfirmView);
