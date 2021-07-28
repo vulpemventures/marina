@@ -92,7 +92,6 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div>
           <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
-
           <ButtonList title="Assets" type="assets">
             {Object.entries(assetsBalance)
               .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
