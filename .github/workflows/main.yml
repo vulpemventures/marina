@@ -38,6 +38,7 @@ jobs:
 
       - name: Bundle app
         run: yarn run build
+
       - name: Package the extension
         run: yarn run web-ext:build
 

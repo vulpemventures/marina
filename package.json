@@ -9,10 +9,12 @@
     "lint": "eslint --ext .ts,.tsx src test",
     "lint:fix": "eslint --fix --ext .ts,.tsx src test",
     "test": "NETWORK=regtest jest --no-cache --verbose test/**.spec.ts",
+    "prettier": "prettier --write src test",
+    "prettier:check": "prettier --check src test",
     "web-ext:build": "web-ext build --source-dir dist --overwrite-dest",
     "web-ext:lint": "web-ext lint --source-dir dist",
     "cypress:open": "yarn cypress:build && yarn run cypress open",
-    "cypress:build": "NODE_ENV=test NETWORK=regtest yarn build",
+    "cypress:build": "webpack --config webpack.cypress.js",
     "cypress:run": "yarn cypress:chrome",
     "cypress:chrome": "yarn run cypress run --browser chrome --config video=false",
     "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
