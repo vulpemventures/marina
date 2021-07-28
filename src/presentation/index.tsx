@@ -6,8 +6,8 @@ import { ProxyStore } from '../application/redux/proxyStore';
 import { persistor } from '../application/redux/store';
 import App from './app';
 
-import "./styles/index.css"
-import "./styles/fonts.css"
+import './styles/index.css';
+import './styles/fonts.css';
 
 const store = new ProxyStore(); // proxy store
 

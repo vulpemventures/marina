@@ -8,8 +8,6 @@ import { marinaStore, wrapMarinaStore } from './application/redux/store';
 import { IDLE_MESSAGE_TYPE } from './application/utils';
 import { setUpPopup } from './application/utils/popup';
 import { INITIALIZE_WELCOME_ROUTE } from './presentation/routes/constants';
-;
-
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
