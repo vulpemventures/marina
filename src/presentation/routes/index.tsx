@@ -49,9 +49,9 @@ import Welcome from '../onboarding/welcome';
 import SelectAction from '../onboarding/select-action';
 import WalletRestore from '../onboarding/wallet-restore';
 import WalletCreate from '../onboarding/wallet-create';
-import EndOfFlow from '../onboarding/end-of-flow';
-import SeedReveal from '../onboarding/seed-reveal';
-import SeedConfirm from '../onboarding/seed-confirm';
+import EndOfFlow from '../../application/redux/containers/end-of-flow-onboarding.container';
+import SeedReveal from '../../application/redux/containers/seed-reveal.container';
+import SeedConfirm from '../../application/redux/containers/seed-confirm.container';
 import BackUpUnlock from '../onboarding/backup-unlock';
 // Wallet
 import Home from '../../application/redux/containers/home.container';
