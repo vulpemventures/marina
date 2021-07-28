@@ -1,7 +1,6 @@
 import {
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
-  VERIFICATION_SUCCESS,
   ONBOARDING_COMPLETETED,
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
@@ -17,10 +16,6 @@ import { ExplorerURLs } from '../../../domain/app';
 export const setExplorer = (explorer: ExplorerURLs, network: Network): AnyAction => ({
   type: SET_EXPLORER,
   payload: { explorer, network },
-});
-
-export const verifyWalletSuccess = (): AnyAction => ({
-  type: VERIFICATION_SUCCESS,
 });
 
 export const onboardingCompleted = (): AnyAction => ({
