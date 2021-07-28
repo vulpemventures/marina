@@ -19,6 +19,7 @@ export const walletInitState: IWallet = {
     gapLimit: 20,
     isLoading: false,
   },
+  isVerified: false,
 };
 
 export function walletReducer(
@@ -103,6 +104,13 @@ export function walletReducer(
       return {
         ...state,
         utxoMap: {},
+      };
+    }
+
+    case ACTION_TYPES.SET_VERIFIED: {
+      return {
+        ...state,
+        isVerified: true,
       };
     }
 

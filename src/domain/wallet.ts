@@ -18,4 +18,5 @@ export interface IWallet {
     isLoading: boolean;
     error?: string;
   };
+  isVerified: boolean;
 }

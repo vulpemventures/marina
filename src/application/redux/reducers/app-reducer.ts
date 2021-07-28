@@ -7,7 +7,6 @@ import * as ACTION_TYPES from '../actions/action-types';
 export const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
-  isWalletVerified: false,
   network: createNetwork(process.env.NETWORK || 'liquid'),
   explorerByNetwork: {
     regtest: NigiriDefaultExplorerURLs,
@@ -27,12 +26,6 @@ export function appReducer(state: IApp = appInitState, { type, payload }: AnyAct
       return {
         ...state,
         errors: { auth: { message: payload.error.message } as IError },
-      };
-    }
-    case ACTION_TYPES.VERIFICATION_SUCCESS: {
-      return {
-        ...state,
-        isWalletVerified: true,
       };
     }
 
