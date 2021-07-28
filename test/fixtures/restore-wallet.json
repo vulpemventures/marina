@@ -1,9 +1,0 @@
-{
-  "confidentialAddresses": [],
-  "encryptedMnemonic": "773ff4219ac4a681c98a9657192371706778d43b048a3def7f6353a53aaadff941baf203c9072da0b39c7b7c3073cd3ea3fef69bc1cec1d192785d5fa929a4aa7e65b5f917f2477a610269941566b16c",
-  "masterXPub": "vpub5SLqN2bLY4WeaEb8NtZLkNAzdjPegEy1vtcSNxqRxQ7USxbtCG9ooooKsvZy4PmpyNNAwbDZgsrwCgAtoZRwFJ5E6C6EZ9t9aqn4rW2dpEr",
-  "masterBlindingKey": "161900c53f52b6531f5b9672e085f43496618e2815cd8c5386161e54f47833a8",
-  "mnemonic": "name portion crane neutral arrange skate gasp seed spoon ten dress bulb",
-  "password": "testpassword",
-  "passwordHash": "9f735e0df9a1ddc702bf0a1a7b83033f9f7153a00c29de82cedadc9957289b05"
-}
