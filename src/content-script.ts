@@ -1,8 +1,8 @@
 import { browser } from 'webextension-polyfill-ts';
 
-import Broker from './broker';
+import Broker from './application/broker';
 
-// start the broker + inject the inject.js script
+// start the broker + inject the inject-script.js script
 startContentScript().catch(console.error);
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
@@ -13,7 +13,7 @@ async function startContentScript() {
     const broker = new Broker([await Broker.WithProxyStore(currentHostname)]);
     broker.start();
 
-    injectScript(browser.extension.getURL('inject.js'));
+    injectScript(browser.extension.getURL('inject-script.js'));
   }
 }
 

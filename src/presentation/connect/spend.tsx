@@ -13,7 +13,6 @@ import {
 import { RootReducerState } from '../../domain/common';
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
-  const app = useSelector((state: RootReducerState) => state.app);
   const assets = useSelector((state: RootReducerState) => state.assets);
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -22,7 +21,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const windowProxy = new WindowProxy();
 
   const assetTicker = connectData.tx?.assetHash
-    ? assets[app.network][connectData.tx.assetHash]?.ticker
+    ? assets[connectData.tx.assetHash]?.ticker
     : 'Unknown';
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);

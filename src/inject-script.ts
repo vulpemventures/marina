@@ -1,4 +1,4 @@
-import Marina from './marina';
+import Marina from "./application/marina";
 
 const marina = new Marina();
 
