@@ -1,4 +1,5 @@
 import { MarinaEventType } from 'marina-provider';
+import { parse } from './utils/browser-storage-converters';
 
 type EventListenerID = string;
 
@@ -29,7 +30,7 @@ export default class WindowProxy {
       window.addEventListener(
         id,
         (event: Event) => {
-          const response = (event as CustomEvent).detail;
+          const response = parse((event as CustomEvent).detail);
 
           if (!response.success) return reject(new Error(response.error));
           return resolve(response.data);
@@ -73,7 +74,7 @@ export default class WindowProxy {
   // start the window listner for a given marina event type
   private startWindowListener(type: MarinaEventType) {
     window.addEventListener(`marina_event_${type.toLowerCase()}`, (event: Event) => {
-      const payload = (event as CustomEvent).detail;
+      const payload = parse((event as CustomEvent).detail);
       for (const eventListener of this.eventListeners[type]) {
         eventListener.listener(payload);
       }

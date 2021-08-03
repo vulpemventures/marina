@@ -2377,9 +2377,12 @@ bitcoinjs-message@^2.2.0:
     secp256k1 "^3.0.1"
     varuint-bitcoin "^1.0.1"
 
-blech32@vulpemventures/blech32.git:
-  version "1.0.0"
-  resolved "https://codeload.github.com/vulpemventures/blech32/tar.gz/1c9acd89bdd2a2a5016fb942cf7d898579f84c8d"
+blech32@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/blech32/-/blech32-1.0.1.tgz#400b9a8953ff80164553a8cf58fece208762e16b"
+  integrity sha512-1/vr1wwB8jvfVCkLQMVXLaIyx7Lgxh/6IqVuQlSsCNzWNzU+64oXzOQ/9BRnN4GANjx9i0O3OSQonDlL4FraSA==
+  dependencies:
+    long "^4.0.0"
 
 blob-util@^2.0.2:
   version "2.0.2"
@@ -7038,16 +7041,16 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.3.7:
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.8.tgz#21413998bd72591f121221dee1f9adec82dd0b05"
-  integrity sha512-XTHVNKMq7cjZMpV/c28lN0LnhAEXhpZyiEYGHZdU2RmTh9eCxSK0LHg6cl4jP0nYVF+aYE5z8zQ/U8z1cbqo4w==
+ldk@^0.3.9:
+  version "0.3.9"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.9.tgz#50ec067e31a2d8d235dc0e072a877e00b7133d15"
+  integrity sha512-SSSpS5r/Fbj5ZFseZcLsud9ErP5p/5dclmptfaI05bnejs5Iys47t0IggBGBhrsLggfmy7119swJMs0hyA2VXA==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
-    liquidjs-lib "^5.1.14"
+    liquidjs-lib "^5.1.15"
     marina-provider "^1.0.0"
     slip77 "^0.1.1"
 
@@ -7097,10 +7100,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
-liquidjs-lib@^5.1.14:
-  version "5.1.14"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.1.14.tgz#105ab9cdc6c5723897d516d83e726424a2de8e25"
-  integrity sha512-Qwskr6J3+XeItzMG3c/mly0zMmGA9XYM10sBrlnc5/dwAENrUAof7AqWjBDEUk2GuVaEvpSUT+m2wO+vMrP8bQ==
+liquidjs-lib@^5.1.15:
+  version "5.1.15"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.1.15.tgz#43cf25006da11386e23561178a260264318467a9"
+  integrity sha512-shrt3KBUnFWoAAqBa5iyz8v62g1P9JIlMtvW+C2GH9J3HqYFV6Hs+Rx7OtNQ1z7xTNttPEbJMGn360JwIT9D0g==
   dependencies:
     "@vulpemventures/secp256k1-zkp" "^2.0.0"
     bech32 "^1.1.2"
@@ -7108,7 +7111,7 @@ liquidjs-lib@^5.1.14:
     bip32 "^2.0.4"
     bip66 "^1.1.0"
     bitcoin-ops "^1.4.0"
-    blech32 vulpemventures/blech32.git
+    blech32 "^1.0.1"
     bs58check "^2.0.0"
     create-hash "^1.1.0"
     create-hmac "^1.1.3"

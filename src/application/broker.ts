@@ -14,6 +14,7 @@ import { UtxoInterface } from 'ldk';
 import { TxsHistory } from '../domain/transaction';
 import { AnyAction } from 'redux';
 import { Network } from '../domain/network';
+import { stringify } from './utils/browser-storage-converters';
 
 interface Message {
   id: string;
@@ -105,14 +106,16 @@ export default class Broker {
 
       for (const ev of events) {
         window.dispatchEvent(
-          new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, { detail: ev.payload })
+          new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, {
+            detail: stringify(ev.payload),
+          })
         );
       }
     });
   }
 
   private sendMsgToInjectScript(message: Message) {
-    window.dispatchEvent(new CustomEvent(message.id, { detail: message.payload }));
+    window.dispatchEvent(new CustomEvent(message.id, { detail: stringify(message.payload) }));
   }
 
   start() {
