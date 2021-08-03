@@ -1,3 +1,4 @@
+import { liquid } from './../../../test/fixtures/network';
 import {
   address as addrLDK,
   addToTx,
@@ -176,15 +177,28 @@ function getTransfers(
     }
   }
 
+  let feeAmount = 0;
+  let feeAsset = liquid.assetHash;
+
   for (const output of vout) {
-    if (
-      !isBlindedOutputInterface(output) &&
-      walletScripts.includes(output.script) &&
-      output.script !== ''
-    ) {
+    if (output.script === '') {
+      // handle the fee output
+      const feeOutput = output as UnblindedOutputInterface;
+      feeAmount = feeOutput.value;
+      feeAsset = feeOutput.asset;
+      continue;
+    }
+
+    if (!isBlindedOutputInterface(output) && walletScripts.includes(output.script)) {
       addToTransfers(output.value, output.asset);
     }
   }
 
-  return transfers;
+  return transfers.filter((t) => {
+    if (t.asset === feeAsset && Math.abs(t.amount) === feeAmount) {
+      return false;
+    }
+
+    return true;
+  });
 }

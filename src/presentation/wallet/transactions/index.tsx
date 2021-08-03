@@ -146,8 +146,8 @@ const TransactionsView: React.FC<TransactionsProps> = ({
           </div>
           {modalTxDetails?.transfers.map((transfer, i) => (
             <div key={i}>
-              <p className="text-base font-medium">Amount</p>
-              <p className="text-xs font-light">
+              <p className="text-sm font-medium">{transfer.amount > 0 ? 'Inbound' : 'Outbound'}</p>
+              <p className="text-sm font-light">
                 {fromSatoshiStr(transfer.amount, assets[transfer.asset]?.precision)}{' '}
                 {assets[transfer.asset]?.ticker ?? transfer.asset.slice(0, 4)}
               </p>
