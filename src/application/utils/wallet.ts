@@ -2,13 +2,13 @@ import { createMasterXPub, MasterXPub } from '../../domain/master-extended-pub';
 import { EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
 import { Address, createAddress } from '../../domain/address';
 import { Mnemonic, IdentityType, StateRestorerOpts, mnemonicRestorerFromEsplora } from 'ldk';
-import { encrypt, hash } from './crypto';
 import { Network } from '../../domain/network';
 import { PasswordHash } from '../../domain/password-hash';
 import { Mnemonic as Mnemo } from '../../domain/mnemonic';
 import { createMasterBlindingKey, MasterBlindingKey } from '../../domain/master-blinding-key';
 import { Password } from '../../domain/password';
 import { getStateRestorerOptsFromAddresses } from './restorer';
+import { encrypt, hashPassword } from './crypto';
 
 export interface WalletData {
   encryptedMnemonic: EncryptedMnemonic;
@@ -38,7 +38,7 @@ export async function createWalletFromMnemonic(
   const masterXPub = createMasterXPub(mnemonicIdentity.masterPublicKey);
   const masterBlindingKey = createMasterBlindingKey(mnemonicIdentity.masterBlindingKey);
   const encryptedMnemonic = encrypt(mnemonic, password);
-  const passwordHash = hash(password);
+  const passwordHash = hashPassword(password);
   const addresses = (await mnemonicIdentity.getAddresses()).map((a) =>
     createAddress(a.confidentialAddress, a.derivationPath)
   );

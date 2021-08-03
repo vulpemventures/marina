@@ -6,6 +6,7 @@ import {
   START_DEEP_RESTORATION,
   NEW_ADDRESS_SUCCESS,
   NEW_CHANGE_ADDRESS_SUCCESS,
+  SET_VERIFIED,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
@@ -50,4 +51,8 @@ export function startDeepRestorer(): AnyAction {
   return {
     type: START_DEEP_RESTORATION,
   };
+}
+
+export function setVerified(): AnyAction {
+  return { type: SET_VERIFIED };
 }

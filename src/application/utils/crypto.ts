@@ -23,11 +23,10 @@ export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemo
   return createMnemonic(decrypted);
 }
 
-export function hash(text: Password): PasswordHash {
-  return createPasswordHash(crypto.createHash('sha256').update(text).digest('hex'));
+export function sha256Hash(str: string): string {
+  return crypto.createHash('sha256').update(str).digest('hex');
 }
 
-export function hashStrings(strings: string[]): string {
-  const toHash = strings.sort().join();
-  return crypto.createHash('sha1').update(toHash).digest('hex');
+export function hashPassword(text: Password): PasswordHash {
+  return createPasswordHash(sha256Hash(text));
 }

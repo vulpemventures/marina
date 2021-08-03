@@ -4,6 +4,7 @@ import SeedRevealView, { SeedRevealProps } from '../../../presentation/onboardin
 
 const mapStateToProps = (state: RootReducerState): SeedRevealProps => ({
   onboardingMnemonic: state.onboarding.mnemonic,
+  isFromPopupFlow: state.onboarding.isFromPopupFlow,
 });
 
 const SeedReveal = connect(mapStateToProps)(SeedRevealView);

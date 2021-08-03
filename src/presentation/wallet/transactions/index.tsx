@@ -8,7 +8,7 @@ import ButtonList from '../../components/button-list';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
-import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
+import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import { imgPathMapMainnet, imgPathMapRegtest, txTypeAsString } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
@@ -167,7 +167,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
         </Button>
       </Modal>
 
-      <ReminderSaveMnemonicModal
+      <SaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}
         handleClose={handleSaveMnemonicClose}
         handleConfirm={handleSaveMnemonicConfirm}

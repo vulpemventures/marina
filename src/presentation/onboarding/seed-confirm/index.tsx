@@ -4,24 +4,23 @@ import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { setVerified } from '../../../application/redux/actions/onboarding';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { setVerified } from '../../../application/redux/actions/wallet';
 
 const NULL_ERROR = '';
 const ERROR_MSG = 'Invalid mnemonic';
 
 export interface SeedConfirmProps {
   onboardingMnemonic: string;
+  isFromPopupFlow: boolean;
 }
 
-const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => {
+const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFromPopupFlow }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-
   const mnemonic: string[] = onboardingMnemonic.trim().split(' ');
   const mnemonicRandomized = shuffleMnemonic([...mnemonic]);
-
   const [wordsList, setWordsList] = useState(mnemonicRandomized);
   const [selected, setSelected] = useState([] as string[]);
   const [error, setError] = useState(NULL_ERROR);
@@ -53,7 +52,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic }) => 
   };
 
   return (
-    <Shell className="space-y-5">
+    <Shell className="space-y-5" hasBackBtn={!isFromPopupFlow}>
       <h1 className="text-3xl font-medium">{'Confirm your secret mnemonic phrase'}</h1>
       <p className="text-base">
         {'Enter your secret twelve words of your mnemonic phrase to make sure it is correct'}

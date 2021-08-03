@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import {
+  BACKUP_UNLOCK_ROUTE,
   RECEIVE_ROUTE,
   SELECT_ASSET_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
@@ -11,7 +12,7 @@ import {
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
-import ReminderSaveMnemonicModal from '../../components/modal-reminder-save-mnemonic';
+import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utils';
@@ -20,6 +21,7 @@ import { PendingTxStep } from '../../../application/redux/reducers/transaction-r
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
 import { Network } from '../../../domain/network';
+import { browser } from 'webextension-polyfill-ts';
 
 export interface HomeProps {
   lbtcAssetHash: string;
@@ -27,6 +29,7 @@ export interface HomeProps {
   getAsset: AssetGetter;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
+  isWalletVerified: boolean;
 }
 
 const HomeView: React.FC<HomeProps> = ({
@@ -35,6 +38,7 @@ const HomeView: React.FC<HomeProps> = ({
   transactionStep,
   assetsBalance,
   network,
+  isWalletVerified,
 }) => {
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -53,8 +57,19 @@ const HomeView: React.FC<HomeProps> = ({
   };
 
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
-  const handleReceive = () => showSaveMnemonicModal(true);
+
+  const handleSaveMnemonicConfirm = async () => {
+    await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
+  };
+
+  const handleReceive = () => {
+    if (!isWalletVerified) {
+      showSaveMnemonicModal(true);
+    } else {
+      history.push(RECEIVE_ROUTE);
+    }
+  };
+
   const handleSend = () => history.push(SELECT_ASSET_ROUTE);
 
   useEffect(() => {
@@ -119,7 +134,7 @@ const HomeView: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      <ReminderSaveMnemonicModal
+      <SaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}
         handleClose={handleSaveMnemonicClose}
         handleConfirm={handleSaveMnemonicConfirm}

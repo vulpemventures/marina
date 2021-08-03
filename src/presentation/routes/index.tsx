@@ -34,6 +34,7 @@ import {
   SEND_END_OF_FLOW_ROUTE,
   SEND_PAYMENT_SUCCESS_ROUTE,
   SEND_PAYMENT_ERROR_ROUTE,
+  BACKUP_UNLOCK_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
 } from './constants';
 
@@ -51,6 +52,7 @@ import WalletCreate from '../onboarding/wallet-create';
 import EndOfFlow from '../../application/redux/containers/end-of-flow-onboarding.container';
 import SeedReveal from '../../application/redux/containers/seed-reveal.container';
 import SeedConfirm from '../../application/redux/containers/seed-confirm.container';
+import BackUpUnlock from '../onboarding/backup-unlock';
 // Wallet
 import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
@@ -82,11 +84,12 @@ const Routes: React.FC = () => {
       {/*Onboarding*/}
       <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />
       <Route exact path={INITIALIZE_SELECT_ACTION_ROUTE} component={SelectAction} />
-      <Route exact path={RESTORE_VAULT_ROUTE} component={WalletRestore} />
       <Route exact path={INITIALIZE_CREATE_PASSWORD_ROUTE} component={WalletCreate} />
       <Route exact path={INITIALIZE_SEED_PHRASE_ROUTE} component={SeedReveal} />
       <Route exact path={INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE} component={SeedConfirm} />
       <Route exact path={INITIALIZE_END_OF_FLOW_ROUTE} component={EndOfFlow} />
+      <Route exact path={RESTORE_VAULT_ROUTE} component={WalletRestore} />
+      <Route exact path={BACKUP_UNLOCK_ROUTE} component={BackUpUnlock} />
       {/*Wallet*/}
       <ProtectedRoute exact path={DEFAULT_ROUTE} comp={Home} />
       <ProtectedRoute exact path={TRANSACTIONS_ROUTE} comp={Transactions} />

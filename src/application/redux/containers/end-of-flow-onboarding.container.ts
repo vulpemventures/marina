@@ -7,7 +7,9 @@ import { getExplorerURLSelector } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
   return {
-    onboarding: state.onboarding,
+    mnemonic: state.onboarding.mnemonic,
+    password: state.onboarding.password,
+    isFromPopupFlow: state.onboarding.isFromPopupFlow,
     network: state.app.network,
     explorerURL: getExplorerURLSelector(state),
   };
