@@ -701,7 +701,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       while (!it.done) {
         const tx = it.value;
         // Update all txsHistory state at each single new tx
-        const toAdd = toDisplayTransaction(tx, walletScripts);
+        const toAdd = toDisplayTransaction(tx, walletScripts, networks[app.network]);
         dispatch(addTx(toAdd, app.network));
         it = await txsGen.next();
       }

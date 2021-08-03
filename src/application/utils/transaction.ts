@@ -1,4 +1,3 @@
-import { liquid } from './../../../test/fixtures/network';
 import {
   address as addrLDK,
   addToTx,
@@ -16,7 +15,7 @@ import {
   UnblindedOutputInterface,
   UtxoInterface,
 } from 'ldk';
-import { confidential } from 'liquidjs-lib';
+import { confidential, networks } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
 import { Address } from '../../domain/address';
@@ -99,8 +98,8 @@ export const isChange = (a: Address): boolean | null =>
  * @param tx txInterface
  * @param walletScripts the wallet's scripts i.e wallet scripts from wallet's addresses.
  */
-export function toDisplayTransaction(tx: TxInterface, walletScripts: string[]): TxDisplayInterface {
-  const transfers = getTransfers(tx.vin, tx.vout, walletScripts);
+export function toDisplayTransaction(tx: TxInterface, walletScripts: string[], network: networks.Network): TxDisplayInterface {
+  const transfers = getTransfers(tx.vin, tx.vout, walletScripts, network);
   return {
     txId: tx.txid,
     blockTimeMs: tx.status.blockTime ? tx.status.blockTime * 1000 : undefined,
@@ -153,7 +152,8 @@ function txTypeFromTransfer(transfers: Transfer[]) {
 function getTransfers(
   vin: Array<InputInterface>,
   vout: Array<BlindedOutputInterface | UnblindedOutputInterface>,
-  walletScripts: string[]
+  walletScripts: string[],
+  network: networks.Network
 ): Transfer[] {
   const transfers: Transfer[] = [];
 
@@ -178,7 +178,7 @@ function getTransfers(
   }
 
   let feeAmount = 0;
-  let feeAsset = liquid.assetHash;
+  let feeAsset = network.assetHash;
 
   for (const output of vout) {
     if (output.script === '') {
