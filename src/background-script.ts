@@ -1,14 +1,13 @@
 import { browser, Idle } from 'webextension-polyfill-ts';
-import { IDLE_MESSAGE_TYPE } from './utils';
-import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import Backend from './backend';
-import { logOut, onboardingCompleted } from './redux/actions/app';
-import { marinaStore, wrapMarinaStore } from './redux/store';
-import { setWalletData } from './redux/actions/wallet';
-import { testWalletData } from './constants/cypress';
-import { setUpPopup } from './utils/popup';
-import { enableWebsite } from './redux/actions/connect';
-
+import Backend from './application/backend';
+import { testWalletData } from './application/constants/cypress';
+import { logOut, onboardingCompleted } from './application/redux/actions/app';
+import { enableWebsite } from './application/redux/actions/connect';
+import { setWalletData } from './application/redux/actions/wallet';
+import { marinaStore, wrapMarinaStore } from './application/redux/store';
+import { IDLE_MESSAGE_TYPE } from './application/utils';
+import { setUpPopup } from './application/utils/popup';
+import { INITIALIZE_WELCOME_ROUTE } from './presentation/routes/constants';
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;

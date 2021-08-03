@@ -16,7 +16,7 @@ const SelectAction: React.FC = () => {
           backgroundImage: "url('/assets/images/fullscreen/bg-wave-top.svg')",
         }}
       >
-        <h1 className="self-center text-4xl font-medium">{'What do you want to do?'}</h1>
+        <h1 className="self-center text-4xl font-medium">What do you want to do?</h1>
         <div className="grid grid-flow-row grid-cols-2 gap-20">
           <div className="rounded-3xl flex flex-col justify-around object-contain w-64 h-64 pt-10 pb-6 pl-6 pr-6 text-center bg-white">
             <h2 className="text-xl font-normal">{'Restore a wallet'}</h2>

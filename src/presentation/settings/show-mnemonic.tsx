@@ -7,14 +7,12 @@ import ShellPopUp from '../components/shell-popup';
 import { IWallet } from '../../domain/wallet';
 import { match } from '../../domain/password-hash';
 import { createPassword } from '../../domain/password';
-import { Network } from '../../domain/network';
 
 export interface SettingsShowMnemonicProps {
   wallet: IWallet;
-  network: Network;
 }
 
-const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet, network }) => {
+const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet }) => {
   const [mnemonic, setMnemonic] = useState('');
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);
@@ -23,7 +21,7 @@ const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet,
     if (!match(password, wallet.passwordHash)) {
       throw new Error('Invalid password');
     }
-    const mnemo = decrypt(wallet.encryptedMnemonic, createPassword(password), network);
+    const mnemo = decrypt(wallet.encryptedMnemonic, createPassword(password));
     setMnemonic(mnemo);
     showUnlockModal(false);
   };
