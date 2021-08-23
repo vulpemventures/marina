@@ -98,7 +98,11 @@ export const isChange = (a: Address): boolean | null =>
  * @param tx txInterface
  * @param walletScripts the wallet's scripts i.e wallet scripts from wallet's addresses.
  */
-export function toDisplayTransaction(tx: TxInterface, walletScripts: string[], network: networks.Network): TxDisplayInterface {
+export function toDisplayTransaction(
+  tx: TxInterface,
+  walletScripts: string[],
+  network: networks.Network
+): TxDisplayInterface {
   const transfers = getTransfers(tx.vin, tx.vout, walletScripts, network);
   return {
     txId: tx.txid,
