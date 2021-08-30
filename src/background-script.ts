@@ -47,8 +47,10 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    // Everytime the browser starts up we need to set up the popup page
-    await browser.browserAction.setPopup({ popup: 'popup.html' });
+    if (marinaStore.getState().wallet.encryptedMnemonic !== '') {
+      // Everytime the browser starts up we need to set up the popup page
+      await browser.browserAction.setPopup({ popup: 'popup.html' });
+    }
   })().catch(console.error);
 });
 

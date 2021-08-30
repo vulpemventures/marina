@@ -45,8 +45,8 @@ function createLocalStorageConfig<S>(
     blacklist,
     migrate: (state: any) => {
       return Promise.resolve({
-        ...state,
         ...initialState,
+        ...state, // /!\ state should be merged **after** initialState !
       });
     },
   };
