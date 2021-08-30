@@ -613,7 +613,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       if (utxoIterator.done) {
         console.info(`number of utxos fetched: ${utxoIterator.value.numberOfUtxos}`);
-        if (utxoIterator.value.errors) {
+        if (utxoIterator.value.errors.length > 0) {
           console.warn(
             `${utxoIterator.value.errors.length} errors occurs during utxos updater generator`
           );
