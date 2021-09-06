@@ -31,6 +31,6 @@ export const NigiriDefaultExplorerURLs: ExplorerURLs = {
 
 export const MempoolExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
-  electrsURL: 'https://mempool.space/liquid',
-  esploraURL: 'https://mempool.space/liquid/api',
+  electrsURL: 'https://liquid.network',
+  esploraURL: 'https://liquid.network/api',
 };
