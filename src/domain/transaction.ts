@@ -7,7 +7,7 @@ export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 
 export type TxsHistoryByNetwork = Record<Network, TxsHistory> & Partial<Record<'errors', IError>>;
 
-export enum TxTypeEnum {
+export enum TxType {
   SelfTransfer = 0,
   Deposit = 1,
   Withdraw = 2,
@@ -27,7 +27,7 @@ export interface Transfer {
 }
 
 export interface TxDisplayInterface {
-  type: TxTypeEnum;
+  type: TxType;
   fee: number;
   txId: string;
   status: TxStatusEnum;
