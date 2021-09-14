@@ -6,6 +6,7 @@ import {
   SETTINGS_DEEP_RESTORER_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
+  DEFAULT_ROUTE
 } from '../routes/constants';
 
 const SettingsMenuSettings: React.FC = () => {
@@ -16,7 +17,11 @@ const SettingsMenuSettings: React.FC = () => {
   const handleDeepRestorer = () => history.push(SETTINGS_DEEP_RESTORER_ROUTE);
 
   return (
-    <ShellPopUp className="h-popupContent" currentPage="Settings">
+    <ShellPopUp
+      className="h-popupContent"
+      currentPage="Settings"
+      backBtnCb={() => history.push(DEFAULT_ROUTE)}
+    >
       <ul className="flex flex-col h-full">
         <button onClick={handleChangeCurrency}>
           <li className="settings-list-item border-t-0.5">
