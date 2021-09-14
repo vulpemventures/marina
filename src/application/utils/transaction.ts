@@ -131,6 +131,10 @@ export function txTypeAsString(txType: TxTypeEnum = TxTypeEnum.Unknow): string {
 }
 
 function txTypeFromTransfer(transfers: Transfer[]): TxTypeEnum {
+  if (transfers.some(({ amount }) => amount === 0)) {
+    return TxTypeEnum.SelfTransfer;
+  }
+
   if (transfers.length === 1) {
     if (transfers[0].amount > 0) {
       return TxTypeEnum.Deposit;
@@ -143,10 +147,6 @@ function txTypeFromTransfer(transfers: Transfer[]): TxTypeEnum {
 
   if (transfers.length === 2) {
     return TxTypeEnum.Swap;
-  }
-
-  if (transfers.some(({ amount }) => amount === 0)) {
-    return TxTypeEnum.SelfTransfer;
   }
 
   return TxTypeEnum.Unknow;
