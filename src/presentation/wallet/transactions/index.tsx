@@ -51,7 +51,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
       : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
 
   // TxDetails Modal
-  const [modalTxDetails, setmodalTxDetails] = useState<TxDisplayInterface>();
+  const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
 
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -117,7 +117,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
                 assetTicker={state.assetTicker}
                 key={index}
                 handleClick={() => {
-                  setmodalTxDetails(tx);
+                  setModalTxDetails(tx);
                 }}
                 tx={tx}
               />
@@ -125,7 +125,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
           })}
       </ButtonList>
 
-      <Modal isOpen={modalTxDetails !== undefined} onClose={() => setmodalTxDetails(undefined)}>
+      <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">
           <img
             className="w-8 h-8 mt-0.5 block mx-auto mb-2"
