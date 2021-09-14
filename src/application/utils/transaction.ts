@@ -13,7 +13,7 @@ import {
   StateRestorerOpts,
   TxInterface,
   UnblindedOutputInterface,
-  UtxoInterface,
+  UtxoInterface
 } from 'ldk';
 import { confidential, networks } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
@@ -111,12 +111,14 @@ export function toDisplayTransaction(
     fee: tx.fee,
     transfers,
     type: txTypeFromTransfer(transfers),
-    webExplorersBlinders: getUnblindURLFromTx(tx, ''),
+    webExplorersBlinders: getUnblindURLFromTx(tx, '')
   };
 }
 
 export function txTypeAsString(txType: TxTypeEnum = TxTypeEnum.Unknow): string {
   switch (txType) {
+    case TxTypeEnum.SelfTransfer:
+      return 'Self Transfer';
     case TxTypeEnum.Deposit:
       return 'Received';
     case TxTypeEnum.Withdraw:
@@ -128,7 +130,7 @@ export function txTypeAsString(txType: TxTypeEnum = TxTypeEnum.Unknow): string {
   }
 }
 
-function txTypeFromTransfer(transfers: Transfer[]) {
+function txTypeFromTransfer(transfers: Transfer[]): TxTypeEnum {
   if (transfers.length === 1) {
     if (transfers[0].amount > 0) {
       return TxTypeEnum.Deposit;
@@ -141,6 +143,10 @@ function txTypeFromTransfer(transfers: Transfer[]) {
 
   if (transfers.length === 2) {
     return TxTypeEnum.Swap;
+  }
+
+  if (transfers.some(({ amount }) => amount === 0)) {
+    return TxTypeEnum.SelfTransfer;
   }
 
   return TxTypeEnum.Unknow;
@@ -171,7 +177,7 @@ function getTransfers(
 
     transfers.push({
       amount,
-      asset,
+      asset
     });
   };
 
@@ -198,8 +204,12 @@ function getTransfers(
     }
   }
 
-  return transfers.filter((t) => {
+  return transfers.filter((t, index, rest) => {
     if (t.asset === feeAsset && Math.abs(t.amount) === feeAmount) {
+      if (rest.length === 1) {
+        transfers[index].amount = 0;
+        return true;
+      }
       return false;
     }
 

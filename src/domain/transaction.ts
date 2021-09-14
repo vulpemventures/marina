@@ -8,15 +8,16 @@ export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 export type TxsHistoryByNetwork = Record<Network, TxsHistory> & Partial<Record<'errors', IError>>;
 
 export enum TxTypeEnum {
-  Unknow = 0,
+  SelfTransfer = 0,
   Deposit = 1,
   Withdraw = 2,
   Swap = 3,
+  Unknow = 4
 }
 
 export enum TxStatusEnum {
   Confirmed = 1,
-  Pending = 0,
+  Pending = 0
 }
 
 export interface Transfer {
