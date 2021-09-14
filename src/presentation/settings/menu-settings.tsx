@@ -6,7 +6,7 @@ import {
   SETTINGS_DEEP_RESTORER_ROUTE,
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
-  DEFAULT_ROUTE
+  DEFAULT_ROUTE,
 } from '../routes/constants';
 
 const SettingsMenuSettings: React.FC = () => {

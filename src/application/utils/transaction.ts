@@ -13,7 +13,7 @@ import {
   StateRestorerOpts,
   TxInterface,
   UnblindedOutputInterface,
-  UtxoInterface
+  UtxoInterface,
 } from 'ldk';
 import { confidential, networks } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
@@ -111,7 +111,7 @@ export function toDisplayTransaction(
     fee: tx.fee,
     transfers,
     type: txTypeFromTransfer(transfers),
-    webExplorersBlinders: getUnblindURLFromTx(tx, '')
+    webExplorersBlinders: getUnblindURLFromTx(tx, ''),
   };
 }
 
@@ -177,7 +177,7 @@ function getTransfers(
 
     transfers.push({
       amount,
-      asset
+      asset,
     });
   };
 

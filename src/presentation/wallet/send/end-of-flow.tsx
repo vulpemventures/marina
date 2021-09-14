@@ -27,7 +27,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   pset,
   restorerOpts,
   explorerURL,
-  recipientAddress
+  recipientAddress,
 }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
@@ -51,15 +51,15 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       const txid = await broadcastTx(explorerURL, tx);
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txid }
+        state: { txid },
       });
     } catch (error: any) {
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {
           tx: tx,
-          error: error?.message || error
-        }
+          error: error?.message || error,
+        },
       });
     }
 

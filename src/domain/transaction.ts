@@ -12,12 +12,12 @@ export enum TxType {
   Deposit = 1,
   Withdraw = 2,
   Swap = 3,
-  Unknow = 4
+  Unknow = 4,
 }
 
 export enum TxStatusEnum {
   Confirmed = 1,
-  Pending = 0
+  Pending = 0,
 }
 
 export interface Transfer {

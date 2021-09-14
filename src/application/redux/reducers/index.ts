@@ -27,7 +27,7 @@ const browserLocalStorage: Storage = {
     const map = { [key]: stringify(value) };
     await browser.storage.local.set(map);
   },
-  removeItem: async (key: string) => browser.storage.local.remove(key)
+  removeItem: async (key: string) => browser.storage.local.remove(key),
 };
 
 function createLocalStorageConfig<S>(
@@ -46,9 +46,9 @@ function createLocalStorageConfig<S>(
     migrate: (state: any) => {
       return Promise.resolve({
         ...initialState,
-        ...state // /!\ state should be merged **after** initialState !
+        ...state, // /!\ state should be merged **after** initialState !
       });
-    }
+    },
   };
 }
 
@@ -79,41 +79,41 @@ const marinaReducer = combineReducers({
     reducer: assetReducer,
     key: 'assets',
     version: 1,
-    initialState: assetInitState
+    initialState: assetInitState,
   }),
   onboarding: onboardingReducer,
   transaction: persist<TransactionState>({
     reducer: transactionReducer,
     key: 'transaction',
     version: 1,
-    initialState: transactionInitState
+    initialState: transactionInitState,
   }),
   txsHistory: persist<TxsHistoryByNetwork>({
     reducer: txsHistoryReducer,
     key: 'txsHistory',
     version: 2,
-    initialState: txsHistoryInitState
+    initialState: txsHistoryInitState,
   }),
   wallet: persist<IWallet>({
     reducer: walletReducer,
     key: 'wallet',
     blacklist: ['deepRestorer'],
     version: 1,
-    initialState: walletInitState
+    initialState: walletInitState,
   }),
   taxi: persist<TaxiState>({
     reducer: taxiReducer,
     key: 'taxi',
     version: 1,
-    initialState: taxiInitState
+    initialState: taxiInitState,
   }),
   connect: persist<ConnectData>({
     reducer: connectDataReducer,
     key: 'connect',
     whitelist: ['enabledSites'],
     version: 1,
-    initialState: connectDataInitState
-  })
+    initialState: connectDataInitState,
+  }),
 });
 
 export default marinaReducer;

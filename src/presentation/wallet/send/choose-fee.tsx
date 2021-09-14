@@ -6,7 +6,7 @@ import {
   MasterPublicKey,
   RecipientInterface,
   StateRestorerOpts,
-  walletFromCoins
+  walletFromCoins,
 } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
@@ -20,7 +20,7 @@ import {
   imgPathMapMainnet,
   imgPathMapRegtest,
   lbtcAssetByNetwork,
-  taxiURL
+  taxiURL,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -31,7 +31,7 @@ import { BalancesByAsset } from '../../../application/redux/selectors/balance.se
 import {
   setFeeAssetAndAmount,
   setFeeChangeAddress,
-  setPset
+  setPset,
 } from '../../../application/redux/actions/transaction';
 import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -66,7 +66,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   taxiAssets,
   lbtcAssetHash,
   masterPubKey,
-  restorerOpts
+  restorerOpts,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -97,8 +97,8 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         {
           asset: sendAsset,
           value: sendAmount,
-          address: sendAddress.value
-        }
+          address: sendAddress.value,
+        },
       ];
 
       if (feeCurrency === lbtcAssetByNetwork(network)) {
@@ -150,7 +150,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     const taxiPayout: RecipientInterface = {
       value: taxiTopup.assetAmount,
       asset: taxiTopup.assetHash,
-      address: ''
+      address: '',
     };
 
     let nextChangeAddr = feeChange;
@@ -196,18 +196,18 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
       await Promise.all([
         dispatch(setPset(unsignedPendingTx)),
-        dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount))
+        dispatch(setFeeAssetAndAmount(feeCurrency, feeAmount)),
       ]);
 
       if (feeChange) {
         await Promise.all([
           dispatch(setFeeChangeAddress(feeChange)),
-          dispatch(incrementChangeAddressIndex())
+          dispatch(incrementChangeAddressIndex()),
         ]);
       }
 
       history.push({
-        pathname: SEND_CONFIRMATION_ROUTE
+        pathname: SEND_CONFIRMATION_ROUTE,
       });
     } catch (error: any) {
       console.error(error);
