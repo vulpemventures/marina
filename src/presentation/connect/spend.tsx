@@ -8,21 +8,20 @@ import WindowProxy from '../../application/proxy';
 import { useSelector } from 'react-redux';
 import {
   connectWithConnectData,
-  WithConnectDataProps,
+  WithConnectDataProps
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
+import type { RecipientInterface } from 'ldk';
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
+  const getTicker = (assetHash: string) => assets[assetHash]?.ticker ?? 'Unknown';
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
   const windowProxy = new WindowProxy();
 
-  const assetTicker = connectData.tx?.assetHash
-    ? assets[connectData.tx.assetHash]?.ticker
-    : 'Unknown';
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
@@ -64,17 +63,21 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
-          <div className="container flex justify-between mt-16">
-            <span className="text-lg font-medium">{connectData.tx?.amount}</span>
-            <span className="text-lg font-medium">{assetTicker}</span>
-          </div>
+          {connectData.tx?.recipients?.map((recipient: RecipientInterface) => (
+            <>
+              <div className="container flex justify-between mt-16">
+                <span className="text-lg font-medium">{recipient.value}</span>
+                <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
+              </div>
 
-          <div className="container flex items-baseline justify-between mt-4">
-            <span className="mr-2 text-lg font-medium">To: </span>
-            <span className="font-small text-sm break-all">
-              {formatAddress(connectData.tx?.recipient ?? '')}
-            </span>
-          </div>
+              <div className="container flex items-baseline justify-between mt-4">
+                <span className="mr-2 text-lg font-medium">To: </span>
+                <span className="font-small text-sm break-all">
+                  {formatAddress(recipient.address)}
+                </span>
+              </div>
+            </>
+          ))}
 
           <div className="bottom-24 container absolute right-0 flex justify-between">
             <Button isOutline={true} onClick={handleReject} textBase={true}>

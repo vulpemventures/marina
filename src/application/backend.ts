@@ -28,7 +28,8 @@ import {
   mnemonicWallet,
   taxiURL,
   toDisplayTransaction,
-  toStringOutpoint
+  toStringOutpoint,
+  lbtcAssetByNetwork
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
 import {
@@ -67,6 +68,7 @@ import { getExplorerURLSelector } from './redux/selectors/app.selector';
 import { walletTransactions } from './redux/selectors/transaction.selector';
 import { balancesSelector } from './redux/selectors/balance.selector';
 import { Balance } from 'marina-provider';
+import { RecipientInterface } from 'ldk';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -263,13 +265,20 @@ export default class Backend {
                 if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
-                if (!params || params.length !== 3 || params.some((p) => p === null)) {
-                  return handleError(id, new Error('Missing params'));
-                }
-                const [recipientAddress, amountInSatoshis, assetHash]: string[] = params;
+
+                const [recipients, feeAssetHash] = params as [
+                  RecipientInterface[],
+                  string | undefined
+                ];
+
                 const hostname = await getCurrentUrl();
                 marinaStore.dispatch(
-                  setTxData(hostname, recipientAddress, amountInSatoshis, assetHash, network)
+                  setTxData(
+                    hostname,
+                    recipients,
+                    feeAssetHash ?? lbtcAssetByNetwork(network),
+                    network
+                  )
                 );
                 await showPopup(`connect/spend`);
 

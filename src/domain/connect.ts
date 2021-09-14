@@ -1,13 +1,13 @@
 import { Network } from './network';
+import { RecipientInterface } from 'ldk';
 
 export type ConnectData = {
   enabledSites: Record<Network, string[]>;
   hostnameSelected: string;
   tx?: {
-    amount?: string;
-    assetHash?: string;
+    recipients?: RecipientInterface[];
+    feeAssetHash?: string;
     hostname?: string;
-    recipient?: string;
     pset?: string;
   };
   msg?: {
@@ -20,8 +20,8 @@ export function newEmptyConnectData(): ConnectData {
   return {
     enabledSites: {
       liquid: [],
-      regtest: [],
+      regtest: []
     },
-    hostnameSelected: '',
+    hostnameSelected: ''
   };
 }
