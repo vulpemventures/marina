@@ -18,7 +18,7 @@ import {
   fetchAndUnblindTxsGenerator,
   fetchAndUnblindUtxosGenerator,
   masterPubKeyRestorerFromState,
-  masterPubKeyRestorerFromEsplora,
+  masterPubKeyRestorerFromEsplora
 } from 'ldk';
 import Marina from './marina';
 import {
@@ -28,7 +28,7 @@ import {
   mnemonicWallet,
   taxiURL,
   toDisplayTransaction,
-  toStringOutpoint,
+  toStringOutpoint
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
 import {
@@ -38,14 +38,14 @@ import {
   selectHostname,
   setMsg,
   setTx,
-  setTxData,
+  setTxData
 } from './redux/actions/connect';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
   setDeepRestorerError,
   setDeepRestorerIsLoading,
-  setWalletData,
+  setWalletData
 } from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
@@ -55,7 +55,7 @@ import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
 import {
   masterPubKeySelector,
   restorerOptsSelector,
-  utxosSelector,
+  utxosSelector
 } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
@@ -316,8 +316,8 @@ export default class Backend {
                     {
                       address: recipient,
                       value: Number(amount),
-                      asset: assetHash,
-                    },
+                      asset: assetHash
+                    }
                   ],
                   greedyCoinSelector(),
                   (): string => changeAddress.confidentialAddress,
@@ -433,7 +433,7 @@ export default class Backend {
                 }
                 const coins = utxosSelector(marinaStore.getState());
                 return handleResponse(id, coins);
-              } catch (e) {
+              } catch (e: any) {
                 return handleError(id, e);
               }
 
@@ -475,11 +475,11 @@ export default class Backend {
         port.postMessage({ id, payload: { success: true, data } });
       };
 
-      const handleError = (id: string, e: Error) => {
+      const handleError = (id: string, e: any) => {
         console.error(e);
         port.postMessage({
           id,
-          payload: { success: false, error: e.message },
+          payload: { success: false, error: e.message }
         });
       };
     });
@@ -501,7 +501,7 @@ export function showPopup(path?: string): Promise<Windows.Window> {
     width: 360,
     focused: true,
     left: 100,
-    top: 100,
+    top: 100
   };
   return browser.windows.create(options as any);
 }
@@ -578,7 +578,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
-        vout,
+        vout
       }));
 
       const skippedOutpoints: string[] = []; // for deleting
@@ -626,7 +626,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
         dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
       }
     } catch (error) {
-      console.error(`fetchAndUpdateUtxos error: ${error.message}`);
+      console.error(`fetchAndUpdateUtxos error: ${error}`);
     }
   };
 }
@@ -750,7 +750,7 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
 
     browser.alarms.create(UPDATE_ALARM, {
       when: Date.now(),
-      periodInMinutes: 4,
+      periodInMinutes: 4
     });
   };
 }
@@ -777,7 +777,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
         setWalletData({
           ...state.wallet,
           restorerOpts,
-          confidentialAddresses: addresses,
+          confidentialAddresses: addresses
         })
       );
 
@@ -786,7 +786,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       dispatch(fetchAndSetTaxiAssets());
 
       dispatch(setDeepRestorerError(undefined));
-    } catch (err) {
+    } catch (err: any) {
       dispatch(setDeepRestorerError(err.message || err));
     } finally {
       dispatch(setDeepRestorerIsLoading(false));
