@@ -454,6 +454,20 @@ export default class Backend {
                 return handleResponse(id, false);
               }
 
+            case Marina.prototype.getFeeAssets.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                const taxiAssets = marinaStore.getState().taxi.taxiAssets;
+                const lbtcAsset = lbtcAssetByNetwork(getCurrentNetwork());
+
+                return handleResponse(id, [lbtcAsset, ...taxiAssets]);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
             //
             default:
               return handleError(id, new Error('Method not implemented.'));

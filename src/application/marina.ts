@@ -85,7 +85,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.isReady.name, []);
   }
 
-  getTaxiAssets(): Promise<string[]> {
-    return this.proxy(this.getTaxiAssets.name, []);
+  getFeeAssets(): Promise<string[]> {
+    return this.proxy(this.getFeeAssets.name, []);
   }
 }
