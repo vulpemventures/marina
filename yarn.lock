@@ -6337,7 +6337,7 @@ marina-provider@^1.0.0:
 
 marina-provider@louisinger/marina-provider#new-send-transaction:
   version "1.3.0"
-  resolved "https://codeload.github.com/louisinger/marina-provider/tar.gz/c547530cd62d75351ae5e3f561c4c3023539c7f4"
+  resolved "https://codeload.github.com/louisinger/marina-provider/tar.gz/06542f44bf6d803af8d1e9b1f235b936af075d47"
 
 marky@^1.2.0:
   version "1.2.2"

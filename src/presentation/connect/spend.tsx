@@ -8,7 +8,7 @@ import WindowProxy from '../../application/proxy';
 import { useSelector } from 'react-redux';
 import {
   connectWithConnectData,
-  WithConnectDataProps
+  WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
 import type { RecipientInterface } from 'ldk';

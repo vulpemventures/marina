@@ -7,18 +7,17 @@ import {
   address as addressLDK,
   networks,
   decodePset,
-  greedyCoinSelector,
   IdentityInterface,
   isBlindedUtxo,
-  psetToUnsignedTx,
   UtxoInterface,
-  walletFromCoins,
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
   fetchAndUnblindUtxosGenerator,
   masterPubKeyRestorerFromState,
-  masterPubKeyRestorerFromEsplora
+  masterPubKeyRestorerFromEsplora,
+  Mnemonic,
+  RecipientInterface,
 } from 'ldk';
 import Marina from './marina';
 import {
@@ -29,7 +28,9 @@ import {
   taxiURL,
   toDisplayTransaction,
   toStringOutpoint,
-  lbtcAssetByNetwork
+  lbtcAssetByNetwork,
+  createSendPset,
+  blindAndSignPset,
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
 import {
@@ -39,14 +40,14 @@ import {
   selectHostname,
   setMsg,
   setTx,
-  setTxData
+  setTxData,
 } from './redux/actions/connect';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
   setDeepRestorerError,
   setDeepRestorerIsLoading,
-  setWalletData
+  setWalletData,
 } from './redux/actions/wallet';
 import { Network } from '../domain/network';
 import { createAddress } from '../domain/address';
@@ -56,7 +57,7 @@ import { setTaxiAssets, updateTaxiAssets } from './redux/actions/taxi';
 import {
   masterPubKeySelector,
   restorerOptsSelector,
-  utxosSelector
+  utxosSelector,
 } from './redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from './redux/actions/utxos';
 import { addAsset } from './redux/actions/asset';
@@ -68,7 +69,6 @@ import { getExplorerURLSelector } from './redux/selectors/app.selector';
 import { walletTransactions } from './redux/selectors/transaction.selector';
 import { balancesSelector } from './redux/selectors/balance.selector';
 import { Balance } from 'marina-provider';
-import { RecipientInterface } from 'ldk';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -276,7 +276,7 @@ export default class Backend {
                   setTxData(
                     hostname,
                     recipients,
-                    feeAssetHash ?? lbtcAssetByNetwork(network),
+                    feeAssetHash ? feeAssetHash : lbtcAssetByNetwork(network),
                     network
                   )
                 );
@@ -310,46 +310,27 @@ export default class Backend {
                 }
 
                 const { tx } = marinaStore.getState().connect;
-                if (!tx || !tx.amount || !tx.assetHash || !tx.recipient)
+                if (!tx || !tx.recipients || !tx.feeAssetHash)
                   throw new Error('Transaction data are missing');
 
-                const { assetHash, amount, recipient } = tx;
+                const { recipients, feeAssetHash } = tx;
                 const coins = getCoins();
-                const txBuilder = walletFromCoins(coins, network);
                 const mnemo = await getMnemonic(password);
                 const changeAddress = await mnemo.getNextChangeAddress();
 
-                const unsignedPset = txBuilder.buildTx(
-                  txBuilder.createTx(),
-                  [
-                    {
-                      address: recipient,
-                      value: Number(amount),
-                      asset: assetHash
-                    }
-                  ],
-                  greedyCoinSelector(),
-                  (): string => changeAddress.confidentialAddress,
-                  true
+                const unsignedPset = await createSendPset(
+                  recipients,
+                  coins,
+                  feeAssetHash,
+                  () => changeAddress.confidentialAddress,
+                  network
                 );
 
-                const outputsIndexToBlind: number[] = [];
-                const blindKeyMap = new Map<number, string>();
-                const recipientData = address.fromConfidential(recipient);
-                const recipientScript = address.toOutputScript(recipientData.unconfidentialAddress);
-                psetToUnsignedTx(unsignedPset).outs.forEach((out, index) => {
-                  if (out.script.length === 0) return;
-                  outputsIndexToBlind.push(index);
-                  if (out.script.equals(recipientScript))
-                    blindKeyMap.set(index, recipientData.blindingKey.toString('hex'));
-                });
-
-                const blindedPset = await mnemo.blindPset(
+                const signedPset = await blindAndSignPset(
+                  mnemo,
                   unsignedPset,
-                  outputsIndexToBlind,
-                  blindKeyMap
+                  recipients.map(({ address }) => address)
                 );
-                const signedPset = await mnemo.signPset(blindedPset);
 
                 const ptx = decodePset(signedPset);
                 if (!ptx.validateSignaturesOfAllInputs()) {
@@ -488,7 +469,7 @@ export default class Backend {
         console.error(e);
         port.postMessage({
           id,
-          payload: { success: false, error: e.message }
+          payload: { success: false, error: e.message },
         });
       };
     });
@@ -510,7 +491,7 @@ export function showPopup(path?: string): Promise<Windows.Window> {
     width: 360,
     focused: true,
     left: 100,
-    top: 100
+    top: 100,
   };
   return browser.windows.create(options as any);
 }
@@ -532,7 +513,7 @@ function persistAddress(isChange: boolean) {
   marinaStore.dispatch(action);
 }
 
-async function getMnemonic(password: string): Promise<IdentityInterface> {
+async function getMnemonic(password: string): Promise<Mnemonic> {
   let mnemonic = '';
   const state = marinaStore.getState();
   const { wallet, app } = state;
@@ -587,7 +568,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
-        vout
+        vout,
       }));
 
       const skippedOutpoints: string[] = []; // for deleting
@@ -759,7 +740,7 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
 
     browser.alarms.create(UPDATE_ALARM, {
       when: Date.now(),
-      periodInMinutes: 4
+      periodInMinutes: 4,
     });
   };
 }
@@ -786,7 +767,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
         setWalletData({
           ...state.wallet,
           restorerOpts,
-          confidentialAddresses: addresses
+          confidentialAddresses: addresses,
         })
       );
 

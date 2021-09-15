@@ -8,7 +8,7 @@ import {
   Utxo,
   Balance,
   MarinaEventType,
-  Recipient
+  Recipient,
 } from 'marina-provider';
 import WindowProxy from './proxy';
 
