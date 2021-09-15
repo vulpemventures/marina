@@ -11,6 +11,7 @@ import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
 import { match } from '../../../domain/password-hash';
 import { StateRestorerOpts } from 'ldk';
+import { extractErrorMessage } from '../../utils/error';
 
 export interface EndOfFlowProps {
   wallet: IWallet;
@@ -53,12 +54,12 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
         state: { txid },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {
           tx: tx,
-          error: error?.message || error,
+          error: extractErrorMessage(error),
         },
       });
     }

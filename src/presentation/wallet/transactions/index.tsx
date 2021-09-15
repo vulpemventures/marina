@@ -49,7 +49,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const getAssetImgPath = () =>
     network === 'regtest'
       ? imgPathMapRegtest[state.assetTicker ?? networks.regtest.assetHash] ?? imgPathMapRegtest['']
-      : imgPathMapMainnet[state.assetHash ?? networks.regtest.assetHash] ?? imgPathMapMainnet[''];
+      : imgPathMapMainnet[state.assetHash ?? networks.liquid.assetHash] ?? imgPathMapMainnet[''];
 
   // TxDetails Modal
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
