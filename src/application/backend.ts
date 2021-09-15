@@ -6,10 +6,8 @@ import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
   address as addressLDK,
   networks,
-  decodePset,
   IdentityInterface,
   isBlindedUtxo,
-  UtxoInterface,
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
@@ -29,8 +27,6 @@ import {
   toDisplayTransaction,
   toStringOutpoint,
   lbtcAssetByNetwork,
-  createSendPset,
-  blindAndSignPset,
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
 import {
@@ -282,9 +278,9 @@ export default class Backend {
                 );
                 await showPopup(`connect/spend`);
 
-                const txid = await this.waitForEvent(Marina.prototype.sendTransaction.name);
+                const txhex = await this.waitForEvent(Marina.prototype.sendTransaction.name);
 
-                return handleResponse(id, txid);
+                return handleResponse(id, txhex);
               } catch (e: any) {
                 marinaStore.dispatch(flushTx());
                 return handleError(id, e);
@@ -293,13 +289,10 @@ export default class Backend {
             //
             case 'SEND_TRANSACTION_RESPONSE':
               try {
-                const [accepted, password] = params;
-                const network = getCurrentNetwork();
+                const [accepted, txHex] = params;
 
                 // exit early if user rejected the transaction
-                if (!accepted) {
-                  // Flush tx data
-                  marinaStore.dispatch(flushTx());
+                if (!accepted || !txHex) {
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.sendTransaction.name,
@@ -309,46 +302,12 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const { tx } = marinaStore.getState().connect;
-                if (!tx || !tx.recipients || !tx.feeAssetHash)
-                  throw new Error('Transaction data are missing');
-
-                const { recipients, feeAssetHash } = tx;
-                const coins = getCoins();
-                const mnemo = await getMnemonic(password);
-                const changeAddress = await mnemo.getNextChangeAddress();
-
-                const unsignedPset = await createSendPset(
-                  recipients,
-                  coins,
-                  feeAssetHash,
-                  () => changeAddress.confidentialAddress,
-                  network
-                );
-
-                const signedPset = await blindAndSignPset(
-                  mnemo,
-                  unsignedPset,
-                  recipients.map(({ address }) => address)
-                );
-
-                const ptx = decodePset(signedPset);
-                if (!ptx.validateSignaturesOfAllInputs()) {
-                  throw new Error('Transaction contains invalid signatures');
+                if (txHex) {
+                  // respond to the injected script
+                  this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
                 }
 
-                const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
-
-                // if we reached this point we can persist the change address
-                persistAddress(true);
-
-                // Flush tx data
-                marinaStore.dispatch(flushTx());
-
-                // respond to the injected script
-                this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
-
-                // repond to the popup so it can be closed
+                // respond to the popup so it can be closed
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -558,11 +517,6 @@ async function signMsgWithPassword(
 
 function getCurrentNetwork(): Network {
   return marinaStore.getState().app.network;
-}
-
-function getCoins(): UtxoInterface[] {
-  const wallet = marinaStore.getState().wallet;
-  return Object.values(wallet.utxoMap);
 }
 
 /**

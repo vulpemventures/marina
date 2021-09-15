@@ -5,16 +5,37 @@ import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
 import WindowProxy from '../../application/proxy';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type { RecipientInterface } from 'ldk';
+import type { Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
+import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { flushTx } from '../../application/redux/actions/connect';
+import { Network } from '../../domain/network';
+import { ConnectData } from '../../domain/connect';
+import { mnemonicWallet } from '../../application/utils/restorer';
+import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
+import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
+import {
+  restorerOptsSelector,
+  utxosSelector,
+} from '../../application/redux/selectors/wallet.selector';
+import { decrypt } from '../../application/utils/crypto';
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
+  const coins = useSelector(utxosSelector);
+  const restorerOpts = useSelector(restorerOptsSelector);
+  const encryptedMnemonic = useSelector(
+    (state: RootReducerState) => state.wallet.encryptedMnemonic
+  );
+  const network = useSelector((state: RootReducerState) => state.app.network);
+
+  const dispatch = useDispatch<ProxyStoreDispatch>();
+
   const getTicker = (assetHash: string) => assets[assetHash]?.ticker ?? 'Unknown';
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -27,6 +48,8 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
   const handleReject = async () => {
     try {
+      // Flush tx data
+      await dispatch(flushTx());
       await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [false]);
     } catch (e) {
       console.error(e);
@@ -38,7 +61,16 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
     if (!password || password.length === 0) return;
 
     try {
-      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [true, password]);
+      const mnemonicIdentity = await mnemonicWallet(
+        decrypt(encryptedMnemonic, password),
+        restorerOpts,
+        network
+      );
+      const txHex = await makeTransaction(mnemonicIdentity, coins, connectData.tx, network);
+      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [true, txHex]);
+
+      await dispatch(incrementChangeAddressIndex());
+      await dispatch(flushTx());
       window.close();
     } catch (e: any) {
       console.error(e);
@@ -63,8 +95,8 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
-          {connectData.tx?.recipients?.map((recipient: RecipientInterface) => (
-            <>
+          {connectData.tx?.recipients?.map((recipient: RecipientInterface, index) => (
+            <div key={index}>
               <div className="container flex justify-between mt-16">
                 <span className="text-lg font-medium">{recipient.value}</span>
                 <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
@@ -76,7 +108,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
                   {formatAddress(recipient.address)}
                 </span>
               </div>
-            </>
+            </div>
           ))}
 
           <div className="bottom-24 container absolute right-0 flex justify-between">
@@ -112,3 +144,32 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 };
 
 export default connectWithConnectData(ConnectSpend);
+
+async function makeTransaction(
+  mnemonic: Mnemonic,
+  coins: UtxoInterface[],
+  connectDataTx: ConnectData['tx'],
+  network: Network
+) {
+  if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
+    throw new Error('Transaction data are missing');
+
+  const { recipients, feeAssetHash } = connectDataTx;
+  const changeAddress = await mnemonic.getNextChangeAddress();
+
+  const unsignedPset = await createSendPset(
+    recipients,
+    coins,
+    feeAssetHash,
+    () => changeAddress.confidentialAddress,
+    network
+  );
+
+  const txHex = await blindAndSignPset(
+    mnemonic,
+    unsignedPset,
+    recipients.map(({ address }) => address)
+  );
+
+  return txHex;
+}
