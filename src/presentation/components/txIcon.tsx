@@ -1,19 +1,19 @@
-import { TxTypeEnum } from '../../domain/transaction';
+import { TxType } from '../../domain/transaction';
 
-function getImgFilename(txType: TxTypeEnum): string {
+function getImgFilename(txType: TxType): string {
   switch (txType) {
-    case TxTypeEnum.Deposit:
+    case TxType.Deposit:
       return 'receive-filled.svg';
-    case TxTypeEnum.Withdraw:
+    case TxType.Withdraw:
       return 'send-filled.svg';
-    case TxTypeEnum.Swap:
+    case TxType.Swap:
       return 'atomic-swap.svg';
     default:
       return 'receive-filled.svg'; // TODO need default icon
   }
 }
 
-const TxIcon: React.FC<{ txType: TxTypeEnum }> = ({ txType }) => {
+const TxIcon: React.FC<{ txType: TxType }> = ({ txType }) => {
   return (
     <img
       className="w-8 mr-1.5"
