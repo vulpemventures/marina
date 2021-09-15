@@ -20,6 +20,7 @@ import { Network } from '../../../domain/network';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
+import { networks } from 'ldk';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -45,13 +46,13 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const assetImgPath =
+  const getAssetImgPath = () =>
     network === 'regtest'
-      ? imgPathMapRegtest[state.assetTicker] ?? imgPathMapRegtest['']
-      : imgPathMapMainnet[state.assetHash] ?? imgPathMapMainnet[''];
+      ? imgPathMapRegtest[state.assetTicker ?? networks.regtest.assetHash] ?? imgPathMapRegtest['']
+      : imgPathMapMainnet[state.assetHash ?? networks.liquid.assetHash] ?? imgPathMapMainnet[''];
 
   // TxDetails Modal
-  const [modalTxDetails, setmodalTxDetails] = useState<TxDisplayInterface>();
+  const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
 
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -70,9 +71,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     await browser.tabs.create({ url, active: false });
   };
 
-  /**
-   * Update txs history once at first render
-   */
+  // Update txs history once at first render
   useEffect(() => {
     dispatch(updateTxs()).catch(console.error);
   }, []);
@@ -90,7 +89,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
           state.assetsBalance[state.assetHash] ?? 0,
           state.assetPrecision
         )}
-        assetImgPath={assetImgPath}
+        assetImgPath={getAssetImgPath()}
         assetTicker={state.assetTicker}
         bigBalanceText={true}
       />
@@ -117,7 +116,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
                 assetTicker={state.assetTicker}
                 key={index}
                 handleClick={() => {
-                  setmodalTxDetails(tx);
+                  setModalTxDetails(tx);
                 }}
                 tx={tx}
               />
@@ -125,11 +124,11 @@ const TransactionsView: React.FC<TransactionsProps> = ({
           })}
       </ButtonList>
 
-      <Modal isOpen={modalTxDetails !== undefined} onClose={() => setmodalTxDetails(undefined)}>
+      <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">
           <img
             className="w-8 h-8 mt-0.5 block mx-auto mb-2"
-            src={assetImgPath}
+            src={getAssetImgPath()}
             alt="liquid bitcoin logo"
           />
           <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>

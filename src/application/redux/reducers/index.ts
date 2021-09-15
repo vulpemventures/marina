@@ -91,7 +91,7 @@ const marinaReducer = combineReducers({
   txsHistory: persist<TxsHistoryByNetwork>({
     reducer: txsHistoryReducer,
     key: 'txsHistory',
-    version: 1,
+    version: 2,
     initialState: txsHistoryInitState,
   }),
   wallet: persist<IWallet>({

@@ -10,6 +10,7 @@ import {
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
+import { extractErrorMessage } from '../../../presentation/utils/error';
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {
@@ -43,7 +44,7 @@ export function setDeepRestorerGapLimit(gapLimit: number): AnyAction {
 export function setDeepRestorerError(error: Error | undefined): AnyAction {
   return {
     type: SET_DEEP_RESTORER_ERROR,
-    payload: { error: error?.message || '' },
+    payload: { error: extractErrorMessage(error) },
   };
 }
 
