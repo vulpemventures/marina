@@ -433,7 +433,7 @@ export default class Backend {
                 }
                 const coins = utxosSelector(marinaStore.getState());
                 return handleResponse(id, coins);
-              } catch (e) {
+              } catch (e: any) {
                 return handleError(id, e);
               }
 
@@ -475,7 +475,7 @@ export default class Backend {
         port.postMessage({ id, payload: { success: true, data } });
       };
 
-      const handleError = (id: string, e: Error) => {
+      const handleError = (id: string, e: any) => {
         console.error(e);
         port.postMessage({
           id,
@@ -626,7 +626,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
         dispatch(deleteUtxo(outpoint.txid, outpoint.vout));
       }
     } catch (error) {
-      console.error(`fetchAndUpdateUtxos error: ${error.message}`);
+      console.error(`fetchAndUpdateUtxos error: ${error}`);
     }
   };
 }
@@ -786,7 +786,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       dispatch(fetchAndSetTaxiAssets());
 
       dispatch(setDeepRestorerError(undefined));
-    } catch (err) {
+    } catch (err: any) {
       dispatch(setDeepRestorerError(err.message || err));
     } finally {
       dispatch(setDeepRestorerIsLoading(false));

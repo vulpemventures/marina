@@ -209,9 +209,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setErrorMessage(error.message);
+      setErrorMessage(error.message || error);
     } finally {
       setLoading(false);
     }

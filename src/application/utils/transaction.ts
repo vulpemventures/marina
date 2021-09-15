@@ -17,7 +17,7 @@ import {
 } from 'ldk';
 import { confidential, networks } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
-import { Transfer, TxDisplayInterface, TxStatusEnum, TxTypeEnum } from '../../domain/transaction';
+import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Address } from '../../domain/address';
 import { mnemonicWallet } from './restorer';
 
@@ -115,35 +115,41 @@ export function toDisplayTransaction(
   };
 }
 
-export function txTypeAsString(txType: TxTypeEnum = TxTypeEnum.Unknow): string {
+export function txTypeAsString(txType: TxType = TxType.Unknow): string {
   switch (txType) {
-    case TxTypeEnum.Deposit:
+    case TxType.SelfTransfer:
+      return 'Self Transfer';
+    case TxType.Deposit:
       return 'Received';
-    case TxTypeEnum.Withdraw:
+    case TxType.Withdraw:
       return 'Sent';
-    case TxTypeEnum.Swap:
+    case TxType.Swap:
       return 'Swap';
-    case TxTypeEnum.Unknow:
+    case TxType.Unknow:
       return 'Transaction';
   }
 }
 
-function txTypeFromTransfer(transfers: Transfer[]) {
+function txTypeFromTransfer(transfers: Transfer[]): TxType {
+  if (transfers.some(({ amount }) => amount === 0)) {
+    return TxType.SelfTransfer;
+  }
+
   if (transfers.length === 1) {
     if (transfers[0].amount > 0) {
-      return TxTypeEnum.Deposit;
+      return TxType.Deposit;
     }
 
     if (transfers[0].amount < 0) {
-      return TxTypeEnum.Withdraw;
+      return TxType.Withdraw;
     }
   }
 
   if (transfers.length === 2) {
-    return TxTypeEnum.Swap;
+    return TxType.Swap;
   }
 
-  return TxTypeEnum.Unknow;
+  return TxType.Unknow;
 }
 
 /**
@@ -198,8 +204,12 @@ function getTransfers(
     }
   }
 
-  return transfers.filter((t) => {
+  return transfers.filter((t, index, rest) => {
     if (t.asset === feeAsset && Math.abs(t.amount) === feeAmount) {
+      if (rest.length === 1) {
+        transfers[index].amount = 0;
+        return true;
+      }
       return false;
     }
 

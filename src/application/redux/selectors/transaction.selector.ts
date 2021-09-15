@@ -5,9 +5,11 @@ export function walletTransactions(state: RootReducerState): TxDisplayInterface[
   return Object.values(state.txsHistory[state.app.network]);
 }
 
-export const txHasAsset = (assetHash: string) => (tx: TxDisplayInterface) => {
-  return tx.transfers.map((t) => t.asset).includes(assetHash);
-};
+export const txHasAsset =
+  (assetHash: string) =>
+  (tx: TxDisplayInterface): boolean => {
+    return tx.transfers.map((t) => t.asset).includes(assetHash);
+  };
 
 export function getOutputsAddresses(state: RootReducerState): string[] {
   const txState = state.transaction;
