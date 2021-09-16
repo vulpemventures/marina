@@ -9,8 +9,10 @@ import { createWalletFromMnemonic } from '../../../application/utils/wallet';
 import { createMnemonic } from '../../../domain/mnemonic';
 import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
+import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
+import { extractErrorMessage } from '../../utils/error';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -29,9 +31,12 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string>();
 
-  useEffect(() => {
-    (async () => {
+  const tryToRestoreWallet = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMsg(undefined);
       if (!isFromPopupFlow) {
         const walletData = await createWalletFromMnemonic(
           createPassword(password),
@@ -47,9 +52,16 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         await dispatch(onboardingCompleted());
       }
       await dispatch(flushOnboarding());
-    })()
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+    } catch (err: unknown) {
+      console.error(err);
+      setErrorMsg(extractErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    tryToRestoreWallet().catch(console.error);
   }, []);
 
   if (isLoading) {
@@ -58,12 +70,25 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
 
   return (
     <Shell hasBackBtn={false}>
-      <h1 className="text-5xl">Congratulations!</h1>
+      <h1 className="text-5xl">{errorMsg ? 'Restoration failed' : 'Congratulations!'}</h1>
       <p className="mt-4">
-        Your wallet is ready. You can close this page and open the extension from the browser
-        toolbar
+        {errorMsg ??
+          'Your wallet is ready. You can close this page and open the extension from the browser toolbar'}
       </p>
-      <img className="w-72 mb-14 mt-10" src="/assets/images/mermaid.png" alt="mermaid" />
+
+      {errorMsg && (
+        <Button
+          className="w-36 container mx-auto mt-4"
+          onClick={tryToRestoreWallet}
+          textBase={true}
+        >
+          Retry
+        </Button>
+      )}
+
+      {!errorMsg && (
+        <img className="w-72 mb-14 mt-10" src="/assets/images/mermaid.png" alt="mermaid" />
+      )}
     </Shell>
   );
 };
