@@ -86,7 +86,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
   return (
     <ShellConnectPopup
-      className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
+      className="h-popupContent max-w-sm pb-20 text-center bg-bottom bg-no-repeat"
       currentPage="Spend"
     >
       {error.length === 0 ? (
@@ -121,18 +121,18 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
           </div>
         </>
       ) : (
-        <>
+        <div className="flex flex-col justify-center p-2 align-middle">
           <h1 className="mt-8 text-lg font-medium">Oops, Something went wrong...</h1>
-          <p className="font-small mt-4 text-sm">{error}</p>
+          <span className="max-w-xs mr-2 font-light">{error}</span>
           <img className="mx-auto my-10" src="/assets/images/cross.svg" alt="error" />
           <Button
             className="w-36 container mx-auto mt-10"
             onClick={handleUnlockModalOpen}
             textBase={true}
           >
-            Unlock
+            Retry
           </Button>
-        </>
+        </div>
       )}
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}

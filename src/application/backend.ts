@@ -267,15 +267,16 @@ export default class Backend {
                   string | undefined
                 ];
 
+                const lbtc = lbtcAssetByNetwork(network);
+                const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
+                const taxiAssets = marinaStore.getState().taxi.taxiAssets;
+
+                if (![lbtc, ...taxiAssets].includes(feeAsset)) {
+                  return handleError(id, new Error(`${feeAsset} not supported as fee asset.`));
+                }
+
                 const hostname = await getCurrentUrl();
-                marinaStore.dispatch(
-                  setTxData(
-                    hostname,
-                    recipients,
-                    feeAssetHash ? feeAssetHash : lbtcAssetByNetwork(network),
-                    network
-                  )
-                );
+                marinaStore.dispatch(setTxData(hostname, recipients, feeAsset, network));
                 await showPopup(`connect/spend`);
 
                 const txhex = await this.waitForEvent(Marina.prototype.sendTransaction.name);
