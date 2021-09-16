@@ -23,7 +23,7 @@
     "@metamask/safe-event-emitter": "^2.0.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",
     "autoprefixer": "^9.8.6",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "bip39": "^3.0.4",
     "bitcoinjs-message": "^2.2.0",
     "buffer": "^6.0.3",
