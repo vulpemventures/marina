@@ -130,7 +130,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
             onClick={handleUnlockModalOpen}
             textBase={true}
           >
-            Retry
+            Unlock
           </Button>
         </div>
       )}
