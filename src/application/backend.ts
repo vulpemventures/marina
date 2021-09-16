@@ -6,19 +6,16 @@ import { browser, Runtime, Windows } from 'webextension-polyfill-ts';
 import {
   address as addressLDK,
   networks,
-  decodePset,
-  greedyCoinSelector,
   IdentityInterface,
   isBlindedUtxo,
-  psetToUnsignedTx,
-  UtxoInterface,
-  walletFromCoins,
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
   fetchAndUnblindUtxosGenerator,
   masterPubKeyRestorerFromState,
   masterPubKeyRestorerFromEsplora,
+  Mnemonic,
+  RecipientInterface,
 } from 'ldk';
 import Marina from './marina';
 import {
@@ -29,6 +26,7 @@ import {
   taxiURL,
   toDisplayTransaction,
   toStringOutpoint,
+  lbtcAssetByNetwork,
 } from './utils';
 import { signMessageWithMnemonic } from './utils/message';
 import {
@@ -263,19 +261,27 @@ export default class Backend {
                 if (!(await this.isCurentSiteEnabled())) {
                   return handleError(id, new Error('User must authorize the current website'));
                 }
-                if (!params || params.length !== 3 || params.some((p) => p === null)) {
-                  return handleError(id, new Error('Missing params'));
+
+                const [recipients, feeAssetHash] = params as [
+                  RecipientInterface[],
+                  string | undefined
+                ];
+
+                const lbtc = lbtcAssetByNetwork(network);
+                const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
+                const taxiAssets = marinaStore.getState().taxi.taxiAssets;
+
+                if (![lbtc, ...taxiAssets].includes(feeAsset)) {
+                  return handleError(id, new Error(`${feeAsset} not supported as fee asset.`));
                 }
-                const [recipientAddress, amountInSatoshis, assetHash]: string[] = params;
+
                 const hostname = await getCurrentUrl();
-                marinaStore.dispatch(
-                  setTxData(hostname, recipientAddress, amountInSatoshis, assetHash, network)
-                );
+                marinaStore.dispatch(setTxData(hostname, recipients, feeAsset, network));
                 await showPopup(`connect/spend`);
 
-                const txid = await this.waitForEvent(Marina.prototype.sendTransaction.name);
+                const txhex = await this.waitForEvent(Marina.prototype.sendTransaction.name);
 
-                return handleResponse(id, txid);
+                return handleResponse(id, txhex);
               } catch (e: any) {
                 marinaStore.dispatch(flushTx());
                 return handleError(id, e);
@@ -284,13 +290,10 @@ export default class Backend {
             //
             case 'SEND_TRANSACTION_RESPONSE':
               try {
-                const [accepted, password] = params;
-                const network = getCurrentNetwork();
+                const [accepted, txHex] = params;
 
                 // exit early if user rejected the transaction
-                if (!accepted) {
-                  // Flush tx data
-                  marinaStore.dispatch(flushTx());
+                if (!accepted || !txHex) {
                   // respond to the injected script
                   this.emitter.emit(
                     Marina.prototype.sendTransaction.name,
@@ -300,65 +303,12 @@ export default class Backend {
                   return handleResponse(id);
                 }
 
-                const { tx } = marinaStore.getState().connect;
-                if (!tx || !tx.amount || !tx.assetHash || !tx.recipient)
-                  throw new Error('Transaction data are missing');
-
-                const { assetHash, amount, recipient } = tx;
-                const coins = getCoins();
-                const txBuilder = walletFromCoins(coins, network);
-                const mnemo = await getMnemonic(password);
-                const changeAddress = await mnemo.getNextChangeAddress();
-
-                const unsignedPset = txBuilder.buildTx(
-                  txBuilder.createTx(),
-                  [
-                    {
-                      address: recipient,
-                      value: Number(amount),
-                      asset: assetHash,
-                    },
-                  ],
-                  greedyCoinSelector(),
-                  (): string => changeAddress.confidentialAddress,
-                  true
-                );
-
-                const outputsIndexToBlind: number[] = [];
-                const blindKeyMap = new Map<number, string>();
-                const recipientData = address.fromConfidential(recipient);
-                const recipientScript = address.toOutputScript(recipientData.unconfidentialAddress);
-                psetToUnsignedTx(unsignedPset).outs.forEach((out, index) => {
-                  if (out.script.length === 0) return;
-                  outputsIndexToBlind.push(index);
-                  if (out.script.equals(recipientScript))
-                    blindKeyMap.set(index, recipientData.blindingKey.toString('hex'));
-                });
-
-                const blindedPset = await mnemo.blindPset(
-                  unsignedPset,
-                  outputsIndexToBlind,
-                  blindKeyMap
-                );
-                const signedPset = await mnemo.signPset(blindedPset);
-
-                const ptx = decodePset(signedPset);
-                if (!ptx.validateSignaturesOfAllInputs()) {
-                  throw new Error('Transaction contains invalid signatures');
+                if (txHex) {
+                  // respond to the injected script
+                  this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
                 }
 
-                const txHex = ptx.finalizeAllInputs().extractTransaction().toHex();
-
-                // if we reached this point we can persist the change address
-                persistAddress(true);
-
-                // Flush tx data
-                marinaStore.dispatch(flushTx());
-
-                // respond to the injected script
-                this.emitter.emit(Marina.prototype.sendTransaction.name, txHex);
-
-                // repond to the popup so it can be closed
+                // respond to the popup so it can be closed
                 return handleResponse(id);
               } catch (e: any) {
                 return handleError(id, e);
@@ -464,6 +414,20 @@ export default class Backend {
                 return handleResponse(id, false);
               }
 
+            case Marina.prototype.getFeeAssets.name:
+              try {
+                if (!(await this.isCurentSiteEnabled())) {
+                  return handleError(id, new Error('User must authorize the current website'));
+                }
+
+                const taxiAssets = marinaStore.getState().taxi.taxiAssets;
+                const lbtcAsset = lbtcAssetByNetwork(getCurrentNetwork());
+
+                return handleResponse(id, [lbtcAsset, ...taxiAssets]);
+              } catch (e: any) {
+                return handleError(id, e);
+              }
+
             //
             default:
               return handleError(id, new Error('Method not implemented.'));
@@ -523,7 +487,7 @@ function persistAddress(isChange: boolean) {
   marinaStore.dispatch(action);
 }
 
-async function getMnemonic(password: string): Promise<IdentityInterface> {
+async function getMnemonic(password: string): Promise<Mnemonic> {
   let mnemonic = '';
   const state = marinaStore.getState();
   const { wallet, app } = state;
@@ -554,11 +518,6 @@ async function signMsgWithPassword(
 
 function getCurrentNetwork(): Network {
   return marinaStore.getState().app.network;
-}
-
-function getCoins(): UtxoInterface[] {
-  const wallet = marinaStore.getState().wallet;
-  return Object.values(wallet.utxoMap);
 }
 
 /**

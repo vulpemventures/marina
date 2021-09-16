@@ -42,7 +42,7 @@ export const ADD_ASSET = 'ADD_ASSET';
 // Connect data
 export const ENABLE_WEBSITE = 'ENABLE_WEBSITE';
 export const DISABLE_WEBSITE = 'DISABLE_WEBSITE';
-export const SET_TX = 'SET_TX';
+export const SET_TX_DATA = 'SET_TX_DATA';
 export const FLUSH_TX = 'FLUSH_TX';
 export const SET_MSG = 'SET_MSG';
 export const FLUSH_MSG = 'FLUSH_MSG';

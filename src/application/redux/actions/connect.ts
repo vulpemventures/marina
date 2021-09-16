@@ -9,8 +9,10 @@ import {
   FLUSH_TX,
   SELECT_HOSTNAME,
   SET_MSG,
-  SET_TX,
+  SET_TX_DATA,
 } from './action-types';
+
+import { RecipientInterface } from 'ldk';
 
 export function enableWebsite(hostname: string, network: Network): AnyAction {
   return {
@@ -47,21 +49,20 @@ export function flushTx(): AnyAction {
 
 export function setTx(hostname: string, pset: string): AnyAction {
   return {
-    type: SET_TX,
+    type: SET_TX_DATA,
     payload: { hostname, pset } as ConnectData['tx'],
   };
 }
 
 export function setTxData(
   hostname: string,
-  recipient: string,
-  amount: string,
-  assetHash: string,
+  recipients: RecipientInterface[],
+  feeAssetHash: string,
   network: Network
 ): AnyAction {
   return {
-    type: SET_TX,
-    payload: { hostname, recipient, amount, assetHash, network } as ConnectData['tx'],
+    type: SET_TX_DATA,
+    payload: { hostname, recipients, feeAssetHash, network } as ConnectData['tx'],
   };
 }
 

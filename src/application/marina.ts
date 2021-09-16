@@ -8,6 +8,7 @@ import {
   Utxo,
   Balance,
   MarinaEventType,
+  Recipient,
 } from 'marina-provider';
 import WindowProxy from './proxy';
 
@@ -48,12 +49,8 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.blindTransaction.name, [psetBase64]);
   }
 
-  sendTransaction(
-    recipientAddress: string,
-    amountInSatoshis: number,
-    assetHash: string
-  ): Promise<TransactionHex> {
-    return this.proxy(this.sendTransaction.name, [recipientAddress, amountInSatoshis, assetHash]);
+  sendTransaction(recipients: Recipient[], feeAssetHash?: string): Promise<TransactionHex> {
+    return this.proxy(this.sendTransaction.name, [recipients, feeAssetHash]);
   }
 
   signTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
@@ -86,5 +83,9 @@ export default class Marina extends WindowProxy implements MarinaProvider {
 
   isReady(): Promise<boolean> {
     return this.proxy(this.isReady.name, []);
+  }
+
+  getFeeAssets(): Promise<string[]> {
+    return this.proxy(this.getFeeAssets.name, []);
   }
 }

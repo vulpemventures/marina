@@ -46,7 +46,7 @@ export function connectDataReducer(
       };
     }
 
-    case ACTION_TYPES.SET_TX: {
+    case ACTION_TYPES.SET_TX_DATA: {
       return {
         ...state,
         tx: payload,

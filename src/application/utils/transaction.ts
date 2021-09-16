@@ -6,20 +6,25 @@ import {
   CoinSelector,
   decodePset,
   getUnblindURLFromTx,
+  greedyCoinSelector,
   InputInterface,
   isBlindedOutputInterface,
+  Mnemonic,
   psetToUnsignedTx,
   RecipientInterface,
-  StateRestorerOpts,
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
+  walletFromCoins,
 } from 'ldk';
 import { confidential, networks } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
-import { Address } from '../../domain/address';
-import { mnemonicWallet } from './restorer';
+import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import { lbtcAssetByNetwork } from './network';
+import { Network } from '../../domain/network';
+import { fetchTopupFromTaxi } from './taxi';
+import { taxiURL } from './constants';
 
 function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
@@ -36,23 +41,25 @@ function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, str
   return outPubkeys;
 }
 
+/**
+ * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.
+ * @param mnemonic Identity using to sign the tx. should be restored.
+ * @param psetBase64 the unsign tx.
+ * @param recipientAddresses a list of known recipients addresses (non wallet output addresses).
+ */
 export async function blindAndSignPset(
-  mnemonic: string,
-  restorerOpts: StateRestorerOpts,
-  chain: string,
+  mnemonic: Mnemonic,
   psetBase64: string,
   recipientAddresses: string[]
 ): Promise<string> {
-  const mnemo = await mnemonicWallet(mnemonic, restorerOpts, chain);
-
-  const outputAddresses = (await mnemo.getAddresses()).map((a) => a.confidentialAddress);
+  const outputAddresses = (await mnemonic.getAddresses()).map((a) => a.confidentialAddress);
 
   const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses.concat(recipientAddresses));
   const outputsToBlind = Array.from(outputPubKeys.keys());
 
-  const blindedPset: string = await mnemo.blindPset(psetBase64, outputsToBlind, outputPubKeys);
+  const blindedPset: string = await mnemonic.blindPset(psetBase64, outputsToBlind, outputPubKeys);
 
-  const signedPset: string = await mnemo.signPset(blindedPset);
+  const signedPset: string = await mnemonic.signPset(blindedPset);
 
   const ptx = decodePset(signedPset);
   if (!ptx.validateSignaturesOfAllInputs()) {
@@ -61,37 +68,86 @@ export async function blindAndSignPset(
   return ptx.finalizeAllInputs().extractTransaction().toHex();
 }
 
-export function fillTaxiTx(
-  psetBase64: string,
-  unspents: UtxoInterface[],
-  receipients: RecipientInterface[],
-  taxiPayout: RecipientInterface,
-  coinSelector: CoinSelector,
-  changeAddressGetter: ChangeAddressFromAssetGetter
-): string {
-  const { selectedUtxos, changeOutputs } = coinSelector(
-    unspents,
-    receipients.concat(taxiPayout),
-    changeAddressGetter
-  );
-  return addToTx(psetBase64, selectedUtxos, receipients.concat(changeOutputs));
-}
-
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
   const receipientScript = addrLDK.toOutputScript(addressToFind);
   return utx.outs.findIndex((out) => out.script.equals(receipientScript));
 }
 
+/**
+ * Create tx from a Topup object.
+ * @param taxiTopup the topup describing the taxi response.
+ * @param unspents a list of utxos used to fund the tx.
+ * @param recipients a list of output to send.
+ * @param coinSelector the way used to coin select the unspents.
+ * @param changeAddressGetter define the way we get change addresses (if needed).
+ */
+export function createTaxiTxFromTopup(
+  taxiTopup: Topup.AsObject,
+  unspents: UtxoInterface[],
+  recipients: RecipientInterface[],
+  coinSelector: CoinSelector,
+  changeAddressGetter: ChangeAddressFromAssetGetter
+): string {
+  const { selectedUtxos, changeOutputs } = coinSelector(
+    unspents,
+    recipients.concat({
+      value: taxiTopup.assetAmount,
+      asset: taxiTopup.assetHash,
+      address: '', // address is not useful for coinSelector
+    }),
+    changeAddressGetter
+  );
+  return addToTx(taxiTopup.partial, selectedUtxos, recipients.concat(changeOutputs));
+}
+
+/**
+ * Create an unsigned tx from utxos set and list of recipients.
+ * @param recipients will create the outputs.
+ * @param unspents will be selected for the inputs.
+ * @param feeAssetHash if !== L-BTC: we'll request taxi to pay the fees.
+ * @param changeAddressGetter the way we fetch change addresses.
+ */
+export async function createSendPset(
+  recipients: RecipientInterface[],
+  unspents: UtxoInterface[],
+  feeAssetHash: string,
+  changeAddressGetter: ChangeAddressFromAssetGetter,
+  network: Network
+): Promise<string> {
+  if (feeAssetHash === lbtcAssetByNetwork(network)) {
+    const txBuilder = walletFromCoins(unspents, network);
+    return txBuilder.buildTx(
+      txBuilder.createTx(),
+      recipients,
+      greedyCoinSelector(),
+      changeAddressGetter,
+      true
+    );
+  }
+
+  const topup = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash)).topup;
+  if (!topup) throw new Error('something went wrong with taxi');
+
+  return createTaxiTxFromTopup(
+    topup,
+    unspents,
+    recipients,
+    greedyCoinSelector(),
+    changeAddressGetter
+  );
+}
+
+/**
+ * extract the fee amount (in satoshi) from an unsigned transaction.
+ * @param tx base64 encoded string.
+ */
 export const feeAmountFromTx = (tx: string): number => {
   const utx = psetToUnsignedTx(tx);
   const feeOutIndex = utx.outs.findIndex((out) => out.script.length === 0);
   const feeOut = utx.outs[feeOutIndex];
   return confidential.confidentialValueToSatoshi(feeOut.value);
 };
-
-export const isChange = (a: Address): boolean | null =>
-  a?.derivationPath ? a.derivationPath?.split('/')[4] === '1' : null;
 
 /**
  * Convert a TxInterface to DisplayInterface

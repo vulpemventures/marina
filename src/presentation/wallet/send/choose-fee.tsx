@@ -16,7 +16,7 @@ import {
   feeAmountFromTx,
   feeLevelToSatsPerByte,
   fetchTopupFromTaxi,
-  fillTaxiTx,
+  createTaxiTxFromTopup,
   imgPathMapMainnet,
   imgPathMapRegtest,
   lbtcAssetByNetwork,
@@ -147,12 +147,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       throw new Error('Taxi topup is undefined');
     }
 
-    const taxiPayout: RecipientInterface = {
-      value: taxiTopup.assetAmount,
-      asset: taxiTopup.assetHash,
-      address: '',
-    };
-
     let nextChangeAddr = feeChange;
     if (!nextChangeAddr) {
       const restored = await masterPubKeyRestorerFromState(masterPubKey)(restorerOpts);
@@ -168,11 +162,10 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       return nextChangeAddr?.value;
     };
 
-    const tx: string = fillTaxiTx(
-      taxiTopup.partial,
+    const tx: string = createTaxiTxFromTopup(
+      taxiTopup,
       Object.values(wallet.utxoMap),
       recipients,
-      taxiPayout,
       greedyCoinSelector(),
       changeGetter
     );
