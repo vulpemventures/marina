@@ -3,24 +3,56 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../application/proxy';
+import WindowProxy from '../../inject-scripts/proxy';
 import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
+import { decrypt, networkFromString } from '../../application/utils';
+import { signMessageWithMnemonic } from '../../application/utils/message';
+import { Network } from 'liquidjs-lib';
+import { useSelector } from 'react-redux';
+import { RootReducerState } from '../../domain/common';
+
+function signMsgWithPassword(
+  message: string,
+  encryptedMnemonic: string,
+  password: string,
+  network: Network
+): Promise<{ signature: string; address: string }> {
+  try {
+    const mnemonic = decrypt(encryptedMnemonic, password);
+    return signMessageWithMnemonic(message, mnemonic, network);
+  } catch (e: any) {
+    throw new Error('Invalid password');
+  }
+}
+
+export interface SignMessageData {
+  accepted: boolean;
+  signedMessage: string;
+}
 
 const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const network = useSelector((state: RootReducerState) => state.app.network);
+  const encryptedMnemonic = useSelector(
+    (state: RootReducerState) => state.wallet.encryptedMnemonic
+  );
 
   const windowProxy = new WindowProxy();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
+  const sendResponseMessage = (accepted: boolean, signedMessage = '') => {
+    return windowProxy.proxy('sign-msg', [{ accepted, signedMessage }]);
+  };
+
   const handleReject = async () => {
     try {
-      await windowProxy.proxy('SIGN_MESSAGE_RESPONSE', [false]);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -31,7 +63,17 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
     if (!password || password.length === 0) return;
 
     try {
-      await windowProxy.proxy('SIGN_MESSAGE_RESPONSE', [true, password]);
+      await sendResponseMessage(true);
+      if (!connectData.msg || !connectData.msg.message) throw new Error('missing message to sign');
+
+      // SIGN THE MESSAGE WITH FIRST ADDRESS FROM HD WALLET
+      const signedMsg = await signMsgWithPassword(
+        connectData.msg.message,
+        encryptedMnemonic,
+        password,
+        networkFromString(network)
+      );
+      await sendResponseMessage(true, signedMsg.signature);
       window.close();
     } catch (e: any) {
       console.error(e);

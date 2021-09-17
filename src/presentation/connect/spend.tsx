@@ -4,7 +4,7 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../application/proxy';
+import WindowProxy from '../../inject-scripts/proxy';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
@@ -46,11 +46,15 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
+  const sendResponseMessage = (accepted: boolean, signedTx = '') => {
+    return windowProxy.proxy('spend', [{ accepted, signedTx }]);
+  };
+
   const handleReject = async () => {
     try {
       // Flush tx data
       await dispatch(flushTx());
-      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [false]);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -66,8 +70,8 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         restorerOpts,
         network
       );
-      const txHex = await makeTransaction(mnemonicIdentity, coins, connectData.tx, network);
-      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [true, txHex]);
+      const signedTxHex = await makeTransaction(mnemonicIdentity, coins, connectData.tx, network);
+      await sendResponseMessage(true, signedTxHex);
 
       await dispatch(incrementChangeAddressIndex());
       await dispatch(flushTx());

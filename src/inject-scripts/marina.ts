@@ -10,9 +10,19 @@ import {
   MarinaEventType,
   Recipient,
 } from 'marina-provider';
+import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from './proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
+  static PROVIDER_NAME = 'marina';
+
+  private eventHandler: MarinaEventHandler;
+
+  constructor() {
+    super();
+    this.eventHandler = new MarinaEventHandler();
+  }
+
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
@@ -74,11 +84,11 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   on(type: MarinaEventType, callback: (payload: any) => void) {
-    return super.on(type, callback);
+    return this.eventHandler.on(type, callback);
   }
 
   off(id: string) {
-    super.off(id);
+    this.eventHandler.off(id);
   }
 
   isReady(): Promise<boolean> {

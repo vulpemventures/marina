@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Broker from '../../application/broker';
+import MarinaBroker from '../../content-scripts/marinaBroker';
 
 interface Props {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const ShellConnectPopup: React.FC<Props> = ({ children, className = '', currentPage }: Props) => {
-  const broker = new Broker();
+  const broker = new MarinaBroker();
   broker.start();
 
   // Prevent resize

@@ -41,7 +41,7 @@ import {
 // Connect
 import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
-import ConnectSpendPset from '../connect/spend-pset';
+import ConnectSpendPset from '../connect/sign-tx';
 import ConnectSignMsg from '../connect/sign-msg';
 
 // Onboarding

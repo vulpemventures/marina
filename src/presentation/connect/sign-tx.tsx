@@ -3,34 +3,58 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../application/proxy';
+import WindowProxy from '../../inject-scripts/proxy';
 import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
+import { useSelector } from 'react-redux';
+import { restorerOptsSelector } from '../../application/redux/selectors/wallet.selector';
+import { RootReducerState } from '../../domain/common';
+import { decrypt, mnemonicWallet } from '../../application/utils';
 
 const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
+  const windowProxy = new WindowProxy();
+
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const windowProxy = new WindowProxy();
+
+  const network = useSelector((state: RootReducerState) => state.app.network);
+  const restorerOpts = useSelector(restorerOptsSelector);
+  const encryptedMnemonic = useSelector(
+    (state: RootReducerState) => state.wallet.encryptedMnemonic
+  );
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const handleReject = async () => {
+  const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
+    return windowProxy.proxy('sign-tx', [{ accepted, signedTxHex: signedTxHex || '' }]);
+  };
+
+  const rejectSignRequest = async () => {
     try {
-      await windowProxy.proxy('SIGN_TRANSACTION_RESPONSE', [false]);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
     window.close();
   };
 
-  const handleUnlock = async (password: string) => {
-    if (!password || password.length === 0) return;
-
+  const signTx = async (password: string) => {
     try {
-      await windowProxy.proxy('SIGN_TRANSACTION_RESPONSE', [true, password]);
+      if (!password || password.length === 0) throw new Error('Need password');
+      const { tx } = connectData;
+      if (!tx || !tx.pset) throw new Error('No transaction to sign');
+
+      const mnemo = await mnemonicWallet(
+        decrypt(encryptedMnemonic, password),
+        restorerOpts,
+        network
+      );
+      const signedTxHex = await mnemo.signPset(tx.pset);
+      await sendResponseMessage(true, signedTxHex);
+
       window.close();
     } catch (e: any) {
       console.error(e);
@@ -41,7 +65,7 @@ const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
   };
 
   const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
+    debounce(signTx, 2000, { leading: true, trailing: false })
   ).current;
 
   return (
@@ -61,7 +85,7 @@ const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
           </p>
 
           <div className="bottom-24 container absolute right-0 flex justify-between">
-            <Button isOutline={true} onClick={handleReject} textBase={true}>
+            <Button isOutline={true} onClick={rejectSignRequest} textBase={true}>
               Reject
             </Button>
             <Button onClick={handleUnlockModalOpen} textBase={true}>
