@@ -7,7 +7,7 @@ import {
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
-  TRANSACTIONS_ROUTE,
+  TRANSACTIONS_ROUTE
 } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
@@ -21,7 +21,7 @@ import { PendingTxStep } from '../../../application/redux/reducers/transaction-r
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
 import { Network } from '../../../domain/network';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 export interface HomeProps {
   lbtcAssetHash: string;
@@ -38,7 +38,7 @@ const HomeView: React.FC<HomeProps> = ({
   transactionStep,
   assetsBalance,
   network,
-  isWalletVerified,
+  isWalletVerified
 }) => {
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -51,8 +51,8 @@ const HomeView: React.FC<HomeProps> = ({
         assetsBalance,
         assetHash,
         assetTicker,
-        assetPrecision,
-      },
+        assetPrecision
+      }
     });
   };
 

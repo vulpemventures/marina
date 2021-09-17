@@ -1,4 +1,4 @@
-import { browser, Idle } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 import { testWalletData } from '../application/constants/cypress';
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
@@ -79,7 +79,7 @@ try {
   // set the idle detection interval
   browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
-  browser.idle.onStateChanged.addListener(function (newState: Idle.IdleState) {
+  browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
     if (newState !== 'active') {
       browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
       // this will handle the logout when the extension is closed

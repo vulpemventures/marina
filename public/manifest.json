@@ -24,6 +24,7 @@
         "https://*/*"
       ],
       "js": [
+        "browser-polyfill.js",
         "content-script.js"
       ],
       "run_at": "document_start",

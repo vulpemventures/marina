@@ -10,7 +10,7 @@ import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
 import { RootReducerState } from '../../domain/common';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject-scripts/proxy';
+import WindowProxy from '../../inject/proxy';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 

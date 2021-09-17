@@ -6,9 +6,9 @@ const { ProvidePlugin } = require('webpack');
 module.exports = {
   entry: {
     'index': './src/presentation/index.tsx',
-    'background-script': './src/background-script.ts',
-    'content-script': './src/content-script.ts',
-    'inject-script': './src/inject-script',
+    'background-script': './src/background/background-script.ts',
+    'content-script': './src/content/content-script.ts',
+    'inject-script': './src/inject/inject-script',
   },
   module: {
     rules: [
@@ -36,6 +36,11 @@ module.exports = {
         { from: './public' }, 
       ],
     }),
+    new CopyWebpackPlugin({
+      patterns: [{
+        from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js',
+      }],
+    })
   ],
   output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
 };

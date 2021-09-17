@@ -1,3 +1,4 @@
+import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { AnyAction } from 'redux';
 import { Store } from 'webext-redux';
 import { serializerAndDeserializer } from '../application/redux/store';
@@ -14,9 +15,11 @@ import {
 export type BrokerOption = (broker: Broker) => void;
 
 export default class Broker {
+  protected emitter: SafeEventEmitter;
   protected store?: Store<RootReducerState, AnyAction> = undefined;
 
   constructor(options: BrokerOption[] = []) {
+    this.emitter = new SafeEventEmitter();
     for (const opt of options) {
       opt(this);
     }
@@ -48,19 +51,12 @@ export default class Broker {
   }
 
   waitForEvent<T>(name: string): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      const listener = (event: MessageEvent<any>) => {
-        if (!isMessageEvent(event)) return;
-        if (event.data.name !== name) return;
-
-        window.removeEventListener('message', listener);
-        if (!event.data.params || event.data.params.length === 0) reject();
-        // respond to popup
-        this.sendMessage(newSuccessResponseMessage(event.data.id, true));
-        resolve(event.data.params![0] as T);
+    return new Promise<T>((resolve) => {
+      const handleEventFromPopup = (value: T) => {
+        resolve(value);
       };
 
-      window.addEventListener('message', listener, false);
+      this.emitter.once(name, handleEventFromPopup);
     });
   }
 

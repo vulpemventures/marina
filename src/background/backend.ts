@@ -1,7 +1,7 @@
 import { RootReducerState } from '../domain/common';
 import { defaultPrecision } from '../application/utils/constants';
 import axios from 'axios';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 import {
   address as addressLDK,
   networks,
@@ -12,26 +12,26 @@ import {
   fetchAndUnblindUtxosGenerator,
   masterPubKeyRestorerFromEsplora,
   MasterPublicKey,
-  masterPubKeyRestorerFromState,
+  masterPubKeyRestorerFromState
 } from 'ldk';
 import {
   fetchAssetsFromTaxi,
   getStateRestorerOptsFromAddresses,
   taxiURL,
   toDisplayTransaction,
-  toStringOutpoint,
+  toStringOutpoint
 } from '../application/utils';
 
 import {
   setDeepRestorerError,
   setDeepRestorerIsLoading,
-  setWalletData,
+  setWalletData
 } from '../application/redux/actions/wallet';
 import { createAddress } from '../domain/address';
 import { setTaxiAssets, updateTaxiAssets } from '../application/redux/actions/taxi';
 import {
   masterPubKeySelector,
-  restorerOptsSelector,
+  restorerOptsSelector
 } from '../application/redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from '../application/redux/actions/utxos';
 import { addAsset } from '../application/redux/actions/asset';
@@ -61,7 +61,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
-        vout,
+        vout
       }));
 
       const skippedOutpoints: string[] = []; // for deleting
@@ -234,7 +234,7 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
 
     browser.alarms.create(UPDATE_ALARM, {
       when: Date.now(),
-      periodInMinutes: 4,
+      periodInMinutes: 4
     });
   };
 }
@@ -261,7 +261,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
         setWalletData({
           ...state.wallet,
           restorerOpts,
-          confidentialAddresses: addresses,
+          confidentialAddresses: addresses
         })
       );
 

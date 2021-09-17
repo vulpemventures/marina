@@ -1,4 +1,4 @@
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 export async function setUpPopup(): Promise<void> {
   // set the popup after the onboarding flow

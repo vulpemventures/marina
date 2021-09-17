@@ -3,7 +3,7 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject-scripts/proxy';
+import WindowProxy from '../../inject/proxy';
 import {
   connectWithConnectData,
   WithConnectDataProps,

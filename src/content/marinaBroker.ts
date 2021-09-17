@@ -1,4 +1,4 @@
-import { browser, Windows } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 import { stringify } from '../application/utils/browser-storage-converters';
 import { compareCacheForEvents, newCacheFromState, newStoreCache, StoreCache } from './store-cache';
@@ -7,9 +7,9 @@ import {
   MessageHandler,
   newErrorResponseMessage,
   newSuccessResponseMessage,
-  RequestMessage,
+  RequestMessage
 } from '../domain/message';
-import Marina from '../inject-scripts/marina';
+import Marina from '../inject/marina';
 import { RootReducerState } from '../domain/common';
 import {
   disableWebsite,
@@ -18,18 +18,17 @@ import {
   selectHostname,
   setMsg,
   setTx,
-  setTxData,
+  setTxData
 } from '../application/redux/actions/connect';
-import SafeEventEmitter from '@metamask/safe-event-emitter';
 import {
   masterPubKeySelector,
   restorerOptsSelector,
-  utxosSelector,
+  utxosSelector
 } from '../application/redux/selectors/wallet.selector';
 import { masterPubKeyRestorerFromState, MasterPublicKey, RecipientInterface } from 'ldk';
 import {
   incrementAddressIndex,
-  incrementChangeAddressIndex,
+  incrementChangeAddressIndex
 } from '../application/redux/actions/wallet';
 import { lbtcAssetByNetwork } from '../application/utils';
 import { walletTransactions } from '../application/redux/selectors/transaction.selector';
@@ -39,17 +38,23 @@ import { Balance } from 'marina-provider';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
-  private emitter: SafeEventEmitter;
   private cache: StoreCache;
   private hostname: string;
 
-  constructor(hostname = '', brokerOpts?: BrokerOption[]) {
-    super(brokerOpts);
+  static async Start(hostname?: string) {
+    const broker = new MarinaBroker(hostname, [await MarinaBroker.WithProxyStore()]);
+    broker.start();
+  }
 
-    this.emitter = new SafeEventEmitter();
+  private constructor(hostname = '', brokerOpts?: BrokerOption[]) {
+    super(brokerOpts);
     this.hostname = hostname;
     this.cache = newStoreCache();
     this.subscribeToStoreEvents();
+  }
+
+  start() {
+    super.start(this.marinaMessageHandler);
   }
 
   // start the store.subscribe function
@@ -68,7 +73,7 @@ export default class MarinaBroker extends Broker {
       for (const ev of events) {
         window.dispatchEvent(
           new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, {
-            detail: stringify(ev.payload),
+            detail: stringify(ev.payload)
           })
         );
       }
@@ -84,7 +89,7 @@ export default class MarinaBroker extends Broker {
     if (!this.hostnameEnabled(state)) throw new Error('User must authorize the current website');
   }
 
-  marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
+  private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
     if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
     const state = this.store.getState();
     const successMsg = (data?: any) => newSuccessResponseMessage(id, data);
@@ -248,7 +253,7 @@ export default class MarinaBroker extends Broker {
 
 const POPUP_HTML = 'popup.html';
 
-function createBrowserPopup(name?: string): Promise<Windows.Window> {
+async function createBrowserPopup(name?: string) {
   const options = {
     url: `${POPUP_HTML}#/connect/${name}`,
     type: 'popup',
@@ -256,9 +261,9 @@ function createBrowserPopup(name?: string): Promise<Windows.Window> {
     width: 360,
     focused: true,
     left: 100,
-    top: 100,
+    top: 100
   };
-  return browser.windows.create(options as any);
+  await browser.windows.create(options as any);
 }
 
 function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {

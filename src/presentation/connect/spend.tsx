@@ -4,7 +4,7 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject-scripts/proxy';
+import WindowProxy from '../../inject/proxy';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
