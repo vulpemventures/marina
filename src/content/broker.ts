@@ -1,4 +1,5 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
+import browser from 'webextension-polyfill';
 import { AnyAction } from 'redux';
 import { Store } from 'webext-redux';
 import { serializerAndDeserializer } from '../application/redux/store';
@@ -7,7 +8,6 @@ import { RootReducerState } from '../domain/common';
 import {
   isResponseMessage,
   MessageHandler,
-  newSuccessResponseMessage,
   RequestMessage,
   ResponseMessage,
 } from '../domain/message';
@@ -17,9 +17,11 @@ export type BrokerOption = (broker: Broker) => void;
 export default class Broker {
   protected emitter: SafeEventEmitter;
   protected store?: Store<RootReducerState, AnyAction> = undefined;
+  protected backgroundScriptPort: browser.Runtime.Port;
 
   constructor(options: BrokerOption[] = []) {
     this.emitter = new SafeEventEmitter();
+    this.backgroundScriptPort = browser.runtime.connect();
     for (const opt of options) {
       opt(this);
     }

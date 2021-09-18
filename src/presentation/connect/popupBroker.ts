@@ -3,7 +3,7 @@ import {
   MessageHandler,
   newErrorResponseMessage,
   newSuccessResponseMessage,
-  RequestMessage
+  RequestMessage,
 } from '../../domain/message';
 
 export default class PopupBroker extends Broker {
@@ -16,8 +16,8 @@ export default class PopupBroker extends Broker {
     super.start(this.messageHandler);
   }
 
-  private messageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
-    const successMsg = newSuccessResponseMessage(id);
+  private messageHandler: MessageHandler = ({ id, name, params }: RequestMessage) => {
+    const successMsg = Promise.resolve(newSuccessResponseMessage(id));
     switch (name) {
       case 'spend': {
         this.emitter.emit(name, params![0]);
@@ -40,7 +40,7 @@ export default class PopupBroker extends Broker {
       }
 
       default:
-        return newErrorResponseMessage(id, new Error('not implemented'));
+        return Promise.reject(newErrorResponseMessage(id, new Error('not implemented')));
     }
   };
 }

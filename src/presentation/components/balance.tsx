@@ -19,7 +19,7 @@ const Balance: React.FC<Props> = ({
   assetBalance,
   assetImgPath,
   assetTicker,
-  assetHash
+  assetHash,
 }) => {
   const electrsURL = useSelector(
     (state: RootReducerState) => state.app.explorerByNetwork[state.app.network].electrsURL
@@ -28,7 +28,7 @@ const Balance: React.FC<Props> = ({
   const handleOpenExplorer = () =>
     browser.tabs.create({
       url: `${electrsURL}/asset/${assetHash}`,
-      active: false
+      active: false,
     });
 
   return (
@@ -43,7 +43,7 @@ const Balance: React.FC<Props> = ({
         <p
           className={cx('text-grayDark  font-medium', {
             'text-3xl': bigBalanceText,
-            'text-lg': !bigBalanceText
+            'text-lg': !bigBalanceText,
           })}
         >
           {assetBalance} {assetTicker}

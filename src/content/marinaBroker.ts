@@ -1,5 +1,3 @@
-import browser from 'webextension-polyfill';
-
 import { stringify } from '../application/utils/browser-storage-converters';
 import { compareCacheForEvents, newCacheFromState, newStoreCache, StoreCache } from './store-cache';
 import Broker, { BrokerOption } from './broker';
@@ -7,7 +5,8 @@ import {
   MessageHandler,
   newErrorResponseMessage,
   newSuccessResponseMessage,
-  RequestMessage
+  PopupName,
+  RequestMessage,
 } from '../domain/message';
 import Marina from '../inject/marina';
 import { RootReducerState } from '../domain/common';
@@ -18,17 +17,17 @@ import {
   selectHostname,
   setMsg,
   setTx,
-  setTxData
+  setTxData,
 } from '../application/redux/actions/connect';
 import {
   masterPubKeySelector,
   restorerOptsSelector,
-  utxosSelector
+  utxosSelector,
 } from '../application/redux/selectors/wallet.selector';
 import { masterPubKeyRestorerFromState, MasterPublicKey, RecipientInterface } from 'ldk';
 import {
   incrementAddressIndex,
-  incrementChangeAddressIndex
+  incrementChangeAddressIndex,
 } from '../application/redux/actions/wallet';
 import { lbtcAssetByNetwork } from '../application/utils';
 import { walletTransactions } from '../application/redux/selectors/transaction.selector';
@@ -73,7 +72,7 @@ export default class MarinaBroker extends Broker {
       for (const ev of events) {
         window.dispatchEvent(
           new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, {
-            detail: stringify(ev.payload)
+            detail: stringify(ev.payload),
           })
         );
       }
@@ -243,27 +242,10 @@ export default class MarinaBroker extends Broker {
     }
   };
 
-  private async openAndWaitPopup<T>(
-    popupName: 'enable' | 'sign-msg' | 'sign-tx' | 'spend'
-  ): Promise<T> {
-    await createBrowserPopup(popupName);
+  private async openAndWaitPopup<T>(popupName: PopupName): Promise<T> {
+    this.backgroundScriptPort.postMessage({ name: popupName });
     return this.waitForEvent<T>(popupName);
   }
-}
-
-const POPUP_HTML = 'popup.html';
-
-async function createBrowserPopup(name?: string) {
-  const options = {
-    url: `${POPUP_HTML}#/connect/${name}`,
-    type: 'popup',
-    height: 600,
-    width: 360,
-    focused: true,
-    left: 100,
-    top: 100
-  };
-  await browser.windows.create(options as any);
 }
 
 function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {

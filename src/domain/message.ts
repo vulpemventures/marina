@@ -13,9 +13,27 @@ export interface ResponseMessage {
   payload: { success: boolean; data?: any; error?: string };
 }
 
+// basically the name of the connect/* files
+export type PopupName = 'enable' | 'sign-msg' | 'sign-tx' | 'spend';
+
+export function isPopupName(name: any): name is PopupName {
+  return name === 'enable' || name === 'sign-msg' || name === 'sign-tx' || name === 'spend';
+}
+
+// this message sends to background script in order to open a connected popup.
+export interface OpenPopupMessage {
+  name: PopupName;
+}
+
+export function isOpenPopupMessage(message: unknown): message is OpenPopupMessage {
+  return message && (message as any).name && isPopupName((message as any).name);
+}
+
 export function isResponseMessage(message: unknown): message is ResponseMessage {
   const msg = message as ResponseMessage;
-  return msg.id !== undefined && msg.payload !== undefined && msg.payload.success !== undefined;
+  return (
+    msg && msg.id !== undefined && msg.payload !== undefined && msg.payload.success !== undefined
+  );
 }
 
 export function newSuccessResponseMessage(id: string, data?: any): ResponseMessage {

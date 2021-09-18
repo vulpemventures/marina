@@ -6,6 +6,7 @@ import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
 import { IDLE_MESSAGE_TYPE } from '../application/utils';
 import { setUpPopup } from '../application/utils/popup';
+import { isOpenPopupMessage, PopupName } from '../domain/message';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 
 // MUST be > 15 seconds
@@ -75,6 +76,14 @@ browser.browserAction.onClicked.addListener(() => {
   })().catch(console.error);
 });
 
+browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
+  port.onMessage.addListener((message: any, port: browser.Runtime.Port) => {
+    if (isOpenPopupMessage(message)) {
+      createBrowserPopup(message.name).catch(console.error);
+    }
+  });
+});
+
 try {
   // set the idle detection interval
   browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
@@ -94,4 +103,19 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
   const { id } = await browser.tabs.create({ url });
   return id;
+}
+
+const POPUP_HTML = 'popup.html';
+
+async function createBrowserPopup(name?: PopupName) {
+  const options = {
+    url: `${POPUP_HTML}#/connect/${name}`,
+    type: 'popup',
+    height: 600,
+    width: 360,
+    focused: true,
+    left: 100,
+    top: 100,
+  };
+  await browser.windows.create(options as any);
 }

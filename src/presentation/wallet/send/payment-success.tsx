@@ -30,7 +30,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
   const handleOpenExplorer = () =>
     browser.tabs.create({
       url: `${electrsExplorerURL}/tx/${state.txid}`,
-      active: false
+      active: false,
     });
 
   const handleBackToHome = () => history.push(DEFAULT_ROUTE);
