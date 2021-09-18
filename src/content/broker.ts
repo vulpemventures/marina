@@ -1,22 +1,20 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
-import { AnyAction } from 'redux';
-import { Store } from 'webext-redux';
 import { serializerAndDeserializer } from '../application/redux/store';
 import { stringify } from '../application/utils/browser-storage-converters';
-import { RootReducerState } from '../domain/common';
 import {
   isResponseMessage,
   MessageHandler,
   RequestMessage,
   ResponseMessage,
 } from '../domain/message';
+import { BrokerProxyStore } from './brokerProxyStore';
 
 export type BrokerOption = (broker: Broker) => void;
 
 export default class Broker {
   protected emitter: SafeEventEmitter;
-  protected store?: Store<RootReducerState, AnyAction> = undefined;
+  protected store?: BrokerProxyStore = undefined;
   protected backgroundScriptPort: browser.Runtime.Port;
 
   constructor(options: BrokerOption[] = []) {
@@ -69,7 +67,7 @@ export default class Broker {
 
   // Set up a webext-redux Proxy store
   static async WithProxyStore(): Promise<BrokerOption> {
-    const proxyStore = new Store<RootReducerState, AnyAction>(serializerAndDeserializer);
+    const proxyStore = new BrokerProxyStore(serializerAndDeserializer);
     await proxyStore.ready();
 
     return (b: Broker) => {

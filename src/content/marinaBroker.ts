@@ -105,7 +105,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.enable.name: {
           if (!this.hostnameEnabled(state)) {
-            this.store.dispatch(selectHostname(this.hostname, state.app.network));
+            await this.store.dispatchAsync(selectHostname(this.hostname, state.app.network));
             await this.openAndWaitPopup<void>('enable');
             return successMsg();
           }
@@ -113,7 +113,7 @@ export default class MarinaBroker extends Broker {
         }
 
         case Marina.prototype.disable.name: {
-          this.store.dispatch(disableWebsite(this.hostname, state.app.network));
+          await this.store.dispatchAsync(disableWebsite(this.hostname, state.app.network));
           return successMsg();
         }
 
@@ -127,7 +127,7 @@ export default class MarinaBroker extends Broker {
           this.checkHostnameAuthorization(state);
           const xpub = await getRestoredXPub(state);
           const nextAddress = await xpub.getNextAddress();
-          this.store.dispatch(incrementAddressIndex());
+          await this.store.dispatchAsync(incrementAddressIndex());
           return successMsg(nextAddress);
         }
 
@@ -135,7 +135,7 @@ export default class MarinaBroker extends Broker {
           this.checkHostnameAuthorization(state);
           const xpub = await getRestoredXPub(state);
           const nextChangeAddress = await xpub.getNextChangeAddress();
-          this.store.dispatch(incrementChangeAddressIndex());
+          await this.store.dispatchAsync(incrementChangeAddressIndex());
           return successMsg(nextChangeAddress);
         }
 
@@ -145,13 +145,13 @@ export default class MarinaBroker extends Broker {
             throw new Error('Missing params');
           }
           const [tx] = params;
-          this.store.dispatch(setTx(this.hostname, tx));
+          await this.store.dispatchAsync(setTx(this.hostname, tx));
           const { accepted, signedTxHex } = await this.openAndWaitPopup<{
             accepted: boolean;
             signedTxHex: string;
           }>('sign-tx');
 
-          this.store.dispatch(flushTx());
+          await this.store.dispatchAsync(flushTx());
           if (!accepted) throw new Error('User rejected the sign request');
 
           return successMsg(signedTxHex);
@@ -167,7 +167,9 @@ export default class MarinaBroker extends Broker {
             throw new Error(`${feeAsset} not supported as fee asset.`);
           }
 
-          this.store.dispatch(setTxData(this.hostname, recipients, feeAsset, state.app.network));
+          await this.store.dispatchAsync(
+            setTxData(this.hostname, recipients, feeAsset, state.app.network)
+          );
           const { accepted, signedTx } = await this.openAndWaitPopup<{
             accepted: boolean;
             signedTx: string;
@@ -182,13 +184,13 @@ export default class MarinaBroker extends Broker {
             throw new Error('Missing params');
           }
           const [message] = params as [string];
-          this.store.dispatch(setMsg(this.hostname, message));
+          await this.store.dispatchAsync(setMsg(this.hostname, message));
           const { accepted, signedMessage } = await this.openAndWaitPopup<{
             accepted: boolean;
             signedMessage: string;
           }>('sign-msg');
 
-          this.store.dispatch(flushMsg());
+          await this.store.dispatchAsync(flushMsg());
           if (!accepted) throw new Error('user rejected the signMessage request');
 
           return successMsg(signedMessage);
