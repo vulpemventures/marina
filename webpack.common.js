@@ -36,11 +36,6 @@ module.exports = {
         { from: './public' }, 
       ],
     }),
-    new CopyWebpackPlugin({
-      patterns: [{
-        from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js',
-      }],
-    })
   ],
   output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
 };
