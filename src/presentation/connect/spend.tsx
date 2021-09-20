@@ -24,7 +24,6 @@ import {
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';
-import { lbtcAssetByNetwork } from '../../application/utils';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -172,29 +171,30 @@ async function makeTransaction(
 
   const { recipients, feeAssetHash } = connectDataTx;
 
-  const maxChangeAddress =
-    connectDataTx.recipients.length + (feeAssetHash !== lbtcAssetByNetwork(network) ? 1 : 0);
+  const assets = Array.from(new Set(recipients.map(({ asset }) => asset).concat(feeAssetHash)));
 
-  const changeAddresses: AddressInterface[] = [];
-  for (let i = 0; i < maxChangeAddress; i++) {
-    changeAddresses.push(await mnemonic.getNextChangeAddress());
+  const changeAddresses: Record<string, AddressInterface> = {};
+  const persisted: Record<string, boolean> = {};
+
+  for (const asset of assets) {
+    changeAddresses[asset] = await mnemonic.getNextChangeAddress();
+    persisted[asset] = false;
   }
 
-  const changeAddressGetter = () => {
-    let n = 0;
-    return () => {
-      const next = changeAddresses[n];
-      n++;
+  const changeAddressGetter = (asset: string) => {
+    if (!assets.includes(asset)) return undefined; // will throw an error in coin selector
+    if (!persisted[asset]) {
       dispatch(incrementChangeAddressIndex()).catch(console.error);
-      return next.confidentialAddress;
-    };
+      persisted[asset] = true;
+    }
+    return changeAddresses[asset].confidentialAddress;
   };
 
   const unsignedPset = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
-    changeAddressGetter(),
+    changeAddressGetter,
     network
   );
 
@@ -203,7 +203,7 @@ async function makeTransaction(
     unsignedPset,
     recipients
       .map(({ address }) => address)
-      .concat(changeAddresses.map(({ confidentialAddress }) => confidentialAddress))
+      .concat(Object.values(changeAddresses).map(({ confidentialAddress }) => confidentialAddress))
   );
 
   return txHex;

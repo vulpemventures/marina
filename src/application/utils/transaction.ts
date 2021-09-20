@@ -56,7 +56,6 @@ export async function blindAndSignPset(
 
   const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses.concat(recipientAddresses));
   const outputsToBlind = Array.from(outputPubKeys.keys());
-  alert(outputsToBlind);
 
   const blindedPset: string = await mnemonic.blindPset(psetBase64, outputsToBlind, outputPubKeys);
 
