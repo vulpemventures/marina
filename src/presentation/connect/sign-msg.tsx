@@ -28,9 +28,9 @@ function signMsgWithPassword(
   }
 }
 
-export interface SignMessageData {
+export interface SignMessagePopupResponse {
   accepted: boolean;
-  signedMessage: string;
+  signedMessage?: string;
 }
 
 const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
@@ -41,12 +41,12 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
     (state: RootReducerState) => state.wallet.encryptedMnemonic
   );
 
-  const popupWindowProxy = new PopupWindowProxy();
+  const popupWindowProxy = new PopupWindowProxy<SignMessagePopupResponse>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const sendResponseMessage = (accepted: boolean, signedMessage = '') => {
+  const sendResponseMessage = (accepted: boolean, signedMessage?: string) => {
     return popupWindowProxy.sendResponse({ data: { accepted, signedMessage } });
   };
 
@@ -63,7 +63,6 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
     if (!password || password.length === 0) return;
 
     try {
-      await sendResponseMessage(true);
       if (!connectData.msg || !connectData.msg.message) throw new Error('missing message to sign');
 
       // SIGN THE MESSAGE WITH FIRST ADDRESS FROM HD WALLET

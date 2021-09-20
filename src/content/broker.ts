@@ -6,7 +6,7 @@ import {
   MessageHandler,
   PopupName,
   RequestMessage,
-  ResponseMessage
+  ResponseMessage,
 } from '../domain/message';
 import { BrokerProxyStore } from './brokerProxyStore';
 

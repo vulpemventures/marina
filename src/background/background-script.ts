@@ -11,7 +11,7 @@ import {
   isOpenPopupMessage,
   isPopupResponseMessage,
   OpenPopupMessage,
-  PopupName
+  PopupName,
 } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
@@ -143,7 +143,7 @@ async function createBrowserPopup(name?: PopupName) {
     width: 360,
     focused: true,
     left: 100,
-    top: 100
+    top: 100,
   };
   await browser.windows.create(options as any);
 }

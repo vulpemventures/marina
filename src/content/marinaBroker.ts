@@ -33,6 +33,9 @@ import { walletTransactions } from '../application/redux/selectors/transaction.s
 import { balancesSelector } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
 import { Balance } from 'marina-provider';
+import { SignTransactionPopupResponse } from '../presentation/connect/sign-tx';
+import { SpendPopupResponse } from '../presentation/connect/spend';
+import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -105,7 +108,8 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.enable.name: {
           if (!this.hostnameEnabled(state)) {
             await this.store.dispatchAsync(selectHostname(this.hostname, state.app.network));
-            await this.openAndWaitPopup<void>('enable');
+            const accepted = await this.openAndWaitPopup<boolean>('enable');
+            if (!accepted) throw new Error(`user rejected to enable ${this.hostname}`);
             return successMsg();
           }
           throw new Error('current site is already enabled');
@@ -145,15 +149,14 @@ export default class MarinaBroker extends Broker {
           }
           const [tx] = params;
           await this.store.dispatchAsync(setTx(this.hostname, tx));
-          const { accepted, signedTxHex } = await this.openAndWaitPopup<{
-            accepted: boolean;
-            signedTxHex: string;
-          }>('sign-tx');
+          const { accepted, signedPset } =
+            await this.openAndWaitPopup<SignTransactionPopupResponse>('sign-tx');
 
           await this.store.dispatchAsync(flushTx());
           if (!accepted) throw new Error('User rejected the sign request');
+          if (!signedPset) throw new Error('Something went wrong with tx signing');
 
-          return successMsg(signedTxHex);
+          return successMsg(signedPset);
         }
 
         case Marina.prototype.sendTransaction.name: {
@@ -169,26 +172,26 @@ export default class MarinaBroker extends Broker {
           await this.store.dispatchAsync(
             setTxData(this.hostname, recipients, feeAsset, state.app.network)
           );
-          const { accepted, signedTx } = await this.openAndWaitPopup<{
-            accepted: boolean;
-            signedTx: string;
-          }>('spend');
+          const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
+            'spend'
+          );
 
           if (!accepted) throw new Error('the user rejected the create tx request');
-          return successMsg(signedTx);
+          if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
+          return successMsg(signedTxHex);
         }
 
         case Marina.prototype.signMessage.name: {
           this.checkHostnameAuthorization(state);
           const [message] = params as [string];
           await this.store.dispatchAsync(setMsg(this.hostname, message));
-          const { accepted, signedMessage } = await this.openAndWaitPopup<{
-            accepted: boolean;
-            signedMessage: string;
-          }>('sign-msg');
+          const { accepted, signedMessage } = await this.openAndWaitPopup<SignMessagePopupResponse>(
+            'sign-msg'
+          );
 
           await this.store.dispatchAsync(flushMsg());
           if (!accepted) throw new Error('user rejected the signMessage request');
+          if (!signedMessage) throw new Error('something went wrong with message signing');
 
           return successMsg(signedMessage);
         }

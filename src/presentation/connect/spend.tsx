@@ -25,6 +25,11 @@ import {
 import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';
 
+export interface SpendPopupResponse {
+  accepted: boolean;
+  signedTxHex?: string;
+}
+
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
   const coins = useSelector(utxosSelector);
@@ -41,13 +46,13 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const popupWindowProxy = new PopupWindowProxy<{ accepted: boolean; signedTx: string }>();
+  const popupWindowProxy = new PopupWindowProxy<SpendPopupResponse>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const sendResponseMessage = (accepted: boolean, signedTx = '') => {
-    return popupWindowProxy.sendResponse({ data: { accepted, signedTx } });
+  const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
+    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex } });
   };
 
   const handleReject = async () => {

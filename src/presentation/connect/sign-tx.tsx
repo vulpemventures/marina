@@ -13,8 +13,13 @@ import { RootReducerState } from '../../domain/common';
 import { decrypt, mnemonicWallet } from '../../application/utils';
 import PopupWindowProxy from './popupWindowProxy';
 
-const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
-  const popupWindowProxy = new PopupWindowProxy<{ accepted: boolean; signedTxHex?: string }>();
+export interface SignTransactionPopupResponse {
+  accepted: boolean;
+  signedPset?: string;
+}
+
+const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData }) => {
+  const popupWindowProxy = new PopupWindowProxy<SignTransactionPopupResponse>();
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -28,8 +33,8 @@ const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
-    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex: signedTxHex } });
+  const sendResponseMessage = (accepted: boolean, signedPset?: string) => {
+    return popupWindowProxy.sendResponse({ data: { accepted, signedPset } });
   };
 
   const rejectSignRequest = async () => {
@@ -52,8 +57,8 @@ const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
         restorerOpts,
         network
       );
-      const signedTxHex = await mnemo.signPset(tx.pset);
-      await sendResponseMessage(true, signedTxHex);
+      const signedPset = await mnemo.signPset(tx.pset);
+      await sendResponseMessage(true, signedPset);
 
       window.close();
     } catch (e: any) {
@@ -116,4 +121,4 @@ const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
   );
 };
 
-export default connectWithConnectData(ConnectSpendPset);
+export default connectWithConnectData(ConnectSignTransaction);
