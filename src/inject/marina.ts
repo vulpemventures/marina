@@ -56,14 +56,26 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   blindTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
+    if (!psetBase64 || typeof psetBase64 !== 'string') {
+      throw new Error('you must specify a pset to blind (base64 encoded)');
+    }
+
     return this.proxy(this.blindTransaction.name, [psetBase64]);
   }
 
   sendTransaction(recipients: Recipient[], feeAssetHash?: string): Promise<TransactionHex> {
+    if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+      throw new Error('invalid recipients array');
+    }
+
     return this.proxy(this.sendTransaction.name, [recipients, feeAssetHash]);
   }
 
   signTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
+    if (!psetBase64 || typeof psetBase64 !== 'string') {
+      throw new Error('you must specify a pset to sign (base64 encoded)');
+    }
+
     return this.proxy(this.signTransaction.name, [psetBase64]);
   }
 
@@ -91,6 +103,8 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   off(id: string) {
+    if (!id) throw new Error('you must specify an id');
+
     this.eventHandler.off(id);
   }
 

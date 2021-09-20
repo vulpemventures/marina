@@ -5,4 +5,4 @@ import Marina from './marina';
 
 const marina = new Marina();
 (window as Record<string, any>)[Marina.PROVIDER_NAME] = marina;
-window.dispatchEvent(new Event('marina#initialized'));
+window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#initialized`));
