@@ -56,6 +56,7 @@ export async function blindAndSignPset(
 
   const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses.concat(recipientAddresses));
   const outputsToBlind = Array.from(outputPubKeys.keys());
+  alert(outputsToBlind);
 
   const blindedPset: string = await mnemonic.blindPset(psetBase64, outputsToBlind, outputPubKeys);
 
@@ -70,8 +71,8 @@ export async function blindAndSignPset(
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
-  const receipientScript = addrLDK.toOutputScript(addressToFind);
-  return utx.outs.findIndex((out) => out.script.equals(receipientScript));
+  const recipientScript = addrLDK.toOutputScript(addressToFind);
+  return utx.outs.findIndex((out) => out.script.equals(recipientScript));
 }
 
 /**
@@ -92,7 +93,7 @@ export function createTaxiTxFromTopup(
   const { selectedUtxos, changeOutputs } = coinSelector(
     unspents,
     recipients.concat({
-      value: taxiTopup.assetAmount,
+      value: 0,
       asset: taxiTopup.assetHash,
       address: '', // address is not useful for coinSelector
     }),

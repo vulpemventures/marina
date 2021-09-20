@@ -7,10 +7,10 @@ import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
-  WithConnectDataProps,
+  WithConnectDataProps
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type { Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
+import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
@@ -20,10 +20,11 @@ import { blindAndSignPset, createSendPset } from '../../application/utils/transa
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
   restorerOptsSelector,
-  utxosSelector,
+  utxosSelector
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';
+import { lbtcAssetByNetwork } from '../../application/utils';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -75,10 +76,15 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         restorerOpts,
         network
       );
-      const signedTxHex = await makeTransaction(mnemonicIdentity, coins, connectData.tx, network);
+      const signedTxHex = await makeTransaction(
+        mnemonicIdentity,
+        coins,
+        connectData.tx,
+        network,
+        dispatch
+      );
       await sendResponseMessage(true, signedTxHex);
 
-      await dispatch(incrementChangeAddressIndex());
       await dispatch(flushTx());
       window.close();
     } catch (e: any) {
@@ -158,26 +164,46 @@ async function makeTransaction(
   mnemonic: Mnemonic,
   coins: UtxoInterface[],
   connectDataTx: ConnectData['tx'],
-  network: Network
+  network: Network,
+  dispatch: ProxyStoreDispatch
 ) {
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
-    throw new Error('Transaction data are missing');
+    throw new Error('transaction data are missing');
 
   const { recipients, feeAssetHash } = connectDataTx;
-  const changeAddress = await mnemonic.getNextChangeAddress();
+
+  const maxChangeAddress =
+    connectDataTx.recipients.length + (feeAssetHash !== lbtcAssetByNetwork(network) ? 1 : 0);
+
+  const changeAddresses: AddressInterface[] = [];
+  for (let i = 0; i < maxChangeAddress; i++) {
+    changeAddresses.push(await mnemonic.getNextChangeAddress());
+  }
+
+  const changeAddressGetter = () => {
+    let n = 0;
+    return () => {
+      const next = changeAddresses[n];
+      n++;
+      dispatch(incrementChangeAddressIndex()).catch(console.error);
+      return next.confidentialAddress;
+    };
+  };
 
   const unsignedPset = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
-    () => changeAddress.confidentialAddress,
+    changeAddressGetter(),
     network
   );
 
   const txHex = await blindAndSignPset(
     mnemonic,
     unsignedPset,
-    recipients.map(({ address }) => address)
+    recipients
+      .map(({ address }) => address)
+      .concat(changeAddresses.map(({ confidentialAddress }) => confidentialAddress))
   );
 
   return txHex;
