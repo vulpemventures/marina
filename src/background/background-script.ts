@@ -1,3 +1,4 @@
+import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import { testWalletData } from '../application/constants/cypress';
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
@@ -6,7 +7,13 @@ import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
 import { IDLE_MESSAGE_TYPE } from '../application/utils';
 import { setUpPopup } from '../application/utils/popup';
-import { isOpenPopupMessage, PopupName } from '../domain/message';
+import {
+  isOpenPopupMessage,
+  isPopupResponseMessage,
+  OpenPopupMessage,
+  PopupName
+} from '../domain/message';
+import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 
 // MUST be > 15 seconds
@@ -76,13 +83,34 @@ browser.browserAction.onClicked.addListener(() => {
   })().catch(console.error);
 });
 
+// the event emitter is used to link all the content-scripts (popups and providers ones)
+const eventEmitter = new SafeEventEmitter();
+
 browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
-  port.onMessage.addListener((message: any, port: browser.Runtime.Port) => {
+  port.onMessage.addListener((message: any) => {
     if (isOpenPopupMessage(message)) {
-      createBrowserPopup(message.name).catch(console.error);
+      handleOpenPopupMessage(message, port).catch((error: any) => {
+        console.error(error);
+        port.postMessage({ data: undefined });
+      });
+      return;
+    }
+
+    if (isPopupResponseMessage(message)) {
+      // propagate popup response
+      eventEmitter.emit(POPUP_RESPONSE, message.data);
     }
   });
 });
+
+// Open the popup window and wait for a response
+// then forward the response to content-script
+async function handleOpenPopupMessage(message: OpenPopupMessage, port: browser.Runtime.Port) {
+  await createBrowserPopup(message.name);
+  eventEmitter.once(POPUP_RESPONSE, (data: any) => {
+    port.postMessage(data);
+  });
+}
 
 try {
   // set the idle detection interval
@@ -115,7 +143,7 @@ async function createBrowserPopup(name?: PopupName) {
     width: 360,
     focused: true,
     left: 100,
-    top: 100,
+    top: 100
   };
   await browser.windows.create(options as any);
 }

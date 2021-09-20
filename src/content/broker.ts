@@ -1,24 +1,22 @@
-import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import { serializerAndDeserializer } from '../application/redux/store';
 import { stringify } from '../application/utils/browser-storage-converters';
 import {
   isResponseMessage,
   MessageHandler,
+  PopupName,
   RequestMessage,
-  ResponseMessage,
+  ResponseMessage
 } from '../domain/message';
 import { BrokerProxyStore } from './brokerProxyStore';
 
 export type BrokerOption = (broker: Broker) => void;
 
 export default class Broker {
-  protected emitter: SafeEventEmitter;
   protected store?: BrokerProxyStore = undefined;
   protected backgroundScriptPort: browser.Runtime.Port;
 
   constructor(options: BrokerOption[] = []) {
-    this.emitter = new SafeEventEmitter();
     this.backgroundScriptPort = browser.runtime.connect();
     for (const opt of options) {
       opt(this);
@@ -50,13 +48,13 @@ export default class Broker {
     );
   }
 
-  waitForEvent<T>(name: string): Promise<T> {
-    return new Promise<T>((resolve) => {
-      const handleEventFromPopup = (value: T) => {
-        resolve(value);
-      };
+  protected async openAndWaitPopup<T>(popupName: PopupName): Promise<T> {
+    this.backgroundScriptPort.postMessage({ name: popupName });
 
-      this.emitter.once(name, handleEventFromPopup);
+    return new Promise<T>((resolve) => {
+      this.backgroundScriptPort.onMessage.addListener((message) => {
+        resolve(message.data as T);
+      });
     });
   }
 

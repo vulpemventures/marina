@@ -5,7 +5,6 @@ import {
   MessageHandler,
   newErrorResponseMessage,
   newSuccessResponseMessage,
-  PopupName,
   RequestMessage,
 } from '../domain/message';
 import Marina from '../inject/marina';
@@ -174,15 +173,13 @@ export default class MarinaBroker extends Broker {
             accepted: boolean;
             signedTx: string;
           }>('spend');
+
           if (!accepted) throw new Error('the user rejected the create tx request');
           return successMsg(signedTx);
         }
 
         case Marina.prototype.signMessage.name: {
           this.checkHostnameAuthorization(state);
-          if (!params || params.length !== 1 || params.some((p) => p === null)) {
-            throw new Error('Missing params');
-          }
           const [message] = params as [string];
           await this.store.dispatchAsync(setMsg(this.hostname, message));
           const { accepted, signedMessage } = await this.openAndWaitPopup<{
@@ -243,11 +240,6 @@ export default class MarinaBroker extends Broker {
       else throw err;
     }
   };
-
-  private async openAndWaitPopup<T>(popupName: PopupName): Promise<T> {
-    this.backgroundScriptPort.postMessage({ name: popupName });
-    return this.waitForEvent<T>(popupName);
-  }
 }
 
 function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {

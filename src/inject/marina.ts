@@ -68,6 +68,9 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   signMessage(message: string): Promise<SignedMessage> {
+    if (!message || message.length === 0) {
+      throw new Error('message cannot be empty');
+    }
     return this.proxy(this.signMessage.name, [message]);
   }
 

@@ -10,17 +10,17 @@ import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
 import { RootReducerState } from '../../domain/common';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject/proxy';
+import PopupWindowProxy from './popupWindowProxy';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
 const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const network = useSelector((state: RootReducerState) => state.app.network);
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const windowProxy = new WindowProxy();
+  const popupWindowProxy = new PopupWindowProxy<boolean>();
 
   const handleReject = async () => {
-    await windowProxy.proxy('enable');
+    await popupWindowProxy.sendResponse({ data: false });
     window.close();
   };
 
@@ -29,7 +29,7 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
       await dispatch(enableWebsite(connectData.hostnameSelected, network));
       await dispatch(flushSelectedHostname(network));
     } finally {
-      await windowProxy.proxy('enable');
+      await popupWindowProxy.sendResponse({ data: true });
       window.close();
     }
   };

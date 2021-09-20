@@ -4,7 +4,6 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject/proxy';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
@@ -24,6 +23,7 @@ import {
   utxosSelector,
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
+import PopupWindowProxy from './popupWindowProxy';
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
@@ -41,13 +41,13 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const windowProxy = new WindowProxy();
+  const popupWindowProxy = new PopupWindowProxy<{ accepted: boolean; signedTx: string }>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedTx = '') => {
-    return windowProxy.proxy('spend', [{ accepted, signedTx }]);
+    return popupWindowProxy.sendResponse({ data: { accepted, signedTx } });
   };
 
   const handleReject = async () => {

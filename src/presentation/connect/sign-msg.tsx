@@ -3,7 +3,6 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject/proxy';
 import {
   connectWithConnectData,
   WithConnectDataProps,
@@ -13,6 +12,7 @@ import { signMessageWithMnemonic } from '../../application/utils/message';
 import { Network } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
 import { RootReducerState } from '../../domain/common';
+import PopupWindowProxy from './popupWindowProxy';
 
 function signMsgWithPassword(
   message: string,
@@ -41,13 +41,13 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
     (state: RootReducerState) => state.wallet.encryptedMnemonic
   );
 
-  const windowProxy = new WindowProxy();
+  const popupWindowProxy = new PopupWindowProxy();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedMessage = '') => {
-    return windowProxy.proxy('sign-msg', [{ accepted, signedMessage }]);
+    return popupWindowProxy.sendResponse({ data: { accepted, signedMessage } });
   };
 
   const handleReject = async () => {

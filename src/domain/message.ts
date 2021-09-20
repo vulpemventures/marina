@@ -20,15 +20,6 @@ export function isPopupName(name: any): name is PopupName {
   return name === 'enable' || name === 'sign-msg' || name === 'sign-tx' || name === 'spend';
 }
 
-// this message sends to background script in order to open a connected popup.
-export interface OpenPopupMessage {
-  name: PopupName;
-}
-
-export function isOpenPopupMessage(message: unknown): message is OpenPopupMessage {
-  return message && (message as any).name && isPopupName((message as any).name);
-}
-
 export function isResponseMessage(message: unknown): message is ResponseMessage {
   const msg = message as ResponseMessage;
   return (
@@ -48,3 +39,20 @@ export function newErrorResponseMessage(id: string, error: Error): ResponseMessa
 // for async logic the MessageHandler returns a Promise.
 // thus, handlers should resolve Success ResponseMessage and Error ResponseMessage
 export type MessageHandler = (request: RequestMessage) => Promise<ResponseMessage>;
+
+// this message sends to background script in order to open a connected popup.
+export interface OpenPopupMessage {
+  name: PopupName;
+}
+
+export function isOpenPopupMessage(message: unknown): message is OpenPopupMessage {
+  return message && (message as any).name && isPopupName((message as any).name);
+}
+
+export interface PopupResponseMessage<T = any> {
+  data?: T;
+}
+
+export function isPopupResponseMessage(message: unknown) {
+  return message && ((message as any).data || (message as any).error);
+}

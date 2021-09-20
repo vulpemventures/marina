@@ -3,7 +3,6 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../inject/proxy';
 import {
   connectWithConnectData,
   WithConnectDataProps,
@@ -12,9 +11,10 @@ import { useSelector } from 'react-redux';
 import { restorerOptsSelector } from '../../application/redux/selectors/wallet.selector';
 import { RootReducerState } from '../../domain/common';
 import { decrypt, mnemonicWallet } from '../../application/utils';
+import PopupWindowProxy from './popupWindowProxy';
 
 const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
-  const windowProxy = new WindowProxy();
+  const popupWindowProxy = new PopupWindowProxy<{ accepted: boolean; signedTxHex?: string }>();
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -29,7 +29,7 @@ const ConnectSpendPset: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
-    return windowProxy.proxy('sign-tx', [{ accepted, signedTxHex: signedTxHex || '' }]);
+    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex: signedTxHex } });
   };
 
   const rejectSignRequest = async () => {
