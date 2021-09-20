@@ -7,7 +7,7 @@ import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
-  WithConnectDataProps
+  WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
 import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
@@ -20,7 +20,7 @@ import { blindAndSignPset, createSendPset } from '../../application/utils/transa
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
   restorerOptsSelector,
-  utxosSelector
+  utxosSelector,
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';

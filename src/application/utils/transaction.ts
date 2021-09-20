@@ -15,7 +15,7 @@ import {
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
-  walletFromCoins
+  walletFromCoins,
 } from 'ldk';
 import { confidential, networks } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
@@ -95,7 +95,7 @@ export function createTaxiTxFromTopup(
     recipients.concat({
       value: taxiTopup.assetAmount,
       asset: taxiTopup.assetHash,
-      address: '' // address is not useful for coinSelector
+      address: '', // address is not useful for coinSelector
     }),
     changeAddressGetter
   );
@@ -168,7 +168,7 @@ export function toDisplayTransaction(
     fee: tx.fee,
     transfers,
     type: txTypeFromTransfer(transfers),
-    webExplorersBlinders: getUnblindURLFromTx(tx, '')
+    webExplorersBlinders: getUnblindURLFromTx(tx, ''),
   };
 }
 
@@ -234,7 +234,7 @@ function getTransfers(
 
     transfers.push({
       amount,
-      asset
+      asset,
     });
   };
 
