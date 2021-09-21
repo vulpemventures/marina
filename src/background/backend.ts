@@ -234,7 +234,7 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
 
     browser.alarms.create(UPDATE_ALARM, {
       when: Date.now(),
-      periodInMinutes: 4,
+      periodInMinutes: 1,
     });
   };
 }
