@@ -25,5 +25,5 @@ export function utxosSelector(state: RootReducerState): UtxoInterface[] {
 }
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {
-  return state.wallet.encryptedMnemonic !== undefined;
+  return state.wallet.encryptedMnemonic !== '' && state.wallet.encryptedMnemonic !== undefined;
 }
