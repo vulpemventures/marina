@@ -1,23 +1,27 @@
-import { browser, Idle } from 'webextension-polyfill-ts';
-import Backend from './application/backend';
-import { testWalletData } from './application/constants/cypress';
-import { logOut, onboardingCompleted } from './application/redux/actions/app';
-import { enableWebsite } from './application/redux/actions/connect';
-import { setWalletData } from './application/redux/actions/wallet';
-import { marinaStore, wrapMarinaStore } from './application/redux/store';
-import { IDLE_MESSAGE_TYPE } from './application/utils';
-import { tabIsOpen } from './application/utils/common';
-import { setUpPopup } from './application/utils/popup';
-import { INITIALIZE_WELCOME_ROUTE } from './presentation/routes/constants';
+import SafeEventEmitter from '@metamask/safe-event-emitter';
+import browser from 'webextension-polyfill';
+import { testWalletData } from '../application/constants/cypress';
+import { logOut, onboardingCompleted } from '../application/redux/actions/app';
+import { enableWebsite } from '../application/redux/actions/connect';
+import { setWalletData } from '../application/redux/actions/wallet';
+import { marinaStore, wrapMarinaStore } from '../application/redux/store';
+import { IDLE_MESSAGE_TYPE } from '../application/utils';
+import { tabIsOpen } from '../application/utils/common';
+import { setUpPopup } from '../application/utils/popup';
+import {
+  isOpenPopupMessage,
+  isPopupResponseMessage,
+  OpenPopupMessage,
+  PopupName,
+} from '../domain/message';
+import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
+import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
+
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
 wrapMarinaStore(marinaStore); // wrap store to proxy store
-
-// We start listening and handling messages from injected script
-const backend = new Backend();
-backend.start();
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -77,11 +81,40 @@ browser.browserAction.onClicked.addListener(() => {
   })().catch(console.error);
 });
 
+// the event emitter is used to link all the content-scripts (popups and providers ones)
+const eventEmitter = new SafeEventEmitter();
+
+browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
+  port.onMessage.addListener((message: any) => {
+    if (isOpenPopupMessage(message)) {
+      handleOpenPopupMessage(message, port).catch((error: any) => {
+        console.error(error);
+        port.postMessage({ data: undefined });
+      });
+      return;
+    }
+
+    if (isPopupResponseMessage(message)) {
+      // propagate popup response
+      eventEmitter.emit(POPUP_RESPONSE, message.data);
+    }
+  });
+});
+
+// Open the popup window and wait for a response
+// then forward the response to content-script
+async function handleOpenPopupMessage(message: OpenPopupMessage, port: browser.Runtime.Port) {
+  await createBrowserPopup(message.name);
+  eventEmitter.once(POPUP_RESPONSE, (data: any) => {
+    port.postMessage(data);
+  });
+}
+
 try {
   // set the idle detection interval
   browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
-  browser.idle.onStateChanged.addListener(function (newState: Idle.IdleState) {
+  browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
     if (newState !== 'active') {
       browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
       // this will handle the logout when the extension is closed
@@ -96,4 +129,19 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
   const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
   const { id } = await browser.tabs.create({ url });
   return id;
+}
+
+const POPUP_HTML = 'popup.html';
+
+async function createBrowserPopup(name?: PopupName) {
+  const options = {
+    url: `${POPUP_HTML}#/connect/${name}`,
+    type: 'popup',
+    height: 600,
+    width: 360,
+    focused: true,
+    left: 100,
+    top: 100,
+  };
+  await browser.windows.create(options as any);
 }

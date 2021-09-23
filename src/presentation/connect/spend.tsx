@@ -4,14 +4,13 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import { formatAddress } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import WindowProxy from '../../application/proxy';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type { Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
+import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
@@ -24,6 +23,12 @@ import {
   utxosSelector,
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
+import PopupWindowProxy from './popupWindowProxy';
+
+export interface SpendPopupResponse {
+  accepted: boolean;
+  signedTxHex?: string;
+}
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
@@ -41,16 +46,20 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const windowProxy = new WindowProxy();
+  const popupWindowProxy = new PopupWindowProxy<SpendPopupResponse>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
+
+  const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
+    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex } });
+  };
 
   const handleReject = async () => {
     try {
       // Flush tx data
       await dispatch(flushTx());
-      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [false]);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -66,10 +75,15 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         restorerOpts,
         network
       );
-      const txHex = await makeTransaction(mnemonicIdentity, coins, connectData.tx, network);
-      await windowProxy.proxy('SEND_TRANSACTION_RESPONSE', [true, txHex]);
+      const signedTxHex = await makeTransaction(
+        mnemonicIdentity,
+        coins,
+        connectData.tx,
+        network,
+        dispatch
+      );
+      await sendResponseMessage(true, signedTxHex);
 
-      await dispatch(incrementChangeAddressIndex());
       await dispatch(flushTx());
       window.close();
     } catch (e: any) {
@@ -149,26 +163,47 @@ async function makeTransaction(
   mnemonic: Mnemonic,
   coins: UtxoInterface[],
   connectDataTx: ConnectData['tx'],
-  network: Network
+  network: Network,
+  dispatch: ProxyStoreDispatch
 ) {
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
-    throw new Error('Transaction data are missing');
+    throw new Error('transaction data are missing');
 
   const { recipients, feeAssetHash } = connectDataTx;
-  const changeAddress = await mnemonic.getNextChangeAddress();
+
+  const assets = Array.from(new Set(recipients.map(({ asset }) => asset).concat(feeAssetHash)));
+
+  const changeAddresses: Record<string, AddressInterface> = {};
+  const persisted: Record<string, boolean> = {};
+
+  for (const asset of assets) {
+    changeAddresses[asset] = await mnemonic.getNextChangeAddress();
+    persisted[asset] = false;
+  }
+
+  const changeAddressGetter = (asset: string) => {
+    if (!assets.includes(asset)) return undefined; // will throw an error in coin selector
+    if (!persisted[asset]) {
+      dispatch(incrementChangeAddressIndex()).catch(console.error);
+      persisted[asset] = true;
+    }
+    return changeAddresses[asset].confidentialAddress;
+  };
 
   const unsignedPset = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
-    () => changeAddress.confidentialAddress,
+    changeAddressGetter,
     network
   );
 
   const txHex = await blindAndSignPset(
     mnemonic,
     unsignedPset,
-    recipients.map(({ address }) => address)
+    recipients
+      .map(({ address }) => address)
+      .concat(Object.values(changeAddresses).map(({ confidentialAddress }) => confidentialAddress))
   );
 
   return txHex;

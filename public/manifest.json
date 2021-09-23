@@ -8,7 +8,8 @@
     "storage",
     "unlimitedStorage",
     "idle",
-    "tabs"
+    "tabs",
+    "<all_urls>"
   ],
   "background": {
     "scripts": [

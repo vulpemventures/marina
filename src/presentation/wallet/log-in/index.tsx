@@ -17,7 +17,7 @@ import { createPassword } from '../../../domain/password';
 import { RootReducerState } from '../../../domain/common';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { updateTaxiAssets } from '../../../application/redux/actions/taxi';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 interface LogInFormValues {
   password: string;

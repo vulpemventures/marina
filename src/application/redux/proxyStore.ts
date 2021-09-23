@@ -2,7 +2,7 @@ import { RootReducerState } from './../../domain/common';
 import { serializerAndDeserializer } from './store';
 import { AnyAction } from 'redux';
 import { Store } from 'webext-redux';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 export type ProxyStoreDispatch = (action: AnyAction) => Promise<void>;
 

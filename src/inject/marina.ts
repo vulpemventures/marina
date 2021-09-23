@@ -10,9 +10,19 @@ import {
   MarinaEventType,
   Recipient,
 } from 'marina-provider';
+import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from './proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
+  static PROVIDER_NAME = 'marina';
+
+  private eventHandler: MarinaEventHandler;
+
+  constructor() {
+    super();
+    this.eventHandler = new MarinaEventHandler();
+  }
+
   enable(): Promise<void> {
     return this.proxy(this.enable.name, []);
   }
@@ -46,18 +56,33 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   blindTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
+    if (!psetBase64 || typeof psetBase64 !== 'string') {
+      throw new Error('you must specify a pset to blind (base64 encoded)');
+    }
+
     return this.proxy(this.blindTransaction.name, [psetBase64]);
   }
 
   sendTransaction(recipients: Recipient[], feeAssetHash?: string): Promise<TransactionHex> {
+    if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+      throw new Error('invalid recipients array');
+    }
+
     return this.proxy(this.sendTransaction.name, [recipients, feeAssetHash]);
   }
 
   signTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
+    if (!psetBase64 || typeof psetBase64 !== 'string') {
+      throw new Error('you must specify a pset to sign (base64 encoded)');
+    }
+
     return this.proxy(this.signTransaction.name, [psetBase64]);
   }
 
   signMessage(message: string): Promise<SignedMessage> {
+    if (!message || message.length === 0) {
+      throw new Error('message cannot be empty');
+    }
     return this.proxy(this.signMessage.name, [message]);
   }
 
@@ -74,11 +99,13 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   on(type: MarinaEventType, callback: (payload: any) => void) {
-    return super.on(type, callback);
+    return this.eventHandler.on(type, callback);
   }
 
   off(id: string) {
-    super.off(id);
+    if (!id) throw new Error('you must specify an id');
+
+    this.eventHandler.off(id);
   }
 
   isReady(): Promise<boolean> {

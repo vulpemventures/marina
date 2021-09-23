@@ -41,7 +41,7 @@ import {
 // Connect
 import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
-import ConnectSpendPset from '../connect/spend-pset';
+import ConnectSignTransaction from '../connect/sign-tx';
 import ConnectSignMsg from '../connect/sign-msg';
 
 // Onboarding
@@ -118,7 +118,7 @@ const Routes: React.FC = () => {
       {/*Connect*/}
       <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
-      <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSpendPset} />
+      <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSignTransaction} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
     </Switch>
   );

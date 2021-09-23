@@ -21,7 +21,7 @@ import { PendingTxStep } from '../../../application/redux/reducers/transaction-r
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
 import { Network } from '../../../domain/network';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 export interface HomeProps {
   lbtcAssetHash: string;
