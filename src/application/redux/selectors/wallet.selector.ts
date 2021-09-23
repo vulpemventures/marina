@@ -9,8 +9,8 @@ export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
     type: IdentityType.MasterPublicKey,
     opts: {
       masterPublicKey: masterXPub,
-      masterBlindingKey: masterBlindingKey,
-    },
+      masterBlindingKey: masterBlindingKey
+    }
   });
 
   return pubKeyWallet;
@@ -22,4 +22,8 @@ export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts
 
 export function utxosSelector(state: RootReducerState): UtxoInterface[] {
   return Object.values(state.wallet.utxoMap);
+}
+
+export function hasMnemonicSelector(state: RootReducerState): boolean {
+  return state.wallet.encryptedMnemonic !== undefined;
 }
