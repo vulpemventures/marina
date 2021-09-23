@@ -14,6 +14,7 @@ import { createPassword } from '../../../domain/password';
 import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
+import WarningDeleteMnemonic from '../../components/warningDeleteMnemonic';
 import { extractErrorMessage } from '../../utils/error';
 
 export interface EndOfFlowProps {
@@ -50,9 +51,10 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
           explorerURL
         );
 
-        await dispatch(reset());
+        if (hasMnemonicRegistered) {
+          await dispatch(reset());
+        }
         await dispatch(setWalletData(walletData));
-        console.log(state);
 
         // Startup alarms to fetch utxos & set the popup page
         await setUpPopup();

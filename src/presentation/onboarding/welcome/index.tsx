@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { INITIALIZE_SELECT_ACTION_ROUTE } from '../../routes/constants';
 import { useSelector } from 'react-redux';
 import { hasMnemonicSelector } from '../../../application/redux/selectors/wallet.selector';
+import WarningDeleteMnemonic from '../../components/warningDeleteMnemonic';
 
 const Welcome: React.FC = () => {
   const history = useHistory();
@@ -24,20 +25,7 @@ const Welcome: React.FC = () => {
       </div>
 
       <div className="flex flex-col self-center justify-center align-middle">
-        {hasMnemonic && (
-          <div className="bg-red bg-opacity-80 text-md text flex justify-between p-4 text-white align-middle border-0.5 rounded shadow-lg">
-            <div>
-              <img className="w-12" src="/assets/images/warning.svg" />
-            </div>
-            <div className="self-center ml-2">
-              <span>There is a mnemonic registered on this browser. </span>
-              <br />
-              <span>Restoring a new wallet will delete that one. </span>
-              <br />
-              <span>Make sure you have a way to restore it so you don't lose it defenitly.</span>
-            </div>
-          </div>
-        )}
+        {hasMnemonic && <WarningDeleteMnemonic />}
         <div className="self-center">
           <Button className="w-52 justify-center mt-3 text-lg" onClick={handleClick}>
             {hasMnemonic ? 'Restore Wallet' : 'Get Started'}
