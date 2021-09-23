@@ -6,7 +6,7 @@ import {
   CHANGE_NETWORK_SUCCESS,
   START_PERIODIC_UPDATE,
   SET_EXPLORER,
-  RESET
+  RESET,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
@@ -16,11 +16,11 @@ import { ExplorerURLs } from '../../../domain/app';
 
 export const setExplorer = (explorer: ExplorerURLs, network: Network): AnyAction => ({
   type: SET_EXPLORER,
-  payload: { explorer, network }
+  payload: { explorer, network },
 });
 
 export const onboardingCompleted = (): AnyAction => ({
-  type: ONBOARDING_COMPLETETED
+  type: ONBOARDING_COMPLETETED,
 });
 
 export function logIn(password: Password, passwordHash: PasswordHash): AnyAction {

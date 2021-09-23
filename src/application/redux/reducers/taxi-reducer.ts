@@ -1,12 +1,12 @@
 import { AnyAction } from 'redux';
-import { RESET, SET_TAXI_ASSETS } from '../actions/action-types';
+import { RESET_TAXI, SET_TAXI_ASSETS } from '../actions/action-types';
 
 export interface TaxiState {
   taxiAssets: string[];
 }
 
 export const taxiInitState: TaxiState = {
-  taxiAssets: []
+  taxiAssets: [],
 };
 
 export function taxiReducer(
@@ -14,7 +14,7 @@ export function taxiReducer(
   { type, payload }: AnyAction
 ): TaxiState {
   switch (type) {
-    case RESET: {
+    case RESET_TAXI: {
       return taxiInitState;
     }
 

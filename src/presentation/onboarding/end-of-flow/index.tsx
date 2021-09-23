@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { onboardingCompleted } from '../../../application/redux/actions/app';
+import { useDispatch, useSelector } from 'react-redux';
+import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { persistor } from '../../../application/redux/store';
 import { setUpPopup } from '../../../application/utils/popup';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
+import { RootReducerState } from '../../../domain/common';
 import { createMnemonic } from '../../../domain/mnemonic';
 import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
@@ -30,11 +31,12 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   isFromPopupFlow,
   network,
   explorerURL,
-  hasMnemonicRegistered
+  hasMnemonicRegistered,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string>();
+  const state = useSelector((state) => state);
 
   const tryToRestoreWallet = async () => {
     try {
@@ -48,7 +50,9 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
           explorerURL
         );
 
+        await dispatch(reset());
         await dispatch(setWalletData(walletData));
+        console.log(state);
 
         // Startup alarms to fetch utxos & set the popup page
         await setUpPopup();

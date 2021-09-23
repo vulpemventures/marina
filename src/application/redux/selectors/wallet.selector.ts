@@ -9,8 +9,8 @@ export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
     type: IdentityType.MasterPublicKey,
     opts: {
       masterPublicKey: masterXPub,
-      masterBlindingKey: masterBlindingKey
-    }
+      masterBlindingKey: masterBlindingKey,
+    },
   });
 
   return pubKeyWallet;

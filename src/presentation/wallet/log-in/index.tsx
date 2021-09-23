@@ -10,7 +10,7 @@ import { logIn, startPeriodicUpdate } from '../../../application/redux/actions/a
 import { setIdleAction } from '../../../application/utils';
 import {
   AUTHENTICATION_SUCCESS,
-  LOGOUT_SUCCESS
+  LOGOUT_SUCCESS,
 } from '../../../application/redux/actions/action-types';
 import { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
@@ -58,13 +58,13 @@ const LogInForm = (props: FormikProps<LogInFormValues>) => {
 
 const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   mapPropsToValues: (): LogInFormValues => ({
-    password: ''
+    password: '',
   }),
 
   validationSchema: Yup.object().shape({
     password: Yup.string()
       .required('Please input password')
-      .min(8, 'Password should be 8 characters minimum.')
+      .min(8, 'Password should be 8 characters minimum.'),
   }),
 
   handleSubmit: (values, { props, setErrors, setSubmitting }) => {
@@ -87,7 +87,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       })
       .catch(console.error);
   },
-  displayName: 'LogInForm'
+  displayName: 'LogInForm',
 })(LogInForm);
 
 const LogIn: React.FC = () => {

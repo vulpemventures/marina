@@ -24,7 +24,7 @@ export const transactionInitState: TransactionState = {
   feeChangeAddress: undefined,
   sendAmount: 0,
   feeAmount: 0,
-  feeAsset: ''
+  feeAsset: '',
 };
 
 export function transactionReducer(
@@ -32,15 +32,11 @@ export function transactionReducer(
   { type, payload }: AnyAction
 ): TransactionState {
   switch (type) {
-    case ACTION_TYPES.RESET: {
-      return transactionInitState;
-    }
-
     case ACTION_TYPES.PENDING_TX_SET_ASSET: {
       return {
         ...state,
         step: 'address-amount',
-        sendAsset: payload.asset
+        sendAsset: payload.asset,
       };
     }
     case ACTION_TYPES.PENDING_TX_SET_ADDRESSES_AND_AMOUNT: {
@@ -49,14 +45,14 @@ export function transactionReducer(
         step: 'choose-fee',
         sendAddress: payload.receipientAddress,
         changeAddress: payload.changeAddress,
-        sendAmount: payload.amountInSatoshi
+        sendAmount: payload.amountInSatoshi,
       };
     }
 
     case ACTION_TYPES.PENDING_TX_SET_FEE_CHANGE_ADDRESS: {
       return {
         ...state,
-        feeChangeAddress: payload.feeChangeAddress
+        feeChangeAddress: payload.feeChangeAddress,
       };
     }
 
@@ -64,7 +60,7 @@ export function transactionReducer(
       return {
         ...state,
         feeAmount: payload.feeAmountInSatoshi,
-        feeAsset: payload.feeAsset
+        feeAsset: payload.feeAsset,
       };
     }
 
@@ -76,7 +72,7 @@ export function transactionReducer(
       return {
         ...state,
         step: 'confirmation',
-        pset: payload.pset
+        pset: payload.pset,
       };
     }
 

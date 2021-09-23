@@ -9,7 +9,7 @@ export function txsHistoryReducer(
   { type, payload }: AnyAction
 ): TxsHistoryByNetwork {
   switch (type) {
-    case ACTION_TYPES.RESET: {
+    case ACTION_TYPES.RESET_TXS: {
       return txsHistoryInitState;
     }
 

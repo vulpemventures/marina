@@ -65,6 +65,13 @@ import { getExplorerURLSelector } from './redux/selectors/app.selector';
 import { walletTransactions } from './redux/selectors/transaction.selector';
 import { balancesSelector } from './redux/selectors/balance.selector';
 import { Balance } from 'marina-provider';
+import {
+  RESET_APP,
+  RESET_CONNECT,
+  RESET_TAXI,
+  RESET_TXS,
+  RESET_WALLET,
+} from './redux/actions/action-types';
 
 const POPUP_HTML = 'popup.html';
 const UPDATE_ALARM = 'UPDATE_ALARM';
@@ -750,5 +757,16 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
     } finally {
       dispatch(setDeepRestorerIsLoading(false));
     }
+  };
+}
+
+export function resetAll(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return async (dispatch) => {
+    dispatch({ type: RESET_TAXI });
+    dispatch({ type: RESET_TXS });
+    dispatch({ type: RESET_APP });
+    dispatch({ type: RESET_WALLET });
+    dispatch({ type: RESET_CONNECT });
+    dispatch(flushTx());
   };
 }

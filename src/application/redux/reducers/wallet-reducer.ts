@@ -8,7 +8,7 @@ import { UtxoInterface } from 'ldk';
 export const walletInitState: IWallet = {
   restorerOpts: {
     lastUsedExternalIndex: 0,
-    lastUsedInternalIndex: 0
+    lastUsedInternalIndex: 0,
   },
   encryptedMnemonic: '',
   masterXPub: '',
@@ -17,9 +17,9 @@ export const walletInitState: IWallet = {
   utxoMap: {},
   deepRestorer: {
     gapLimit: 20,
-    isLoading: false
+    isLoading: false,
   },
-  isVerified: false
+  isVerified: false,
 };
 
 export function walletReducer(
@@ -27,7 +27,7 @@ export function walletReducer(
   { type, payload }: AnyAction
 ): IWallet {
   switch (type) {
-    case ACTION_TYPES.RESET: {
+    case ACTION_TYPES.RESET_WALLET: {
       return walletInitState;
     }
 
@@ -38,7 +38,7 @@ export function walletReducer(
         masterBlindingKey: payload.masterBlindingKey,
         encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
-        restorerOpts: payload.restorerOpts
+        restorerOpts: payload.restorerOpts,
       };
     }
 
@@ -47,8 +47,8 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedInternalIndex: (state.restorerOpts.lastUsedInternalIndex ?? -1) + 1
-        }
+          lastUsedInternalIndex: (state.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
+        },
       };
     }
 
@@ -57,8 +57,8 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedExternalIndex: (state.restorerOpts.lastUsedExternalIndex ?? -1) + 1
-        }
+          lastUsedExternalIndex: (state.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
+        },
       };
     }
 
@@ -67,8 +67,8 @@ export function walletReducer(
         ...state,
         utxoMap: {
           ...state.utxoMap,
-          [toStringOutpoint(payload.utxo as UtxoInterface)]: payload.utxo
-        }
+          [toStringOutpoint(payload.utxo as UtxoInterface)]: payload.utxo,
+        },
       };
     }
 
@@ -79,42 +79,42 @@ export function walletReducer(
       } = state.utxoMap;
       return {
         ...state,
-        utxoMap
+        utxoMap,
       };
     }
 
     case ACTION_TYPES.SET_DEEP_RESTORER_GAP_LIMIT: {
       return {
         ...state,
-        deepRestorer: { ...state.deepRestorer, gapLimit: payload.gapLimit }
+        deepRestorer: { ...state.deepRestorer, gapLimit: payload.gapLimit },
       };
     }
 
     case ACTION_TYPES.SET_DEEP_RESTORER_IS_LOADING: {
       return {
         ...state,
-        deepRestorer: { ...state.deepRestorer, isLoading: payload.isLoading }
+        deepRestorer: { ...state.deepRestorer, isLoading: payload.isLoading },
       };
     }
 
     case ACTION_TYPES.SET_DEEP_RESTORER_ERROR: {
       return {
         ...state,
-        deepRestorer: { ...state.deepRestorer, error: payload.error }
+        deepRestorer: { ...state.deepRestorer, error: payload.error },
       };
     }
 
     case ACTION_TYPES.FLUSH_UTXOS: {
       return {
         ...state,
-        utxoMap: {}
+        utxoMap: {},
       };
     }
 
     case ACTION_TYPES.SET_VERIFIED: {
       return {
         ...state,
-        isVerified: true
+        isVerified: true,
       };
     }
 
