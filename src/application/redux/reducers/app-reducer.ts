@@ -10,50 +10,54 @@ export const appInitState: IApp = {
   network: createNetwork(process.env.NETWORK || 'liquid'),
   explorerByNetwork: {
     regtest: NigiriDefaultExplorerURLs,
-    liquid: BlockstreamExplorerURLs,
-  },
+    liquid: BlockstreamExplorerURLs
+  }
 };
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
   switch (type) {
+    case ACTION_TYPES.RESET: {
+      return appInitState;
+    }
+
     case ACTION_TYPES.AUTHENTICATION_SUCCESS: {
       return {
         ...state,
-        isAuthenticated: true,
+        isAuthenticated: true
       };
     }
     case ACTION_TYPES.AUTHENTICATION_FAILURE: {
       return {
         ...state,
-        errors: { auth: { message: payload.error.message } as IError },
+        errors: { auth: { message: payload.error.message } as IError }
       };
     }
 
     case ACTION_TYPES.ONBOARDING_COMPLETETED: {
       return {
         ...state,
-        isOnboardingCompleted: true,
+        isOnboardingCompleted: true
       };
     }
 
     case ACTION_TYPES.LOGOUT_SUCCESS: {
       return {
         ...state,
-        isAuthenticated: false,
+        isAuthenticated: false
       };
     }
 
     case ACTION_TYPES.CHANGE_NETWORK_SUCCESS: {
       return {
         ...state,
-        network: payload.network,
+        network: payload.network
       };
     }
 
     case ACTION_TYPES.SET_EXPLORER: {
       return {
         ...state,
-        explorerByNetwork: { ...state.explorerByNetwork, [payload.network]: payload.explorer },
+        explorerByNetwork: { ...state.explorerByNetwork, [payload.network]: payload.explorer }
       };
     }
 

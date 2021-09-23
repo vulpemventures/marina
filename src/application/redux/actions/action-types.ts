@@ -58,3 +58,6 @@ export const START_PERIODIC_UPDATE = 'START_PERIODIC_UPDATE';
 
 // Restoration
 export const START_DEEP_RESTORATION = 'START_DEEP_RESTORATION';
+
+// Common
+export const RESET = 'RESET';

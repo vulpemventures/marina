@@ -4,6 +4,7 @@ import { onboardingCompleted } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { persistor } from '../../../application/redux/store';
 import { setUpPopup } from '../../../application/utils/popup';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
 import { createMnemonic } from '../../../domain/mnemonic';
@@ -20,6 +21,7 @@ export interface EndOfFlowProps {
   isFromPopupFlow: boolean;
   network: Network;
   explorerURL: string;
+  hasMnemonicRegistered: boolean;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
@@ -28,6 +30,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   isFromPopupFlow,
   network,
   explorerURL,
+  hasMnemonicRegistered
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
