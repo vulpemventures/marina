@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Broker from '../../application/broker';
+import PopupBroker from '../connect/popupBroker';
 
 interface Props {
   children: React.ReactNode;
@@ -8,8 +8,7 @@ interface Props {
 }
 
 const ShellConnectPopup: React.FC<Props> = ({ children, className = '', currentPage }: Props) => {
-  const broker = new Broker();
-  broker.start();
+  PopupBroker.Start();
 
   // Prevent resize
   useEffect(() => {

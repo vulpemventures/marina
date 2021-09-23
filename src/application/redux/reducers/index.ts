@@ -5,7 +5,7 @@ import { txsHistoryReducer, txsHistoryInitState } from './txs-history-reducer';
 import { AnyAction, combineReducers, Reducer } from 'redux';
 import { Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 import persistReducer, { PersistPartial } from 'redux-persist/es/persistReducer';
 import { IApp } from '../../../domain/app';
 import { TxsHistoryByNetwork } from '../../../domain/transaction';

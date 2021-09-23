@@ -1,6 +1,6 @@
 import React from 'react';
 import cx from 'classnames';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 import { useSelector } from 'react-redux';
 import { RootReducerState } from '../../domain/common';
 

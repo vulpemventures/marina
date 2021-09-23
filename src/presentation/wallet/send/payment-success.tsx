@@ -3,7 +3,7 @@ import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import Button from '../../components/button';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx, updateTxs } from '../../../application/redux/actions/transaction';

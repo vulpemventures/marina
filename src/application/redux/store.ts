@@ -14,7 +14,7 @@ import {
   fetchAndUpdateUtxos,
   startAlarmUpdater,
   deepRestorer,
-} from '../backend';
+} from '../../background/backend';
 import persistStore from 'redux-persist/es/persistStore';
 import { parse, stringify } from '../utils/browser-storage-converters';
 import thunk from 'redux-thunk';

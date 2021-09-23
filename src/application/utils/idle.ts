@@ -1,4 +1,4 @@
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 export const IDLE_MESSAGE_TYPE = 'runtime_msg_idle';
 

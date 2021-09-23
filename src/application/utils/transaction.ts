@@ -70,8 +70,8 @@ export async function blindAndSignPset(
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
-  const receipientScript = addrLDK.toOutputScript(addressToFind);
-  return utx.outs.findIndex((out) => out.script.equals(receipientScript));
+  const recipientScript = addrLDK.toOutputScript(addressToFind);
+  return utx.outs.findIndex((out) => out.script.equals(recipientScript));
 }
 
 /**
