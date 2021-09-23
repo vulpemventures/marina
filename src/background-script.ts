@@ -6,6 +6,7 @@ import { enableWebsite } from './application/redux/actions/connect';
 import { setWalletData } from './application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from './application/redux/store';
 import { IDLE_MESSAGE_TYPE } from './application/utils';
+import { tabIsOpen } from './application/utils/common';
 import { setUpPopup } from './application/utils/popup';
 import { INITIALIZE_WELCOME_ROUTE } from './presentation/routes/constants';
 // MUST be > 15 seconds
@@ -60,10 +61,7 @@ browser.browserAction.onClicked.addListener(() => {
   (async () => {
     // here we prevent to open many onboarding pages fullscreen
     // in case we have one active already in the current tab
-    const tabs = await browser.tabs.query({ currentWindow: true });
-    for (const { id } of tabs) {
-      if (id && id === welcomeTabID) return;
-    }
+    if (welcomeTabID && (await tabIsOpen(welcomeTabID))) return;
 
     // in case the onboarding page is closed before finishing
     // the wallet creation process, we let user re-open it

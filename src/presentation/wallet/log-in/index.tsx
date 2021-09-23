@@ -34,11 +34,11 @@ const LogInForm = (props: FormikProps<LogInFormValues>) => {
 
   const openOnboardingTab = async () => {
     const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
-    const { id } = await browser.tabs.create({ url });
+    await browser.tabs.create({ url });
   };
 
   return (
-    <>
+    <div className="flex flex-col">
       <form onSubmit={handleSubmit} className="mt-10">
         <Input
           name="password"
@@ -51,8 +51,12 @@ const LogInForm = (props: FormikProps<LogInFormValues>) => {
           Log in
         </Button>
       </form>
-      <a onClick={openOnboardingTab}>Restore account</a>
-    </>
+      <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
+        <span className="cursor-pointer" onClick={openOnboardingTab}>
+          Restore account
+        </span>
+      </div>
+    </div>
   );
 };
 
@@ -60,13 +64,11 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
   mapPropsToValues: (): LogInFormValues => ({
     password: '',
   }),
-
   validationSchema: Yup.object().shape({
     password: Yup.string()
       .required('Please input password')
       .min(8, 'Password should be 8 characters minimum.'),
   }),
-
   handleSubmit: (values, { props, setErrors, setSubmitting }) => {
     const logInAction = logIn(createPassword(values.password), props.passwordHash);
     props

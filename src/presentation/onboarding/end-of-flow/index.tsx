@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { persistor } from '../../../application/redux/store';
 import { setUpPopup } from '../../../application/utils/popup';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
-import { RootReducerState } from '../../../domain/common';
 import { createMnemonic } from '../../../domain/mnemonic';
 import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
 import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
-import WarningDeleteMnemonic from '../../components/warningDeleteMnemonic';
 import { extractErrorMessage } from '../../utils/error';
 
 export interface EndOfFlowProps {
@@ -37,7 +34,6 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string>();
-  const state = useSelector((state) => state);
 
   const tryToRestoreWallet = async () => {
     try {

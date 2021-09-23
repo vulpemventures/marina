@@ -761,7 +761,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
 }
 
 export function resetAll(): ThunkAction<void, RootReducerState, any, AnyAction> {
-  return async (dispatch) => {
+  return (dispatch) => {
     dispatch({ type: RESET_TAXI });
     dispatch({ type: RESET_TXS });
     dispatch({ type: RESET_APP });
