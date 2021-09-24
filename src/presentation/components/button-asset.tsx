@@ -12,7 +12,7 @@ interface Props {
     assetHash,
     assetName,
     assetTicker,
-    assetPrecision
+    assetPrecision,
   }: {
     [key: string]: string | number;
   }) => void;
@@ -29,7 +29,7 @@ const ButtonAsset: React.FC<Props> = ({
   disabled = false,
   quantity,
   handleClick,
-  type = 'button'
+  type = 'button',
 }: Props) => {
   return (
     <button

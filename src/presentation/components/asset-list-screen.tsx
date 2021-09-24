@@ -15,9 +15,16 @@ export interface AssetListProps {
   assets: Array<Asset & { assetHash: string }>; // the assets to display
   onClick: (assetHash: string) => Promise<void>;
   balances?: BalancesByAsset;
+  title: string;
 }
 
-const AssetListScreen: React.FC<AssetListProps> = ({ onClick, network, assets, balances }) => {
+const AssetListScreen: React.FC<AssetListProps> = ({
+  title,
+  onClick,
+  network,
+  assets,
+  balances,
+}) => {
   const history = useHistory();
 
   // Filter assets
@@ -51,6 +58,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({ onClick, network, assets, b
       backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-wave-bottom-sm.png"
       className="h-popupContent bg-primary container mx-auto text-center bg-bottom bg-no-repeat"
+      currentPage="select asset"
     >
       <InputIcon
         className="my-4"
@@ -61,7 +69,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({ onClick, network, assets, b
       />
 
       <div className="h-96 pb-1">
-        <ButtonList title="Assets" emptyText="no assets to display...">
+        <ButtonList title={title} emptyText="no assets to display...">
           {searchResults.map((asset, index) => (
             <ButtonAsset
               assetImgPath={

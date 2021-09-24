@@ -30,6 +30,7 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, balanceAssets, b
 
   return (
     <AssetListScreen
+      title="Send Asset"
       onClick={handleSend}
       network={network}
       assets={balanceAssets}

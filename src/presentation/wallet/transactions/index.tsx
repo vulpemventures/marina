@@ -40,7 +40,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
   network,
-  webExplorerURL
+  webExplorerURL,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
