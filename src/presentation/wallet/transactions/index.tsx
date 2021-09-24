@@ -40,7 +40,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
   network,
-  webExplorerURL,
+  webExplorerURL
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
@@ -98,7 +98,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
-      <ButtonList title="Transactions" type="transactions">
+      <ButtonList title="Transactions" emptyText="Your transactions will appear here">
         {transactions
           .filter(txHasAsset(state.assetHash))
           // Descending order

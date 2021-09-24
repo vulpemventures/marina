@@ -7,7 +7,7 @@ import {
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
-  TRANSACTIONS_ROUTE,
+  TRANSACTIONS_ROUTE
 } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
@@ -38,7 +38,7 @@ const HomeView: React.FC<HomeProps> = ({
   transactionStep,
   assetsBalance,
   network,
-  isWalletVerified,
+  isWalletVerified
 }) => {
   const history = useHistory();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -51,8 +51,8 @@ const HomeView: React.FC<HomeProps> = ({
         assetsBalance,
         assetHash,
         assetTicker,
-        assetPrecision,
-      },
+        assetPrecision
+      }
     });
   };
 
@@ -107,7 +107,7 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div>
           <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
-          <ButtonList title="Assets" type="assets">
+          <ButtonList title="Assets" emptyText="You don't own any asset...">
             {Object.entries(assetsBalance)
               .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
               .map(([asset, balance]) => {

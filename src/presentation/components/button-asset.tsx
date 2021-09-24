@@ -12,12 +12,12 @@ interface Props {
     assetHash,
     assetName,
     assetTicker,
-    assetPrecision,
+    assetPrecision
   }: {
     [key: string]: string | number;
   }) => void;
   type?: 'submit' | 'button' | 'reset';
-  quantity: number;
+  quantity?: number;
 }
 
 const ButtonAsset: React.FC<Props> = ({
@@ -29,7 +29,7 @@ const ButtonAsset: React.FC<Props> = ({
   disabled = false,
   quantity,
   handleClick,
-  type = 'button',
+  type = 'button'
 }: Props) => {
   return (
     <button
@@ -46,9 +46,11 @@ const ButtonAsset: React.FC<Props> = ({
         </div>
       </div>
       <div className="flex flex-row">
-        <div className="text-small font-medium">
-          {formatDecimalAmount(fromSatoshi(quantity, assetPrecision))}
-        </div>
+        {quantity && (
+          <div className="text-small font-medium">
+            {formatDecimalAmount(fromSatoshi(quantity, assetPrecision))}
+          </div>
+        )}
         <img className="ml-1.5" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
     </button>
