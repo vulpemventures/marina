@@ -27,6 +27,10 @@ export function walletReducer(
   { type, payload }: AnyAction
 ): IWallet {
   switch (type) {
+    case ACTION_TYPES.RESET_WALLET: {
+      return walletInitState;
+    }
+
     case ACTION_TYPES.WALLET_SET_DATA: {
       return {
         ...state,

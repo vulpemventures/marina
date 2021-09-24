@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 /**
  * Wait at least helper
  * @param time
@@ -12,4 +14,12 @@ export async function waitAtLeast(time: number, promise: Promise<any>) {
   const promiseCombined = Promise.all([promise, promiseTimeout]);
   const values = await promiseCombined;
   return values[0];
+}
+
+export async function tabIsOpen(tabID: number): Promise<boolean> {
+  const tabs = await browser.tabs.query({ currentWindow: true });
+  for (const { id } of tabs) {
+    if (id && id === tabID) return true;
+  }
+  return false;
 }

@@ -4,6 +4,7 @@ import EndOfFlowOnboardingView, {
   EndOfFlowProps,
 } from '../../../presentation/onboarding/end-of-flow';
 import { getExplorerURLSelector } from '../selectors/app.selector';
+import { hasMnemonicSelector } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
   return {
@@ -12,6 +13,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
     isFromPopupFlow: state.onboarding.isFromPopupFlow,
     network: state.app.network,
     explorerURL: getExplorerURLSelector(state),
+    hasMnemonicRegistered: hasMnemonicSelector(state),
   };
 };
 

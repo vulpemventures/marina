@@ -10,6 +10,10 @@ export function connectDataReducer(
   { type, payload }: AnyAction
 ): ConnectData {
   switch (type) {
+    case ACTION_TYPES.RESET_CONNECT: {
+      return connectDataInitState;
+    }
+
     case ACTION_TYPES.ENABLE_WEBSITE: {
       return {
         ...state,

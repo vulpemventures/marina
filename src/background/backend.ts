@@ -40,6 +40,14 @@ import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
 import { addTx, updateTxs } from '../application/redux/actions/transaction';
 import { getExplorerURLSelector } from '../application/redux/selectors/app.selector';
+import {
+  RESET_APP,
+  RESET_CONNECT,
+  RESET_TAXI,
+  RESET_TXS,
+  RESET_WALLET,
+} from '../application/redux/actions/action-types';
+import { flushTx } from '../application/redux/actions/connect';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
@@ -215,6 +223,7 @@ export function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any
   };
 }
 
+// Start the periodic updater (for utxos and txs fetching)
 export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return (dispatch) => {
     dispatch(updateUtxos());
@@ -239,6 +248,7 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
   };
 }
 
+// Using to generate addresses and use the explorer to test them
 export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     const state = getState();
@@ -282,4 +292,16 @@ function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {
   const xPubKey = masterPubKeySelector(state);
   const opts = restorerOptsSelector(state);
   return masterPubKeyRestorerFromState(xPubKey)(opts);
+}
+
+// reset all the reducers except the `assets` reducer (shared data).
+export function resetAll(): ThunkAction<void, RootReducerState, any, AnyAction> {
+  return (dispatch) => {
+    dispatch({ type: RESET_TAXI });
+    dispatch({ type: RESET_TXS });
+    dispatch({ type: RESET_APP });
+    dispatch({ type: RESET_WALLET });
+    dispatch({ type: RESET_CONNECT });
+    dispatch(flushTx());
+  };
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { onboardingCompleted } from '../../../application/redux/actions/app';
+import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import { setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -20,6 +20,7 @@ export interface EndOfFlowProps {
   isFromPopupFlow: boolean;
   network: Network;
   explorerURL: string;
+  hasMnemonicRegistered: boolean;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
@@ -28,6 +29,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   isFromPopupFlow,
   network,
   explorerURL,
+  hasMnemonicRegistered,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +47,9 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
           explorerURL
         );
 
+        if (hasMnemonicRegistered) {
+          await dispatch(reset());
+        }
         await dispatch(setWalletData(walletData));
 
         // Startup alarms to fetch utxos & set the popup page

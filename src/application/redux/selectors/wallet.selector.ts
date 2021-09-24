@@ -23,3 +23,7 @@ export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts
 export function utxosSelector(state: RootReducerState): UtxoInterface[] {
   return Object.values(state.wallet.utxoMap);
 }
+
+export function hasMnemonicSelector(state: RootReducerState): boolean {
+  return state.wallet.encryptedMnemonic !== '' && state.wallet.encryptedMnemonic !== undefined;
+}

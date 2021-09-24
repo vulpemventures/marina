@@ -9,6 +9,10 @@ export function txsHistoryReducer(
   { type, payload }: AnyAction
 ): TxsHistoryByNetwork {
   switch (type) {
+    case ACTION_TYPES.RESET_TXS: {
+      return txsHistoryInitState;
+    }
+
     case ACTION_TYPES.ADD_TX: {
       let newLiquidTxsHistory = state.liquid;
       let newRegtestTxsHistory = state.regtest;
