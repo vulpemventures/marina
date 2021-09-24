@@ -9,13 +9,17 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Asset } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
 
-export interface SelectAssetProps {
+export interface SendSelectAssetProps {
   network: Network;
   balances: BalancesByAsset;
   balanceAssets: Array<Asset & { assetHash: string }>;
 }
 
-const SelectAssetView: React.FC<SelectAssetProps> = ({ network, balanceAssets, balances }) => {
+const SendSelectAssetView: React.FC<SendSelectAssetProps> = ({
+  network,
+  balanceAssets,
+  balances,
+}) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -35,4 +39,4 @@ const SelectAssetView: React.FC<SelectAssetProps> = ({ network, balanceAssets, b
   );
 };
 
-export default SelectAssetView;
+export default SendSelectAssetView;

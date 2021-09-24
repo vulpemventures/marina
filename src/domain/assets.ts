@@ -1,10 +1,12 @@
 import { defaultPrecision } from './../application/utils/constants';
+import { Network } from './network';
 export type IAssets = Record<string, Asset>;
 
 export type Asset = {
   name: string;
   precision: number;
   ticker: string;
+  isRegtestAsset?: boolean;
 };
 
 export type AssetGetter = (assetHash: string) => Asset & { assetHash: string };

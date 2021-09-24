@@ -1,19 +1,20 @@
 import { connect } from 'react-redux';
 import { assetGetterFromIAssets } from '../../../domain/assets';
 import { RootReducerState } from '../../../domain/common';
-import SelectAssetView, { SelectAssetProps } from '../../../presentation/wallet/send/select-asset';
+import ReceiveSelectAssetView, {
+  ReceiveSelectAssetProps,
+} from '../../../presentation/wallet/receive/receive-select-asset';
 import { balancesSelector } from '../selectors/balance.selector';
 
-const mapStateToProps = (state: RootReducerState): SelectAssetProps => {
+const mapStateToProps = (state: RootReducerState): ReceiveSelectAssetProps => {
   const balances = balancesSelector(state);
   const getAsset = assetGetterFromIAssets(state.assets);
   return {
     network: state.app.network,
-    balanceAssets: Object.keys(balances).map(getAsset),
-    balances,
+    assets: Object.keys(balances).map(getAsset),
   };
 };
 
-const Home = connect(mapStateToProps)(SelectAssetView);
+const ReceiveSelectAsset = connect(mapStateToProps)(ReceiveSelectAssetView);
 
-export default Home;
+export default ReceiveSelectAsset;

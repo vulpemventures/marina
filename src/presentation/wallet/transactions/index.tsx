@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
-import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
+import {
+  DEFAULT_ROUTE,
+  RECEIVE_ADDRESS_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+} from '../../routes/constants';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ButtonList from '../../components/button-list';
@@ -57,7 +61,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
+  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ADDRESS_ROUTE);
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));

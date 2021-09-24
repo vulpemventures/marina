@@ -21,8 +21,9 @@ const BACKUP_UNLOCK_ROUTE = '/backup-unlock';
 const LOGIN_ROUTE = '/login';
 const DEFAULT_ROUTE = '/';
 const TRANSACTIONS_ROUTE = '/transactions';
-const RECEIVE_ROUTE = '/receive';
-const SELECT_ASSET_ROUTE = '/select-asset';
+const RECEIVE_SELECT_ASSET_ROUTE = '/receive/select-asset';
+const RECEIVE_ADDRESS_ROUTE = '/receive/address';
+const SEND_SELECT_ASSET_ROUTE = '/send/select-asset';
 const SEND_ADDRESS_AMOUNT_ROUTE = '/send';
 const SEND_CHOOSE_FEE_ROUTE = '/send/choose-fee';
 const SEND_CONFIRMATION_ROUTE = '/send/confirmation';
@@ -64,8 +65,9 @@ export {
   LOGIN_ROUTE,
   DEFAULT_ROUTE,
   TRANSACTIONS_ROUTE,
-  RECEIVE_ROUTE,
-  SELECT_ASSET_ROUTE,
+  RECEIVE_SELECT_ASSET_ROUTE,
+  RECEIVE_ADDRESS_ROUTE,
+  SEND_SELECT_ASSET_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,

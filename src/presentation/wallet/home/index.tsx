@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import {
   BACKUP_UNLOCK_ROUTE,
-  RECEIVE_ROUTE,
-  SELECT_ASSET_ROUTE,
+  RECEIVE_SELECT_ASSET_ROUTE,
+  SEND_SELECT_ASSET_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
@@ -66,11 +66,11 @@ const HomeView: React.FC<HomeProps> = ({
     if (!isWalletVerified) {
       showSaveMnemonicModal(true);
     } else {
-      history.push(RECEIVE_ROUTE);
+      history.push(RECEIVE_SELECT_ASSET_ROUTE);
     }
   };
 
-  const handleSend = () => history.push(SELECT_ASSET_ROUTE);
+  const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
   useEffect(() => {
     switch (transactionStep) {

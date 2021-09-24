@@ -16,8 +16,8 @@ import {
   DEFAULT_ROUTE,
   LOGIN_ROUTE,
   TRANSACTIONS_ROUTE,
-  RECEIVE_ROUTE,
-  SELECT_ASSET_ROUTE,
+  RECEIVE_SELECT_ASSET_ROUTE,
+  SEND_SELECT_ASSET_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
@@ -36,6 +36,7 @@ import {
   SEND_PAYMENT_ERROR_ROUTE,
   BACKUP_UNLOCK_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
+  RECEIVE_ADDRESS_ROUTE,
 } from './constants';
 
 // Connect
@@ -57,8 +58,9 @@ import BackUpUnlock from '../onboarding/backup-unlock';
 import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
 import Transactions from '../../application/redux/containers/transactions.container';
-import Receive from '../../application/redux/containers/receive.container';
-import SelectAsset from '../../application/redux/containers/select-asset.container';
+import ReceiveAddress from '../../application/redux/containers/receive.container';
+import ReceiveSelectAsset from '../../application/redux/containers/receive-select-asset.container';
+import SendSelectAsset from '../../application/redux/containers/send-select-asset.container';
 import AddressAmount from '../../application/redux/containers/address-amount.container';
 import ChooseFee from '../../application/redux/containers/choose-fee.container';
 import Confirmation from '../../application/redux/containers/confirmation.container';
@@ -93,8 +95,9 @@ const Routes: React.FC = () => {
       {/*Wallet*/}
       <ProtectedRoute exact path={DEFAULT_ROUTE} comp={Home} />
       <ProtectedRoute exact path={TRANSACTIONS_ROUTE} comp={Transactions} />
-      <ProtectedRoute exact path={RECEIVE_ROUTE} comp={Receive} />
-      <ProtectedRoute exact path={SELECT_ASSET_ROUTE} comp={SelectAsset} />
+      <ProtectedRoute exact path={RECEIVE_SELECT_ASSET_ROUTE} comp={ReceiveSelectAsset} />
+      <ProtectedRoute exact path={RECEIVE_ADDRESS_ROUTE} comp={ReceiveAddress} />
+      <ProtectedRoute exact path={SEND_SELECT_ASSET_ROUTE} comp={SendSelectAsset} />
       <ProtectedRoute exact path={SEND_ADDRESS_AMOUNT_ROUTE} comp={AddressAmount} />
       <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} comp={ChooseFee} />
       <ProtectedRoute exact path={SEND_CONFIRMATION_ROUTE} comp={Confirmation} />
