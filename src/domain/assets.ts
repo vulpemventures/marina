@@ -1,5 +1,4 @@
 import { defaultPrecision } from './../application/utils/constants';
-import { Network } from './network';
 export type IAssets = Record<string, Asset>;
 
 export type Asset = {
