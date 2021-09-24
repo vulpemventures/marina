@@ -4,11 +4,11 @@ const WarningDeleteMnemonic: React.FC = () => (
       <img alt="warning" className="w-12" src="/assets/images/warning.svg" />
     </div>
     <div className="self-center ml-2">
-      <span>There is a mnemonic registered on this browser. </span>
+      <span>There is already a mnemonic on this browser. </span>
       <br />
       <span>Restoring a new wallet will delete that one. </span>
       <br />
-      <span>Make sure you have a way to restore it so you don't lose it defenitly.</span>
+      <span>Make sure you have a safe backup of the mnemonic words before creating a new wallet</span>
     </div>
   </div>
 );

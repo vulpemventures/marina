@@ -28,7 +28,7 @@ const Welcome: React.FC = () => {
         {hasMnemonic && <WarningDeleteMnemonic />}
         <div className="self-center">
           <Button className="w-52 justify-center mt-3 text-lg" onClick={handleClick}>
-            {hasMnemonic ? 'Restore Wallet' : 'Get Started'}
+            {hasMnemonic ? 'I understand, go ahead!' : 'Get Started'}
           </Button>
         </div>
       </div>
