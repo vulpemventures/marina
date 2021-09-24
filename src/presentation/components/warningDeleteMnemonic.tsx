@@ -8,7 +8,9 @@ const WarningDeleteMnemonic: React.FC = () => (
       <br />
       <span>Restoring a new wallet will delete that one. </span>
       <br />
-      <span>Make sure you have a safe backup of the mnemonic words before creating a new wallet</span>
+      <span>
+        Make sure you have a safe backup of the mnemonic words before creating a new wallet
+      </span>
     </div>
   </div>
 );
