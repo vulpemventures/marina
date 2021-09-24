@@ -1,10 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router';
-import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
-import ButtonAsset from '../../components/button-asset';
-import InputIcon from '../../components/input-icon';
-import ShellPopUp from '../../components/shell-popup';
-import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
