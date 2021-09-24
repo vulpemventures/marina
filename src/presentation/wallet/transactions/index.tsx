@@ -98,31 +98,33 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
-      <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-        {transactions
-          .filter(txHasAsset(state.assetHash))
-          // Descending order
-          .sort((a, b) => {
-            if (!a.blockTimeMs || !b.blockTimeMs) return 0;
-            const momentB = moment(b.blockTimeMs);
-            const momentA = moment(a.blockTimeMs);
-            return momentB.diff(momentA);
-          })
-          .map((tx, index) => {
-            return (
-              <ButtonTransaction
-                assetHash={state.assetHash}
-                assetPrecision={state.assetPrecision}
-                assetTicker={state.assetTicker}
-                key={index}
-                handleClick={() => {
-                  setModalTxDetails(tx);
-                }}
-                tx={tx}
-              />
-            );
-          })}
-      </ButtonList>
+      <div className="h-60 rounded-xl mb-1">
+        <ButtonList title="Transactions" emptyText="Your transactions will appear here">
+          {transactions
+            .filter(txHasAsset(state.assetHash))
+            // Descending order
+            .sort((a, b) => {
+              if (!a.blockTimeMs || !b.blockTimeMs) return 0;
+              const momentB = moment(b.blockTimeMs);
+              const momentA = moment(a.blockTimeMs);
+              return momentB.diff(momentA);
+            })
+            .map((tx, index) => {
+              return (
+                <ButtonTransaction
+                  assetHash={state.assetHash}
+                  assetPrecision={state.assetPrecision}
+                  assetTicker={state.assetTicker}
+                  key={index}
+                  handleClick={() => {
+                    setModalTxDetails(tx);
+                  }}
+                  tx={tx}
+                />
+              );
+            })}
+        </ButtonList>
+      </div>
 
       <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">

@@ -92,7 +92,7 @@ const HomeView: React.FC<HomeProps> = ({
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       hasBackBtn={false}
     >
-      <div className="h-popupContent flex flex-col justify-between">
+      <div className="h-popupContent">
         <div>
           <Balance
             assetHash={lbtcAssetHash}
@@ -105,8 +105,10 @@ const HomeView: React.FC<HomeProps> = ({
           <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
         </div>
 
-        <div>
-          <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
+        <br />
+        <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
+
+        <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
             {Object.entries(assetsBalance)
               .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))

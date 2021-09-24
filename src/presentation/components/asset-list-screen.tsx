@@ -1,15 +1,12 @@
 import React, { useEffect } from 'react';
 import { useHistory } from 'react-router';
-import { DEFAULT_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../routes/constants';
+import { DEFAULT_ROUTE } from '../routes/constants';
 import ButtonAsset from './button-asset';
 import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../application/utils';
-import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../application/redux/selectors/balance.selector';
-import { setAsset } from '../../application/redux/actions/transaction';
 import { Network } from '../../domain/network';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { Asset } from '../../domain/assets';
 import ButtonList from './button-list';
 
@@ -22,8 +19,6 @@ export interface AssetListProps {
 
 const AssetListScreen: React.FC<AssetListProps> = ({ onClick, network, assets, balances }) => {
   const history = useHistory();
-
-  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -56,37 +51,34 @@ const AssetListScreen: React.FC<AssetListProps> = ({ onClick, network, assets, b
       backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-wave-bottom-sm.png"
       className="h-popupContent bg-primary container mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="Select asset"
     >
       <InputIcon
-        className="my-8"
+        className="my-4"
         imgIconPath="assets/images/search.svg"
         imgIconAlt="search"
         onChange={handleChange}
         type="search"
       />
 
-      <div className="h-25.75 overflow-y-scroll">
-        <div className="pb-4 space-y-4">
-          <ButtonList title="Assets" emptyText="no assets to display...">
-            {searchResults.map((asset) => (
-              <ButtonAsset
-                assetImgPath={
-                  network === 'regtest'
-                    ? imgPathMapRegtest[asset.ticker] ?? imgPathMapRegtest['']
-                    : imgPathMapMainnet[asset.assetHash] ?? imgPathMapMainnet['']
-                }
-                assetHash={asset.assetHash}
-                assetName={asset.name}
-                assetTicker={asset.ticker}
-                assetPrecision={asset.precision}
-                quantity={balances ? balances[asset.assetHash] : undefined}
-                key={asset.assetHash}
-                handleClick={({ assetHash }) => onClick(assetHash as string)}
-              />
-            ))}
-          </ButtonList>
-        </div>
+      <div className="h-96 pb-1">
+        <ButtonList title="Assets" emptyText="no assets to display...">
+          {searchResults.map((asset, index) => (
+            <ButtonAsset
+              assetImgPath={
+                network === 'regtest'
+                  ? imgPathMapRegtest[asset.ticker] ?? imgPathMapRegtest['']
+                  : imgPathMapMainnet[asset.assetHash] ?? imgPathMapMainnet['']
+              }
+              assetHash={asset.assetHash}
+              assetName={asset.name}
+              assetTicker={asset.ticker}
+              assetPrecision={asset.precision}
+              quantity={balances ? balances[asset.assetHash] : undefined}
+              key={index}
+              handleClick={({ assetHash }) => onClick(assetHash as string)}
+            />
+          ))}
+        </ButtonList>
       </div>
     </ShellPopUp>
   );
