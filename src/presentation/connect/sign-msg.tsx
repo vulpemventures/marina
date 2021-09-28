@@ -13,13 +13,14 @@ import { Network } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
 import { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
+import { SignedMessage } from 'marina-provider';
 
 function signMsgWithPassword(
   message: string,
   encryptedMnemonic: string,
   password: string,
   network: Network
-): Promise<{ signature: string; address: string }> {
+): Promise<SignedMessage> {
   try {
     const mnemonic = decrypt(encryptedMnemonic, password);
     return signMessageWithMnemonic(message, mnemonic, network);
@@ -30,7 +31,7 @@ function signMsgWithPassword(
 
 export interface SignMessagePopupResponse {
   accepted: boolean;
-  signedMessage?: string;
+  signedMessage?: SignedMessage;
 }
 
 const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
@@ -46,7 +47,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const sendResponseMessage = (accepted: boolean, signedMessage?: string) => {
+  const sendResponseMessage = (accepted: boolean, signedMessage?: SignedMessage) => {
     return popupWindowProxy.sendResponse({ data: { accepted, signedMessage } });
   };
 
@@ -72,7 +73,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
         password,
         networkFromString(network)
       );
-      await sendResponseMessage(true, signedMsg.signature);
+      await sendResponseMessage(true, signedMsg);
       window.close();
     } catch (e: any) {
       console.error(e);
