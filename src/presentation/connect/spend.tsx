@@ -7,7 +7,7 @@ import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   connectWithConnectData,
-  WithConnectDataProps,
+  WithConnectDataProps
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
 import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
@@ -16,15 +16,11 @@ import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { mnemonicWallet } from '../../application/utils/restorer';
-import {
-  withDataOutputs,
-  blindAndSignPset,
-  createSendPset,
-} from '../../application/utils/transaction';
+import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
   restorerOptsSelector,
-  utxosSelector,
+  utxosSelector
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';
@@ -194,17 +190,14 @@ async function makeTransaction(
     return changeAddresses[asset].confidentialAddress;
   };
 
-  let unsignedPset = await createSendPset(
+  const unsignedPset = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
     changeAddressGetter,
-    network
+    network,
+    data
   );
-
-  if (data && data.length > 0) {
-    unsignedPset = withDataOutputs(unsignedPset, data, network);
-  }
 
   const txHex = await blindAndSignPset(
     mnemonic,
