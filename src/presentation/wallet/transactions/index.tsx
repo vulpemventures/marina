@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
-import { DEFAULT_ROUTE, RECEIVE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
+import {
+  DEFAULT_ROUTE,
+  RECEIVE_ADDRESS_ROUTE,
+  SEND_ADDRESS_AMOUNT_ROUTE,
+} from '../../routes/constants';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ButtonList from '../../components/button-list';
@@ -57,7 +61,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ROUTE);
+  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ADDRESS_ROUTE);
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));
@@ -98,31 +102,33 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
       <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
-      <ButtonList title="Transactions" type="transactions">
-        {transactions
-          .filter(txHasAsset(state.assetHash))
-          // Descending order
-          .sort((a, b) => {
-            if (!a.blockTimeMs || !b.blockTimeMs) return 0;
-            const momentB = moment(b.blockTimeMs);
-            const momentA = moment(a.blockTimeMs);
-            return momentB.diff(momentA);
-          })
-          .map((tx, index) => {
-            return (
-              <ButtonTransaction
-                assetHash={state.assetHash}
-                assetPrecision={state.assetPrecision}
-                assetTicker={state.assetTicker}
-                key={index}
-                handleClick={() => {
-                  setModalTxDetails(tx);
-                }}
-                tx={tx}
-              />
-            );
-          })}
-      </ButtonList>
+      <div className="h-60 rounded-xl mb-1">
+        <ButtonList title="Transactions" emptyText="Your transactions will appear here">
+          {transactions
+            .filter(txHasAsset(state.assetHash))
+            // Descending order
+            .sort((a, b) => {
+              if (!a.blockTimeMs || !b.blockTimeMs) return 0;
+              const momentB = moment(b.blockTimeMs);
+              const momentA = moment(a.blockTimeMs);
+              return momentB.diff(momentA);
+            })
+            .map((tx, index) => {
+              return (
+                <ButtonTransaction
+                  assetHash={state.assetHash}
+                  assetPrecision={state.assetPrecision}
+                  assetTicker={state.assetTicker}
+                  key={index}
+                  handleClick={() => {
+                    setModalTxDetails(tx);
+                  }}
+                  tx={tx}
+                />
+              );
+            })}
+        </ButtonList>
+      </div>
 
       <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">

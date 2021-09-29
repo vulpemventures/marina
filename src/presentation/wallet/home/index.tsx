@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import {
   BACKUP_UNLOCK_ROUTE,
-  RECEIVE_ROUTE,
-  SELECT_ASSET_ROUTE,
+  RECEIVE_SELECT_ASSET_ROUTE,
+  SEND_SELECT_ASSET_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
   SEND_CHOOSE_FEE_ROUTE,
   SEND_CONFIRMATION_ROUTE,
@@ -66,11 +66,11 @@ const HomeView: React.FC<HomeProps> = ({
     if (!isWalletVerified) {
       showSaveMnemonicModal(true);
     } else {
-      history.push(RECEIVE_ROUTE);
+      history.push(RECEIVE_SELECT_ASSET_ROUTE);
     }
   };
 
-  const handleSend = () => history.push(SELECT_ASSET_ROUTE);
+  const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
   useEffect(() => {
     switch (transactionStep) {
@@ -92,7 +92,7 @@ const HomeView: React.FC<HomeProps> = ({
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       hasBackBtn={false}
     >
-      <div className="h-popupContent flex flex-col justify-between">
+      <div className="h-popupContent">
         <div>
           <Balance
             assetHash={lbtcAssetHash}
@@ -105,9 +105,11 @@ const HomeView: React.FC<HomeProps> = ({
           <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
         </div>
 
-        <div>
-          <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
-          <ButtonList title="Assets" type="assets">
+        <br />
+        <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
+
+        <div className="h-60">
+          <ButtonList title="Assets" emptyText="You don't own any asset...">
             {Object.entries(assetsBalance)
               .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
               .map(([asset, balance]) => {
