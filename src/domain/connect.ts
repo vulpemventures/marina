@@ -9,6 +9,7 @@ export type ConnectData = {
     feeAssetHash?: string;
     hostname?: string;
     pset?: string;
+    data?: string[];
   };
   msg?: {
     hostname?: string;

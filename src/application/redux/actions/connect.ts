@@ -1,3 +1,4 @@
+import { RecipientInterface } from 'ldk';
 import { AnyAction } from 'redux';
 import { ConnectData } from '../../../domain/connect';
 import { Network } from '../../../domain/network';
@@ -11,8 +12,6 @@ import {
   SET_MSG,
   SET_TX_DATA,
 } from './action-types';
-
-import { RecipientInterface } from 'ldk';
 
 export function enableWebsite(hostname: string, network: Network): AnyAction {
   return {
@@ -58,11 +57,12 @@ export function setTxData(
   hostname: string,
   recipients: RecipientInterface[],
   feeAssetHash: string,
-  network: Network
+  network: Network,
+  data: string[]
 ): AnyAction {
   return {
     type: SET_TX_DATA,
-    payload: { hostname, recipients, feeAssetHash, network } as ConnectData['tx'],
+    payload: { hostname, recipients, feeAssetHash, network, data } as ConnectData['tx'],
   };
 }
 

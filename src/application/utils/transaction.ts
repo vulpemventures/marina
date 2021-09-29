@@ -17,14 +17,15 @@ import {
   UtxoInterface,
   walletFromCoins,
 } from 'ldk';
-import { confidential, networks } from 'liquidjs-lib';
-import { blindingKeyFromAddress, isConfidentialAddress } from './address';
+import { confidential, networks, payments } from 'liquidjs-lib';
+import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { Network } from '../../domain/network';
 import { fetchTopupFromTaxi } from './taxi';
 import { taxiURL } from './constants';
+import { isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
 
 function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
@@ -271,4 +272,42 @@ function getTransfers(
 
     return true;
   });
+}
+
+/**
+ * Used to sort marina-provider Recipient type
+ * @param recipients
+ */
+export function sortRecipients(recipients: Recipient[]): {
+  data: string[];
+  addressRecipients: RecipientInterface[];
+} {
+  const addressRecipients: RecipientInterface[] = [];
+  const data: string[] = [];
+
+  for (const recipient of recipients) {
+    if (isDataRecipient(recipient)) {
+      data.push(recipient.data);
+    } else if (isAddressRecipient(recipient)) {
+      addressRecipients.push(recipient);
+    }
+  }
+
+  return { data, addressRecipients };
+}
+
+// Add OP_RETURN outputs to psetBase64 (unsigned)
+export function withDataOutputs(psetBase64: string, data: string[], network: Network) {
+  const pset = decodePset(psetBase64);
+
+  for (const bytes of data.map((hex) => Buffer.from(hex, 'hex'))) {
+    const opReturnPayment = payments.embed({ data: [bytes] });
+    pset.addOutput({
+      script: opReturnPayment.output!,
+      asset: networkFromString(network).assetHash,
+      value: confidential.satoshiToConfidentialValue(0),
+    });
+  }
+
+  return pset.toBase64();
 }

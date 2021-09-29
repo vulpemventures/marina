@@ -16,7 +16,11 @@ import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { mnemonicWallet } from '../../application/utils/restorer';
-import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
+import {
+  withDataOutputs,
+  blindAndSignPset,
+  createSendPset,
+} from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
   restorerOptsSelector,
@@ -169,7 +173,7 @@ async function makeTransaction(
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
     throw new Error('transaction data are missing');
 
-  const { recipients, feeAssetHash } = connectDataTx;
+  const { recipients, feeAssetHash, data } = connectDataTx;
 
   const assets = Array.from(new Set(recipients.map(({ asset }) => asset).concat(feeAssetHash)));
 
@@ -190,13 +194,17 @@ async function makeTransaction(
     return changeAddresses[asset].confidentialAddress;
   };
 
-  const unsignedPset = await createSendPset(
+  let unsignedPset = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
     changeAddressGetter,
     network
   );
+
+  if (data && data.length > 0) {
+    unsignedPset = withDataOutputs(unsignedPset, data, network);
+  }
 
   const txHex = await blindAndSignPset(
     mnemonic,

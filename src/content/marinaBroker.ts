@@ -28,11 +28,11 @@ import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
 } from '../application/redux/actions/wallet';
-import { lbtcAssetByNetwork } from '../application/utils';
+import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
 import { walletTransactions } from '../application/redux/selectors/transaction.selector';
 import { balancesSelector } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
-import { Balance } from 'marina-provider';
+import { Balance, isDataRecipient, Recipient } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../presentation/connect/sign-tx';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
@@ -161,7 +161,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.sendTransaction.name: {
           this.checkHostnameAuthorization(state);
-          const [recipients, feeAssetHash] = params as [RecipientInterface[], string | undefined];
+          const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
           const lbtc = lbtcAssetByNetwork(state.app.network);
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
 
@@ -169,8 +169,10 @@ export default class MarinaBroker extends Broker {
             throw new Error(`${feeAsset} not supported as fee asset.`);
           }
 
+          const { addressRecipients, data } = sortRecipients(recipients);
+
           await this.store.dispatchAsync(
-            setTxData(this.hostname, recipients, feeAsset, state.app.network)
+            setTxData(this.hostname, addressRecipients, feeAsset, state.app.network, data)
           );
           const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
             'spend'
