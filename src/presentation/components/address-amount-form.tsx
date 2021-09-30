@@ -178,7 +178,6 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
     props.history.push({
       pathname: SEND_CHOOSE_FEE_ROUTE,
-      state: { changeAddress: changeAddress },
     });
   },
   displayName: 'AddressAmountForm',
