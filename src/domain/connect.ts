@@ -22,8 +22,8 @@ export function newEmptyConnectData(): ConnectData {
   return {
     enabledSites: {
       liquid: [],
-      regtest: []
+      regtest: [],
     },
-    hostnameSelected: ''
+    hostnameSelected: '',
   };
 }

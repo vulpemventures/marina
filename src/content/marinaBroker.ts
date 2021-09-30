@@ -23,7 +23,7 @@ import {
   restorerOptsSelector,
   utxosSelector,
 } from '../application/redux/selectors/wallet.selector';
-import { masterPubKeyRestorerFromState, MasterPublicKey, RecipientInterface } from 'ldk';
+import { masterPubKeyRestorerFromState, MasterPublicKey } from 'ldk';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
@@ -32,7 +32,7 @@ import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
 import { walletTransactions } from '../application/redux/selectors/transaction.selector';
 import { balancesSelector } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
-import { Balance, isDataRecipient, Recipient } from 'marina-provider';
+import { Balance, Recipient } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../presentation/connect/sign-tx';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';

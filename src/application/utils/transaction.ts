@@ -16,7 +16,6 @@ import {
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
-  walletFromCoins
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
@@ -96,7 +95,7 @@ export function createTaxiTxFromTopup(
     recipients.concat({
       value: taxiTopup.assetAmount,
       asset: taxiTopup.assetHash,
-      address: '' // address is not useful for coinSelector
+      address: '', // address is not useful for coinSelector
     }),
     changeAddressGetter
   );
@@ -200,7 +199,7 @@ export function toDisplayTransaction(
     fee: tx.fee,
     transfers,
     type: txTypeFromTransfer(transfers),
-    webExplorersBlinders: getUnblindURLFromTx(tx, '')
+    webExplorersBlinders: getUnblindURLFromTx(tx, ''),
   };
 }
 
@@ -266,7 +265,7 @@ function getTransfers(
 
     transfers.push({
       amount,
-      asset
+      asset,
     });
   };
 
@@ -337,7 +336,7 @@ function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
     pset.addOutput({
       script: opReturnPayment.output!,
       asset: recipient.asset,
-      value: confidential.satoshiToConfidentialValue(recipient.value)
+      value: confidential.satoshiToConfidentialValue(recipient.value),
     });
   }
 
