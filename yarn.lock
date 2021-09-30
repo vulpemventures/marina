@@ -6340,10 +6340,10 @@ marina-provider@^1.0.0:
   resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.3.0.tgz#ee26222816570e5649457c5eb6f3078433af5cd8"
   integrity sha512-J00cMcynnNwLut8GdbLNHSHR7jKUGcaiJfExgomIDbIMXJD/nZZQlxg8/zzPsAnujMx/aAEqqfEj+h4PIohp9g==
 
-marina-provider@^1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.2.tgz#44ccc2aaee79c98d70d9ccf88b57dd275cfa929a"
-  integrity sha512-s+qjzy8pjtuPbAeeLZCUlZXb/aWgkVinlTs8VVyB7yUPI8OXCUAyO8q++LZdahU6s6aRw/yM3qH1MAGFkC6aKA==
+marina-provider@^1.4.3:
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.3.tgz#15e51c989569e96088a74916ff195e03fc0b05c8"
+  integrity sha512-FXeJ61q+arMUEdR7GeXLmT/Xx8w1NP5vmkztkBIeSmRFvs02qjJO6GqutEUnVFWUzC3QQSB45yiOo8+i8ohYZw==
 
 marky@^1.2.0:
   version "1.2.2"

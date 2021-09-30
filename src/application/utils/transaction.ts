@@ -4,6 +4,7 @@ import {
   BlindedOutputInterface,
   ChangeAddressFromAssetGetter,
   CoinSelector,
+  createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
   greedyCoinSelector,
@@ -15,16 +16,16 @@ import {
   TxInterface,
   UnblindedOutputInterface,
   UtxoInterface,
-  walletFromCoins,
 } from 'ldk';
-import { confidential, networks } from 'liquidjs-lib';
-import { blindingKeyFromAddress, isConfidentialAddress } from './address';
+import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
+import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { Network } from '../../domain/network';
 import { fetchTopupFromTaxi } from './taxi';
 import { taxiURL } from './constants';
+import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
 
 function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
   const outPubkeys: Map<number, string> = new Map();
@@ -113,17 +114,48 @@ export async function createSendPset(
   unspents: UtxoInterface[],
   feeAssetHash: string,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  network: Network
+  network: Network,
+  data?: DataRecipient[]
 ): Promise<string> {
+  const coinSelector = greedyCoinSelector();
+
   if (feeAssetHash === lbtcAssetByNetwork(network)) {
-    const txBuilder = walletFromCoins(unspents, network);
-    return txBuilder.buildTx(
-      txBuilder.createTx(),
-      recipients,
-      greedyCoinSelector(),
-      changeAddressGetter,
-      true
+    const targetRecipients = recipients.concat(
+      data ? data.map((d) => ({ ...d, address: '' })) : []
     );
+
+    const { selectedUtxos, changeOutputs } = coinSelector(
+      unspents,
+      targetRecipients,
+      changeAddressGetter
+    );
+
+    // compute the amount according to tx size
+    const feeOutput = createFeeOutput(
+      selectedUtxos.length,
+      changeOutputs.length + recipients.length + (data ? data.length : 0) + 1,
+      0.1,
+      feeAssetHash
+    );
+
+    const selection = coinSelector(
+      unspents,
+      targetRecipients.concat([feeOutput]),
+      changeAddressGetter
+    );
+
+    const emptyTx = new Psbt({ network: networkFromString(network) }).toBase64();
+    let pset = addToTx(
+      emptyTx,
+      selection.selectedUtxos,
+      recipients.concat(selection.changeOutputs).concat([feeOutput])
+    );
+
+    if (data && data.length > 0) {
+      pset = withDataOutputs(pset, data);
+    }
+
+    return pset;
   }
 
   const topup = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash)).topup;
@@ -271,4 +303,42 @@ function getTransfers(
 
     return true;
   });
+}
+
+/**
+ * Used to sort marina-provider Recipient type
+ * @param recipients
+ */
+export function sortRecipients(recipients: Recipient[]): {
+  data: DataRecipient[];
+  addressRecipients: RecipientInterface[];
+} {
+  const addressRecipients: RecipientInterface[] = [];
+  const data: DataRecipient[] = [];
+
+  for (const recipient of recipients) {
+    if (isDataRecipient(recipient)) {
+      data.push(recipient);
+    } else if (isAddressRecipient(recipient)) {
+      addressRecipients.push(recipient);
+    }
+  }
+
+  return { data, addressRecipients };
+}
+
+// Add OP_RETURN outputs to psetBase64 (unsigned)
+function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
+  const pset = decodePset(psetBase64);
+
+  for (const recipient of dataOutputs) {
+    const opReturnPayment = payments.embed({ data: [Buffer.from(recipient.data, 'hex')] });
+    pset.addOutput({
+      script: opReturnPayment.output!,
+      asset: recipient.asset,
+      value: confidential.satoshiToConfidentialValue(recipient.value),
+    });
+  }
+
+  return pset.toBase64();
 }

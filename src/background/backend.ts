@@ -13,6 +13,7 @@ import {
   masterPubKeyRestorerFromEsplora,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
+  utxoWithPrevout,
 } from 'ldk';
 import {
   fetchAssetsFromTaxi,
@@ -21,7 +22,6 @@ import {
   toDisplayTransaction,
   toStringOutpoint,
 } from '../application/utils';
-
 import {
   setDeepRestorerError,
   setDeepRestorerIsLoading,
@@ -91,12 +91,17 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {
-        const utxo = utxoIterator?.value;
+        let utxo = utxoIterator?.value;
         if (!isBlindedUtxo(utxo)) {
           if (utxo.asset) {
             const assets = getState().assets;
             await fetchAssetInfos(utxo.asset, explorer, assets, dispatch).catch(console.error);
           }
+
+          if (!utxo.prevout) {
+            utxo = await utxoWithPrevout(utxo, explorer);
+          }
+
           dispatch(addUtxo(utxo));
         }
         utxoIterator = await utxos.next();

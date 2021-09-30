@@ -169,7 +169,7 @@ async function makeTransaction(
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
     throw new Error('transaction data are missing');
 
-  const { recipients, feeAssetHash } = connectDataTx;
+  const { recipients, feeAssetHash, data } = connectDataTx;
 
   const assets = Array.from(new Set(recipients.map(({ asset }) => asset).concat(feeAssetHash)));
 
@@ -195,7 +195,8 @@ async function makeTransaction(
     coins,
     feeAssetHash,
     changeAddressGetter,
-    network
+    network,
+    data
   );
 
   const txHex = await blindAndSignPset(
