@@ -124,9 +124,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
 
     if (!changeAddress) throw new Error('change address is not defined');
-    console.log(recipients);
-    console.log(changeAddress);
-    console.log(wallet.utxoMap);
 
     const tx: string = w.buildTx(
       w.createTx(),
