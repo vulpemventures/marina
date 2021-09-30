@@ -3,7 +3,7 @@
 /* eslint-disable no-constant-condition */
 import axios from 'axios';
 
-const APIURL = process.env.EXPLORER || `http://localhost:3001`;
+export const APIURL = process.env.EXPLORER || `http://localhost:3001`;
 
 export function sleep(ms: number): Promise<any> {
   return new Promise((resolve) => setTimeout(resolve, ms));
