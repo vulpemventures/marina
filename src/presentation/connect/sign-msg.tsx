@@ -90,7 +90,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
   return (
     <ShellConnectPopup
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="Spend"
+      currentPage="Sign message"
     >
       {error.length === 0 ? (
         <>
