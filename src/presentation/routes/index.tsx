@@ -4,7 +4,7 @@ import { ProtectedRoute } from './guards';
 import {
   CONNECT_ENABLE_ROUTE,
   CONNECT_SPEND_ROUTE,
-  CONNECT_SPEND_PSET_ROUTE,
+  CONNECT_SIGN_PSET_ROUTE,
   CONNECT_SIGN_MSG_ROUTE,
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_SELECT_ACTION_ROUTE,
@@ -42,7 +42,7 @@ import {
 // Connect
 import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
-import ConnectSignTransaction from '../connect/sign-tx';
+import ConnectSignTransaction from '../connect/sign-pset';
 import ConnectSignMsg from '../connect/sign-msg';
 
 // Onboarding
@@ -121,7 +121,7 @@ const Routes: React.FC = () => {
       {/*Connect*/}
       <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
-      <Route exact path={CONNECT_SPEND_PSET_ROUTE} component={ConnectSignTransaction} />
+      <Route exact path={CONNECT_SIGN_PSET_ROUTE} component={ConnectSignTransaction} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
     </Switch>
   );

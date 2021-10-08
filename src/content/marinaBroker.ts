@@ -33,7 +33,7 @@ import { walletTransactions } from '../application/redux/selectors/transaction.s
 import { balancesSelector } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
 import { Balance, Recipient } from 'marina-provider';
-import { SignTransactionPopupResponse } from '../presentation/connect/sign-tx';
+import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
 
@@ -147,10 +147,10 @@ export default class MarinaBroker extends Broker {
           if (!params || params.length !== 1) {
             throw new Error('Missing params');
           }
-          const [tx] = params;
-          await this.store.dispatchAsync(setTx(this.hostname, tx));
+          const [pset] = params;
+          await this.store.dispatchAsync(setTx(this.hostname, pset));
           const { accepted, signedPset } =
-            await this.openAndWaitPopup<SignTransactionPopupResponse>('sign-tx');
+            await this.openAndWaitPopup<SignTransactionPopupResponse>('sign-pset');
 
           await this.store.dispatchAsync(flushTx());
           if (!accepted) throw new Error('User rejected the sign request');

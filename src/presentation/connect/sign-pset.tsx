@@ -73,10 +73,11 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
     debounce(signTx, 2000, { leading: true, trailing: false })
   ).current;
 
+  console.log(connectData.tx?.pset);
   return (
     <ShellConnectPopup
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="Spend"
+      currentPage="Sign PSET"
     >
       {error.length === 0 ? (
         <>
