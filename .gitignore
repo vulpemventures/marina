@@ -50,3 +50,6 @@ runtaxi.sh
 
 # cypress
 /cypress/videos
+
+# bundler analyzer
+./stats.json
