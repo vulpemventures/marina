@@ -19,8 +19,8 @@ import { mnemonicWallet } from '../../application/utils/restorer';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
-  restorerOptsSelector,
-  utxosSelector,
+  selectAllUnspents,
+  selectRestorerOpts,
 } from '../../application/redux/selectors/wallet.selector';
 import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';
@@ -32,8 +32,8 @@ export interface SpendPopupResponse {
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
-  const coins = useSelector(utxosSelector);
-  const restorerOpts = useSelector(restorerOptsSelector);
+  const coins = useSelector(selectAllUnspents);
+  const restorerOpts = useSelector(selectRestorerOpts);
   const encryptedMnemonic = useSelector(
     (state: RootReducerState) => state.wallet.encryptedMnemonic
   );

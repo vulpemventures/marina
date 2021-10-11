@@ -1,40 +1,42 @@
-import { RootReducerState } from '../../../domain/common';
-import { lbtcAssetByNetwork } from '../../utils';
-import { walletTransactions } from './transaction.selector';
+import { selectAllUniqueTransactionsAssets } from './transaction.selector';
+import { createSelector } from 'reselect';
+import type { UtxoInterface } from 'ldk';
+import { selectLBTCforNetwork } from './app.selector';
+import { selectAllUnspents } from './wallet.selector';
 
 export type BalancesByAsset = { [assetHash: string]: number };
-/**
- * Extract balances from all unblinded utxos in state
- * @param onSuccess
- * @param onError
- */
-export function balancesSelector(state: RootReducerState): BalancesByAsset {
-  const utxos = Object.values(state.wallet.utxoMap);
-  const balancesFromUtxos = utxos.reduce((acc, curr) => {
-    if (!curr.asset || !curr.value) {
-      return acc;
-    }
-    return { ...acc, [curr.asset]: curr.value + (curr.asset in acc ? acc[curr.asset] : 0) };
-  }, {} as BalancesByAsset);
 
-  const txs = walletTransactions(state);
-  const assets = Object.keys(balancesFromUtxos);
-
-  for (const tx of txs) {
-    const allTxAssets = tx.transfers.map((t) => t.asset);
-    for (const a of allTxAssets) {
-      if (!assets.includes(a)) {
-        balancesFromUtxos[a] = 0;
-        assets.push(a);
-      }
-    }
+function balancesReducer(balances: BalancesByAsset, utxo: UtxoInterface) {
+  if (!utxo.asset || !utxo.value) {
+    return balances;
   }
-
-  const lbtcAssetHash = lbtcAssetByNetwork(state.app.network);
-
-  if (balancesFromUtxos[lbtcAssetHash] === undefined) {
-    balancesFromUtxos[lbtcAssetHash] = 0;
-  }
-
-  return balancesFromUtxos;
+  return {
+    ...balances,
+    [utxo.asset]: utxo.value + (utxo.asset in balances ? balances[utxo.asset] : 0),
+  };
 }
+
+const selectBalancesFromUnspents = createSelector([selectAllUnspents], (utxos) =>
+  utxos.reduce(balancesReducer, {})
+);
+
+// Extract balances from all unblinded utxos in state
+// it also fill with balance = 0 if wallet contains txs of a given asset
+// always return at least one balance = LBTC balance (0 if no utxos)
+export const selectBalances = createSelector(
+  [selectBalancesFromUnspents, selectAllUniqueTransactionsAssets, selectLBTCforNetwork],
+  (balancesFromUtxos, transactionsAssets, assetHashLBTC) => {
+    const balances = balancesFromUtxos;
+    const balanceAssets = new Set(Object.keys(balancesFromUtxos));
+    for (const asset of transactionsAssets) {
+      if (balanceAssets.has(asset)) continue;
+      balances[asset] = 0;
+    }
+
+    if (balances[assetHashLBTC] === undefined) {
+      balances[assetHashLBTC] = 0;
+    }
+
+    return balances;
+  }
+);

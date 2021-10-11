@@ -20,22 +20,23 @@ import {
 } from '../application/redux/actions/connect';
 import {
   masterPubKeySelector,
-  restorerOptsSelector,
-  utxosSelector,
+  selectAllUnspents,
+  selectRestorerOpts,
 } from '../application/redux/selectors/wallet.selector';
 import { masterPubKeyRestorerFromState, MasterPublicKey } from 'ldk';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
 } from '../application/redux/actions/wallet';
-import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
-import { walletTransactions } from '../application/redux/selectors/transaction.selector';
-import { balancesSelector } from '../application/redux/selectors/balance.selector';
+import { sortRecipients } from '../application/utils';
+import { selectAllTransactions } from '../application/redux/selectors/transaction.selector';
+import { selectBalances } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
 import { Balance, Recipient } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
+import { selectLBTCforNetwork } from '../application/redux/selectors/app.selector';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -162,7 +163,7 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.sendTransaction.name: {
           this.checkHostnameAuthorization(state);
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
-          const lbtc = lbtcAssetByNetwork(state.app.network);
+          const lbtc = selectLBTCforNetwork(state);
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
 
           if (![lbtc, ...state.taxi.taxiAssets].includes(feeAsset)) {
@@ -200,19 +201,19 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getTransactions.name: {
           this.checkHostnameAuthorization(state);
-          const transactions = walletTransactions(state);
+          const transactions = selectAllTransactions(state);
           return successMsg(transactions);
         }
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          const coins = utxosSelector(state);
+          const coins = selectAllUnspents(state);
           return successMsg(coins);
         }
 
         case Marina.prototype.getBalances.name: {
           this.checkHostnameAuthorization(state);
-          const balances = balancesSelector(state);
+          const balances = selectBalances(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
@@ -233,7 +234,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getFeeAssets.name: {
           this.checkHostnameAuthorization(state);
-          const lbtcAsset = lbtcAssetByNetwork(state.app.network);
+          const lbtcAsset = selectLBTCforNetwork(state);
           return successMsg([lbtcAsset, ...state.taxi.taxiAssets]);
         }
 
@@ -249,6 +250,6 @@ export default class MarinaBroker extends Broker {
 
 function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {
   const xPubKey = masterPubKeySelector(state);
-  const opts = restorerOptsSelector(state);
+  const opts = selectRestorerOpts(state);
   return masterPubKeyRestorerFromState(xPubKey)(opts);
 }

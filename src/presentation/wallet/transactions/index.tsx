@@ -21,7 +21,6 @@ import { IAssets } from '../../../domain/assets';
 import { updateTxs, setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { Network } from '../../../domain/network';
-import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
 import { networks } from 'ldk';
@@ -105,7 +104,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
       <div className="h-60 rounded-xl mb-1">
         <ButtonList title="Transactions" emptyText="Your transactions will appear here">
           {transactions
-            .filter(txHasAsset(state.assetHash))
+            .filter(txHasAssetFilter(state.assetHash))
             // Descending order
             .sort((a, b) => {
               if (!a.blockTimeMs || !b.blockTimeMs) return 0;
@@ -180,5 +179,11 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     </ShellPopUp>
   );
 };
+
+const txHasAssetFilter =
+  (assetHash: string) =>
+  (tx: TxDisplayInterface): boolean => {
+    return tx.transfers.map((t) => t.asset).includes(assetHash);
+  };
 
 export default TransactionsView;

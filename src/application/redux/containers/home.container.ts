@@ -1,15 +1,15 @@
 import { RootReducerState } from './../../../domain/common';
 import { connect } from 'react-redux';
 import HomeView, { HomeProps } from '../../../presentation/wallet/home';
-import { balancesSelector } from '../selectors/balance.selector';
+import { selectBalances } from '../selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../../domain/assets';
-import { lbtcAssetByNetwork } from '../../utils';
+import { selectLBTCforNetwork } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => ({
-  lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
+  lbtcAssetHash: selectLBTCforNetwork(state),
   network: state.app.network,
   transactionStep: state.transaction.step,
-  assetsBalance: balancesSelector(state),
+  assetsBalance: selectBalances(state),
   getAsset: assetGetterFromIAssets(state.assets),
   isWalletVerified: state.wallet.isVerified,
 });

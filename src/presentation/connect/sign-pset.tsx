@@ -8,7 +8,7 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
-import { restorerOptsSelector } from '../../application/redux/selectors/wallet.selector';
+import { selectRestorerOpts } from '../../application/redux/selectors/wallet.selector';
 import { RootReducerState } from '../../domain/common';
 import { decrypt, mnemonicWallet } from '../../application/utils';
 import PopupWindowProxy from './popupWindowProxy';
@@ -25,7 +25,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   const [error, setError] = useState<string>('');
 
   const network = useSelector((state: RootReducerState) => state.app.network);
-  const restorerOpts = useSelector(restorerOptsSelector);
+  const restorerOpts = useSelector(selectRestorerOpts);
   const encryptedMnemonic = useSelector(
     (state: RootReducerState) => state.wallet.encryptedMnemonic
   );

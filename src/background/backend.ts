@@ -31,7 +31,7 @@ import { createAddress } from '../domain/address';
 import { setTaxiAssets, updateTaxiAssets } from '../application/redux/actions/taxi';
 import {
   masterPubKeySelector,
-  restorerOptsSelector,
+  selectRestorerOpts,
 } from '../application/redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from '../application/redux/actions/utxos';
 import { addAsset } from '../application/redux/actions/asset';
@@ -295,7 +295,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
 
 function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {
   const xPubKey = masterPubKeySelector(state);
-  const opts = restorerOptsSelector(state);
+  const opts = selectRestorerOpts(state);
   return masterPubKeyRestorerFromState(xPubKey)(opts);
 }
 

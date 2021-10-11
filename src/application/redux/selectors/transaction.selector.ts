@@ -1,26 +1,16 @@
+import { createSelector } from 'reselect';
 import { RootReducerState } from '../../../domain/common';
-import { TxDisplayInterface } from '../../../domain/transaction';
 
-export function walletTransactions(state: RootReducerState): TxDisplayInterface[] {
-  return Object.values(state.txsHistory[state.app.network]);
-}
+export const selectAllTransactions = createSelector(
+  [(state: RootReducerState) => state.txsHistory[state.app.network]],
+  (txs) => Object.values(txs)
+);
 
-export const txHasAsset =
-  (assetHash: string) =>
-  (tx: TxDisplayInterface): boolean => {
-    return tx.transfers.map((t) => t.asset).includes(assetHash);
-  };
+const selectAllTransactionsAssets = createSelector([selectAllTransactions], (txs) =>
+  txs.flatMap((tx) => tx.transfers.map((trans) => trans.asset))
+);
 
-export function getOutputsAddresses(state: RootReducerState): string[] {
-  const txState = state.transaction;
-  const addresses = [txState.changeAddress, txState.feeChangeAddress, txState.sendAddress];
-
-  const result: string[] = [];
-  for (const addr of addresses) {
-    if (addr) {
-      result.push(addr.value);
-    }
-  }
-
-  return result;
-}
+export const selectAllUniqueTransactionsAssets = createSelector(
+  [selectAllTransactionsAssets],
+  (assets) => Array.from(new Set(assets))
+);
