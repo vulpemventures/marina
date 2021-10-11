@@ -46,7 +46,6 @@
     "react-router-dom": "^5.2.0",
     "react-virtualized-auto-sizer": "^1.0.6",
     "react-window": "^1.8.6",
-    "readable-stream": "^3.6.0",
     "redux": "^4.1.0",
     "redux-persist": "^6.0.0",
     "redux-thunk": "^2.3.0",
