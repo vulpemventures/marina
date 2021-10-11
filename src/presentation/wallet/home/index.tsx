@@ -111,7 +111,7 @@ const HomeView: React.FC<HomeProps> = ({
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
             {Object.entries(assetsBalance)
-              .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
+              .sort(([a]) => (a === lbtcAssetHash ? -Infinity : Infinity))
               .map(([asset, balance]) => {
                 const { ticker, precision, name } = getAsset(asset);
                 return (

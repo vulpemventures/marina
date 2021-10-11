@@ -109,8 +109,8 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
-          {connectData.tx?.recipients?.map((recipient: RecipientInterface, index) => (
-            <div key={index}>
+          {connectData.tx?.recipients?.map((recipient: RecipientInterface, index: number) => (
+            <div key={recipient.address + index}>
               <div className="container flex justify-between mt-16">
                 <span className="text-lg font-medium">{recipient.value}</span>
                 <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>

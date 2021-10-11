@@ -70,7 +70,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({
 
       <div className="h-96 pb-1">
         <ButtonList title={title} emptyText="no assets to display...">
-          {searchResults.map((asset, index) => (
+          {searchResults.map((asset) => (
             <ButtonAsset
               assetImgPath={
                 network === 'regtest'
@@ -82,7 +82,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({
               assetTicker={asset.ticker}
               assetPrecision={asset.precision}
               quantity={balances ? balances[asset.assetHash] : undefined}
-              key={index}
+              key={asset.assetHash}
               handleClick={({ assetHash }) => onClick(assetHash as string)}
             />
           ))}

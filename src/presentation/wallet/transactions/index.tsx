@@ -113,13 +113,13 @@ const TransactionsView: React.FC<TransactionsProps> = ({
               const momentA = moment(a.blockTimeMs);
               return momentB.diff(momentA);
             })
-            .map((tx, index) => {
+            .map((tx) => {
               return (
                 <ButtonTransaction
                   assetHash={state.assetHash}
                   assetPrecision={state.assetPrecision}
                   assetTicker={state.assetTicker}
-                  key={index}
+                  key={tx.txId}
                   handleClick={() => {
                     setModalTxDetails(tx);
                   }}
@@ -150,7 +150,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
             <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
           </div>
           {modalTxDetails?.transfers.map((transfer, i) => (
-            <div key={i}>
+            <div key={transfer.asset}>
               <p className="text-sm font-medium">{transfer.amount > 0 ? 'Inbound' : 'Outbound'}</p>
               <p className="text-sm font-light">
                 {fromSatoshiStr(transfer.amount, assets[transfer.asset]?.precision)}{' '}

@@ -49,8 +49,8 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
       <p className="mt-12 text-base font-medium">Give permission to this site to:</p>
 
-      {permissions.map((p, i) => (
-        <div className="container flex mt-10 text-left" key={i}>
+      {permissions.map((p) => (
+        <div className="container flex mt-10 text-left" key={p}>
           <img className="mr-4" src="/assets/images/checkbox-checked.svg" alt="checkbox" />
           <span className="font-regular text-base">{p}</span>
         </div>
