@@ -7,7 +7,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { setUpPopup } from '../../../application/utils/popup';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
 import { createMnemonic } from '../../../domain/mnemonic';
-import { Network } from '../../../domain/network';
+import { NetworkType } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
 import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
@@ -18,7 +18,7 @@ export interface EndOfFlowProps {
   mnemonic: string;
   password: string;
   isFromPopupFlow: boolean;
-  network: Network;
+  network: NetworkType;
   explorerURL: string;
   hasMnemonicRegistered: boolean;
 }

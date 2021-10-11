@@ -20,12 +20,12 @@ import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
-import { Network } from '../../../domain/network';
+import { NetworkType } from '../../../domain/network';
 import browser from 'webextension-polyfill';
 
 export interface HomeProps {
   lbtcAssetHash: string;
-  network: Network;
+  network: NetworkType;
   getAsset: AssetGetter;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;

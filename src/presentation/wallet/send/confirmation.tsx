@@ -6,11 +6,11 @@ import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/cons
 import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
 import { AssetGetter } from '../../../domain/assets';
-import { Network } from '../../../domain/network';
+import { NetworkType } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 
 export interface ConfirmationProps {
-  network: Network;
+  network: NetworkType;
   transaction: TransactionState;
   getAsset: AssetGetter;
 }

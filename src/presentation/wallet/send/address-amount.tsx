@@ -10,7 +10,7 @@ import { BalancesByAsset } from '../../../application/redux/selectors/balance.se
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import AddressAmountEnhancedForm from '../../components/address-amount-form';
 import { MasterPublicKey, StateRestorerOpts } from 'ldk';
-import { Network } from '../../../domain/network';
+import { NetworkType } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset, IAssets } from '../../../domain/assets';
 import { DEFAULT_ROUTE } from '../../routes/constants';
@@ -18,7 +18,7 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 export interface AddressAmountProps {
   masterPubKey: MasterPublicKey;
   restorerOpts: StateRestorerOpts;
-  network: Network;
+  network: NetworkType;
   transaction: TransactionState;
   balances: BalancesByAsset;
   transactionAsset: Asset;

@@ -9,12 +9,12 @@ import {
   RESET,
 } from './action-types';
 import { AnyAction } from 'redux';
-import { Network } from '../../../domain/network';
+import { NetworkType } from '../../../domain/network';
 import { Password } from '../../../domain/password';
 import { match, PasswordHash } from '../../../domain/password-hash';
 import { ExplorerURLs } from '../../../domain/app';
 
-export const setExplorer = (explorer: ExplorerURLs, network: Network): AnyAction => ({
+export const setExplorer = (explorer: ExplorerURLs, network: NetworkType): AnyAction => ({
   type: SET_EXPLORER,
   payload: { explorer, network },
 });
@@ -39,7 +39,7 @@ export function logOut(): AnyAction {
   return { type: LOGOUT_SUCCESS };
 }
 
-export function changeNetwork(network: Network): AnyAction {
+export function changeNetwork(network: NetworkType): AnyAction {
   return { type: CHANGE_NETWORK_SUCCESS, payload: { network } };
 }
 

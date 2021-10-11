@@ -1,11 +1,12 @@
 import { address, decodePset } from 'ldk';
 import { Address } from './address';
 import { IError } from './common';
-import { Network } from './network';
+import { NetworkType } from './network';
 
 export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 
-export type TxsHistoryByNetwork = Record<Network, TxsHistory> & Partial<Record<'errors', IError>>;
+export type TxsHistoryByNetwork = Record<NetworkType, TxsHistory> &
+  Partial<Record<'errors', IError>>;
 
 export enum TxType {
   SelfTransfer = 0,

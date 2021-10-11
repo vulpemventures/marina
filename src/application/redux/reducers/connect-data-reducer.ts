@@ -1,4 +1,4 @@
-import { Network } from './../../../domain/network';
+import { NetworkType } from './../../../domain/network';
 import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
 import { ConnectData, newEmptyConnectData } from '../../../domain/connect';
@@ -19,7 +19,10 @@ export function connectDataReducer(
         ...state,
         enabledSites: {
           ...state.enabledSites,
-          [payload.network]: [...state.enabledSites[payload.network as Network], payload.hostname],
+          [payload.network]: [
+            ...state.enabledSites[payload.network as NetworkType],
+            payload.hostname,
+          ],
         },
       };
     }
@@ -29,7 +32,7 @@ export function connectDataReducer(
         ...state,
         enabledSites: {
           ...state.enabledSites,
-          [payload.network]: state.enabledSites[payload.network as Network].filter(
+          [payload.network]: state.enabledSites[payload.network as NetworkType].filter(
             (v) => v !== payload.hostname
           ),
         },

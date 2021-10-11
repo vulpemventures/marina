@@ -1,12 +1,12 @@
 import { IError } from './common';
-import { Network } from './network';
+import { NetworkType } from './network';
 
 export interface IApp {
   errors?: Record<string, IError>;
   isAuthenticated: boolean;
   isOnboardingCompleted: boolean;
-  network: Network;
-  explorerByNetwork: Record<Network, ExplorerURLs>;
+  network: NetworkType;
+  explorerByNetwork: Record<NetworkType, ExplorerURLs>;
 }
 
 export type ExplorerType = 'Blockstream' | 'Mempool' | 'Nigiri' | 'Custom';

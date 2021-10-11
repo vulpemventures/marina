@@ -22,7 +22,7 @@ import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { Network } from '../../domain/network';
+import { NetworkType } from '../../domain/network';
 import { fetchTopupFromTaxi } from './taxi';
 import { taxiURL } from './constants';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
@@ -114,7 +114,7 @@ export async function createSendPset(
   unspents: UtxoInterface[],
   feeAssetHash: string,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  network: Network,
+  network: NetworkType,
   data?: DataRecipient[]
 ): Promise<string> {
   const coinSelector = greedyCoinSelector();
@@ -270,7 +270,11 @@ function getTransfers(
   };
 
   for (const input of vin) {
-    if (!isBlindedOutputInterface(input.prevout) && walletScripts.includes(input.prevout.script)) {
+    if (
+      input.prevout &&
+      !isBlindedOutputInterface(input.prevout) &&
+      walletScripts.includes(input.prevout.script)
+    ) {
       addToTransfers(-1 * input.prevout.value, input.prevout.asset);
     }
   }

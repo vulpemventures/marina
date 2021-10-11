@@ -12,7 +12,7 @@ import { defaultPrecision, isValidAddressForNetwork } from '../../application/ut
 import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import { IAssets } from '../../domain/assets';
-import { Network } from '../../domain/network';
+import { NetworkType } from '../../domain/network';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 
 interface AddressAmountFormValues {
@@ -32,7 +32,7 @@ interface AddressAmountFormProps {
   restorerOpts: StateRestorerOpts;
   transaction: TransactionState;
   assets: IAssets;
-  network: Network;
+  network: NetworkType;
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {

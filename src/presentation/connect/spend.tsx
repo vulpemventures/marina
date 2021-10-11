@@ -13,7 +13,7 @@ import { RootReducerState } from '../../domain/common';
 import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
-import { Network } from '../../domain/network';
+import { NetworkType } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { mnemonicWallet } from '../../application/utils/restorer';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
@@ -110,7 +110,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
           {connectData.tx?.recipients?.map((recipient: RecipientInterface, index: number) => (
-            <div key={recipient.address + index}>
+            <div key={`${recipient.address}${index}`}>
               <div className="container flex justify-between mt-16">
                 <span className="text-lg font-medium">{recipient.value}</span>
                 <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
@@ -163,7 +163,7 @@ async function makeTransaction(
   mnemonic: Mnemonic,
   coins: UtxoInterface[],
   connectDataTx: ConnectData['tx'],
-  network: Network,
+  network: NetworkType,
   dispatch: ProxyStoreDispatch
 ) {
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)

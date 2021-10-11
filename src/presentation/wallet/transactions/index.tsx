@@ -20,9 +20,9 @@ import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
 import { updateTxs, setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
-import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
+import { NetworkType } from '../../../domain/network';
 import { networks } from 'ldk';
 
 interface LocationState {
@@ -35,7 +35,7 @@ interface LocationState {
 export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
-  network: Network;
+  network: NetworkType;
   webExplorerURL: string;
 }
 

@@ -7,21 +7,21 @@ import {
   networkChange,
 } from '../application/utils/marina-event';
 import { RootReducerState } from '../domain/common';
-import { Network } from '../domain/network';
+import { NetworkType } from '../domain/network';
 import { TxsHistory } from '../domain/transaction';
 
 export interface StoreCache {
   utxoState: Record<string, UtxoInterface>;
   txsHistoryState: TxsHistory;
-  enabledWebsitesState: Record<Network, string[]>;
-  network: Network;
+  enabledWebsitesState: Record<NetworkType, string[]>;
+  network: NetworkType;
 }
 
 export function newStoreCache(): StoreCache {
   return {
     utxoState: {},
     txsHistoryState: {},
-    enabledWebsitesState: { regtest: [], liquid: [] },
+    enabledWebsitesState: { regtest: [], liquid: [], testnet: [] },
     network: 'liquid',
   };
 }

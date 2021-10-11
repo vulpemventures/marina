@@ -70,7 +70,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
         {selected.map((word: string, i: number) => (
           <Button
             className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
-            key={word + i}
+            key={`${word}${i}`}
             isOutline={true}
             roundedMd={true}
             onClick={() => deleteSelectedWord(i)}
@@ -86,7 +86,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
         {wordsList.map((word, i) => (
           <Button
             className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
-            key={word + i}
+            key={`${word}${i}`}
             isOutline={true}
             roundedMd={true}
             onClick={() => selectWord(i)}

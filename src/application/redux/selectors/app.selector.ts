@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { Network } from '../../../domain/network';
+import { NetworkType } from '../../../domain/network';
 import { lbtcAssetByNetwork } from '../../utils';
 import { RootReducerState } from './../../../domain/common';
 
@@ -9,5 +9,5 @@ export function getExplorerURLSelector(state: RootReducerState) {
 
 export const selectLBTCforNetwork = createSelector(
   [(state: RootReducerState) => state.app.network],
-  (network: Network) => lbtcAssetByNetwork(network)
+  (network: NetworkType) => lbtcAssetByNetwork(network)
 );
