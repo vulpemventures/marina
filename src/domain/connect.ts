@@ -23,7 +23,6 @@ export function newEmptyConnectData(): ConnectData {
     enabledSites: {
       liquid: [],
       regtest: [],
-      testnet: [],
     },
     hostnameSelected: '',
   };

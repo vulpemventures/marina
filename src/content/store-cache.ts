@@ -21,7 +21,7 @@ export function newStoreCache(): StoreCache {
   return {
     utxoState: {},
     txsHistoryState: {},
-    enabledWebsitesState: { regtest: [], liquid: [], testnet: [] },
+    enabledWebsitesState: { regtest: [], liquid: [] },
     network: 'liquid',
   };
 }
