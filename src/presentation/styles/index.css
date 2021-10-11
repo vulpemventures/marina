@@ -146,19 +146,20 @@ scrollbar thumb {
   border-radius: 15px;
 }
 /* Chrome */
-#btn-list {
+.btn-list {
+  overflow-x: hidden;
   margin-right: -10px;
   padding-right: 10px;
 }
-#btn-list::-webkit-scrollbar {
+.btn-list::-webkit-scrollbar {
   width: 10px;
 }
-#btn-list::-webkit-scrollbar-thumb {
+.btn-list::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 15px;
 }
-#btn-list::-webkit-scrollbar-corner,
-#btn-list::-webkit-scrollbar-track {
+.btn-list::-webkit-scrollbar-corner,
+.btn-list::-webkit-scrollbar-track {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 15px;
 }

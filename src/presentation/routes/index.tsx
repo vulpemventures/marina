@@ -51,39 +51,71 @@ const Welcome = React.lazy(() => import('../onboarding/welcome'));
 const SelectAction = React.lazy(() => import('../onboarding/select-action'));
 const WalletRestore = React.lazy(() => import('../onboarding/wallet-restore'));
 const WalletCreate = React.lazy(() => import('../onboarding/wallet-create'));
-const EndOfFlow = React.lazy(() => import('../../application/redux/containers/end-of-flow-onboarding.container'));
-const SeedReveal = React.lazy(() => import('../../application/redux/containers/seed-reveal.container'));
-const SeedConfirm = React.lazy(() => import('../../application/redux/containers/seed-confirm.container'));
-const BackUpUnlock = React.lazy(() => import( '../onboarding/backup-unlock'));
+const EndOfFlow = React.lazy(
+  () => import('../../application/redux/containers/end-of-flow-onboarding.container')
+);
+const SeedReveal = React.lazy(
+  () => import('../../application/redux/containers/seed-reveal.container')
+);
+const SeedConfirm = React.lazy(
+  () => import('../../application/redux/containers/seed-confirm.container')
+);
+const BackUpUnlock = React.lazy(() => import('../onboarding/backup-unlock'));
 // Wallet
-const Home = React.lazy(() => import( '../../application/redux/containers/home.container'));
-const LogIn = React.lazy(() => import( '../wallet/log-in'));
-const Transactions = React.lazy(() => import( '../../application/redux/containers/transactions.container'));
-const ReceiveAddress = React.lazy(() => import( '../../application/redux/containers/receive.container'));
-const ReceiveSelectAsset = React.lazy(() => import( '../../application/redux/containers/receive-select-asset.container'));
-const SendSelectAsset = React.lazy(() => import( '../../application/redux/containers/send-select-asset.container'));
-const AddressAmount = React.lazy(() => import( '../../application/redux/containers/address-amount.container'));
-const ChooseFee = React.lazy(() => import( '../../application/redux/containers/choose-fee.container'));
-const Confirmation = React.lazy(() => import( '../../application/redux/containers/confirmation.container'));
-const SendEndOfFlow = React.lazy(() => import( '../../application/redux/containers/end-of-flow.container'));
-const PaymentSuccess = React.lazy(() => import( '../../application/redux/containers/payment-success.container'));
-const PaymentError = React.lazy(() => import( '../wallet/send/payment-error'));
+const Home = React.lazy(() => import('../../application/redux/containers/home.container'));
+const LogIn = React.lazy(() => import('../wallet/log-in'));
+const Transactions = React.lazy(
+  () => import('../../application/redux/containers/transactions.container')
+);
+const ReceiveAddress = React.lazy(
+  () => import('../../application/redux/containers/receive.container')
+);
+const ReceiveSelectAsset = React.lazy(
+  () => import('../../application/redux/containers/receive-select-asset.container')
+);
+const SendSelectAsset = React.lazy(
+  () => import('../../application/redux/containers/send-select-asset.container')
+);
+const AddressAmount = React.lazy(
+  () => import('../../application/redux/containers/address-amount.container')
+);
+const ChooseFee = React.lazy(
+  () => import('../../application/redux/containers/choose-fee.container')
+);
+const Confirmation = React.lazy(
+  () => import('../../application/redux/containers/confirmation.container')
+);
+const SendEndOfFlow = React.lazy(
+  () => import('../../application/redux/containers/end-of-flow.container')
+);
+const PaymentSuccess = React.lazy(
+  () => import('../../application/redux/containers/payment-success.container')
+);
+const PaymentError = React.lazy(() => import('../wallet/send/payment-error'));
 // Settings
-const SettingsMenuSecurity = React.lazy(() => import( '../settings/menu-security'));
-const SettingsMenuSettings = React.lazy(() => import( '../settings/menu-settings'));
-const SettingsMenuInfo = React.lazy(() => import( '../settings/menu-info'));
-const SettingsShowMnemonic = React.lazy(() => import( '../../application/redux/containers/settings-show-mnemonic.container'));
-const SettingsDeepRestorer = React.lazy(() => import( '../../application/redux/containers/deep-restorer.container'));
-const SettingsChangePassword = React.lazy(() => import( '../settings/change-password'));
-const SettingsCurrency = React.lazy(() => import( '../settings/currency'));
-const SettingsExplorer = React.lazy(() => import( '../settings/explorer'));
-const SettingsNetworks = React.lazy(() => import( '../../application/redux/containers/settings-networks.container'));
-const SettingsCredits = React.lazy(() => import( '../settings/credits'));
-const SettingsTerms = React.lazy(() => import( '../settings/terms'));
+const SettingsMenuSecurity = React.lazy(() => import('../settings/menu-security'));
+const SettingsMenuSettings = React.lazy(() => import('../settings/menu-settings'));
+const SettingsMenuInfo = React.lazy(() => import('../settings/menu-info'));
+const SettingsShowMnemonic = React.lazy(
+  () => import('../../application/redux/containers/settings-show-mnemonic.container')
+);
+const SettingsDeepRestorer = React.lazy(
+  () => import('../../application/redux/containers/deep-restorer.container')
+);
+const SettingsChangePassword = React.lazy(() => import('../settings/change-password'));
+const SettingsCurrency = React.lazy(() => import('../settings/currency'));
+const SettingsExplorer = React.lazy(() => import('../settings/explorer'));
+const SettingsNetworks = React.lazy(
+  () => import('../../application/redux/containers/settings-networks.container')
+);
+const SettingsCredits = React.lazy(() => import('../settings/credits'));
+const SettingsTerms = React.lazy(() => import('../settings/terms'));
 
 const Routes: React.FC = () => {
   return (
-    <Suspense fallback={<MermaidLoader className="flex items-center justify-center h-screen p-24"/>}>
+    <Suspense
+      fallback={<MermaidLoader className="flex items-center justify-center h-screen p-24" />}
+    >
       <Switch>
         {/*Onboarding*/}
         <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />
