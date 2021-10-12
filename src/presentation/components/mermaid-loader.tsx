@@ -3,6 +3,7 @@ import useLottieLoader from '../hooks/use-lottie-loader';
 
 interface MermaidLoaderProps {
   className: string;
+  backgroundImagePath?: string;
 }
 
 const MermaidLoader: React.FC<MermaidLoaderProps> = ({ className }) => {
