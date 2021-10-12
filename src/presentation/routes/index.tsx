@@ -113,9 +113,7 @@ const SettingsTerms = React.lazy(() => import('../settings/terms'));
 
 const Routes: React.FC = () => {
   return (
-    <Suspense
-      fallback={<MermaidLoader className="flex items-center justify-center h-screen p-24" />}
-    >
+    <Suspense fallback={<MermaidLoader className="flex items-center justify-center h-screen" />}>
       <Switch>
         {/*Onboarding*/}
         <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />

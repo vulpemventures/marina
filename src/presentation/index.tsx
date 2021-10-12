@@ -8,6 +8,7 @@ import App from './app';
 
 import './styles/index.css';
 import './styles/fonts.css';
+import MermaidLoader from './components/mermaid-loader';
 
 const store = new ProxyStore(); // proxy store
 
@@ -16,7 +17,10 @@ store
   .then(() => {
     render(
       <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
+        <PersistGate
+          loading={<MermaidLoader className="flex items-center justify-center h-screen" />}
+          persistor={persistor}
+        >
           <App />
         </PersistGate>
       </Provider>,
