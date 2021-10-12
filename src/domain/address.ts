@@ -1,4 +1,5 @@
 import { address as addressLDK } from 'ldk';
+import { isConfidentialAddress } from '../application/utils';
 
 export interface Address {
   // Blinding Public Key
@@ -12,7 +13,7 @@ export function createAddress(
   address: Address['value'],
   derivationPath?: Address['derivationPath']
 ): Address {
-  if (addressLDK.isConfidential(address)) {
+  if (isConfidentialAddress(address)) {
     const { blindingKey, unconfidentialAddress } = addressLDK.fromConfidential(address);
     return {
       value: address,
