@@ -32,6 +32,9 @@ module.exports = {
       },
     },
     extend: {
+      backgroundImage: {
+        'popup-wave': "url('/public/assets/images/popup/bg-home.png')",
+      },
       borderRadius: {
         '4xl': '2rem',
       },
