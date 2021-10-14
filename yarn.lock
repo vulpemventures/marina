@@ -6027,16 +6027,16 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.3.9:
-  version "0.3.9"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.9.tgz#50ec067e31a2d8d235dc0e072a877e00b7133d15"
-  integrity sha512-SSSpS5r/Fbj5ZFseZcLsud9ErP5p/5dclmptfaI05bnejs5Iys47t0IggBGBhrsLggfmy7119swJMs0hyA2VXA==
+ldk@^0.3.13:
+  version "0.3.13"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.13.tgz#351c2c9a1a83f6aab692590df8cc0865a6b82956"
+  integrity sha512-IEYztFTS53yTvyKCNIFXThti1hk4Xir10KgRaySj9b/Exas589I+PgQvputvRKKIWRTe3wMQYQChuSGWb3dzjg==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
-    liquidjs-lib "^5.1.15"
+    liquidjs-lib "^5.2.2"
     marina-provider "^1.0.0"
     slip77 "^0.1.1"
 
@@ -6086,12 +6086,13 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
-liquidjs-lib@^5.1.15:
-  version "5.1.15"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.1.15.tgz#43cf25006da11386e23561178a260264318467a9"
-  integrity sha512-shrt3KBUnFWoAAqBa5iyz8v62g1P9JIlMtvW+C2GH9J3HqYFV6Hs+Rx7OtNQ1z7xTNttPEbJMGn360JwIT9D0g==
+liquidjs-lib@^5.2.2:
+  version "5.2.2"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.2.2.tgz#72a6fa4a32b74c49b7f9e9f9e58e31e55ff6a264"
+  integrity sha512-wHwJGGQi0zU3DrOaFPqfa36i3W0XojA/aoXbr66ph1NDc3nA1CJzdsagMx++iqY23qftqgUo0rKN9WDz2wmr/Q==
   dependencies:
     "@vulpemventures/secp256k1-zkp" "^2.0.0"
+    axios "^0.21.1"
     bech32 "^1.1.2"
     bip174-liquid "^1.0.3"
     bip32 "^2.0.4"
