@@ -52,7 +52,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    if (marinaStore.getState().wallet.encryptedMnemonic !== '') {
+    if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic !== '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
     }
@@ -71,7 +71,7 @@ browser.browserAction.onClicked.addListener(() => {
     // the wallet creation process, we let user re-open it
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
-    if (marinaStore.getState().wallet.encryptedMnemonic === '') {
+    if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic === '') {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {

@@ -6,13 +6,15 @@ import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 
 export const walletInitState: IWallet = {
-  restorerOpts: {
-    lastUsedExternalIndex: 0,
-    lastUsedInternalIndex: 0,
+  mainAccount: {
+    encryptedMnemonic: '',
+    masterBlindingKey: '',
+    masterXPub: '',
+    restorerOpts: {
+      lastUsedExternalIndex: 0,
+      lastUsedInternalIndex: 0,
+    },
   },
-  encryptedMnemonic: '',
-  masterXPub: '',
-  masterBlindingKey: '',
   passwordHash: '',
   utxoMap: {},
   deepRestorer: {
@@ -34,20 +36,20 @@ export function walletReducer(
     case ACTION_TYPES.WALLET_SET_DATA: {
       return {
         ...state,
-        masterXPub: payload.masterXPub,
-        masterBlindingKey: payload.masterBlindingKey,
-        encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
-        restorerOpts: payload.restorerOpts,
+        mainAccount: { ...payload },
       };
     }
 
     case ACTION_TYPES.NEW_CHANGE_ADDRESS_SUCCESS: {
       return {
         ...state,
-        restorerOpts: {
-          ...state.restorerOpts,
-          lastUsedInternalIndex: (state.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
+        mainAccount: {
+          ...state.mainAccount,
+          restorerOpts: {
+            ...state.mainAccount.restorerOpts,
+            lastUsedInternalIndex: (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
+          },
         },
       };
     }
@@ -55,9 +57,12 @@ export function walletReducer(
     case ACTION_TYPES.NEW_ADDRESS_SUCCESS: {
       return {
         ...state,
-        restorerOpts: {
-          ...state.restorerOpts,
-          lastUsedExternalIndex: (state.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
+        mainAccount: {
+          ...state.mainAccount,
+          restorerOpts: {
+            ...state.mainAccount.restorerOpts,
+            lastUsedExternalIndex: (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
+          },
         },
       };
     }

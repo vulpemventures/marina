@@ -18,12 +18,7 @@ import {
   setTx,
   setTxData,
 } from '../application/redux/actions/connect';
-import {
-  masterPubKeySelector,
-  restorerOptsSelector,
-  utxosSelector,
-} from '../application/redux/selectors/wallet.selector';
-import { masterPubKeyRestorerFromState, MasterPublicKey } from 'ldk';
+import { selectMainAccount, utxosSelector } from '../application/redux/selectors/wallet.selector';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
@@ -122,13 +117,13 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getAddresses.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await getRestoredXPub(state);
+          const xpub = await selectMainAccount(state).getWatchIdentity();
           return successMsg(await xpub.getAddresses());
         }
 
         case Marina.prototype.getNextAddress.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await getRestoredXPub(state);
+          const xpub = await selectMainAccount(state).getWatchIdentity();
           const nextAddress = await xpub.getNextAddress();
           await this.store.dispatchAsync(incrementAddressIndex());
           return successMsg(nextAddress);
@@ -136,7 +131,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getNextChangeAddress.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await getRestoredXPub(state);
+          const xpub = await selectMainAccount(state).getWatchIdentity();
           const nextChangeAddress = await xpub.getNextChangeAddress();
           await this.store.dispatchAsync(incrementChangeAddressIndex());
           return successMsg(nextChangeAddress);
@@ -223,7 +218,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.isReady.name: {
           try {
-            await getRestoredXPub(state); // check if Xpub is valid
+            await selectMainAccount(state).getWatchIdentity(); // check if Xpub is valid
             return successMsg(state.app.isOnboardingCompleted);
           } catch {
             // catch error = not ready
@@ -245,10 +240,4 @@ export default class MarinaBroker extends Broker {
       else throw err;
     }
   };
-}
-
-function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {
-  const xPubKey = masterPubKeySelector(state);
-  const opts = restorerOptsSelector(state);
-  return masterPubKeyRestorerFromState(xPubKey)(opts);
 }

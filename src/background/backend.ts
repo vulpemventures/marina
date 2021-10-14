@@ -12,8 +12,8 @@ import {
   fetchAndUnblindUtxosGenerator,
   masterPubKeyRestorerFromEsplora,
   MasterPublicKey,
-  masterPubKeyRestorerFromState,
   utxoWithPrevout,
+  IdentityType,
 } from 'ldk';
 import {
   fetchAssetsFromTaxi,
@@ -29,10 +29,7 @@ import {
 } from '../application/redux/actions/wallet';
 import { createAddress } from '../domain/address';
 import { setTaxiAssets, updateTaxiAssets } from '../application/redux/actions/taxi';
-import {
-  masterPubKeySelector,
-  restorerOptsSelector,
-} from '../application/redux/selectors/wallet.selector';
+import { selectMainAccount } from '../application/redux/selectors/wallet.selector';
 import { addUtxo, deleteUtxo, updateUtxos } from '../application/redux/actions/utxos';
 import { addAsset } from '../application/redux/actions/asset';
 import { ThunkAction } from 'redux-thunk';
@@ -52,9 +49,9 @@ import { flushTx } from '../application/redux/actions/connect';
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
 const getAddresses = async (state: RootReducerState) => {
-  const xpub = await getRestoredXPub(state);
+  const xpub = await selectMainAccount(state).getWatchIdentity();
   return (await xpub.getAddresses()).reverse();
-}
+};
 
 /**
  * fetch and unblind the utxos and then refresh it.
@@ -259,7 +256,14 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
   return async (dispatch, getState) => {
     const state = getState();
     const { isLoading, gapLimit } = state.wallet.deepRestorer;
-    const toRestore = masterPubKeySelector(state);
+    const toRestore = new MasterPublicKey({
+      chain: state.app.network,
+      type: IdentityType.MasterPublicKey,
+      opts: {
+        masterPublicKey: state.wallet.mainAccount.masterXPub,
+        masterBlindingKey: state.wallet.mainAccount.masterBlindingKey,
+      },
+    });
     const explorer = getExplorerURLSelector(getState());
     if (isLoading) return;
 
@@ -275,9 +279,10 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
 
       dispatch(
         setWalletData({
-          ...state.wallet,
+          ...state.wallet.mainAccount,
           restorerOpts,
           confidentialAddresses: addresses,
+          passwordHash: state.wallet.passwordHash,
         })
       );
 
@@ -292,12 +297,6 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       dispatch(setDeepRestorerIsLoading(false));
     }
   };
-}
-
-function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {
-  const xPubKey = masterPubKeySelector(state);
-  const opts = restorerOptsSelector(state);
-  return masterPubKeyRestorerFromState(xPubKey)(opts);
 }
 
 // reset all the reducers except the `assets` reducer (shared data).

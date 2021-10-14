@@ -1,5 +1,15 @@
-import { StateRestorerOpts, Mnemonic, IdentityType, mnemonicRestorerFromState } from 'ldk';
+import {
+  StateRestorerOpts,
+  Mnemonic,
+  IdentityType,
+  mnemonicRestorerFromState,
+  MasterPublicKey,
+  masterPubKeyRestorerFromState,
+} from 'ldk';
 import { Address } from '../../domain/address';
+import { MasterBlindingKey } from '../../domain/master-blinding-key';
+import { MasterXPub } from '../../domain/master-extended-pub';
+import { Network } from '../../domain/network';
 
 export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRestorerOpts {
   const derivationPaths = addresses.map((addr) => addr.derivationPath);
@@ -27,16 +37,34 @@ export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRe
   };
 }
 
-export function mnemonicWallet(
+export function restoredMnemonic(
   mnemonic: string,
   restorerOpts: StateRestorerOpts,
-  chain: string
+  chain: Network
 ): Promise<Mnemonic> {
-  const mnemonicWallet = new Mnemonic({
+  const mnemonicID = new Mnemonic({
     chain,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
   });
 
-  return mnemonicRestorerFromState(mnemonicWallet)(restorerOpts);
+  return mnemonicRestorerFromState(mnemonicID)(restorerOpts);
+}
+
+export function restoredMasterPublicKey(
+  masterXPub: MasterXPub,
+  masterBlindingKey: MasterBlindingKey,
+  restorerOpts: StateRestorerOpts,
+  network: Network
+) {
+  const xpub = new MasterPublicKey({
+    chain: network,
+    type: IdentityType.MasterPublicKey,
+    opts: {
+      masterPublicKey: masterXPub,
+      masterBlindingKey: masterBlindingKey,
+    },
+  });
+
+  return masterPubKeyRestorerFromState(xpub)(restorerOpts);
 }

@@ -3,7 +3,12 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import { blindAndSignPset, broadcastTx, decrypt, mnemonicWallet } from '../../../application/utils';
+import {
+  blindAndSignPset,
+  broadcastTx,
+  decrypt,
+  restoredMnemonic,
+} from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
 import { IWallet } from '../../../domain/wallet';
@@ -12,21 +17,18 @@ import { createPassword } from '../../../domain/password';
 import { match } from '../../../domain/password-hash';
 import { StateRestorerOpts } from 'ldk';
 import { extractErrorMessage } from '../../utils/error';
+import { MainAccount } from '../../../domain/account';
 
 export interface EndOfFlowProps {
-  wallet: IWallet;
-  network: Network;
-  restorerOpts: StateRestorerOpts;
+  mainAccount: MainAccount;
   pset?: string;
   explorerURL: string;
   recipientAddress?: string;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
-  wallet,
-  network,
+  mainAccount,
   pset,
-  restorerOpts,
   explorerURL,
   recipientAddress,
 }) => {
@@ -41,13 +43,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
     if (!pset || !recipientAddress) return;
     try {
       const pass = createPassword(password);
-      if (!match(password, wallet.passwordHash)) {
-        throw new Error('Invalid password');
-      }
-
-      const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
-
-      const mnemo = await mnemonicWallet(mnemonic, restorerOpts, network);
+      const mnemo = await mainAccount.getSigningIdentity(pass);
       tx = await blindAndSignPset(mnemo, pset, [recipientAddress]);
 
       const txid = await broadcastTx(explorerURL, tx);

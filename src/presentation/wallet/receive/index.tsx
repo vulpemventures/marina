@@ -7,15 +7,14 @@ import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
+import { MainAccount } from '../../../domain/account';
 
 export interface ReceiveProps {
-  pubKey: MasterPublicKey;
-  restorerOpts: StateRestorerOpts;
+  mainAccount: MainAccount;
 }
 
-const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
+const ReceiveView: React.FC<ReceiveProps> = ({ mainAccount }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -33,7 +32,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
 
   useEffect(() => {
     (async () => {
-      const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
+      const publicKey = await mainAccount.getWatchIdentity();
       const addr = await publicKey.getNextAddress();
       setConfidentialAddress(addr.confidentialAddress);
       await dispatch(incrementAddressIndex()); // persist address

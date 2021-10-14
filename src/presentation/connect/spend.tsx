@@ -15,14 +15,12 @@ import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
-import { mnemonicWallet } from '../../application/utils/restorer';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
-  restorerOptsSelector,
+  selectMainAccount,
   utxosSelector,
 } from '../../application/redux/selectors/wallet.selector';
-import { decrypt } from '../../application/utils/crypto';
 import PopupWindowProxy from './popupWindowProxy';
 
 export interface SpendPopupResponse {
@@ -32,12 +30,9 @@ export interface SpendPopupResponse {
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
-  const coins = useSelector(utxosSelector);
-  const restorerOpts = useSelector(restorerOptsSelector);
-  const encryptedMnemonic = useSelector(
-    (state: RootReducerState) => state.wallet.encryptedMnemonic
-  );
+  const mainAccount = useSelector(selectMainAccount);
   const network = useSelector((state: RootReducerState) => state.app.network);
+  const coins = useSelector(utxosSelector);
 
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -70,11 +65,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
     if (!password || password.length === 0) return;
 
     try {
-      const mnemonicIdentity = await mnemonicWallet(
-        decrypt(encryptedMnemonic, password),
-        restorerOpts,
-        network
-      );
+      const mnemonicIdentity = await mainAccount.getSigningIdentity(password);
       const signedTxHex = await makeTransaction(
         mnemonicIdentity,
         coins,

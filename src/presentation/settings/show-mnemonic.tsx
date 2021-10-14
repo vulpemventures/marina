@@ -21,7 +21,7 @@ const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet 
     if (!match(password, wallet.passwordHash)) {
       throw new Error('Invalid password');
     }
-    const mnemo = decrypt(wallet.encryptedMnemonic, createPassword(password));
+    const mnemo = decrypt(wallet.mainAccount.encryptedMnemonic, createPassword(password));
     setMnemonic(mnemo);
     showUnlockModal(false);
   };

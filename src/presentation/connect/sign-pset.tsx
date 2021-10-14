@@ -8,9 +8,7 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
-import { restorerOptsSelector } from '../../application/redux/selectors/wallet.selector';
-import { RootReducerState } from '../../domain/common';
-import { decrypt, mnemonicWallet } from '../../application/utils';
+import { selectMainAccount } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
 
 export interface SignTransactionPopupResponse {
@@ -24,11 +22,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const network = useSelector((state: RootReducerState) => state.app.network);
-  const restorerOpts = useSelector(restorerOptsSelector);
-  const encryptedMnemonic = useSelector(
-    (state: RootReducerState) => state.wallet.encryptedMnemonic
-  );
+  const mainAccount = useSelector(selectMainAccount);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
@@ -52,11 +46,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       const { tx } = connectData;
       if (!tx || !tx.pset) throw new Error('No transaction to sign');
 
-      const mnemo = await mnemonicWallet(
-        decrypt(encryptedMnemonic, password),
-        restorerOpts,
-        network
-      );
+      const mnemo = await mainAccount.getSigningIdentity(password);
       const signedPset = await mnemo.signPset(tx.pset);
       await sendResponseMessage(true, signedPset);
 

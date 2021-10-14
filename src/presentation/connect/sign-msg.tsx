@@ -39,7 +39,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [error, setError] = useState<string>('');
   const network = useSelector((state: RootReducerState) => state.app.network);
   const encryptedMnemonic = useSelector(
-    (state: RootReducerState) => state.wallet.encryptedMnemonic
+    (state: RootReducerState) => state.wallet.mainAccount.encryptedMnemonic
   );
 
   const popupWindowProxy = new PopupWindowProxy<SignMessagePopupResponse>();

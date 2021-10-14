@@ -1,23 +1,9 @@
-import { IdentityType, MasterPublicKey, StateRestorerOpts, UtxoInterface } from 'ldk';
+import { MasterPublicKey, UtxoInterface } from 'ldk';
+import { createMnemonicAccount, MainAccount } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 
-export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
-  const { masterBlindingKey, masterXPub } = state.wallet;
-  const network = state.app.network;
-  const pubKeyWallet = new MasterPublicKey({
-    chain: network,
-    type: IdentityType.MasterPublicKey,
-    opts: {
-      masterPublicKey: masterXPub,
-      masterBlindingKey: masterBlindingKey,
-    },
-  });
-
-  return pubKeyWallet;
-}
-
-export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts {
-  return state.wallet.restorerOpts;
+export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
+  return selectMainAccount(state).getWatchIdentity();
 }
 
 export function utxosSelector(state: RootReducerState): UtxoInterface[] {
@@ -25,5 +11,12 @@ export function utxosSelector(state: RootReducerState): UtxoInterface[] {
 }
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {
-  return state.wallet.encryptedMnemonic !== '' && state.wallet.encryptedMnemonic !== undefined;
+  return (
+    state.wallet.mainAccount.encryptedMnemonic !== '' &&
+    state.wallet.mainAccount.encryptedMnemonic !== undefined
+  );
+}
+
+export function selectMainAccount(state: RootReducerState): MainAccount {
+  return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }

@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import {
-  greedyCoinSelector,
-  masterPubKeyRestorerFromState,
-  MasterPublicKey,
-  RecipientInterface,
-  StateRestorerOpts,
-  walletFromCoins,
-} from 'ldk';
+import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -38,6 +31,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
+import { MainAccount } from '../../../domain/account';
 
 export interface ChooseFeeProps {
   network: Network;
@@ -50,8 +44,7 @@ export interface ChooseFeeProps {
   balances: BalancesByAsset;
   taxiAssets: string[];
   lbtcAssetHash: string;
-  masterPubKey: MasterPublicKey;
-  restorerOpts: StateRestorerOpts;
+  mainAccount: MainAccount;
 }
 
 const ChooseFeeView: React.FC<ChooseFeeProps> = ({
@@ -65,8 +58,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   balances,
   taxiAssets,
   lbtcAssetHash,
-  masterPubKey,
-  restorerOpts,
+  mainAccount,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -152,7 +144,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     let nextChangeAddr = feeChange;
     if (!nextChangeAddr) {
-      const restored = await masterPubKeyRestorerFromState(masterPubKey)(restorerOpts);
+      const restored = await mainAccount.getWatchIdentity();
       const next = await restored.getNextChangeAddress();
       nextChangeAddr = createAddress(next.confidentialAddress, next.derivationPath);
       setFeeChange(nextChangeAddr);
