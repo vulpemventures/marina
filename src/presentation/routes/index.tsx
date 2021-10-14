@@ -37,6 +37,7 @@ import {
   BACKUP_UNLOCK_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
+  PAIR_COSIGNER_ROUTE,
 } from './constants';
 
 // Connect
@@ -79,6 +80,7 @@ import SettingsExplorer from '../settings/explorer';
 import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
+import PairCosigner from '../cosigner/pair';
 
 const Routes: React.FC = () => {
   return (
@@ -123,6 +125,8 @@ const Routes: React.FC = () => {
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SIGN_PSET_ROUTE} component={ConnectSignTransaction} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
+
+      <Route exact path={PAIR_COSIGNER_ROUTE} component={PairCosigner} />
     </Switch>
   );
 };

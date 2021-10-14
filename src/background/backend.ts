@@ -51,6 +51,11 @@ import { flushTx } from '../application/redux/actions/connect';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
+const getAddresses = async (state: RootReducerState) => {
+  const xpub = await getRestoredXPub(state);
+  return (await xpub.getAddresses()).reverse();
+}
+
 /**
  * fetch and unblind the utxos and then refresh it.
  */
@@ -61,10 +66,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       const { wallet, app } = state;
       if (!app.isAuthenticated) return;
 
-      const xpub = await getRestoredXPub(state);
-      const addrs = (await xpub.getAddresses()).reverse();
-      if (addrs.length === 0) return;
-
+      const addrs = await getAddresses(state);
       const explorer = getExplorerURLSelector(getState());
 
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
@@ -156,8 +158,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       const { app, txsHistory } = state;
       if (!app.isAuthenticated) return;
       // Initialize txs to txsHistory shallow clone
-      const pubKeyWallet = await getRestoredXPub(state);
-      const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
+      const addressInterfaces = await getAddresses(state);
       const walletScripts = addressInterfaces.map((a) =>
         address.toOutputScript(a.confidentialAddress).toString('hex')
       );

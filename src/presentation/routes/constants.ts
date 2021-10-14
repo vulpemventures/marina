@@ -50,6 +50,9 @@ const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
 
+// Cosigner Opt in
+const PAIR_COSIGNER_ROUTE = '/cosigner/pair';
+
 export {
   //Connect
   CONNECT_ENABLE_ROUTE,
@@ -90,4 +93,6 @@ export {
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
+
+  PAIR_COSIGNER_ROUTE
 };
