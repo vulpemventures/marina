@@ -6,16 +6,10 @@ import ShellPopUp from '../../components/shell-popup';
 import {
   blindAndSignPset,
   broadcastTx,
-  decrypt,
-  restoredMnemonic,
 } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
-import { IWallet } from '../../../domain/wallet';
-import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
-import { match } from '../../../domain/password-hash';
-import { StateRestorerOpts } from 'ldk';
 import { extractErrorMessage } from '../../utils/error';
 import { MainAccount } from '../../../domain/account';
 
