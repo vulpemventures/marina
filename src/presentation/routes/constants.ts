@@ -49,6 +49,7 @@ const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
+const SETTINGS_COSIGNERS_ROUTE = '/settings/info/cosigners';
 
 // Cosigner Opt in
 const PAIR_COSIGNER_ROUTE = '/cosigner/pair';
@@ -93,6 +94,7 @@ export {
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
+  SETTINGS_COSIGNERS_ROUTE,
 
   PAIR_COSIGNER_ROUTE
 };

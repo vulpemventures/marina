@@ -38,6 +38,7 @@ import {
   SETTINGS_DEEP_RESTORER_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
   PAIR_COSIGNER_ROUTE,
+  SETTINGS_COSIGNERS_ROUTE,
 } from './constants';
 
 // Connect
@@ -81,6 +82,7 @@ import SettingsNetworks from '../../application/redux/containers/settings-networ
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 import PairCosigner from '../cosigner/pair';
+import SettingsCosigners from '../settings/cosigners';
 
 const Routes: React.FC = () => {
   return (
@@ -117,6 +119,7 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} comp={SettingsDeepRestorer} />
+      <ProtectedRoute exact path={SETTINGS_COSIGNERS_ROUTE} comp={SettingsCosigners} />
       <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
