@@ -48,7 +48,7 @@ export function walletReducer(
           ...state.mainAccount,
           restorerOpts: {
             ...state.mainAccount.restorerOpts,
-            lastUsedInternalIndex: (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
+            lastUsedInternalIndex: (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
           },
         },
       };
@@ -61,7 +61,7 @@ export function walletReducer(
           ...state.mainAccount,
           restorerOpts: {
             ...state.mainAccount.restorerOpts,
-            lastUsedExternalIndex: (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
+            lastUsedExternalIndex: (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
           },
         },
       };

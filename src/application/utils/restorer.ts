@@ -5,6 +5,10 @@ import {
   mnemonicRestorerFromState,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
+  Multisig,
+  DEFAULT_BASE_DERIVATION_PATH,
+  CosignerMultisig,
+  IdentityInterface,
 } from 'ldk';
 import { Address } from '../../domain/address';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
@@ -37,6 +41,8 @@ export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRe
   };
 }
 
+// create a Mnemonic Identity
+// restore it from restorer's state
 export function restoredMnemonic(
   mnemonic: string,
   restorerOpts: StateRestorerOpts,
@@ -51,6 +57,8 @@ export function restoredMnemonic(
   return mnemonicRestorerFromState(mnemonicID)(restorerOpts);
 }
 
+// create a MasterPublicKey Identity
+// restore it using StateRestorerOpts
 export function restoredMasterPublicKey(
   masterXPub: MasterXPub,
   masterBlindingKey: MasterBlindingKey,
@@ -67,4 +75,27 @@ export function restoredMasterPublicKey(
   });
 
   return masterPubKeyRestorerFromState(xpub)(restorerOpts);
+}
+
+
+export function restoredMultisig(
+  mnemonic: string,
+  cosigners: CosignerMultisig[],
+  requiredSignatures: number,
+  network: Network
+) {
+  const multisigID = new Multisig({
+    chain: network,
+    type: IdentityType.Multisig,
+    opts: {
+      requiredSignatures,
+      signer: {
+        mnemonic,
+        baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH,
+      },
+      cosigners
+    }
+  });
+
+  return restore(multisigID as IdentityInterface)
 }
