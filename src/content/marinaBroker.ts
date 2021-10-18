@@ -18,19 +18,19 @@ import {
   setTx,
   setTxData,
 } from '../application/redux/actions/connect';
-import { selectMainAccount, utxosSelector } from '../application/redux/selectors/wallet.selector';
+import { selectMainAccount, selectTransactions, selectUtxos } from '../application/redux/selectors/wallet.selector';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
 } from '../application/redux/actions/wallet';
 import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
-import { walletTransactions } from '../application/redux/selectors/transaction.selector';
-import { balancesSelector } from '../application/redux/selectors/balance.selector';
+import { selectBalances } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
 import { Balance, Recipient } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
+import { MainAccountID } from '../domain/account';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -195,19 +195,19 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getTransactions.name: {
           this.checkHostnameAuthorization(state);
-          const transactions = walletTransactions(state);
+          const transactions = selectTransactions(MainAccountID)(state);
           return successMsg(transactions);
         }
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          const coins = utxosSelector(state);
+          const coins = selectUtxos(MainAccountID)(state);
           return successMsg(coins);
         }
 
         case Marina.prototype.getBalances.name: {
           this.checkHostnameAuthorization(state);
-          const balances = balancesSelector(state);
+          const balances = selectBalances(MainAccountID)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {

@@ -1,13 +1,13 @@
-import { UtxoInterface } from 'ldk';
-import { MnemonicAccountData } from './account';
+import { AccountID, MnemonicAccountData } from './account';
 import { IError } from './common';
 import { PasswordHash } from './password-hash';
+import { UtxosAndTxsHistory } from './transaction';
 
 export interface IWallet {
   mainAccount: MnemonicAccountData;
+  unspentsAndTransactions: Record<AccountID, UtxosAndTxsHistory>;
   errors?: Record<string, IError>;
   passwordHash: PasswordHash;
-  utxoMap: Record<string, UtxoInterface>;
   deepRestorer: {
     gapLimit: number;
     isLoading: boolean;

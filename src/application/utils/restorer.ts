@@ -9,6 +9,8 @@ import {
   DEFAULT_BASE_DERIVATION_PATH,
   CosignerMultisig,
   IdentityInterface,
+  MultisigWatchOnly,
+  XPub,
 } from 'ldk';
 import { Address } from '../../domain/address';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
@@ -94,6 +96,24 @@ export function restoredMultisig(
         baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH,
       },
       cosigners
+    }
+  });
+
+  return restore(multisigID as IdentityInterface)
+}
+
+export function restoredWatchOnlyMultisig(
+  signerXPub: XPub,
+  cosigners: CosignerMultisig[],
+  requiredSignatures: number,
+  network: Network
+) {
+  const multisigID = new MultisigWatchOnly({
+    chain: network,
+    type: IdentityType.MultisigWatchOnly,
+    opts: {
+      requiredSignatures,
+      cosigners: cosigners.concat([signerXPub])
     }
   });
 

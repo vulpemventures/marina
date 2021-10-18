@@ -1,6 +1,7 @@
+import { AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { lbtcAssetByNetwork } from '../../utils';
-import { walletTransactions } from './transaction.selector';
+import { selectTransactions, selectUtxos } from './wallet.selector';
 
 export type BalancesByAsset = { [assetHash: string]: number };
 /**
@@ -8,8 +9,8 @@ export type BalancesByAsset = { [assetHash: string]: number };
  * @param onSuccess
  * @param onError
  */
-export function balancesSelector(state: RootReducerState): BalancesByAsset {
-  const utxos = Object.values(state.wallet.utxoMap);
+export const selectBalances = (accountID: AccountID) => (state: RootReducerState): BalancesByAsset => {
+  const utxos = selectUtxos(accountID)(state);
   const balancesFromUtxos = utxos.reduce((acc, curr) => {
     if (!curr.asset || !curr.value) {
       return acc;
@@ -17,7 +18,7 @@ export function balancesSelector(state: RootReducerState): BalancesByAsset {
     return { ...acc, [curr.asset]: curr.value + (curr.asset in acc ? acc[curr.asset] : 0) };
   }, {} as BalancesByAsset);
 
-  const txs = walletTransactions(state);
+  const txs = selectTransactions(accountID)(state);
   const assets = Object.keys(balancesFromUtxos);
 
   for (const tx of txs) {

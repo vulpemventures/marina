@@ -1,13 +1,14 @@
 import { connect } from 'react-redux';
+import { MainAccountID } from '../../../domain/account';
 import { assetGetterFromIAssets } from '../../../domain/assets';
 import { RootReducerState } from '../../../domain/common';
 import SendSelectAssetView, {
   SendSelectAssetProps,
 } from '../../../presentation/wallet/send/send-select-asset';
-import { balancesSelector } from '../selectors/balance.selector';
+import { selectBalances } from '../selectors/balance.selector';
 
 const mapStateToProps = (state: RootReducerState): SendSelectAssetProps => {
-  const balances = balancesSelector(state);
+  const balances = selectBalances(MainAccountID)(state);
   const getAsset = assetGetterFromIAssets(state.assets);
   return {
     network: state.app.network,

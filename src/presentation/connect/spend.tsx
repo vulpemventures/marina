@@ -19,9 +19,10 @@ import { blindAndSignPset, createSendPset } from '../../application/utils/transa
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
   selectMainAccount,
-  utxosSelector,
+  selectUtxos,
 } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
+import { MainAccountID } from '../../domain/account';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -32,7 +33,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
   const mainAccount = useSelector(selectMainAccount);
   const network = useSelector((state: RootReducerState) => state.app.network);
-  const coins = useSelector(utxosSelector);
+  const coins = useSelector(selectUtxos(MainAccountID));
 
   const dispatch = useDispatch<ProxyStoreDispatch>();
 

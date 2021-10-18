@@ -11,15 +11,16 @@ import { alias, wrapStore } from 'webext-redux';
 import marinaReducer from './reducers';
 import {
   fetchAndSetTaxiAssets,
-  updateTxsHistory,
-  fetchAndUpdateUtxos,
+  makeTxsUpdaterThunk,
+  makeUtxosUpdaterThunk,
   startAlarmUpdater,
   deepRestorer,
   resetAll,
-} from '../../background/backend';
+} from './backend';
 import persistStore from 'redux-persist/es/persistStore';
 import { parse, stringify } from '../utils/browser-storage-converters';
 import thunk from 'redux-thunk';
+import { selectMainAccount } from './selectors/wallet.selector';
 
 export const serializerAndDeserializer = {
   serializer: (payload: any) => stringify(payload),
@@ -27,8 +28,8 @@ export const serializerAndDeserializer = {
 };
 
 const backgroundAliases = {
-  [UPDATE_UTXOS]: () => fetchAndUpdateUtxos(),
-  [UPDATE_TXS]: () => updateTxsHistory(),
+  [UPDATE_UTXOS]: () => makeUtxosUpdaterThunk(selectMainAccount),
+  [UPDATE_TXS]: () => makeTxsUpdaterThunk(selectMainAccount),
   [UPDATE_TAXI_ASSETS]: () => fetchAndSetTaxiAssets(),
   [START_PERIODIC_UPDATE]: () => startAlarmUpdater(),
   [START_DEEP_RESTORATION]: () => deepRestorer(),

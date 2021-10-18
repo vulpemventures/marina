@@ -1,5 +1,5 @@
-import { RootReducerState } from '../domain/common';
-import { defaultPrecision } from '../application/utils/constants';
+import { RootReducerState } from '../../domain/common';
+import { defaultPrecision } from '../utils/constants';
 import axios from 'axios';
 import browser from 'webextension-polyfill';
 import {
@@ -14,6 +14,7 @@ import {
   MasterPublicKey,
   utxoWithPrevout,
   IdentityType,
+  AddressInterface,
 } from 'ldk';
 import {
   fetchAssetsFromTaxi,
@@ -21,52 +22,73 @@ import {
   taxiURL,
   toDisplayTransaction,
   toStringOutpoint,
-} from '../application/utils';
+} from '../utils';
 import {
   setDeepRestorerError,
   setDeepRestorerIsLoading,
   setWalletData,
-} from '../application/redux/actions/wallet';
-import { createAddress } from '../domain/address';
-import { setTaxiAssets, updateTaxiAssets } from '../application/redux/actions/taxi';
-import { selectMainAccount } from '../application/redux/selectors/wallet.selector';
-import { addUtxo, deleteUtxo, updateUtxos } from '../application/redux/actions/utxos';
-import { addAsset } from '../application/redux/actions/asset';
+} from './actions/wallet';
+import { createAddress } from '../../domain/address';
+import { setTaxiAssets, updateTaxiAssets } from './actions/taxi';
+import { addUtxo, deleteUtxo, updateUtxos } from './actions/utxos';
+import { addAsset } from './actions/asset';
 import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
-import { IAssets } from '../domain/assets';
-import { addTx, updateTxs } from '../application/redux/actions/transaction';
-import { getExplorerURLSelector } from '../application/redux/selectors/app.selector';
+import { IAssets } from '../../domain/assets';
+import { addTx, updateTxs } from './actions/transaction';
+import { getExplorerURLSelector } from './selectors/app.selector';
 import {
   RESET_APP,
   RESET_CONNECT,
   RESET_TAXI,
   RESET_TXS,
   RESET_WALLET,
-} from '../application/redux/actions/action-types';
-import { flushTx } from '../application/redux/actions/connect';
+} from './actions/action-types';
+import { flushTx } from './actions/connect';
+import { Account } from '../../domain/account';
+import { selectMainAccount } from './selectors/wallet.selector';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
-const getAddresses = async (state: RootReducerState) => {
-  const xpub = await selectMainAccount(state).getWatchIdentity();
-  return (await xpub.getAddresses()).reverse();
-};
+type AccountSelector = (state: RootReducerState) => Account;
 
 /**
- * fetch and unblind the utxos and then refresh it.
+ * fetch the asset infos from explorer (ticker, precision etc...)
  */
-export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, AnyAction> {
+async function fetchAssetInfos(
+  assetHash: string,
+  explorerUrl: string,
+  assetsState: IAssets,
+  dispatch: Dispatch
+) {
+  if (assetsState[assetHash] !== undefined) return; // do not update
+
+  const assetInfos = (await axios.get(`${explorerUrl}/asset/${assetHash}`)).data;
+  const name = assetInfos?.name ? assetInfos.name : 'Unknown';
+  const ticker = assetInfos?.ticker ? assetInfos.ticker : assetHash.slice(0, 4).toUpperCase();
+  const precision = assetInfos.precision !== undefined ? assetInfos.precision : defaultPrecision;
+
+  dispatch(addAsset(assetHash, { name, ticker, precision }));
+}
+
+async function getAddressesFromAccount(account: Account): Promise<AddressInterface[]> {
+  return (await account.getWatchIdentity()).getAddresses();
+}
+
+// fetch and unblind the utxos and then refresh it.
+export function makeUtxosUpdaterThunk(selectAccount: AccountSelector): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
       const state = getState();
-      const { wallet, app } = state;
+      const { app } = state;
       if (!app.isAuthenticated) return;
 
-      const addrs = await getAddresses(state);
-      const explorer = getExplorerURLSelector(getState());
 
-      const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
+      const account = selectAccount(state);
+      const explorer = getExplorerURLSelector(getState());
+      const utxosMap = state.wallet.unspentsAndTransactions[account.accountID].utxosMap;
+
+      const currentOutpoints = Object.values(utxosMap || {}).map(({ txid, vout }) => ({
         txid,
         vout,
       }));
@@ -75,12 +97,12 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       // Fetch utxo(s). Return blinded utxo(s) if unblinding has been skipped
       const utxos = fetchAndUnblindUtxosGenerator(
-        addrs,
+        await getAddressesFromAccount(account),
         explorer,
         // Skip unblinding if utxo exists in current state
         (utxo) => {
           const outpoint = toStringOutpoint(utxo);
-          const skip = wallet.utxoMap[outpoint] !== undefined;
+          const skip = utxosMap[outpoint] !== undefined;
 
           if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
 
@@ -101,7 +123,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
             utxo = await utxoWithPrevout(utxo, explorer);
           }
 
-          dispatch(addUtxo(utxo));
+          dispatch(addUtxo(account.accountID, utxo));
         }
         utxoIterator = await utxos.next();
       }
@@ -127,35 +149,20 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 }
 
 /**
- * fetch the asset infos from explorer (ticker, precision etc...)
- */
-async function fetchAssetInfos(
-  assetHash: string,
-  explorerUrl: string,
-  assetsState: IAssets,
-  dispatch: Dispatch
-) {
-  if (assetsState[assetHash] !== undefined) return; // do not update
-
-  const assetInfos = (await axios.get(`${explorerUrl}/asset/${assetHash}`)).data;
-  const name = assetInfos?.name ? assetInfos.name : 'Unknown';
-  const ticker = assetInfos?.ticker ? assetInfos.ticker : assetHash.slice(0, 4).toUpperCase();
-  const precision = assetInfos.precision !== undefined ? assetInfos.precision : defaultPrecision;
-
-  dispatch(addAsset(assetHash, { name, ticker, precision }));
-}
-
-/**
  * use fetchAndUnblindTxsGenerator to update the tx history
  */
-export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, AnyAction> {
+export function makeTxsUpdaterThunk(selectAccount: AccountSelector): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
       const state = getState();
-      const { app, txsHistory } = state;
+      const { app } = state;
       if (!app.isAuthenticated) return;
+
+      const account = selectAccount(state);
+      const txsHistory = state.wallet.unspentsAndTransactions[account.accountID].transactions[app.network] || {};
+
       // Initialize txs to txsHistory shallow clone
-      const addressInterfaces = await getAddresses(state);
+      const addressInterfaces = await getAddressesFromAccount(account);
       const walletScripts = addressInterfaces.map((a) =>
         address.toOutputScript(a.confidentialAddress).toString('hex')
       );
@@ -183,7 +190,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
         identityBlindKeyGetter,
         explorer,
         // Check if tx exists in React state
-        (tx) => txsHistory[app.network][tx.txid] !== undefined
+        (tx) => txsHistory[tx.txid] !== undefined
       );
 
       let it = await txsGen.next();
@@ -287,7 +294,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       );
 
       dispatch(updateUtxos());
-      dispatch(updateTxsHistory());
+      dispatch(makeTxsUpdaterThunk(selectMainAccount));
       dispatch(fetchAndSetTaxiAssets());
 
       dispatch(setDeepRestorerError(undefined));

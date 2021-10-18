@@ -1,13 +1,18 @@
 import { MasterPublicKey, UtxoInterface } from 'ldk';
-import { createMnemonicAccount, MainAccount } from '../../../domain/account';
+import { AccountID, createMnemonicAccount, MainAccount } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
+import { TxDisplayInterface } from '../../../domain/transaction';
 
 export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
   return selectMainAccount(state).getWatchIdentity();
 }
 
-export function utxosSelector(state: RootReducerState): UtxoInterface[] {
-  return Object.values(state.wallet.utxoMap);
+export const selectUtxos = (accountID: AccountID) => (state: RootReducerState): UtxoInterface[] => {
+  return Object.values(state.wallet.unspentsAndTransactions[accountID].utxosMap || {});
+}
+
+export const selectTransactions = (accountID: AccountID) => (state: RootReducerState): TxDisplayInterface[] => {
+  return Object.values(state.wallet.unspentsAndTransactions[accountID].transactions[state.app.network] || {});
 }
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {

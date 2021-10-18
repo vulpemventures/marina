@@ -1,10 +1,6 @@
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
 
-export function walletTransactions(state: RootReducerState): TxDisplayInterface[] {
-  return Object.values(state.txsHistory[state.app.network]);
-}
-
 export const txHasAsset =
   (assetHash: string) =>
   (tx: TxDisplayInterface): boolean => {
