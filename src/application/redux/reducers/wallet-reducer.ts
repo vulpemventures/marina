@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
-import { WalletState } from '../../../domain/wallet';
+import { CosignerExtraData, WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
-import { AccountID, MainAccountID } from '../../../domain/account';
+import { AccountID, MainAccountID, MultisigAccountData } from '../../../domain/account';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { Network } from '../../../domain/network';
 
@@ -95,6 +95,17 @@ export function walletReducer(
           },
         },
       };
+    }
+      
+    case ACTION_TYPES.WALLET_ADD_RESTRICTED_ASSET_ACCOUNT: {
+      const data = payload.multisigAccountData as MultisigAccountData<CosignerExtraData>;
+      return {
+        ...state,
+        restrictedAssetAccounts: {
+          ...state.restrictedAssetAccounts,
+          [data.cosignerXPubs[0]]: data
+        }
+      }
     }
 
     case ACTION_TYPES.NEW_CHANGE_ADDRESS_SUCCESS: {

@@ -7,10 +7,20 @@ import {
   NEW_ADDRESS_SUCCESS,
   NEW_CHANGE_ADDRESS_SUCCESS,
   SET_VERIFIED,
+  WALLET_ADD_RESTRICTED_ASSET_ACCOUNT,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { extractErrorMessage } from '../../../presentation/utils/error';
+import { MultisigAccountData } from '../../../domain/account';
+import { CosignerExtraData } from '../../../domain/wallet';
+
+export function addRestrictedAssetData(multisigAccountData: MultisigAccountData<CosignerExtraData>) {
+  return {
+    type: WALLET_ADD_RESTRICTED_ASSET_ACCOUNT,
+    payload: { multisigAccountData }
+  }
+}
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {
