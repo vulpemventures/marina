@@ -17,10 +17,7 @@ import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
-import {
-  selectMainAccount,
-  selectUtxos,
-} from '../../application/redux/selectors/wallet.selector';
+import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
 import { MainAccountID } from '../../domain/account';
 

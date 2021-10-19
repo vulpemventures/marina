@@ -79,7 +79,6 @@ export function restoredMasterPublicKey(
   return masterPubKeyRestorerFromState(xpub)(restorerOpts);
 }
 
-
 export function restoredMultisig(
   signer: HDSignerMultisig,
   cosigners: CosignerMultisig[],
@@ -92,8 +91,8 @@ export function restoredMultisig(
     opts: {
       requiredSignatures,
       signer,
-      cosigners
-    }
+      cosigners,
+    },
   });
 
   // return restoreFrom(multisigID);
@@ -111,8 +110,8 @@ export function restoredWatchOnlyMultisig(
     type: IdentityType.MultisigWatchOnly,
     opts: {
       requiredSignatures,
-      cosigners: cosigners.concat([signerXPub])
-    }
+      cosigners: cosigners.concat([signerXPub]),
+    },
   });
 
   // return restoreFromState(multisigID as IdentityInterface)

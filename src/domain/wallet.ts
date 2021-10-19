@@ -5,7 +5,7 @@ import { UtxosAndTxsHistory } from './transaction';
 
 export interface WalletState {
   mainAccount: MnemonicAccountData;
-  restrictedAssetAccounts: Record<XPub, MultisigAccountData<CosignerExtraData>>,
+  restrictedAssetAccounts: Record<XPub, MultisigAccountData<CosignerExtraData>>;
   unspentsAndTransactions: Record<AccountID, UtxosAndTxsHistory>;
   passwordHash: PasswordHash;
   deepRestorer: {

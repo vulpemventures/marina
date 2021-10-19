@@ -18,7 +18,11 @@ import {
   setTx,
   setTxData,
 } from '../application/redux/actions/connect';
-import { selectMainAccount, selectTransactions, selectUtxos } from '../application/redux/selectors/wallet.selector';
+import {
+  selectMainAccount,
+  selectTransactions,
+  selectUtxos,
+} from '../application/redux/selectors/wallet.selector';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,

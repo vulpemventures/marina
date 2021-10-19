@@ -22,16 +22,14 @@ const SettingsCosigners: React.FC<SettingsCosignersProps> = ({ multisigAccountsD
       currentPage="Change currency"
     >
       <p className="font-regular my-8 text-base text-left">Cosigners</p>
-      <div className="bg-white rounded-lg shadow lg:w-1/3">
+      <div className="lg:w-1/3 bg-white rounded-lg shadow">
         <ul className="divide-y divide-gray-100">
-        {multisigAccountsData.map(({ extraData }) =>
-          <li className="p-3 hover:bg-blue-600 hover:text-blue-200">
-            { extraData.cosignerURL }
-          </li>
-        )}  
+          {multisigAccountsData.map(({ extraData }) => (
+            <li className="hover:bg-blue-600 hover:text-blue-200 p-3">{extraData.cosignerURL}</li>
+          ))}
         </ul>
-      </div> 
-          
+      </div>
+
       <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
         <span className="cursor-pointer" onClick={openAddCosignerTab}>
           Add cosigner

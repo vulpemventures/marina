@@ -57,7 +57,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   taxiAssets,
   lbtcAssetHash,
   mainAccount,
-  mainAccountUtxos
+  mainAccountUtxos,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();

@@ -50,7 +50,8 @@ export function compareCacheForEvents(
 export function newCacheFromState(state: RootReducerState): StoreCache {
   return {
     utxoState: state.wallet.unspentsAndTransactions[MainAccountID].utxosMap,
-    txsHistoryState: state.wallet.unspentsAndTransactions[MainAccountID].transactions[state.app.network],
+    txsHistoryState:
+      state.wallet.unspentsAndTransactions[MainAccountID].transactions[state.app.network],
     enabledWebsitesState: state.connect.enabledSites,
     network: state.app.network,
   };

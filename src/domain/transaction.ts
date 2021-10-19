@@ -6,7 +6,7 @@ import { Network } from './network';
 export interface UtxosAndTxsHistory {
   utxosMap: Record<string, UtxoInterface>;
   transactions: TxsHistoryByNetwork;
-} 
+}
 
 export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 

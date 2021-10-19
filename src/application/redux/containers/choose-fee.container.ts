@@ -17,7 +17,7 @@ const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   sendAsset: state.transaction.sendAsset,
   sendAmount: state.transaction.sendAmount,
   mainAccount: selectMainAccount(state),
-  mainAccountUtxos: selectUtxos(MainAccountID)(state)
+  mainAccountUtxos: selectUtxos(MainAccountID)(state),
 });
 
 const ChooseFee = connect(mapStateToProps)(ChooseFeeView);

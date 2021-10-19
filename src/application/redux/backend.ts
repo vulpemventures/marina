@@ -23,11 +23,7 @@ import {
   toDisplayTransaction,
   toStringOutpoint,
 } from '../utils';
-import {
-  setDeepRestorerError,
-  setDeepRestorerIsLoading,
-  setWalletData,
-} from './actions/wallet';
+import { setDeepRestorerError, setDeepRestorerIsLoading, setWalletData } from './actions/wallet';
 import { createAddress } from '../../domain/address';
 import { setTaxiAssets, updateTaxiAssets } from './actions/taxi';
 import { addUtxo, deleteUtxo, updateUtxos } from './actions/utxos';
@@ -46,7 +42,11 @@ import {
 } from './actions/action-types';
 import { flushTx } from './actions/connect';
 import { Account } from '../../domain/account';
-import { selectMainAccount } from './selectors/wallet.selector';
+import {
+  selectMainAccount,
+  selectUnspentsAndTransactions,
+  selectUtxos,
+} from './selectors/wallet.selector';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
@@ -76,17 +76,18 @@ async function getAddressesFromAccount(account: Account): Promise<AddressInterfa
 }
 
 // fetch and unblind the utxos and then refresh it.
-export function makeUtxosUpdaterThunk(selectAccount: AccountSelector): ThunkAction<void, RootReducerState, any, AnyAction> {
+export function makeUtxosUpdaterThunk(
+  selectAccount: AccountSelector
+): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
       const state = getState();
       const { app } = state;
       if (!app.isAuthenticated) return;
 
-
       const account = selectAccount(state);
       const explorer = getExplorerURLSelector(getState());
-      const utxosMap = state.wallet.unspentsAndTransactions[account.accountID].utxosMap;
+      const utxosMap = selectUnspentsAndTransactions(account.accountID)(state).utxosMap;
 
       const currentOutpoints = Object.values(utxosMap || {}).map(({ txid, vout }) => ({
         txid,
@@ -151,7 +152,9 @@ export function makeUtxosUpdaterThunk(selectAccount: AccountSelector): ThunkActi
 /**
  * use fetchAndUnblindTxsGenerator to update the tx history
  */
-export function makeTxsUpdaterThunk(selectAccount: AccountSelector): ThunkAction<void, RootReducerState, any, AnyAction> {
+export function makeTxsUpdaterThunk(
+  selectAccount: AccountSelector
+): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
     try {
       const state = getState();
@@ -159,7 +162,9 @@ export function makeTxsUpdaterThunk(selectAccount: AccountSelector): ThunkAction
       if (!app.isAuthenticated) return;
 
       const account = selectAccount(state);
-      const txsHistory = state.wallet.unspentsAndTransactions[account.accountID].transactions[app.network] || {};
+      const txsHistory = selectUnspentsAndTransactions(account.accountID)(state).transactions[
+        app.network
+      ];
 
       // Initialize txs to txsHistory shallow clone
       const addressInterfaces = await getAddressesFromAccount(account);
@@ -204,7 +209,7 @@ export function makeTxsUpdaterThunk(selectAccount: AccountSelector): ThunkAction
         const tx = it.value;
         // Update all txsHistory state at each single new tx
         const toAdd = toDisplayTransaction(tx, walletScripts, networks[app.network]);
-        dispatch(addTx(toAdd, app.network));
+        dispatch(addTx(account.accountID, toAdd, app.network));
         it = await txsGen.next();
       }
     } catch (error) {

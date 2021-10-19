@@ -31,7 +31,7 @@ const optInForm = (props: FormikProps<OptInFormValues>) => {
       />
       {touchedAndError('cosignerURL') && <div className="text-red">{errors.cosignerURL}</div>}
 
-       <Field
+      <Field
         type="password"
         name="password"
         className="focus:ring-primary focus:border-primary placeholder-grayLight block w-2/5 border-2 rounded-md"
@@ -48,7 +48,7 @@ const optInForm = (props: FormikProps<OptInFormValues>) => {
 const OptInFormikForm = withFormik<OptInFormProps, OptInFormValues>({
   validationSchema: Yup.object().shape({
     cosignerURL: Yup.string().required('Please input cosignerURL').url('Not a valid URL'),
-    password: Yup.string().required()
+    password: Yup.string().required(),
   }),
 
   handleSubmit: async (values, { props }) => {
@@ -61,7 +61,7 @@ const OptInFormikForm = withFormik<OptInFormProps, OptInFormValues>({
 const PairCosigner: React.FC = () => {
   const onSubmit = (values: OptInFormValues) => {
     // const multisigAccountData = create2of2MultisigAccountData<CosignerExtraData>(
-      
+
     // )
 
     console.log(values);

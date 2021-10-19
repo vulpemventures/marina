@@ -5,6 +5,8 @@ import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 import { AccountID, MainAccountID } from '../../../domain/account';
+import { TxDisplayInterface } from '../../../domain/transaction';
+import { Network } from '../../../domain/network';
 
 export const walletInitState: WalletState = {
   mainAccount: {
@@ -20,9 +22,9 @@ export const walletInitState: WalletState = {
   restrictedAssetAccounts: {},
   unspentsAndTransactions: {
     MainAccountID: {
-      utxosMap: { },
-      transactions: { regtest: { }, liquid: { } }
-    }
+      utxosMap: {},
+      transactions: { regtest: {}, liquid: {} },
+    },
   },
   passwordHash: '',
   deepRestorer: {
@@ -32,21 +34,44 @@ export const walletInitState: WalletState = {
   isVerified: false,
 };
 
-const addUnspent = (state: WalletState) => (accountID: AccountID, utxo: UtxoInterface): WalletState => {
-  return {
-    ...state,
-    unspentsAndTransactions: {
-      ...state.unspentsAndTransactions,
-      [accountID]: {
-        ...state.unspentsAndTransactions[accountID],
-        utxosMap: {
-          ...state.unspentsAndTransactions[accountID].utxosMap,
-          [toStringOutpoint(utxo)]: utxo,
-        }
-      }
-    }
-  }
-}
+const addUnspent =
+  (state: WalletState) =>
+  (accountID: AccountID, utxo: UtxoInterface): WalletState => {
+    return {
+      ...state,
+      unspentsAndTransactions: {
+        ...state.unspentsAndTransactions,
+        [accountID]: {
+          ...state.unspentsAndTransactions[accountID],
+          utxosMap: {
+            ...state.unspentsAndTransactions[accountID].utxosMap,
+            [toStringOutpoint(utxo)]: utxo,
+          },
+        },
+      },
+    };
+  };
+
+const addTx =
+  (state: WalletState) =>
+  (accountID: AccountID, tx: TxDisplayInterface, network: Network): WalletState => {
+    return {
+      ...state,
+      unspentsAndTransactions: {
+        ...state.unspentsAndTransactions,
+        [accountID]: {
+          ...state.unspentsAndTransactions[accountID],
+          transactions: {
+            ...state.unspentsAndTransactions[accountID].transactions,
+            [network]: {
+              ...state.unspentsAndTransactions[accountID].transactions[network],
+              [tx.txId]: tx,
+            },
+          },
+        },
+      },
+    };
+  };
 
 export function walletReducer(
   state: WalletState = walletInitState,
@@ -61,7 +86,14 @@ export function walletReducer(
       return {
         ...state,
         passwordHash: payload.passwordHash,
-        mainAccount: { ...payload },
+        mainAccount: { accountID: MainAccountID, ...payload },
+        unspentsAndTransactions: {
+          ...state.unspentsAndTransactions,
+          [MainAccountID]: {
+            utxosMap: {},
+            transactions: { regtest: {}, liquid: {} },
+          },
+        },
       };
     }
 
@@ -108,9 +140,13 @@ export function walletReducer(
           [payload.accountID]: {
             ...state.unspentsAndTransactions[payload.accountID],
             utxosMap,
-          }
-        }
+          },
+        },
       };
+    }
+
+    case ACTION_TYPES.ADD_TX: {
+      return addTx(state)(payload.accountID, payload.tx, payload.network);
     }
 
     case ACTION_TYPES.SET_DEEP_RESTORER_GAP_LIMIT: {
@@ -142,9 +178,9 @@ export function walletReducer(
           [payload.accountID]: {
             ...state.unspentsAndTransactions[payload.accountID],
             utxosMap: {},
-          }
-        }
-      }
+          },
+        },
+      };
     }
 
     case ACTION_TYPES.SET_VERIFIED: {

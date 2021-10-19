@@ -20,7 +20,11 @@ export interface SettingsNetworksProps {
   error?: string;
 }
 
-const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, accountsIDs, error }) => {
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
+  restorationLoading,
+  accountsIDs,
+  error,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const network = useSelector((state: RootReducerState) => state.app.network);
