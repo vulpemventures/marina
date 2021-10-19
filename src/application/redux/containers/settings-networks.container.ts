@@ -6,6 +6,7 @@ import { RootReducerState } from '../../../domain/common';
 
 const mapStateToProps = (state: RootReducerState): SettingsNetworksProps => ({
   restorationLoading: state.wallet.deepRestorer.isLoading,
+  accountsIDs: Object.keys(state.wallet.unspentsAndTransactions),
   error: state.wallet.deepRestorer.error,
 });
 
