@@ -96,7 +96,8 @@ export function restoredMultisig(
     }
   });
 
-  return restoreFrom(multisigID);
+  // return restoreFrom(multisigID);
+  return Promise.resolve(multisigID);
 }
 
 export function restoredWatchOnlyMultisig(
@@ -114,5 +115,6 @@ export function restoredWatchOnlyMultisig(
     }
   });
 
-  return restore(multisigID as IdentityInterface)
+  // return restoreFromState(multisigID as IdentityInterface)
+  return Promise.resolve(multisigID);
 }

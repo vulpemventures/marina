@@ -5,10 +5,10 @@ import { withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import Button from '../../components/button';
 import Shell from '../../components/shell';
-import { IError, RootReducerState } from '../../../domain/common';
+import { IError } from '../../../domain/common';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { setVerified } from '../../../application/redux/actions/wallet';
 
@@ -20,7 +20,6 @@ interface WalletRestoreFormValues {
 }
 
 interface WalletRestoreFormProps {
-  ctxErrors?: Record<string, IError>;
   dispatch: ProxyStoreDispatch;
   history: RouteComponentProps['history'];
 }
@@ -122,7 +121,6 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 
   mapPropsToValues: (props: WalletRestoreFormProps): WalletRestoreFormValues => ({
     confirmPassword: '',
-    ctxErrors: props.ctxErrors,
     mnemonic: '',
     password: '',
   }),
@@ -158,13 +156,12 @@ const WalletRestoreEnhancedForm = withFormik<WalletRestoreFormProps, WalletResto
 const WalletRestore: React.FC<WalletRestoreFormProps> = () => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
-  const errors = useSelector((state: RootReducerState) => state.wallet?.errors);
 
   return (
     <Shell>
       <h2 className="mb-4 text-3xl font-medium">{'Restore a wallet from a mnemonic phrase'}</h2>
       <p>{'Enter your secret twelve words of your mnemonic phrase to Restore your wallet'}</p>
-      <WalletRestoreEnhancedForm ctxErrors={errors} dispatch={dispatch} history={history} />
+      <WalletRestoreEnhancedForm dispatch={dispatch} history={history} />
     </Shell>
   );
 };
