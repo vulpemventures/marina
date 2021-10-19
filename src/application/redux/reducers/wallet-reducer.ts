@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
-import { IWallet } from '../../../domain/wallet';
+import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 import { AccountID, MainAccountID } from '../../../domain/account';
 
-export const walletInitState: IWallet = {
+export const walletInitState: WalletState = {
   mainAccount: {
     accountID: MainAccountID,
     encryptedMnemonic: '',
@@ -17,6 +17,7 @@ export const walletInitState: IWallet = {
       lastUsedInternalIndex: 0,
     },
   },
+  restrictedAssetAccounts: {},
   unspentsAndTransactions: {
     MainAccountID: {
       utxosMap: { },
@@ -31,7 +32,7 @@ export const walletInitState: IWallet = {
   isVerified: false,
 };
 
-const addUnspent = (state: IWallet) => (accountID: AccountID, utxo: UtxoInterface): IWallet => {
+const addUnspent = (state: WalletState) => (accountID: AccountID, utxo: UtxoInterface): WalletState => {
   return {
     ...state,
     unspentsAndTransactions: {
@@ -48,9 +49,9 @@ const addUnspent = (state: IWallet) => (accountID: AccountID, utxo: UtxoInterfac
 }
 
 export function walletReducer(
-  state: IWallet = walletInitState,
+  state: WalletState = walletInitState,
   { type, payload }: AnyAction
-): IWallet {
+): WalletState {
   switch (type) {
     case ACTION_TYPES.RESET_WALLET: {
       return walletInitState;

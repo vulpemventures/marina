@@ -1,7 +1,8 @@
-import { MasterPublicKey, UtxoInterface } from 'ldk';
-import { AccountID, createMnemonicAccount, MainAccount } from '../../../domain/account';
+import { MasterPublicKey, UtxoInterface, XPub } from 'ldk';
+import { AccountID, createMnemonicAccount, createMultisigAccount, MainAccount, MultisigAccount, MultisigAccountData } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
+import { CosignerExtraData } from '../../../domain/wallet';
 
 export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
   return selectMainAccount(state).getWatchIdentity();
@@ -24,4 +25,12 @@ export function hasMnemonicSelector(state: RootReducerState): boolean {
 
 export function selectMainAccount(state: RootReducerState): MainAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
+}
+
+export const selectRestrictedAssetAccount = (cosignerXPub: XPub) => function (state: RootReducerState): MultisigAccount {
+  return createMultisigAccount(state.wallet.mainAccount.encryptedMnemonic, state.wallet.restrictedAssetAccounts[cosignerXPub], state.app.network);
+}
+
+export function selectAllRestrictedAssetAccounts(state: RootReducerState): MultisigAccountData<CosignerExtraData>[] {
+  return Object.values(state.wallet.restrictedAssetAccounts);
 }

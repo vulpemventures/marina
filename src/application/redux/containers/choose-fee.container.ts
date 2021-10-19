@@ -4,10 +4,9 @@ import { RootReducerState } from '../../../domain/common';
 import ChooseFeeView, { ChooseFeeProps } from '../../../presentation/wallet/send/choose-fee';
 import { lbtcAssetByNetwork } from '../../utils';
 import { selectBalances } from '../selectors/balance.selector';
-import { selectMainAccount } from '../selectors/wallet.selector';
+import { selectMainAccount, selectUtxos } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
-  wallet: state.wallet,
   network: state.app.network,
   assets: state.assets,
   balances: selectBalances(MainAccountID)(state),
@@ -18,6 +17,7 @@ const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   sendAsset: state.transaction.sendAsset,
   sendAmount: state.transaction.sendAmount,
   mainAccount: selectMainAccount(state),
+  mainAccountUtxos: selectUtxos(MainAccountID)(state)
 });
 
 const ChooseFee = connect(mapStateToProps)(ChooseFeeView);

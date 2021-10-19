@@ -6,11 +6,11 @@ import {
   MasterPublicKey,
   masterPubKeyRestorerFromState,
   Multisig,
-  DEFAULT_BASE_DERIVATION_PATH,
   CosignerMultisig,
   IdentityInterface,
   MultisigWatchOnly,
   XPub,
+  HDSignerMultisig,
 } from 'ldk';
 import { Address } from '../../domain/address';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
@@ -81,7 +81,7 @@ export function restoredMasterPublicKey(
 
 
 export function restoredMultisig(
-  mnemonic: string,
+  signer: HDSignerMultisig,
   cosigners: CosignerMultisig[],
   requiredSignatures: number,
   network: Network
@@ -91,15 +91,12 @@ export function restoredMultisig(
     type: IdentityType.Multisig,
     opts: {
       requiredSignatures,
-      signer: {
-        mnemonic,
-        baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH,
-      },
+      signer,
       cosigners
     }
   });
 
-  return restore(multisigID as IdentityInterface)
+  return restoreFrom(multisigID);
 }
 
 export function restoredWatchOnlyMultisig(

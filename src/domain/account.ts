@@ -1,6 +1,6 @@
-import { IdentityInterface, MasterPublicKey, Mnemonic, Multisig, MultisigWatchOnly, StateRestorerOpts } from 'ldk';
+import { DEFAULT_BASE_DERIVATION_PATH, HDSignerMultisig, IdentityInterface, IdentityType, MasterPublicKey, Mnemonic, Multisig, MultisigWatchOnly, StateRestorerOpts, XPub } from 'ldk';
 import { decrypt } from '../application/utils';
-import { restoredMasterPublicKey, restoredMnemonic } from '../application/utils/restorer';
+import { restoredMasterPublicKey, restoredMnemonic, restoredMultisig, restoredWatchOnlyMultisig } from '../application/utils/restorer';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
@@ -48,3 +48,39 @@ export function createMnemonicAccount(data: MnemonicAccountData, network: Networ
 // MultisigAccount aims to handle account with cosigner(s)
 // use master extended public keys from cosigners and xpub derived from master private key (mnemonic)
 export type MultisigAccount = Account<Multisig, MultisigWatchOnly>;
+
+export interface MultisigAccountData<ExtraDataT = undefined> {
+  baseDerivationPath: string; // we'll use the MainAccount in order to generate 
+  signerXPub: XPub;
+  cosignerXPubs: XPub[];
+  requiredSignature: number;
+  extraData: ExtraDataT;
+}
+
+export function create2of2MultisigAccountData<T>(signer: HDSignerMultisig, cosignerXPub: XPub, network: Network, extraData: T): MultisigAccountData<T> {
+  const multisigID = new Multisig({
+    chain: network,
+    type: IdentityType.Multisig,
+    opts: {
+      requiredSignatures: 2,
+      signer,
+      cosigners: [cosignerXPub]
+    }
+  })
+  
+  return {
+    baseDerivationPath: signer.baseDerivationPath || DEFAULT_BASE_DERIVATION_PATH,
+    signerXPub: multisigID.getXPub(),
+    cosignerXPubs: [cosignerXPub],
+    requiredSignature: 2,
+    extraData
+  }
+}
+
+export function createMultisigAccount(encryptedMnemonic: EncryptedMnemonic, data: MultisigAccountData<any>, network: Network): MultisigAccount {
+  return {
+    accountID: data.signerXPub,
+    getSigningIdentity: (password: string) => restoredMultisig({ mnemonic: decrypt(encryptedMnemonic, password), baseDerivationPath: data.baseDerivationPath }, data.cosignerXPubs, data.requiredSignature, network),
+    getWatchIdentity: () => restoredWatchOnlyMultisig(data.signerXPub, data.cosignerXPubs, data.requiredSignature, network)
+  }
+}

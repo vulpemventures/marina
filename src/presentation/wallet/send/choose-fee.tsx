@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { greedyCoinSelector, RecipientInterface, walletFromCoins } from 'ldk';
+import { greedyCoinSelector, RecipientInterface, UtxoInterface, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -17,7 +17,6 @@ import {
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { IWallet } from '../../../domain/wallet';
 import { IAssets } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
@@ -40,11 +39,11 @@ export interface ChooseFeeProps {
   sendAmount: number;
   sendAddress?: Address;
   sendAsset: string;
-  wallet: IWallet;
   balances: BalancesByAsset;
   taxiAssets: string[];
   lbtcAssetHash: string;
   mainAccount: MainAccount;
+  mainAccountUtxos: UtxoInterface[];
 }
 
 const ChooseFeeView: React.FC<ChooseFeeProps> = ({
@@ -54,11 +53,11 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   sendAmount,
   sendAddress,
   sendAsset,
-  wallet,
   balances,
   taxiAssets,
   lbtcAssetHash,
   mainAccount,
+  mainAccountUtxos
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -112,7 +111,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const createTx = (recipients: RecipientInterface[]) => {
     // no taxi
     setFeeChange(undefined);
-    const w = walletFromCoins(Object.values(wallet.utxoMap), network);
+    const w = walletFromCoins(mainAccountUtxos, network);
     const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
 
     if (!changeAddress) throw new Error('change address is not defined');
@@ -159,7 +158,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const tx: string = createTaxiTxFromTopup(
       taxiTopup,
-      Object.values(wallet.utxoMap),
+      mainAccountUtxos,
       recipients,
       greedyCoinSelector(),
       changeGetter

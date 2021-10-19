@@ -7,7 +7,7 @@ import { parse, stringify } from '../../utils/browser-storage-converters';
 import browser from 'webextension-polyfill';
 import persistReducer, { PersistPartial } from 'redux-persist/es/persistReducer';
 import { IApp } from '../../../domain/app';
-import { IWallet } from '../../../domain/wallet';
+import { WalletState } from '../../../domain/wallet';
 import { taxiReducer, TaxiState, taxiInitState } from './taxi-reducer';
 import { ConnectData } from '../../../domain/connect';
 import { IAssets } from '../../../domain/assets';
@@ -86,7 +86,7 @@ const marinaReducer = combineReducers({
     version: 1,
     initialState: transactionInitState,
   }),
-  wallet: persist<IWallet>({
+  wallet: persist<WalletState>({
     reducer: walletReducer,
     key: 'wallet',
     blacklist: ['deepRestorer'],

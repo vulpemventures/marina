@@ -1,12 +1,12 @@
-import { AccountID, MnemonicAccountData } from './account';
-import { IError } from './common';
+import { XPub } from 'ldk';
+import { AccountID, MnemonicAccountData, MultisigAccountData } from './account';
 import { PasswordHash } from './password-hash';
 import { UtxosAndTxsHistory } from './transaction';
 
-export interface IWallet {
+export interface WalletState {
   mainAccount: MnemonicAccountData;
+  restrictedAssetAccounts: Record<XPub, MultisigAccountData<CosignerExtraData>>,
   unspentsAndTransactions: Record<AccountID, UtxosAndTxsHistory>;
-  errors?: Record<string, IError>;
   passwordHash: PasswordHash;
   deepRestorer: {
     gapLimit: number;
@@ -14,4 +14,8 @@ export interface IWallet {
     error?: string;
   };
   isVerified: boolean;
+}
+
+export interface CosignerExtraData {
+  cosignerURL: string;
 }

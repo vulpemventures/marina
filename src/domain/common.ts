@@ -1,5 +1,5 @@
 import { ConnectData } from './connect';
-import { IWallet } from './wallet';
+import { WalletState } from './wallet';
 import { IApp } from './app';
 import { OnboardingState } from '../application/redux/reducers/onboarding-reducer';
 import { TransactionState } from '../application/redux/reducers/transaction-reducer';
@@ -12,7 +12,7 @@ export interface RootReducerState {
   assets: IAssets;
   onboarding: OnboardingState;
   transaction: TransactionState;
-  wallet: IWallet;
+  wallet: WalletState;
   connect: ConnectData;
   taxi: TaxiState;
 }

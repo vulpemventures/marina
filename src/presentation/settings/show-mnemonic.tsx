@@ -4,12 +4,12 @@ import { decrypt } from '../../application/utils';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
 import ShellPopUp from '../components/shell-popup';
-import { IWallet } from '../../domain/wallet';
+import { WalletState } from '../../domain/wallet';
 import { match } from '../../domain/password-hash';
 import { createPassword } from '../../domain/password';
 
 export interface SettingsShowMnemonicProps {
-  wallet: IWallet;
+  wallet: WalletState;
 }
 
 const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet }) => {
