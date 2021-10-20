@@ -8,13 +8,13 @@ import { useDispatch } from 'react-redux';
 import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
-import { MainAccount } from '../../../domain/account';
+import { Account } from '../../../domain/account';
 
 export interface ReceiveProps {
-  mainAccount: MainAccount;
+  account: Account;
 }
 
-const ReceiveView: React.FC<ReceiveProps> = ({ mainAccount }) => {
+const ReceiveView: React.FC<ReceiveProps> = ({ account }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -32,10 +32,10 @@ const ReceiveView: React.FC<ReceiveProps> = ({ mainAccount }) => {
 
   useEffect(() => {
     (async () => {
-      const publicKey = await mainAccount.getWatchIdentity();
+      const publicKey = await account.getWatchIdentity();
       const addr = await publicKey.getNextAddress();
       setConfidentialAddress(addr.confidentialAddress);
-      await dispatch(incrementAddressIndex()); // persist address
+      await dispatch(incrementAddressIndex(account.getAccountID())); // persist address
       setTimeout(() => {
         dispatch(updateUtxos()).catch(console.error);
       }, 8000);

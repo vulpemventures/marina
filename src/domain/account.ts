@@ -9,14 +9,17 @@ import {
   MultisigWatchOnly,
   StateRestorerOpts,
   XPub,
+  multisigFromEsplora,
 } from 'ldk';
 import { decrypt } from '../application/utils';
 import {
+  getStateRestorerOptsFromAddresses,
   restoredMasterPublicKey,
   restoredMnemonic,
   restoredMultisig,
   restoredWatchOnlyMultisig,
 } from '../application/utils/restorer';
+import { createAddress } from './address';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
@@ -37,14 +40,14 @@ export interface Account<
   SignID extends IdentityInterface = IdentityInterface,
   WatchID extends IdentityInterface = IdentityInterface
 > {
-  accountID: AccountID;
+  getAccountID(): AccountID;
   getSigningIdentity(password: string): Promise<SignID>;
   getWatchIdentity(): Promise<WatchID>;
 }
 
 // Main Account uses the default Mnemonic derivation path
 // single-sig account used to send/receive regular assets
-export type MainAccount = Account<Mnemonic, MasterPublicKey>;
+export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
 
 export interface MnemonicAccountData {
   accountID: AccountID;
@@ -54,9 +57,12 @@ export interface MnemonicAccountData {
   masterBlindingKey: MasterBlindingKey;
 }
 
-export function createMnemonicAccount(data: MnemonicAccountData, network: Network): MainAccount {
+export function createMnemonicAccount(
+  data: MnemonicAccountData,
+  network: Network
+): MnemonicAccount {
   return {
-    accountID: data.accountID,
+    getAccountID: () => data.accountID,
     getSigningIdentity: (password: string) =>
       restoredMnemonic(decrypt(data.encryptedMnemonic, password), data.restorerOpts, network),
     getWatchIdentity: () =>
@@ -72,16 +78,20 @@ export interface MultisigAccountData<ExtraDataT = undefined> {
   baseDerivationPath: string; // we'll use the MainAccount in order to generate
   signerXPub: XPub;
   cosignerXPubs: XPub[];
+  restorerOpts: StateRestorerOpts;
   requiredSignature: number;
   extraData: ExtraDataT;
 }
 
-export function create2of2MultisigAccountData<T>(
+// create account data
+// restore the Identity from esplora URL in order to compute the StateRestorerOpts
+export async function create2of2MultisigAccountData<T>(
   signer: HDSignerMultisig,
   cosignerXPub: XPub,
   network: Network,
-  extraData: T
-): MultisigAccountData<T> {
+  extraData: T,
+  explorerURL: string
+): Promise<MultisigAccountData<T>> {
   const multisigID = new Multisig({
     chain: network,
     type: IdentityType.Multisig,
@@ -92,12 +102,22 @@ export function create2of2MultisigAccountData<T>(
     },
   });
 
+  const restoredFromExplorer = await multisigFromEsplora(multisigID)({
+    esploraURL: explorerURL,
+    gapLimit: 30,
+  });
+  const addresses = (await restoredFromExplorer.getAddresses()).map((a) =>
+    createAddress(a.confidentialAddress, a.derivationPath)
+  );
+  const restorerOpts = getStateRestorerOptsFromAddresses(addresses);
+
   return {
     baseDerivationPath: signer.baseDerivationPath || DEFAULT_BASE_DERIVATION_PATH,
     signerXPub: multisigID.getXPub(),
     cosignerXPubs: [cosignerXPub],
     requiredSignature: 2,
     extraData,
+    restorerOpts,
   };
 }
 
@@ -107,7 +127,7 @@ export function createMultisigAccount(
   network: Network
 ): MultisigAccount {
   return {
-    accountID: data.signerXPub,
+    getAccountID: () => data.signerXPub,
     getSigningIdentity: (password: string) =>
       restoredMultisig(
         {
@@ -116,6 +136,7 @@ export function createMultisigAccount(
         },
         data.cosignerXPubs,
         data.requiredSignature,
+        data.restorerOpts,
         network
       ),
     getWatchIdentity: () =>
@@ -123,6 +144,7 @@ export function createMultisigAccount(
         data.signerXPub,
         data.cosignerXPubs,
         data.requiredSignature,
+        data.restorerOpts,
         network
       ),
   };

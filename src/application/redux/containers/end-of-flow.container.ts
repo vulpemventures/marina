@@ -5,7 +5,7 @@ import { getExplorerURLSelector } from '../selectors/app.selector';
 import { selectMainAccount } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({
-  mainAccount: selectMainAccount(state),
+  account: selectMainAccount(state),
   pset: state.transaction.pset,
   explorerURL: getExplorerURLSelector(state),
   recipientAddress: state.transaction.sendAddress?.value,

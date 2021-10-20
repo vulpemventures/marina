@@ -4,15 +4,15 @@ import {
   SET_DEEP_RESTORER_GAP_LIMIT,
   SET_DEEP_RESTORER_ERROR,
   START_DEEP_RESTORATION,
-  NEW_ADDRESS_SUCCESS,
-  NEW_CHANGE_ADDRESS_SUCCESS,
+  INCREMENT_EXTERNAL_ADDRESS_INDEX,
+  INCREMENT_INTERNAL_ADDRESS_INDEX,
   SET_VERIFIED,
   WALLET_ADD_RESTRICTED_ASSET_ACCOUNT,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { extractErrorMessage } from '../../../presentation/utils/error';
-import { MultisigAccountData } from '../../../domain/account';
+import { AccountID, MultisigAccountData } from '../../../domain/account';
 import { CosignerExtraData } from '../../../domain/wallet';
 
 export function addRestrictedAssetData(
@@ -31,12 +31,12 @@ export function setWalletData(walletData: WalletData): AnyAction {
   };
 }
 
-export function incrementAddressIndex(): AnyAction {
-  return { type: NEW_ADDRESS_SUCCESS };
+export function incrementAddressIndex(accountID: AccountID): AnyAction {
+  return { type: INCREMENT_EXTERNAL_ADDRESS_INDEX, payload: { accountID } };
 }
 
-export function incrementChangeAddressIndex(): AnyAction {
-  return { type: NEW_CHANGE_ADDRESS_SUCCESS };
+export function incrementChangeAddressIndex(accountID: AccountID): AnyAction {
+  return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID } };
 }
 
 export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {

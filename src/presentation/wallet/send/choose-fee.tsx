@@ -30,7 +30,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
-import { MainAccount } from '../../../domain/account';
+import { Account } from '../../../domain/account';
 
 export interface ChooseFeeProps {
   network: Network;
@@ -42,7 +42,7 @@ export interface ChooseFeeProps {
   balances: BalancesByAsset;
   taxiAssets: string[];
   lbtcAssetHash: string;
-  mainAccount: MainAccount;
+  account: Account;
   mainAccountUtxos: UtxoInterface[];
 }
 
@@ -56,7 +56,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   balances,
   taxiAssets,
   lbtcAssetHash,
-  mainAccount,
+  account,
   mainAccountUtxos,
 }) => {
   const history = useHistory();
@@ -143,7 +143,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     let nextChangeAddr = feeChange;
     if (!nextChangeAddr) {
-      const restored = await mainAccount.getWatchIdentity();
+      const restored = await account.getWatchIdentity();
       const next = await restored.getNextChangeAddress();
       nextChangeAddr = createAddress(next.confidentialAddress, next.derivationPath);
       setFeeChange(nextChangeAddr);
@@ -189,7 +189,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (feeChange) {
         await Promise.all([
           dispatch(setFeeChangeAddress(feeChange)),
-          dispatch(incrementChangeAddressIndex()),
+          dispatch(incrementChangeAddressIndex(account.getAccountID())),
         ]);
       }
 

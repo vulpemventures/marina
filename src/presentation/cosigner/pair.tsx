@@ -110,16 +110,15 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
     const cosigner: Cosigner = new MockedCosigner(network, explorerURL);
     const requestedXPub = await cosigner.requestXPub(walletXPub);
 
-    const multisigAccountData = create2of2MultisigAccountData<CosignerExtraData>(
+    const multisigAccountData = await create2of2MultisigAccountData<CosignerExtraData>(
       walletSignerData,
       requestedXPub,
       network,
-      { cosignerURL: values.cosignerURL }
+      { cosignerURL: values.cosignerURL },
+      explorerURL
     );
 
     await dispatch(addRestrictedAssetData(multisigAccountData));
-
-    console.log(multisigAccountData);
   };
 
   return (

@@ -13,10 +13,10 @@ import { Network } from '../../../domain/network';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset, IAssets } from '../../../domain/assets';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { MainAccount } from '../../../domain/account';
+import { Account } from '../../../domain/account';
 
 export interface AddressAmountProps {
-  mainAccount: MainAccount;
+  account: Account;
   network: Network;
   transaction: TransactionState;
   balances: BalancesByAsset;
@@ -25,7 +25,7 @@ export interface AddressAmountProps {
 }
 
 const AddressAmountView: React.FC<AddressAmountProps> = ({
-  mainAccount,
+  account,
   network,
   transaction,
   balances,
@@ -67,7 +67,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
         network={network}
         assets={assets}
         assetPrecision={transactionAsset.precision}
-        mainAccount={mainAccount}
+        account={account}
       />
     </ShellPopUp>
   );

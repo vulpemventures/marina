@@ -127,17 +127,19 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getNextAddress.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await selectMainAccount(state).getWatchIdentity();
+          const account = selectMainAccount(state);
+          const xpub = await account.getWatchIdentity();
           const nextAddress = await xpub.getNextAddress();
-          await this.store.dispatchAsync(incrementAddressIndex());
+          await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID()));
           return successMsg(nextAddress);
         }
 
         case Marina.prototype.getNextChangeAddress.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await selectMainAccount(state).getWatchIdentity();
+          const account = selectMainAccount(state);
+          const xpub = await account.getWatchIdentity();
           const nextChangeAddress = await xpub.getNextChangeAddress();
-          await this.store.dispatchAsync(incrementChangeAddressIndex());
+          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getAccountID()));
           return successMsg(nextChangeAddress);
         }
 

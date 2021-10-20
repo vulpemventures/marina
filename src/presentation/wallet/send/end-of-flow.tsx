@@ -8,21 +8,17 @@ import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../rout
 import { debounce } from 'lodash';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
-import { MainAccount } from '../../../domain/account';
+import { Account, MainAccountID } from '../../../domain/account';
+import { Transaction } from 'liquidjs-lib';
 
 export interface EndOfFlowProps {
-  mainAccount: MainAccount;
+  account: Account;
   pset?: string;
   explorerURL: string;
   recipientAddress?: string;
 }
 
-const EndOfFlow: React.FC<EndOfFlowProps> = ({
-  mainAccount,
-  pset,
-  explorerURL,
-  recipientAddress,
-}) => {
+const EndOfFlow: React.FC<EndOfFlowProps> = ({ account, pset, explorerURL, recipientAddress }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
 
@@ -34,10 +30,14 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
     if (!pset || !recipientAddress) return;
     try {
       const pass = createPassword(password);
-      const mnemo = await mainAccount.getSigningIdentity(pass);
-      tx = await blindAndSignPset(mnemo, pset, [recipientAddress]);
+      const signer = await account.getSigningIdentity(pass);
+      tx = await blindAndSignPset(signer, pset, [recipientAddress]);
 
-      const txid = await broadcastTx(explorerURL, tx);
+      const txid = Transaction.fromHex(tx).getId();
+      if (account.getAccountID() === MainAccountID) {
+        await broadcastTx(explorerURL, tx);
+      }
+
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
         state: { txid },

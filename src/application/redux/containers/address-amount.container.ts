@@ -9,7 +9,7 @@ import { selectBalances } from '../selectors/balance.selector';
 import { selectMainAccount } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
-  mainAccount: selectMainAccount(state),
+  account: selectMainAccount(state),
   network: state.app.network,
   transaction: state.transaction,
   assets: state.assets,

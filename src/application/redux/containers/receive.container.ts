@@ -4,7 +4,7 @@ import ReceiveView, { ReceiveProps } from '../../../presentation/wallet/receive'
 import { selectMainAccount } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): ReceiveProps => ({
-  mainAccount: selectMainAccount(state),
+  account: selectMainAccount(state),
 });
 
 const Receive = connect(mapStateToProps)(ReceiveView);

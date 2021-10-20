@@ -13,7 +13,7 @@ import { TransactionState } from '../../application/redux/reducers/transaction-r
 import { IAssets } from '../../domain/assets';
 import { Network } from '../../domain/network';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
-import { MainAccount } from '../../domain/account';
+import { Account } from '../../domain/account';
 
 interface AddressAmountFormValues {
   address: string;
@@ -31,7 +31,7 @@ interface AddressAmountFormProps {
   transaction: TransactionState;
   assets: IAssets;
   network: Network;
-  mainAccount: MainAccount;
+  account: Account;
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
@@ -156,14 +156,14 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     }),
 
   handleSubmit: async (values, { props }) => {
-    const masterPubKey = await props.mainAccount.getWatchIdentity();
+    const masterPubKey = await props.account.getWatchIdentity();
     const changeAddressGenerated = await masterPubKey.getNextChangeAddress();
     const changeAddress = createAddress(
       changeAddressGenerated.confidentialAddress,
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(incrementChangeAddressIndex()); // persist address in wallet
+    await props.dispatch(incrementChangeAddressIndex(props.account.getAccountID())); // persist address in wallet
 
     await props
       .dispatch(

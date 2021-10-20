@@ -3,9 +3,9 @@ import {
   AccountID,
   createMnemonicAccount,
   createMultisigAccount,
-  MainAccount,
   MultisigAccount,
   MultisigAccountData,
+  MnemonicAccount,
 } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
@@ -36,7 +36,7 @@ export function hasMnemonicSelector(state: RootReducerState): boolean {
   );
 }
 
-export function selectMainAccount(state: RootReducerState): MainAccount {
+export function selectMainAccount(state: RootReducerState): MnemonicAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }
 
@@ -52,7 +52,6 @@ export const selectRestrictedAssetAccount = (cosignerXPub: XPub) =>
 export function selectAllRestrictedAssetAccounts(
   state: RootReducerState
 ): MultisigAccountData<CosignerExtraData>[] {
-  console.log(state.wallet.restrictedAssetAccounts);
   return Object.values(state.wallet.restrictedAssetAccounts);
 }
 

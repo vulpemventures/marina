@@ -8,9 +8,9 @@ import {
   decodePset,
   getUnblindURLFromTx,
   greedyCoinSelector,
+  IdentityInterface,
   InputInterface,
   isBlindedOutputInterface,
-  Mnemonic,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
@@ -44,23 +44,27 @@ function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, str
 
 /**
  * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.
- * @param mnemonic Identity using to sign the tx. should be restored.
+ * @param signerIdentity Identity using to sign the tx. should be restored.
  * @param psetBase64 the unsign tx.
  * @param recipientAddresses a list of known recipients addresses (non wallet output addresses).
  */
 export async function blindAndSignPset(
-  mnemonic: Mnemonic,
+  signerIdentity: IdentityInterface,
   psetBase64: string,
   recipientAddresses: string[]
 ): Promise<string> {
-  const outputAddresses = (await mnemonic.getAddresses()).map((a) => a.confidentialAddress);
+  const outputAddresses = (await signerIdentity.getAddresses()).map((a) => a.confidentialAddress);
 
   const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses.concat(recipientAddresses));
   const outputsToBlind = Array.from(outputPubKeys.keys());
 
-  const blindedPset: string = await mnemonic.blindPset(psetBase64, outputsToBlind, outputPubKeys);
+  const blindedPset: string = await signerIdentity.blindPset(
+    psetBase64,
+    outputsToBlind,
+    outputPubKeys
+  );
 
-  const signedPset: string = await mnemonic.signPset(blindedPset);
+  const signedPset: string = await signerIdentity.signPset(blindedPset);
 
   const ptx = decodePset(signedPset);
   if (!ptx.validateSignaturesOfAllInputs()) {

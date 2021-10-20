@@ -10,6 +10,7 @@ import {
   MultisigWatchOnly,
   XPub,
   HDSignerMultisig,
+  restorerFromState,
 } from 'ldk';
 import { Address } from '../../domain/address';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
@@ -78,10 +79,13 @@ export function restoredMasterPublicKey(
   return masterPubKeyRestorerFromState(xpub)(restorerOpts);
 }
 
+// create a Multisig Identity
+// restore it using StateRestorerOpts
 export function restoredMultisig(
   signer: HDSignerMultisig,
   cosigners: CosignerMultisig[],
   requiredSignatures: number,
+  restorerOpts: StateRestorerOpts,
   network: Network
 ) {
   const multisigID = new Multisig({
@@ -94,14 +98,16 @@ export function restoredMultisig(
     },
   });
 
-  // return restoreFrom(multisigID);
-  return Promise.resolve(multisigID);
+  return restorerFromState<Multisig>(multisigID)(restorerOpts);
 }
 
+// create a MultisigWatchOnly Identity
+// restore it using StateRestorerOpts
 export function restoredWatchOnlyMultisig(
   signerXPub: XPub,
   cosigners: CosignerMultisig[],
   requiredSignatures: number,
+  restorerOpts: StateRestorerOpts,
   network: Network
 ) {
   const multisigID = new MultisigWatchOnly({
@@ -113,6 +119,5 @@ export function restoredWatchOnlyMultisig(
     },
   });
 
-  // return restoreFromState(multisigID as IdentityInterface)
-  return Promise.resolve(multisigID);
+  return restorerFromState<MultisigWatchOnly>(multisigID)(restorerOpts);
 }

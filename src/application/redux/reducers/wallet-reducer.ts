@@ -108,27 +108,67 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.NEW_CHANGE_ADDRESS_SUCCESS: {
+    case ACTION_TYPES.INCREMENT_INTERNAL_ADDRESS_INDEX: {
+      const accountID = payload.accountID as AccountID;
+      if (accountID === MainAccountID) {
+        return {
+          ...state,
+          mainAccount: {
+            ...state.mainAccount,
+            restorerOpts: {
+              ...state.mainAccount.restorerOpts,
+              lastUsedInternalIndex:
+                (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
+            },
+          },
+        };
+      }
+
       return {
         ...state,
-        mainAccount: {
-          ...state.mainAccount,
-          restorerOpts: {
-            ...state.mainAccount.restorerOpts,
-            lastUsedInternalIndex: (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
+        restrictedAssetAccounts: {
+          ...state.restrictedAssetAccounts,
+          [accountID]: {
+            ...state.restrictedAssetAccounts[accountID],
+            restorerOpts: {
+              ...state.restrictedAssetAccounts[accountID].restorerOpts,
+              lastUsedInternalIndex:
+                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedInternalIndex ??
+                  -1) + 1,
+            },
           },
         },
       };
     }
 
-    case ACTION_TYPES.NEW_ADDRESS_SUCCESS: {
+    case ACTION_TYPES.INCREMENT_EXTERNAL_ADDRESS_INDEX: {
+      const accountID = payload.accountID as AccountID;
+      if (accountID === MainAccountID) {
+        return {
+          ...state,
+          mainAccount: {
+            ...state.mainAccount,
+            restorerOpts: {
+              ...state.mainAccount.restorerOpts,
+              lastUsedExternalIndex:
+                (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
+            },
+          },
+        };
+      }
+
       return {
         ...state,
-        mainAccount: {
-          ...state.mainAccount,
-          restorerOpts: {
-            ...state.mainAccount.restorerOpts,
-            lastUsedExternalIndex: (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
+        restrictedAssetAccounts: {
+          ...state.restrictedAssetAccounts,
+          [accountID]: {
+            ...state.restrictedAssetAccounts[accountID],
+            restorerOpts: {
+              ...state.restrictedAssetAccounts[accountID].restorerOpts,
+              lastUsedExternalIndex:
+                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedExternalIndex ??
+                  -1) + 1,
+            },
           },
         },
       };

@@ -26,7 +26,10 @@ const SettingsCosignersView: React.FC<SettingsCosignersProps> = ({ multisigAccou
       <div className="max-h-80">
         <ButtonList emptyText="" title="Cosigners">
           {multisigAccountsData.map(({ extraData }, index) => (
-            <div key={`${extraData.cosignerURL}${index}`} className="hover:bg-blue-600 hover:text-blue-200 p-3 rounded-sm shadow-md">
+            <div
+              key={`${extraData.cosignerURL}${index}`}
+              className="hover:bg-blue-600 hover:text-blue-200 p-3 rounded-sm shadow-md"
+            >
               <b>
                 Cosigner #{index} <br />
               </b>
