@@ -5,7 +5,6 @@ import {
   mnemonicRestorerFromState,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
-  Multisig,
   CosignerMultisig,
   MultisigWatchOnly,
   XPub,
@@ -13,6 +12,7 @@ import {
   restorerFromState,
 } from 'ldk';
 import { Address } from '../../domain/address';
+import { Cosigner, MultisigWithCosigner } from '../../domain/cosigner';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
 import { MasterXPub } from '../../domain/master-extended-pub';
 import { Network } from '../../domain/network';
@@ -86,9 +86,10 @@ export function restoredMultisig(
   cosigners: CosignerMultisig[],
   requiredSignatures: number,
   restorerOpts: StateRestorerOpts,
+  cosigner: Cosigner,
   network: Network
 ) {
-  const multisigID = new Multisig({
+  const multisigID = new MultisigWithCosigner({
     chain: network,
     type: IdentityType.Multisig,
     opts: {
@@ -96,9 +97,9 @@ export function restoredMultisig(
       signer,
       cosigners,
     },
-  });
+  }, cosigner);
 
-  return restorerFromState<Multisig>(multisigID)(restorerOpts);
+  return restorerFromState<MultisigWithCosigner>(multisigID)(restorerOpts);
 }
 
 // create a MultisigWatchOnly Identity

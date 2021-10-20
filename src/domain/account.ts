@@ -20,10 +20,12 @@ import {
   restoredWatchOnlyMultisig,
 } from '../application/utils/restorer';
 import { createAddress } from './address';
+import { HDSignerToXPub, MockedCosigner, MultisigWithCosigner } from './cosigner';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
 import { Network } from './network';
+import { CosignerExtraData } from './wallet';
 
 export type AccountID = string;
 export const MainAccountID: AccountID = 'main';
@@ -72,7 +74,7 @@ export function createMnemonicAccount(
 
 // MultisigAccount aims to handle account with cosigner(s)
 // use master extended public keys from cosigners and xpub derived from master private key (mnemonic)
-export type MultisigAccount = Account<Multisig, MultisigWatchOnly>;
+export type MultisigAccount = Account<MultisigWithCosigner, MultisigWatchOnly>;
 
 export interface MultisigAccountData<ExtraDataT = undefined> {
   baseDerivationPath: string; // we'll use the MainAccount in order to generate
@@ -81,6 +83,7 @@ export interface MultisigAccountData<ExtraDataT = undefined> {
   restorerOpts: StateRestorerOpts;
   requiredSignature: number;
   extraData: ExtraDataT;
+  network: Network;
 }
 
 // create account data
@@ -113,18 +116,18 @@ export async function create2of2MultisigAccountData<T>(
 
   return {
     baseDerivationPath: signer.baseDerivationPath || DEFAULT_BASE_DERIVATION_PATH,
-    signerXPub: multisigID.getXPub(),
+    signerXPub: HDSignerToXPub(signer, network),
     cosignerXPubs: [cosignerXPub],
     requiredSignature: 2,
     extraData,
     restorerOpts,
+    network
   };
 }
 
 export function createMultisigAccount(
   encryptedMnemonic: EncryptedMnemonic,
-  data: MultisigAccountData<any>,
-  network: Network
+  data: MultisigAccountData<CosignerExtraData>,
 ): MultisigAccount {
   return {
     getAccountID: () => data.signerXPub,
@@ -137,7 +140,8 @@ export function createMultisigAccount(
         data.cosignerXPubs,
         data.requiredSignature,
         data.restorerOpts,
-        network
+        new MockedCosigner(data.network, data.signerXPub),
+        data.network
       ),
     getWatchIdentity: () =>
       restoredWatchOnlyMultisig(
@@ -145,7 +149,7 @@ export function createMultisigAccount(
         data.cosignerXPubs,
         data.requiredSignature,
         data.restorerOpts,
-        network
+        data.network
       ),
   };
 }

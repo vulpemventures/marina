@@ -110,7 +110,7 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
     const walletXPub = HDSignerToXPub(walletSignerData, network);
 
     // cosigner should be created from values.cosignerURL
-    const cosigner: Cosigner = new MockedCosigner(network, explorerURL);
+    const cosigner: Cosigner = new MockedCosigner(network, walletXPub);
     const requestedXPub = await cosigner.requestXPub(walletXPub);
 
     const multisigAccountData = await create2of2MultisigAccountData<CosignerExtraData>(
