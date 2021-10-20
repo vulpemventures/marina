@@ -118,7 +118,7 @@ export function walletReducer(
             restorerOpts: {
               ...state.mainAccount.restorerOpts,
               lastUsedInternalIndex:
-                (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
+                (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
             },
           },
         };
@@ -133,8 +133,8 @@ export function walletReducer(
             restorerOpts: {
               ...state.restrictedAssetAccounts[accountID].restorerOpts,
               lastUsedInternalIndex:
-                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedInternalIndex ??
-                  -1) + 1,
+                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedInternalIndex ?? 0) +
+                1,
             },
           },
         },
@@ -151,7 +151,7 @@ export function walletReducer(
             restorerOpts: {
               ...state.mainAccount.restorerOpts,
               lastUsedExternalIndex:
-                (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
+                (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
             },
           },
         };
@@ -166,8 +166,8 @@ export function walletReducer(
             restorerOpts: {
               ...state.restrictedAssetAccounts[accountID].restorerOpts,
               lastUsedExternalIndex:
-                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedExternalIndex ??
-                  -1) + 1,
+                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedExternalIndex ?? 0) +
+                1,
             },
           },
         },

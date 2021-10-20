@@ -83,7 +83,7 @@ export function makeUtxosUpdaterThunk(
 
       const account = selectAccount(state);
       const explorer = getExplorerURLSelector(getState());
-      const utxosMap = selectUnspentsAndTransactions(account.accountID)(state).utxosMap;
+      const utxosMap = selectUnspentsAndTransactions(account.getAccountID())(state).utxosMap;
 
       const currentOutpoints = Object.values(utxosMap || {}).map(({ txid, vout }) => ({
         txid,
@@ -120,7 +120,7 @@ export function makeUtxosUpdaterThunk(
             utxo = await utxoWithPrevout(utxo, explorer);
           }
 
-          dispatch(addUtxo(account.accountID, utxo));
+          dispatch(addUtxo(account.getAccountID(), utxo));
         }
         utxoIterator = await utxos.next();
       }
@@ -158,7 +158,7 @@ export function makeTxsUpdaterThunk(
       if (!app.isAuthenticated) return;
 
       const account = selectAccount(state);
-      const txsHistory = selectUnspentsAndTransactions(account.accountID)(state).transactions[
+      const txsHistory = selectUnspentsAndTransactions(account.getAccountID())(state).transactions[
         app.network
       ];
 
@@ -205,7 +205,7 @@ export function makeTxsUpdaterThunk(
         const tx = it.value;
         // Update all txsHistory state at each single new tx
         const toAdd = toDisplayTransaction(tx, walletScripts, networks[app.network]);
-        dispatch(addTx(account.accountID, toAdd, app.network));
+        dispatch(addTx(account.getAccountID(), toAdd, app.network));
         it = await txsGen.next();
       }
     } catch (error) {

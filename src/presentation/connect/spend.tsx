@@ -19,7 +19,7 @@ import { blindAndSignPset, createSendPset } from '../../application/utils/transa
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { MainAccountID } from '../../domain/account';
+import { AccountID, MainAccountID } from '../../domain/account';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -65,6 +65,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
     try {
       const mnemonicIdentity = await mainAccount.getSigningIdentity(password);
       const signedTxHex = await makeTransaction(
+        mainAccount.getAccountID(),
         mnemonicIdentity,
         coins,
         connectData.tx,
@@ -149,6 +150,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 export default connectWithConnectData(ConnectSpend);
 
 async function makeTransaction(
+  accountID: AccountID,
   mnemonic: Mnemonic,
   coins: UtxoInterface[],
   connectDataTx: ConnectData['tx'],
@@ -173,7 +175,7 @@ async function makeTransaction(
   const changeAddressGetter = (asset: string) => {
     if (!assets.includes(asset)) return undefined; // will throw an error in coin selector
     if (!persisted[asset]) {
-      dispatch(incrementChangeAddressIndex()).catch(console.error);
+      dispatch(incrementChangeAddressIndex(accountID)).catch(console.error);
       persisted[asset] = true;
     }
     return changeAddresses[asset].confidentialAddress;

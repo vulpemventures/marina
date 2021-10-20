@@ -53,6 +53,7 @@ const SETTINGS_COSIGNERS_ROUTE = '/settings/info/cosigners';
 
 // Cosigner Opt in
 const PAIR_COSIGNER_ROUTE = '/cosigner/pair';
+const PAIR_SUCCESS_COSIGNER_ROUTE = '/cosigner/pair/success';
 
 export {
   //Connect
@@ -96,4 +97,5 @@ export {
   SETTINGS_DEEP_RESTORER_ROUTE,
   SETTINGS_COSIGNERS_ROUTE,
   PAIR_COSIGNER_ROUTE,
+  PAIR_SUCCESS_COSIGNER_ROUTE,
 };

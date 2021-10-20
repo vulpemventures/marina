@@ -13,6 +13,8 @@ import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { addRestrictedAssetData } from '../../application/redux/actions/wallet';
 import { DEFAULT_BASE_DERIVATION_PATH } from 'ldk';
+import { useHistory } from 'react-router';
+import { PAIR_SUCCESS_COSIGNER_ROUTE } from '../routes/constants';
 
 interface OptInFormProps {
   onSubmit: (values: OptInFormValues) => Promise<void>;
@@ -98,6 +100,7 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
   explorerURL,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
+  const history = useHistory();
 
   const onSubmit = async (values: OptInFormValues) => {
     const walletSignerData = {
@@ -119,6 +122,7 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
     );
 
     await dispatch(addRestrictedAssetData(multisigAccountData));
+    history.push(PAIR_SUCCESS_COSIGNER_ROUTE);
   };
 
   return (
