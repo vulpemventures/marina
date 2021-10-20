@@ -4,12 +4,14 @@ import browser from 'webextension-polyfill';
 import { PAIR_COSIGNER_ROUTE } from '../routes/constants';
 import { MultisigAccountData } from '../../domain/account';
 import { CosignerExtraData } from '../../domain/wallet';
+import ButtonList from '../components/button-list';
+import Button from '../components/button';
 
 export interface SettingsCosignersProps {
   multisigAccountsData: MultisigAccountData<CosignerExtraData>[];
 }
 
-const SettingsCosigners: React.FC<SettingsCosignersProps> = ({ multisigAccountsData }) => {
+const SettingsCosignersView: React.FC<SettingsCosignersProps> = ({ multisigAccountsData }) => {
   const openAddCosignerTab = async () => {
     const url = browser.runtime.getURL(`home.html#${PAIR_COSIGNER_ROUTE}`);
     await browser.tabs.create({ url });
@@ -21,22 +23,26 @@ const SettingsCosigners: React.FC<SettingsCosignersProps> = ({ multisigAccountsD
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Change currency"
     >
-      <p className="font-regular my-8 text-base text-left">Cosigners</p>
-      <div className="lg:w-1/3 bg-white rounded-lg shadow">
-        <ul className="divide-y divide-gray-100">
-          {multisigAccountsData.map(({ extraData }) => (
-            <li className="hover:bg-blue-600 hover:text-blue-200 p-3">{extraData.cosignerURL}</li>
+      <div className="max-h-80">
+        <ButtonList emptyText="" title="Cosigners">
+          {multisigAccountsData.map(({ extraData }, index) => (
+            <div key={`${extraData.cosignerURL}${index}`} className="hover:bg-blue-600 hover:text-blue-200 p-3 rounded-sm shadow-md">
+              <b>
+                Cosigner #{index} <br />
+              </b>
+              {extraData.cosignerURL}
+            </div>
           ))}
-        </ul>
+        </ButtonList>
       </div>
 
       <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
-        <span className="cursor-pointer" onClick={openAddCosignerTab}>
+        <Button className="cursor-pointer" onClick={openAddCosignerTab}>
           Add cosigner
-        </span>
+        </Button>
       </div>
     </ShellPopUp>
   );
 };
 
-export default SettingsCosigners;
+export default SettingsCosignersView;

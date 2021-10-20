@@ -45,7 +45,6 @@ import { Account } from '../../domain/account';
 import {
   selectMainAccount,
   selectUnspentsAndTransactions,
-  selectUtxos,
 } from './selectors/wallet.selector';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';

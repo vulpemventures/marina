@@ -15,11 +15,13 @@ import { extractErrorMessage } from '../../../presentation/utils/error';
 import { MultisigAccountData } from '../../../domain/account';
 import { CosignerExtraData } from '../../../domain/wallet';
 
-export function addRestrictedAssetData(multisigAccountData: MultisigAccountData<CosignerExtraData>) {
+export function addRestrictedAssetData(
+  multisigAccountData: MultisigAccountData<CosignerExtraData>
+) {
   return {
     type: WALLET_ADD_RESTRICTED_ASSET_ACCOUNT,
-    payload: { multisigAccountData }
-  }
+    payload: { multisigAccountData },
+  };
 }
 
 export function setWalletData(walletData: WalletData): AnyAction {

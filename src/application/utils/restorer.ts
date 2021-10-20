@@ -7,7 +7,6 @@ import {
   masterPubKeyRestorerFromState,
   Multisig,
   CosignerMultisig,
-  IdentityInterface,
   MultisigWatchOnly,
   XPub,
   HDSignerMultisig,

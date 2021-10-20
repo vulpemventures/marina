@@ -81,8 +81,8 @@ import SettingsExplorer from '../settings/explorer';
 import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
-import PairCosigner from '../cosigner/pair';
-import SettingsCosigners from '../settings/cosigners';
+import PairCosigner from '../../application/redux/containers/pair.container';
+import SettingsCosigner from '../../application/redux/containers/cosigners.container';
 
 const Routes: React.FC = () => {
   return (
@@ -119,7 +119,7 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} comp={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} comp={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} comp={SettingsDeepRestorer} />
-      <ProtectedRoute exact path={SETTINGS_COSIGNERS_ROUTE} comp={SettingsCosigners} />
+      <ProtectedRoute exact path={SETTINGS_COSIGNERS_ROUTE} comp={SettingsCosigner} />
       <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />

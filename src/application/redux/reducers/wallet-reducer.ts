@@ -96,16 +96,16 @@ export function walletReducer(
         },
       };
     }
-      
+
     case ACTION_TYPES.WALLET_ADD_RESTRICTED_ASSET_ACCOUNT: {
       const data = payload.multisigAccountData as MultisigAccountData<CosignerExtraData>;
       return {
         ...state,
         restrictedAssetAccounts: {
           ...state.restrictedAssetAccounts,
-          [data.cosignerXPubs[0]]: data
-        }
-      }
+          [data.cosignerXPubs[0]]: data,
+        },
+      };
     }
 
     case ACTION_TYPES.NEW_CHANGE_ADDRESS_SUCCESS: {
