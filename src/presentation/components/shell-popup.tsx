@@ -45,9 +45,10 @@ const ShellPopUp: React.FC<Props> = ({
     if (history.location.pathname === '/') {
       dispatch(utxosUpdateTask(MainAccountID)).catch(console.error);
       dispatch(txsUpdateTask(MainAccountID)).catch(console.error);
+    } else {
+      history.push(DEFAULT_ROUTE);
     }
     await dispatch(flushPendingTx());
-    history.push(DEFAULT_ROUTE);
   };
   const handleBackBtn = () => {
     if (backBtnCb) {

@@ -16,6 +16,7 @@ import {
 } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
+import { extractErrorMessage } from '../presentation/utils/error';
 import { startUpdaterWorker } from './updater-worker';
 
 // MUST be > 15 seconds
@@ -23,7 +24,10 @@ const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
 wrapMarinaStore(marinaStore); // wrap store to proxy store
-startUpdaterWorker(marinaStore); // start an async subscriber to store in order to handle updater task
+// start an async subscriber to store in order to handle updater task
+startUpdaterWorker(marinaStore).catch((err) =>
+  console.error(`CRITICAL: updater worker not started (${extractErrorMessage(err)})`)
+);
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,

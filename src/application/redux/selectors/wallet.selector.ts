@@ -1,4 +1,4 @@
-import { MasterPublicKey, UtxoInterface, XPub } from 'ldk';
+import { MasterPublicKey, UtxoInterface } from 'ldk';
 import {
   AccountID,
   createMnemonicAccount,

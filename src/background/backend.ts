@@ -16,7 +16,6 @@ import { addUtxo, deleteUtxo } from '../application/redux/actions/utxos';
 import { getExplorerURLSelector } from '../application/redux/selectors/app.selector';
 import { selectUnspentsAndTransactions } from '../application/redux/selectors/wallet.selector';
 import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../application/utils';
-import { stringify } from '../application/utils/browser-storage-converters';
 import { Account } from '../domain/account';
 import { RootReducerState } from '../domain/common';
 
