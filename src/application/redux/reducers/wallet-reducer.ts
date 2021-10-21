@@ -186,6 +186,10 @@ export function walletReducer(
     }
 
     case ACTION_TYPES.DELETE_UTXO: {
+      if (!state.unspentsAndTransactions[payload.accountID]) {
+        return state;
+      }
+
       const {
         [toStringOutpoint({ txid: payload.txid, vout: payload.vout })]: deleted,
         ...utxosMap

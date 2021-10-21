@@ -7,8 +7,8 @@ export function addUtxo(accountID: AccountID, utxo: UtxoInterface): AnyAction {
   return { type: ADD_UTXO, payload: { accountID, utxo } };
 }
 
-export function deleteUtxo(txid: string, vout: number): AnyAction {
-  return { type: DELETE_UTXO, payload: { txid, vout } };
+export function deleteUtxo(accountID: AccountID, txid: string, vout: number): AnyAction {
+  return { type: DELETE_UTXO, payload: { txid, vout, accountID } };
 }
 
 export function flushUtxos(accountID: AccountID): AnyAction {

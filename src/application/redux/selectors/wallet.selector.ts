@@ -58,9 +58,12 @@ export function selectAllRestrictedAssetAccounts(
   return Object.values(state.wallet.restrictedAssetAccounts);
 }
 
-export const selectUnspentsAndTransactions = (accountID: AccountID) => (state: RootReducerState) => {
-  return state.wallet.unspentsAndTransactions[accountID] ?? {
-    utxosMap: {},
-    transactions: { regtest: {}, liquid: {} },
+export const selectUnspentsAndTransactions =
+  (accountID: AccountID) => (state: RootReducerState) => {
+    return (
+      state.wallet.unspentsAndTransactions[accountID] ?? {
+        utxosMap: {},
+        transactions: { regtest: {}, liquid: {} },
+      }
+    );
   };
-}

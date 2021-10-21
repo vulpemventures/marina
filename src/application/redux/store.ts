@@ -25,6 +25,7 @@ import { createAddress } from '../../domain/address';
 import { flushTx } from './actions/connect';
 import { txsUpdateTask, utxosUpdateTask } from './actions/updater';
 import { MainAccountID } from '../../domain/account';
+import { extractErrorMessage } from '../../presentation/utils/error';
 
 export const serializerAndDeserializer = {
   serializer: (payload: any) => stringify(payload),
@@ -44,17 +45,21 @@ const create = () => createStore(marinaReducer, applyMiddleware(alias(background
 // and then set assets in store.
 function fetchAndSetTaxiAssets(): ThunkAction<void, RootReducerState, any, AnyAction> {
   return async (dispatch, getState) => {
-    const state = getState();
-    const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);
+    try {
+      const state = getState();
+      const assets = await fetchAssetsFromTaxi(taxiURL[state.app.network]);
 
-    const currentAssets = state.taxi.taxiAssets;
-    const sortAndJoin = (a: string[]) => a.sort().join('');
+      const currentAssets = state.taxi.taxiAssets;
+      const sortAndJoin = (a: string[]) => a.sort().join('');
 
-    if (sortAndJoin(currentAssets) === sortAndJoin(assets)) {
-      return; // skip if same assets state
+      if (sortAndJoin(currentAssets) === sortAndJoin(assets)) {
+        return; // skip if same assets state
+      }
+
+      dispatch(setTaxiAssets(assets));
+    } catch (err) {
+      console.error('an error happen while fetching taxi assets:', extractErrorMessage(err));
     }
-
-    dispatch(setTaxiAssets(assets));
   };
 }
 

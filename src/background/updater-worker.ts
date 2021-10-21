@@ -23,16 +23,14 @@ function nextUpdaterTask(store: Store<RootReducerState>): Promise<UpdaterTask> {
 }
 
 export async function startUpdaterWorker(store: Store<RootReducerState>): Promise<void> {
-  console.warn('start updater worker')
   while (true) {
     try {
       const nextTask = await nextUpdaterTask(store); // if stack = [] this freeze the loop
-      console.warn('next task:', nextTask);
       store.dispatch({ type: POP_UPDATER_TASK }); // pop the task from the stack
       const taskResolver = nextTask.type === UpdaterTaskType.TX ? makeTxsUpdater : makeUtxosUpdater;
       await taskResolver(selectAccount(nextTask.accountID))(store);
     } catch {
-      console.error('updater error')
+      console.error('updater error');
     }
   }
 }
