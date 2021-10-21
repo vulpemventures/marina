@@ -27,8 +27,10 @@ import { MasterXPub } from './master-extended-pub';
 import { Network } from './network';
 import { CosignerExtraData } from './wallet';
 
-export type AccountID = string;
-export const MainAccountID: AccountID = 'main';
+export const MainAccountID = 'mainAccount';
+export const RestrictedAssetAccountID = 'restrictedAssetAccount';
+
+export type AccountID = 'mainAccount' | 'restrictedAssetAccount';
 
 /**
  * Account domain represents the keys of the User
@@ -130,7 +132,7 @@ export function createMultisigAccount(
   data: MultisigAccountData<CosignerExtraData>
 ): MultisigAccount {
   return {
-    getAccountID: () => data.signerXPub,
+    getAccountID: () => RestrictedAssetAccountID,
     getSigningIdentity: (password: string) =>
       restoredMultisig(
         {

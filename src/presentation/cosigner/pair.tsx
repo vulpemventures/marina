@@ -11,7 +11,7 @@ import { Cosigner, HDSignerToXPub, MockedCosigner } from '../../domain/cosigner'
 import { Network } from '../../domain/network';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { addRestrictedAssetData } from '../../application/redux/actions/wallet';
+import { setRestrictedAssetData } from '../../application/redux/actions/wallet';
 import { DEFAULT_BASE_DERIVATION_PATH } from 'ldk';
 import { useHistory } from 'react-router';
 import { PAIR_SUCCESS_COSIGNER_ROUTE } from '../routes/constants';
@@ -121,7 +121,7 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
       explorerURL
     );
 
-    await dispatch(addRestrictedAssetData(multisigAccountData));
+    await dispatch(setRestrictedAssetData(multisigAccountData));
     history.push(PAIR_SUCCESS_COSIGNER_ROUTE);
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useHistory } from 'react-router';
+import { RouteComponentProps, useHistory } from 'react-router';
 import { RECEIVE_ADDRESS_ROUTE } from '../../routes/constants';
 import { Network } from '../../../domain/network';
 import { Asset } from '../../../domain/assets';

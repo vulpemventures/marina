@@ -1,11 +1,10 @@
-import { XPub } from 'ldk';
-import { AccountID, MnemonicAccountData, MultisigAccountData } from './account';
+import { AccountID, MainAccountID, MnemonicAccountData, MultisigAccountData, RestrictedAssetAccountID } from './account';
 import { PasswordHash } from './password-hash';
 import { UtxosAndTxsHistory } from './transaction';
 
 export interface WalletState {
-  mainAccount: MnemonicAccountData;
-  restrictedAssetAccounts: Record<XPub, MultisigAccountData<CosignerExtraData>>;
+  [MainAccountID]: MnemonicAccountData;
+  [RestrictedAssetAccountID]?: MultisigAccountData<CosignerExtraData>;
   unspentsAndTransactions: Record<AccountID, UtxosAndTxsHistory>;
   passwordHash: PasswordHash;
   deepRestorer: {

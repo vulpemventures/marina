@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -7,16 +7,13 @@ import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
-import { Account } from '../../../domain/account';
 import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actions/updater';
 
-export interface ReceiveProps {
-  account: Account;
-}
-
-const ReceiveView: React.FC<ReceiveProps> = ({ account }) => {
+const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+
+  const account = useSelector()
 
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');

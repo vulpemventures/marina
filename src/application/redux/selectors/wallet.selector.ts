@@ -41,21 +41,20 @@ export function selectMainAccount(state: RootReducerState): MnemonicAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }
 
-const selectRestrictedAssetAccount = (signerXPub: AccountID) =>
-  function (state: RootReducerState): MultisigAccount {
-    return createMultisigAccount(
-      state.wallet.mainAccount.encryptedMnemonic,
-      state.wallet.restrictedAssetAccounts[signerXPub]
-    );
-  };
+function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount | undefined {
+  if (!state.wallet.restrictedAssetAccount) return undefined;
+
+  return createMultisigAccount(
+    state.wallet.mainAccount.encryptedMnemonic,
+    state.wallet.restrictedAssetAccount
+  );
+};
 
 export const selectAccount = (accountID: AccountID) =>
-  accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount(accountID);
+  accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
 
-export function selectAllRestrictedAssetAccounts(
-  state: RootReducerState
-): MultisigAccountData<CosignerExtraData>[] {
-  return Object.values(state.wallet.restrictedAssetAccounts);
+export const selectAccountForReceive = (asset: string) => (state: RootReducerState) => {
+  const assets = state.assets
 }
 
 export const selectUnspentsAndTransactions =

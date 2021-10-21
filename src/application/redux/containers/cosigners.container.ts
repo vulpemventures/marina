@@ -3,11 +3,10 @@ import { RootReducerState } from '../../../domain/common';
 import SettingsCosignersView, {
   SettingsCosignersProps,
 } from '../../../presentation/settings/cosigners';
-import { selectAllRestrictedAssetAccounts } from '../selectors/wallet.selector';
 
 const SettingsCosigner = connect(
   (state: RootReducerState): SettingsCosignersProps => ({
-    multisigAccountsData: selectAllRestrictedAssetAccounts(state),
+    multisigAccountsData: state.wallet.restrictedAssetAccount ? [state.wallet.restrictedAssetAccount] : [],
   })
 )(SettingsCosignersView);
 

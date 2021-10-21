@@ -4,12 +4,12 @@ import * as ACTION_TYPES from '../actions/action-types';
 import { CosignerExtraData, WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
-import { AccountID, MainAccountID, MultisigAccountData } from '../../../domain/account';
+import { AccountID, MainAccountID, MultisigAccountData, RestrictedAssetAccountID } from '../../../domain/account';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { Network } from '../../../domain/network';
 
 export const walletInitState: WalletState = {
-  mainAccount: {
+  [MainAccountID]: {
     accountID: MainAccountID,
     encryptedMnemonic: '',
     masterBlindingKey: '',
@@ -19,12 +19,16 @@ export const walletInitState: WalletState = {
       lastUsedInternalIndex: 0,
     },
   },
-  restrictedAssetAccounts: {},
+  [RestrictedAssetAccountID]: undefined,
   unspentsAndTransactions: {
     [MainAccountID]: {
       utxosMap: {},
       transactions: { regtest: {}, liquid: {} },
     },
+    [RestrictedAssetAccountID]: {
+      utxosMap: {},
+      transactions: { regtest: {}, liquid: {} },
+    }
   },
   passwordHash: '',
   deepRestorer: {
@@ -97,17 +101,14 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.WALLET_ADD_RESTRICTED_ASSET_ACCOUNT: {
+    case ACTION_TYPES.SET_RESTRICTED_ASSET_ACCOUNT: {
       const data = payload.multisigAccountData as MultisigAccountData<CosignerExtraData>;
       return {
         ...state,
-        restrictedAssetAccounts: {
-          ...state.restrictedAssetAccounts,
-          [data.signerXPub]: data,
-        },
+        restrictedAssetAccount: data,
         unspentsAndTransactions: {
           ...state.unspentsAndTransactions,
-          [data.signerXPub]: {
+          [RestrictedAssetAccountID]: {
             utxosMap: {},
             transactions: { liquid: {}, regtest: {} },
           },
@@ -117,32 +118,14 @@ export function walletReducer(
 
     case ACTION_TYPES.INCREMENT_INTERNAL_ADDRESS_INDEX: {
       const accountID = payload.accountID as AccountID;
-      if (accountID === MainAccountID) {
-        return {
-          ...state,
-          mainAccount: {
-            ...state.mainAccount,
-            restorerOpts: {
-              ...state.mainAccount.restorerOpts,
-              lastUsedInternalIndex:
-                (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
-            },
-          },
-        };
-      }
-
       return {
         ...state,
-        restrictedAssetAccounts: {
-          ...state.restrictedAssetAccounts,
-          [accountID]: {
-            ...state.restrictedAssetAccounts[accountID],
-            restorerOpts: {
-              ...state.restrictedAssetAccounts[accountID].restorerOpts,
-              lastUsedInternalIndex:
-                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedInternalIndex ?? 0) +
-                1,
-            },
+        mainAccount: {
+          ...state.mainAccount,
+          restorerOpts: {
+            ...state.mainAccount.restorerOpts,
+            lastUsedInternalIndex:
+              (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
           },
         },
       };
@@ -150,32 +133,14 @@ export function walletReducer(
 
     case ACTION_TYPES.INCREMENT_EXTERNAL_ADDRESS_INDEX: {
       const accountID = payload.accountID as AccountID;
-      if (accountID === MainAccountID) {
-        return {
-          ...state,
-          mainAccount: {
-            ...state.mainAccount,
-            restorerOpts: {
-              ...state.mainAccount.restorerOpts,
-              lastUsedExternalIndex:
-                (state.mainAccount.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
-            },
-          },
-        };
-      }
-
       return {
         ...state,
-        restrictedAssetAccounts: {
-          ...state.restrictedAssetAccounts,
-          [accountID]: {
-            ...state.restrictedAssetAccounts[accountID],
-            restorerOpts: {
-              ...state.restrictedAssetAccounts[accountID].restorerOpts,
-              lastUsedExternalIndex:
-                (state.restrictedAssetAccounts[accountID].restorerOpts.lastUsedExternalIndex ?? 0) +
-                1,
-            },
+        [accountID]: {
+          ...state[accountID],
+          restorerOpts: {
+            ...state[accountID]?.restorerOpts,
+            lastUsedExternalIndex:
+              (state[accountID]?.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
           },
         },
       };
@@ -186,21 +151,22 @@ export function walletReducer(
     }
 
     case ACTION_TYPES.DELETE_UTXO: {
-      if (!state.unspentsAndTransactions[payload.accountID]) {
+      const accountID = payload.accountID as AccountID;
+      if (!state.unspentsAndTransactions[accountID]) {
         return state;
       }
 
       const {
         [toStringOutpoint({ txid: payload.txid, vout: payload.vout })]: deleted,
         ...utxosMap
-      } = state.unspentsAndTransactions[payload.accountID].utxosMap;
+      } = state.unspentsAndTransactions[accountID].utxosMap;
 
       return {
         ...state,
         unspentsAndTransactions: {
           ...state.unspentsAndTransactions,
           [payload.accountID]: {
-            ...state.unspentsAndTransactions[payload.accountID],
+            ...state.unspentsAndTransactions[accountID],
             utxosMap,
           },
         },
@@ -233,12 +199,13 @@ export function walletReducer(
     }
 
     case ACTION_TYPES.FLUSH_UTXOS: {
+      const accountID = payload.accountID as AccountID;
       return {
         ...state,
         unspentsAndTransactions: {
           ...state.unspentsAndTransactions,
-          [payload.accountID]: {
-            ...state.unspentsAndTransactions[payload.accountID],
+          [accountID]: {
+            ...state.unspentsAndTransactions[accountID],
             utxosMap: {},
           },
         },
