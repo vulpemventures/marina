@@ -26,8 +26,8 @@ export class MultisigWithCosigner extends Multisig implements IdentityInterface 
   }
 
   async signPset(pset: string): Promise<string> {
-    const signed = await super.signPset(pset)
-    return this.cosigner.signPset(signed)
+    const signed = await super.signPset(pset);
+    return this.cosigner.signPset(signed);
   }
 }
 
@@ -56,12 +56,16 @@ export class MockedCosigner implements Cosigner {
       chain: network,
       type: IdentityType.Mnemonic,
       opts: {
-        mnemonic: 'sponsor envelope waste fork indicate board survey tobacco laugh cover guitar layer',
-        baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH
-      }
+        mnemonic:
+          'sponsor envelope waste fork indicate board survey tobacco laugh cover guitar layer',
+        baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH,
+      },
     });
     this.network = network;
-    this.esploraURL = network === 'liquid' ? BlockstreamExplorerURLs.esploraURL : NigiriDefaultExplorerURLs.esploraURL;
+    this.esploraURL =
+      network === 'liquid'
+        ? BlockstreamExplorerURLs.esploraURL
+        : NigiriDefaultExplorerURLs.esploraURL;
     this.cosignerXPub = cosignerXPub;
   }
 

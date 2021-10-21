@@ -5,10 +5,10 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch } from 'react-redux';
-import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { Account } from '../../../domain/account';
+import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actions/updater';
 
 export interface ReceiveProps {
   account: Account;
@@ -37,7 +37,8 @@ const ReceiveView: React.FC<ReceiveProps> = ({ account }) => {
       setConfidentialAddress(addr.confidentialAddress);
       await dispatch(incrementAddressIndex(account.getAccountID())); // persist address
       setTimeout(() => {
-        dispatch(updateUtxos()).catch(console.error);
+        dispatch(utxosUpdateTask(account.getAccountID())).catch(console.error);
+        dispatch(txsUpdateTask(account.getAccountID())).catch(console.error);
       }, 8000);
     })().catch(console.error);
   }, []);

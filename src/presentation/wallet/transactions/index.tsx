@@ -18,7 +18,7 @@ import { imgPathMapMainnet, imgPathMapRegtest, txTypeAsString } from '../../../a
 import { fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
-import { updateTxs, setAsset } from '../../../application/redux/actions/transaction';
+import { setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { Network } from '../../../domain/network';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
@@ -74,11 +74,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     const url = `${webExplorerURL}${modalTxDetails.webExplorersBlinders}`;
     await browser.tabs.create({ url, active: false });
   };
-
-  // Update txs history once at first render
-  useEffect(() => {
-    dispatch(updateTxs()).catch(console.error);
-  }, []);
 
   return (
     <ShellPopUp

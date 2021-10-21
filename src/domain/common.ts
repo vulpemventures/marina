@@ -6,6 +6,7 @@ import { TransactionState } from '../application/redux/reducers/transaction-redu
 import { Action } from 'redux';
 import { TaxiState } from '../application/redux/reducers/taxi-reducer';
 import { IAssets } from './assets';
+import { UpdaterState } from '../application/redux/reducers/updater-reducer';
 
 export interface RootReducerState {
   app: IApp;
@@ -15,6 +16,7 @@ export interface RootReducerState {
   wallet: WalletState;
   connect: ConnectData;
   taxi: TaxiState;
+  updater: UpdaterState;
 }
 
 export interface ActionWithPayload<T> extends Action<string> {

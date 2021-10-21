@@ -40,7 +40,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({ account, pset, explorerURL, recip
 
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txid },
+        state: { txid, accountID: account.getAccountID() },
       });
     } catch (error: unknown) {
       return history.push({

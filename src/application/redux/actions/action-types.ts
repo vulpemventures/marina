@@ -4,7 +4,6 @@ export const WALLET_ADD_RESTRICTED_ASSET_ACCOUNT = 'WALLET_ADD_RESTRICTED_ASSET_
 export const ADD_UTXO = 'ADD_UTXO';
 export const DELETE_UTXO = 'DELETE_UTXO';
 export const FLUSH_UTXOS = 'FLUSH_UTXOS';
-export const UPDATE_UTXOS = 'UPDATE_UTXOS';
 export const SET_DEEP_RESTORER_GAP_LIMIT = 'SET_DEEP_RESTORER_GAP_LIMIT';
 export const SET_DEEP_RESTORER_IS_LOADING = 'SET_DEEP_RESTORER_IS_LOADING';
 export const SET_DEEP_RESTORER_ERROR = 'SET_DEEP_RESTORER_ERROR';
@@ -28,9 +27,7 @@ export const ONBOARDING_FLUSH = 'ONBOARDING_FLUSH';
 export const ONBOARDING_SET_IS_FROM_POPUP_FLOW = 'ONBOARDING_SET_IS_FROM_POPUP_FLOW';
 
 // Transactions history
-export const UPDATE_TXS = 'UPDATE_TXS';
 export const ADD_TX = 'ADD_TX';
-export const RESET_TXS = 'RESET_TXS';
 
 // Pending transaction
 export const PENDING_TX_SET_ASSET = 'PENDING_TX_SET_ASSET';
@@ -67,3 +64,7 @@ export const START_DEEP_RESTORATION = 'START_DEEP_RESTORATION';
 
 // Reset
 export const RESET = 'RESET';
+
+// Updater
+export const PUSH_UPDATER_TASK = 'PUSH_UPDATER_TASK';
+export const POP_UPDATER_TASK = 'POP_UPDATER_TASK';

@@ -4,7 +4,6 @@ import {
   PENDING_TX_SET_ADDRESSES_AND_AMOUNT,
   PENDING_TX_SET_FEE_CHANGE_ADDRESS,
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
-  UPDATE_TXS,
   PENDING_TX_SET_PSET,
   ADD_TX,
 } from './action-types';
@@ -39,12 +38,6 @@ export function setFeeAssetAndAmount(feeAsset: string, feeAmountInSatoshi: numbe
 
 export function flushPendingTx(): AnyAction {
   return { type: PENDING_TX_FLUSH };
-}
-
-export function updateTxs(): AnyAction {
-  return {
-    type: UPDATE_TXS,
-  };
 }
 
 export function setPset(pset: string): AnyAction {

@@ -6,6 +6,7 @@ import {
   MultisigAccount,
   MultisigAccountData,
   MnemonicAccount,
+  MainAccountID,
 } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
@@ -40,14 +41,16 @@ export function selectMainAccount(state: RootReducerState): MnemonicAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }
 
-export const selectRestrictedAssetAccount = (cosignerXPub: XPub) =>
+const selectRestrictedAssetAccount = (signerXPub: AccountID) =>
   function (state: RootReducerState): MultisigAccount {
     return createMultisigAccount(
       state.wallet.mainAccount.encryptedMnemonic,
-      state.wallet.restrictedAssetAccounts[cosignerXPub],
-      state.app.network
+      state.wallet.restrictedAssetAccounts[signerXPub]
     );
   };
+
+export const selectAccount = (accountID: AccountID) =>
+  accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount(accountID);
 
 export function selectAllRestrictedAssetAccounts(
   state: RootReducerState
@@ -55,8 +58,9 @@ export function selectAllRestrictedAssetAccounts(
   return Object.values(state.wallet.restrictedAssetAccounts);
 }
 
-export const selectUnspentsAndTransactions = (accountID: AccountID) => (state: RootReducerState) =>
-  state.wallet.unspentsAndTransactions[accountID] ?? {
+export const selectUnspentsAndTransactions = (accountID: AccountID) => (state: RootReducerState) => {
+  return state.wallet.unspentsAndTransactions[accountID] ?? {
     utxosMap: {},
     transactions: { regtest: {}, liquid: {} },
   };
+}

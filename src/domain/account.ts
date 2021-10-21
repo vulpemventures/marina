@@ -121,13 +121,13 @@ export async function create2of2MultisigAccountData<T>(
     requiredSignature: 2,
     extraData,
     restorerOpts,
-    network
+    network,
   };
 }
 
 export function createMultisigAccount(
   encryptedMnemonic: EncryptedMnemonic,
-  data: MultisigAccountData<CosignerExtraData>,
+  data: MultisigAccountData<CosignerExtraData>
 ): MultisigAccount {
   return {
     getAccountID: () => data.signerXPub,

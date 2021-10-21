@@ -6,12 +6,14 @@ import Button from '../../components/button';
 import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
-import { flushPendingTx, updateTxs } from '../../../application/redux/actions/transaction';
+import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { updateUtxos } from '../../../application/redux/actions/utxos';
+import { AccountID } from '../../../domain/account';
+import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actions/updater';
 
 interface LocationState {
   txid: string;
+  accountID: AccountID;
 }
 
 export interface PaymentSuccessProps {
@@ -39,8 +41,8 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
   useEffect(() => {
     void (async () => {
       await dispatch(flushPendingTx());
-      await dispatch(updateUtxos()).catch(console.error);
-      await dispatch(updateTxs()).catch(console.error);
+      await dispatch(utxosUpdateTask(state.accountID)).catch(console.error);
+      await dispatch(txsUpdateTask(state.accountID)).catch(console.error);
     })();
   }, []);
 

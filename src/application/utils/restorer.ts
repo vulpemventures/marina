@@ -89,15 +89,18 @@ export function restoredMultisig(
   cosigner: Cosigner,
   network: Network
 ) {
-  const multisigID = new MultisigWithCosigner({
-    chain: network,
-    type: IdentityType.Multisig,
-    opts: {
-      requiredSignatures,
-      signer,
-      cosigners,
+  const multisigID = new MultisigWithCosigner(
+    {
+      chain: network,
+      type: IdentityType.Multisig,
+      opts: {
+        requiredSignatures,
+        signer,
+        cosigners,
+      },
     },
-  }, cosigner);
+    cosigner
+  );
 
   return restorerFromState<MultisigWithCosigner>(multisigID)(restorerOpts);
 }

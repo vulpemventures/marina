@@ -21,7 +21,7 @@ export const walletInitState: WalletState = {
   },
   restrictedAssetAccounts: {},
   unspentsAndTransactions: {
-    MainAccountID: {
+    [MainAccountID]: {
       utxosMap: {},
       transactions: { regtest: {}, liquid: {} },
     },
@@ -103,7 +103,14 @@ export function walletReducer(
         ...state,
         restrictedAssetAccounts: {
           ...state.restrictedAssetAccounts,
-          [data.cosignerXPubs[0]]: data,
+          [data.signerXPub]: data,
+        },
+        unspentsAndTransactions: {
+          ...state.unspentsAndTransactions,
+          [data.signerXPub]: {
+            utxosMap: {},
+            transactions: { liquid: {}, regtest: {} },
+          },
         },
       };
     }

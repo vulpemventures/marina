@@ -4,9 +4,10 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { updateUtxos } from '../../application/redux/actions/utxos';
-import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
+import { flushPendingTx } from '../../application/redux/actions/transaction';
 import { RootReducerState } from '../../domain/common';
+import { MainAccountID } from '../../domain/account';
+import { txsUpdateTask, utxosUpdateTask } from '../../application/redux/actions/updater';
 
 interface Props {
   btnDisabled?: boolean;
@@ -42,8 +43,8 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = async () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(updateUtxos()).catch(console.error);
-      dispatch(updateTxs()).catch(console.error);
+      dispatch(utxosUpdateTask(MainAccountID)).catch(console.error);
+      dispatch(txsUpdateTask(MainAccountID)).catch(console.error);
     }
     await dispatch(flushPendingTx());
     history.push(DEFAULT_ROUTE);
