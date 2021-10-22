@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { greedyCoinSelector, RecipientInterface, UtxoInterface, walletFromCoins } from 'ldk';
+import { ChangeAddressFromAssetGetter, CoinSelectionResult, CoinSelector, greedyCoinSelector, RecipientInterface, UtxoInterface, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -48,6 +48,7 @@ export interface ChooseFeeProps {
 
 interface State {
   unsignedPset?: string;
+  utxos?: UtxoInterface[];
   feeChange?: Address;
   topup?: Topup.AsObject;
 }
@@ -109,13 +110,18 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       ? stateForTaxiPSET(
           account,
           feeAsset,
-          utxos,
           getRecipient(),
           changeAddress!,
+          utxos,
           network,
           state.topup
         )
-      : stateForRegularPSET(getRecipient(), changeAddress!, utxos, network);
+      : stateForRegularPSET(
+          getRecipient(),
+          changeAddress!,
+          utxos,
+          network,
+        );
 
     newStatePromise.then(setState).catch(handleError).finally(done);
   }, [feeAsset]);
@@ -228,21 +234,30 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   );
 };
 
+const sideEffectCoinSelector = (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
+  return (unspents: UtxoInterface[], outputs: RecipientInterface[], changeGetter: ChangeAddressFromAssetGetter) => {
+    const result = greedyCoinSelector()(unspents, outputs, changeGetter);
+    sideEffect(result);
+    return result;
+  }
+}
+
 function stateForRegularPSET(
   recipient: RecipientInterface,
   change: Address,
   utxos: UtxoInterface[],
-  network: Network
+  network: Network,
 ): Promise<State> {
   const result: State = {};
   result.unsignedPset = undefined;
   result.feeChange = undefined;
+  result.utxos = [];
   const w = walletFromCoins(utxos, network);
 
   result.unsignedPset = w.buildTx(
     w.createTx(),
     [recipient],
-    greedyCoinSelector(),
+    sideEffectCoinSelector(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
     () => change.value,
     true,
     0.1
@@ -255,15 +270,16 @@ function stateForRegularPSET(
 async function stateForTaxiPSET(
   account: Account,
   feeAsset: string,
-  utxos: UtxoInterface[],
   recipient: RecipientInterface,
   change: Address,
+  utxos: UtxoInterface[],
   network: Network,
   lastTopup?: Topup.AsObject
 ): Promise<State> {
   const result: State = {};
   result.unsignedPset = undefined;
   result.topup = lastTopup;
+  result.utxos = [];
 
   if (!lastTopup || feeAsset !== lastTopup.assetHash) {
     result.topup = undefined;
@@ -291,7 +307,7 @@ async function stateForTaxiPSET(
     result.topup,
     utxos,
     [recipient],
-    greedyCoinSelector(),
+    sideEffectCoinSelector(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
     changeGetter
   );
 
@@ -299,11 +315,11 @@ async function stateForTaxiPSET(
 }
 
 function actionsFromState(state: State, feeCurrency: string, accountID: AccountID): AnyAction[] {
-  if (!state.unsignedPset) return [];
+  if (!state.unsignedPset || !state.utxos) return [];
 
   const actions: AnyAction[] = [];
   const feeAmount = state.topup ? state.topup.assetAmount : feeAmountFromTx(state.unsignedPset);
-  actions.push(setPset(state.unsignedPset));
+  actions.push(setPset(state.unsignedPset, state.utxos));
   actions.push(setFeeAssetAndAmount(feeCurrency, feeAmount));
 
   if (state.feeChange) {

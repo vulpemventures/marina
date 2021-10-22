@@ -1,6 +1,7 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
+import { UtxoInterface } from 'ldk';
 
 export type PendingTxStep = 'empty' | 'address-amount' | 'choose-fee' | 'confirmation';
 
@@ -14,6 +15,7 @@ export interface TransactionState {
   sendAddress?: Address;
   changeAddress?: Address;
   feeChangeAddress?: Address;
+  selectedUtxos?: UtxoInterface[];
 }
 
 export const transactionInitState: TransactionState = {
@@ -55,7 +57,7 @@ export function transactionReducer(
         feeChangeAddress: payload.feeChangeAddress,
       };
     }
-
+      
     case ACTION_TYPES.PENDING_TX_SET_FEE_AMOUNT_AND_ASSET: {
       return {
         ...state,
@@ -73,6 +75,7 @@ export function transactionReducer(
         ...state,
         step: 'confirmation',
         pset: payload.pset,
+        selectedUtxos: payload.utxos
       };
     }
 

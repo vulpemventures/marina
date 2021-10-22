@@ -1,4 +1,5 @@
 import {
+  address,
   address as addrLDK,
   addToTx,
   BlindedOutputInterface,
@@ -11,6 +12,7 @@ import {
   IdentityInterface,
   InputInterface,
   isBlindedOutputInterface,
+  isBlindedUtxo,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
@@ -18,7 +20,7 @@ import {
   UtxoInterface,
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
-import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
+import { isConfidentialAddress, networkFromString } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
@@ -27,19 +29,55 @@ import { fetchTopupFromTaxi } from './taxi';
 import { taxiURL } from './constants';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
 
-function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, string> {
-  const outPubkeys: Map<number, string> = new Map();
+const blindingKeyFromAddress = (addr: string): Buffer => {
+  return address.fromConfidential(addr).blindingKey;
+};
 
-  for (const outAddr of outputAddresses) {
-    const index = outputIndexFromAddress(pset, outAddr);
+function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, Buffer> {
+  const outPubkeys: Map<number, Buffer> = new Map();
+
+  for (const outAddress of outputAddresses) {
+    const index = outputIndexFromAddress(pset, outAddress);
     if (index === -1) continue;
-    if (isConfidentialAddress(outAddr)) {
-      const blindingPublicKey = blindingKeyFromAddress(outAddr);
-      outPubkeys.set(index, blindingPublicKey);
+    if (isConfidentialAddress(outAddress)) {
+      outPubkeys.set(index, blindingKeyFromAddress(outAddress));
     }
   }
 
   return outPubkeys;
+}
+
+function inputBlindingDataMap(pset: string, utxos: UtxoInterface[]): Map<number, confidential.UnblindOutputResult> {
+  const inputBlindingData = new Map<number, confidential.UnblindOutputResult>();
+
+  let index = -1;
+  for (const input of psetToUnsignedTx(pset).ins) {
+    index++;
+    const utxo = utxos.find(u => u.txid === input.hash.toString('hex'));
+    if (!utxo) {
+      throw new Error(`blindPSET error: utxo not found '${input.hash.reverse().toString('hex')}'`)
+    }
+    if (!isBlindedUtxo(utxo)) continue;
+
+    if (!utxo.unblindData) {
+      throw new Error(`blindPSET error: utxo need unblind data '${input.hash.reverse().toString('hex')}'`)
+    }
+
+    inputBlindingData.set(index, utxo.unblindData)
+  }
+
+  return inputBlindingData;
+}
+
+async function blindPset(
+  psetBase64: string,
+  utxos: UtxoInterface[],
+  outputAddresses: string[],
+) {
+  const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses);
+  const inputBlindingData = inputBlindingDataMap(psetBase64, utxos);
+  
+  return (await decodePset(psetBase64).blindOutputsByIndex(inputBlindingData, outputPubKeys)).toBase64()
 }
 
 /**
@@ -49,28 +87,29 @@ function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, str
  * @param recipientAddresses a list of known recipients addresses (non wallet output addresses).
  */
 export async function blindAndSignPset(
-  signerIdentity: IdentityInterface,
   psetBase64: string,
+  selectedUtxos: UtxoInterface[],
+  identities: IdentityInterface[],
   recipientAddresses: string[]
 ): Promise<string> {
-  const outputAddresses = (await signerIdentity.getAddresses()).map((a) => a.confidentialAddress);
-
-  const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses.concat(recipientAddresses));
-  const outputsToBlind = Array.from(outputPubKeys.keys());
-
-  const blindedPset: string = await signerIdentity.blindPset(
-    psetBase64,
-    outputsToBlind,
-    outputPubKeys
-  );
-
-  const signedPset: string = await signerIdentity.signPset(blindedPset);
-
-  const ptx = decodePset(signedPset);
-  if (!ptx.validateSignaturesOfAllInputs()) {
-    throw new Error('Transaction containes invalid signatures');
+  const outputAddresses: string[] = recipientAddresses;
+  for (const id of identities) {
+    outputAddresses.push(...(await id.getAddresses()).map((a) => a.confidentialAddress));
   }
-  return ptx.finalizeAllInputs().extractTransaction().toHex();
+  
+  let pset = await blindPset(psetBase64, selectedUtxos, outputAddresses);
+  
+  for (const id of identities) {
+    pset = await id.signPset(pset);
+    if (decodePset(pset).validateSignaturesOfAllInputs()) break;
+  }
+
+  const decodedPset = decodePset(pset);
+  if (!decodedPset.validateSignaturesOfAllInputs()) {
+    throw new Error('PSET is not fully signed');
+  }
+
+  return decodedPset.finalizeAllInputs().extractTransaction().toHex();
 }
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
