@@ -43,7 +43,7 @@ export interface ChooseFeeProps {
   taxiAssets: string[];
   lbtcAssetHash: string;
   account: Account;
-  mainAccountUtxos: UtxoInterface[];
+  utxos: UtxoInterface[];
 }
 
 const ChooseFeeView: React.FC<ChooseFeeProps> = ({
@@ -57,7 +57,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   taxiAssets,
   lbtcAssetHash,
   account,
-  mainAccountUtxos,
+  utxos,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -111,7 +111,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const createTx = (recipients: RecipientInterface[]) => {
     // no taxi
     setFeeChange(undefined);
-    const w = walletFromCoins(mainAccountUtxos, network);
+    const w = walletFromCoins(utxos, network);
     const currentSatsPerByte = feeLevelToSatsPerByte[feeLevel];
 
     if (!changeAddress) throw new Error('change address is not defined');
@@ -158,7 +158,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const tx: string = createTaxiTxFromTopup(
       taxiTopup,
-      mainAccountUtxos,
+      utxos,
       recipients,
       greedyCoinSelector(),
       changeGetter

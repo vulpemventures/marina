@@ -14,13 +14,21 @@ export function masterPubKeySelector(state: RootReducerState): Promise<MasterPub
   return selectMainAccount(state).getWatchIdentity();
 }
 
-export const selectUtxos =
+export const selectUtxos = (...accounts: AccountID[]) => (state: RootReducerState): UtxoInterface[] => {
+  return accounts.flatMap(ID => selectUtxosForAccount(ID)(state));
+}
+
+const selectUtxosForAccount =
   (accountID: AccountID) =>
   (state: RootReducerState): UtxoInterface[] => {
     return Object.values(selectUnspentsAndTransactions(accountID)(state).utxosMap);
   };
 
-export const selectTransactions =
+export const selectTransactions = (...accounts: AccountID[]) => (state: RootReducerState) => {
+  return accounts.flatMap(ID => selectTransactionsForAccount(ID)(state));
+}
+
+const selectTransactionsForAccount =
   (accountID: AccountID) =>
   (state: RootReducerState): TxDisplayInterface[] => {
     return Object.values(
