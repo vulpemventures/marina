@@ -61,7 +61,6 @@ import BackUpUnlock from '../onboarding/backup-unlock';
 import Home from '../../application/redux/containers/home.container';
 import LogIn from '../wallet/log-in';
 import Transactions from '../../application/redux/containers/transactions.container';
-import ReceiveAddress from '../../application/redux/containers/receive.container';
 import ReceiveSelectAsset from '../../application/redux/containers/receive-select-asset.container';
 import SendSelectAsset from '../../application/redux/containers/send-select-asset.container';
 import AddressAmount from '../../application/redux/containers/address-amount.container';
@@ -85,6 +84,7 @@ import SettingsTerms from '../settings/terms';
 import PairCosigner from '../../application/redux/containers/pair.container';
 import SettingsCosigner from '../../application/redux/containers/cosigners.container';
 import PairSuccess from '../cosigner/pair-success';
+import ReceiveView from '../wallet/receive';
 
 const Routes: React.FC = () => {
   return (
@@ -102,7 +102,7 @@ const Routes: React.FC = () => {
         <ProtectedRoute exact path={DEFAULT_ROUTE} component={Home} />
         <ProtectedRoute exact path={TRANSACTIONS_ROUTE} component={Transactions} />
         <ProtectedRoute exact path={RECEIVE_SELECT_ASSET_ROUTE} component={ReceiveSelectAsset} />
-        <ProtectedRoute exact path={`${RECEIVE_ADDRESS_ROUTE}/:asset`} component={ReceiveAddress} />
+        <ProtectedRoute exact path={`${RECEIVE_ADDRESS_ROUTE}/:asset`} component={ReceiveView} />
         <ProtectedRoute exact path={SEND_SELECT_ASSET_ROUTE} component={SendSelectAsset} />
         <ProtectedRoute exact path={SEND_ADDRESS_AMOUNT_ROUTE} component={AddressAmount} />
         <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} component={ChooseFee} />

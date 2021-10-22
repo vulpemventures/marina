@@ -4,13 +4,11 @@ import {
   createMnemonicAccount,
   createMultisigAccount,
   MultisigAccount,
-  MultisigAccountData,
   MnemonicAccount,
   MainAccountID,
 } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
-import { CosignerExtraData } from '../../../domain/wallet';
 
 export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
   return selectMainAccount(state).getWatchIdentity();
@@ -54,7 +52,12 @@ export const selectAccount = (accountID: AccountID) =>
   accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
 
 export const selectAccountForReceive = (asset: string) => (state: RootReducerState) => {
-  const assets = state.assets
+  // TODO hardcode restricted asset hashes
+  if (asset === 'restricted_asset') {
+    return selectRestrictedAssetAccount(state);
+  }
+
+  return selectMainAccount(state);
 }
 
 export const selectUnspentsAndTransactions =

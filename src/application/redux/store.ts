@@ -24,7 +24,7 @@ import { setDeepRestorerError, setDeepRestorerIsLoading, setWalletData } from '.
 import { createAddress } from '../../domain/address';
 import { flushTx } from './actions/connect';
 import { txsUpdateTask, utxosUpdateTask } from './actions/updater';
-import { MainAccountID } from '../../domain/account';
+import { AccountID, MainAccountID, RestrictedAssetAccountID } from '../../domain/account';
 import { extractErrorMessage } from '../../presentation/utils/error';
 
 export const serializerAndDeserializer = {
@@ -71,8 +71,11 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
     browser.alarms.onAlarm.addListener((alarm) => {
       switch (alarm.name) {
         case 'UPDATE_ALARM':
-          dispatch(txsUpdateTask(MainAccountID));
-          dispatch(utxosUpdateTask(MainAccountID));
+          ([MainAccountID, RestrictedAssetAccountID] as AccountID[]).forEach((ID: AccountID) => {
+            dispatch(utxosUpdateTask(ID));
+            dispatch(txsUpdateTask(ID));
+          })
+          
           dispatch(updateTaxiAssets());
           break;
 

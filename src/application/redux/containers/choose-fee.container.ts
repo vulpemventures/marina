@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { MainAccountID } from '../../../domain/account';
+import { MainAccountID, RestrictedAssetAccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import ChooseFeeView, { ChooseFeeProps } from '../../../presentation/wallet/send/choose-fee';
 import { lbtcAssetByNetwork } from '../../utils';
@@ -9,7 +9,7 @@ import { selectMainAccount, selectUtxos } from '../selectors/wallet.selector';
 const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   network: state.app.network,
   assets: state.assets,
-  balances: selectBalances(MainAccountID)(state),
+  balances: selectBalances(MainAccountID, RestrictedAssetAccountID)(state),
   taxiAssets: state.taxi.taxiAssets,
   lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
   sendAddress: state.transaction.sendAddress,

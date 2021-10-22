@@ -1,15 +1,24 @@
 import { AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { lbtcAssetByNetwork } from '../../utils';
+import { sumBalances } from '../../utils/balances';
 import { selectTransactions, selectUtxos } from './wallet.selector';
 
 export type BalancesByAsset = { [assetHash: string]: number };
+
+export const selectBalances = (...accounts: AccountID[]) => {
+  const selectors = accounts.map(id => selectBalancesForAccount(id))
+  return (state: RootReducerState) => {
+    return sumBalances(...selectors.map(select => select(state)));
+  }
+}
+
 /**
  * Extract balances from all unblinded utxos in state
  * @param onSuccess
  * @param onError
  */
-export const selectBalances =
+const selectBalancesForAccount =
   (accountID: AccountID) =>
   (state: RootReducerState): BalancesByAsset => {
     const utxos = selectUtxos(accountID)(state);

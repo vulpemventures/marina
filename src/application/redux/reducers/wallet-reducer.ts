@@ -120,12 +120,12 @@ export function walletReducer(
       const accountID = payload.accountID as AccountID;
       return {
         ...state,
-        mainAccount: {
-          ...state.mainAccount,
+        [accountID]: {
+          ...state[accountID],
           restorerOpts: {
-            ...state.mainAccount.restorerOpts,
+            ...state[accountID]?.restorerOpts,
             lastUsedInternalIndex:
-              (state.mainAccount.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
+              (state[accountID]?.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
           },
         },
       };

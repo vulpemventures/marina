@@ -19,7 +19,7 @@ import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../app
 import { Account } from '../domain/account';
 import { RootReducerState } from '../domain/common';
 
-type AccountSelector = (state: RootReducerState) => Account;
+type AccountSelector = (state: RootReducerState) => Account | undefined;
 
 /**
  * fetch the asset infos from explorer (ticker, precision etc...)
@@ -55,6 +55,7 @@ export function makeUtxosUpdater(
       if (!app.isAuthenticated) return;
 
       const account = selectAccount(state);
+      if (!account) return;
       const explorer = getExplorerURLSelector(state);
       const currentCacheState = selectUnspentsAndTransactions(account.getAccountID())(state);
       const utxosMap = currentCacheState === undefined ? {} : currentCacheState.utxosMap;
@@ -131,6 +132,7 @@ export function makeTxsUpdater(
       if (!app.isAuthenticated) return;
 
       const account = selectAccount(state);
+      if (!account) return;
       const txsHistory = selectUnspentsAndTransactions(account.getAccountID())(state).transactions[
         app.network
       ];

@@ -4,13 +4,13 @@ import HomeView, { HomeProps } from '../../../presentation/wallet/home';
 import { selectBalances } from '../selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../../domain/assets';
 import { lbtcAssetByNetwork } from '../../utils';
-import { MainAccountID } from '../../../domain/account';
+import { MainAccountID, RestrictedAssetAccountID } from '../../../domain/account';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => ({
   lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
   network: state.app.network,
   transactionStep: state.transaction.step,
-  assetsBalance: selectBalances(MainAccountID)(state),
+  assetsBalance: selectBalances(MainAccountID, RestrictedAssetAccountID)(state),
   getAsset: assetGetterFromIAssets(state.assets),
   isWalletVerified: state.wallet.isVerified,
 });

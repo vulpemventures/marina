@@ -3,10 +3,11 @@ import SettingsNetworksView, {
 } from './../../../presentation/settings/networks';
 import { connect } from 'react-redux';
 import { RootReducerState } from '../../../domain/common';
+import { MainAccountID, RestrictedAssetAccountID } from '../../../domain/account';
 
 const mapStateToProps = (state: RootReducerState): SettingsNetworksProps => ({
   restorationLoading: state.wallet.deepRestorer.isLoading,
-  accountsIDs: Object.keys(state.wallet.unspentsAndTransactions),
+  accountsIDs: [RestrictedAssetAccountID, MainAccountID],
   error: state.wallet.deepRestorer.error,
 });
 
