@@ -4,7 +4,12 @@ import * as ACTION_TYPES from '../actions/action-types';
 import { CosignerExtraData, WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
-import { AccountID, MainAccountID, MultisigAccountData, RestrictedAssetAccountID } from '../../../domain/account';
+import {
+  AccountID,
+  MainAccountID,
+  MultisigAccountData,
+  RestrictedAssetAccountID,
+} from '../../../domain/account';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { Network } from '../../../domain/network';
 
@@ -28,7 +33,7 @@ export const walletInitState: WalletState = {
     [RestrictedAssetAccountID]: {
       utxosMap: {},
       transactions: { regtest: {}, liquid: {} },
-    }
+    },
   },
   passwordHash: '',
   deepRestorer: {
@@ -124,8 +129,7 @@ export function walletReducer(
           ...state[accountID],
           restorerOpts: {
             ...state[accountID]?.restorerOpts,
-            lastUsedInternalIndex:
-              (state[accountID]?.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
+            lastUsedInternalIndex: (state[accountID]?.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
           },
         },
       };
@@ -139,8 +143,7 @@ export function walletReducer(
           ...state[accountID],
           restorerOpts: {
             ...state[accountID]?.restorerOpts,
-            lastUsedExternalIndex:
-              (state[accountID]?.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
+            lastUsedExternalIndex: (state[accountID]?.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
           },
         },
       };

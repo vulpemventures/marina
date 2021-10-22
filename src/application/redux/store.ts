@@ -74,8 +74,8 @@ export function startAlarmUpdater(): ThunkAction<void, RootReducerState, any, An
           ([MainAccountID, RestrictedAssetAccountID] as AccountID[]).forEach((ID: AccountID) => {
             dispatch(utxosUpdateTask(ID));
             dispatch(txsUpdateTask(ID));
-          })
-          
+          });
+
           dispatch(updateTaxiAssets());
           break;
 

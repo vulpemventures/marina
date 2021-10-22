@@ -14,7 +14,7 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const account = useSelector(selectAccountForReceive(match.params.asset))
+  const account = useSelector(selectAccountForReceive(match.params.asset));
 
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
@@ -31,7 +31,7 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
   useEffect(() => {
     (async () => {
       if (account === undefined) {
-        throw new Error('multisig account for restricted asset is not set')
+        throw new Error('multisig account for restricted asset is not set');
       }
 
       const identity = await account.getWatchIdentity();

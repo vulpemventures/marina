@@ -7,11 +7,11 @@ import { selectTransactions, selectUtxos } from './wallet.selector';
 export type BalancesByAsset = { [assetHash: string]: number };
 
 export const selectBalances = (...accounts: AccountID[]) => {
-  const selectors = accounts.map(id => selectBalancesForAccount(id))
+  const selectors = accounts.map((id) => selectBalancesForAccount(id));
   return (state: RootReducerState) => {
-    return sumBalances(...selectors.map(select => select(state)));
-  }
-}
+    return sumBalances(...selectors.map((select) => select(state)));
+  };
+};
 
 /**
  * Extract balances from all unblinded utxos in state

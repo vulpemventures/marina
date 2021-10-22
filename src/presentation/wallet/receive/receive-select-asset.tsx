@@ -11,7 +11,11 @@ export interface ReceiveSelectAssetProps {
   restrictedAssetSetup: boolean;
 }
 
-const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets, restrictedAssetSetup }) => {
+const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({
+  network,
+  assets,
+  restrictedAssetSetup,
+}) => {
   const history = useHistory();
 
   const handleSend = (asset: string) => {
@@ -23,9 +27,7 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
       title="Receive Asset"
       onClick={handleSend}
       network={network}
-      assets={[UnknowAsset]
-        .concat(assets)
-        .concat(restrictedAssetSetup ? [RestrictedAsset] : [])}
+      assets={[UnknowAsset].concat(assets).concat(restrictedAssetSetup ? [RestrictedAsset] : [])}
     />
   );
 };

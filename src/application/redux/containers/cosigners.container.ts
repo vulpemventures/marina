@@ -6,7 +6,9 @@ import SettingsCosignersView, {
 
 const SettingsCosigner = connect(
   (state: RootReducerState): SettingsCosignersProps => ({
-    multisigAccountsData: state.wallet.restrictedAssetAccount ? [state.wallet.restrictedAssetAccount] : [],
+    multisigAccountsData: state.wallet.restrictedAssetAccount
+      ? [state.wallet.restrictedAssetAccount]
+      : [],
   })
 )(SettingsCosignersView);
 

@@ -14,9 +14,11 @@ export function masterPubKeySelector(state: RootReducerState): Promise<MasterPub
   return selectMainAccount(state).getWatchIdentity();
 }
 
-export const selectUtxos = (...accounts: AccountID[]) => (state: RootReducerState): UtxoInterface[] => {
-  return accounts.flatMap(ID => selectUtxosForAccount(ID)(state));
-}
+export const selectUtxos =
+  (...accounts: AccountID[]) =>
+  (state: RootReducerState): UtxoInterface[] => {
+    return accounts.flatMap((ID) => selectUtxosForAccount(ID)(state));
+  };
 
 const selectUtxosForAccount =
   (accountID: AccountID) =>
@@ -24,9 +26,11 @@ const selectUtxosForAccount =
     return Object.values(selectUnspentsAndTransactions(accountID)(state).utxosMap);
   };
 
-export const selectTransactions = (...accounts: AccountID[]) => (state: RootReducerState) => {
-  return accounts.flatMap(ID => selectTransactionsForAccount(ID)(state));
-}
+export const selectTransactions =
+  (...accounts: AccountID[]) =>
+  (state: RootReducerState) => {
+    return accounts.flatMap((ID) => selectTransactionsForAccount(ID)(state));
+  };
 
 const selectTransactionsForAccount =
   (accountID: AccountID) =>
@@ -54,7 +58,7 @@ function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount 
     state.wallet.mainAccount.encryptedMnemonic,
     state.wallet.restrictedAssetAccount
   );
-};
+}
 
 export const selectAccount = (accountID: AccountID) =>
   accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
@@ -66,7 +70,7 @@ export const selectAccountForReceive = (asset: string) => (state: RootReducerSta
   }
 
   return selectMainAccount(state);
-}
+};
 
 export const selectUnspentsAndTransactions =
   (accountID: AccountID) => (state: RootReducerState) => {

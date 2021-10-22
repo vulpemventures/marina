@@ -13,7 +13,7 @@ const mapStateToProps = (state: RootReducerState): ReceiveSelectAssetProps => {
   return {
     network: state.app.network,
     assets: Object.keys(balances).map(getAsset),
-    restrictedAssetSetup: state.wallet.restrictedAssetAccount !== undefined
+    restrictedAssetSetup: state.wallet.restrictedAssetAccount !== undefined,
   };
 };
 

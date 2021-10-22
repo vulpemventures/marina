@@ -88,56 +88,56 @@ import ReceiveView from '../wallet/receive';
 
 const Routes: React.FC = () => {
   return (
-      <Switch>
-        {/*Onboarding*/}
-        <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />
-        <Route exact path={INITIALIZE_SELECT_ACTION_ROUTE} component={SelectAction} />
-        <Route exact path={INITIALIZE_CREATE_PASSWORD_ROUTE} component={WalletCreate} />
-        <Route exact path={INITIALIZE_SEED_PHRASE_ROUTE} component={SeedReveal} />
-        <Route exact path={INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE} component={SeedConfirm} />
-        <Route exact path={INITIALIZE_END_OF_FLOW_ROUTE} component={EndOfFlow} />
-        <Route exact path={RESTORE_VAULT_ROUTE} component={WalletRestore} />
-        <Route exact path={BACKUP_UNLOCK_ROUTE} component={BackUpUnlock} />
-        {/*Wallet*/}
-        <ProtectedRoute exact path={DEFAULT_ROUTE} component={Home} />
-        <ProtectedRoute exact path={TRANSACTIONS_ROUTE} component={Transactions} />
-        <ProtectedRoute exact path={RECEIVE_SELECT_ASSET_ROUTE} component={ReceiveSelectAsset} />
-        <ProtectedRoute exact path={`${RECEIVE_ADDRESS_ROUTE}/:asset`} component={ReceiveView} />
-        <ProtectedRoute exact path={SEND_SELECT_ASSET_ROUTE} component={SendSelectAsset} />
-        <ProtectedRoute exact path={SEND_ADDRESS_AMOUNT_ROUTE} component={AddressAmount} />
-        <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} component={ChooseFee} />
-        <ProtectedRoute exact path={SEND_CONFIRMATION_ROUTE} component={Confirmation} />
-        <ProtectedRoute exact path={SEND_END_OF_FLOW_ROUTE} component={SendEndOfFlow} />
-        <ProtectedRoute exact path={SEND_PAYMENT_SUCCESS_ROUTE} component={PaymentSuccess} />
-        <ProtectedRoute exact path={SEND_PAYMENT_ERROR_ROUTE} component={PaymentError} />
-        {/*Settings*/}
-        <ProtectedRoute exact path={SETTINGS_MENU_SECURITY_ROUTE} component={SettingsMenuSecurity} />
-        <ProtectedRoute exact path={SETTINGS_MENU_SETTINGS_ROUTE} component={SettingsMenuSettings} />
-        <ProtectedRoute exact path={SETTINGS_MENU_INFO_ROUTE} component={SettingsMenuInfo} />
-        <ProtectedRoute exact path={SETTINGS_SHOW_MNEMONIC_ROUTE} component={SettingsShowMnemonic} />
-        <ProtectedRoute
-          exact
-          path={SETTINGS_CHANGE_PASSWORD_ROUTE}
-          component={SettingsChangePassword}
-        />
-        <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} component={SettingsCurrency} />
-        <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} component={SettingsExplorer} />
-        <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} component={SettingsNetworks} />
-        <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
-        <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />
-        <ProtectedRoute exact path={SETTINGS_COSIGNERS_ROUTE} component={SettingsCosigner} />
-        <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
-        {/*Login*/}
-        <Route exact path={LOGIN_ROUTE} component={LogIn} />
-        {/*Connect*/}
-        <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
-        <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
-        <Route exact path={CONNECT_SIGN_PSET_ROUTE} component={ConnectSignTransaction} />
-        <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
+    <Switch>
+      {/*Onboarding*/}
+      <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />
+      <Route exact path={INITIALIZE_SELECT_ACTION_ROUTE} component={SelectAction} />
+      <Route exact path={INITIALIZE_CREATE_PASSWORD_ROUTE} component={WalletCreate} />
+      <Route exact path={INITIALIZE_SEED_PHRASE_ROUTE} component={SeedReveal} />
+      <Route exact path={INITIALIZE_CONFIRM_SEED_PHRASE_ROUTE} component={SeedConfirm} />
+      <Route exact path={INITIALIZE_END_OF_FLOW_ROUTE} component={EndOfFlow} />
+      <Route exact path={RESTORE_VAULT_ROUTE} component={WalletRestore} />
+      <Route exact path={BACKUP_UNLOCK_ROUTE} component={BackUpUnlock} />
+      {/*Wallet*/}
+      <ProtectedRoute exact path={DEFAULT_ROUTE} component={Home} />
+      <ProtectedRoute exact path={TRANSACTIONS_ROUTE} component={Transactions} />
+      <ProtectedRoute exact path={RECEIVE_SELECT_ASSET_ROUTE} component={ReceiveSelectAsset} />
+      <ProtectedRoute exact path={`${RECEIVE_ADDRESS_ROUTE}/:asset`} component={ReceiveView} />
+      <ProtectedRoute exact path={SEND_SELECT_ASSET_ROUTE} component={SendSelectAsset} />
+      <ProtectedRoute exact path={SEND_ADDRESS_AMOUNT_ROUTE} component={AddressAmount} />
+      <ProtectedRoute exact path={SEND_CHOOSE_FEE_ROUTE} component={ChooseFee} />
+      <ProtectedRoute exact path={SEND_CONFIRMATION_ROUTE} component={Confirmation} />
+      <ProtectedRoute exact path={SEND_END_OF_FLOW_ROUTE} component={SendEndOfFlow} />
+      <ProtectedRoute exact path={SEND_PAYMENT_SUCCESS_ROUTE} component={PaymentSuccess} />
+      <ProtectedRoute exact path={SEND_PAYMENT_ERROR_ROUTE} component={PaymentError} />
+      {/*Settings*/}
+      <ProtectedRoute exact path={SETTINGS_MENU_SECURITY_ROUTE} component={SettingsMenuSecurity} />
+      <ProtectedRoute exact path={SETTINGS_MENU_SETTINGS_ROUTE} component={SettingsMenuSettings} />
+      <ProtectedRoute exact path={SETTINGS_MENU_INFO_ROUTE} component={SettingsMenuInfo} />
+      <ProtectedRoute exact path={SETTINGS_SHOW_MNEMONIC_ROUTE} component={SettingsShowMnemonic} />
+      <ProtectedRoute
+        exact
+        path={SETTINGS_CHANGE_PASSWORD_ROUTE}
+        component={SettingsChangePassword}
+      />
+      <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} component={SettingsCurrency} />
+      <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} component={SettingsExplorer} />
+      <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} component={SettingsNetworks} />
+      <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
+      <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />
+      <ProtectedRoute exact path={SETTINGS_COSIGNERS_ROUTE} component={SettingsCosigner} />
+      <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
+      {/*Login*/}
+      <Route exact path={LOGIN_ROUTE} component={LogIn} />
+      {/*Connect*/}
+      <Route exact path={CONNECT_ENABLE_ROUTE} component={ConnectEnableView} />
+      <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
+      <Route exact path={CONNECT_SIGN_PSET_ROUTE} component={ConnectSignTransaction} />
+      <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
 
-        <ProtectedRoute exact path={PAIR_COSIGNER_ROUTE} component={PairCosigner} />
-        <ProtectedRoute exact path={PAIR_SUCCESS_COSIGNER_ROUTE} component={PairSuccess} />
-      </Switch>
+      <ProtectedRoute exact path={PAIR_COSIGNER_ROUTE} component={PairCosigner} />
+      <ProtectedRoute exact path={PAIR_SUCCESS_COSIGNER_ROUTE} component={PairSuccess} />
+    </Switch>
   );
 };
 

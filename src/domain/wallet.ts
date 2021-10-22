@@ -1,4 +1,10 @@
-import { AccountID, MainAccountID, MnemonicAccountData, MultisigAccountData, RestrictedAssetAccountID } from './account';
+import {
+  AccountID,
+  MainAccountID,
+  MnemonicAccountData,
+  MultisigAccountData,
+  RestrictedAssetAccountID,
+} from './account';
 import { PasswordHash } from './password-hash';
 import { UtxosAndTxsHistory } from './transaction';
 

@@ -1,4 +1,4 @@
-import { BalancesByAsset } from "../redux/selectors/balance.selector";
+import { BalancesByAsset } from '../redux/selectors/balance.selector';
 
 const addBalance = (toAdd: BalancesByAsset) => (base: BalancesByAsset) => {
   const result = base;
@@ -7,13 +7,13 @@ const addBalance = (toAdd: BalancesByAsset) => (base: BalancesByAsset) => {
   }
 
   return result;
-}
+};
 
 export const sumBalances = (...balances: BalancesByAsset[]) => {
   const [balance, ...rest] = balances;
   let result = balance;
   const addFns = rest.map(addBalance);
-  addFns.forEach((f) => result = f(result));
+  addFns.forEach((f) => (result = f(result)));
 
   return result;
-}
+};
