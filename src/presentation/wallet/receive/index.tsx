@@ -8,13 +8,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actions/updater';
-import { selectAccountForReceive } from '../../../application/redux/selectors/wallet.selector';
+import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
 
 const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const account = useSelector(selectAccountForReceive(match.params.asset));
+  const account = useSelector(selectAccountForAsset(match.params.asset));
 
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');

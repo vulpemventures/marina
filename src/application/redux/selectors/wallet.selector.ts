@@ -63,7 +63,7 @@ function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount 
 export const selectAccount = (accountID: AccountID) =>
   accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
 
-export const selectAccountForReceive = (asset: string) => (state: RootReducerState) => {
+export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {
   // TODO hardcode restricted asset hashes
   if (asset === 'restricted_asset') {
     return selectRestrictedAssetAccount(state);

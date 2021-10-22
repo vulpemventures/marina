@@ -15,7 +15,6 @@ import { Network } from '../../../domain/network';
 
 export const walletInitState: WalletState = {
   [MainAccountID]: {
-    accountID: MainAccountID,
     encryptedMnemonic: '',
     masterBlindingKey: '',
     masterXPub: '',

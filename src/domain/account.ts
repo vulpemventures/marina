@@ -54,7 +54,6 @@ export interface Account<
 export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
 
 export interface MnemonicAccountData {
-  accountID: AccountID;
   encryptedMnemonic: EncryptedMnemonic;
   restorerOpts: StateRestorerOpts;
   masterXPub: MasterXPub;
@@ -66,7 +65,7 @@ export function createMnemonicAccount(
   network: Network
 ): MnemonicAccount {
   return {
-    getAccountID: () => data.accountID,
+    getAccountID: () => MainAccountID,
     getSigningIdentity: (password: string) =>
       restoredMnemonic(decrypt(data.encryptedMnemonic, password), data.restorerOpts, network),
     getWatchIdentity: () =>
