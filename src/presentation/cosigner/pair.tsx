@@ -21,7 +21,6 @@ interface OptInFormProps {
 }
 
 interface OptInFormValues {
-  cosignerURL: string;
   password: string;
   derivationPath: string;
 }
@@ -33,15 +32,6 @@ const optInForm = (props: FormikProps<OptInFormValues>) => {
 
   return (
     <Form>
-      <p className="mb-2">Cosigner URL</p>
-      <Field
-        type="url"
-        name="cosignerURL"
-        placeholder="https://..."
-        className="focus:ring-primary focus:border-primary placeholder-grayLight block w-2/5 border-2 rounded-md"
-      />
-      {touchedAndError('cosignerURL') && <div className="text-red">{errors.cosignerURL}</div>}
-
       <p className="mb-2">Password</p>
       <Field
         type="password"
@@ -68,7 +58,6 @@ const optInForm = (props: FormikProps<OptInFormValues>) => {
 
 const OptInFormikForm = withFormik<OptInFormProps, OptInFormValues>({
   validationSchema: Yup.object().shape({
-    cosignerURL: Yup.string().required().url('invalid URL'),
     password: Yup.string().required(),
     derivationPath: Yup.string()
       .required()
@@ -115,7 +104,7 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
       walletSignerData,
       await cosigner.xPub(),
       network,
-      { cosignerURL: values.cosignerURL },
+      { cosignerURL: 'http://cosigner.URL' },
       explorerURL
     );
 
