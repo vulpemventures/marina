@@ -51,11 +51,14 @@ function inputBlindingDataMap(
   utxos: UtxoInterface[]
 ): Map<number, confidential.UnblindOutputResult> {
   const inputBlindingData = new Map<number, confidential.UnblindOutputResult>();
+  const txidToBuffer = function (txid: string) {
+    return Buffer.from(txid, 'hex').reverse();
+  };
 
   let index = -1;
   for (const input of psetToUnsignedTx(pset).ins) {
     index++;
-    const utxo = utxos.find((u) => Buffer.from(u.txid, 'hex').reverse().equals(input.hash));
+    const utxo = utxos.find((u) => txidToBuffer(u.txid).equals(input.hash));
     if (!utxo) {
       throw new Error(`blindPSET error: utxo not found '${input.hash.reverse().toString('hex')}'`);
     }

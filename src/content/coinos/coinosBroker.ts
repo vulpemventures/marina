@@ -1,9 +1,15 @@
-import { selectUtxos } from "../../application/redux/selectors/wallet.selector";
-import { RestrictedAssetAccountID } from "../../domain/account";
-import { MessageHandler, newErrorResponseMessage, newSuccessResponseMessage, RequestMessage } from "../../domain/message";
-import CoinosProvider from "../../inject/coinOS/provider";
-import Broker, { BrokerOption } from "../broker";
-import MarinaBroker from "../marina/marinaBroker";
+import { setAllowCoinInConnectData } from '../../application/redux/actions/allowance';
+import { selectUtxos } from '../../application/redux/selectors/wallet.selector';
+import { RestrictedAssetAccountID } from '../../domain/account';
+import {
+  MessageHandler,
+  newErrorResponseMessage,
+  newSuccessResponseMessage,
+  RequestMessage,
+} from '../../domain/message';
+import CoinosProvider from '../../inject/coinOS/provider';
+import Broker, { BrokerOption } from '../broker';
+import MarinaBroker from '../marina/marinaBroker';
 
 export default class CoinosBroker extends Broker {
   static async Start() {
@@ -29,7 +35,28 @@ export default class CoinosBroker extends Broker {
           const utxos = selectUtxos(RestrictedAssetAccountID)(this.store.getState());
           return successMsg(utxos);
         }
-          
+
+        case CoinosProvider.prototype.allowCoin.name: {
+          if (!params || params.length < 2) throw new Error('invalid params');
+          const txid = params[0];
+          const vout = params[1];
+
+          await this.store.dispatchAsync(setAllowCoinInConnectData(txid, vout));
+
+          const utxos = selectUtxos(RestrictedAssetAccountID)(this.store.getState());
+          const selectedCoin = utxos.find((u) => u.txid === txid && u.vout === vout);
+          if (!selectedCoin) {
+            throw new Error(`utxo ${txid}:${vout} is not found.`);
+          }
+
+          const result = await this.openAndWaitPopup<boolean>('allow-coin');
+          if (!result) {
+            throw new Error('user rejected the allowance');
+          }
+
+          return successMsg(result);
+        }
+
         default:
           return newErrorResponseMessage(id, new Error('Method not implemented.'));
       }
@@ -37,5 +64,5 @@ export default class CoinosBroker extends Broker {
       if (err instanceof Error) return newErrorResponseMessage(id, err);
       else throw err;
     }
-  }
+  };
 }

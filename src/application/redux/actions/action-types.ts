@@ -49,6 +49,7 @@ export const SET_MSG = 'SET_MSG';
 export const FLUSH_MSG = 'FLUSH_MSG';
 export const SELECT_HOSTNAME = 'SELECT_HOSTNAME';
 export const FLUSH_SELECTED_HOSTNAME = 'FLUSH_SELECTED_HOSTNAME';
+export const SET_ALLOW_COIN = 'SET_ALLOW_COIN';
 export const RESET_CONNECT = 'RESET_CONNECT';
 
 // Taxi
@@ -68,3 +69,6 @@ export const RESET = 'RESET';
 // Updater
 export const PUSH_UPDATER_TASK = 'PUSH_UPDATER_TASK';
 export const POP_UPDATER_TASK = 'POP_UPDATER_TASK';
+
+// Allowance
+export const ALLOW_COIN = 'ALLOW_COIN';

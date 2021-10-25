@@ -7,6 +7,7 @@ const CONNECT_ENABLE_ROUTE = makeConnectRoute('enable');
 const CONNECT_SPEND_ROUTE = makeConnectRoute('spend');
 const CONNECT_SIGN_PSET_ROUTE = makeConnectRoute('sign-pset');
 const CONNECT_SIGN_MSG_ROUTE = makeConnectRoute('sign-msg');
+const CONNECT_ALLOW_COIN_ROUTE = makeConnectRoute('allow-coin');
 
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
@@ -61,6 +62,7 @@ export {
   CONNECT_SPEND_ROUTE,
   CONNECT_SIGN_PSET_ROUTE,
   CONNECT_SIGN_MSG_ROUTE,
+  CONNECT_ALLOW_COIN_ROUTE,
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,

@@ -80,5 +80,7 @@ export default class Broker {
 
 // custom type guard for MessageEvent
 function isMessageEvent(event: MessageEvent<any>): event is MessageEvent<RequestMessage> {
-  return event.source === window && event.data && event.data.id && event.data.name && event.data.provider;
+  return (
+    event.source === window && event.data && event.data.id && event.data.name && event.data.provider
+  );
 }

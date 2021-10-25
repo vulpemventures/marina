@@ -71,6 +71,18 @@ export function connectDataReducer(
       };
     }
 
+    case ACTION_TYPES.SET_ALLOW_COIN: {
+      return {
+        ...state,
+        allowance: {
+          allowCoin: {
+            txid: payload.txid,
+            vout: payload.vout,
+          },
+        },
+      };
+    }
+
     default:
       return state;
   }

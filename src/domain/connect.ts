@@ -1,5 +1,5 @@
 import { Network } from './network';
-import { RecipientInterface } from 'ldk';
+import { Outpoint, RecipientInterface } from 'ldk';
 import { DataRecipient } from 'marina-provider';
 
 export type ConnectData = {
@@ -15,6 +15,9 @@ export type ConnectData = {
   msg?: {
     hostname?: string;
     message?: string;
+  };
+  allowance?: {
+    allowCoin: Outpoint;
   };
 };
 

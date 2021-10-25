@@ -9,6 +9,7 @@ import {
   MultisigOpts,
   XPub,
 } from 'ldk';
+import { ECPair, Transaction } from 'liquidjs-lib';
 import { BlockstreamExplorerURLs, NigiriDefaultExplorerURLs } from './app';
 import { Network } from './network';
 
@@ -45,16 +46,53 @@ export class MultisigWithCosigner extends Multisig implements IdentityInterface 
     this.cosigner = cosigner;
   }
 
+  // this is used instead of super.signPset in case of the input must be signed with SIGHASH_NONE + SIGHASH_ANYONE_CAN_PAY (allowance)
+  private async signWithSighashNone(psetBase64: string): Promise<string> {
+    const pset = decodePset(psetBase64);
+    const signInputPromises: Promise<void>[] = [];
+
+    for (let index = 0; index < pset.data.inputs.length; index++) {
+      const input = pset.data.inputs[index];
+      if (input.witnessUtxo) {
+        const derivationPath = this.scriptToPath[input.witnessUtxo.script.toString('hex')];
+
+        if (derivationPath) {
+          // if there is an address generated for the input script: build the signing key pair.
+          const privKey = this.baseNode.derivePath(derivationPath).privateKey;
+          if (!privKey) throw new Error('signing private key is undefined');
+          const signingKeyPair = ECPair.fromPrivateKey(privKey);
+          // add the promise to array
+          signInputPromises.push(
+            pset.signInputAsync(index, signingKeyPair, [
+              Transaction.SIGHASH_NONE + Transaction.SIGHASH_ANYONECANPAY,
+            ])
+          );
+        }
+      }
+    }
+    // wait that all signing promise resolved
+    await Promise.all(signInputPromises);
+    // return the signed pset, base64 encoded.
+    return pset.toBase64();
+  }
+
   async signPset(pset: string): Promise<string> {
     const toSign = addRedeemAndWitnessScriptsToInputs(pset, this);
     const signed = await super.signPset(toSign);
     return this.cosigner.signPset(signed, this.getXPub());
+  }
+
+  async allow(pset: string): Promise<void> {
+    const toSign = addRedeemAndWitnessScriptsToInputs(pset, this);
+    const signed = await this.signWithSighashNone(toSign);
+    return this.cosigner.allow(signed);
   }
 }
 
 export interface Cosigner {
   xPub(): Promise<XPub>;
   signPset(pset: string, xpub: XPub): Promise<string>;
+  allow(pset: string): Promise<void>;
 }
 
 export class MockedCosigner implements Cosigner {
@@ -100,5 +138,9 @@ export class MockedCosigner implements Cosigner {
       throw new Error('Mocked cosigner: not able to sign pset');
     }
     return signed;
+  }
+
+  allow(pset: string) {
+    return Promise.resolve();
   }
 }

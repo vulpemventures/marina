@@ -1,5 +1,10 @@
 import { stringify } from '../../application/utils/browser-storage-converters';
-import { compareCacheForEvents, newCacheFromState, newStoreCache, StoreCache } from '../store-cache';
+import {
+  compareCacheForEvents,
+  newCacheFromState,
+  newStoreCache,
+  StoreCache,
+} from '../store-cache';
 import Broker, { BrokerOption } from '../broker';
 import {
   MessageHandler,

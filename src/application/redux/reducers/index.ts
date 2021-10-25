@@ -16,6 +16,7 @@ import { appReducer, appInitState } from './app-reducer';
 import { walletInitState, walletReducer } from './wallet-reducer';
 import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
 import { updaterReducer } from './updater-reducer';
+import { allowanceInitState, allowanceReducer, AllowanceState } from './allowance-reducer';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -108,6 +109,12 @@ const marinaReducer = combineReducers({
     initialState: connectDataInitState,
   }),
   updater: updaterReducer,
+  allowance: persist<AllowanceState>({
+    reducer: allowanceReducer,
+    key: 'allowance',
+    version: 0,
+    initialState: allowanceInitState,
+  }),
 });
 
 export default marinaReducer;

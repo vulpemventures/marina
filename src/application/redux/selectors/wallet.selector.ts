@@ -52,7 +52,7 @@ export function selectMainAccount(state: RootReducerState): MnemonicAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }
 
-function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount | undefined {
+export function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount | undefined {
   if (!state.wallet.restrictedAssetAccount) return undefined;
 
   return createMultisigAccount(
