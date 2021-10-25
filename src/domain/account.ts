@@ -20,7 +20,7 @@ import {
   restoredWatchOnlyMultisig,
 } from '../application/utils/restorer';
 import { createAddress } from './address';
-import { HDSignerToXPub, MockedCosigner, MultisigWithCosigner } from './cosigner';
+import { MockedCosigner, MultisigWithCosigner } from './cosigner';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
@@ -117,7 +117,7 @@ export async function create2of2MultisigAccountData<T>(
 
   return {
     baseDerivationPath: signer.baseDerivationPath || DEFAULT_BASE_DERIVATION_PATH,
-    signerXPub: HDSignerToXPub(signer, network),
+    signerXPub: multisigID.getXPub(),
     cosignerXPubs: [cosignerXPub],
     requiredSignature: 2,
     extraData,
@@ -141,7 +141,7 @@ export function createMultisigAccount(
         data.cosignerXPubs,
         data.requiredSignature,
         data.restorerOpts,
-        new MockedCosigner(data.network, data.signerXPub),
+        new MockedCosigner(data.network),
         data.network
       ),
     getWatchIdentity: () =>

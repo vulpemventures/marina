@@ -7,7 +7,7 @@ import { create2of2MultisigAccountData } from '../../domain/account';
 import { CosignerExtraData } from '../../domain/wallet';
 import { decrypt } from '../../application/utils';
 import { EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
-import { Cosigner, HDSignerToXPub, MockedCosigner } from '../../domain/cosigner';
+import { Cosigner, MockedCosigner } from '../../domain/cosigner';
 import { Network } from '../../domain/network';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
@@ -107,15 +107,13 @@ const PairCosignerView: React.FC<PairCosignerProps> = ({
       mnemonic: decrypt(encryptedMnemonic, values.password),
       baseDerivationPath: values.derivationPath,
     };
-    const walletXPub = HDSignerToXPub(walletSignerData, network);
 
     // cosigner should be created from values.cosignerURL
-    const cosigner: Cosigner = new MockedCosigner(network, walletXPub);
-    const requestedXPub = await cosigner.requestXPub(walletXPub);
+    const cosigner: Cosigner = new MockedCosigner(network);
 
     const multisigAccountData = await create2of2MultisigAccountData<CosignerExtraData>(
       walletSignerData,
-      requestedXPub,
+      await cosigner.xPub(),
       network,
       { cosignerURL: values.cosignerURL },
       explorerURL

@@ -13,7 +13,7 @@ import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actio
 
 interface LocationState {
   txid: string;
-  accountID: AccountID;
+  accountIDs: AccountID[];
 }
 
 export interface PaymentSuccessProps {
@@ -41,8 +41,12 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
   useEffect(() => {
     void (async () => {
       await dispatch(flushPendingTx());
-      await dispatch(utxosUpdateTask(state.accountID)).catch(console.error);
-      await dispatch(txsUpdateTask(state.accountID)).catch(console.error);
+
+      await Promise.all(
+        (state.accountIDs ?? [])
+          .flatMap((ID) => [utxosUpdateTask(ID), txsUpdateTask(ID)])
+          .map(dispatch)
+      ).catch(console.error);
     })();
   }, []);
 

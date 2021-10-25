@@ -6,6 +6,7 @@ import {
   MultisigAccount,
   MnemonicAccount,
   MainAccountID,
+  Account,
 } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
@@ -59,6 +60,17 @@ function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount 
     state.wallet.restrictedAssetAccount
   );
 }
+
+export const selectAllAccounts = (state: RootReducerState): Account[] => {
+  const mainAccount = selectMainAccount(state);
+  const restrictedAssetAccount = selectRestrictedAssetAccount(state);
+
+  if (restrictedAssetAccount) {
+    return [mainAccount, restrictedAssetAccount];
+  }
+
+  return [mainAccount];
+};
 
 export const selectAccount = (accountID: AccountID) =>
   accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;

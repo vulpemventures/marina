@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { ChangeAddressFromAssetGetter, CoinSelectionResult, CoinSelector, greedyCoinSelector, RecipientInterface, UtxoInterface, walletFromCoins } from 'ldk';
+import {
+  ChangeAddressFromAssetGetter,
+  CoinSelectionResult,
+  CoinSelector,
+  greedyCoinSelector,
+  RecipientInterface,
+  UtxoInterface,
+  walletFromCoins,
+} from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -116,12 +124,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           network,
           state.topup
         )
-      : stateForRegularPSET(
-          getRecipient(),
-          changeAddress!,
-          utxos,
-          network,
-        );
+      : stateForRegularPSET(getRecipient(), changeAddress!, utxos, network);
 
     newStatePromise.then(setState).catch(handleError).finally(done);
   }, [feeAsset]);
@@ -235,18 +238,22 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 };
 
 const sideEffectCoinSelector = (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
-  return (unspents: UtxoInterface[], outputs: RecipientInterface[], changeGetter: ChangeAddressFromAssetGetter) => {
+  return (
+    unspents: UtxoInterface[],
+    outputs: RecipientInterface[],
+    changeGetter: ChangeAddressFromAssetGetter
+  ) => {
     const result = greedyCoinSelector()(unspents, outputs, changeGetter);
     sideEffect(result);
     return result;
-  }
-}
+  };
+};
 
 function stateForRegularPSET(
   recipient: RecipientInterface,
   change: Address,
   utxos: UtxoInterface[],
-  network: Network,
+  network: Network
 ): Promise<State> {
   const result: State = {};
   result.unsignedPset = undefined;

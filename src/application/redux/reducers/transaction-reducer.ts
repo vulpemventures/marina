@@ -57,7 +57,7 @@ export function transactionReducer(
         feeChangeAddress: payload.feeChangeAddress,
       };
     }
-      
+
     case ACTION_TYPES.PENDING_TX_SET_FEE_AMOUNT_AND_ASSET: {
       return {
         ...state,
@@ -75,7 +75,7 @@ export function transactionReducer(
         ...state,
         step: 'confirmation',
         pset: payload.pset,
-        selectedUtxos: payload.utxos
+        selectedUtxos: payload.utxos,
       };
     }
 

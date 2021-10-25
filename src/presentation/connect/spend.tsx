@@ -191,8 +191,9 @@ async function makeTransaction(
   );
 
   const txHex = await blindAndSignPset(
-    mnemonic,
     unsignedPset,
+    coins,
+    [mnemonic],
     recipients
       .map(({ address }) => address)
       .concat(Object.values(changeAddresses).map(({ confidentialAddress }) => confidentialAddress))

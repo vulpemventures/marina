@@ -12,7 +12,7 @@ const RECEIVER = 'AzpofttCgtcfk1PDWytoocvMWqQnLUJfjZw6MVmSdJQtwWnovQPgqiWSRTFZmK
 
 describe('create send pset (build, blind & sign)', () => {
   const mnemonic: Mnemonic = makeRandomMnemonic();
-  const unspents: UtxoInterface[] = []
+  const unspents: UtxoInterface[] = [];
 
   const makeUnspents = async () => {
     const addr = await mnemonic.getNextAddress();

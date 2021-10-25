@@ -1,21 +1,41 @@
-import { fromPublicKey, fromSeed } from 'bip32';
-import { mnemonicToSeedSync } from 'bip39';
 import {
+  decodePset,
   DEFAULT_BASE_DERIVATION_PATH,
-  HDSignerMultisig,
   IdentityInterface,
   IdentityOpts,
   IdentityType,
-  Mnemonic,
   Multisig,
   multisigFromEsplora,
   MultisigOpts,
-  toXpub,
   XPub,
 } from 'ldk';
-import { networkFromString } from '../application/utils';
 import { BlockstreamExplorerURLs, NigiriDefaultExplorerURLs } from './app';
 import { Network } from './network';
+
+function decodeMultisigPath(path: string) {
+  const splitted = path.split('/');
+  return { change: parseInt(splitted[0]), index: parseInt(splitted[1]) };
+}
+
+function addRedeemAndWitnessScriptsToInputs(pset: string, multisig: Multisig): string {
+  const decoded = decodePset(pset);
+  let inputIndex = 0;
+  for (const input of decoded.data.inputs) {
+    if (!input.witnessUtxo) continue;
+    const path = multisig.scriptToPath[input.witnessUtxo.script.toString('hex')];
+    if (path) {
+      const { change, index } = decodeMultisigPath(path);
+      const p2ms = multisig.getMultisigAddress(change, index);
+      decoded.updateInput(inputIndex, {
+        redeemScript: Buffer.from(p2ms.redeemScript, 'hex'),
+        witnessScript: Buffer.from(p2ms.witnessScript, 'hex'),
+      });
+    }
+
+    inputIndex++;
+  }
+  return decoded.toBase64();
+}
 
 export class MultisigWithCosigner extends Multisig implements IdentityInterface {
   private cosigner: Cosigner;
@@ -26,73 +46,59 @@ export class MultisigWithCosigner extends Multisig implements IdentityInterface 
   }
 
   async signPset(pset: string): Promise<string> {
-    const signed = await super.signPset(pset);
-    return this.cosigner.signPset(signed);
+    const toSign = addRedeemAndWitnessScriptsToInputs(pset, this);
+    const signed = await super.signPset(toSign);
+    return this.cosigner.signPset(signed, this.getXPub());
   }
 }
 
 export interface Cosigner {
-  requestXPub(signerXPub: XPub): Promise<XPub>;
-  signPset(pset: string): Promise<string>;
-}
-
-export function HDSignerToXPub(signer: HDSignerMultisig, network: Network) {
-  const walletSeed = mnemonicToSeedSync(signer.mnemonic);
-  const net = networkFromString(network);
-  const baseNode = fromSeed(walletSeed, net).derivePath(
-    signer.baseDerivationPath || DEFAULT_BASE_DERIVATION_PATH
-  );
-  return toXpub(fromPublicKey(baseNode.publicKey, baseNode.chainCode, net).toBase58());
+  xPub(): Promise<XPub>;
+  signPset(pset: string, xpub: XPub): Promise<string>;
 }
 
 export class MockedCosigner implements Cosigner {
-  private mnemonic: Mnemonic;
-  private cosignerXPub: XPub;
+  private mnemonic =
+    'sponsor envelope waste fork indicate board survey tobacco laugh cover guitar layer';
   private network: Network;
   private esploraURL: string;
 
-  constructor(network: Network, cosignerXPub: XPub) {
-    this.mnemonic = new Mnemonic({
-      chain: network,
-      type: IdentityType.Mnemonic,
-      opts: {
-        mnemonic:
-          'sponsor envelope waste fork indicate board survey tobacco laugh cover guitar layer',
-        baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH,
-      },
-    });
+  constructor(network: Network) {
     this.network = network;
     this.esploraURL =
       network === 'liquid'
         ? BlockstreamExplorerURLs.esploraURL
         : NigiriDefaultExplorerURLs.esploraURL;
-    this.cosignerXPub = cosignerXPub;
   }
 
-  requestXPub(_: XPub) {
-    return Promise.resolve(this.mnemonic.getXPub());
+  xPub() {
+    return Promise.resolve(
+      'xpub661MyMwAqRbcFgkcqS2dYiVoJLc9QEiVQLPcyG1pkVi2UTUSe8dCAjkUVqczLiamx4R9jrSj6GefRRFZyF9cfApymZm4WzazurfdaAYWqhb'
+    );
   }
 
-  async signPset(pset: string) {
-    if (this.cosignerXPub === undefined) {
-      throw new Error('pairing is not done');
-    }
-
+  async signPset(pset: string, cosignerXPub: XPub) {
     const multisigID = await multisigFromEsplora(
       new Multisig({
         chain: this.network,
         type: IdentityType.Multisig,
         opts: {
           requiredSignatures: 2,
-          cosigners: [this.cosignerXPub],
+          cosigners: [cosignerXPub],
           signer: {
-            mnemonic: this.mnemonic.mnemonic,
+            mnemonic: this.mnemonic,
             baseDerivationPath: DEFAULT_BASE_DERIVATION_PATH,
           },
         },
       })
     )({ esploraURL: this.esploraURL, gapLimit: 20 });
 
-    return multisigID.signPset(pset);
+    await multisigID.getNextAddress();
+    const signed = await multisigID.signPset(pset);
+
+    if (!decodePset(signed).validateSignaturesOfAllInputs()) {
+      throw new Error('Mocked cosigner: not able to sign pset');
+    }
+    return signed;
   }
 }

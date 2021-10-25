@@ -12,7 +12,6 @@ import {
   IdentityInterface,
   InputInterface,
   isBlindedOutputInterface,
-  isBlindedUtxo,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
@@ -47,37 +46,39 @@ function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, Buf
   return outPubkeys;
 }
 
-function inputBlindingDataMap(pset: string, utxos: UtxoInterface[]): Map<number, confidential.UnblindOutputResult> {
+function inputBlindingDataMap(
+  pset: string,
+  utxos: UtxoInterface[]
+): Map<number, confidential.UnblindOutputResult> {
   const inputBlindingData = new Map<number, confidential.UnblindOutputResult>();
 
   let index = -1;
   for (const input of psetToUnsignedTx(pset).ins) {
     index++;
-    const utxo = utxos.find(u => u.txid === input.hash.toString('hex'));
+    const utxo = utxos.find((u) => Buffer.from(u.txid, 'hex').reverse().equals(input.hash));
     if (!utxo) {
-      throw new Error(`blindPSET error: utxo not found '${input.hash.reverse().toString('hex')}'`)
+      throw new Error(`blindPSET error: utxo not found '${input.hash.reverse().toString('hex')}'`);
     }
-    if (!isBlindedUtxo(utxo)) continue;
 
     if (!utxo.unblindData) {
-      throw new Error(`blindPSET error: utxo need unblind data '${input.hash.reverse().toString('hex')}'`)
+      throw new Error(
+        `blindPSET error: utxo need unblind data '${input.hash.reverse().toString('hex')}'`
+      );
     }
 
-    inputBlindingData.set(index, utxo.unblindData)
+    inputBlindingData.set(index, utxo.unblindData);
   }
 
   return inputBlindingData;
 }
 
-async function blindPset(
-  psetBase64: string,
-  utxos: UtxoInterface[],
-  outputAddresses: string[],
-) {
+async function blindPset(psetBase64: string, utxos: UtxoInterface[], outputAddresses: string[]) {
   const outputPubKeys = outPubKeysMap(psetBase64, outputAddresses);
   const inputBlindingData = inputBlindingDataMap(psetBase64, utxos);
-  
-  return (await decodePset(psetBase64).blindOutputsByIndex(inputBlindingData, outputPubKeys)).toBase64()
+
+  return (
+    await decodePset(psetBase64).blindOutputsByIndex(inputBlindingData, outputPubKeys)
+  ).toBase64();
 }
 
 /**
@@ -96,12 +97,16 @@ export async function blindAndSignPset(
   for (const id of identities) {
     outputAddresses.push(...(await id.getAddresses()).map((a) => a.confidentialAddress));
   }
-  
+
   let pset = await blindPset(psetBase64, selectedUtxos, outputAddresses);
-  
+
   for (const id of identities) {
     pset = await id.signPset(pset);
-    if (decodePset(pset).validateSignaturesOfAllInputs()) break;
+    try {
+      if (decodePset(pset).validateSignaturesOfAllInputs()) break;
+    } catch {
+      continue;
+    }
   }
 
   const decodedPset = decodePset(pset);
