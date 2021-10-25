@@ -60,13 +60,9 @@ function inputBlindingDataMap(
       throw new Error(`blindPSET error: utxo not found '${input.hash.reverse().toString('hex')}'`);
     }
 
-    if (!utxo.unblindData) {
-      throw new Error(
-        `blindPSET error: utxo need unblind data '${input.hash.reverse().toString('hex')}'`
-      );
+    if (utxo.unblindData) {
+      inputBlindingData.set(index, utxo.unblindData);
     }
-
-    inputBlindingData.set(index, utxo.unblindData);
   }
 
   return inputBlindingData;
