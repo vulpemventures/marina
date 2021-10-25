@@ -1,6 +1,12 @@
 import { parse } from '../application/utils/browser-storage-converters';
 
 export default class WindowProxy {
+  protected providerName: string;
+
+  constructor(providerName: string) {
+    this.providerName = providerName;
+  }
+
   proxy(name: string, params: any[] = []): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = makeid(16);
@@ -31,6 +37,7 @@ export default class WindowProxy {
         id,
         name,
         params,
+        provider: this.providerName,
       },
       window.location.origin
     );

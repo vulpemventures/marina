@@ -5,12 +5,13 @@ import {
   newSuccessResponseMessage,
   RequestMessage,
 } from '../../domain/message';
+import PopupWindowProxy from './popupWindowProxy';
 
 export const POPUP_RESPONSE = 'POPUP_RESPONSE';
 
 export default class PopupBroker extends Broker {
   static Start() {
-    const broker = new PopupBroker();
+    const broker = new PopupBroker(PopupWindowProxy.PROVIDER_NAME);
     broker.start();
   }
 

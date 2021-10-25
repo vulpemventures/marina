@@ -1,14 +1,14 @@
-import { stringify } from '../application/utils/browser-storage-converters';
-import { compareCacheForEvents, newCacheFromState, newStoreCache, StoreCache } from './store-cache';
-import Broker, { BrokerOption } from './broker';
+import { stringify } from '../../application/utils/browser-storage-converters';
+import { compareCacheForEvents, newCacheFromState, newStoreCache, StoreCache } from '../store-cache';
+import Broker, { BrokerOption } from '../broker';
 import {
   MessageHandler,
   newErrorResponseMessage,
   newSuccessResponseMessage,
   RequestMessage,
-} from '../domain/message';
-import Marina from '../inject/marina';
-import { RootReducerState } from '../domain/common';
+} from '../../domain/message';
+import Marina from '../../inject/marina/provider';
+import { RootReducerState } from '../../domain/common';
 import {
   disableWebsite,
   flushMsg,
@@ -17,24 +17,24 @@ import {
   setMsg,
   setTx,
   setTxData,
-} from '../application/redux/actions/connect';
+} from '../../application/redux/actions/connect';
 import {
   selectMainAccount,
   selectTransactions,
   selectUtxos,
-} from '../application/redux/selectors/wallet.selector';
+} from '../../application/redux/selectors/wallet.selector';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
-} from '../application/redux/actions/wallet';
-import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
-import { selectBalances } from '../application/redux/selectors/balance.selector';
-import { assetGetterFromIAssets } from '../domain/assets';
+} from '../../application/redux/actions/wallet';
+import { lbtcAssetByNetwork, sortRecipients } from '../../application/utils';
+import { selectBalances } from '../../application/redux/selectors/balance.selector';
+import { assetGetterFromIAssets } from '../../domain/assets';
 import { Balance, Recipient } from 'marina-provider';
-import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
-import { SpendPopupResponse } from '../presentation/connect/spend';
-import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
-import { MainAccountID } from '../domain/account';
+import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
+import { SpendPopupResponse } from '../../presentation/connect/spend';
+import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
+import { MainAccountID } from '../../domain/account';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -47,7 +47,7 @@ export default class MarinaBroker extends Broker {
   }
 
   private constructor(hostname = '', brokerOpts?: BrokerOption[]) {
-    super(brokerOpts);
+    super(Marina.PROVIDER_NAME, brokerOpts);
     this.hostname = hostname;
     this.cache = newStoreCache();
     this.subscribeToStoreEvents();
