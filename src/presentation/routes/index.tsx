@@ -38,7 +38,7 @@ import {
   SETTINGS_DEEP_RESTORER_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
 } from './constants';
-import PopupMermaidLoader from '../components/popup-mermaid-loader';
+import PopupLoader from '../components/popup-loader';
 
 // Connect
 const ConnectEnableView = React.lazy(() => import('../connect/enable'));
@@ -113,7 +113,7 @@ const SettingsTerms = React.lazy(() => import('../settings/terms'));
 
 const Routes: React.FC = () => {
   return (
-    <Suspense fallback={<PopupMermaidLoader />}>
+    <Suspense fallback={<PopupLoader />}>
       <Switch>
         {/*Onboarding*/}
         <Route exact path={INITIALIZE_WELCOME_ROUTE} component={Welcome} />

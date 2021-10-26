@@ -8,7 +8,7 @@ import App from './app';
 
 import './styles/index.css';
 import './styles/fonts.css';
-import PopupMermaidLoader from './components/popup-mermaid-loader';
+import PopupLoader from './components/popup-loader';
 
 const store = new ProxyStore(); // proxy store
 
@@ -17,7 +17,7 @@ store
   .then(() => {
     render(
       <Provider store={store}>
-        <PersistGate loading={<PopupMermaidLoader />} persistor={persistor}>
+        <PersistGate loading={<PopupLoader />} persistor={persistor}>
           <App />
         </PersistGate>
       </Provider>,
