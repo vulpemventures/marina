@@ -115,8 +115,10 @@ const AllowCoinView: React.FC<WithConnectDataProps> = ({ connectData }) => {
       <div>
         {error && <p className="text-red">{error}</p>}
         {connectData.allowance?.requestParam &&
-          connectData.allowance.requestParam.map(({ asset, amount }) => (
-            <p>{`${fromSatoshi(amount, getAsset(asset).precision)} ${getAsset(asset).ticker}`}</p>
+          connectData.allowance.requestParam.map(({ asset, amount }, index) => (
+            <p key={`${asset}${index}`}>{`${fromSatoshi(amount, getAsset(asset).precision)} ${
+              getAsset(asset).ticker
+            }`}</p>
           ))}
       </div>
       <div className="bottom-24 container absolute right-0 flex justify-between">
