@@ -10,16 +10,27 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
+import type {
+  AddressInterface,
+  ChangeAddressFromAssetGetter,
+  IdentityInterface,
+  RecipientInterface,
+  UtxoInterface,
+} from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
-import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
+import {
+  selectMainAccount,
+  selectRestrictedAssetAccount,
+  selectUtxos,
+} from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { AccountID, MainAccountID } from '../../domain/account';
+import { Account, MainAccountID, RestrictedAssetAccountID } from '../../domain/account';
+import { lbtcAssetByNetwork } from '../../application/utils';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -29,8 +40,10 @@ export interface SpendPopupResponse {
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
   const mainAccount = useSelector(selectMainAccount);
+  const restrictedAssetAccount = useSelector(selectRestrictedAssetAccount);
+
   const network = useSelector((state: RootReducerState) => state.app.network);
-  const coins = useSelector(selectUtxos(MainAccountID));
+  const coins = useSelector(selectUtxos(MainAccountID, RestrictedAssetAccountID));
 
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -61,16 +74,27 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
   const handleUnlock = async (password: string) => {
     if (!password || password.length === 0) return;
+    if (!connectData.tx?.recipients) return;
 
     try {
-      const mnemonicIdentity = await mainAccount.getSigningIdentity(password);
+      const assets = assetsSet(
+        connectData.tx?.recipients,
+        connectData.tx.feeAssetHash ?? lbtcAssetByNetwork(network)
+      );
+
+      const { getter, changeAddresses } = await changeAddressGetter(mainAccount, assets, dispatch);
+
+      const accounts: Account[] = restrictedAssetAccount
+        ? [mainAccount, restrictedAssetAccount]
+        : [mainAccount];
+      const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(password)));
       const signedTxHex = await makeTransaction(
-        mainAccount.getAccountID(),
-        mnemonicIdentity,
+        identities,
         coins,
         connectData.tx,
         network,
-        dispatch
+        getter,
+        changeAddresses
       );
       await sendResponseMessage(true, signedTxHex);
 
@@ -149,37 +173,49 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
 export default connectWithConnectData(ConnectSpend);
 
+function assetsSet(recipients: RecipientInterface[], feeAsset: string): Set<string> {
+  return new Set(recipients.map((r) => r.asset).concat([feeAsset]));
+}
+
+async function changeAddressGetter(
+  account: Account,
+  assets: Set<string>,
+  dispatch: ProxyStoreDispatch
+): Promise<{ getter: ChangeAddressFromAssetGetter; changeAddresses: string[] }> {
+  const changeAddresses: Record<string, AddressInterface> = {};
+  const persisted: Record<string, boolean> = {};
+
+  const id = await account.getWatchIdentity();
+  for (const asset of assets) {
+    changeAddresses[asset] = await id.getNextChangeAddress();
+    persisted[asset] = false;
+  }
+
+  return {
+    getter: (asset: string) => {
+      if (!assets.has(asset)) return undefined; // will throw an error in coin selector
+      if (!persisted[asset]) {
+        dispatch(incrementChangeAddressIndex(account.getAccountID())).catch(console.error);
+        persisted[asset] = true;
+      }
+      return changeAddresses[asset].confidentialAddress;
+    },
+    changeAddresses: Object.values(changeAddresses).map((a) => a.confidentialAddress),
+  };
+}
+
 async function makeTransaction(
-  accountID: AccountID,
-  mnemonic: Mnemonic,
+  identities: IdentityInterface[],
   coins: UtxoInterface[],
   connectDataTx: ConnectData['tx'],
   network: Network,
-  dispatch: ProxyStoreDispatch
+  changeAddressGetter: ChangeAddressFromAssetGetter,
+  changeAddresses: string[]
 ) {
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
     throw new Error('transaction data are missing');
 
   const { recipients, feeAssetHash, data } = connectDataTx;
-
-  const assets = Array.from(new Set(recipients.map(({ asset }) => asset).concat(feeAssetHash)));
-
-  const changeAddresses: Record<string, AddressInterface> = {};
-  const persisted: Record<string, boolean> = {};
-
-  for (const asset of assets) {
-    changeAddresses[asset] = await mnemonic.getNextChangeAddress();
-    persisted[asset] = false;
-  }
-
-  const changeAddressGetter = (asset: string) => {
-    if (!assets.includes(asset)) return undefined; // will throw an error in coin selector
-    if (!persisted[asset]) {
-      dispatch(incrementChangeAddressIndex(accountID)).catch(console.error);
-      persisted[asset] = true;
-    }
-    return changeAddresses[asset].confidentialAddress;
-  };
 
   const unsignedPset = await createSendPset(
     recipients,
@@ -193,10 +229,8 @@ async function makeTransaction(
   const txHex = await blindAndSignPset(
     unsignedPset,
     coins,
-    [mnemonic],
-    recipients
-      .map(({ address }) => address)
-      .concat(Object.values(changeAddresses).map(({ confidentialAddress }) => confidentialAddress))
+    identities,
+    recipients.map(({ address }) => address).concat(changeAddresses)
   );
 
   return txHex;

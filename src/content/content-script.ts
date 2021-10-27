@@ -11,7 +11,7 @@ async function startContentScript() {
   if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
     const currentHostname = window.location.hostname;
     await MarinaBroker.Start(currentHostname);
-    await CoinosBroker.Start();
+    await CoinosBroker.Start(currentHostname);
 
     injectScript(browser.runtime.getURL('inject-script.js'));
   }

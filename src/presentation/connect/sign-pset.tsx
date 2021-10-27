@@ -8,8 +8,9 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
-import { selectMainAccount } from '../../application/redux/selectors/wallet.selector';
+import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
+import { signPset } from '../../application/utils';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -22,7 +23,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const mainAccount = useSelector(selectMainAccount);
+  const accounts = useSelector(selectAllAccounts);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
@@ -46,8 +47,9 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       const { tx } = connectData;
       if (!tx || !tx.pset) throw new Error('No transaction to sign');
 
-      const mnemo = await mainAccount.getSigningIdentity(password);
-      const signedPset = await mnemo.signPset(tx.pset);
+      const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(password)));
+      const signedPset = await signPset(tx.pset, identities);
+
       await sendResponseMessage(true, signedPset);
 
       window.close();

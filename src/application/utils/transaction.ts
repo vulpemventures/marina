@@ -97,8 +97,22 @@ export async function blindAndSignPset(
     outputAddresses.push(...(await id.getAddresses()).map((a) => a.confidentialAddress));
   }
 
-  let pset = await blindPset(psetBase64, selectedUtxos, outputAddresses);
+  const blindedPset = await blindPset(psetBase64, selectedUtxos, outputAddresses);
+  const signedPset = await signPset(blindedPset, identities);
 
+  const decodedPset = decodePset(signedPset);
+  if (!decodedPset.validateSignaturesOfAllInputs()) {
+    throw new Error('PSET is not fully signed');
+  }
+
+  return decodedPset.finalizeAllInputs().extractTransaction().toHex();
+}
+
+export async function signPset(
+  psetBase64: string,
+  identities: IdentityInterface[]
+): Promise<string> {
+  let pset = psetBase64;
   for (const id of identities) {
     pset = await id.signPset(pset);
     try {
@@ -108,12 +122,7 @@ export async function blindAndSignPset(
     }
   }
 
-  const decodedPset = decodePset(pset);
-  if (!decodedPset.validateSignaturesOfAllInputs()) {
-    throw new Error('PSET is not fully signed');
-  }
-
-  return decodedPset.finalizeAllInputs().extractTransaction().toHex();
+  return pset;
 }
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
