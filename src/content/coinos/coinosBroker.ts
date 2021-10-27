@@ -1,6 +1,7 @@
-import { setAllowCoinInConnectData } from '../../application/redux/actions/allowance';
+import { setApproveParams } from '../../application/redux/actions/allowance';
 import { selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import { RestrictedAssetAccountID } from '../../domain/account';
+import { AssetAmount } from '../../domain/connect';
 import {
   MessageHandler,
   newErrorResponseMessage,
@@ -37,19 +38,12 @@ export default class CoinosBroker extends Broker {
         }
 
         case CoinosProvider.prototype.allowCoin.name: {
-          if (!params || params.length < 2) throw new Error('invalid params');
-          const txid = params[0];
-          const vout = params[1];
+          if (!params || params.length !== 1) throw new Error('invalid params');
+          const requestParams: AssetAmount[] = params[0].filter(isAssetAmount);
+          if (requestParams.length <= 0) throw new Error('invalid params');
 
-          await this.store.dispatchAsync(setAllowCoinInConnectData(txid, vout));
-
-          const utxos = selectUtxos(RestrictedAssetAccountID)(this.store.getState());
-          const selectedCoin = utxos.find((u) => u.txid === txid && u.vout === vout);
-          if (!selectedCoin) {
-            throw new Error(`utxo ${txid}:${vout} is not found.`);
-          }
-
-          const result = await this.openAndWaitPopup<boolean>('allow-coin');
+          await this.store.dispatchAsync(setApproveParams(requestParams));
+          const result = await this.openAndWaitPopup<string>('allow-coin');
           if (!result) {
             throw new Error('user rejected the allowance');
           }
@@ -65,4 +59,8 @@ export default class CoinosBroker extends Broker {
       else throw err;
     }
   };
+}
+
+function isAssetAmount(assetAmount: any): assetAmount is AssetAmount {
+  return assetAmount.asset && assetAmount.amount;
 }

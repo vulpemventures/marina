@@ -1,23 +1,25 @@
 import { Outpoint } from 'ldk';
 import { ActionWithPayload } from '../../../domain/common';
-import { ALLOW_COIN, SET_ALLOW_COIN } from './action-types';
+import { AssetAmount } from '../../../domain/connect';
+import { ALLOW_COIN, SET_APPROVE_REQUEST_PARAM } from './action-types';
 
-export function allowCoin(txid: string, vout: number): ActionWithPayload<Outpoint> {
+export function addAllowedCoin(utxo: Outpoint): ActionWithPayload<Outpoint> {
   return {
     type: ALLOW_COIN,
     payload: {
-      txid,
-      vout,
+      txid: utxo.txid,
+      vout: utxo.vout,
     },
   };
 }
 
-export function setAllowCoinInConnectData(txid: string, vout: number): ActionWithPayload<Outpoint> {
+export function setApproveParams(
+  assetAmounts: AssetAmount[]
+): ActionWithPayload<{ assetAmounts: AssetAmount[] }> {
   return {
-    type: SET_ALLOW_COIN,
+    type: SET_APPROVE_REQUEST_PARAM,
     payload: {
-      txid,
-      vout,
+      assetAmounts,
     },
   };
 }

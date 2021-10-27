@@ -82,17 +82,15 @@ export class MultisigWithCosigner extends Multisig implements IdentityInterface 
     return this.cosigner.signPset(signed, this.getXPub());
   }
 
-  async allow(pset: string): Promise<void> {
+  async allow(pset: string): Promise<string> {
     const toSign = addRedeemAndWitnessScriptsToInputs(pset, this);
-    const signed = await this.signWithSighashNone(toSign);
-    return this.cosigner.allow(signed);
+    return this.signWithSighashNone(toSign);
   }
 }
 
 export interface Cosigner {
   xPub(): Promise<XPub>;
   signPset(pset: string, xpub: XPub): Promise<string>;
-  allow(pset: string): Promise<void>;
 }
 
 export class MockedCosigner implements Cosigner {

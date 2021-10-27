@@ -71,14 +71,11 @@ export function connectDataReducer(
       };
     }
 
-    case ACTION_TYPES.SET_ALLOW_COIN: {
+    case ACTION_TYPES.SET_APPROVE_REQUEST_PARAM: {
       return {
         ...state,
         allowance: {
-          allowCoin: {
-            txid: payload.txid,
-            vout: payload.vout,
-          },
+          requestParam: payload.assetAmounts,
         },
       };
     }

@@ -1,6 +1,11 @@
 import { Network } from './network';
-import { Outpoint, RecipientInterface } from 'ldk';
+import { RecipientInterface } from 'ldk';
 import { DataRecipient } from 'marina-provider';
+
+export interface AssetAmount {
+  asset: string;
+  amount: number;
+}
 
 export type ConnectData = {
   enabledSites: Record<Network, string[]>;
@@ -17,7 +22,7 @@ export type ConnectData = {
     message?: string;
   };
   allowance?: {
-    allowCoin: Outpoint;
+    requestParam: AssetAmount[];
   };
 };
 
