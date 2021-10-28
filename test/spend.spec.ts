@@ -38,7 +38,7 @@ describe('create send pset (build, blind & sign)', () => {
 
   test('should be able to create a regular transaction', async () => {
     const pset = await createSendPset(
-      makeRecipients({ value: 100 }, { value: 110 }),
+      makeRecipients({ value: 200 }, { value: 2100 }),
       await makeUnspents(),
       network.assetHash,
       await makeChangeAddressGetter(),
