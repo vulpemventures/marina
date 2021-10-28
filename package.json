@@ -31,7 +31,7 @@
     "decimal.js": "^10.2.1",
     "formik": "^2.2.6",
     "google-protobuf": "^3.15.8",
-    "ldk": "^0.3.14",
+    "ldk": "^0.3.15",
     "liquidjs-lib": "^5.2.2",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
