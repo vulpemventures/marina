@@ -5,10 +5,14 @@ import {
 } from './action-types';
 import { AnyAction } from 'redux';
 
-export function setPasswordAndOnboardingMnemonic(password: string, mnemonic: string): AnyAction {
+export function setPasswordAndOnboardingMnemonic(
+  password: string,
+  mnemonic: string,
+  needSecurityAccount: boolean
+): AnyAction {
   return {
     type: ONBOARDING_SET_MNEMONIC_AND_PASSWORD,
-    payload: { mnemonic, password },
+    payload: { mnemonic, password, needSecurityAccount },
   };
 }
 

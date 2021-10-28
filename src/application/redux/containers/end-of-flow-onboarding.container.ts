@@ -14,6 +14,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
     network: state.app.network,
     explorerURL: getExplorerURLSelector(state),
     hasMnemonicRegistered: hasMnemonicSelector(state),
+    needSecurityAccount: state.onboarding.needSecurityAccount,
   };
 };
 
