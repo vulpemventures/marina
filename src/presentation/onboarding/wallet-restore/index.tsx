@@ -31,7 +31,7 @@ const WalletRestore: React.FC = () => {
   return (
     <Shell>
       <h2 className="mb-4 text-3xl font-medium">{'Restore a wallet from a mnemonic phrase'}</h2>
-      <p>{'Enter your secret twelve words of your mnemonic phrase to Restore your wallet'}</p>
+      <p className="mb-2 font-medium">Enter your secret twelve words of your mnemonic phrase to Restore your wallet</p>
       <MnemonicField value={mnemonic} onChange={(mnemo) => setMnemonic(mnemo)} />
       <OnboardingForm onSubmit={onSubmit} />
     </Shell>

@@ -28,7 +28,6 @@ function addRedeemAndWitnessScriptsToInputs(pset: string, multisig: Multisig): s
       const { change, index } = decodeMultisigPath(path);
       const p2ms = multisig.getMultisigAddress(change, index);
       decoded.updateInput(inputIndex, {
-        redeemScript: Buffer.from(p2ms.redeemScript, 'hex'),
         witnessScript: Buffer.from(p2ms.witnessScript, 'hex'),
       });
     }
