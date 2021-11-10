@@ -1,0 +1,80 @@
+import { call, put, takeLeading, fork, all, take, cancel, delay, AllEffect } from "redux-saga/effects";
+import { Task } from "@redux-saga/types";
+import { fetchAssetsFromTaxi, taxiURL } from "../../utils";
+import { RESET, RESET_APP, RESET_CONNECT, RESET_TAXI, RESET_WALLET, START_PERIODIC_UPDATE, STOP_PERIODIC_UPDATE, UPDATE_TAXI_ASSETS } from "../actions/action-types";
+import { setTaxiAssets } from "../actions/taxi";
+import { selectTaxiAssets } from "../selectors/taxi.selector";
+import { updateTaskAction } from "../actions/updater";
+import { selectAllAccountsIDs } from "../selectors/wallet.selector";
+import { newSagaSelector, SagaGenerator, selectNetworkSaga } from "./utils";
+import { watchUpdateTask } from "./updater";
+
+const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
+
+function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
+  const network = yield* selectNetworkSaga();
+  const assets = yield call(fetchAssetsFromTaxi, taxiURL[network]);
+  const currentTaxiAssets = yield* selectTaxiAssetsSaga();
+  const sortAndJoin = (a: string[]) => a.sort().join('');
+  if (sortAndJoin(assets) !== sortAndJoin(currentTaxiAssets)) {
+    yield put(setTaxiAssets(assets));
+  }
+}
+
+// watch for every UPDATE_TAXI_ASSETS actions
+// wait that previous update is done before begin the new one
+function* watchUpdateTaxi(): SagaGenerator<void, void> {
+  yield takeLeading(UPDATE_TAXI_ASSETS, fetchAndSetTaxiAssets);
+}
+
+const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
+
+function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
+  return function* (): SagaGenerator<void, void> {
+    while (true) {
+      yield* task();
+      yield delay(intervalMs);
+    }
+  }
+}
+
+function* dispatchUpdateTaskForAllAccountsIDs(): SagaGenerator<void, void> {
+  const accountIDs = yield* selectAllAccountsIDsSaga();
+  yield all(accountIDs.map(id => put(updateTaskAction(id))));
+}
+
+const periodicUpdaterSaga = newPeriodicSagaTask(dispatchUpdateTaskForAllAccountsIDs, 60_000);
+const periodicTaxiUpdateSaga = newPeriodicSagaTask(fetchAndSetTaxiAssets, 120_000);
+
+// watch for every START_PERIODIC_UPDATE actions
+// and starts periodic tasks for all accounts + taxi
+function* watchPeriodicUpdater(): SagaGenerator<void, Task> {
+  while (yield take(START_PERIODIC_UPDATE)) {
+    const periodicUpdateTask = yield fork(periodicUpdaterSaga);
+    const periodicTaxiUpdateTask = yield fork(periodicTaxiUpdateSaga);
+    yield take(STOP_PERIODIC_UPDATE);
+    yield cancel(periodicUpdateTask);
+    yield cancel(periodicTaxiUpdateTask);
+  }
+} 
+
+function* reset(): Generator<AllEffect<any>> {
+  const actionsTypes = [RESET_APP, RESET_WALLET, RESET_CONNECT, RESET_TAXI];
+  yield all(actionsTypes.map(type => put({ type })));
+}
+
+// watch for every RESET actions
+// run reset saga in order to clean the redux state
+function* watchReset(): SagaGenerator<void, void> {
+  yield takeLeading(RESET, reset);
+}
+
+function* mainSaga(): SagaGenerator<void, void> {
+  yield fork(watchReset);
+  yield fork(watchUpdateTaxi);
+  yield fork(watchUpdateTask);
+  yield fork(watchPeriodicUpdater);
+}
+
+export default mainSaga;
+

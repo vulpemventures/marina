@@ -72,7 +72,11 @@ export const selectAllAccounts = (state: RootReducerState): Account[] => {
   return [mainAccount];
 };
 
-export const selectAccount = (accountID: AccountID) =>
+export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
+  return selectAllAccounts(state).map((account) => account.getAccountID());
+};
+
+export const selectAccount = (accountID: AccountID): ((state: RootReducerState) => Account | undefined) =>
   accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
 
 export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {

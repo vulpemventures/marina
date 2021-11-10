@@ -6,7 +6,7 @@ import {
   TopupWithAssetRequest,
 } from 'taxi-protobuf/generated/js/taxi_pb';
 
-export const fetchAssetsFromTaxi = async (taxiUrl: string): Promise<string[]> => {
+export async function fetchAssetsFromTaxi(taxiUrl: string): Promise<string[]> {
   const client = new TaxiClient(taxiUrl, undefined);
   const res = await client.listAssets(new ListAssetsRequest(), null);
   return res.getAssetsList().map((asset: AssetDetails) => asset.getAssetHash());

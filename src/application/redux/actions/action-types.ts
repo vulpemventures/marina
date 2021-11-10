@@ -59,6 +59,7 @@ export const RESET_TAXI = 'RESET_TAXI';
 
 // Alarms
 export const START_PERIODIC_UPDATE = 'START_PERIODIC_UPDATE';
+export const STOP_PERIODIC_UPDATE = 'STOP_PERIODIC_UPDATE';
 
 // Restoration
 export const START_DEEP_RESTORATION = 'START_DEEP_RESTORATION';
@@ -66,9 +67,8 @@ export const START_DEEP_RESTORATION = 'START_DEEP_RESTORATION';
 // Reset
 export const RESET = 'RESET';
 
-// Updater
-export const PUSH_UPDATER_TASK = 'PUSH_UPDATER_TASK';
-export const POP_UPDATER_TASK = 'POP_UPDATER_TASK';
-
 // Allowance
 export const ALLOW_COIN = 'ALLOW_COIN';
+
+// Updater taskes
+export const UPDATE_TASK = 'UPDATE_TASK';

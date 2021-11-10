@@ -1,27 +1,10 @@
 import { AccountID } from '../../../domain/account';
-import { UpdaterTaskType } from '../reducers/updater-reducer';
-import { PUSH_UPDATER_TASK } from './action-types';
+import { ActionWithPayload } from '../../../domain/common';
+import { UPDATE_TASK } from './action-types';
 
-export function utxosUpdateTask(accountID: AccountID) {
-  return {
-    type: PUSH_UPDATER_TASK,
-    payload: {
-      updaterTask: {
-        accountID,
-        type: UpdaterTaskType.UTXO,
-      },
-    },
-  };
-}
+export type UpdateTaskAction = ActionWithPayload<AccountID>;
 
-export function txsUpdateTask(accountID: AccountID) {
-  return {
-    type: PUSH_UPDATER_TASK,
-    payload: {
-      updaterTask: {
-        accountID,
-        type: UpdaterTaskType.TX,
-      },
-    },
-  };
-}
+export const updateTaskAction = (accountID: AccountID): UpdateTaskAction => ({
+  type: UPDATE_TASK,
+  payload: accountID,
+});
