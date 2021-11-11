@@ -41,9 +41,6 @@ function selectUnspentsAndTransactionsSaga(
 
 const putAddUtxoAction = (accountID: AccountID) =>
   function* (utxo: UtxoInterface): SagaGenerator {
-    console.warn(
-      `add utxo in account: ${accountID} (${toStringOutpoint(utxo)}) ${utxo.value} ${utxo.asset}`
-    );
     if (utxo.asset && utxo.value) {
       yield put(addUtxo(accountID, utxo));
     }
@@ -51,7 +48,6 @@ const putAddUtxoAction = (accountID: AccountID) =>
 
 const putDeleteUtxoAction = (accountID: AccountID) =>
   function* (outpoint: Outpoint): SagaGenerator {
-    console.warn(`delete utxo in account: ${accountID} (${toStringOutpoint(outpoint)})`);
     yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout));
   };
 
