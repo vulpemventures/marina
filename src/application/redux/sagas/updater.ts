@@ -41,11 +41,15 @@ function selectUnspentsAndTransactionsSaga(
 
 const putAddUtxoAction = (accountID: AccountID) =>
   function* (utxo: UtxoInterface): SagaGenerator {
+    console.warn(
+      `add utxo in account: ${accountID} (${toStringOutpoint(utxo)}) ${utxo.value} ${utxo.asset}`
+    );
     yield put(addUtxo(accountID, utxo));
   };
 
 const putDeleteUtxoAction = (accountID: AccountID) =>
   function* (outpoint: Outpoint): SagaGenerator {
+    console.warn(`delete utxo in account: ${accountID} (${toStringOutpoint(outpoint)})`);
     yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout));
   };
 
@@ -189,7 +193,7 @@ export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<voi
 
 // starts a set of workers in order to handle asynchronously the UPDATE_TASK action
 export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
-  const MAX_UPDATER_WORKERS = 3;
+  const MAX_UPDATER_WORKERS = 1;
   const accountToUpdateChan = yield* createChannel<AccountID>();
 
   for (let i = 0; i < MAX_UPDATER_WORKERS; i++) {

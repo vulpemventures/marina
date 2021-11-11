@@ -22,6 +22,7 @@ const selectBalancesForAccount =
   (accountID: AccountID) =>
   (state: RootReducerState): BalancesByAsset => {
     const utxos = selectUtxos(accountID)(state);
+    console.log(utxos, accountID);
     const balancesFromUtxos = utxos.reduce((acc, curr) => {
       if (!curr.asset || !curr.value) {
         return acc;
