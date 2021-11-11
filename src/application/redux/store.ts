@@ -13,7 +13,7 @@ export const serializerAndDeserializer = {
 
 const create = () => {
   const sagaMiddleware = createSagaMiddleware();
-  const store = createStore(marinaReducer, applyMiddleware(sagaMiddleware))
+  const store = createStore(marinaReducer, applyMiddleware(sagaMiddleware));
   sagaMiddleware.run(mainSaga);
   return store;
 };
