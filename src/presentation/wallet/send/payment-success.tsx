@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { AccountID } from '../../../domain/account';
-import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actions/updater';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
 
 interface LocationState {
   txid: string;
@@ -44,7 +44,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
 
       await Promise.all(
         (state.accountIDs ?? [])
-          .flatMap((ID) => [utxosUpdateTask(ID), txsUpdateTask(ID)])
+          .map(updateTaskAction)
           .map(dispatch)
       ).catch(console.error);
     })();

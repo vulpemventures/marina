@@ -4,6 +4,7 @@ import { Account, AccountID } from "../../../domain/account";
 import { extractErrorMessage } from "../../../presentation/utils/error";
 import { getStateRestorerOptsFromAddresses } from "../../utils";
 import { START_DEEP_RESTORATION } from "../actions/action-types";
+import { updateTaskAction } from "../actions/updater";
 import { setDeepRestorerError, setDeepRestorerIsLoading, setRestorerOpts } from "../actions/wallet";
 import { selectDeepRestorerGapLimit, selectDeepRestorerIsLoading } from "../selectors/wallet.selector";
 import { newSagaSelector, SagaGenerator, selectAccountSaga, selectAllAccountsIDsSaga, selectExplorerSaga } from "./utils";
@@ -43,6 +44,7 @@ function* restoreAllAccounts(): SagaGenerator {
     for (const ID of accountsIDs) {
       const stateRestorerOpts = yield* deepRestore(ID, gapLimit, esploraURL);
       yield put(setRestorerOpts(ID, stateRestorerOpts));
+      yield put(updateTaskAction(ID)); // update utxos and transactions according to the restored addresses
     }
     yield put(setDeepRestorerError(undefined));
   } catch (e) {

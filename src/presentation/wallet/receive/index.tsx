@@ -7,8 +7,8 @@ import { formatAddress } from '../../utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
-import { txsUpdateTask, utxosUpdateTask } from '../../../application/redux/actions/updater';
 import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
 
 const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
@@ -39,9 +39,8 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
       setConfidentialAddress(addr.confidentialAddress);
       await dispatch(incrementAddressIndex(account.getAccountID())); // persist address
       setTimeout(() => {
-        dispatch(utxosUpdateTask(account.getAccountID())).catch(console.error);
-        dispatch(txsUpdateTask(account.getAccountID())).catch(console.error);
-      }, 8000);
+        dispatch(updateTaskAction(account.getAccountID())).catch(console.error);
+      }, 2000);
     })().catch(console.error);
   }, []);
 
