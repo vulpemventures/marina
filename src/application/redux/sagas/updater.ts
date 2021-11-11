@@ -44,7 +44,9 @@ const putAddUtxoAction = (accountID: AccountID) =>
     console.warn(
       `add utxo in account: ${accountID} (${toStringOutpoint(utxo)}) ${utxo.value} ${utxo.asset}`
     );
-    yield put(addUtxo(accountID, utxo));
+    if (utxo.asset && utxo.value) {
+      yield put(addUtxo(accountID, utxo));
+    }
   };
 
 const putDeleteUtxoAction = (accountID: AccountID) =>
@@ -193,7 +195,7 @@ export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<voi
 
 // starts a set of workers in order to handle asynchronously the UPDATE_TASK action
 export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
-  const MAX_UPDATER_WORKERS = 1;
+  const MAX_UPDATER_WORKERS = 3;
   const accountToUpdateChan = yield* createChannel<AccountID>();
 
   for (let i = 0; i < MAX_UPDATER_WORKERS; i++) {
