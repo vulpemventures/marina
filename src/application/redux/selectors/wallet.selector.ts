@@ -97,3 +97,11 @@ export const selectUnspentsAndTransactions =
       }
     );
   };
+
+export const selectDeepRestorerIsLoading = (state: RootReducerState) => {
+  return state.wallet.deepRestorer.isLoading;
+}
+
+export const selectDeepRestorerGapLimit = (state: RootReducerState) => {
+  return state.wallet.deepRestorer.gapLimit;
+}

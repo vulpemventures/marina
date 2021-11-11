@@ -1,8 +1,8 @@
 import { StrictEffect, select, call } from "redux-saga/effects";
 import { Account, AccountID } from "../../../domain/account";
 import { RootReducerState } from "../../../domain/common";
-import { selectNetwork } from "../selectors/app.selector";
-import { selectAccount } from "../selectors/wallet.selector";
+import { getExplorerURLSelector, selectNetwork } from "../selectors/app.selector";
+import { selectAccount, selectAllAccountsIDs } from "../selectors/wallet.selector";
 
 export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<StrictEffect, ReturnType, YieldType>;
 
@@ -34,6 +34,8 @@ export function* processAsyncGenerator<NextType>(
 }
 
 export const selectNetworkSaga = newSagaSelector(selectNetwork);
+export const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
+export const selectExplorerSaga = newSagaSelector(getExplorerURLSelector);
 
 export function selectAccountSaga(accountID: AccountID): SagaGenerator<Account | undefined> {
   return newSagaSelector(selectAccount(accountID))();

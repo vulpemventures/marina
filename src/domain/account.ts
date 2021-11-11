@@ -10,16 +10,21 @@ import {
   StateRestorerOpts,
   XPub,
   multisigFromEsplora,
+  Restorer,
+  EsploraRestorerOpts,
+  masterPubKeyRestorerFromEsplora,
+  multisigWatchOnlyFromEsplora,
 } from 'ldk';
 import { decrypt } from '../application/utils';
 import {
   getStateRestorerOptsFromAddresses,
+  newMasterPublicKey,
+  newMultisigWatchOnly,
   restoredMasterPublicKey,
   restoredMnemonic,
   restoredMultisig,
   restoredWatchOnlyMultisig,
 } from '../application/utils/restorer';
-import { createAddress } from './address';
 import { MockedCosigner, MultisigWithCosigner } from './cosigner';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
@@ -47,6 +52,7 @@ export interface Account<
   getAccountID(): AccountID;
   getSigningIdentity(password: string): Promise<SignID>;
   getWatchIdentity(): Promise<WatchID>;
+  getDeepRestorer(): Restorer<EsploraRestorerOpts, WatchID>;
 }
 
 // Main Account uses the default Mnemonic derivation path
@@ -70,6 +76,7 @@ export function createMnemonicAccount(
       restoredMnemonic(decrypt(data.encryptedMnemonic, password), data.restorerOpts, network),
     getWatchIdentity: () =>
       restoredMasterPublicKey(data.masterXPub, data.masterBlindingKey, data.restorerOpts, network),
+    getDeepRestorer: () => masterPubKeyRestorerFromEsplora(newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)),
   };
 }
 
@@ -110,9 +117,7 @@ export async function create2of2MultisigAccountData<T>(
     esploraURL: explorerURL,
     gapLimit: 30,
   });
-  const addresses = (await restoredFromExplorer.getAddresses()).map((a) =>
-    createAddress(a.confidentialAddress, a.derivationPath)
-  );
+  const addresses = await restoredFromExplorer.getAddresses();
   const restorerOpts = getStateRestorerOptsFromAddresses(addresses);
 
   return {
@@ -152,5 +157,6 @@ export function createMultisigAccount(
         data.restorerOpts,
         data.network
       ),
+    getDeepRestorer: () => multisigWatchOnlyFromEsplora(newMultisigWatchOnly(data.network, data.requiredSignature, data.cosignerXPubs, data.signerXPub)),
   };
 }

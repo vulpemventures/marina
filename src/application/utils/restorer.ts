@@ -10,14 +10,14 @@ import {
   XPub,
   HDSignerMultisig,
   restorerFromState,
+  AddressInterface,
 } from 'ldk';
-import { Address } from '../../domain/address';
 import { Cosigner, MultisigWithCosigner } from '../../domain/cosigner';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
 import { MasterXPub } from '../../domain/master-extended-pub';
 import { Network } from '../../domain/network';
 
-export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRestorerOpts {
+export function getStateRestorerOptsFromAddresses(addresses: AddressInterface[]): StateRestorerOpts {
   const derivationPaths = addresses.map((addr) => addr.derivationPath);
 
   const indexes = [];
@@ -67,7 +67,12 @@ export function restoredMasterPublicKey(
   restorerOpts: StateRestorerOpts,
   network: Network
 ) {
-  const xpub = new MasterPublicKey({
+  const xpub = newMasterPublicKey(masterXPub, masterBlindingKey, network);
+  return masterPubKeyRestorerFromState(xpub)(restorerOpts);
+}
+
+export function newMasterPublicKey(masterXPub: MasterXPub, masterBlindingKey: MasterBlindingKey, network: Network) {
+  return new MasterPublicKey({
     chain: network,
     type: IdentityType.MasterPublicKey,
     opts: {
@@ -75,8 +80,6 @@ export function restoredMasterPublicKey(
       masterBlindingKey: masterBlindingKey,
     },
   });
-
-  return masterPubKeyRestorerFromState(xpub)(restorerOpts);
 }
 
 // create a Multisig Identity
@@ -114,7 +117,12 @@ export function restoredWatchOnlyMultisig(
   restorerOpts: StateRestorerOpts,
   network: Network
 ) {
-  const multisigID = new MultisigWatchOnly({
+  const multisigID = newMultisigWatchOnly(network, requiredSignatures, cosigners, signerXPub);
+  return restorerFromState<MultisigWatchOnly>(multisigID)(restorerOpts);
+}
+
+export function newMultisigWatchOnly(network: Network, requiredSignatures: number, cosigners: CosignerMultisig[], signerXPub: XPub) {
+  return new MultisigWatchOnly({
     chain: network,
     type: IdentityType.MultisigWatchOnly,
     opts: {
@@ -122,6 +130,5 @@ export function restoredWatchOnlyMultisig(
       cosigners: cosigners.concat([signerXPub]),
     },
   });
-
-  return restorerFromState<MultisigWatchOnly>(multisigID)(restorerOpts);
 }
+

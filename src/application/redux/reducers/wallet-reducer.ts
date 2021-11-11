@@ -90,6 +90,16 @@ export function walletReducer(
       return walletInitState;
     }
 
+    case ACTION_TYPES.SET_RESTORER_OPTS: {
+      return {
+        ...state,
+        [payload.accountID]: {
+          ...state[payload.accountID as AccountID],
+          restorerOpts: payload.restorerOpts,
+        }
+      }
+    }
+
     case ACTION_TYPES.WALLET_SET_DATA: {
       return {
         ...state,

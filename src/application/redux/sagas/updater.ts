@@ -7,12 +7,9 @@ import { UtxosAndTxsHistory } from "../../../domain/transaction";
 import { toDisplayTransaction, toStringOutpoint } from "../../utils";
 import { addTx } from "../actions/transaction";
 import { addUtxo, deleteUtxo } from "../actions/utxos";
-import { getExplorerURLSelector } from "../selectors/app.selector";
 import { selectUnspentsAndTransactions } from "../selectors/wallet.selector";
-import { newSagaSelector, processAsyncGenerator, SagaGenerator, selectAccountSaga, selectNetworkSaga } from "./utils";
+import { newSagaSelector, processAsyncGenerator, SagaGenerator, selectAccountSaga, selectExplorerSaga, selectNetworkSaga } from "./utils";
 import { UPDATE_TASK } from "../actions/action-types";
-
-const selectExplorerSaga = newSagaSelector(getExplorerURLSelector);
 
 function selectUnspentsAndTransactionsSaga(accountID: AccountID): SagaGenerator<UtxosAndTxsHistory> {
   return newSagaSelector(selectUnspentsAndTransactions(accountID))();

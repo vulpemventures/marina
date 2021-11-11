@@ -5,9 +5,9 @@ import { RESET, RESET_APP, RESET_CONNECT, RESET_TAXI, RESET_WALLET, START_PERIOD
 import { setTaxiAssets } from "../actions/taxi";
 import { selectTaxiAssets } from "../selectors/taxi.selector";
 import { updateTaskAction } from "../actions/updater";
-import { selectAllAccountsIDs } from "../selectors/wallet.selector";
-import { newSagaSelector, SagaGenerator, selectNetworkSaga } from "./utils";
+import { newSagaSelector, SagaGenerator, selectAllAccountsIDsSaga, selectNetworkSaga } from "./utils";
 import { watchUpdateTask } from "./updater";
+import { watchStartDeepRestorer } from "./deep-restorer";
 
 const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
 
@@ -27,7 +27,6 @@ function* watchUpdateTaxi(): SagaGenerator<void, void> {
   yield takeLeading(UPDATE_TAXI_ASSETS, fetchAndSetTaxiAssets);
 }
 
-const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
 
 function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
   return function* (): SagaGenerator<void, void> {
@@ -74,6 +73,7 @@ function* mainSaga(): SagaGenerator<void, void> {
   yield fork(watchUpdateTaxi);
   yield fork(watchUpdateTask);
   yield fork(watchPeriodicUpdater);
+  yield fork(watchStartDeepRestorer);
 }
 
 export default mainSaga;

@@ -8,12 +8,14 @@ import {
   INCREMENT_INTERNAL_ADDRESS_INDEX,
   SET_VERIFIED,
   SET_RESTRICTED_ASSET_ACCOUNT,
+  SET_RESTORER_OPTS,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { extractErrorMessage } from '../../../presentation/utils/error';
 import { AccountID, MultisigAccountData } from '../../../domain/account';
 import { CosignerExtraData } from '../../../domain/wallet';
+import { StateRestorerOpts } from 'ldk';
 
 export function setRestrictedAssetData(
   multisigAccountData: MultisigAccountData<CosignerExtraData>
@@ -29,6 +31,13 @@ export function setWalletData(walletData: WalletData): AnyAction {
     type: WALLET_SET_DATA,
     payload: walletData,
   };
+}
+
+export function setRestorerOpts(accountID: AccountID, restorerOpts: StateRestorerOpts): AnyAction {
+  return {
+    type: SET_RESTORER_OPTS,
+    payload: { accountID, restorerOpts },
+  }
 }
 
 export function incrementAddressIndex(accountID: AccountID): AnyAction {
