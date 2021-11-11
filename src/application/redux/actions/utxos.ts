@@ -1,9 +1,12 @@
 import { UtxoInterface } from 'ldk';
 import { AnyAction } from 'redux';
 import { AccountID } from '../../../domain/account';
+import { ActionWithPayload } from '../../../domain/common';
 import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS } from './action-types';
 
-export function addUtxo(accountID: AccountID, utxo: UtxoInterface): AnyAction {
+export type AddUtxoAction = ActionWithPayload<{ accountID: AccountID, utxo: UtxoInterface }>;
+
+export function addUtxo(accountID: AccountID, utxo: UtxoInterface): AddUtxoAction {
   return { type: ADD_UTXO, payload: { accountID, utxo } };
 }
 

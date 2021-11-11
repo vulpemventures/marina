@@ -9,14 +9,14 @@ import {
   BlindingKeyGetter,
   fetchAndUnblindTxsGenerator,
 } from 'ldk';
-import { put, call, fork, all, take, AllEffect } from 'redux-saga/effects';
+import { put, call, fork, all, take, AllEffect, takeEvery } from 'redux-saga/effects';
 import { buffers, Channel, channel } from '@redux-saga/core';
 import { Account, AccountID } from '../../../domain/account';
 import { Network } from '../../../domain/network';
 import { UtxosAndTxsHistory } from '../../../domain/transaction';
-import { toDisplayTransaction, toStringOutpoint } from '../../utils';
+import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../../utils';
 import { addTx } from '../actions/transaction';
-import { addUtxo, deleteUtxo } from '../actions/utxos';
+import { addUtxo, AddUtxoAction, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
 import {
   newSagaSelector,
@@ -26,7 +26,11 @@ import {
   selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
-import { UPDATE_TASK } from '../actions/action-types';
+import { ADD_UTXO, UPDATE_TASK } from '../actions/action-types';
+import { Asset, IAssets } from '../../../domain/assets';
+import axios from 'axios';
+import { RootReducerState } from '../../../domain/common';
+import { addAsset } from '../actions/asset';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID
@@ -138,24 +142,65 @@ function* createChannel<T>(): SagaGenerator<Channel<T>> {
   return yield call(channel, buffers.sliding(10));
 }
 
-function* updaterWorker(channel: Channel<AccountID>): SagaGenerator<void, AccountID> {
+function* requestAssetInfoFromEsplora(assetHash: string): SagaGenerator<Asset> {
+  const explorerURL = yield* selectExplorerSaga();
+  const getRequest = () => axios.get(`${explorerURL}/asset/${assetHash}`).then(r => r.data)
+  const result = yield call(getRequest)
+
+  return {
+    name: result?.name ?? 'Unknown',
+    ticker: result?.name ?? assetHash.slice(0, 4).toUpperCase(),
+    precision: result?.precision ?? defaultPrecision
+  }
+}
+
+function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, AccountID> {
   while (true) {
-    const accountID = yield take(channel);
+    const accountID = yield take(chanToListen);
     yield* updateTxsAndUtxos(accountID);
+  }
+}
+
+const selectAllAssetsSaga = newSagaSelector((state: RootReducerState) => new Set(Object.keys(state.assets)))
+
+function* assetsWorker(assetsChan: Channel<string>): SagaGenerator<void, string> {
+  while (true) {
+    const assetHashFromUpdater = yield take(assetsChan);
+    const assets = yield* selectAllAssetsSaga();
+    if (!assets.has(assetHashFromUpdater)) {
+      const asset = yield* requestAssetInfoFromEsplora(assetHashFromUpdater);
+      yield put(addAsset(assetHashFromUpdater, asset));
+    }
+  }
+}
+
+export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<void, AddUtxoAction> {
+  while (true) {
+    const action = yield take(ADD_UTXO);
+    const asset = action.payload.utxo.asset;
+    if (asset) {
+      yield put(chan, asset);
+    }
   }
 }
 
 // starts a set of workers in order to handle asynchronously the UPDATE_TASK action
 export function* watchUpdateTask(): SagaGenerator<void, { payload: AccountID }> {
-  const MAX_WORKERS = 3;
-  const chan = yield* createChannel<AccountID>();
+  const MAX_UPDATER_WORKERS = 3;
+  const accountToUpdateChan = yield* createChannel<AccountID>();
 
-  for (let i = 0; i < MAX_WORKERS; i++) {
-    yield fork(updaterWorker, chan);
+  for (let i = 0; i < MAX_UPDATER_WORKERS; i++) {
+    yield fork(updaterWorker, accountToUpdateChan);
   }
 
+  // start the asset updater
+  const assetsHashChan = yield* createChannel<string>();
+  yield fork(assetsWorker, assetsHashChan);
+  yield fork(watchForAddUtxoAction, assetsHashChan); // this will fee the assets chan
+
+  // listen for UPDATE_TASK
   while (true) {
     const { payload } = yield take(UPDATE_TASK);
-    yield put(chan, payload);
+    yield put(accountToUpdateChan, payload);
   }
 }
