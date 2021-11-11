@@ -1,5 +1,4 @@
 import { FormikProps, withFormik } from 'formik';
-import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { RouteComponentProps } from 'react-router';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import cx from 'classnames';
@@ -14,6 +13,7 @@ import { TransactionState } from '../../application/redux/reducers/transaction-r
 import { IAssets } from '../../domain/assets';
 import { Network } from '../../domain/network';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
+import { Account } from '../../domain/account';
 
 interface AddressAmountFormValues {
   address: string;
@@ -28,11 +28,10 @@ interface AddressAmountFormProps {
   dispatch: ProxyStoreDispatch;
   assetPrecision: number;
   history: RouteComponentProps['history'];
-  pubKey: MasterPublicKey;
-  restorerOpts: StateRestorerOpts;
   transaction: TransactionState;
   assets: IAssets;
   network: Network;
+  account: Account;
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
@@ -157,14 +156,14 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     }),
 
   handleSubmit: async (values, { props }) => {
-    const masterPubKey = await masterPubKeyRestorerFromState(props.pubKey)(props.restorerOpts);
+    const masterPubKey = await props.account.getWatchIdentity();
     const changeAddressGenerated = await masterPubKey.getNextChangeAddress();
     const changeAddress = createAddress(
       changeAddressGenerated.confidentialAddress,
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(incrementChangeAddressIndex()); // persist address in wallet
+    await props.dispatch(incrementChangeAddressIndex(props.account.getAccountID())); // persist address in wallet
 
     await props
       .dispatch(

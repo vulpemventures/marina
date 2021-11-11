@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
 import {
   DEFAULT_ROUTE,
-  RECEIVE_ADDRESS_ROUTE,
+  RECEIVE_SELECT_ASSET_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
 } from '../../routes/constants';
 import Balance from '../../components/balance';
@@ -18,7 +18,7 @@ import { imgPathMapMainnet, imgPathMapRegtest, txTypeAsString } from '../../../a
 import { fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
-import { updateTxs, setAsset } from '../../../application/redux/actions/transaction';
+import { setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { Network } from '../../../domain/network';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
@@ -61,7 +61,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ADDRESS_ROUTE);
+  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);
   const handleReceive = () => showSaveMnemonicModal(true);
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));
@@ -74,11 +74,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     const url = `${webExplorerURL}${modalTxDetails.webExplorersBlinders}`;
     await browser.tabs.create({ url, active: false });
   };
-
-  // Update txs history once at first render
-  useEffect(() => {
-    dispatch(updateTxs()).catch(console.error);
-  }, []);
 
   return (
     <ShellPopUp

@@ -15,12 +15,16 @@ export function encrypt(payload: Mnemonic, password: Password): EncryptedMnemoni
 }
 
 export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemonic {
-  const hash = crypto.createHash('sha1').update(password);
-  const secret = hash.digest().slice(0, 16);
-  const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
-  let decrypted = key.update(encrypted, 'hex', 'utf8');
-  decrypted += key.final('utf8');
-  return createMnemonic(decrypted);
+  try {
+    const hash = crypto.createHash('sha1').update(password);
+    const secret = hash.digest().slice(0, 16);
+    const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
+    let decrypted = key.update(encrypted, 'hex', 'utf8');
+    decrypted += key.final('utf8');
+    return createMnemonic(decrypted);
+  } catch {
+    throw new Error('invalid password');
+  }
 }
 
 export function sha256Hash(str: string): string {

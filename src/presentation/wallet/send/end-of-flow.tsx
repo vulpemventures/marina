@@ -3,32 +3,29 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import { blindAndSignPset, broadcastTx, decrypt, mnemonicWallet } from '../../../application/utils';
+import { blindAndSignPset, broadcastTx } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
-import { IWallet } from '../../../domain/wallet';
-import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
-import { match } from '../../../domain/password-hash';
-import { StateRestorerOpts } from 'ldk';
 import { extractErrorMessage } from '../../utils/error';
+import { Account } from '../../../domain/account';
+import { Transaction } from 'liquidjs-lib';
+import { UtxoInterface } from 'ldk';
 
 export interface EndOfFlowProps {
-  wallet: IWallet;
-  network: Network;
-  restorerOpts: StateRestorerOpts;
+  accounts: Account[];
   pset?: string;
+  selectedUtxos: UtxoInterface[];
   explorerURL: string;
   recipientAddress?: string;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
-  wallet,
-  network,
+  accounts,
   pset,
-  restorerOpts,
   explorerURL,
   recipientAddress,
+  selectedUtxos,
 }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
@@ -37,29 +34,24 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const handleUnlock = async (password: string) => {
-    let tx = '';
-    if (!pset || !recipientAddress) return;
     try {
+      if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
-      if (!match(password, wallet.passwordHash)) {
-        throw new Error('Invalid password');
-      }
+      const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(pass)));
+      const tx = await blindAndSignPset(pset, selectedUtxos, identities, [recipientAddress]);
 
-      const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
+      const txid = Transaction.fromHex(tx).getId();
+      await broadcastTx(explorerURL, tx);
 
-      const mnemo = await mnemonicWallet(mnemonic, restorerOpts, network);
-      tx = await blindAndSignPset(mnemo, pset, [recipientAddress]);
-
-      const txid = await broadcastTx(explorerURL, tx);
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txid },
+        state: { txid, accountIDs: accounts.map((a) => a.getAccountID()) },
       });
     } catch (error: unknown) {
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {
-          tx: tx,
+          tx: '',
           error: extractErrorMessage(error),
         },
       });

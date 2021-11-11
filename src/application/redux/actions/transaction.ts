@@ -4,7 +4,6 @@ import {
   PENDING_TX_SET_ADDRESSES_AND_AMOUNT,
   PENDING_TX_SET_FEE_CHANGE_ADDRESS,
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
-  UPDATE_TXS,
   PENDING_TX_SET_PSET,
   ADD_TX,
 } from './action-types';
@@ -12,6 +11,8 @@ import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { Network } from '../../../domain/network';
+import { AccountID } from '../../../domain/account';
+import { UtxoInterface } from 'ldk';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -40,22 +41,16 @@ export function flushPendingTx(): AnyAction {
   return { type: PENDING_TX_FLUSH };
 }
 
-export function updateTxs(): AnyAction {
-  return {
-    type: UPDATE_TXS,
-  };
-}
-
-export function setPset(pset: string): AnyAction {
+export function setPset(pset: string, utxos: UtxoInterface[]): AnyAction {
   return {
     type: PENDING_TX_SET_PSET,
-    payload: { pset },
+    payload: { pset, utxos },
   };
 }
 
-export function addTx(tx: TxDisplayInterface, network: Network): AnyAction {
+export function addTx(accountID: AccountID, tx: TxDisplayInterface, network: Network): AnyAction {
   return {
     type: ADD_TX,
-    payload: { tx, network },
+    payload: { tx, network, accountID },
   };
 }

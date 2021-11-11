@@ -71,6 +71,15 @@ export function connectDataReducer(
       };
     }
 
+    case ACTION_TYPES.SET_APPROVE_REQUEST_PARAM: {
+      return {
+        ...state,
+        allowance: {
+          requestParam: payload.assetAmounts,
+        },
+      };
+    }
+
     default:
       return state;
   }

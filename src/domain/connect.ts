@@ -2,6 +2,11 @@ import { Network } from './network';
 import { RecipientInterface } from 'ldk';
 import { DataRecipient } from 'marina-provider';
 
+export interface AssetAmount {
+  asset: string;
+  amount: number;
+}
+
 export type ConnectData = {
   enabledSites: Record<Network, string[]>;
   hostnameSelected: string;
@@ -15,6 +20,9 @@ export type ConnectData = {
   msg?: {
     hostname?: string;
     message?: string;
+  };
+  allowance?: {
+    requestParam: AssetAmount[];
   };
 };
 

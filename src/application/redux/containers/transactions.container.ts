@@ -1,12 +1,13 @@
 import { connect } from 'react-redux';
+import { MainAccountID, RestrictedAssetAccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import TransactionsView, { TransactionsProps } from '../../../presentation/wallet/transactions';
-import { walletTransactions } from '../selectors/transaction.selector';
+import { selectTransactions } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): TransactionsProps => ({
   assets: state.assets,
   network: state.app.network,
-  transactions: walletTransactions(state),
+  transactions: selectTransactions(MainAccountID, RestrictedAssetAccountID)(state),
   webExplorerURL: state.app.explorerByNetwork[state.app.network].electrsURL,
 });
 

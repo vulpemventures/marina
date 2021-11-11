@@ -1,14 +1,19 @@
-import { stringify } from '../application/utils/browser-storage-converters';
-import { compareCacheForEvents, newCacheFromState, newStoreCache, StoreCache } from './store-cache';
-import Broker, { BrokerOption } from './broker';
+import { stringify } from '../../application/utils/browser-storage-converters';
+import {
+  compareCacheForEvents,
+  newCacheFromState,
+  newStoreCache,
+  StoreCache,
+} from '../store-cache';
+import Broker, { BrokerOption } from '../broker';
 import {
   MessageHandler,
   newErrorResponseMessage,
   newSuccessResponseMessage,
   RequestMessage,
-} from '../domain/message';
-import Marina from '../inject/marina';
-import { RootReducerState } from '../domain/common';
+} from '../../domain/message';
+import Marina from '../../inject/marina/provider';
+import { RootReducerState } from '../../domain/common';
 import {
   disableWebsite,
   flushMsg,
@@ -17,25 +22,24 @@ import {
   setMsg,
   setTx,
   setTxData,
-} from '../application/redux/actions/connect';
+} from '../../application/redux/actions/connect';
 import {
-  masterPubKeySelector,
-  restorerOptsSelector,
-  utxosSelector,
-} from '../application/redux/selectors/wallet.selector';
-import { masterPubKeyRestorerFromState, MasterPublicKey } from 'ldk';
+  selectMainAccount,
+  selectTransactions,
+  selectUtxos,
+} from '../../application/redux/selectors/wallet.selector';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
-} from '../application/redux/actions/wallet';
-import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
-import { walletTransactions } from '../application/redux/selectors/transaction.selector';
-import { balancesSelector } from '../application/redux/selectors/balance.selector';
-import { assetGetterFromIAssets } from '../domain/assets';
+} from '../../application/redux/actions/wallet';
+import { lbtcAssetByNetwork, sortRecipients } from '../../application/utils';
+import { selectBalances } from '../../application/redux/selectors/balance.selector';
+import { assetGetterFromIAssets } from '../../domain/assets';
 import { Balance, Recipient } from 'marina-provider';
-import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
-import { SpendPopupResponse } from '../presentation/connect/spend';
-import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
+import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
+import { SpendPopupResponse } from '../../presentation/connect/spend';
+import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
+import { MainAccountID } from '../../domain/account';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -48,7 +52,7 @@ export default class MarinaBroker extends Broker {
   }
 
   private constructor(hostname = '', brokerOpts?: BrokerOption[]) {
-    super(brokerOpts);
+    super(Marina.PROVIDER_NAME, brokerOpts);
     this.hostname = hostname;
     this.cache = newStoreCache();
     this.subscribeToStoreEvents();
@@ -122,23 +126,25 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getAddresses.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await getRestoredXPub(state);
+          const xpub = await selectMainAccount(state).getWatchIdentity();
           return successMsg(await xpub.getAddresses());
         }
 
         case Marina.prototype.getNextAddress.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await getRestoredXPub(state);
+          const account = selectMainAccount(state);
+          const xpub = await account.getWatchIdentity();
           const nextAddress = await xpub.getNextAddress();
-          await this.store.dispatchAsync(incrementAddressIndex());
+          await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID()));
           return successMsg(nextAddress);
         }
 
         case Marina.prototype.getNextChangeAddress.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await getRestoredXPub(state);
+          const account = selectMainAccount(state);
+          const xpub = await account.getWatchIdentity();
           const nextChangeAddress = await xpub.getNextChangeAddress();
-          await this.store.dispatchAsync(incrementChangeAddressIndex());
+          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getAccountID()));
           return successMsg(nextChangeAddress);
         }
 
@@ -200,19 +206,19 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getTransactions.name: {
           this.checkHostnameAuthorization(state);
-          const transactions = walletTransactions(state);
+          const transactions = selectTransactions(MainAccountID)(state);
           return successMsg(transactions);
         }
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          const coins = utxosSelector(state);
+          const coins = selectUtxos(MainAccountID)(state);
           return successMsg(coins);
         }
 
         case Marina.prototype.getBalances.name: {
           this.checkHostnameAuthorization(state);
-          const balances = balancesSelector(state);
+          const balances = selectBalances(MainAccountID)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
@@ -223,7 +229,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.isReady.name: {
           try {
-            await getRestoredXPub(state); // check if Xpub is valid
+            await selectMainAccount(state).getWatchIdentity(); // check if Xpub is valid
             return successMsg(state.app.isOnboardingCompleted);
           } catch {
             // catch error = not ready
@@ -245,10 +251,4 @@ export default class MarinaBroker extends Broker {
       else throw err;
     }
   };
-}
-
-function getRestoredXPub(state: RootReducerState): Promise<MasterPublicKey> {
-  const xPubKey = masterPubKeySelector(state);
-  const opts = restorerOptsSelector(state);
-  return masterPubKeyRestorerFromState(xPubKey)(opts);
 }

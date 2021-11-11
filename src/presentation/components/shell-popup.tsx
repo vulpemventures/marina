@@ -4,9 +4,12 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { updateUtxos } from '../../application/redux/actions/utxos';
-import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
-import { RootReducerState } from '../../domain/common';
+import { flushPendingTx } from '../../application/redux/actions/transaction';
+import {
+  selectAllAccountsIDs,
+  selectDeepRestorerIsLoading,
+} from '../../application/redux/selectors/wallet.selector';
+import { updateTaskAction } from '../../application/redux/actions/updater';
 
 interface Props {
   btnDisabled?: boolean;
@@ -31,9 +34,8 @@ const ShellPopUp: React.FC<Props> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const deepRestorerLoading = useSelector(
-    (state: RootReducerState) => state.wallet.deepRestorer.isLoading
-  );
+  const allAccountsIds = useSelector(selectAllAccountsIDs);
+  const deepRestorerLoading = useSelector(selectDeepRestorerIsLoading);
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
@@ -42,11 +44,11 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = async () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(updateUtxos()).catch(console.error);
-      dispatch(updateTxs()).catch(console.error);
+      await Promise.all(allAccountsIds.map(updateTaskAction).map(dispatch));
+    } else {
+      history.push(DEFAULT_ROUTE);
     }
     await dispatch(flushPendingTx());
-    history.push(DEFAULT_ROUTE);
   };
   const handleBackBtn = () => {
     if (backBtnCb) {

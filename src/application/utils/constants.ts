@@ -1,5 +1,6 @@
 import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 import blockstreamAssetHashes from '../constants/blockstream_asset_hash.json';
+import { Network } from '../../domain/network';
 
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
@@ -7,7 +8,7 @@ export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '100': 0.1,
 };
 
-export const taxiURL: Record<string, string> = {
+export const taxiURL: Record<Network, string> = {
   regtest: 'http://localhost:8000',
   liquid: 'https://grpc.liquid.taxi',
 };

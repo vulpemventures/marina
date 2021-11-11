@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
-import { useDispatch } from 'react-redux';
-import { updateUtxos } from '../../../application/redux/actions/utxos';
+import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
+import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
 
-export interface ReceiveProps {
-  pubKey: MasterPublicKey;
-  restorerOpts: StateRestorerOpts;
-}
-
-const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
+const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+
+  const account = useSelector(selectAccountForAsset(match.params.asset));
 
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
@@ -33,13 +30,17 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
 
   useEffect(() => {
     (async () => {
-      const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
-      const addr = await publicKey.getNextAddress();
+      if (account === undefined) {
+        throw new Error('multisig account for restricted asset is not set');
+      }
+
+      const identity = await account.getWatchIdentity();
+      const addr = await identity.getNextAddress();
       setConfidentialAddress(addr.confidentialAddress);
-      await dispatch(incrementAddressIndex()); // persist address
+      await dispatch(incrementAddressIndex(account.getAccountID())); // persist address
       setTimeout(() => {
-        dispatch(updateUtxos()).catch(console.error);
-      }, 8000);
+        dispatch(updateTaskAction(account.getAccountID())).catch(console.error);
+      }, 2000);
     })().catch(console.error);
   }, []);
 

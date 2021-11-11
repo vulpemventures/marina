@@ -4,6 +4,7 @@ export interface RequestMessage {
   id: string;
   name: string;
   params?: Array<any>;
+  provider: string;
 }
 
 // the message received by the inject script
@@ -14,10 +15,16 @@ export interface ResponseMessage {
 }
 
 // basically the name of the connect/* files
-export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend';
+export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend' | 'allow-coin';
 
 export function isPopupName(name: any): name is PopupName {
-  return name === 'enable' || name === 'sign-msg' || name === 'sign-pset' || name === 'spend';
+  return (
+    name === 'enable' ||
+    name === 'sign-msg' ||
+    name === 'sign-pset' ||
+    name === 'spend' ||
+    name === 'allow-coin'
+  );
 }
 
 export function isResponseMessage(message: unknown): message is ResponseMessage {

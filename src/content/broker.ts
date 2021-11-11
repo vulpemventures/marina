@@ -15,12 +15,15 @@ export type BrokerOption = (broker: Broker) => void;
 export default class Broker {
   protected store?: BrokerProxyStore = undefined;
   protected backgroundScriptPort: browser.Runtime.Port;
+  protected providerName: string;
 
-  constructor(options: BrokerOption[] = []) {
+  constructor(name: string, options: BrokerOption[] = []) {
     this.backgroundScriptPort = browser.runtime.connect();
     for (const opt of options) {
       opt(this);
     }
+
+    this.providerName = name;
   }
 
   start(handler: MessageHandler) {
@@ -29,6 +32,7 @@ export default class Broker {
       'message',
       (event: MessageEvent<any>) => {
         if (!isMessageEvent(event)) return;
+        if (event.data.provider !== this.providerName) return;
 
         // handler should reject and resolve ResponseMessage.
         handler(event.data)
@@ -76,5 +80,7 @@ export default class Broker {
 
 // custom type guard for MessageEvent
 function isMessageEvent(event: MessageEvent<any>): event is MessageEvent<RequestMessage> {
-  return event.source === window && event.data && event.data.id && event.data.name;
+  return (
+    event.source === window && event.data && event.data.id && event.data.name && event.data.provider
+  );
 }

@@ -5,12 +5,14 @@ export interface OnboardingState {
   mnemonic: string;
   password: string;
   isFromPopupFlow: boolean;
+  needSecurityAccount: boolean;
 }
 
 const onboardingInitState: OnboardingState = {
   mnemonic: '',
   password: '',
   isFromPopupFlow: false,
+  needSecurityAccount: false,
 };
 
 export function onboardingReducer(
@@ -23,6 +25,7 @@ export function onboardingReducer(
         ...state,
         password: payload.password,
         mnemonic: payload.mnemonic,
+        needSecurityAccount: payload.needSecurityAccount,
       };
     }
 

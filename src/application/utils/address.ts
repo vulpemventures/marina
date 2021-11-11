@@ -1,9 +1,5 @@
 import { address, networks } from 'ldk';
 
-export const blindingKeyFromAddress = (addr: string): string => {
-  return address.fromConfidential(addr).blindingKey.toString('hex');
-};
-
 export const isConfidentialAddress = (addr: string): boolean => {
   try {
     address.fromConfidential(addr);

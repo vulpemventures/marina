@@ -4,6 +4,7 @@ import { changeNetwork } from '../../application/redux/actions/app';
 import { flushUtxos } from '../../application/redux/actions/utxos';
 import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { AccountID } from '../../domain/account';
 import { RootReducerState } from '../../domain/common';
 import { createNetwork } from '../../domain/network';
 import Select from '../components/select';
@@ -15,10 +16,15 @@ const formattedNetworks = networks.map((n) => formatNetwork(n));
 
 export interface SettingsNetworksProps {
   restorationLoading: boolean;
+  accountsIDs: AccountID[];
   error?: string;
 }
 
-const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, error }) => {
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
+  restorationLoading,
+  accountsIDs,
+  error,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const network = useSelector((state: RootReducerState) => state.app.network);
@@ -30,7 +36,7 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoad
     setIsLoading(true);
     const newNetwork = createNetwork(net.toLowerCase());
     await dispatch(changeNetwork(newNetwork));
-    await dispatch(flushUtxos());
+    await Promise.all(accountsIDs.map(flushUtxos).map(dispatch));
     await dispatch(setDeepRestorerGapLimit(20));
     await dispatch(startDeepRestorer());
     setIsLoading(false);

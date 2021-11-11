@@ -1,22 +1,26 @@
-import { UtxoInterface, StateRestorerOpts } from 'ldk';
-import { IError } from './common';
-import { EncryptedMnemonic } from './encrypted-mnemonic';
-import { MasterBlindingKey } from './master-blinding-key';
-import { MasterXPub } from './master-extended-pub';
+import {
+  AccountID,
+  MainAccountID,
+  MnemonicAccountData,
+  MultisigAccountData,
+  RestrictedAssetAccountID,
+} from './account';
 import { PasswordHash } from './password-hash';
+import { UtxosAndTxsHistory } from './transaction';
 
-export interface IWallet {
-  encryptedMnemonic: EncryptedMnemonic;
-  errors?: Record<string, IError>;
-  masterXPub: MasterXPub;
-  masterBlindingKey: MasterBlindingKey;
+export interface WalletState {
+  [MainAccountID]: MnemonicAccountData;
+  [RestrictedAssetAccountID]?: MultisigAccountData<CosignerExtraData>;
+  unspentsAndTransactions: Record<AccountID, UtxosAndTxsHistory>;
   passwordHash: PasswordHash;
-  utxoMap: Record<string, UtxoInterface>;
-  restorerOpts: StateRestorerOpts;
   deepRestorer: {
     gapLimit: number;
     isLoading: boolean;
     error?: string;
   };
   isVerified: boolean;
+}
+
+export interface CosignerExtraData {
+  cosignerURL: string;
 }

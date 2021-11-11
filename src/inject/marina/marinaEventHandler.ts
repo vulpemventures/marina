@@ -1,6 +1,6 @@
 import { MarinaEventType } from 'marina-provider';
-import { parse } from '../application/utils/browser-storage-converters';
-import { makeid } from './proxy';
+import { parse } from '../../application/utils/browser-storage-converters';
+import { makeid } from '../proxy';
 
 type EventListenerID = string;
 

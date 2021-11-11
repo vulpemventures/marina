@@ -1,7 +1,12 @@
-import { address, decodePset } from 'ldk';
+import { address, decodePset, UtxoInterface } from 'ldk';
 import { Address } from './address';
 import { IError } from './common';
 import { Network } from './network';
+
+export interface UtxosAndTxsHistory {
+  utxosMap: Record<string, UtxoInterface>;
+  transactions: TxsHistoryByNetwork;
+}
 
 export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 

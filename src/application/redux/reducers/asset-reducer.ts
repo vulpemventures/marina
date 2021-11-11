@@ -17,7 +17,6 @@ export const assetInitState: IAssets = {
     name: 'Liquid Bitcoin',
     precision: 8,
     ticker: 'L-BTC',
-    isRegtestAsset: true,
   },
 };
 
