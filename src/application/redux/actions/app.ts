@@ -7,6 +7,7 @@ import {
   START_PERIODIC_UPDATE,
   SET_EXPLORER,
   RESET,
+  STOP_PERIODIC_UPDATE,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Network } from '../../../domain/network';
@@ -45,6 +46,10 @@ export function changeNetwork(network: Network): AnyAction {
 
 export function startPeriodicUpdate(): AnyAction {
   return { type: START_PERIODIC_UPDATE };
+}
+
+export function stopPeriodicUpdate(): AnyAction {
+  return { type: STOP_PERIODIC_UPDATE };
 }
 
 export function reset(): AnyAction {

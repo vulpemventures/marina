@@ -31,6 +31,7 @@ import { Asset, IAssets } from '../../../domain/assets';
 import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
+import { UpdateTaskAction } from '../actions/updater';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID
@@ -144,14 +145,14 @@ function* createChannel<T>(): SagaGenerator<Channel<T>> {
 
 function* requestAssetInfoFromEsplora(assetHash: string): SagaGenerator<Asset> {
   const explorerURL = yield* selectExplorerSaga();
-  const getRequest = () => axios.get(`${explorerURL}/asset/${assetHash}`).then(r => r.data)
-  const result = yield call(getRequest)
+  const getRequest = () => axios.get(`${explorerURL}/asset/${assetHash}`).then((r) => r.data);
+  const result = yield call(getRequest);
 
   return {
     name: result?.name ?? 'Unknown',
     ticker: result?.name ?? assetHash.slice(0, 4).toUpperCase(),
-    precision: result?.precision ?? defaultPrecision
-  }
+    precision: result?.precision ?? defaultPrecision,
+  };
 }
 
 function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, AccountID> {
@@ -161,7 +162,9 @@ function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, A
   }
 }
 
-const selectAllAssetsSaga = newSagaSelector((state: RootReducerState) => new Set(Object.keys(state.assets)))
+const selectAllAssetsSaga = newSagaSelector(
+  (state: RootReducerState) => new Set(Object.keys(state.assets))
+);
 
 function* assetsWorker(assetsChan: Channel<string>): SagaGenerator<void, string> {
   while (true) {
@@ -185,7 +188,7 @@ export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<voi
 }
 
 // starts a set of workers in order to handle asynchronously the UPDATE_TASK action
-export function* watchUpdateTask(): SagaGenerator<void, { payload: AccountID }> {
+export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
   const MAX_UPDATER_WORKERS = 3;
   const accountToUpdateChan = yield* createChannel<AccountID>();
 
