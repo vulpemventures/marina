@@ -76,7 +76,9 @@ export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
   return selectAllAccounts(state).map((account) => account.getAccountID());
 };
 
-export const selectAccount = (accountID: AccountID): ((state: RootReducerState) => Account | undefined) =>
+export const selectAccount = (
+  accountID: AccountID
+): ((state: RootReducerState) => Account | undefined) =>
   accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
 
 export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {
@@ -100,8 +102,8 @@ export const selectUnspentsAndTransactions =
 
 export const selectDeepRestorerIsLoading = (state: RootReducerState) => {
   return state.wallet.deepRestorer.isLoading;
-}
+};
 
 export const selectDeepRestorerGapLimit = (state: RootReducerState) => {
   return state.wallet.deepRestorer.gapLimit;
-}
+};

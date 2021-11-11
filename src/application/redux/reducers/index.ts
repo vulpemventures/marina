@@ -15,7 +15,6 @@ import { PersistConfig } from 'redux-persist/lib/types';
 import { appReducer, appInitState } from './app-reducer';
 import { walletInitState, walletReducer } from './wallet-reducer';
 import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
-import { updaterReducer } from './updater-reducer';
 import { allowanceInitState, allowanceReducer, AllowanceState } from './allowance-reducer';
 
 const browserLocalStorage: Storage = {
@@ -108,7 +107,6 @@ const marinaReducer = combineReducers({
     version: 1,
     initialState: connectDataInitState,
   }),
-  updater: updaterReducer,
   allowance: persist<AllowanceState>({
     reducer: allowanceReducer,
     key: 'allowance',

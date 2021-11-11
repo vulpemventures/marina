@@ -10,7 +10,7 @@ export async function fetchAssetsFromTaxi(taxiUrl: string): Promise<string[]> {
   const client = new TaxiClient(taxiUrl, undefined);
   const res = await client.listAssets(new ListAssetsRequest(), null);
   return res.getAssetsList().map((asset: AssetDetails) => asset.getAssetHash());
-};
+}
 
 export const fetchTopupFromTaxi = async (
   taxiUrl: string,

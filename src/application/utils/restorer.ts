@@ -17,7 +17,9 @@ import { MasterBlindingKey } from '../../domain/master-blinding-key';
 import { MasterXPub } from '../../domain/master-extended-pub';
 import { Network } from '../../domain/network';
 
-export function getStateRestorerOptsFromAddresses(addresses: AddressInterface[]): StateRestorerOpts {
+export function getStateRestorerOptsFromAddresses(
+  addresses: AddressInterface[]
+): StateRestorerOpts {
   const derivationPaths = addresses.map((addr) => addr.derivationPath);
 
   const indexes = [];
@@ -71,7 +73,11 @@ export function restoredMasterPublicKey(
   return masterPubKeyRestorerFromState(xpub)(restorerOpts);
 }
 
-export function newMasterPublicKey(masterXPub: MasterXPub, masterBlindingKey: MasterBlindingKey, network: Network) {
+export function newMasterPublicKey(
+  masterXPub: MasterXPub,
+  masterBlindingKey: MasterBlindingKey,
+  network: Network
+) {
   return new MasterPublicKey({
     chain: network,
     type: IdentityType.MasterPublicKey,
@@ -121,7 +127,12 @@ export function restoredWatchOnlyMultisig(
   return restorerFromState<MultisigWatchOnly>(multisigID)(restorerOpts);
 }
 
-export function newMultisigWatchOnly(network: Network, requiredSignatures: number, cosigners: CosignerMultisig[], signerXPub: XPub) {
+export function newMultisigWatchOnly(
+  network: Network,
+  requiredSignatures: number,
+  cosigners: CosignerMultisig[],
+  signerXPub: XPub
+) {
   return new MultisigWatchOnly({
     chain: network,
     type: IdentityType.MultisigWatchOnly,
@@ -131,4 +142,3 @@ export function newMultisigWatchOnly(network: Network, requiredSignatures: numbe
     },
   });
 }
-

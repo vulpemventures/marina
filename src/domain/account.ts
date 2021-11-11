@@ -76,7 +76,10 @@ export function createMnemonicAccount(
       restoredMnemonic(decrypt(data.encryptedMnemonic, password), data.restorerOpts, network),
     getWatchIdentity: () =>
       restoredMasterPublicKey(data.masterXPub, data.masterBlindingKey, data.restorerOpts, network),
-    getDeepRestorer: () => masterPubKeyRestorerFromEsplora(newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)),
+    getDeepRestorer: () =>
+      masterPubKeyRestorerFromEsplora(
+        newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
+      ),
   };
 }
 
@@ -157,6 +160,14 @@ export function createMultisigAccount(
         data.restorerOpts,
         data.network
       ),
-    getDeepRestorer: () => multisigWatchOnlyFromEsplora(newMultisigWatchOnly(data.network, data.requiredSignature, data.cosignerXPubs, data.signerXPub)),
+    getDeepRestorer: () =>
+      multisigWatchOnlyFromEsplora(
+        newMultisigWatchOnly(
+          data.network,
+          data.requiredSignature,
+          data.cosignerXPubs,
+          data.signerXPub
+        )
+      ),
   };
 }

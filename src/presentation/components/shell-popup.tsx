@@ -5,7 +5,10 @@ import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushPendingTx } from '../../application/redux/actions/transaction';
-import { selectAllAccountsIDs, selectDeepRestorerIsLoading } from '../../application/redux/selectors/wallet.selector';
+import {
+  selectAllAccountsIDs,
+  selectDeepRestorerIsLoading,
+} from '../../application/redux/selectors/wallet.selector';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 
 interface Props {

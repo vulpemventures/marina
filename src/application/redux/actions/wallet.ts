@@ -37,7 +37,7 @@ export function setRestorerOpts(accountID: AccountID, restorerOpts: StateRestore
   return {
     type: SET_RESTORER_OPTS,
     payload: { accountID, restorerOpts },
-  }
+  };
 }
 
 export function incrementAddressIndex(accountID: AccountID): AnyAction {

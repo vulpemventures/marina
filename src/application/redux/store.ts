@@ -1,4 +1,4 @@
-import { createStore, applyMiddleware, Store, AnyAction } from 'redux';
+import { createStore, applyMiddleware, Store } from 'redux';
 import { wrapStore } from 'webext-redux';
 import marinaReducer from './reducers';
 import persistStore from 'redux-persist/es/persistStore';
@@ -11,10 +11,12 @@ export const serializerAndDeserializer = {
   deserializer: (payload: any) => parse(payload),
 };
 
-const sagaMiddleware = createSagaMiddleware();
-const create = () => createStore(marinaReducer, applyMiddleware(sagaMiddleware));
-
-sagaMiddleware.run(mainSaga);
+const create = () => {
+  const sagaMiddleware = createSagaMiddleware();
+  const store = createStore(marinaReducer, applyMiddleware(sagaMiddleware))
+  sagaMiddleware.run(mainSaga);
+  return store;
+};
 
 export const marinaStore = create();
 export const persistor = persistStore(marinaStore);

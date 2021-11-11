@@ -42,11 +42,9 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
     void (async () => {
       await dispatch(flushPendingTx());
 
-      await Promise.all(
-        (state.accountIDs ?? [])
-          .map(updateTaskAction)
-          .map(dispatch)
-      ).catch(console.error);
+      await Promise.all((state.accountIDs ?? []).map(updateTaskAction).map(dispatch)).catch(
+        console.error
+      );
     })();
   }, []);
 

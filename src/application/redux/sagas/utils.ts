@@ -1,17 +1,21 @@
-import { StrictEffect, select, call } from "redux-saga/effects";
-import { Account, AccountID } from "../../../domain/account";
-import { RootReducerState } from "../../../domain/common";
-import { getExplorerURLSelector, selectNetwork } from "../selectors/app.selector";
-import { selectAccount, selectAllAccountsIDs } from "../selectors/wallet.selector";
+import { StrictEffect, select, call } from 'redux-saga/effects';
+import { Account, AccountID } from '../../../domain/account';
+import { RootReducerState } from '../../../domain/common';
+import { getExplorerURLSelector, selectNetwork } from '../selectors/app.selector';
+import { selectAccount, selectAllAccountsIDs } from '../selectors/wallet.selector';
 
-export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<StrictEffect, ReturnType, YieldType>;
+export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
+  StrictEffect,
+  ReturnType,
+  YieldType
+>;
 
 // create a saga "selector" (a generator) from a redux selector function
 export function newSagaSelector<R>(selectorFn: (state: RootReducerState) => R) {
   return function* (): SagaGenerator<R> {
     const result = yield select(selectorFn);
     return result;
-  }
+  };
 }
 
 // redux-saga does not handle async generator
@@ -19,7 +23,7 @@ export function newSagaSelector<R>(selectorFn: (state: RootReducerState) => R) {
 export function* processAsyncGenerator<NextType>(
   asyncGenerator: AsyncGenerator<NextType>,
   onNext: (n: NextType) => SagaGenerator,
-  onDone?: () => SagaGenerator,
+  onDone?: () => SagaGenerator
 ): SagaGenerator<void, IteratorYieldResult<NextType>> {
   const next = () => asyncGenerator.next();
   let n = yield call(next);

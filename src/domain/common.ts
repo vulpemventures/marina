@@ -6,7 +6,6 @@ import { TransactionState } from '../application/redux/reducers/transaction-redu
 import { Action } from 'redux';
 import { TaxiState } from '../application/redux/reducers/taxi-reducer';
 import { IAssets } from './assets';
-import { UpdaterState } from '../application/redux/reducers/updater-reducer';
 import { AllowanceState } from '../application/redux/reducers/allowance-reducer';
 
 export interface RootReducerState {
@@ -17,7 +16,6 @@ export interface RootReducerState {
   wallet: WalletState;
   connect: ConnectData;
   taxi: TaxiState;
-  updater: UpdaterState;
   allowance: AllowanceState;
 }
 
