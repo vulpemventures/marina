@@ -48,6 +48,7 @@ import {
 } from '../application/redux/actions/action-types';
 import { flushTx } from '../application/redux/actions/connect';
 import { selectEsploraURL } from '../application/redux/selectors/app.selector';
+import { extractErrorMessage } from '../presentation/utils/error';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
@@ -278,8 +279,8 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       dispatch(fetchAndSetTaxiAssets());
 
       dispatch(setDeepRestorerError(undefined));
-    } catch (err: any) {
-      dispatch(setDeepRestorerError(err.message || err));
+    } catch (err) {
+      dispatch(setDeepRestorerError(new Error(extractErrorMessage(err))));
     } finally {
       dispatch(setDeepRestorerIsLoading(false));
     }
