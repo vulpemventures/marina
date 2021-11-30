@@ -18,10 +18,9 @@ import {
   feeLevelToSatsPerByte,
   fetchTopupFromTaxi,
   createTaxiTxFromTopup,
-  imgPathMapMainnet,
-  imgPathMapRegtest,
   lbtcAssetByNetwork,
   taxiURL,
+  getAssetImage,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -225,16 +224,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   };
 
   const getFeeCurrencyImgPath = (): string => {
-    let img: string = imgPathMapMainnet[feeCurrency || ''];
-    if (network === 'regtest') {
-      img = imgPathMapRegtest[assets[feeCurrency || '']?.ticker];
-    }
-
-    if (!img) {
-      return imgPathMapMainnet[''];
-    }
-
-    return img;
+    return getAssetImage(feeCurrency || '');
   };
 
   return (

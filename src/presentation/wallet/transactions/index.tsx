@@ -14,7 +14,7 @@ import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
-import { imgPathMapMainnet, imgPathMapRegtest, txTypeAsString } from '../../../application/utils';
+import { getAssetImage, txTypeAsString } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
@@ -23,7 +23,6 @@ import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
-import { networks, NetworkString } from 'ldk';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -35,24 +34,18 @@ interface LocationState {
 export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
-  network: NetworkString;
   webExplorerURL: string;
 }
 
 const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
-  network,
   webExplorerURL,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-
-  const getAssetImgPath = () =>
-    network === 'regtest'
-      ? imgPathMapRegtest[state.assetTicker ?? networks.regtest.assetHash] ?? imgPathMapRegtest['']
-      : imgPathMapMainnet[state.assetHash ?? networks.liquid.assetHash] ?? imgPathMapMainnet[''];
+  const getAssetImgPath = () => getAssetImage(state.assetHash);
 
   // TxDetails Modal
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();

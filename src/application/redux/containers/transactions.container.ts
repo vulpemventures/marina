@@ -6,7 +6,6 @@ import { walletTransactions } from '../selectors/transaction.selector';
 
 const mapStateToProps = (state: RootReducerState): TransactionsProps => ({
   assets: state.assets,
-  network: state.app.network,
   transactions: walletTransactions(state),
   webExplorerURL: selectElectrsURL(state),
 });

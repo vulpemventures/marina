@@ -5,7 +5,6 @@ export type Asset = {
   name: string;
   precision: number;
   ticker: string;
-  isRegtestAsset?: boolean;
 };
 
 export type AssetGetter = (assetHash: string) => Asset & { assetHash: string };

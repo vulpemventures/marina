@@ -16,7 +16,7 @@ import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utils';
-import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { getAssetImage } from '../../../application/utils';
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
@@ -116,11 +116,7 @@ const HomeView: React.FC<HomeProps> = ({
                 const { ticker, precision, name } = getAsset(asset);
                 return (
                   <ButtonAsset
-                    assetImgPath={
-                      network === 'regtest'
-                        ? imgPathMapRegtest[ticker] ?? imgPathMapRegtest['']
-                        : imgPathMapMainnet[asset] ?? imgPathMapMainnet['']
-                    }
+                    assetImgPath={getAssetImage(asset)}
                     assetHash={asset}
                     assetName={name || 'unknown'}
                     assetTicker={ticker}
