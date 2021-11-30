@@ -2,7 +2,6 @@ import React from 'react';
 import cx from 'classnames';
 import browser from 'webextension-polyfill';
 import { useSelector } from 'react-redux';
-import { RootReducerState } from '../../domain/common';
 import { selectElectrsURL } from '../../application/redux/selectors/app.selector';
 
 interface Props {

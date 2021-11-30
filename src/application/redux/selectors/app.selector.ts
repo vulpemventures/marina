@@ -3,7 +3,10 @@ import { appInitState } from '../reducers/app-reducer';
 import { RootReducerState } from './../../../domain/common';
 
 function getExplorerURLSelector(state: RootReducerState): ExplorerURLs {
-  return state.app.explorerByNetwork[state.app.network] ?? appInitState.explorerByNetwork[state.app.network];
+  return (
+    state.app.explorerByNetwork[state.app.network] ??
+    appInitState.explorerByNetwork[state.app.network]
+  );
 }
 
 export function selectEsploraURL(state: RootReducerState): string {

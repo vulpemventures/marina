@@ -14,6 +14,7 @@ import {
 } from '../../domain/app';
 import SettingsCustomExplorerForm from '../components/explorer-custom-form';
 import { NetworkString } from 'ldk';
+import { appInitState } from '../../application/redux/reducers/app-reducer';
 
 function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
   switch (network) {
@@ -21,6 +22,8 @@ function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
       return ['Blockstream', 'Mempool', 'Custom'];
     case 'regtest':
       return ['Nigiri', 'Custom'];
+    case 'testnet':
+      return ['Testnet', 'Custom'];
     default:
       return explorerTypesForNetwork('liquid');
   }
@@ -49,6 +52,9 @@ const SettingsExplorer: React.FC = () => {
       case 'Nigiri':
         handleChange(NigiriDefaultExplorerURLs).catch(console.error);
         break;
+      case 'Testnet':
+        handleChange(BlockstreamExplorerURLs).catch(console.error);
+        break;
       case 'Custom':
         setCustom(true);
         break;
@@ -67,7 +73,11 @@ const SettingsExplorer: React.FC = () => {
       <Select
         onClick={() => setCustom(false)}
         list={explorerTypesForNetwork(network)}
-        selected={app.explorerByNetwork[network].type}
+        selected={
+          app.explorerByNetwork[network]
+            ? app.explorerByNetwork[network].type
+            : appInitState.explorerByNetwork[network].type
+        }
         onSelect={onSelect}
         disabled={false}
       />
