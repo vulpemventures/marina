@@ -160,9 +160,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const changeGetter = (asset: string) => {
       if (asset === sendAsset) {
-        return changeAddress?.value;
+        return changeAddress?.value ?? '';
       }
-      return nextChangeAddr?.value;
+      return nextChangeAddr?.value ?? '';
     };
 
     const tx: string = createTaxiTxFromTopup(

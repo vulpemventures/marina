@@ -6027,18 +6027,19 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.3.9:
-  version "0.3.9"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.9.tgz#50ec067e31a2d8d235dc0e072a877e00b7133d15"
-  integrity sha512-SSSpS5r/Fbj5ZFseZcLsud9ErP5p/5dclmptfaI05bnejs5Iys47t0IggBGBhrsLggfmy7119swJMs0hyA2VXA==
+ldk@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.0.tgz#6e38f6aff4520222223730532121ce14600eb826"
+  integrity sha512-oeXxgC3WyJEvDu7txLiT2eRuousGesbcFtZc/jgFCqjOcSELuaVG/DZxdvVXwsDFbWPop0J5Zpc9WWnoD6BA9w==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
-    liquidjs-lib "^5.1.15"
+    liquidjs-lib "^5.2.2"
     marina-provider "^1.0.0"
     slip77 "^0.1.1"
+    tslib "^2.3.1"
 
 leven@^3.1.0:
   version "3.1.0"
@@ -6086,12 +6087,13 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
-liquidjs-lib@^5.1.15:
-  version "5.1.15"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.1.15.tgz#43cf25006da11386e23561178a260264318467a9"
-  integrity sha512-shrt3KBUnFWoAAqBa5iyz8v62g1P9JIlMtvW+C2GH9J3HqYFV6Hs+Rx7OtNQ1z7xTNttPEbJMGn360JwIT9D0g==
+liquidjs-lib@^5.2.2:
+  version "5.2.3"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.2.3.tgz#1018393fc8a2bacd96e52373cdb90975984cedfa"
+  integrity sha512-jV2GZ24kfT8k02G5Igk14Pr2AqDTig2MaqMlf4CullACwwhNMKf8GE3EyQcf6Q4qJanBQ4TyxG84S9LNCS8r6w==
   dependencies:
     "@vulpemventures/secp256k1-zkp" "^2.0.0"
+    axios "^0.21.1"
     bech32 "^1.1.2"
     bip174-liquid "^1.0.3"
     bip32 "^2.0.4"
@@ -9093,6 +9095,11 @@ tslib@^2.2.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.0.tgz#803b8cdab3e12ba581a4ca41c8839bbb0dacb09e"
   integrity sha512-N82ooyxVNm6h1riLCoyS9e3fuJ3AMG2zIZs2Gd1ATcSFjSA23Q0fzjjZeh0jbJvWVDZ0cJT8yaNNaaXHzueNjg==
+
+tslib@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
+  integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
 tsutils@^3.21.0:
   version "3.21.0"

@@ -1,4 +1,4 @@
-import { StateRestorerOpts, Mnemonic, IdentityType, mnemonicRestorerFromState } from 'ldk';
+import { StateRestorerOpts, Mnemonic, IdentityType, mnemonicRestorerFromState, NetworkString } from 'ldk';
 import { Address } from '../../domain/address';
 
 export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRestorerOpts {
@@ -30,7 +30,7 @@ export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRe
 export function mnemonicWallet(
   mnemonic: string,
   restorerOpts: StateRestorerOpts,
-  chain: string
+  chain: NetworkString
 ): Promise<Mnemonic> {
   const mnemonicWallet = new Mnemonic({
     chain,

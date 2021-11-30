@@ -10,7 +10,7 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type { AddressInterface, Mnemonic, RecipientInterface, UtxoInterface } from 'ldk';
+import type { AddressInterface, Mnemonic, RecipientInterface, UnblindedOutput } from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import { Network } from '../../domain/network';
@@ -161,7 +161,7 @@ export default connectWithConnectData(ConnectSpend);
 
 async function makeTransaction(
   mnemonic: Mnemonic,
-  coins: UtxoInterface[],
+  coins: UnblindedOutput[],
   connectDataTx: ConnectData['tx'],
   network: Network,
   dispatch: ProxyStoreDispatch
@@ -182,7 +182,7 @@ async function makeTransaction(
   }
 
   const changeAddressGetter = (asset: string) => {
-    if (!assets.includes(asset)) return undefined; // will throw an error in coin selector
+    if (!assets.includes(asset)) return ''; // will throw an error in coin selector
     if (!persisted[asset]) {
       dispatch(incrementChangeAddressIndex()).catch(console.error);
       persisted[asset] = true;

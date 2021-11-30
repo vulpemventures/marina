@@ -1,5 +1,5 @@
 import { Network } from './../../domain/network';
-import { Outpoint, toOutpoint, UtxoInterface } from 'ldk';
+import { Outpoint, toOutpoint, UnblindedOutput } from 'ldk';
 import { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
 import { MarinaEventType } from 'marina-provider';
 
@@ -8,7 +8,7 @@ export interface MarinaEvent<P extends any> {
   payload: P;
 }
 
-export type NewUtxoMarinaEvent = MarinaEvent<UtxoInterface>;
+export type NewUtxoMarinaEvent = MarinaEvent<UnblindedOutput>;
 export type SpentUtxoMarinaEvent = MarinaEvent<Outpoint>;
 export type NewTxMarinaEvent = MarinaEvent<TxDisplayInterface>;
 export type EnabledMarinaEvent = MarinaEvent<{ network: Network; hostname: string }>;
@@ -34,8 +34,8 @@ export function compareTxsHistoryState(
 
 // compare two utxo state and return marina events
 export function compareUtxoState(
-  oldState: Record<string, UtxoInterface>,
-  newState: Record<string, UtxoInterface>
+  oldState: Record<string, UnblindedOutput>,
+  newState: Record<string, UnblindedOutput>
 ): (NewUtxoMarinaEvent | SpentUtxoMarinaEvent)[] {
   const events: (NewUtxoMarinaEvent | SpentUtxoMarinaEvent)[] = [];
   const newEntries = Object.entries(newState);

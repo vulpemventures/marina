@@ -1,4 +1,4 @@
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 import { AnyAction } from 'redux';
 import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS, UPDATE_UTXOS } from './action-types';
 
@@ -6,7 +6,7 @@ export function updateUtxos(): AnyAction {
   return { type: UPDATE_UTXOS };
 }
 
-export function addUtxo(utxo: UtxoInterface): AnyAction {
+export function addUtxo(utxo: UnblindedOutput): AnyAction {
   return { type: ADD_UTXO, payload: { utxo } };
 }
 

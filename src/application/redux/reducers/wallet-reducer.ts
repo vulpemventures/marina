@@ -3,7 +3,7 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IWallet } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 
 export const walletInitState: IWallet = {
   restorerOpts: {
@@ -67,7 +67,7 @@ export function walletReducer(
         ...state,
         utxoMap: {
           ...state.utxoMap,
-          [toStringOutpoint(payload.utxo as UtxoInterface)]: payload.utxo,
+          [toStringOutpoint(payload.utxo as UnblindedOutput)]: payload.utxo,
         },
       };
     }

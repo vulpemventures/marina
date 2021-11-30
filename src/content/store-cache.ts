@@ -1,4 +1,4 @@
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 import {
   MarinaEvent,
   compareEnabledWebsites,
@@ -11,7 +11,7 @@ import { Network } from '../domain/network';
 import { TxsHistory } from '../domain/transaction';
 
 export interface StoreCache {
-  utxoState: Record<string, UtxoInterface>;
+  utxoState: Record<string, UnblindedOutput>;
   txsHistoryState: TxsHistory;
   enabledWebsitesState: Record<Network, string[]>;
   network: Network;

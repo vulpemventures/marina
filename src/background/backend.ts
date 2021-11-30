@@ -5,7 +5,6 @@ import browser from 'webextension-polyfill';
 import {
   address as addressLDK,
   networks,
-  isBlindedUtxo,
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
@@ -13,7 +12,8 @@ import {
   masterPubKeyRestorerFromEsplora,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
-  utxoWithPrevout,
+  isUnblindedOutput,
+  getAsset,
 } from 'ldk';
 import {
   fetchAssetsFromTaxi,
@@ -91,17 +91,10 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {
-        let utxo = utxoIterator?.value;
-        if (!isBlindedUtxo(utxo)) {
-          if (utxo.asset) {
-            const assets = getState().assets;
-            await fetchAssetInfos(utxo.asset, explorer, assets, dispatch).catch(console.error);
-          }
-
-          if (!utxo.prevout) {
-            utxo = await utxoWithPrevout(utxo, explorer);
-          }
-
+        const utxo = utxoIterator.value;
+        if (isUnblindedOutput(utxo)) {
+          const assets = getState().assets;
+          await fetchAssetInfos(getAsset(utxo), explorer, assets, dispatch).catch(console.error);
           dispatch(addUtxo(utxo));
         }
         utxoIterator = await utxos.next();

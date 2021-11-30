@@ -9,7 +9,7 @@ export interface IApp {
   explorerByNetwork: Record<Network, ExplorerURLs>;
 }
 
-export type ExplorerType = 'Blockstream' | 'Mempool' | 'Nigiri' | 'Custom';
+export type ExplorerType = 'Blockstream' | 'Testnet' | 'Mempool' | 'Nigiri' | 'Custom';
 
 export interface ExplorerURLs {
   type: ExplorerType;
@@ -21,6 +21,12 @@ export const BlockstreamExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
   electrsURL: 'https://blockstream.info/liquid',
   esploraURL: 'https://blockstream.info/liquid/api',
+};
+
+export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {
+  type: 'Testnet',
+  electrsURL: 'https://blockstream.info/liquidtestnet',
+  esploraURL: 'https://blockstream.info/liquidtestnet/api',
 };
 
 export const NigiriDefaultExplorerURLs: ExplorerURLs = {

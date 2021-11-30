@@ -1,4 +1,4 @@
-import { IdentityType, MasterPublicKey, StateRestorerOpts, UtxoInterface } from 'ldk';
+import { IdentityType, MasterPublicKey, StateRestorerOpts, UnblindedOutput } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
 
 export function masterPubKeySelector(state: RootReducerState): MasterPublicKey {
@@ -20,7 +20,7 @@ export function restorerOptsSelector(state: RootReducerState): StateRestorerOpts
   return state.wallet.restorerOpts;
 }
 
-export function utxosSelector(state: RootReducerState): UtxoInterface[] {
+export function utxosSelector(state: RootReducerState): UnblindedOutput[] {
   return Object.values(state.wallet.utxoMap);
 }
 
