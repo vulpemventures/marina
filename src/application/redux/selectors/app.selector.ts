@@ -1,5 +1,15 @@
+import { ExplorerURLs } from '../../../domain/app';
+import { appInitState } from '../reducers/app-reducer';
 import { RootReducerState } from './../../../domain/common';
 
-export function getExplorerURLSelector(state: RootReducerState) {
-  return state.app.explorerByNetwork[state.app.network].esploraURL;
+function getExplorerURLSelector(state: RootReducerState): ExplorerURLs {
+  return state.app.explorerByNetwork[state.app.network] ?? appInitState.explorerByNetwork[state.app.network];
+}
+
+export function selectEsploraURL(state: RootReducerState): string {
+  return getExplorerURLSelector(state).esploraURL;
+}
+
+export function selectElectrsURL(state: RootReducerState): string {
+  return getExplorerURLSelector(state).electrsURL;
 }

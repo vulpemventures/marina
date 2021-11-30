@@ -7,15 +7,14 @@ import { blindAndSignPset, broadcastTx, decrypt, mnemonicWallet } from '../../..
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
 import { IWallet } from '../../../domain/wallet';
-import { Network } from '../../../domain/network';
 import { createPassword } from '../../../domain/password';
 import { match } from '../../../domain/password-hash';
-import { StateRestorerOpts } from 'ldk';
+import { NetworkString, StateRestorerOpts } from 'ldk';
 import { extractErrorMessage } from '../../utils/error';
 
 export interface EndOfFlowProps {
   wallet: IWallet;
-  network: Network;
+  network: NetworkString;
   restorerOpts: StateRestorerOpts;
   pset?: string;
   explorerURL: string;

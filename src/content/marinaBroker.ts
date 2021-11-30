@@ -207,7 +207,7 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
           const coins = utxosSelector(state);
-          const results: Utxo[] = coins.map(unblindedOutput => ({
+          const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
             asset: getAsset(unblindedOutput),

@@ -3,6 +3,7 @@ import cx from 'classnames';
 import browser from 'webextension-polyfill';
 import { useSelector } from 'react-redux';
 import { RootReducerState } from '../../domain/common';
+import { selectElectrsURL } from '../../application/redux/selectors/app.selector';
 
 interface Props {
   assetBalance: string | number;
@@ -21,9 +22,7 @@ const Balance: React.FC<Props> = ({
   assetTicker,
   assetHash,
 }) => {
-  const electrsURL = useSelector(
-    (state: RootReducerState) => state.app.explorerByNetwork[state.app.network].electrsURL
-  );
+  const electrsURL = useSelector(selectElectrsURL);
 
   const handleOpenExplorer = () =>
     browser.tabs.create({

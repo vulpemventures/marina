@@ -15,14 +15,14 @@ import {
   CoinSelectorErrorFn,
   isUnblindedOutput,
   getSats,
-  getAsset
+  getAsset,
+  NetworkString,
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { Network } from '../../domain/network';
 import { fetchTopupFromTaxi } from './taxi';
 import { taxiURL } from './constants';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
@@ -75,7 +75,11 @@ function outputIndexFromAddress(tx: string, addressToFind: string): number {
   return utx.outs.findIndex((out) => out.script.equals(recipientScript));
 }
 
-const throwErrorCoinSelector: CoinSelectorErrorFn = (asset: string, amount: number, has: number) => {
+const throwErrorCoinSelector: CoinSelectorErrorFn = (
+  asset: string,
+  amount: number,
+  has: number
+) => {
   throw new Error(`Not enought coins to select ${amount} ${asset} (has: ${has})`);
 };
 
@@ -118,7 +122,7 @@ export async function createSendPset(
   unspents: UnblindedOutput[],
   feeAssetHash: string,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  network: Network,
+  network: NetworkString,
   data?: DataRecipient[]
 ): Promise<string> {
   const coinSelector = greedyCoinSelector();
@@ -274,7 +278,11 @@ function getTransfers(
   };
 
   for (const input of vin) {
-    if (input.prevout && isUnblindedOutput(input.prevout) && walletScripts.includes(input.prevout.prevout.script.toString('hex'))) {
+    if (
+      input.prevout &&
+      isUnblindedOutput(input.prevout) &&
+      walletScripts.includes(input.prevout.prevout.script.toString('hex'))
+    ) {
       addToTransfers(-1 * getSats(input.prevout), getAsset(input.prevout));
     }
   }
@@ -290,7 +298,10 @@ function getTransfers(
       continue;
     }
 
-    if (isUnblindedOutput(output) && walletScripts.includes(output.prevout.script.toString('hex'))) {
+    if (
+      isUnblindedOutput(output) &&
+      walletScripts.includes(output.prevout.script.toString('hex'))
+    ) {
       addToTransfers(getSats(output), getAsset(output));
     }
   }

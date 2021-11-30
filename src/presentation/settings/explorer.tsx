@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import ShellPopUp from '../components/shell-popup';
 import { useDispatch, useSelector } from 'react-redux';
-import { Network } from '../../domain/network';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { RootReducerState } from '../../domain/common';
 import { setExplorer } from '../../application/redux/actions/app';
@@ -14,8 +13,9 @@ import {
   NigiriDefaultExplorerURLs,
 } from '../../domain/app';
 import SettingsCustomExplorerForm from '../components/explorer-custom-form';
+import { NetworkString } from 'ldk';
 
-function explorerTypesForNetwork(network: Network): ExplorerType[] {
+function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
   switch (network) {
     case 'liquid':
       return ['Blockstream', 'Mempool', 'Custom'];

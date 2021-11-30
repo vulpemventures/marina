@@ -39,7 +39,6 @@ import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
 import { addTx, updateTxs } from '../application/redux/actions/transaction';
-import { getExplorerURLSelector } from '../application/redux/selectors/app.selector';
 import {
   RESET_APP,
   RESET_CONNECT,
@@ -48,6 +47,7 @@ import {
   RESET_WALLET,
 } from '../application/redux/actions/action-types';
 import { flushTx } from '../application/redux/actions/connect';
+import { selectEsploraURL } from '../application/redux/selectors/app.selector';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
@@ -65,7 +65,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       const addrs = (await xpub.getAddresses()).reverse();
       if (addrs.length === 0) return;
 
-      const explorer = getExplorerURLSelector(getState());
+      const explorer = selectEsploraURL(getState());
 
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
@@ -155,7 +155,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
         address.toOutputScript(a.confidentialAddress).toString('hex')
       );
 
-      const explorer = getExplorerURLSelector(getState());
+      const explorer = selectEsploraURL(getState());
 
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
@@ -252,7 +252,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
     const state = getState();
     const { isLoading, gapLimit } = state.wallet.deepRestorer;
     const toRestore = masterPubKeySelector(state);
-    const explorer = getExplorerURLSelector(getState());
+    const explorer = selectEsploraURL(getState());
     if (isLoading) return;
 
     try {

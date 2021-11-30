@@ -10,10 +10,15 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type { AddressInterface, Mnemonic, RecipientInterface, UnblindedOutput } from 'ldk';
+import type {
+  AddressInterface,
+  Mnemonic,
+  NetworkString,
+  RecipientInterface,
+  UnblindedOutput,
+} from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
-import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { mnemonicWallet } from '../../application/utils/restorer';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
@@ -163,7 +168,7 @@ async function makeTransaction(
   mnemonic: Mnemonic,
   coins: UnblindedOutput[],
   connectDataTx: ConnectData['tx'],
-  network: Network,
+  network: NetworkString,
   dispatch: ProxyStoreDispatch
 ) {
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)

@@ -1,12 +1,12 @@
+import { NetworkString } from 'ldk';
 import { IError } from './common';
-import { Network } from './network';
 
 export interface IApp {
   errors?: Record<string, IError>;
   isAuthenticated: boolean;
   isOnboardingCompleted: boolean;
-  network: Network;
-  explorerByNetwork: Record<Network, ExplorerURLs>;
+  network: NetworkString;
+  explorerByNetwork: Record<NetworkString, ExplorerURLs>;
 }
 
 export type ExplorerType = 'Blockstream' | 'Testnet' | 'Mempool' | 'Nigiri' | 'Custom';

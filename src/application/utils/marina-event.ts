@@ -1,5 +1,4 @@
-import { Network } from './../../domain/network';
-import { Outpoint, toOutpoint, UnblindedOutput } from 'ldk';
+import { NetworkString, Outpoint, toOutpoint, UnblindedOutput } from 'ldk';
 import { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
 import { MarinaEventType } from 'marina-provider';
 
@@ -11,9 +10,9 @@ export interface MarinaEvent<P extends any> {
 export type NewUtxoMarinaEvent = MarinaEvent<UnblindedOutput>;
 export type SpentUtxoMarinaEvent = MarinaEvent<Outpoint>;
 export type NewTxMarinaEvent = MarinaEvent<TxDisplayInterface>;
-export type EnabledMarinaEvent = MarinaEvent<{ network: Network; hostname: string }>;
-export type DisabledMarinaEvent = MarinaEvent<{ network: Network; hostname: string }>;
-export type NetworkMarinaEvent = MarinaEvent<Network>;
+export type EnabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
+export type DisabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
+export type NetworkMarinaEvent = MarinaEvent<NetworkString>;
 
 // compare tx history states and return marina events
 export function compareTxsHistoryState(
@@ -60,13 +59,13 @@ export function compareUtxoState(
 }
 
 export function compareEnabledWebsites(
-  oldState: Record<Network, string[]>,
-  newState: Record<Network, string[]>,
+  oldState: Record<NetworkString, string[]>,
+  newState: Record<NetworkString, string[]>,
   currentHostname: string
 ) {
   const events: (DisabledMarinaEvent | EnabledMarinaEvent)[] = [];
 
-  for (const network of ['liquid', 'regtest'] as Network[]) {
+  for (const network of ['liquid', 'regtest', 'testnet'] as NetworkString[]) {
     const oldHostnames = oldState[network];
     const newHostnames = newState[network];
 
@@ -86,7 +85,10 @@ export function compareEnabledWebsites(
   return events.filter((ev) => ev.payload.hostname === currentHostname);
 }
 
-export function networkChange(oldNetwork: Network, newNetwork: Network): NetworkMarinaEvent[] {
+export function networkChange(
+  oldNetwork: NetworkString,
+  newNetwork: NetworkString
+): NetworkMarinaEvent[] {
   if (oldNetwork !== newNetwork) return [{ type: 'NETWORK', payload: newNetwork }];
   else return [];
 }

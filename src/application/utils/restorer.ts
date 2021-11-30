@@ -1,4 +1,10 @@
-import { StateRestorerOpts, Mnemonic, IdentityType, mnemonicRestorerFromState, NetworkString } from 'ldk';
+import {
+  StateRestorerOpts,
+  Mnemonic,
+  IdentityType,
+  mnemonicRestorerFromState,
+  NetworkString,
+} from 'ldk';
 import { Address } from '../../domain/address';
 
 export function getStateRestorerOptsFromAddresses(addresses: Address[]): StateRestorerOpts {

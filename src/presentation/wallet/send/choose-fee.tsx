@@ -4,6 +4,7 @@ import {
   greedyCoinSelector,
   masterPubKeyRestorerFromState,
   MasterPublicKey,
+  NetworkString,
   RecipientInterface,
   StateRestorerOpts,
   walletFromCoins,
@@ -33,14 +34,13 @@ import {
   setFeeChangeAddress,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
 
 export interface ChooseFeeProps {
-  network: Network;
+  network: NetworkString;
   assets: IAssets;
   changeAddress?: Address;
   sendAmount: number;

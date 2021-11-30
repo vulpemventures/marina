@@ -3,9 +3,10 @@ import { RootReducerState } from '../../../domain/common';
 import PaymentSuccessView, {
   PaymentSuccessProps,
 } from '../../../presentation/wallet/send/payment-success';
+import { selectElectrsURL } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): PaymentSuccessProps => ({
-  electrsExplorerURL: state.app.explorerByNetwork[state.app.network].electrsURL,
+  electrsExplorerURL: selectElectrsURL(state),
 });
 
 const PaymentSuccess = connect(mapStateToProps)(PaymentSuccessView);

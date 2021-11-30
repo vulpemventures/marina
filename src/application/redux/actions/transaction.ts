@@ -11,7 +11,7 @@ import {
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
 import { TxDisplayInterface } from '../../../domain/transaction';
-import { Network } from '../../../domain/network';
+import { NetworkString } from 'ldk';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -53,7 +53,7 @@ export function setPset(pset: string): AnyAction {
   };
 }
 
-export function addTx(tx: TxDisplayInterface, network: Network): AnyAction {
+export function addTx(tx: TxDisplayInterface, network: NetworkString): AnyAction {
   return {
     type: ADD_TX,
     payload: { tx, network },
