@@ -19,7 +19,7 @@ import {
   NetworkString,
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
-import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
+import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
@@ -152,7 +152,7 @@ export async function createSendPset(
       changeAddressGetter
     );
 
-    const emptyTx = new Psbt({ network: networkFromString(network) }).toBase64();
+    const emptyTx = new Psbt({ network: networks[network] }).toBase64();
     let pset = addToTx(
       emptyTx,
       selection.selectedUtxos,

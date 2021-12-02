@@ -7,23 +7,24 @@ import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
-import { decrypt, networkFromString } from '../../application/utils';
+import { decrypt } from '../../application/utils';
 import { signMessageWithMnemonic } from '../../application/utils/message';
-import { Network } from 'liquidjs-lib';
+import { networks } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
 import { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
 import { SignedMessage } from 'marina-provider';
+import { NetworkString } from 'ldk';
 
 function signMsgWithPassword(
   message: string,
   encryptedMnemonic: string,
   password: string,
-  network: Network
+  network: NetworkString
 ): Promise<SignedMessage> {
   try {
     const mnemonic = decrypt(encryptedMnemonic, password);
-    return signMessageWithMnemonic(message, mnemonic, network);
+    return signMessageWithMnemonic(message, mnemonic, networks[network]);
   } catch (e: any) {
     throw new Error('Invalid password');
   }
@@ -71,7 +72,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
         connectData.msg.message,
         encryptedMnemonic,
         password,
-        networkFromString(network)
+        network
       );
       await sendResponseMessage(true, signedMsg);
       window.close();
