@@ -18,5 +18,9 @@ export interface IWallet {
     isLoading: boolean;
     error?: string;
   };
+  updaterLoaders: {
+    utxos: boolean;
+    txs: boolean;
+  };
   isVerified: boolean;
 }

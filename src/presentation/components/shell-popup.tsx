@@ -7,6 +7,7 @@ import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { updateUtxos } from '../../application/redux/actions/utxos';
 import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
 import { RootReducerState } from '../../domain/common';
+import { selectUpdaterLoaders } from '../../application/redux/selectors/wallet.selector';
 
 interface Props {
   btnDisabled?: boolean;
@@ -30,6 +31,8 @@ const ShellPopUp: React.FC<Props> = ({
 }: Props) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+
+  const updaterLoaders = useSelector(selectUpdaterLoaders);
 
   const deepRestorerLoading = useSelector(
     (state: RootReducerState) => state.wallet.deepRestorer.isLoading
@@ -97,7 +100,7 @@ const ShellPopUp: React.FC<Props> = ({
           <button onClick={goToHome}>
             <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
           </button>
-          {deepRestorerLoading && <span className="animate-pulse">Deep Restorer loading... </span>}
+          {(deepRestorerLoading || updaterLoaders.utxos || updaterLoaders.txs) && loader()}
           <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>
@@ -121,6 +124,16 @@ const ShellPopUp: React.FC<Props> = ({
       <ModalMenu isOpen={isMenuModalOpen} handleClose={closeMenuModal} />
     </div>
   );
+
+  function getLoaderText(): string | undefined {
+    if (deepRestorerLoading) return 'Deep Restorer loading...';
+    if (updaterLoaders.txs || updaterLoaders.utxos) return 'Updater loading...';
+    return undefined;
+  }
+
+  function loader(): JSX.Element {
+    return <span className="animate-pulse">{getLoaderText()}</span>;
+  }
 };
 
 export default ShellPopUp;

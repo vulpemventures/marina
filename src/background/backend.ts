@@ -25,6 +25,8 @@ import {
 import {
   setDeepRestorerError,
   setDeepRestorerIsLoading,
+  setTransactionsUpdaterLoader,
+  setUtxosUpdaterLoader,
   setWalletData,
 } from '../application/redux/actions/wallet';
 import { createAddress } from '../domain/address';
@@ -62,6 +64,7 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       const { wallet, app } = state;
       if (!app.isAuthenticated) return;
 
+      dispatch(setUtxosUpdaterLoader(true));
       const xpub = await getRestoredXPub(state);
       const addrs = (await xpub.getAddresses()).reverse();
       if (addrs.length === 0) return;
@@ -117,6 +120,8 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       }
     } catch (error) {
       console.error(`fetchAndUpdateUtxos error: ${error}`);
+    } finally {
+      dispatch(setUtxosUpdaterLoader(false));
     }
   };
 }
@@ -149,6 +154,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       const state = getState();
       const { app, txsHistory } = state;
       if (!app.isAuthenticated) return;
+
+      dispatch(setTransactionsUpdaterLoader(true))
       // Initialize txs to txsHistory shallow clone
       const pubKeyWallet = await getRestoredXPub(state);
       const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
@@ -198,6 +205,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       }
     } catch (error) {
       console.error(`fetchAndUnblindTxs: ${error}`);
+    } finally {
+      dispatch(setTransactionsUpdaterLoader(false));
     }
   };
 }

@@ -27,3 +27,7 @@ export function utxosSelector(state: RootReducerState): UnblindedOutput[] {
 export function hasMnemonicSelector(state: RootReducerState): boolean {
   return state.wallet.encryptedMnemonic !== '' && state.wallet.encryptedMnemonic !== undefined;
 }
+
+export function selectUpdaterLoaders(state: RootReducerState): { utxos: boolean; txs: boolean } {
+  return state.wallet.updaterLoaders;
+}

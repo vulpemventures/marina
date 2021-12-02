@@ -15,10 +15,11 @@ const formattedNetworks = availableNetworks.map((n) => formatNetwork(n));
 
 export interface SettingsNetworksProps {
   restorationLoading: boolean;
+  updaterIsloading: boolean;
   error?: string;
 }
 
-const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, error }) => {
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, updaterIsloading, error }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const network = useSelector((state: RootReducerState) => state.app.network);
@@ -47,13 +48,14 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoad
     >
       <p className="font-regular my-8 text-base text-left">Select the network</p>
       <Select
-        disabled={isLoading || restorationLoading}
+        disabled={isLoading || restorationLoading || updaterIsloading}
         list={formattedNetworks}
         selected={selectedNetwork}
         onSelect={setSelectedValue}
       />
 
       {(isLoading || restorationLoading) && <p className="m-2">{'loading'}...</p>}
+      {updaterIsloading && <p className="m-2">{'updater is loading'}...</p>}
       {error && <p className="m-2">{error}</p>}
     </ShellPopUp>
   );

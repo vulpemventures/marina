@@ -19,6 +19,10 @@ export const walletInitState: IWallet = {
     gapLimit: 20,
     isLoading: false,
   },
+  updaterLoaders: {
+    utxos: false,
+    txs: false
+  },
   isVerified: false,
 };
 
@@ -120,6 +124,16 @@ export function walletReducer(
         ...state,
         isVerified: true,
       };
+    }
+      
+    case ACTION_TYPES.SET_UPDATER_LOADER: {
+      return {
+        ...state,
+        updaterLoaders: {
+          ...state.updaterLoaders,
+          [payload.loader]: payload.isLoading,
+        }
+      }
     }
 
     default: {
