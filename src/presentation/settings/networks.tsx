@@ -19,7 +19,11 @@ export interface SettingsNetworksProps {
   error?: string;
 }
 
-const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, updaterIsloading, error }) => {
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
+  restorationLoading,
+  updaterIsloading,
+  error,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const network = useSelector((state: RootReducerState) => state.app.network);

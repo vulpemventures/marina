@@ -58,10 +58,12 @@ export function setVerified(): AnyAction {
   return { type: SET_VERIFIED };
 }
 
-const setUpdaterLoader = (loader: string) => (isLoading: boolean): AnyAction => ({
-  type: SET_UPDATER_LOADER,
-  payload: { loader, isLoading },
-});
+const setUpdaterLoader =
+  (loader: string) =>
+  (isLoading: boolean): AnyAction => ({
+    type: SET_UPDATER_LOADER,
+    payload: { loader, isLoading },
+  });
 
 export const setUtxosUpdaterLoader = setUpdaterLoader('utxos');
 export const setTransactionsUpdaterLoader = setUpdaterLoader('transactions');

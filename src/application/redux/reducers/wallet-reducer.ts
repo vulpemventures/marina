@@ -21,7 +21,7 @@ export const walletInitState: IWallet = {
   },
   updaterLoaders: {
     utxos: false,
-    txs: false
+    txs: false,
   },
   isVerified: false,
 };
@@ -125,15 +125,15 @@ export function walletReducer(
         isVerified: true,
       };
     }
-      
+
     case ACTION_TYPES.SET_UPDATER_LOADER: {
       return {
         ...state,
         updaterLoaders: {
           ...state.updaterLoaders,
           [payload.loader]: payload.isLoading,
-        }
-      }
+        },
+      };
     }
 
     default: {

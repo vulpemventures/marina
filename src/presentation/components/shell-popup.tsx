@@ -32,6 +32,7 @@ const ShellPopUp: React.FC<Props> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
+  const network = useSelector((state: RootReducerState) => state.app.network);
   const updaterLoaders = useSelector(selectUpdaterLoaders);
 
   const deepRestorerLoading = useSelector(
@@ -96,10 +97,20 @@ const ShellPopUp: React.FC<Props> = ({
   return (
     <div id="shell-popup" className="grid h-screen">
       <header>
-        <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center justify-between h-12 border-b-2">
-          <button onClick={goToHome}>
-            <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
-          </button>
+        <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center content-center justify-between h-12 border-b-2">
+          <div className="flex flex-row items-center">
+            <button onClick={goToHome}>
+              <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
+            </button>
+
+            {network === 'testnet' && (
+              <div>
+                <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
+                  Testnet
+                </span>
+              </div>
+            )}
+          </div>
           {(deepRestorerLoading || updaterLoaders.utxos || updaterLoaders.txs) && loader()}
           <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />

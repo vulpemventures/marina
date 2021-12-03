@@ -155,7 +155,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       const { app, txsHistory } = state;
       if (!app.isAuthenticated) return;
 
-      dispatch(setTransactionsUpdaterLoader(true))
+      dispatch(setTransactionsUpdaterLoader(true));
       // Initialize txs to txsHistory shallow clone
       const pubKeyWallet = await getRestoredXPub(state);
       const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
