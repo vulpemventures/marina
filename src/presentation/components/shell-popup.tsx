@@ -137,7 +137,7 @@ const ShellPopUp: React.FC<Props> = ({
   );
 
   function getLoaderText(): string | undefined {
-    if (deepRestorerLoading) return 'Deep Restorer loading...';
+    if (deepRestorerLoading) return 'Restoring...';
     if (updaterLoaders.txs || updaterLoaders.utxos) return 'Updating...';
     return undefined;
   }
