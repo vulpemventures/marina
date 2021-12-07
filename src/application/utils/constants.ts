@@ -32,6 +32,7 @@ const assetHashToImagePath = new Map<string, string>()
   .set('ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2', USDT_IMG) // mainnet USDt
   .set('f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958', USDT_IMG) // testnet USDt
   .set('0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a', LCAD_IMG) // mainnet LCAD
+  .set('ac3e0ff248c5051ffd61e00155b7122e5ebc04fd397a0ecbdd4f4e4a56232926', LCAD_IMG) // testnet LCAD
   .set('78557eb89ea8439dc1a519f4eb0267c86b261068648a0f84a5c6b55ca39b66f1', JADE_IMG);
 
 blockstreamAssetHashes.forEach((assetHash: string) => {
