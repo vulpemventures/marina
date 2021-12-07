@@ -8,6 +8,7 @@ import { updateUtxos } from '../../application/redux/actions/utxos';
 import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
 import { RootReducerState } from '../../domain/common';
 import { selectUpdaterLoaders } from '../../application/redux/selectors/wallet.selector';
+import { formatNetwork } from '../utils';
 
 interface Props {
   btnDisabled?: boolean;
@@ -103,10 +104,10 @@ const ShellPopUp: React.FC<Props> = ({
               <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
             </button>
 
-            {network === 'testnet' && (
+            {network !== 'liquid' && (
               <div>
                 <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
-                  Testnet
+                  {formatNetwork(network)}
                 </span>
               </div>
             )}
