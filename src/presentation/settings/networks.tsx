@@ -10,7 +10,7 @@ import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
 
-const availableNetworks: NetworkString[] = ['liquid', 'regtest', 'testnet'];
+const availableNetworks: NetworkString[] = ['liquid', 'testnet', 'regtest'];
 const formattedNetworks = availableNetworks.map((n) => formatNetwork(n));
 
 export interface SettingsNetworksProps {
