@@ -23,7 +23,7 @@ import {
   restorerOptsSelector,
   utxosSelector,
 } from '../application/redux/selectors/wallet.selector';
-import { masterPubKeyRestorerFromState, MasterPublicKey } from 'ldk';
+import { masterPubKeyRestorerFromState, MasterPublicKey, getAsset, getSats } from 'ldk';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
@@ -32,7 +32,7 @@ import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
 import { walletTransactions } from '../application/redux/selectors/transaction.selector';
 import { balancesSelector } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
-import { Balance, Recipient } from 'marina-provider';
+import { Balance, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
@@ -207,7 +207,13 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
           const coins = utxosSelector(state);
-          return successMsg(coins);
+          const results: Utxo[] = coins.map((unblindedOutput) => ({
+            txid: unblindedOutput.txid,
+            vout: unblindedOutput.vout,
+            asset: getAsset(unblindedOutput),
+            value: getSats(unblindedOutput),
+          }));
+          return successMsg(results);
         }
 
         case Marina.prototype.getBalances.name: {

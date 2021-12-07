@@ -2,20 +2,20 @@ import { FormikProps, withFormik } from 'formik';
 import React from 'react';
 import { setExplorer } from '../../application/redux/actions/app';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { Network } from '../../domain/network';
 import Button from './button';
 import Input from './input';
 import * as Yup from 'yup';
+import { NetworkString } from 'ldk';
 
 interface SettingsExplorerFormValues {
   esploraURL: string;
   electrsURL: string;
-  network: Network;
+  network: NetworkString;
 }
 
 interface SettingsExplorerFormProps {
   dispatch: ProxyStoreDispatch;
-  network: Network;
+  network: NetworkString;
   onDone: () => void;
 }
 

@@ -4,6 +4,7 @@ import {
   greedyCoinSelector,
   masterPubKeyRestorerFromState,
   MasterPublicKey,
+  NetworkString,
   RecipientInterface,
   StateRestorerOpts,
   walletFromCoins,
@@ -17,10 +18,9 @@ import {
   feeLevelToSatsPerByte,
   fetchTopupFromTaxi,
   createTaxiTxFromTopup,
-  imgPathMapMainnet,
-  imgPathMapRegtest,
   lbtcAssetByNetwork,
   taxiURL,
+  getAssetImage,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -33,14 +33,13 @@ import {
   setFeeChangeAddress,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
 
 export interface ChooseFeeProps {
-  network: Network;
+  network: NetworkString;
   assets: IAssets;
   changeAddress?: Address;
   sendAmount: number;
@@ -160,9 +159,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const changeGetter = (asset: string) => {
       if (asset === sendAsset) {
-        return changeAddress?.value;
+        return changeAddress?.value ?? '';
       }
-      return nextChangeAddr?.value;
+      return nextChangeAddr?.value ?? '';
     };
 
     const tx: string = createTaxiTxFromTopup(
@@ -225,16 +224,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   };
 
   const getFeeCurrencyImgPath = (): string => {
-    let img: string = imgPathMapMainnet[feeCurrency || ''];
-    if (network === 'regtest') {
-      img = imgPathMapRegtest[assets[feeCurrency || '']?.ticker];
-    }
-
-    if (!img) {
-      return imgPathMapMainnet[''];
-    }
-
-    return img;
+    return getAssetImage(feeCurrency || '');
   };
 
   return (

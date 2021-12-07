@@ -1,16 +1,22 @@
-import { createNetwork } from '../../../domain/network';
-import { BlockstreamExplorerURLs, IApp, NigiriDefaultExplorerURLs } from '../../../domain/app';
+import {
+  BlockstreamExplorerURLs,
+  BlockstreamTestnetExplorerURLs,
+  IApp,
+  NigiriDefaultExplorerURLs,
+} from '../../../domain/app';
 import { IError } from '../../../domain/common';
 import { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
+import { NetworkString } from 'ldk';
 
 export const appInitState: IApp = {
   isOnboardingCompleted: false,
   isAuthenticated: false,
-  network: createNetwork(process.env.NETWORK || 'liquid'),
+  network: (process.env.NETWORK as NetworkString) || 'liquid',
   explorerByNetwork: {
     regtest: NigiriDefaultExplorerURLs,
     liquid: BlockstreamExplorerURLs,
+    testnet: BlockstreamTestnetExplorerURLs,
   },
 };
 

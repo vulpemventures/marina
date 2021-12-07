@@ -1,4 +1,4 @@
-import { UtxoInterface, StateRestorerOpts } from 'ldk';
+import { UnblindedOutput, StateRestorerOpts } from 'ldk';
 import { IError } from './common';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
@@ -11,12 +11,16 @@ export interface IWallet {
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
   passwordHash: PasswordHash;
-  utxoMap: Record<string, UtxoInterface>;
+  utxoMap: Record<string, UnblindedOutput>;
   restorerOpts: StateRestorerOpts;
   deepRestorer: {
     gapLimit: number;
     isLoading: boolean;
     error?: string;
+  };
+  updaterLoaders: {
+    utxos: boolean;
+    txs: boolean;
   };
   isVerified: boolean;
 }

@@ -4,7 +4,6 @@ import { IApp } from './app';
 import { OnboardingState } from '../application/redux/reducers/onboarding-reducer';
 import { TransactionState } from '../application/redux/reducers/transaction-reducer';
 import { TxsHistoryByNetwork } from './transaction';
-import { Action } from 'redux';
 import { TaxiState } from '../application/redux/reducers/taxi-reducer';
 import { IAssets } from './assets';
 
@@ -17,10 +16,6 @@ export interface RootReducerState {
   wallet: IWallet;
   connect: ConnectData;
   taxi: TaxiState;
-}
-
-export interface ActionWithPayload<T> extends Action<string> {
-  payload: T;
 }
 
 export interface IError {

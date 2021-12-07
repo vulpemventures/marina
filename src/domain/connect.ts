@@ -1,9 +1,8 @@
-import { Network } from './network';
-import { RecipientInterface } from 'ldk';
+import { NetworkString, RecipientInterface } from 'ldk';
 import { DataRecipient } from 'marina-provider';
 
 export type ConnectData = {
-  enabledSites: Record<Network, string[]>;
+  enabledSites: Record<NetworkString, string[]>;
   hostnameSelected: string;
   tx?: {
     recipients?: RecipientInterface[];
@@ -23,6 +22,7 @@ export function newEmptyConnectData(): ConnectData {
     enabledSites: {
       liquid: [],
       regtest: [],
+      testnet: [],
     },
     hostnameSelected: '',
   };

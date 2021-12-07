@@ -5,7 +5,6 @@ import browser from 'webextension-polyfill';
 import {
   address as addressLDK,
   networks,
-  isBlindedUtxo,
   BlindingKeyGetter,
   address,
   fetchAndUnblindTxsGenerator,
@@ -13,7 +12,8 @@ import {
   masterPubKeyRestorerFromEsplora,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
-  utxoWithPrevout,
+  isUnblindedOutput,
+  getAsset,
 } from 'ldk';
 import {
   fetchAssetsFromTaxi,
@@ -25,6 +25,8 @@ import {
 import {
   setDeepRestorerError,
   setDeepRestorerIsLoading,
+  setTransactionsUpdaterLoader,
+  setUtxosUpdaterLoader,
   setWalletData,
 } from '../application/redux/actions/wallet';
 import { createAddress } from '../domain/address';
@@ -39,7 +41,6 @@ import { ThunkAction } from 'redux-thunk';
 import { AnyAction, Dispatch } from 'redux';
 import { IAssets } from '../domain/assets';
 import { addTx, updateTxs } from '../application/redux/actions/transaction';
-import { getExplorerURLSelector } from '../application/redux/selectors/app.selector';
 import {
   RESET_APP,
   RESET_CONNECT,
@@ -48,6 +49,8 @@ import {
   RESET_WALLET,
 } from '../application/redux/actions/action-types';
 import { flushTx } from '../application/redux/actions/connect';
+import { selectEsploraURL } from '../application/redux/selectors/app.selector';
+import { extractErrorMessage } from '../presentation/utils/error';
 
 const UPDATE_ALARM = 'UPDATE_ALARM';
 
@@ -61,11 +64,12 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       const { wallet, app } = state;
       if (!app.isAuthenticated) return;
 
+      dispatch(setUtxosUpdaterLoader(true));
       const xpub = await getRestoredXPub(state);
       const addrs = (await xpub.getAddresses()).reverse();
       if (addrs.length === 0) return;
 
-      const explorer = getExplorerURLSelector(getState());
+      const explorer = selectEsploraURL(getState());
 
       const currentOutpoints = Object.values(wallet.utxoMap).map(({ txid, vout }) => ({
         txid,
@@ -91,17 +95,10 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
 
       let utxoIterator = await utxos.next();
       while (!utxoIterator.done) {
-        let utxo = utxoIterator?.value;
-        if (!isBlindedUtxo(utxo)) {
-          if (utxo.asset) {
-            const assets = getState().assets;
-            await fetchAssetInfos(utxo.asset, explorer, assets, dispatch).catch(console.error);
-          }
-
-          if (!utxo.prevout) {
-            utxo = await utxoWithPrevout(utxo, explorer);
-          }
-
+        const utxo = utxoIterator.value;
+        if (isUnblindedOutput(utxo)) {
+          const assets = getState().assets;
+          await fetchAssetInfos(getAsset(utxo), explorer, assets, dispatch).catch(console.error);
           dispatch(addUtxo(utxo));
         }
         utxoIterator = await utxos.next();
@@ -123,6 +120,8 @@ export function fetchAndUpdateUtxos(): ThunkAction<void, RootReducerState, any, 
       }
     } catch (error) {
       console.error(`fetchAndUpdateUtxos error: ${error}`);
+    } finally {
+      dispatch(setUtxosUpdaterLoader(false));
     }
   };
 }
@@ -155,6 +154,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       const state = getState();
       const { app, txsHistory } = state;
       if (!app.isAuthenticated) return;
+
+      dispatch(setTransactionsUpdaterLoader(true));
       // Initialize txs to txsHistory shallow clone
       const pubKeyWallet = await getRestoredXPub(state);
       const addressInterfaces = (await pubKeyWallet.getAddresses()).reverse();
@@ -162,7 +163,7 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
         address.toOutputScript(a.confidentialAddress).toString('hex')
       );
 
-      const explorer = getExplorerURLSelector(getState());
+      const explorer = selectEsploraURL(getState());
 
       const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
         try {
@@ -204,6 +205,8 @@ export function updateTxsHistory(): ThunkAction<void, RootReducerState, any, Any
       }
     } catch (error) {
       console.error(`fetchAndUnblindTxs: ${error}`);
+    } finally {
+      dispatch(setTransactionsUpdaterLoader(false));
     }
   };
 }
@@ -259,7 +262,7 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
     const state = getState();
     const { isLoading, gapLimit } = state.wallet.deepRestorer;
     const toRestore = masterPubKeySelector(state);
-    const explorer = getExplorerURLSelector(getState());
+    const explorer = selectEsploraURL(getState());
     if (isLoading) return;
 
     try {
@@ -285,8 +288,8 @@ export function deepRestorer(): ThunkAction<void, RootReducerState, any, AnyActi
       dispatch(fetchAndSetTaxiAssets());
 
       dispatch(setDeepRestorerError(undefined));
-    } catch (err: any) {
-      dispatch(setDeepRestorerError(err.message || err));
+    } catch (err) {
+      dispatch(setDeepRestorerError(new Error(extractErrorMessage(err))));
     } finally {
       dispatch(setDeepRestorerIsLoading(false));
     }

@@ -1,8 +1,7 @@
-import { RecipientInterface } from 'ldk';
+import { NetworkString, RecipientInterface } from 'ldk';
 import { DataRecipient } from 'marina-provider';
 import { AnyAction } from 'redux';
 import { ConnectData } from '../../../domain/connect';
-import { Network } from '../../../domain/network';
 import {
   DISABLE_WEBSITE,
   ENABLE_WEBSITE,
@@ -14,14 +13,14 @@ import {
   SET_TX_DATA,
 } from './action-types';
 
-export function enableWebsite(hostname: string, network: Network): AnyAction {
+export function enableWebsite(hostname: string, network: NetworkString): AnyAction {
   return {
     type: ENABLE_WEBSITE,
     payload: { hostname, network },
   };
 }
 
-export function disableWebsite(hostname: string, network: Network): AnyAction {
+export function disableWebsite(hostname: string, network: NetworkString): AnyAction {
   return {
     type: DISABLE_WEBSITE,
     payload: { hostname, network },
@@ -58,7 +57,7 @@ export function setTxData(
   hostname: string,
   recipients: RecipientInterface[],
   feeAssetHash: string,
-  network: Network,
+  network: NetworkString,
   data: DataRecipient[]
 ): AnyAction {
   return {
@@ -67,14 +66,14 @@ export function setTxData(
   };
 }
 
-export function selectHostname(hostname: string, network: Network): AnyAction {
+export function selectHostname(hostname: string, network: NetworkString): AnyAction {
   return {
     type: SELECT_HOSTNAME,
     payload: { hostname, network },
   };
 }
 
-export function flushSelectedHostname(network: Network): AnyAction {
+export function flushSelectedHostname(network: NetworkString): AnyAction {
   return {
     type: FLUSH_SELECTED_HOSTNAME,
     payload: { network },

@@ -1,11 +1,11 @@
+import { NetworkString } from 'ldk';
 import { connect } from 'react-redux';
 import { RootReducerState } from '../../../domain/common';
 import { ConnectData } from '../../../domain/connect';
-import { Network } from '../../../domain/network';
 
 export interface WithConnectDataProps {
   connectData: ConnectData;
-  network: Network;
+  network: NetworkString;
 }
 
 const mapStateToProps = (state: RootReducerState): WithConnectDataProps => ({

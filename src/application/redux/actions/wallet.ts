@@ -7,10 +7,10 @@ import {
   NEW_ADDRESS_SUCCESS,
   NEW_CHANGE_ADDRESS_SUCCESS,
   SET_VERIFIED,
+  SET_UPDATER_LOADER,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
-import { extractErrorMessage } from '../../../presentation/utils/error';
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {
@@ -44,7 +44,7 @@ export function setDeepRestorerGapLimit(gapLimit: number): AnyAction {
 export function setDeepRestorerError(error: Error | undefined): AnyAction {
   return {
     type: SET_DEEP_RESTORER_ERROR,
-    payload: { error: extractErrorMessage(error) },
+    payload: { error: error ? error.message : undefined },
   };
 }
 
@@ -57,3 +57,13 @@ export function startDeepRestorer(): AnyAction {
 export function setVerified(): AnyAction {
   return { type: SET_VERIFIED };
 }
+
+const setUpdaterLoader =
+  (loader: string) =>
+  (isLoading: boolean): AnyAction => ({
+    type: SET_UPDATER_LOADER,
+    payload: { loader, isLoading },
+  });
+
+export const setUtxosUpdaterLoader = setUpdaterLoader('utxos');
+export const setTransactionsUpdaterLoader = setUpdaterLoader('transactions');

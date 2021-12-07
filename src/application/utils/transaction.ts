@@ -1,28 +1,28 @@
 import {
   address as addrLDK,
   addToTx,
-  BlindedOutputInterface,
   ChangeAddressFromAssetGetter,
   CoinSelector,
   createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
   greedyCoinSelector,
-  InputInterface,
-  isBlindedOutputInterface,
   Mnemonic,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
-  UnblindedOutputInterface,
-  UtxoInterface,
+  UnblindedOutput,
+  CoinSelectorErrorFn,
+  isUnblindedOutput,
+  getSats,
+  getAsset,
+  NetworkString,
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
-import { blindingKeyFromAddress, isConfidentialAddress, networkFromString } from './address';
+import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { Network } from '../../domain/network';
 import { fetchTopupFromTaxi } from './taxi';
 import { taxiURL } from './constants';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
@@ -75,6 +75,14 @@ function outputIndexFromAddress(tx: string, addressToFind: string): number {
   return utx.outs.findIndex((out) => out.script.equals(recipientScript));
 }
 
+const throwErrorCoinSelector: CoinSelectorErrorFn = (
+  asset: string,
+  amount: number,
+  has: number
+) => {
+  throw new Error(`Not enought coins to select ${amount} ${asset} (has: ${has})`);
+};
+
 /**
  * Create tx from a Topup object.
  * @param taxiTopup the topup describing the taxi response.
@@ -85,12 +93,12 @@ function outputIndexFromAddress(tx: string, addressToFind: string): number {
  */
 export function createTaxiTxFromTopup(
   taxiTopup: Topup.AsObject,
-  unspents: UtxoInterface[],
+  unspents: UnblindedOutput[],
   recipients: RecipientInterface[],
   coinSelector: CoinSelector,
   changeAddressGetter: ChangeAddressFromAssetGetter
 ): string {
-  const { selectedUtxos, changeOutputs } = coinSelector(
+  const { selectedUtxos, changeOutputs } = coinSelector(throwErrorCoinSelector)(
     unspents,
     recipients.concat({
       value: taxiTopup.assetAmount,
@@ -111,10 +119,10 @@ export function createTaxiTxFromTopup(
  */
 export async function createSendPset(
   recipients: RecipientInterface[],
-  unspents: UtxoInterface[],
+  unspents: UnblindedOutput[],
   feeAssetHash: string,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  network: Network,
+  network: NetworkString,
   data?: DataRecipient[]
 ): Promise<string> {
   const coinSelector = greedyCoinSelector();
@@ -124,7 +132,7 @@ export async function createSendPset(
       data ? data.map((d) => ({ ...d, address: '' })) : []
     );
 
-    const { selectedUtxos, changeOutputs } = coinSelector(
+    const { selectedUtxos, changeOutputs } = coinSelector(throwErrorCoinSelector)(
       unspents,
       targetRecipients,
       changeAddressGetter
@@ -138,13 +146,13 @@ export async function createSendPset(
       feeAssetHash
     );
 
-    const selection = coinSelector(
+    const selection = coinSelector(throwErrorCoinSelector)(
       unspents,
       targetRecipients.concat([feeOutput]),
       changeAddressGetter
     );
 
-    const emptyTx = new Psbt({ network: networkFromString(network) }).toBase64();
+    const emptyTx = new Psbt({ network: networks[network] }).toBase64();
     let pset = addToTx(
       emptyTx,
       selection.selectedUtxos,
@@ -248,8 +256,8 @@ function txTypeFromTransfer(transfers: Transfer[]): TxType {
  * @param walletScripts
  */
 function getTransfers(
-  vin: Array<InputInterface>,
-  vout: Array<BlindedOutputInterface | UnblindedOutputInterface>,
+  vin: TxInterface['vin'],
+  vout: TxInterface['vout'],
   walletScripts: string[],
   network: networks.Network
 ): Transfer[] {
@@ -270,8 +278,12 @@ function getTransfers(
   };
 
   for (const input of vin) {
-    if (!isBlindedOutputInterface(input.prevout) && walletScripts.includes(input.prevout.script)) {
-      addToTransfers(-1 * input.prevout.value, input.prevout.asset);
+    if (
+      input.prevout &&
+      isUnblindedOutput(input.prevout) &&
+      walletScripts.includes(input.prevout.prevout.script.toString('hex'))
+    ) {
+      addToTransfers(-1 * getSats(input.prevout), getAsset(input.prevout));
     }
   }
 
@@ -279,16 +291,18 @@ function getTransfers(
   let feeAsset = network.assetHash;
 
   for (const output of vout) {
-    if (output.script === '') {
+    if (output.prevout.script.length === 0) {
       // handle the fee output
-      const feeOutput = output as UnblindedOutputInterface;
-      feeAmount = feeOutput.value;
-      feeAsset = feeOutput.asset;
+      feeAmount = getSats(output);
+      feeAsset = getAsset(output);
       continue;
     }
 
-    if (!isBlindedOutputInterface(output) && walletScripts.includes(output.script)) {
-      addToTransfers(output.value, output.asset);
+    if (
+      isUnblindedOutput(output) &&
+      walletScripts.includes(output.prevout.script.toString('hex'))
+    ) {
+      addToTransfers(getSats(output), getAsset(output));
     }
   }
 

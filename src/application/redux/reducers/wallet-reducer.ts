@@ -3,7 +3,7 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { IWallet } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 
 export const walletInitState: IWallet = {
   restorerOpts: {
@@ -18,6 +18,10 @@ export const walletInitState: IWallet = {
   deepRestorer: {
     gapLimit: 20,
     isLoading: false,
+  },
+  updaterLoaders: {
+    utxos: false,
+    txs: false,
   },
   isVerified: false,
 };
@@ -47,7 +51,9 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedInternalIndex: (state.restorerOpts.lastUsedInternalIndex ?? -1) + 1,
+          lastUsedInternalIndex: state.restorerOpts.lastUsedInternalIndex
+            ? state.restorerOpts.lastUsedInternalIndex + 1
+            : 0,
         },
       };
     }
@@ -57,7 +63,9 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedExternalIndex: (state.restorerOpts.lastUsedExternalIndex ?? -1) + 1,
+          lastUsedExternalIndex: state.restorerOpts.lastUsedExternalIndex
+            ? state.restorerOpts.lastUsedExternalIndex + 1
+            : 0,
         },
       };
     }
@@ -67,7 +75,7 @@ export function walletReducer(
         ...state,
         utxoMap: {
           ...state.utxoMap,
-          [toStringOutpoint(payload.utxo as UtxoInterface)]: payload.utxo,
+          [toStringOutpoint(payload.utxo as UnblindedOutput)]: payload.utxo,
         },
       };
     }
@@ -115,6 +123,16 @@ export function walletReducer(
       return {
         ...state,
         isVerified: true,
+      };
+    }
+
+    case ACTION_TYPES.SET_UPDATER_LOADER: {
+      return {
+        ...state,
+        updaterLoaders: {
+          ...state.updaterLoaders,
+          [payload.loader]: payload.isLoading,
+        },
       };
     }
 

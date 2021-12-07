@@ -2,15 +2,14 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
-import { imgPathMapMainnet, imgPathMapRegtest } from '../../../application/utils';
+import { getAssetImage } from '../../../application/utils';
 import { fromSatoshi } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import AddressAmountEnhancedForm from '../../components/address-amount-form';
-import { MasterPublicKey, StateRestorerOpts } from 'ldk';
-import { Network } from '../../../domain/network';
+import { MasterPublicKey, NetworkString, StateRestorerOpts } from 'ldk';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset, IAssets } from '../../../domain/assets';
 import { DEFAULT_ROUTE } from '../../routes/constants';
@@ -18,7 +17,7 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 export interface AddressAmountProps {
   masterPubKey: MasterPublicKey;
   restorerOpts: StateRestorerOpts;
-  network: Network;
+  network: NetworkString;
   transaction: TransactionState;
   balances: BalancesByAsset;
   transactionAsset: Asset;
@@ -52,11 +51,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
       <Balance
         assetHash={transaction.sendAsset}
         assetBalance={fromSatoshi(balances[transaction.sendAsset] ?? 0, transactionAsset.precision)}
-        assetImgPath={
-          network === 'regtest'
-            ? imgPathMapRegtest[transactionAsset.ticker] ?? imgPathMapRegtest['']
-            : imgPathMapMainnet[transaction.sendAsset] ?? imgPathMapMainnet['']
-        }
+        assetImgPath={getAssetImage(transaction.sendAsset)}
         assetTicker={transactionAsset.ticker}
         className="mt-4"
       />
