@@ -40,7 +40,7 @@ const SeedRevealView: React.FC<SeedRevealProps> = ({ onboardingMnemonic, isFromP
               Remind me later
             </Button>
           )}
-          <Button className="w-52" onClick={handleNext}>
+          <Button className="w-36" onClick={handleNext}>
             Next
           </Button>
         </div>
