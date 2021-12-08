@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
-import { CosignerExtraData, WalletState } from '../../../domain/wallet';
+import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
 import {
   AccountID,
   MainAccountID,
-  MultisigAccountData,
-  RestrictedAssetAccountID,
 } from '../../../domain/account';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { Network } from '../../../domain/network';
@@ -23,13 +21,8 @@ export const walletInitState: WalletState = {
       lastUsedInternalIndex: 0,
     },
   },
-  [RestrictedAssetAccountID]: undefined,
   unspentsAndTransactions: {
     [MainAccountID]: {
-      utxosMap: {},
-      transactions: { regtest: {}, liquid: {} },
-    },
-    [RestrictedAssetAccountID]: {
       utxosMap: {},
       transactions: { regtest: {}, liquid: {} },
     },
@@ -110,21 +103,6 @@ export function walletReducer(
           [MainAccountID]: {
             utxosMap: {},
             transactions: { regtest: {}, liquid: {} },
-          },
-        },
-      };
-    }
-
-    case ACTION_TYPES.SET_RESTRICTED_ASSET_ACCOUNT: {
-      const data = payload.multisigAccountData as MultisigAccountData<CosignerExtraData>;
-      return {
-        ...state,
-        restrictedAssetAccount: data,
-        unspentsAndTransactions: {
-          ...state.unspentsAndTransactions,
-          [RestrictedAssetAccountID]: {
-            utxosMap: {},
-            transactions: { liquid: {}, regtest: {} },
           },
         },
       };

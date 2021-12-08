@@ -15,15 +15,14 @@ export interface ResponseMessage {
 }
 
 // basically the name of the connect/* files
-export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend' | 'allow-coin';
+export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend';
 
 export function isPopupName(name: any): name is PopupName {
   return (
     name === 'enable' ||
     name === 'sign-msg' ||
     name === 'sign-pset' ||
-    name === 'spend' ||
-    name === 'allow-coin'
+    name === 'spend'
   );
 }
 

@@ -7,24 +7,13 @@ import {
   INCREMENT_EXTERNAL_ADDRESS_INDEX,
   INCREMENT_INTERNAL_ADDRESS_INDEX,
   SET_VERIFIED,
-  SET_RESTRICTED_ASSET_ACCOUNT,
   SET_RESTORER_OPTS,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
 import { extractErrorMessage } from '../../../presentation/utils/error';
-import { AccountID, MultisigAccountData } from '../../../domain/account';
-import { CosignerExtraData } from '../../../domain/wallet';
+import { AccountID } from '../../../domain/account';
 import { StateRestorerOpts } from 'ldk';
-
-export function setRestrictedAssetData(
-  multisigAccountData: MultisigAccountData<CosignerExtraData>
-) {
-  return {
-    type: SET_RESTRICTED_ASSET_ACCOUNT,
-    payload: { multisigAccountData },
-  };
-}
 
 export function setWalletData(walletData: WalletData): AnyAction {
   return {

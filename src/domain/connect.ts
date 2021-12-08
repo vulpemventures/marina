@@ -21,9 +21,6 @@ export type ConnectData = {
     hostname?: string;
     message?: string;
   };
-  allowance?: {
-    requestParam: AssetAmount[];
-  };
 };
 
 export function newEmptyConnectData(): ConnectData {

@@ -25,11 +25,10 @@ import { blindAndSignPset, createSendPset } from '../../application/utils/transa
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import {
   selectMainAccount,
-  selectRestrictedAssetAccount,
   selectUtxos,
 } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { Account, MainAccountID, RestrictedAssetAccountID } from '../../domain/account';
+import { Account, MainAccountID } from '../../domain/account';
 import { lbtcAssetByNetwork } from '../../application/utils';
 
 export interface SpendPopupResponse {
@@ -40,10 +39,9 @@ export interface SpendPopupResponse {
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
   const mainAccount = useSelector(selectMainAccount);
-  const restrictedAssetAccount = useSelector(selectRestrictedAssetAccount);
 
   const network = useSelector((state: RootReducerState) => state.app.network);
-  const coins = useSelector(selectUtxos(MainAccountID, RestrictedAssetAccountID));
+  const coins = useSelector(selectUtxos(MainAccountID));
 
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -84,9 +82,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
       const { getter, changeAddresses } = await changeAddressGetter(mainAccount, assets, dispatch);
 
-      const accounts: Account[] = restrictedAssetAccount
-        ? [mainAccount, restrictedAssetAccount]
-        : [mainAccount];
+      const accounts: Account[] = [mainAccount];
       const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(password)));
       const signedTxHex = await makeTransaction(
         identities,

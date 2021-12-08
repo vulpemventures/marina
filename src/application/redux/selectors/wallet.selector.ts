@@ -2,8 +2,6 @@ import { MasterPublicKey, UtxoInterface } from 'ldk';
 import {
   AccountID,
   createMnemonicAccount,
-  createMultisigAccount,
-  MultisigAccount,
   MnemonicAccount,
   MainAccountID,
   Account,
@@ -52,23 +50,9 @@ export function selectMainAccount(state: RootReducerState): MnemonicAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }
 
-export function selectRestrictedAssetAccount(state: RootReducerState): MultisigAccount | undefined {
-  if (!state.wallet.restrictedAssetAccount) return undefined;
-
-  return createMultisigAccount(
-    state.wallet.mainAccount.encryptedMnemonic,
-    state.wallet.restrictedAssetAccount
-  );
-}
 
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
   const mainAccount = selectMainAccount(state);
-  const restrictedAssetAccount = selectRestrictedAssetAccount(state);
-
-  if (restrictedAssetAccount) {
-    return [mainAccount, restrictedAssetAccount];
-  }
-
   return [mainAccount];
 };
 
@@ -78,15 +62,17 @@ export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
 
 export const selectAccount = (
   accountID: AccountID
-): ((state: RootReducerState) => Account | undefined) =>
-  accountID === MainAccountID ? selectMainAccount : selectRestrictedAssetAccount;
-
-export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {
-  // TODO hardcode restricted asset hashes
-  if (asset === 'restricted_asset') {
-    return selectRestrictedAssetAccount(state);
+): ((state: RootReducerState) => Account | undefined) => {
+  if (accountID === MainAccountID) {
+    return selectMainAccount;
   }
 
+  // TODO multiple accounts: we need to modify the way we select account via ID
+  return () => undefined;
+}
+
+// By definition, each asset hash should be associated with a single Account
+export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {
   return selectMainAccount(state);
 };
 

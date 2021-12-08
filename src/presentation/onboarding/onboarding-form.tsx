@@ -88,24 +88,6 @@ const OnboardingFormView = (props: FormikProps<OnboardingFormValues>) => {
         )}
       </div>
 
-      <div className={cx({ 'mb-12': !errors.makeSecurityAccount || !touched.makeSecurityAccount })}>
-        <label htmlFor="makeSecurityAccount" className="text-grayLight block text-base">
-          <input
-            className="focus:ring-primary text-primary border-grayLight w-4 h-4 mr-2 text-base rounded"
-            checked={values.makeSecurityAccount}
-            id="makeSecurityAccount"
-            name="makeSecurityAccount"
-            onChange={handleChange}
-            onBlur={handleBlur}
-            type="checkbox"
-          />
-          {'Add a security account powered by CoinOS'}
-        </label>
-        {errors.makeSecurityAccount && touched.makeSecurityAccount && (
-          <p className="text-red h-10 mt-2 text-xs">{errors.makeSecurityAccount}</p>
-        )}
-      </div>
-
       <div className={cx({ 'mb-12': !errors.acceptTerms || !touched.acceptTerms })}>
         <label htmlFor="acceptTerms" className="text-grayLight block text-base">
           <input

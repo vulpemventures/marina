@@ -1,7 +1,6 @@
 // Wallet
 export const WALLET_SET_DATA = 'WALLET_SET_DATA';
 export const SET_RESTORER_OPTS = 'SET_RESTORER_OPTS';
-export const SET_RESTRICTED_ASSET_ACCOUNT = 'SET_RESTRICTED_ASSET_ACCOUNT';
 export const ADD_UTXO = 'ADD_UTXO';
 export const DELETE_UTXO = 'DELETE_UTXO';
 export const FLUSH_UTXOS = 'FLUSH_UTXOS';
@@ -67,9 +66,6 @@ export const START_DEEP_RESTORATION = 'START_DEEP_RESTORATION';
 
 // Reset
 export const RESET = 'RESET';
-
-// Allowance
-export const ALLOW_COIN = 'ALLOW_COIN';
 
 // Updater taskes
 export const UPDATE_TASK = 'UPDATE_TASK';

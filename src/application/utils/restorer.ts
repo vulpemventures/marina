@@ -12,7 +12,6 @@ import {
   restorerFromState,
   AddressInterface,
 } from 'ldk';
-import { Cosigner, MultisigWithCosigner } from '../../domain/cosigner';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
 import { MasterXPub } from '../../domain/master-extended-pub';
 import { Network } from '../../domain/network';
@@ -86,32 +85,6 @@ export function newMasterPublicKey(
       masterBlindingKey: masterBlindingKey,
     },
   });
-}
-
-// create a Multisig Identity
-// restore it using StateRestorerOpts
-export function restoredMultisig(
-  signer: HDSignerMultisig,
-  cosigners: CosignerMultisig[],
-  requiredSignatures: number,
-  restorerOpts: StateRestorerOpts,
-  cosigner: Cosigner,
-  network: Network
-) {
-  const multisigID = new MultisigWithCosigner(
-    {
-      chain: network,
-      type: IdentityType.Multisig,
-      opts: {
-        requiredSignatures,
-        signer,
-        cosigners,
-      },
-    },
-    cosigner
-  );
-
-  return restorerFromState<MultisigWithCosigner>(multisigID)(restorerOpts);
 }
 
 // create a MultisigWatchOnly Identity

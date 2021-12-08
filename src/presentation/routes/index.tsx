@@ -37,10 +37,6 @@ import {
   BACKUP_UNLOCK_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
-  PAIR_COSIGNER_ROUTE,
-  SETTINGS_COSIGNERS_ROUTE,
-  PAIR_SUCCESS_COSIGNER_ROUTE,
-  CONNECT_ALLOW_COIN_ROUTE,
 } from './constants';
 
 // Connect
@@ -48,7 +44,6 @@ import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
 import ConnectSignTransaction from '../connect/sign-pset';
 import ConnectSignMsg from '../connect/sign-msg';
-import ConnectAllowCoin from '../connect/allow-coin';
 
 // Onboarding
 import Welcome from '../onboarding/welcome';
@@ -83,9 +78,6 @@ import SettingsExplorer from '../settings/explorer';
 import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
-import PairCosigner from '../../application/redux/containers/pair.container';
-import SettingsCosigner from '../../application/redux/containers/cosigners.container';
-import PairSuccess from '../cosigner/pair-success';
 import ReceiveView from '../wallet/receive';
 
 const Routes: React.FC = () => {
@@ -127,7 +119,6 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} component={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />
-      <ProtectedRoute exact path={SETTINGS_COSIGNERS_ROUTE} component={SettingsCosigner} />
       <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
@@ -136,10 +127,6 @@ const Routes: React.FC = () => {
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SIGN_PSET_ROUTE} component={ConnectSignTransaction} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
-      <Route exact path={CONNECT_ALLOW_COIN_ROUTE} component={ConnectAllowCoin} />
-
-      <ProtectedRoute exact path={PAIR_COSIGNER_ROUTE} component={PairCosigner} />
-      <ProtectedRoute exact path={PAIR_SUCCESS_COSIGNER_ROUTE} component={PairSuccess} />
     </Switch>
   );
 };

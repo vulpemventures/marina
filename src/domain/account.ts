@@ -1,41 +1,27 @@
 import {
-  DEFAULT_BASE_DERIVATION_PATH,
-  HDSignerMultisig,
   IdentityInterface,
-  IdentityType,
   MasterPublicKey,
   Mnemonic,
-  Multisig,
-  MultisigWatchOnly,
   StateRestorerOpts,
-  XPub,
-  multisigFromEsplora,
   Restorer,
   EsploraRestorerOpts,
   masterPubKeyRestorerFromEsplora,
-  multisigWatchOnlyFromEsplora,
 } from 'ldk';
 import { decrypt } from '../application/utils';
 import {
-  getStateRestorerOptsFromAddresses,
   newMasterPublicKey,
-  newMultisigWatchOnly,
   restoredMasterPublicKey,
   restoredMnemonic,
-  restoredMultisig,
-  restoredWatchOnlyMultisig,
 } from '../application/utils/restorer';
-import { MockedCosigner, MultisigWithCosigner } from './cosigner';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
 import { Network } from './network';
-import { CosignerExtraData } from './wallet';
 
 export const MainAccountID = 'mainAccount';
 export const RestrictedAssetAccountID = 'restrictedAssetAccount';
 
-export type AccountID = 'mainAccount' | 'restrictedAssetAccount';
+export type AccountID = 'mainAccount';
 
 /**
  * Account domain represents the keys of the User
@@ -79,95 +65,6 @@ export function createMnemonicAccount(
     getDeepRestorer: () =>
       masterPubKeyRestorerFromEsplora(
         newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
-      ),
-  };
-}
-
-// MultisigAccount aims to handle account with cosigner(s)
-// use master extended public keys from cosigners and xpub derived from master private key (mnemonic)
-export type MultisigAccount = Account<MultisigWithCosigner, MultisigWatchOnly>;
-
-export interface MultisigAccountData<ExtraDataT = undefined> {
-  baseDerivationPath: string; // we'll use the MainAccount in order to generate
-  signerXPub: XPub;
-  cosignerXPubs: XPub[];
-  restorerOpts: StateRestorerOpts;
-  requiredSignature: number;
-  extraData: ExtraDataT;
-  network: Network;
-}
-
-// create account data
-// restore the Identity from esplora URL in order to compute the StateRestorerOpts
-export async function create2of2MultisigAccountData<T>(
-  signer: HDSignerMultisig,
-  cosignerXPub: XPub,
-  network: Network,
-  extraData: T,
-  explorerURL: string
-): Promise<MultisigAccountData<T>> {
-  const multisigID = new Multisig({
-    chain: network,
-    type: IdentityType.Multisig,
-    opts: {
-      requiredSignatures: 2,
-      signer,
-      cosigners: [cosignerXPub],
-    },
-  });
-
-  const restoredFromExplorer = await multisigFromEsplora(multisigID)({
-    esploraURL: explorerURL,
-    gapLimit: 30,
-  });
-  const addresses = await restoredFromExplorer.getAddresses();
-  const restorerOpts = getStateRestorerOptsFromAddresses(addresses);
-
-  return {
-    baseDerivationPath: signer.baseDerivationPath || DEFAULT_BASE_DERIVATION_PATH,
-    signerXPub: multisigID.getXPub(),
-    cosignerXPubs: [cosignerXPub],
-    requiredSignature: 2,
-    extraData,
-    restorerOpts,
-    network,
-  };
-}
-
-export function createMultisigAccount(
-  encryptedMnemonic: EncryptedMnemonic,
-  data: MultisigAccountData<CosignerExtraData>
-): MultisigAccount {
-  return {
-    getAccountID: () => RestrictedAssetAccountID,
-    getSigningIdentity: (password: string) =>
-      restoredMultisig(
-        {
-          mnemonic: decrypt(encryptedMnemonic, password),
-          baseDerivationPath: data.baseDerivationPath,
-        },
-        data.cosignerXPubs,
-        data.requiredSignature,
-        data.restorerOpts,
-        new MockedCosigner(data.network),
-        data.network
-      ),
-    getWatchIdentity: () =>
-      restoredWatchOnlyMultisig(
-        data.signerXPub,
-        data.cosignerXPubs,
-        data.requiredSignature,
-        data.restorerOpts,
-        data.network
-      ),
-    getDeepRestorer: () =>
-      multisigWatchOnlyFromEsplora(
-        newMultisigWatchOnly(
-          data.network,
-          data.requiredSignature,
-          data.cosignerXPubs,
-          data.signerXPub
-        )
       ),
   };
 }

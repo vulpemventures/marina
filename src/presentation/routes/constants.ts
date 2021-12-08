@@ -7,7 +7,6 @@ const CONNECT_ENABLE_ROUTE = makeConnectRoute('enable');
 const CONNECT_SPEND_ROUTE = makeConnectRoute('spend');
 const CONNECT_SIGN_PSET_ROUTE = makeConnectRoute('sign-pset');
 const CONNECT_SIGN_MSG_ROUTE = makeConnectRoute('sign-msg');
-const CONNECT_ALLOW_COIN_ROUTE = makeConnectRoute('allow-coin');
 
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
@@ -50,11 +49,6 @@ const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
-const SETTINGS_COSIGNERS_ROUTE = '/settings/info/cosigners';
-
-// Cosigner Opt in
-const PAIR_COSIGNER_ROUTE = '/cosigner/pair';
-const PAIR_SUCCESS_COSIGNER_ROUTE = '/cosigner/pair/success';
 
 export {
   //Connect
@@ -62,7 +56,6 @@ export {
   CONNECT_SPEND_ROUTE,
   CONNECT_SIGN_PSET_ROUTE,
   CONNECT_SIGN_MSG_ROUTE,
-  CONNECT_ALLOW_COIN_ROUTE,
   // Onboarding
   INITIALIZE_WELCOME_ROUTE,
   INITIALIZE_CREATE_PASSWORD_ROUTE,
@@ -97,7 +90,4 @@ export {
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
-  SETTINGS_COSIGNERS_ROUTE,
-  PAIR_COSIGNER_ROUTE,
-  PAIR_SUCCESS_COSIGNER_ROUTE,
 };

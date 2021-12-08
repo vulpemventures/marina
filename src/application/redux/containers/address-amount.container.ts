@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { MainAccountID, RestrictedAssetAccountID } from '../../../domain/account';
+import { MainAccountID } from '../../../domain/account';
 import { assetGetterFromIAssets } from '../../../domain/assets';
 import { RootReducerState } from '../../../domain/common';
 import AddressAmountView, {
@@ -13,7 +13,7 @@ const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
   network: state.app.network,
   transaction: state.transaction,
   assets: state.assets,
-  balances: selectBalances(MainAccountID, RestrictedAssetAccountID)(state),
+  balances: selectBalances(MainAccountID)(state),
   transactionAsset: assetGetterFromIAssets(state.assets)(state.transaction.sendAsset),
 });
 

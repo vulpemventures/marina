@@ -9,7 +9,7 @@ import {
   BlindingKeyGetter,
   fetchAndUnblindTxsGenerator,
 } from 'ldk';
-import { put, call, fork, all, take, AllEffect, takeEvery } from 'redux-saga/effects';
+import { put, call, fork, all, take, AllEffect } from 'redux-saga/effects';
 import { buffers, Channel, channel } from '@redux-saga/core';
 import { Account, AccountID } from '../../../domain/account';
 import { Network } from '../../../domain/network';
@@ -27,7 +27,7 @@ import {
   selectNetworkSaga,
 } from './utils';
 import { ADD_UTXO, UPDATE_TASK } from '../actions/action-types';
-import { Asset, IAssets } from '../../../domain/assets';
+import { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';

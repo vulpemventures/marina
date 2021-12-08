@@ -8,13 +8,11 @@ import AssetListScreen from '../../components/asset-list-screen';
 export interface ReceiveSelectAssetProps {
   network: Network;
   assets: Array<Asset & { assetHash: string }>;
-  restrictedAssetSetup: boolean;
 }
 
 const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({
   network,
   assets,
-  restrictedAssetSetup,
 }) => {
   const history = useHistory();
 
@@ -27,7 +25,7 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({
       title="Receive Asset"
       onClick={handleSend}
       network={network}
-      assets={[UnknowAsset].concat(assets).concat(restrictedAssetSetup ? [RestrictedAsset] : [])}
+      assets={[UnknowAsset].concat(assets)}
     />
   );
 };
@@ -37,13 +35,6 @@ const UnknowAsset: Asset & { assetHash: string } = {
   name: 'New asset',
   precision: 8,
   assetHash: 'new_asset',
-};
-
-const RestrictedAsset: Asset & { assetHash: string } = {
-  ticker: 'Any',
-  name: 'Restricted assets',
-  precision: 8,
-  assetHash: 'restricted_asset',
 };
 
 export default ReceiveSelectAssetView;
