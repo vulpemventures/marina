@@ -23,10 +23,7 @@ import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
-import {
-  selectMainAccount,
-  selectUtxos,
-} from '../../application/redux/selectors/wallet.selector';
+import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
 import { Account, MainAccountID } from '../../domain/account';
 import { lbtcAssetByNetwork } from '../../application/utils';

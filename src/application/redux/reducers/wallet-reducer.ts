@@ -4,10 +4,7 @@ import * as ACTION_TYPES from '../actions/action-types';
 import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { UtxoInterface } from 'ldk';
-import {
-  AccountID,
-  MainAccountID,
-} from '../../../domain/account';
+import { AccountID, MainAccountID } from '../../../domain/account';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { Network } from '../../../domain/network';
 

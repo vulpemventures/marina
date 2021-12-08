@@ -10,10 +10,7 @@ export interface ReceiveSelectAssetProps {
   assets: Array<Asset & { assetHash: string }>;
 }
 
-const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({
-  network,
-  assets,
-}) => {
+const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets }) => {
   const history = useHistory();
 
   const handleSend = (asset: string) => {

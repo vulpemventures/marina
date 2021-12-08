@@ -50,7 +50,6 @@ export function selectMainAccount(state: RootReducerState): MnemonicAccount {
   return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
 }
 
-
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
   const mainAccount = selectMainAccount(state);
   return [mainAccount];
@@ -69,7 +68,7 @@ export const selectAccount = (
 
   // TODO multiple accounts: we need to modify the way we select account via ID
   return () => undefined;
-}
+};
 
 // By definition, each asset hash should be associated with a single Account
 export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {

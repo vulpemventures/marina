@@ -18,12 +18,7 @@ export interface ResponseMessage {
 export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend';
 
 export function isPopupName(name: any): name is PopupName {
-  return (
-    name === 'enable' ||
-    name === 'sign-msg' ||
-    name === 'sign-pset' ||
-    name === 'spend'
-  );
+  return name === 'enable' || name === 'sign-msg' || name === 'sign-pset' || name === 'spend';
 }
 
 export function isResponseMessage(message: unknown): message is ResponseMessage {
