@@ -17,20 +17,16 @@ const SelectAction: React.FC = () => {
         }}
       >
         <h1 className="self-center text-4xl font-medium">What do you want to do?</h1>
-        <div className="grid grid-flow-row grid-cols-2 gap-20">
-          <div className="rounded-3xl flex flex-col justify-around object-contain w-64 h-64 pt-10 pb-6 pl-6 pr-6 text-center bg-white">
+        <div className="grid grid-flow-row grid-cols-2 gap-12">
+          <div className="rounded-3xl flex flex-col justify-around object-contain w-52 h-52 pt-10 pb-6 pl-6 pr-6 text-center bg-white">
             <h2 className="text-xl font-normal">{'Restore a wallet'}</h2>
             <img className="w-16 h-16 m-auto" src="/assets/images/save.png" alt="save" />
             <Button className="text-md w-40 mx-auto" onClick={handleClickRestore}>
               {'Restore'}
             </Button>
           </div>
-          <div
-            className={
-              'w-64 h-64 object-contain bg-white rounded-3xl text-center pl-6 pr-6 pb-6 pt-10 justify-around flex flex-col'
-            }
-          >
-            <h2 className="text-xl font-normal">{'Create a new wallet'}</h2>
+          <div className="rounded-3xl flex flex-col justify-around object-contain w-52 h-52 pt-10 pb-6 pl-6 pr-6 text-center bg-white">
+            <h2 className="text-xl font-normal">{'New wallet'}</h2>
             <img className="w-16 h-16 m-auto" src="/assets/images/plus.png" alt="plus" />
             <Button className="text-md w-40 mx-auto" onClick={handleClickCreate}>
               {'Create'}
