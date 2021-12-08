@@ -8,7 +8,6 @@ import {
   CosignerMultisig,
   MultisigWatchOnly,
   XPub,
-  HDSignerMultisig,
   restorerFromState,
   AddressInterface,
 } from 'ldk';

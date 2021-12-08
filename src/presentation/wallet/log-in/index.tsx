@@ -83,7 +83,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
           props.dispatch(startPeriodicUpdate()).catch(console.error);
           props.history.push(DEFAULT_ROUTE);
           setIdleAction(() => {
-            props.dispatch(stopPeriodicUpdate());
+            props.dispatch(stopPeriodicUpdate()).catch(console.error);
             props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
           });
         } else {
