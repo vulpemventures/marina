@@ -60,7 +60,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
 
       <div
         className={cx(
-          'h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-2 border-2 rounded-md shadow-md',
+          'h-44 grid w-4/5 grid-cols-3 grid-rows-4 gap-2 p-2 border-2 rounded-md shadow-md',
           {
             'border-primary': error === NULL_ERROR,
             'border-red': error !== NULL_ERROR,
@@ -69,10 +69,11 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
       >
         {selected.map((word: string, i: number) => (
           <Button
-            className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
+            className="inline-flex items-center text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
             key={i}
             isOutline={true}
             roundedMd={true}
+            isTextSmall={true}
             onClick={() => deleteSelectedWord(i)}
           >
             {word}
@@ -82,13 +83,14 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
 
       <div className="text-red h-5 m-2 font-medium">{error}</div>
 
-      <div className="h-44 grid w-4/5 grid-cols-4 grid-rows-3 gap-2 p-3">
+      <div className="h-44 grid w-4/5 grid-cols-3 grid-rows-4 gap-2 p-3">
         {wordsList.map((word, i) => (
           <Button
-            className="text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
+            className="inline-flex items-center text-grayDark hover:-translate-y-1 transition duration-300 ease-in-out transform shadow-md"
             key={i}
             isOutline={true}
             roundedMd={true}
+            isTextSmall={true}
             onClick={() => selectWord(i)}
           >
             {word}
