@@ -27,7 +27,7 @@ const Welcome: React.FC = () => {
       <div className="flex flex-col self-center justify-center align-middle">
         {hasMnemonic && <WarningDeleteMnemonic />}
         <div className="self-center">
-          <Button className="w-52 justify-center mt-3 text-lg" onClick={handleClick}>
+          <Button className="w-80 justify-center mt-3 text-lg" onClick={handleClick}>
             {hasMnemonic ? 'I understand, go ahead!' : 'Get Started'}
           </Button>
         </div>
