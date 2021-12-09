@@ -36,12 +36,17 @@ import { Task } from 'redux-saga';
 const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
 
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
-  const network = yield* selectNetworkSaga();
-  const assets = yield call(fetchAssetsFromTaxi, taxiURL[network]);
-  const currentTaxiAssets = yield* selectTaxiAssetsSaga();
-  const sortAndJoin = (a: string[]) => a.sort().join('');
-  if (sortAndJoin(assets) !== sortAndJoin(currentTaxiAssets)) {
-    yield put(setTaxiAssets(assets));
+  try {
+    const network = yield* selectNetworkSaga();
+    const assets = yield call(fetchAssetsFromTaxi, taxiURL[network]);
+    const currentTaxiAssets = yield* selectTaxiAssetsSaga();
+    const sortAndJoin = (a: string[]) => a.sort().join('');
+    if (sortAndJoin(assets) !== sortAndJoin(currentTaxiAssets)) {
+      yield put(setTaxiAssets(assets));
+    }
+  } catch (err: unknown) {
+    console.warn(`fetch taxi assets error: ${(err as Error).message || 'unknown'}`)
+    // ignore errors
   }
 }
 
