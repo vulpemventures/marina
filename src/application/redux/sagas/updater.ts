@@ -161,10 +161,10 @@ function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, A
   while (true) {
     const accountID = yield take(chanToListen);
     try {
-      yield put(pushUpdaterLoader())
+      yield put(pushUpdaterLoader());
       yield* updateTxsAndUtxos(accountID);
     } finally {
-      yield put(popUpdaterLoader())
+      yield put(popUpdaterLoader());
     }
   }
 }

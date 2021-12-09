@@ -228,16 +228,22 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   );
 };
 
-const sideEffectCoinSelector = (coinSelector: CoinSelector) => (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
-  return (errorHandler: CoinSelectorErrorFn) =>
-    (unspents: UnblindedOutput[], outputs: RecipientInterface[], changeGetter: ChangeAddressFromAssetGetter) => {
-      const result = coinSelector(errorHandler)(unspents, outputs, changeGetter)
-      sideEffect(result)
-      return result;
-    };
-};
+const sideEffectCoinSelector =
+  (coinSelector: CoinSelector) =>
+  (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
+    return (errorHandler: CoinSelectorErrorFn) =>
+      (
+        unspents: UnblindedOutput[],
+        outputs: RecipientInterface[],
+        changeGetter: ChangeAddressFromAssetGetter
+      ) => {
+        const result = coinSelector(errorHandler)(unspents, outputs, changeGetter);
+        sideEffect(result);
+        return result;
+      };
+  };
 
-const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelector())
+const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelector());
 
 function stateForRegularPSET(
   recipient: RecipientInterface,

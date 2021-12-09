@@ -212,7 +212,7 @@ export function walletReducer(
         updaterLoaders: neverNegative(state.updaterLoaders + 1),
       };
     }
-      
+
     case ACTION_TYPES.POP_UPDATER_LOADER: {
       return {
         ...state,
@@ -229,4 +229,4 @@ export function walletReducer(
 const neverNegative = (n: number) => {
   if (n < 0) return 0;
   return n;
-}
+};

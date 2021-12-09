@@ -38,7 +38,7 @@ const ShellPopUp: React.FC<Props> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const allAccountsIds = useSelector(selectAllAccountsIDs);
-  const updaterIsLoading = useSelector(selectUpdaterIsLoading)
+  const updaterIsLoading = useSelector(selectUpdaterIsLoading);
   const deepRestorerLoading = useSelector(selectDeepRestorerIsLoading);
   const network = useSelector(selectNetwork);
   // Menu modal

@@ -47,7 +47,11 @@ export function setPset(pset: string, utxos: UnblindedOutput[]): AnyAction {
   };
 }
 
-export function addTx(accountID: AccountID, tx: TxDisplayInterface, network: NetworkString): AnyAction {
+export function addTx(
+  accountID: AccountID,
+  tx: TxDisplayInterface,
+  network: NetworkString
+): AnyAction {
   return {
     type: ADD_TX,
     payload: { tx, network, accountID },

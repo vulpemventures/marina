@@ -94,5 +94,5 @@ export const selectDeepRestorerGapLimit = (state: RootReducerState) => {
 };
 
 export const selectUpdaterIsLoading = (state: RootReducerState) => {
-  return state.wallet.updaterLoaders > 0
-}
+  return state.wallet.updaterLoaders > 0;
+};

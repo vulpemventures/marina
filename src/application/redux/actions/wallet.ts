@@ -9,7 +9,7 @@ import {
   SET_VERIFIED,
   SET_RESTORER_OPTS,
   POP_UPDATER_LOADER,
-  PUSH_UPDATER_LOADER
+  PUSH_UPDATER_LOADER,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { WalletData } from '../../utils/wallet';
@@ -71,9 +71,8 @@ export function setVerified(): AnyAction {
 
 export const popUpdaterLoader = (): AnyAction => ({
   type: POP_UPDATER_LOADER,
-})
+});
 
 export const pushUpdaterLoader = (): AnyAction => ({
   type: PUSH_UPDATER_LOADER,
-})
-
+});
