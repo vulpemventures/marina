@@ -30,14 +30,10 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
 
   useEffect(() => {
     (async () => {
-      if (account === undefined) {
-        throw new Error('multisig account for restricted asset is not set');
-      }
-
       const identity = await account.getWatchIdentity();
       const addr = await identity.getNextAddress();
-      setConfidentialAddress(addr.confidentialAddress);
       await dispatch(incrementAddressIndex(account.getAccountID())); // persist address
+      setConfidentialAddress(addr.confidentialAddress);
       setTimeout(() => {
         dispatch(updateTaskAction(account.getAccountID())).catch(console.error);
       }, 2000);

@@ -8,7 +8,6 @@ import { MainAccountID } from '../../../domain/account';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => ({
   lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
-  network: state.app.network,
   transactionStep: state.transaction.step,
   assetsBalance: selectBalances(MainAccountID)(state),
   getAsset: assetGetterFromIAssets(state.assets),

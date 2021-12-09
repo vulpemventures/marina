@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
-import { setWalletData } from '../../../application/redux/actions/wallet';
+import { setVerified, setWalletData } from '../../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { setUpPopup } from '../../../application/utils/popup';
 import { createWalletFromMnemonic } from '../../../application/utils/wallet';
@@ -21,6 +21,7 @@ export interface EndOfFlowProps {
   network: NetworkString;
   explorerURL: string;
   hasMnemonicRegistered: boolean;
+  walletVerified: boolean;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
@@ -30,6 +31,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   network,
   explorerURL,
   hasMnemonicRegistered,
+  walletVerified,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +60,10 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         await dispatch(onboardingCompleted());
       }
 
+      if (walletVerified) {
+        // the user has confirmed via seed-confirm page
+        await dispatch(setVerified());
+      }
       await dispatch(flushOnboarding());
     } catch (err: unknown) {
       console.error(err);

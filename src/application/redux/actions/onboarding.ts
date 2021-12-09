@@ -2,6 +2,7 @@ import {
   ONBOARDING_FLUSH,
   ONBOARDING_SET_MNEMONIC_AND_PASSWORD,
   ONBOARDING_SET_IS_FROM_POPUP_FLOW,
+  ONBOARDING_SET_VERIFIED,
 } from './action-types';
 import { AnyAction } from 'redux';
 
@@ -24,5 +25,11 @@ export function setBackup(mnemonic: string): AnyAction {
   return {
     type: ONBOARDING_SET_IS_FROM_POPUP_FLOW,
     payload: { mnemonic },
+  };
+}
+
+export function setOnboardingVerified(): AnyAction {
+  return {
+    type: ONBOARDING_SET_VERIFIED,
   };
 }

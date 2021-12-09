@@ -113,7 +113,7 @@ export function walletReducer(
           ...state[accountID],
           restorerOpts: {
             ...state[accountID]?.restorerOpts,
-            lastUsedInternalIndex: (state[accountID]?.restorerOpts.lastUsedInternalIndex ?? 0) + 1,
+            lastUsedInternalIndex: increment(state[accountID]?.restorerOpts.lastUsedInternalIndex),
           },
         },
       };
@@ -127,7 +127,7 @@ export function walletReducer(
           ...state[accountID],
           restorerOpts: {
             ...state[accountID]?.restorerOpts,
-            lastUsedExternalIndex: (state[accountID]?.restorerOpts.lastUsedExternalIndex ?? 0) + 1,
+            lastUsedExternalIndex: increment(state[accountID]?.restorerOpts.lastUsedExternalIndex),
           },
         },
       };
@@ -229,4 +229,12 @@ export function walletReducer(
 const neverNegative = (n: number) => {
   if (n < 0) return 0;
   return n;
+};
+
+const increment = (n: number | undefined): number => {
+  if (n !== undefined && n !== null) {
+    if (n < 0) return 1; // -Infinity = 0, return 0+1=1
+    return n + 1;
+  }
+  return 0; // return 0 if null or undefined
 };

@@ -6,7 +6,7 @@ import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { setVerified } from '../../../application/redux/actions/wallet';
+import { setOnboardingVerified } from '../../../application/redux/actions/onboarding';
 
 const NULL_ERROR = '';
 const ERROR_MSG = 'Invalid mnemonic';
@@ -27,7 +27,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
 
   const handleConfirm = async () => {
     if (selected.join(' ') === mnemonic.join(' ')) {
-      await dispatch(setVerified());
+      await dispatch(setOnboardingVerified());
       history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     }
 

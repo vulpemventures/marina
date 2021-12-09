@@ -5,14 +5,14 @@ export interface OnboardingState {
   mnemonic: string;
   password: string;
   isFromPopupFlow: boolean;
-  needSecurityAccount: boolean;
+  verified: boolean;
 }
 
 const onboardingInitState: OnboardingState = {
   mnemonic: '',
   password: '',
   isFromPopupFlow: false,
-  needSecurityAccount: false,
+  verified: false,
 };
 
 export function onboardingReducer(
@@ -25,7 +25,6 @@ export function onboardingReducer(
         ...state,
         password: payload.password,
         mnemonic: payload.mnemonic,
-        needSecurityAccount: payload.needSecurityAccount,
       };
     }
 
@@ -40,6 +39,14 @@ export function onboardingReducer(
         isFromPopupFlow: true,
       };
     }
+
+    case ACTION_TYPES.ONBOARDING_SET_VERIFIED: {
+      return {
+        ...state,
+        verified: true,
+      };
+    }
+
     default:
       return state;
   }

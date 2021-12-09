@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Shell from '../../components/shell';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
+import {
+  setOnboardingVerified,
+  setPasswordAndOnboardingMnemonic,
+} from '../../../application/redux/actions/onboarding';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { setVerified } from '../../../application/redux/actions/wallet';
 import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
 
@@ -24,7 +26,7 @@ const WalletRestore: React.FC = () => {
   }) => {
     if (mnemonic === '') throw new Error('need a valid mnemonic');
     await dispatch(setPasswordAndOnboardingMnemonic(password, mnemonic, makeSecurityAccount));
-    await dispatch(setVerified());
+    await dispatch(setOnboardingVerified());
     history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   };
 

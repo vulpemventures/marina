@@ -21,11 +21,9 @@ import { PendingTxStep } from '../../../application/redux/reducers/transaction-r
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { AssetGetter } from '../../../domain/assets';
 import browser from 'webextension-polyfill';
-import { NetworkString } from 'ldk';
 
 export interface HomeProps {
   lbtcAssetHash: string;
-  network: NetworkString;
   getAsset: AssetGetter;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
@@ -37,7 +35,6 @@ const HomeView: React.FC<HomeProps> = ({
   getAsset,
   transactionStep,
   assetsBalance,
-  network,
   isWalletVerified,
 }) => {
   const history = useHistory();
