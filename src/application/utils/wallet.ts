@@ -1,7 +1,12 @@
 import { createMasterXPub, MasterXPub } from '../../domain/master-extended-pub';
 import { EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
-import { Mnemonic, IdentityType, StateRestorerOpts, mnemonicRestorerFromEsplora } from 'ldk';
-import { Network } from '../../domain/network';
+import {
+  Mnemonic,
+  IdentityType,
+  StateRestorerOpts,
+  mnemonicRestorerFromEsplora,
+  NetworkString,
+} from 'ldk';
 import { PasswordHash } from '../../domain/password-hash';
 import { Mnemonic as Mnemo } from '../../domain/mnemonic';
 import { createMasterBlindingKey, MasterBlindingKey } from '../../domain/master-blinding-key';
@@ -20,7 +25,7 @@ export interface WalletData {
 export async function createWalletFromMnemonic(
   password: Password,
   mnemonic: Mnemo,
-  chain: Network,
+  chain: NetworkString,
   esploraURL: string
 ): Promise<WalletData> {
   const toRestore = new Mnemonic({

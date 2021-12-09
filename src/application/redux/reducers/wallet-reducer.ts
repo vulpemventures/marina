@@ -3,10 +3,9 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
-import { UtxoInterface } from 'ldk';
 import { AccountID, MainAccountID } from '../../../domain/account';
 import { TxDisplayInterface } from '../../../domain/transaction';
-import { Network } from '../../../domain/network';
+import { NetworkString, UnblindedOutput } from 'ldk';
 
 export const walletInitState: WalletState = {
   [MainAccountID]: {
@@ -21,7 +20,7 @@ export const walletInitState: WalletState = {
   unspentsAndTransactions: {
     [MainAccountID]: {
       utxosMap: {},
-      transactions: { regtest: {}, liquid: {} },
+      transactions: { regtest: {}, liquid: {}, testnet: {} },
     },
   },
   passwordHash: '',
@@ -29,12 +28,13 @@ export const walletInitState: WalletState = {
     gapLimit: 20,
     isLoading: false,
   },
+  updaterLoaders: 0,
   isVerified: false,
 };
 
 const addUnspent =
   (state: WalletState) =>
-  (accountID: AccountID, utxo: UtxoInterface): WalletState => {
+  (accountID: AccountID, utxo: UnblindedOutput): WalletState => {
     return {
       ...state,
       unspentsAndTransactions: {
@@ -52,7 +52,7 @@ const addUnspent =
 
 const addTx =
   (state: WalletState) =>
-  (accountID: AccountID, tx: TxDisplayInterface, network: Network): WalletState => {
+  (accountID: AccountID, tx: TxDisplayInterface, network: NetworkString): WalletState => {
     return {
       ...state,
       unspentsAndTransactions: {
@@ -99,7 +99,7 @@ export function walletReducer(
           ...state.unspentsAndTransactions,
           [MainAccountID]: {
             utxosMap: {},
-            transactions: { regtest: {}, liquid: {} },
+            transactions: { regtest: {}, liquid: {}, testnet: {} },
           },
         },
       };
@@ -206,8 +206,27 @@ export function walletReducer(
       };
     }
 
+    case ACTION_TYPES.PUSH_UPDATER_LOADER: {
+      return {
+        ...state,
+        updaterLoaders: neverNegative(state.updaterLoaders + 1),
+      };
+    }
+      
+    case ACTION_TYPES.POP_UPDATER_LOADER: {
+      return {
+        ...state,
+        updaterLoaders: neverNegative(state.updaterLoaders - 1),
+      };
+    }
+
     default: {
       return state;
     }
   }
+}
+
+const neverNegative = (n: number) => {
+  if (n < 0) return 0;
+  return n;
 }

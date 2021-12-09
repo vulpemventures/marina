@@ -1,5 +1,4 @@
 import {
-  UtxoInterface,
   Outpoint,
   fetchAndUnblindUtxosGenerator,
   AddressInterface,
@@ -8,11 +7,13 @@ import {
   networks,
   BlindingKeyGetter,
   fetchAndUnblindTxsGenerator,
+  UnblindedOutput,
+  NetworkString,
+  getAsset,
 } from 'ldk';
 import { put, call, fork, all, take, AllEffect } from 'redux-saga/effects';
 import { buffers, Channel, channel } from '@redux-saga/core';
 import { Account, AccountID } from '../../../domain/account';
-import { Network } from '../../../domain/network';
 import { UtxosAndTxsHistory } from '../../../domain/transaction';
 import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../../utils';
 import { addTx } from '../actions/transaction';
@@ -32,6 +33,7 @@ import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
 import { UpdateTaskAction } from '../actions/updater';
+import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID
@@ -40,10 +42,8 @@ function selectUnspentsAndTransactionsSaga(
 }
 
 const putAddUtxoAction = (accountID: AccountID) =>
-  function* (utxo: UtxoInterface): SagaGenerator {
-    if (utxo.asset && utxo.value) {
-      yield put(addUtxo(accountID, utxo));
-    }
+  function* (utxo: UnblindedOutput): SagaGenerator {
+    yield put(addUtxo(accountID, utxo));
   };
 
 const putDeleteUtxoAction = (accountID: AccountID) =>
@@ -60,7 +60,7 @@ function* getAddressesFromAccount(account: Account): SagaGenerator<AddressInterf
 // it fetches and unblinds the unspents comming from the explorer
 function* utxosUpdater(
   accountID: AccountID
-): SagaGenerator<void, IteratorYieldResult<UtxoInterface>> {
+): SagaGenerator<void, IteratorYieldResult<UnblindedOutput>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
   const explorerURL = yield* selectExplorerSaga();
@@ -74,7 +74,7 @@ function* utxosUpdater(
     if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
     return skip;
   });
-  yield* processAsyncGenerator<UtxoInterface>(utxosGenerator, putAddUtxoAction(accountID));
+  yield* processAsyncGenerator<UnblindedOutput>(utxosGenerator, putAddUtxoAction(accountID));
 
   const toDelete = Object.values(utxosMap).filter(
     (utxo) => !skippedOutpoints.includes(toStringOutpoint(utxo))
@@ -85,7 +85,7 @@ function* utxosUpdater(
   }
 }
 
-const putAddTxAction = (accountID: AccountID, network: Network, walletScripts: string[]) =>
+const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
   function* (tx: TxInterface) {
     yield put(
       addTx(accountID, toDisplayTransaction(tx, walletScripts, networks[network]), network)
@@ -160,7 +160,12 @@ function* requestAssetInfoFromEsplora(assetHash: string): SagaGenerator<Asset> {
 function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, AccountID> {
   while (true) {
     const accountID = yield take(chanToListen);
-    yield* updateTxsAndUtxos(accountID);
+    try {
+      yield put(pushUpdaterLoader())
+      yield* updateTxsAndUtxos(accountID);
+    } finally {
+      yield put(popUpdaterLoader())
+    }
   }
 }
 
@@ -182,7 +187,7 @@ function* assetsWorker(assetsChan: Channel<string>): SagaGenerator<void, string>
 export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<void, AddUtxoAction> {
   while (true) {
     const action = yield take(ADD_UTXO);
-    const asset = action.payload.utxo.asset;
+    const asset = getAsset(action.payload.utxo);
     if (asset) {
       yield put(chan, asset);
     }

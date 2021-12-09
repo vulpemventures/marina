@@ -11,9 +11,9 @@ import { defaultPrecision, isValidAddressForNetwork } from '../../application/ut
 import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import { IAssets } from '../../domain/assets';
-import { Network } from '../../domain/network';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import { Account } from '../../domain/account';
+import { NetworkString } from 'ldk';
 
 interface AddressAmountFormValues {
   address: string;
@@ -30,7 +30,7 @@ interface AddressAmountFormProps {
   history: RouteComponentProps['history'];
   transaction: TransactionState;
   assets: IAssets;
-  network: Network;
+  network: NetworkString;
   account: Account;
 }
 

@@ -1,12 +1,12 @@
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 import { AnyAction } from 'redux';
 import { AccountID } from '../../../domain/account';
 import { ActionWithPayload } from '../../../domain/common';
 import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS } from './action-types';
 
-export type AddUtxoAction = ActionWithPayload<{ accountID: AccountID; utxo: UtxoInterface }>;
+export type AddUtxoAction = ActionWithPayload<{ accountID: AccountID; utxo: UnblindedOutput }>;
 
-export function addUtxo(accountID: AccountID, utxo: UtxoInterface): AddUtxoAction {
+export function addUtxo(accountID: AccountID, utxo: UnblindedOutput): AddUtxoAction {
   return { type: ADD_UTXO, payload: { accountID, utxo } };
 }
 

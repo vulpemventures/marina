@@ -11,9 +11,6 @@ export interface WalletState {
     isLoading: boolean;
     error?: string;
   };
+  updaterLoaders: number;
   isVerified: boolean;
-}
-
-export interface CosignerExtraData {
-  cosignerURL: string;
 }

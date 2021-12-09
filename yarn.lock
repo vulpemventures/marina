@@ -6078,10 +6078,10 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.3.15:
-  version "0.3.15"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.15.tgz#f3d966836a8086088406e33b090709eea915500a"
-  integrity sha512-vwMC2XyZjazz8JPY4g0dENNzgfatcjSopGm05JmePsevX9Acpue6B3oDeKC4nDKFuFIb8LvtOY4BxSxf0mZZzQ==
+ldk@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.0.tgz#6e38f6aff4520222223730532121ce14600eb826"
+  integrity sha512-oeXxgC3WyJEvDu7txLiT2eRuousGesbcFtZc/jgFCqjOcSELuaVG/DZxdvVXwsDFbWPop0J5Zpc9WWnoD6BA9w==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
@@ -6090,6 +6090,7 @@ ldk@^0.3.15:
     liquidjs-lib "^5.2.2"
     marina-provider "^1.0.0"
     slip77 "^0.1.1"
+    tslib "^2.3.1"
 
 leven@^3.1.0:
   version "3.1.0"
@@ -6138,9 +6139,9 @@ lines-and-columns@^1.1.6:
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
 liquidjs-lib@^5.2.2:
-  version "5.2.2"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.2.2.tgz#72a6fa4a32b74c49b7f9e9f9e58e31e55ff6a264"
-  integrity sha512-wHwJGGQi0zU3DrOaFPqfa36i3W0XojA/aoXbr66ph1NDc3nA1CJzdsagMx++iqY23qftqgUo0rKN9WDz2wmr/Q==
+  version "5.2.3"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.2.3.tgz#1018393fc8a2bacd96e52373cdb90975984cedfa"
+  integrity sha512-jV2GZ24kfT8k02G5Igk14Pr2AqDTig2MaqMlf4CullACwwhNMKf8GE3EyQcf6Q4qJanBQ4TyxG84S9LNCS8r6w==
   dependencies:
     "@vulpemventures/secp256k1-zkp" "^2.0.0"
     axios "^0.21.1"
@@ -6392,10 +6393,10 @@ marina-provider@^1.0.0:
   resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.3.0.tgz#ee26222816570e5649457c5eb6f3078433af5cd8"
   integrity sha512-J00cMcynnNwLut8GdbLNHSHR7jKUGcaiJfExgomIDbIMXJD/nZZQlxg8/zzPsAnujMx/aAEqqfEj+h4PIohp9g==
 
-marina-provider@^1.4.3:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.3.tgz#15e51c989569e96088a74916ff195e03fc0b05c8"
-  integrity sha512-FXeJ61q+arMUEdR7GeXLmT/Xx8w1NP5vmkztkBIeSmRFvs02qjJO6GqutEUnVFWUzC3QQSB45yiOo8+i8ohYZw==
+marina-provider@^1.4.4:
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.4.tgz#f63f845d0a4df8e9e9848427d9e2fa03c8e43f6f"
+  integrity sha512-jiSXk36bPHpttSWXraH/koO25NxvoBwoo1HkGWAQzneIDMfYinbWalDfthfq551kXONzJqgqeZfWDsypLHSQ7A==
 
 marky@^1.2.0:
   version "1.2.2"
@@ -9154,6 +9155,11 @@ tslib@^2.2.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.0.tgz#803b8cdab3e12ba581a4ca41c8839bbb0dacb09e"
   integrity sha512-N82ooyxVNm6h1riLCoyS9e3fuJ3AMG2zIZs2Gd1ATcSFjSA23Q0fzjjZeh0jbJvWVDZ0cJT8yaNNaaXHzueNjg==
+
+tslib@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
+  integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
 tsutils@^3.21.0:
   version "3.21.0"

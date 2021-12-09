@@ -1,3 +1,4 @@
+import { balances } from 'ldk';
 import { AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { lbtcAssetByNetwork } from '../../utils';
@@ -22,13 +23,7 @@ const selectBalancesForAccount =
   (accountID: AccountID) =>
   (state: RootReducerState): BalancesByAsset => {
     const utxos = selectUtxos(accountID)(state);
-    console.log(utxos, accountID);
-    const balancesFromUtxos = utxos.reduce((acc, curr) => {
-      if (!curr.asset || !curr.value) {
-        return acc;
-      }
-      return { ...acc, [curr.asset]: curr.value + (curr.asset in acc ? acc[curr.asset] : 0) };
-    }, {} as BalancesByAsset);
+    const balancesFromUtxos = balances(utxos);
 
     const txs = selectTransactions(accountID)(state);
     const assets = Object.keys(balancesFromUtxos);

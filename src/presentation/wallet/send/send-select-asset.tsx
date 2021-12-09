@@ -4,13 +4,13 @@ import { SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
-import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Asset } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
+import { NetworkString } from 'ldk';
 
 export interface SendSelectAssetProps {
-  network: Network;
+  network: NetworkString;
   balances: BalancesByAsset;
   balanceAssets: Array<Asset & { assetHash: string }>;
 }

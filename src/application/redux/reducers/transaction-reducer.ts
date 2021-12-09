@@ -1,7 +1,7 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 
 export type PendingTxStep = 'empty' | 'address-amount' | 'choose-fee' | 'confirmation';
 
@@ -15,7 +15,7 @@ export interface TransactionState {
   sendAddress?: Address;
   changeAddress?: Address;
   feeChangeAddress?: Address;
-  selectedUtxos?: UtxoInterface[];
+  selectedUtxos?: UnblindedOutput[];
 }
 
 export const transactionInitState: TransactionState = {

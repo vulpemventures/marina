@@ -35,11 +35,12 @@ import {
 import { lbtcAssetByNetwork, sortRecipients } from '../../application/utils';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import { Balance, Recipient } from 'marina-provider';
+import { Balance, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { MainAccountID } from '../../domain/account';
+import { getAsset, getSats } from 'ldk';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -213,7 +214,13 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
           const coins = selectUtxos(MainAccountID)(state);
-          return successMsg(coins);
+          const results: Utxo[] = coins.map((unblindedOutput) => ({
+            txid: unblindedOutput.txid,
+            vout: unblindedOutput.vout,
+            asset: getAsset(unblindedOutput),
+            value: getSats(unblindedOutput),
+          }));
+          return successMsg(results);
         }
 
         case Marina.prototype.getBalances.name: {

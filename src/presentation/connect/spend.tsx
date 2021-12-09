@@ -14,12 +14,12 @@ import type {
   AddressInterface,
   ChangeAddressFromAssetGetter,
   IdentityInterface,
+  NetworkString,
   RecipientInterface,
-  UtxoInterface,
+  UnblindedOutput,
 } from 'ldk';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
-import { Network } from '../../domain/network';
 import { ConnectData } from '../../domain/connect';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
@@ -186,7 +186,7 @@ async function changeAddressGetter(
 
   return {
     getter: (asset: string) => {
-      if (!assets.has(asset)) return undefined; // will throw an error in coin selector
+      if (!assets.has(asset)) throw new Error('missing change address');
       if (!persisted[asset]) {
         dispatch(incrementChangeAddressIndex(account.getAccountID())).catch(console.error);
         persisted[asset] = true;
@@ -199,9 +199,9 @@ async function changeAddressGetter(
 
 async function makeTransaction(
   identities: IdentityInterface[],
-  coins: UtxoInterface[],
+  coins: UnblindedOutput[],
   connectDataTx: ConnectData['tx'],
-  network: Network,
+  network: NetworkString,
   changeAddressGetter: ChangeAddressFromAssetGetter,
   changeAddresses: string[]
 ) {

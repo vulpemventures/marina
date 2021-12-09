@@ -1,6 +1,6 @@
 {
   "name": "marina",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "scripts": {
     "start": "NETWORK=regtest webpack --watch --config webpack.dev.js",
@@ -31,11 +31,10 @@
     "decimal.js": "^10.2.1",
     "formik": "^2.2.6",
     "google-protobuf": "^3.15.8",
-    "ldk": "^0.3.15",
-    "liquidjs-lib": "^5.2.2",
+    "ldk": "^0.4.0",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
-    "marina-provider": "^1.4.3",
+    "marina-provider": "^1.4.4",
     "moment": "^2.29.1",
     "path-browserify": "^1.0.1",
     "postcss": "^7.0.35",

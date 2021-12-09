@@ -10,9 +10,8 @@ import {
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
 import { TxDisplayInterface } from '../../../domain/transaction';
-import { Network } from '../../../domain/network';
+import { NetworkString, UnblindedOutput } from 'ldk';
 import { AccountID } from '../../../domain/account';
-import { UtxoInterface } from 'ldk';
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -41,14 +40,14 @@ export function flushPendingTx(): AnyAction {
   return { type: PENDING_TX_FLUSH };
 }
 
-export function setPset(pset: string, utxos: UtxoInterface[]): AnyAction {
+export function setPset(pset: string, utxos: UnblindedOutput[]): AnyAction {
   return {
     type: PENDING_TX_SET_PSET,
     payload: { pset, utxos },
   };
 }
 
-export function addTx(accountID: AccountID, tx: TxDisplayInterface, network: Network): AnyAction {
+export function addTx(accountID: AccountID, tx: TxDisplayInterface, network: NetworkString): AnyAction {
   return {
     type: ADD_TX,
     payload: { tx, network, accountID },

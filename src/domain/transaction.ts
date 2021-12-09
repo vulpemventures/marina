@@ -1,16 +1,16 @@
-import { address, decodePset, UtxoInterface } from 'ldk';
+import { address, decodePset, NetworkString, UnblindedOutput } from 'ldk';
 import { Address } from './address';
 import { IError } from './common';
-import { Network } from './network';
 
 export interface UtxosAndTxsHistory {
-  utxosMap: Record<string, UtxoInterface>;
+  utxosMap: Record<string, UnblindedOutput>;
   transactions: TxsHistoryByNetwork;
 }
 
 export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 
-export type TxsHistoryByNetwork = Record<Network, TxsHistory> & Partial<Record<'errors', IError>>;
+export type TxsHistoryByNetwork = Record<NetworkString, TxsHistory> &
+  Partial<Record<'errors', IError>>;
 
 export enum TxType {
   SelfTransfer = 0,

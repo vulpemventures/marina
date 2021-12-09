@@ -6,6 +6,7 @@ import {
   Restorer,
   EsploraRestorerOpts,
   masterPubKeyRestorerFromEsplora,
+  NetworkString,
 } from 'ldk';
 import { decrypt } from '../application/utils';
 import {
@@ -16,7 +17,6 @@ import {
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
-import { Network } from './network';
 
 export const MainAccountID = 'mainAccount';
 export const RestrictedAssetAccountID = 'restrictedAssetAccount';
@@ -54,7 +54,7 @@ export interface MnemonicAccountData {
 
 export function createMnemonicAccount(
   data: MnemonicAccountData,
-  network: Network
+  network: NetworkString
 ): MnemonicAccount {
   return {
     getAccountID: () => MainAccountID,

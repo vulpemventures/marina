@@ -1,4 +1,4 @@
-import { UtxoInterface } from 'ldk';
+import { NetworkString, UnblindedOutput } from 'ldk';
 import {
   MarinaEvent,
   compareEnabledWebsites,
@@ -8,21 +8,20 @@ import {
 } from '../application/utils/marina-event';
 import { MainAccountID } from '../domain/account';
 import { RootReducerState } from '../domain/common';
-import { Network } from '../domain/network';
 import { TxsHistory } from '../domain/transaction';
 
 export interface StoreCache {
-  utxoState: Record<string, UtxoInterface>;
+  utxoState: Record<string, UnblindedOutput>;
   txsHistoryState: TxsHistory;
-  enabledWebsitesState: Record<Network, string[]>;
-  network: Network;
+  enabledWebsitesState: Record<NetworkString, string[]>;
+  network: NetworkString;
 }
 
 export function newStoreCache(): StoreCache {
   return {
     utxoState: {},
     txsHistoryState: {},
-    enabledWebsitesState: { regtest: [], liquid: [] },
+    enabledWebsitesState: { regtest: [], liquid: [], testnet: [] },
     network: 'liquid',
   };
 }

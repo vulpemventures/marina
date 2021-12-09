@@ -1,12 +1,12 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import { RECEIVE_ADDRESS_ROUTE } from '../../routes/constants';
-import { Network } from '../../../domain/network';
 import { Asset } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
+import { NetworkString } from 'ldk';
 
 export interface ReceiveSelectAssetProps {
-  network: Network;
+  network: NetworkString;
   assets: Array<Asset & { assetHash: string }>;
 }
 

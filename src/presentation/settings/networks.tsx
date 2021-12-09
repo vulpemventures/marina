@@ -1,3 +1,4 @@
+import { NetworkString } from 'ldk';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
@@ -6,23 +7,24 @@ import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/re
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { AccountID } from '../../domain/account';
 import { RootReducerState } from '../../domain/common';
-import { createNetwork } from '../../domain/network';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
 
-const networks = ['liquid', 'regtest'];
-const formattedNetworks = networks.map((n) => formatNetwork(n));
+const availableNetworks: NetworkString[] = ['liquid', 'testnet', 'regtest'];
+const formattedNetworks = availableNetworks.map((n) => formatNetwork(n));
 
 export interface SettingsNetworksProps {
   restorationLoading: boolean;
   accountsIDs: AccountID[];
+  updaterIsloading: boolean;
   error?: string;
 }
 
 const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
   restorationLoading,
   accountsIDs,
+  updaterIsloading,
   error,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,11 +36,13 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
 
   const setSelectedValue = async (net: string) => {
     setIsLoading(true);
-    const newNetwork = createNetwork(net.toLowerCase());
-    await dispatch(changeNetwork(newNetwork));
-    await Promise.all(accountsIDs.map(flushUtxos).map(dispatch));
-    await dispatch(setDeepRestorerGapLimit(20));
-    await dispatch(startDeepRestorer());
+    const newNetwork = net.toLowerCase();
+    if (newNetwork !== network) {
+      await dispatch(changeNetwork(newNetwork as NetworkString));
+      await Promise.all(accountsIDs.map(flushUtxos).map(dispatch));
+      await dispatch(setDeepRestorerGapLimit(20));
+      await dispatch(startDeepRestorer());
+    }
     setIsLoading(false);
   };
 
@@ -51,13 +55,14 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
     >
       <p className="font-regular my-8 text-base text-left">Select the network</p>
       <Select
-        disabled={isLoading || restorationLoading}
+        disabled={isLoading || restorationLoading || updaterIsloading}
         list={formattedNetworks}
         selected={selectedNetwork}
         onSelect={setSelectedValue}
       />
 
       {(isLoading || restorationLoading) && <p className="m-2">{'loading'}...</p>}
+      {updaterIsloading && <p className="m-2">{'updater is loading'}...</p>}
       {error && <p className="m-2">{error}</p>}
     </ShellPopUp>
   );

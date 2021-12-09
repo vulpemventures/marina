@@ -1,23 +1,26 @@
+import { networks } from 'ldk';
 import { AnyAction } from 'redux';
-import { IAssets } from '../../../domain/assets';
+import { Asset, IAssets } from '../../../domain/assets';
 import * as ACTION_TYPES from '../actions/action-types';
 
+const USDt: Asset = {
+  name: 'Tether USD',
+  precision: 8,
+  ticker: 'USDt',
+};
+
+const LBTC: Asset = {
+  name: 'Liquid Bitcoin',
+  precision: 8,
+  ticker: 'L-BTC',
+};
+
 export const assetInitState: IAssets = {
-  ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2: {
-    name: 'Tether USD',
-    precision: 8,
-    ticker: 'USDt',
-  },
-  '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d': {
-    name: 'Liquid Bitcoin',
-    precision: 8,
-    ticker: 'L-BTC',
-  },
-  '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225': {
-    name: 'Liquid Bitcoin',
-    precision: 8,
-    ticker: 'L-BTC',
-  },
+  ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2: USDt,
+  f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958: USDt,
+  [networks.liquid.assetHash]: LBTC,
+  [networks.regtest.assetHash]: LBTC,
+  [networks.testnet.assetHash]: LBTC,
 };
 
 export function assetReducer(

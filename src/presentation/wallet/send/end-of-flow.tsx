@@ -10,12 +10,12 @@ import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import { Account } from '../../../domain/account';
 import { Transaction } from 'liquidjs-lib';
-import { UtxoInterface } from 'ldk';
+import { UnblindedOutput } from 'ldk';
 
 export interface EndOfFlowProps {
   accounts: Account[];
   pset?: string;
-  selectedUtxos: UtxoInterface[];
+  selectedUtxos: UnblindedOutput[];
   explorerURL: string;
   recipientAddress?: string;
 }

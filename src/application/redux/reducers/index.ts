@@ -2,7 +2,7 @@ import { assetInitState, assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
 import { transactionReducer, TransactionState, transactionInitState } from './transaction-reducer';
 import { AnyAction, combineReducers, Reducer } from 'redux';
-import { Storage } from 'redux-persist';
+import { PersistMigrate, Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
 import browser from 'webextension-polyfill';
 import persistReducer, { PersistPartial } from 'redux-persist/es/persistReducer';
@@ -28,9 +28,27 @@ const browserLocalStorage: Storage = {
   removeItem: async (key: string) => browser.storage.local.remove(key),
 };
 
+// init state DOES NOT erase the current state during migration
+const migrateAfter =
+  (initialState: any): PersistMigrate =>
+  (state: any) =>
+    Promise.resolve({
+      ...initialState,
+      ...state, // /!\ state should be merged **after** initialState !
+    });
+
+// init state erases the current state during migration
+const migrateBefore =
+  (initialState: any): PersistMigrate =>
+  (state: any) =>
+    Promise.resolve({
+      ...state, // /!\ state should be merged **before** initialState !
+      ...initialState,
+    });
+
 function createLocalStorageConfig<S>(
-  initialState: S,
   key: string,
+  migration: PersistMigrate,
   whitelist?: string[],
   blacklist?: string[],
   version = 0
@@ -41,70 +59,64 @@ function createLocalStorageConfig<S>(
     version,
     whitelist,
     blacklist,
-    migrate: (state: any) => {
-      return Promise.resolve({
-        ...initialState,
-        ...state, // /!\ state should be merged **after** initialState !
-      });
-    },
+    migrate: migration,
   };
 }
 
 // custom persist reducer function
 function persist<S extends any>(opts: {
   reducer: Reducer<S, AnyAction>;
-  initialState: S;
+  migrate: PersistMigrate;
   key: string;
   whitelist?: string[];
   blacklist?: string[];
   version?: number;
 }): Reducer<S & PersistPartial, AnyAction> {
   return persistReducer(
-    createLocalStorageConfig(
-      opts.initialState,
-      opts.key,
-      opts.whitelist,
-      opts.blacklist,
-      opts.version
-    ),
+    createLocalStorageConfig(opts.key, opts.migrate, opts.whitelist, opts.blacklist, opts.version),
     opts.reducer
   );
 }
 
 const marinaReducer = combineReducers({
-  app: persist<IApp>({ reducer: appReducer, key: 'app', version: 1, initialState: appInitState }),
+  app: persist<IApp>({
+    reducer: appReducer,
+    key: 'app',
+    version: 1,
+    migrate: migrateAfter(appInitState),
+  }),
   assets: persist<IAssets>({
     reducer: assetReducer,
     key: 'assets',
-    version: 1,
-    initialState: assetInitState,
+    version: 2,
+    migrate: migrateBefore(assetInitState),
   }),
   onboarding: onboardingReducer,
   transaction: persist<TransactionState>({
     reducer: transactionReducer,
     key: 'transaction',
     version: 1,
-    initialState: transactionInitState,
+    migrate: migrateAfter(transactionInitState),
   }),
   wallet: persist<WalletState>({
     reducer: walletReducer,
     key: 'wallet',
-    blacklist: ['deepRestorer'],
-    version: 3,
-    initialState: walletInitState,
+    blacklist: ['deepRestorer', 'updaterLoader'],
+    version: 1,
+    migrate: migrateAfter(walletInitState),
   }),
   taxi: persist<TaxiState>({
     reducer: taxiReducer,
     key: 'taxi',
     version: 1,
-    initialState: taxiInitState,
+    migrate: migrateAfter(taxiInitState),
   }),
   connect: persist<ConnectData>({
     reducer: connectDataReducer,
     key: 'connect',
     whitelist: ['enabledSites'],
     version: 1,
-    initialState: connectDataInitState,
+    migrate: migrateAfter(connectDataInitState),
   }),
 });
 

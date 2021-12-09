@@ -10,10 +10,10 @@ import {
   XPub,
   restorerFromState,
   AddressInterface,
+  NetworkString,
 } from 'ldk';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
 import { MasterXPub } from '../../domain/master-extended-pub';
-import { Network } from '../../domain/network';
 
 export function getStateRestorerOptsFromAddresses(
   addresses: AddressInterface[]
@@ -48,7 +48,7 @@ export function getStateRestorerOptsFromAddresses(
 export function restoredMnemonic(
   mnemonic: string,
   restorerOpts: StateRestorerOpts,
-  chain: Network
+  chain: NetworkString
 ): Promise<Mnemonic> {
   const mnemonicID = new Mnemonic({
     chain,
@@ -65,7 +65,7 @@ export function restoredMasterPublicKey(
   masterXPub: MasterXPub,
   masterBlindingKey: MasterBlindingKey,
   restorerOpts: StateRestorerOpts,
-  network: Network
+  network: NetworkString
 ) {
   const xpub = newMasterPublicKey(masterXPub, masterBlindingKey, network);
   return masterPubKeyRestorerFromState(xpub)(restorerOpts);
@@ -74,7 +74,7 @@ export function restoredMasterPublicKey(
 export function newMasterPublicKey(
   masterXPub: MasterXPub,
   masterBlindingKey: MasterBlindingKey,
-  network: Network
+  network: NetworkString
 ) {
   return new MasterPublicKey({
     chain: network,
@@ -93,14 +93,14 @@ export function restoredWatchOnlyMultisig(
   cosigners: CosignerMultisig[],
   requiredSignatures: number,
   restorerOpts: StateRestorerOpts,
-  network: Network
+  network: NetworkString
 ) {
   const multisigID = newMultisigWatchOnly(network, requiredSignatures, cosigners, signerXPub);
   return restorerFromState<MultisigWatchOnly>(multisigID)(restorerOpts);
 }
 
 export function newMultisigWatchOnly(
-  network: Network,
+  network: NetworkString,
   requiredSignatures: number,
   cosigners: CosignerMultisig[],
   signerXPub: XPub

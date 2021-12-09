@@ -1,4 +1,3 @@
-import { MasterPublicKey, UtxoInterface } from 'ldk';
 import {
   AccountID,
   createMnemonicAccount,
@@ -6,6 +5,7 @@ import {
   MainAccountID,
   Account,
 } from '../../../domain/account';
+import { MasterPublicKey, UnblindedOutput } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface } from '../../../domain/transaction';
 
@@ -15,13 +15,13 @@ export function masterPubKeySelector(state: RootReducerState): Promise<MasterPub
 
 export const selectUtxos =
   (...accounts: AccountID[]) =>
-  (state: RootReducerState): UtxoInterface[] => {
+  (state: RootReducerState): UnblindedOutput[] => {
     return accounts.flatMap((ID) => selectUtxosForAccount(ID)(state));
   };
 
 const selectUtxosForAccount =
   (accountID: AccountID) =>
-  (state: RootReducerState): UtxoInterface[] => {
+  (state: RootReducerState): UnblindedOutput[] => {
     return Object.values(selectUnspentsAndTransactions(accountID)(state).utxosMap);
   };
 
@@ -71,7 +71,7 @@ export const selectAccount = (
 };
 
 // By definition, each asset hash should be associated with a single Account
-export const selectAccountForAsset = (asset: string) => (state: RootReducerState) => {
+export const selectAccountForAsset = (_: string) => (state: RootReducerState) => {
   return selectMainAccount(state);
 };
 
@@ -92,3 +92,7 @@ export const selectDeepRestorerIsLoading = (state: RootReducerState) => {
 export const selectDeepRestorerGapLimit = (state: RootReducerState) => {
   return state.wallet.deepRestorer.gapLimit;
 };
+
+export const selectUpdaterIsLoading = (state: RootReducerState) => {
+  return state.wallet.updaterLoaders > 0
+}

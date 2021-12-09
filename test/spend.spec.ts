@@ -1,4 +1,4 @@
-import { decodePset, fetchAndUnblindUtxos, Mnemonic, networks, UtxoInterface } from 'ldk';
+import { decodePset, fetchAndUnblindUtxos, Mnemonic, networks, UnblindedOutput } from 'ldk';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
@@ -12,7 +12,7 @@ const RECEIVER = 'AzpofttCgtcfk1PDWytoocvMWqQnLUJfjZw6MVmSdJQtwWnovQPgqiWSRTFZmK
 
 describe('create send pset (build, blind & sign)', () => {
   const mnemonic: Mnemonic = makeRandomMnemonic();
-  const unspents: UtxoInterface[] = [];
+  const unspents: UnblindedOutput[] = [];
 
   const makeUnspents = async () => {
     const addr = await mnemonic.getNextAddress();
@@ -38,7 +38,7 @@ describe('create send pset (build, blind & sign)', () => {
 
   test('should be able to create a regular transaction', async () => {
     const pset = await createSendPset(
-      makeRecipients({ value: 200 }, { value: 2100 }),
+      makeRecipients({ value: 100000 }, { value: 11000 }),
       await makeUnspents(),
       network.assetHash,
       await makeChangeAddressGetter(),

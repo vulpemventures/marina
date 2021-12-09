@@ -4,9 +4,11 @@ import {
   ChangeAddressFromAssetGetter,
   CoinSelectionResult,
   CoinSelector,
+  CoinSelectorErrorFn,
   greedyCoinSelector,
+  NetworkString,
   RecipientInterface,
-  UtxoInterface,
+  UnblindedOutput,
   walletFromCoins,
 } from 'ldk';
 import Balance from '../../components/balance';
@@ -17,9 +19,8 @@ import {
   feeAmountFromTx,
   fetchTopupFromTaxi,
   createTaxiTxFromTopup,
-  imgPathMapMainnet,
-  imgPathMapRegtest,
   taxiURL,
+  getAssetImage,
 } from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
@@ -31,7 +32,6 @@ import {
   setFeeChangeAddress,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { Network } from '../../../domain/network';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
@@ -41,7 +41,7 @@ import { extractErrorMessage } from '../../utils/error';
 import { AnyAction } from 'redux';
 
 export interface ChooseFeeProps {
-  network: Network;
+  network: NetworkString;
   assets: IAssets;
   changeAddress?: Address;
   sendAmount: number;
@@ -51,12 +51,12 @@ export interface ChooseFeeProps {
   taxiAssets: string[];
   lbtcAssetHash: string;
   account: Account;
-  utxos: UtxoInterface[];
+  utxos: UnblindedOutput[];
 }
 
 interface State {
   unsignedPset?: string;
-  utxos?: UtxoInterface[];
+  utxos?: UnblindedOutput[];
   feeChange?: Address;
   topup?: Topup.AsObject;
 }
@@ -156,16 +156,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   };
 
   const getFeeCurrencyImgPath = (): string => {
-    let img: string = imgPathMapMainnet[feeAsset || ''];
-    if (network === 'regtest') {
-      img = imgPathMapRegtest[assets[feeAsset || '']?.ticker];
-    }
-
-    if (!img) {
-      return imgPathMapMainnet[''];
-    }
-
-    return img;
+    return getAssetImage(feeAsset || '');
   };
 
   return (
@@ -237,23 +228,22 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   );
 };
 
-const sideEffectCoinSelector = (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
-  return (
-    unspents: UtxoInterface[],
-    outputs: RecipientInterface[],
-    changeGetter: ChangeAddressFromAssetGetter
-  ) => {
-    const result = greedyCoinSelector()(unspents, outputs, changeGetter);
-    sideEffect(result);
-    return result;
-  };
+const sideEffectCoinSelector = (coinSelector: CoinSelector) => (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
+  return (errorHandler: CoinSelectorErrorFn) =>
+    (unspents: UnblindedOutput[], outputs: RecipientInterface[], changeGetter: ChangeAddressFromAssetGetter) => {
+      const result = coinSelector(errorHandler)(unspents, outputs, changeGetter)
+      sideEffect(result)
+      return result;
+    };
 };
+
+const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelector())
 
 function stateForRegularPSET(
   recipient: RecipientInterface,
   change: Address,
-  utxos: UtxoInterface[],
-  network: Network
+  utxos: UnblindedOutput[],
+  network: NetworkString
 ): Promise<State> {
   const result: State = {};
   result.unsignedPset = undefined;
@@ -264,7 +254,7 @@ function stateForRegularPSET(
   result.unsignedPset = w.buildTx(
     w.createTx(),
     [recipient],
-    sideEffectCoinSelector(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+    greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
     () => change.value,
     true,
     0.1
@@ -279,8 +269,8 @@ async function stateForTaxiPSET(
   feeAsset: string,
   recipient: RecipientInterface,
   change: Address,
-  utxos: UtxoInterface[],
-  network: Network,
+  utxos: UnblindedOutput[],
+  network: NetworkString,
   lastTopup?: Topup.AsObject
 ): Promise<State> {
   const result: State = {};
@@ -314,7 +304,7 @@ async function stateForTaxiPSET(
     result.topup,
     utxos,
     [recipient],
-    sideEffectCoinSelector(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+    greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
     changeGetter
   );
 

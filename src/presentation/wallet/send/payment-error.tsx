@@ -5,7 +5,7 @@ import Button from '../../components/button';
 import { broadcastTx } from '../../../application/utils';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useSelector } from 'react-redux';
-import { getExplorerURLSelector } from '../../../application/redux/selectors/app.selector';
+import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
 
 interface LocationState {
   error: string;
@@ -15,7 +15,7 @@ interface LocationState {
 const PaymentError: React.FC = () => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
-  const explorer = useSelector(getExplorerURLSelector);
+  const explorer = useSelector(selectEsploraURL);
 
   const handleRetry = () =>
     broadcastTx(explorer, state.tx)
