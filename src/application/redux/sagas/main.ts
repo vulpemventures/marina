@@ -45,7 +45,7 @@ function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
       yield put(setTaxiAssets(assets));
     }
   } catch (err: unknown) {
-    console.warn(`fetch taxi assets error: ${(err as Error).message || 'unknown'}`)
+    console.warn(`fetch taxi assets error: ${(err as Error).message || 'unknown'}`);
     // ignore errors
   }
 }
