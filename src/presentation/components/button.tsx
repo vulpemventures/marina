@@ -11,6 +11,7 @@ interface Props {
   textBase?: boolean;
   type?: 'submit' | 'button' | 'reset';
   extraData?: any;
+  isTextSmall?: boolean;
 }
 
 const Button: React.FC<Props> = ({
@@ -22,6 +23,7 @@ const Button: React.FC<Props> = ({
   isOutline = false,
   roundedMd = false,
   textBase = false,
+  isTextSmall = false,
   extraData = undefined,
 }: Props) => {
   const classes = cx(
@@ -32,8 +34,9 @@ const Button: React.FC<Props> = ({
     { 'text-primary bg-white shadow-innerBtnBorder': isOutline },
     { 'rounded-3xl': !roundedMd },
     { 'rounded-md': roundedMd },
-    { 'text-lg': !textBase },
-    { 'text-base': textBase }
+    { 'text-lg': !isTextSmall && !textBase },
+    { 'text-base': !isTextSmall && textBase },
+    { 'text-sm': isTextSmall }
   );
 
   return (
