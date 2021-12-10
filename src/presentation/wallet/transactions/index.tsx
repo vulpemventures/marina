@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
 import {
@@ -22,6 +22,8 @@ import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { MainAccountID } from '../../../domain/account';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -62,6 +64,11 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     const url = `${webExplorerURL}${modalTxDetails.webExplorersBlinders}`;
     await browser.tabs.create({ url, active: false });
   };
+
+  // update tx history for main account once at first render
+  useEffect(() => {
+    dispatch(updateTaskAction(MainAccountID)).catch(console.error);
+  }, [])
 
   return (
     <ShellPopUp
