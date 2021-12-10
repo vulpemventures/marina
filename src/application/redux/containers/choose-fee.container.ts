@@ -13,7 +13,7 @@ const mapStateToProps = (state: RootReducerState): ChooseFeeProps => ({
   taxiAssets: state.taxi.taxiAssets,
   lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
   sendAddress: state.transaction.sendAddress,
-  changeAddress: state.transaction.changeAddress,
+  changeAddress: state.transaction.changeAddresses[0],
   sendAsset: state.transaction.sendAsset,
   sendAmount: state.transaction.sendAmount,
   account: selectMainAccount(state),

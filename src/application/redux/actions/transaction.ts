@@ -19,12 +19,12 @@ export function setAsset(asset: string): AnyAction {
 
 export function setAddressesAndAmount(
   receipientAddress: Address,
-  changeAddress: Address,
+  changeAddresses: Address[],
   amountInSatoshi: number
 ): AnyAction {
   return {
     type: PENDING_TX_SET_ADDRESSES_AND_AMOUNT,
-    payload: { receipientAddress, changeAddress, amountInSatoshi },
+    payload: { receipientAddress, changeAddresses, amountInSatoshi },
   };
 }
 

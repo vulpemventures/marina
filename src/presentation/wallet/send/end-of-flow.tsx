@@ -18,6 +18,7 @@ export interface EndOfFlowProps {
   selectedUtxos: UnblindedOutput[];
   explorerURL: string;
   recipientAddress?: string;
+  changeAddresses: string[];
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
@@ -26,6 +27,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   explorerURL,
   recipientAddress,
   selectedUtxos,
+  changeAddresses,
 }) => {
   const history = useHistory();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
@@ -38,7 +40,13 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
       const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(pass)));
-      const tx = await blindAndSignPset(pset, selectedUtxos, identities, [recipientAddress]);
+      const tx = await blindAndSignPset(
+        pset,
+        selectedUtxos,
+        identities,
+        [recipientAddress],
+        changeAddresses
+      );
 
       const txid = Transaction.fromHex(tx).getId();
       await broadcastTx(explorerURL, tx);

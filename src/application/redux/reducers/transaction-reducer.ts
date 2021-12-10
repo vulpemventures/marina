@@ -13,8 +13,7 @@ export interface TransactionState {
   feeAsset: string;
   pset?: string;
   sendAddress?: Address;
-  changeAddress?: Address;
-  feeChangeAddress?: Address;
+  changeAddresses: Address[];
   selectedUtxos?: UnblindedOutput[];
 }
 
@@ -22,8 +21,7 @@ export const transactionInitState: TransactionState = {
   step: 'empty',
   sendAsset: '',
   sendAddress: undefined,
-  changeAddress: undefined,
-  feeChangeAddress: undefined,
+  changeAddresses: [],
   sendAmount: 0,
   feeAmount: 0,
   feeAsset: '',
@@ -46,7 +44,7 @@ export function transactionReducer(
         ...state,
         step: 'choose-fee',
         sendAddress: payload.receipientAddress,
-        changeAddress: payload.changeAddress,
+        changeAddresses: payload.changeAddresses,
         sendAmount: payload.amountInSatoshi,
       };
     }
@@ -54,7 +52,7 @@ export function transactionReducer(
     case ACTION_TYPES.PENDING_TX_SET_FEE_CHANGE_ADDRESS: {
       return {
         ...state,
-        feeChangeAddress: payload.feeChangeAddress,
+        changeAddresses: [...state.changeAddresses, payload.feeChangeAddress],
       };
     }
 

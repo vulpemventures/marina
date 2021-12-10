@@ -223,7 +223,8 @@ async function makeTransaction(
     unsignedPset,
     coins,
     identities,
-    recipients.map(({ address }) => address).concat(changeAddresses)
+    recipients.map(({ address }) => address),
+    changeAddresses
   );
 
   return txHex;

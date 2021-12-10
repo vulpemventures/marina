@@ -80,6 +80,20 @@ async function blindPset(psetBase64: string, utxos: UnblindedOutput[], outputAdd
   ).toBase64();
 }
 
+function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
+  const excludeScripts = excludeAddresses.map((a) => addrLDK.toOutputScript(a));
+  const tx = psetToUnsignedTx(psetBase64);
+  for (const out of tx.outs) {
+    if (out.script.length > 0 && !excludeScripts.includes(out.script)) {
+      if (!out.rangeProof || !out.surjectionProof) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 /**
  * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.
  * @param signerIdentity Identity using to sign the tx. should be restored.
@@ -90,14 +104,16 @@ export async function blindAndSignPset(
   psetBase64: string,
   selectedUtxos: UnblindedOutput[],
   identities: IdentityInterface[],
-  recipientAddresses: string[]
+  recipientAddresses: string[],
+  changeAddresses: string[]
 ): Promise<string> {
-  const outputAddresses: string[] = recipientAddresses;
-  for (const id of identities) {
-    outputAddresses.push(...(await id.getAddresses()).map((a) => a.confidentialAddress));
-  }
+  const outputAddresses = recipientAddresses.concat(changeAddresses);
 
   const blindedPset = await blindPset(psetBase64, selectedUtxos, outputAddresses);
+  if (!isFullyBlinded(blindedPset, recipientAddresses)) {
+    throw new Error('blindPSET error: not fully blinded');
+  }
+
   const signedPset = await signPset(blindedPset, identities);
 
   const decodedPset = decodePset(signedPset);

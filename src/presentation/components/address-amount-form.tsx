@@ -169,7 +169,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       .dispatch(
         setAddressesAndAmount(
           createAddress(values.address),
-          changeAddress,
+          [changeAddress],
           toSatoshi(values.amount, values.assetPrecision)
         )
       )

@@ -10,6 +10,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({
   explorerURL: selectEsploraURL(state),
   recipientAddress: state.transaction.sendAddress?.value,
   selectedUtxos: state.transaction.selectedUtxos ?? [],
+  changeAddresses: state.transaction.changeAddresses.map((changeAddress) => changeAddress.value),
 });
 
 const SendEndOfFlow = connect(mapStateToProps)(EndOfFlow);
