@@ -3,6 +3,7 @@ import { createEncryptedMnemonic, EncryptedMnemonic } from '../../domain/encrypt
 import { createMnemonic, Mnemonic } from '../../domain/mnemonic';
 import { Password } from '../../domain/password';
 import { createPasswordHash, PasswordHash } from '../../domain/password-hash';
+import { INVALID_PASSWORD_ERROR } from './constants';
 
 const iv = Buffer.alloc(16, 0);
 export function encrypt(payload: Mnemonic, password: Password): EncryptedMnemonic {
@@ -23,7 +24,7 @@ export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemo
     decrypted += key.final('utf8');
     return createMnemonic(decrypted);
   } catch {
-    throw new Error('invalid password');
+    throw new Error(INVALID_PASSWORD_ERROR);
   }
 }
 

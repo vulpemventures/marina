@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { debounce } from 'lodash';
-import { decrypt } from '../../application/utils';
+import { decrypt, INVALID_PASSWORD_ERROR } from '../../application/utils';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
 import ShellPopUp from '../components/shell-popup';
@@ -19,7 +19,7 @@ const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet 
   const handleModalUnlockCancel = () => showUnlockModal(false);
   const handleShowMnemonic = (password: string) => {
     if (!match(password, wallet.passwordHash)) {
-      throw new Error('Invalid password');
+      throw new Error(INVALID_PASSWORD_ERROR);
     }
     const mnemo = decrypt(wallet.mainAccount.encryptedMnemonic, createPassword(password));
     setMnemonic(mnemo);

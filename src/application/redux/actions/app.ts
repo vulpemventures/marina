@@ -14,6 +14,7 @@ import { Password } from '../../../domain/password';
 import { match, PasswordHash } from '../../../domain/password-hash';
 import { ExplorerURLs } from '../../../domain/app';
 import { NetworkString } from 'ldk';
+import { INVALID_PASSWORD_ERROR } from '../../utils';
 
 export const setExplorer = (explorer: ExplorerURLs, network: NetworkString): AnyAction => ({
   type: SET_EXPLORER,
@@ -27,7 +28,10 @@ export const onboardingCompleted = (): AnyAction => ({
 export function logIn(password: Password, passwordHash: PasswordHash): AnyAction {
   try {
     if (!match(password, passwordHash)) {
-      return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
+      return {
+        type: AUTHENTICATION_FAILURE,
+        payload: { error: new Error(INVALID_PASSWORD_ERROR) },
+      };
     }
 
     return { type: AUTHENTICATION_SUCCESS };

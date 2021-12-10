@@ -2,6 +2,9 @@ import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 import blockstreamAssetHashes from '../constants/blockstream_asset_hash.json';
 import { networks, NetworkString } from 'ldk';
 
+export const INVALID_MNEMONIC_ERROR = 'Invalid mnemonic';
+export const INVALID_PASSWORD_ERROR = 'Invalid password';
+
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
   '50': 0.1,

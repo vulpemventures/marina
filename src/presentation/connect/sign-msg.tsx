@@ -7,7 +7,7 @@ import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
-import { decrypt } from '../../application/utils';
+import { decrypt, INVALID_PASSWORD_ERROR } from '../../application/utils';
 import { signMessageWithMnemonic } from '../../application/utils/message';
 import { networks } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
@@ -26,7 +26,7 @@ function signMsgWithPassword(
     const mnemonic = decrypt(encryptedMnemonic, password);
     return signMessageWithMnemonic(message, mnemonic, networks[network]);
   } catch (e: any) {
-    throw new Error('Invalid password');
+    throw new Error(INVALID_PASSWORD_ERROR);
   }
 }
 

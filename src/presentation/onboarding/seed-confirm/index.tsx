@@ -7,9 +7,9 @@ import Shell from '../../components/shell';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { setOnboardingVerified } from '../../../application/redux/actions/onboarding';
+import { INVALID_MNEMONIC_ERROR } from '../../../application/utils';
 
 const NULL_ERROR = '';
-const ERROR_MSG = 'Invalid mnemonic';
 
 export interface SeedConfirmProps {
   onboardingMnemonic: string;
@@ -31,7 +31,7 @@ const SeedConfirmView: React.FC<SeedConfirmProps> = ({ onboardingMnemonic, isFro
       history.push(INITIALIZE_END_OF_FLOW_ROUTE);
     }
 
-    setError(ERROR_MSG);
+    setError(INVALID_MNEMONIC_ERROR);
     setSelected([]);
     setWordsList(mnemonicRandomized);
   };
