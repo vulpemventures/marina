@@ -13,8 +13,9 @@ import { ConnectData } from '../../../domain/connect';
 import { IAssets } from '../../../domain/assets';
 import { PersistConfig } from 'redux-persist/lib/types';
 import { appReducer, appInitState } from './app-reducer';
-import { walletInitState, walletReducer } from './wallet-reducer';
+import { walletReducer } from './wallet-reducer';
 import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
+import { walletMigrate } from '../../../domain/migrations';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -102,8 +103,8 @@ const marinaReducer = combineReducers({
     reducer: walletReducer,
     key: 'wallet',
     blacklist: ['deepRestorer', 'updaterLoaders'],
-    version: 1,
-    migrate: migrateAfter(walletInitState),
+    version: 2,
+    migrate: walletMigrate,
   }),
   taxi: persist<TaxiState>({
     reducer: taxiReducer,
