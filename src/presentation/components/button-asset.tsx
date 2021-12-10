@@ -41,13 +41,13 @@ const ButtonAsset: React.FC<Props> = ({
       <div className="flex flex-row items-center">
         <img className="w-8 mr-1.5" src={assetImgPath} alt="liquid asset" />
         <div className="flex flex-col text-left">
-          <span className="text-grayDark text-small font-medium">{formatAssetName(assetName)}</span>
+          <span className="text-grayDark text-sm font-medium">{formatAssetName(assetName)}</span>
           <span className="text-grayLight text-xs font-medium">{assetTicker}</span>
         </div>
       </div>
       <div className="flex flex-row">
         {quantity && (
-          <div className="text-small font-medium">
+          <div className="text-sm font-medium">
             {formatDecimalAmount(fromSatoshi(quantity, assetPrecision))}
           </div>
         )}

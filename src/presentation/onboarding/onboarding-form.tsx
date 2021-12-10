@@ -43,7 +43,7 @@ const OnboardingFormView = (props: FormikProps<OnboardingFormValues>) => {
           <p className="mb-2 font-medium">Create password</p>
           <input
             className={cx(
-              'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-2/5 rounded-md',
+              'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-3/5 rounded-md',
               {
                 'border-red': errors.password && touched.password,
                 'border-grayLight': !errors.password,
@@ -68,7 +68,7 @@ const OnboardingFormView = (props: FormikProps<OnboardingFormValues>) => {
           <p className="mb-2 font-medium">Confirm password</p>
           <input
             className={cx(
-              'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-2/5 rounded-md',
+              'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-3/5 rounded-md',
               {
                 'border-red': errors.confirmPassword && touched.confirmPassword,
                 'border-grayLight': !errors.confirmPassword,
@@ -107,7 +107,7 @@ const OnboardingFormView = (props: FormikProps<OnboardingFormValues>) => {
         )}
       </div>
 
-      <Button className="w-1/5 text-base" disabled={isSubmitting} type="submit">
+      <Button className="w-3/5 text-base" disabled={isSubmitting} type="submit">
         Create
       </Button>
     </form>
