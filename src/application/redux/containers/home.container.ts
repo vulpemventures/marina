@@ -11,7 +11,6 @@ const mapStateToProps = (state: RootReducerState): HomeProps => ({
   transactionStep: state.transaction.step,
   assetsBalance: selectBalances(MainAccountID)(state),
   getAsset: assetGetterFromIAssets(state.assets),
-  isWalletVerified: state.wallet.isVerified,
 });
 
 const Home = connect(mapStateToProps)(HomeView);

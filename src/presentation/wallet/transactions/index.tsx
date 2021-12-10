@@ -12,7 +12,6 @@ import ButtonList from '../../components/button-list';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
-import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
 import { getAssetImage, txTypeAsString } from '../../../application/utils';
 import { fromSatoshiStr } from '../../utils';
@@ -51,10 +50,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
 
   // Save mnemonic modal
-  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
-  const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);
-  const handleReceive = () => showSaveMnemonicModal(true);
+  const handleReceive = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
@@ -158,12 +154,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({
           See in Explorer
         </Button>
       </Modal>
-
-      <SaveMnemonicModal
-        isOpen={isSaveMnemonicModalOpen}
-        handleClose={handleSaveMnemonicClose}
-        handleConfirm={handleSaveMnemonicConfirm}
-      />
     </ShellPopUp>
   );
 };
