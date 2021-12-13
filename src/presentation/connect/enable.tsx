@@ -43,20 +43,20 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Enable"
     >
-      <h1 className="mt-8 text-2xl font-medium break-all">{connectData.hostnameSelected}</h1>
+      <h1 className="text-2xl font-medium break-all">{connectData.hostnameSelected}</h1>
 
-      <p className="mt-4 text-base font-medium">Connect with Marina</p>
+      <p className="mt-2 text-base font-medium">Connect with Marina</p>
 
-      <p className="mt-12 text-base font-medium">Give permission to this site to:</p>
+      <p className="mt-8 text-base font-medium">Give permission to this site to:</p>
 
       {permissions.map((p, i) => (
-        <div className="container flex mt-10 text-left" key={i}>
+        <div className="flex mt-4 text-left" key={i}>
           <img className="mr-4" src="/assets/images/checkbox-checked.svg" alt="checkbox" />
           <span className="font-regular text-base">{p}</span>
         </div>
       ))}
 
-      <div className="bottom-24 container absolute right-0 flex justify-between">
+      <div className="bottom-12 container absolute right-0 flex justify-between">
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
