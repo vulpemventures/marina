@@ -81,16 +81,16 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
           props.dispatch(updateTaxiAssets()).catch(console.error);
           props.dispatch(startPeriodicUpdate()).catch(console.error);
-          props.history.push(DEFAULT_ROUTE);
           setIdleAction(() => {
             props.dispatch(stopPeriodicUpdate()).catch(console.error);
             props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
           });
+          props.history.push(DEFAULT_ROUTE);
         } else {
           const err = logInAction.payload.error;
           setErrors({ password: err.message });
+          setSubmitting(false);
         }
-        setSubmitting(false);
       })
       .catch(console.error);
   },
