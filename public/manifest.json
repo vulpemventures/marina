@@ -8,7 +8,6 @@
     "storage",
     "unlimitedStorage",
     "idle",
-    "tabs",
     "<all_urls>"
   ],
   "background": {
