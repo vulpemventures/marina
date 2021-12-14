@@ -4,14 +4,11 @@ import {
   MnemonicAccount,
   MainAccountID,
   Account,
+  toDisplayTxForAccount,
 } from '../../../domain/account';
-import { MasterPublicKey, UnblindedOutput } from 'ldk';
+import { TxInterface, UnblindedOutput } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
-import { TxDisplayInterface } from '../../../domain/transaction';
-
-export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
-  return selectMainAccount(state).getWatchIdentity();
-}
+import { selectNetwork } from './app.selector';
 
 export const selectUtxos =
   (...accounts: AccountID[]) =>
@@ -25,6 +22,13 @@ const selectUtxosForAccount =
     return Object.values(selectUnspentsAndTransactions(accountID)(state).utxosMap);
   };
 
+export const selectToDisplayTxFunc = (accountID: AccountID) => (state: RootReducerState) => {
+  const account = selectAccount(accountID)(state);
+  if (!account) return undefined;
+  const network = selectNetwork(state);
+  return toDisplayTxForAccount(account)(network);
+};
+
 export const selectTransactions =
   (...accounts: AccountID[]) =>
   (state: RootReducerState) => {
@@ -33,7 +37,7 @@ export const selectTransactions =
 
 const selectTransactionsForAccount =
   (accountID: AccountID) =>
-  (state: RootReducerState): TxDisplayInterface[] => {
+  (state: RootReducerState): TxInterface[] => {
     return Object.values(
       selectUnspentsAndTransactions(accountID)(state).transactions[state.app.network]
     );
@@ -79,7 +83,7 @@ export const selectUnspentsAndTransactions =
   (accountID: AccountID) => (state: RootReducerState) => {
     return (
       state.wallet.unspentsAndTransactions[accountID] ?? {
-        utxosMap: {},
+        utxos: {},
         transactions: { regtest: {}, liquid: {} },
       }
     );

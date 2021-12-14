@@ -4,8 +4,7 @@ import * as ACTION_TYPES from '../actions/action-types';
 import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
 import { AccountID, MainAccountID } from '../../../domain/account';
-import { TxDisplayInterface } from '../../../domain/transaction';
-import { NetworkString, UnblindedOutput } from 'ldk';
+import { NetworkString, TxInterface, UnblindedOutput } from 'ldk';
 
 export const walletInitState: WalletState = {
   [MainAccountID]: {
@@ -32,27 +31,9 @@ export const walletInitState: WalletState = {
   isVerified: false,
 };
 
-const addUnspent =
+const pushTxInState =
   (state: WalletState) =>
-  (accountID: AccountID, utxo: UnblindedOutput): WalletState => {
-    return {
-      ...state,
-      unspentsAndTransactions: {
-        ...state.unspentsAndTransactions,
-        [accountID]: {
-          ...state.unspentsAndTransactions[accountID],
-          utxosMap: {
-            ...state.unspentsAndTransactions[accountID].utxosMap,
-            [toStringOutpoint(utxo)]: utxo,
-          },
-        },
-      },
-    };
-  };
-
-const addTx =
-  (state: WalletState) =>
-  (accountID: AccountID, tx: TxDisplayInterface, network: NetworkString): WalletState => {
+  (accountID: AccountID, tx: TxInterface, network: NetworkString): WalletState => {
     return {
       ...state,
       unspentsAndTransactions: {
@@ -63,7 +44,7 @@ const addTx =
             ...state.unspentsAndTransactions[accountID].transactions,
             [network]: {
               ...state.unspentsAndTransactions[accountID].transactions[network],
-              [tx.txId]: tx,
+              [tx.txid]: tx,
             },
           },
         },
@@ -133,35 +114,8 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.ADD_UTXO: {
-      return addUnspent(state)(payload.accountID, payload.utxo);
-    }
-
-    case ACTION_TYPES.DELETE_UTXO: {
-      const accountID = payload.accountID as AccountID;
-      if (!state.unspentsAndTransactions[accountID]) {
-        return state;
-      }
-
-      const {
-        [toStringOutpoint({ txid: payload.txid, vout: payload.vout })]: deleted,
-        ...utxosMap
-      } = state.unspentsAndTransactions[accountID].utxosMap;
-
-      return {
-        ...state,
-        unspentsAndTransactions: {
-          ...state.unspentsAndTransactions,
-          [payload.accountID]: {
-            ...state.unspentsAndTransactions[accountID],
-            utxosMap,
-          },
-        },
-      };
-    }
-
     case ACTION_TYPES.ADD_TX: {
-      return addTx(state)(payload.accountID, payload.tx, payload.network);
+      return pushTxInState(state)(payload.accountID, payload.tx, payload.network);
     }
 
     case ACTION_TYPES.SET_DEEP_RESTORER_GAP_LIMIT: {
@@ -185,7 +139,7 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.FLUSH_UTXOS: {
+    case ACTION_TYPES.SET_UTXOS: {
       const accountID = payload.accountID as AccountID;
       return {
         ...state,
@@ -193,7 +147,7 @@ export function walletReducer(
           ...state.unspentsAndTransactions,
           [accountID]: {
             ...state.unspentsAndTransactions[accountID],
-            utxosMap: {},
+            utxosMap: utxosArrayToRecord(payload.utxos),
           },
         },
       };
@@ -236,3 +190,14 @@ const increment = (n: number | undefined): number => {
   if (n < 0) return 1; // -Infinity = 0, return 0+1=1
   return n + 1;
 };
+
+function arrayToObject<T>(array: T[], key: (item: T) => string): { [key: string]: T } {
+  const obj: { [key: string]: T } = {};
+  array.forEach((item) => {
+    obj[key(item)] = item;
+  });
+  return obj;
+}
+
+const utxosArrayToRecord = (outputs: UnblindedOutput[]) =>
+  arrayToObject<UnblindedOutput>(outputs, (utxo) => toStringOutpoint(utxo));

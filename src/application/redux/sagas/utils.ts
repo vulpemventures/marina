@@ -1,6 +1,7 @@
 import { StrictEffect, select, call } from 'redux-saga/effects';
 import { Account, AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
+import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
 import { selectAccount, selectAllAccountsIDs } from '../selectors/wallet.selector';
 
@@ -10,11 +11,28 @@ export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
   YieldType
 >;
 
+function customSagaParser(obj: any): any {
+  if (typeof obj === 'object') {
+    if (isBufferLike(obj)) {
+      return reviver('', obj);
+    }
+
+    for (const key in obj) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(key)) {
+        obj[key] = customSagaParser(obj[key]);
+      }
+    }
+  }
+
+  return obj;
+}
+
 // create a saga "selector" (a generator) from a redux selector function
 export function newSagaSelector<R>(selectorFn: (state: RootReducerState) => R) {
   return function* (): SagaGenerator<R> {
     const result = yield select(selectorFn);
-    return result;
+    return customSagaParser(result);
   };
 }
 

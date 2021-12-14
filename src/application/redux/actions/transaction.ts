@@ -9,9 +9,15 @@ import {
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
-import { TxDisplayInterface } from '../../../domain/transaction';
-import { NetworkString, UnblindedOutput } from 'ldk';
+import { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
 import { AccountID } from '../../../domain/account';
+import { ActionWithPayload } from '../../../domain/common';
+
+export type AddTxAction = ActionWithPayload<{
+  tx: TxInterface;
+  network: NetworkString;
+  accountID: AccountID;
+}>;
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
@@ -47,11 +53,7 @@ export function setPset(pset: string, utxos: UnblindedOutput[]): AnyAction {
   };
 }
 
-export function addTx(
-  accountID: AccountID,
-  tx: TxDisplayInterface,
-  network: NetworkString
-): AnyAction {
+export function addTx(accountID: AccountID, tx: TxInterface, network: NetworkString): AddTxAction {
   return {
     type: ADD_TX,
     payload: { tx, network, accountID },

@@ -1,5 +1,5 @@
-import { NetworkString, Outpoint, toOutpoint, UnblindedOutput } from 'ldk';
-import { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
+import { NetworkString, Outpoint, toOutpoint, TxInterface, UnblindedOutput } from 'ldk';
+import { TxsHistory } from '../../domain/transaction';
 import { MarinaEventType } from 'marina-provider';
 
 export interface MarinaEvent<P extends any> {
@@ -9,7 +9,7 @@ export interface MarinaEvent<P extends any> {
 
 export type NewUtxoMarinaEvent = MarinaEvent<UnblindedOutput>;
 export type SpentUtxoMarinaEvent = MarinaEvent<Outpoint>;
-export type NewTxMarinaEvent = MarinaEvent<TxDisplayInterface>;
+export type NewTxMarinaEvent = MarinaEvent<TxInterface>;
 export type EnabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
 export type DisabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
 export type NetworkMarinaEvent = MarinaEvent<NetworkString>;
