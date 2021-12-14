@@ -8,17 +8,17 @@ import { WalletState } from './wallet';
 
 // inspired by: https://gist.github.com/lafiosca/b7bbb569ae3fe5c1ce110bf71d7ee153
 
-type WalletPersistedStateV2 = WalletState & Partial<PersistedState>; // the current version
-type keysAddedInV2 = 'unspentsAndTransactions' | 'mainAccount';
+export type WalletPersistedStateV2 = WalletState & Partial<PersistedState>; // the current version
+type keysAddedInV2 = 'unspentsAndTransactions' | 'mainAccount' | 'updaterLoaders';
 type deletedInV2 = {
   encryptedMnemonic: EncryptedMnemonic;
   masterBlindingKey: MasterBlindingKey;
   masterXPub: MasterXPub;
   restorerOpts: StateRestorerOpts;
 };
-type WalletPersistedStateV1 = Omit<WalletPersistedStateV2, keysAddedInV2> & deletedInV2;
+export type WalletPersistedStateV1 = Omit<WalletPersistedStateV2, keysAddedInV2> & deletedInV2;
 
-const walletMigrations = {
+export const walletMigrations = {
   2: (state: WalletPersistedStateV1): WalletPersistedStateV2 => {
     return {
       mainAccount: {
