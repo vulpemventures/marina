@@ -30,7 +30,7 @@ const SettingsChangePasswordForm = (props: FormikProps<SettingsChangePasswordFor
       <Input
         name="currentPassword"
         placeholder="Enter current password"
-        title="Create password"
+        title="Current password"
         type="password"
         {...props}
       />
