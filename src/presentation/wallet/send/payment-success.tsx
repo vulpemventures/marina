@@ -1,19 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import Button from '../../components/button';
 import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { useDispatch } from 'react-redux';
-import { flushPendingTx } from '../../../application/redux/actions/transaction';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { AccountID } from '../../../domain/account';
-import { updateTaskAction } from '../../../application/redux/actions/updater';
 
 interface LocationState {
   txid: string;
-  accountIDs: AccountID[];
 }
 
 export interface PaymentSuccessProps {
@@ -22,7 +16,6 @@ export interface PaymentSuccessProps {
 
 const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL }) => {
   const { state } = useLocation<LocationState>();
-  const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
 
   // Populate ref div with svg animation
@@ -36,17 +29,6 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
     });
 
   const handleBackToHome = () => history.push(DEFAULT_ROUTE);
-
-  // Cleanup and change address derivation
-  useEffect(() => {
-    void (async () => {
-      await dispatch(flushPendingTx());
-
-      await Promise.all((state.accountIDs ?? []).map(updateTaskAction).map(dispatch)).catch(
-        console.error
-      );
-    })();
-  }, []);
 
   return (
     <ShellPopUp

@@ -11,6 +11,10 @@ import { extractErrorMessage } from '../../utils/error';
 import { Account } from '../../../domain/account';
 import { Transaction } from 'liquidjs-lib';
 import { UnblindedOutput } from 'ldk';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { flushPendingTx } from '../../../application/redux/actions/transaction';
 
 export interface EndOfFlowProps {
   accounts: Account[];
@@ -30,6 +34,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   changeAddresses,
 }) => {
   const history = useHistory();
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
@@ -51,9 +56,20 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       const txid = Transaction.fromHex(tx).getId();
       await broadcastTx(explorerURL, tx);
 
+      // start updater
+      await Promise.all(
+        accounts
+          .map((a) => a.getAccountID())
+          .map(updateTaskAction)
+          .map(dispatch)
+      );
+      // flush pending tx state
+      await dispatch(flushPendingTx());
+
+      // push to success page
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txid, accountIDs: accounts.map((a) => a.getAccountID()) },
+        state: { txid },
       });
     } catch (error: unknown) {
       return history.push({

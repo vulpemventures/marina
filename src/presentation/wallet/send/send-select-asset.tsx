@@ -7,19 +7,13 @@ import { setAsset } from '../../../application/redux/actions/transaction';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Asset } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
-import { NetworkString } from 'ldk';
 
 export interface SendSelectAssetProps {
-  network: NetworkString;
   balances: BalancesByAsset;
   balanceAssets: Array<Asset & { assetHash: string }>;
 }
 
-const SendSelectAssetView: React.FC<SendSelectAssetProps> = ({
-  network,
-  balanceAssets,
-  balances,
-}) => {
+const SendSelectAssetView: React.FC<SendSelectAssetProps> = ({ balanceAssets, balances }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
@@ -32,7 +26,6 @@ const SendSelectAssetView: React.FC<SendSelectAssetProps> = ({
     <AssetListScreen
       title="Send Asset"
       onClick={handleSend}
-      network={network}
       assets={balanceAssets}
       balances={balances}
     />

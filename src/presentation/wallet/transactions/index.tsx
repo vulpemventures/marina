@@ -76,6 +76,9 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   // update tx history for main account once at first render
   useEffect(() => {
     dispatch(updateTaskAction(MainAccountID)).catch(console.error);
+    return () => {
+      setModalTxDetails(undefined);
+    };
   }, []);
 
   return (

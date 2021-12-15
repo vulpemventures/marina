@@ -32,18 +32,20 @@ export function transactionReducer(
   { type, payload }: AnyAction
 ): TransactionState {
   switch (type) {
+    case ACTION_TYPES.PENDING_TX_SET_STEP: {
+      return { ...state, step: payload.step };
+    }
+
     case ACTION_TYPES.PENDING_TX_SET_ASSET: {
       return {
         ...state,
-        step: 'address-amount',
         sendAsset: payload.asset,
       };
     }
     case ACTION_TYPES.PENDING_TX_SET_ADDRESSES_AND_AMOUNT: {
       return {
         ...state,
-        step: 'choose-fee',
-        sendAddress: payload.receipientAddress,
+        sendAddress: payload.recipientAddress,
         changeAddresses: payload.changeAddresses,
         sendAmount: payload.amountInSatoshi,
       };
@@ -71,7 +73,6 @@ export function transactionReducer(
     case ACTION_TYPES.PENDING_TX_SET_PSET: {
       return {
         ...state,
-        step: 'confirmation',
         pset: payload.pset,
         selectedUtxos: payload.utxos,
       };

@@ -21,7 +21,6 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
     <AssetListScreen
       title="Receive Asset"
       onClick={handleSend}
-      network={network}
       assets={[UnknowAsset].concat(assets)}
     />
   );

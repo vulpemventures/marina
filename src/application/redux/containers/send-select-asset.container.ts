@@ -11,7 +11,6 @@ const mapStateToProps = (state: RootReducerState): SendSelectAssetProps => {
   const balances = selectBalances(MainAccountID)(state);
   const getAsset = assetGetterFromIAssets(state.assets);
   return {
-    network: state.app.network,
     balanceAssets: Object.keys(balances).map(getAsset),
     balances,
   };

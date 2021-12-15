@@ -28,8 +28,10 @@ import { IAssets } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import {
+  flushPendingTx,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
+  setPendingTxStep,
   setPset,
 } from '../../../application/redux/actions/transaction';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -79,6 +81,18 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
+  useEffect(() => {
+    if (!changeAddress?.value || !sendAddress?.value || !sendAsset) {
+      dispatch(flushPendingTx()).catch(console.error);
+      history.goBack();
+    } else {
+      dispatch(setPendingTxStep('choose-fee')).catch(console.error);
+    }
+    return () => {
+      setFeeAsset(lbtcAssetHash);
+    };
+  }, []);
+
   const [state, setState] = useState(initialState);
   const [feeAsset, setFeeAsset] = useState<string | undefined>(lbtcAssetHash);
   const [loading, setLoading] = useState(false);
@@ -97,7 +111,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const getRecipient = () => ({
     asset: sendAsset,
     value: sendAmount,
-    address: sendAddress!.value,
+    address: sendAddress?.value || '',
   });
 
   const isTaxi = () => feeAsset !== lbtcAssetHash;
@@ -106,6 +120,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   useEffect(() => {
     if (!sendAddress || !changeAddress) {
       history.goBack(); // should be set in previous step
+      return;
     }
 
     if (loading) return;
@@ -119,14 +134,19 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           account,
           feeAsset,
           getRecipient(),
-          changeAddress!,
+          changeAddress,
           utxos,
           network,
           state.topup
         )
-      : stateForRegularPSET(getRecipient(), changeAddress!, utxos, network);
+      : stateForRegularPSET(getRecipient(), changeAddress, utxos, network);
 
     newStatePromise.then(setState).catch(handleError).finally(done);
+
+    return () => {
+      setState(initialState);
+      setFeeAsset(undefined);
+    };
   }, [feeAsset]);
 
   // dispatch a set of actions in order to save the pset in redux state
@@ -257,13 +277,11 @@ function stateForRegularPSET(
   result.utxos = [];
   const w = walletFromCoins(utxos, network);
 
-  result.unsignedPset = w.buildTx(
-    w.createTx(),
-    [recipient],
+  result.unsignedPset = w.sendTx(
+    recipient,
     greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-    () => change.value,
-    true,
-    0.1
+    change.value,
+    true
   );
 
   result.topup = undefined;
@@ -323,6 +341,7 @@ function actionsFromState(state: State, feeCurrency: string, accountID: AccountI
   const actions: AnyAction[] = [];
   const feeAmount = state.topup ? state.topup.assetAmount : feeAmountFromTx(state.unsignedPset);
   actions.push(setPset(state.unsignedPset, state.utxos));
+  actions.push(setPendingTxStep('confirmation'));
   actions.push(setFeeAssetAndAmount(feeCurrency, feeAmount));
 
   if (state.feeChange) {

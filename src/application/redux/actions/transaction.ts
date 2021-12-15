@@ -5,6 +5,7 @@ import {
   PENDING_TX_SET_FEE_CHANGE_ADDRESS,
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
   PENDING_TX_SET_PSET,
+  PENDING_TX_SET_STEP,
   ADD_TX,
 } from './action-types';
 import { AnyAction } from 'redux';
@@ -12,6 +13,7 @@ import { Address } from '../../../domain/address';
 import { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
 import { AccountID } from '../../../domain/account';
 import { ActionWithPayload } from '../../../domain/common';
+import { PendingTxStep } from '../reducers/transaction-reducer';
 
 export type AddTxAction = ActionWithPayload<{
   tx: TxInterface;
@@ -23,14 +25,18 @@ export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
 }
 
+export function setPendingTxStep(step: PendingTxStep): AnyAction {
+  return { type: PENDING_TX_SET_STEP, payload: { step } };
+}
+
 export function setAddressesAndAmount(
-  receipientAddress: Address,
-  changeAddresses: Address[],
-  amountInSatoshi: number
+  amountInSatoshi: number,
+  changeAddresses?: Address[],
+  recipientAddress?: Address
 ): AnyAction {
   return {
     type: PENDING_TX_SET_ADDRESSES_AND_AMOUNT,
-    payload: { receipientAddress, changeAddresses, amountInSatoshi },
+    payload: { recipientAddress, changeAddresses, amountInSatoshi },
   };
 }
 

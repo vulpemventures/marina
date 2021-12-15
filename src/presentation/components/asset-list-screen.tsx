@@ -8,23 +8,15 @@ import { getAssetImage } from '../../application/utils';
 import { BalancesByAsset } from '../../application/redux/selectors/balance.selector';
 import { Asset } from '../../domain/assets';
 import ButtonList from './button-list';
-import { NetworkString } from 'ldk';
 
 export interface AssetListProps {
-  network: NetworkString;
   assets: Array<Asset & { assetHash: string }>; // the assets to display
   onClick: (assetHash: string) => Promise<void>;
   balances?: BalancesByAsset;
   title: string;
 }
 
-const AssetListScreen: React.FC<AssetListProps> = ({
-  title,
-  onClick,
-  network,
-  assets,
-  balances,
-}) => {
+const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, balances }) => {
   const history = useHistory();
 
   // Filter assets
@@ -42,6 +34,10 @@ const AssetListScreen: React.FC<AssetListProps> = ({
     );
 
     setSearchResults(results);
+    return () => {
+      setSearchTerm('');
+      setSearchResults(assets);
+    };
   }, [searchTerm]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

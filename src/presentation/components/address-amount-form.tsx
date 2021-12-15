@@ -3,7 +3,10 @@ import { RouteComponentProps } from 'react-router';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import cx from 'classnames';
 import Button from './button';
-import { setAddressesAndAmount } from '../../application/redux/actions/transaction';
+import {
+  setAddressesAndAmount,
+  setPendingTxStep,
+} from '../../application/redux/actions/transaction';
 import { createAddress } from '../../domain/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
@@ -20,7 +23,7 @@ interface AddressAmountFormValues {
   amount: number;
   assetTicker: string;
   assetPrecision: number;
-  balances: { [assetHash: string]: number };
+  balance: number;
 }
 
 interface AddressAmountFormProps {
@@ -35,7 +38,23 @@ interface AddressAmountFormProps {
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
-  const { errors, handleChange, handleBlur, handleSubmit, isSubmitting, touched, values } = props;
+  const {
+    errors,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    isSubmitting,
+    touched,
+    values,
+    setFieldValue,
+    setFieldTouched,
+  } = props;
+
+  const setMaxAmount = () => {
+    const maxAmount = values.balance;
+    setFieldValue('amount', maxAmount);
+    setFieldTouched('amount', true, false);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="mt-10">
@@ -93,8 +112,17 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
             </span>
           </div>
         </label>
+        <p className="text-primary text-right">
+          <button
+            onClick={setMaxAmount}
+            className="background-transparent focus:outline-none px-3 py-1 mt-1 mb-1 mr-1 text-xs font-bold uppercase transition-all duration-150 ease-linear outline-none"
+            type="button"
+          >
+            SEND ALL
+          </button>
+        </p>
         {errors.amount && touched.amount && (
-          <p className="text-red h-10 mt-2 text-xs font-medium text-left">{errors.amount}</p>
+          <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.amount}</p>
         )}
       </div>
 
@@ -122,13 +150,16 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     amount:
       props.transaction.sendAmount > 0
         ? fromSatoshi(
-            props.transaction.sendAmount,
+            props.transaction.sendAmount ?? 0,
             props.assets[props.transaction.sendAsset].precision
           )
         : ('' as unknown as number),
     assetTicker: props.assets[props.transaction.sendAsset]?.ticker ?? '',
     assetPrecision: props.assets[props.transaction.sendAsset]?.precision ?? defaultPrecision,
-    balances: props.balances,
+    balance: fromSatoshi(
+      props.balances[props.transaction.sendAsset] ?? 0,
+      props.assets[props.transaction.sendAsset]?.precision
+    ),
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
@@ -168,13 +199,14 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     await props
       .dispatch(
         setAddressesAndAmount(
-          createAddress(values.address),
+          toSatoshi(values.amount, values.assetPrecision),
           [changeAddress],
-          toSatoshi(values.amount, values.assetPrecision)
+          createAddress(values.address)
         )
       )
       .catch(console.error);
 
+    await props.dispatch(setPendingTxStep('address-amount'));
     props.history.push({
       pathname: SEND_CHOOSE_FEE_ROUTE,
     });
