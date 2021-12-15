@@ -36,12 +36,14 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
+  const [signedTx, setSignedTx] = useState<string>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const handleUnlock = async (password: string) => {
     try {
+      setSignedTx(undefined);
       if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
       const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(pass)));
@@ -52,6 +54,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         [recipientAddress],
         changeAddresses
       );
+      setSignedTx(tx);
 
       const txid = Transaction.fromHex(tx).getId();
       await broadcastTx(explorerURL, tx);
@@ -75,7 +78,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {
-          tx: '',
+          tx: signedTx,
           error: extractErrorMessage(error),
         },
       });
