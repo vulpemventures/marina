@@ -11,6 +11,9 @@ export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
   YieldType
 >;
 
+// customSagaParser is a recursive function that parses the result of a saga selector
+// this is a trick due to the fact that the state requested by saga is parsed by JSON.parse
+// which does not include our custom Buffer serialization format @see browser-storage-converters.ts file.
 function customSagaParser(obj: any): any {
   if (typeof obj === 'object') {
     if (isBufferLike(obj)) {
