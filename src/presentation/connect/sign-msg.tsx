@@ -15,6 +15,7 @@ import { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
 import { SignedMessage } from 'marina-provider';
 import { NetworkString } from 'ldk';
+import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 
 function signMsgWithPassword(
   message: string,
@@ -112,7 +113,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
         </>
       ) : (
         <>
-          <h1 className="mt-8 text-lg font-medium">Oops, Something went wrong...</h1>
+          <h1 className="mt-8 text-lg font-medium">{SOMETHING_WENT_WRONG_ERROR}</h1>
           <p className="font-small mt-4 text-sm">{error}</p>
           <img className="mx-auto my-10" src="/assets/images/cross.svg" alt="error" />
           <Button
