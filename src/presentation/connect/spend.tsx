@@ -27,6 +27,7 @@ import { selectMainAccount, selectUtxos } from '../../application/redux/selector
 import PopupWindowProxy from './popupWindowProxy';
 import { Account, MainAccountID } from '../../domain/account';
 import { lbtcAssetByNetwork } from '../../application/utils';
+import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -143,7 +144,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         </>
       ) : (
         <div className="flex flex-col justify-center p-2 align-middle">
-          <h1 className="mt-8 text-lg font-medium">Oops, Something went wrong...</h1>
+          <h1 className="mt-8 text-lg font-medium">{SOMETHING_WENT_WRONG_ERROR}</h1>
           <span className="max-w-xs mr-2 font-light">{error}</span>
           <img className="mx-auto my-10" src="/assets/images/cross.svg" alt="error" />
           <Button

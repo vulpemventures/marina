@@ -29,7 +29,7 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
       btnDisabled={restorationLoading}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="Networks"
+      currentPage="Deep restorer"
     >
       <p className="font-regular my-8 text-base text-left">Select the restoration gap limit</p>
       <Select

@@ -4,6 +4,7 @@ import { networks, NetworkString } from 'ldk';
 
 export const INVALID_MNEMONIC_ERROR = 'Invalid mnemonic';
 export const INVALID_PASSWORD_ERROR = 'Invalid password';
+export const SOMETHING_WENT_WRONG_ERROR = 'Oops, something went wrong...';
 
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,

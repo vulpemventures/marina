@@ -69,7 +69,7 @@ const SettingsExplorer: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Explorer"
     >
-      <p className="font-sm mt-8 text-left">Select the explorer</p>
+      <p className="font-regular my-8 text-base text-left">Select the explorer</p>
       <Select
         onClick={() => setCustom(false)}
         list={explorerTypesForNetwork(network)}
