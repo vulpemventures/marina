@@ -2,6 +2,8 @@ import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 import blockstreamAssetHashes from '../constants/blockstream_asset_hash.json';
 import { networks, NetworkString } from 'ldk';
 
+export const SOMETHING_WENT_WRONG_ERROR = 'Oops, something went wrong...';
+
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
   '50': 0.1,
