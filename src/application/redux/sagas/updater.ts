@@ -124,7 +124,7 @@ function* requestAssetInfoFromEsplora(assetHash: string): SagaGenerator<Asset> {
 
   return {
     name: result?.name ?? 'Unknown',
-    ticker: result?.name ?? assetHash.slice(0, 4).toUpperCase(),
+    ticker: result?.ticker ?? assetHash.slice(0, 4).toUpperCase(),
     precision: result?.precision ?? defaultPrecision,
   };
 }
@@ -141,15 +141,26 @@ function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, A
   }
 }
 
+const selectAssetSaga = (assetHash: string) =>
+  newSagaSelector((state: RootReducerState) => state.assets[assetHash]);
+
 const selectAllAssetsSaga = newSagaSelector(
   (state: RootReducerState) => new Set(Object.keys(state.assets))
 );
 
+function* needUpdate(assetHash: string): SagaGenerator<boolean> {
+  const assets = yield* selectAllAssetsSaga();
+  if (!assets.has(assetHash)) return true; // fetch if the asset is not in the state
+  const asset = yield* selectAssetSaga(assetHash)();
+  if (!asset) return true; // fetch if the asset is undefined
+  if (asset.ticker === assetHash.slice(0, 4).toUpperCase()) return true; // fetch if the ticker is not in the state
+  return false;
+}
+
 function* assetsWorker(assetsChan: Channel<string>): SagaGenerator<void, string> {
   while (true) {
     const assetHashFromUpdater = yield take(assetsChan);
-    const assets = yield* selectAllAssetsSaga();
-    if (!assets.has(assetHashFromUpdater)) {
+    if (yield* needUpdate(assetHashFromUpdater)) {
       const asset = yield* requestAssetInfoFromEsplora(assetHashFromUpdater);
       yield put(addAsset(assetHashFromUpdater, asset));
     }
