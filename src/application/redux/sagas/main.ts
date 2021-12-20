@@ -28,6 +28,7 @@ import {
   SagaGenerator,
   selectAllAccountsIDsSaga,
   selectNetworkSaga,
+  selectUpdaterIsLoadingSaga,
 } from './utils';
 import { watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
@@ -66,6 +67,8 @@ function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
 }
 
 function* dispatchUpdateTaskForAllAccountsIDs(): SagaGenerator<void, void> {
+  const isUpdating = yield* selectUpdaterIsLoadingSaga();
+  if (isUpdating) return; // skip if any updater worker is already running
   const accountIDs = yield* selectAllAccountsIDsSaga();
   yield all(accountIDs.map((id) => put(updateTaskAction(id))));
 }
