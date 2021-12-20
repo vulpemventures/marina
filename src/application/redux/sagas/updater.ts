@@ -63,7 +63,6 @@ function* getAddressesFromAccount(account: Account): SagaGenerator<AddressInterf
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString) =>
   function* (tx: TxInterface) {
-    console.log(tx.txid);
     yield put(addTx(accountID, tx, network));
   };
 
