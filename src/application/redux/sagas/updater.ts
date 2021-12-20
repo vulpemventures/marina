@@ -63,6 +63,7 @@ function* getAddressesFromAccount(account: Account): SagaGenerator<AddressInterf
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString) =>
   function* (tx: TxInterface) {
+    console.log(tx.txid);
     yield put(addTx(accountID, tx, network));
   };
 
@@ -161,8 +162,12 @@ function* assetsWorker(assetsChan: Channel<string>): SagaGenerator<void, string>
   while (true) {
     const assetHashFromUpdater = yield take(assetsChan);
     if (yield* needUpdate(assetHashFromUpdater)) {
-      const asset = yield* requestAssetInfoFromEsplora(assetHashFromUpdater);
-      yield put(addAsset(assetHashFromUpdater, asset));
+      try {
+        const asset = yield* requestAssetInfoFromEsplora(assetHashFromUpdater);
+        yield put(addAsset(assetHashFromUpdater, asset));
+      } catch (e) {
+        console.warn(`Error fetching asset ${assetHashFromUpdater}`, e);
+      }
     }
   }
 }
