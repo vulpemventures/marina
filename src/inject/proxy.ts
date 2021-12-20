@@ -9,9 +9,10 @@ export default class WindowProxy {
       window.addEventListener(
         id,
         (event: Event) => {
+          if (!(event instanceof Event)) return reject(new Error('invalid event'));
           const response = parse((event as CustomEvent).detail);
 
-          if (!response.success) return reject(new Error(response.error));
+          if (!response.success) return reject(new Error(response?.error ?? 'unknown error'));
           return resolve(response.data);
         },
         {
