@@ -24,7 +24,7 @@ import { MasterXPub } from './master-extended-pub';
 export const MainAccountID = 'mainAccount';
 export const RestrictedAssetAccountID = 'restrictedAssetAccount';
 
-export type AccountID = 'mainAccount';
+export type AccountID = MainAccountID;
 
 /**
  * Account domain represents the keys of the User
