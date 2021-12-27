@@ -131,7 +131,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
             </div>
           ))}
 
-          <div className="bottom-24 container absolute right-0 flex justify-between">
+          <div className="bottom-12 container absolute right-0 flex justify-between">
             <Button isOutline={true} onClick={handleReject} textBase={true}>
               Reject
             </Button>
