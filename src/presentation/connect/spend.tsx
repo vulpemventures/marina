@@ -122,7 +122,6 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
                   <span className="text-lg font-medium">{recipient.value}</span>
                   <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
                 </div>
-
                 <div className="container flex items-baseline justify-between">
                   <span className="mr-2 text-lg font-medium">To: </span>
                   <span className="font-small text-sm break-all">
