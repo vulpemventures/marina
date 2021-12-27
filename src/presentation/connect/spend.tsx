@@ -115,21 +115,23 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
 
-          {connectData.tx?.recipients?.map((recipient: RecipientInterface, index) => (
-            <div key={index}>
-              <div className="container flex justify-between mt-16">
-                <span className="text-lg font-medium">{recipient.value}</span>
-                <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
-              </div>
+          <div className="h-64 mt-4 overflow-y-auto">
+            {connectData.tx?.recipients?.map((recipient: RecipientInterface, index) => (
+              <div key={index}>
+                <div className="container flex justify-between mt-6">
+                  <span className="text-lg font-medium">{recipient.value}</span>
+                  <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
+                </div>
 
-              <div className="container flex items-baseline justify-between mt-4">
-                <span className="mr-2 text-lg font-medium">To: </span>
-                <span className="font-small text-sm break-all">
-                  {formatAddress(recipient.address)}
-                </span>
+                <div className="container flex items-baseline justify-between">
+                  <span className="mr-2 text-lg font-medium">To: </span>
+                  <span className="font-small text-sm break-all">
+                    {formatAddress(recipient.address)}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           <div className="bottom-12 container absolute right-0 flex justify-between">
             <Button isOutline={true} onClick={handleReject} textBase={true}>
