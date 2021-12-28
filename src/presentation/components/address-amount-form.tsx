@@ -105,6 +105,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
               onBlur={handleBlur}
               placeholder="0"
               type="number"
+              lang="en"
               value={values.amount}
             />
             <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-base font-medium">
