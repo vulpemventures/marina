@@ -1,5 +1,6 @@
 import { balances } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
+import { lbtcAssetByNetwork } from '../../utils';
 
 export type BalancesByAsset = { [assetHash: string]: number };
 /**
@@ -9,5 +10,12 @@ export type BalancesByAsset = { [assetHash: string]: number };
  */
 export function balancesSelector(state: RootReducerState): BalancesByAsset {
   const utxos = Object.values(state.wallet.utxoMap);
-  return balances(utxos);
+  const balancesFromUtxos = balances(utxos);
+
+  const lbtcAssetHash = lbtcAssetByNetwork(state.app.network);
+  if (!Object.prototype.hasOwnProperty.call(balancesFromUtxos, lbtcAssetHash)) {
+    balancesFromUtxos[lbtcAssetHash] = 0;
+  }
+
+  return balancesFromUtxos;
 }

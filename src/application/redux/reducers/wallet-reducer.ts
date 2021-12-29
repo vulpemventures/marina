@@ -51,9 +51,7 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedInternalIndex: state.restorerOpts.lastUsedInternalIndex
-            ? state.restorerOpts.lastUsedInternalIndex + 1
-            : 0,
+          lastUsedInternalIndex: increment(state.restorerOpts.lastUsedInternalIndex),
         },
       };
     }
@@ -63,9 +61,7 @@ export function walletReducer(
         ...state,
         restorerOpts: {
           ...state.restorerOpts,
-          lastUsedExternalIndex: state.restorerOpts.lastUsedExternalIndex
-            ? state.restorerOpts.lastUsedExternalIndex + 1
-            : 0,
+          lastUsedExternalIndex: increment(state.restorerOpts.lastUsedExternalIndex),
         },
       };
     }
@@ -141,3 +137,9 @@ export function walletReducer(
     }
   }
 }
+
+const increment = (n: number | undefined): number => {
+  if (n === undefined || n === null) return 0;
+  if (n < 0) return 1; // -Infinity = 0, return 0+1=1
+  return n + 1;
+};
