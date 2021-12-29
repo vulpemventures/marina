@@ -13,7 +13,7 @@ export function balancesSelector(state: RootReducerState): BalancesByAsset {
   const balancesFromUtxos = balances(utxos);
 
   const lbtcAssetHash = lbtcAssetByNetwork(state.app.network);
-  if (balancesFromUtxos[lbtcAssetHash] === undefined) {
+  if (!Object.prototype.hasOwnProperty.call(balancesFromUtxos, lbtcAssetHash)) {
     balancesFromUtxos[lbtcAssetHash] = 0;
   }
 
