@@ -35,7 +35,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.isEnabled.name, []);
   }
 
-  getNetwork(): Promise<'liquid' | 'regtest'> {
+  getNetwork(): Promise<'liquid' | 'regtest' | 'testnet'> {
     return this.proxy(this.getNetwork.name, []);
   }
 
