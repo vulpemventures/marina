@@ -118,7 +118,6 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
           <div className="h-64 mt-4 overflow-y-auto">
             {connectData.tx?.recipients?.map((recipient: RecipientInterface, index) => (
               <div key={index}>
-                {console.log('xxxxx', recipient)}
                 <div className="container flex justify-between mt-6">
                   <span className="text-lg font-medium">{fromSatoshi(recipient.value)}</span>
                   <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
