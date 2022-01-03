@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import { formatAddress } from '../utils';
+import { formatAddress, fromSatoshi } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
@@ -118,8 +118,9 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
           <div className="h-64 mt-4 overflow-y-auto">
             {connectData.tx?.recipients?.map((recipient: RecipientInterface, index) => (
               <div key={index}>
+                {console.log('xxxxx', recipient)}
                 <div className="container flex justify-between mt-6">
-                  <span className="text-lg font-medium">{recipient.value}</span>
+                  <span className="text-lg font-medium">{fromSatoshi(recipient.value)}</span>
                   <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
                 </div>
                 <div className="container flex items-baseline justify-between">
