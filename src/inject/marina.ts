@@ -68,6 +68,10 @@ export default class Marina extends WindowProxy implements MarinaProvider {
       throw new Error('invalid recipients array');
     }
 
+    recipients.forEach((recipient: Recipient) => {
+      if (recipient.value < 0) throw new Error('invalid negative value');
+    });
+
     return this.proxy(this.sendTransaction.name, [recipients, feeAssetHash]);
   }
 
