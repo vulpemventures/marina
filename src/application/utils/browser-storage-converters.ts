@@ -31,7 +31,7 @@ export function replacer(key: string, value: any) {
   return value;
 }
 
-export function reviver(_: string, value: any) {
+export function reviver(key: string, value: any) {
   if (isBufferLike(value)) {
     if (isArray(value.data)) {
       return Buffer.from(value.data);
@@ -46,7 +46,7 @@ export function reviver(_: string, value: any) {
   return value;
 }
 
-export function isBufferLike(x: any): boolean {
+function isBufferLike(x: any): boolean {
   return isObject(x) && x.type === 'Buffer' && (isArray(x.data) || isString(x.data));
 }
 

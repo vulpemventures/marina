@@ -1,14 +1,19 @@
 import { UnblindedOutput } from 'ldk';
+import { AnyAction } from 'redux';
 import { AccountID } from '../../../domain/account';
 import { ActionWithPayload } from '../../../domain/common';
-import { SET_UTXOS } from './action-types';
+import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS } from './action-types';
 
-export type SetUtxosAction = ActionWithPayload<{ accountID: AccountID; utxos: UnblindedOutput[] }>;
+export type AddUtxoAction = ActionWithPayload<{ accountID: AccountID; utxo: UnblindedOutput }>;
 
-export function setUtxos(accountID: AccountID, utxos: UnblindedOutput[]): SetUtxosAction {
-  return { type: SET_UTXOS, payload: { accountID, utxos } };
+export function addUtxo(accountID: AccountID, utxo: UnblindedOutput): AddUtxoAction {
+  return { type: ADD_UTXO, payload: { accountID, utxo } };
 }
 
-export function flushUtxos(accountID: AccountID): SetUtxosAction {
-  return { type: SET_UTXOS, payload: { accountID, utxos: [] } };
+export function deleteUtxo(accountID: AccountID, txid: string, vout: number): AnyAction {
+  return { type: DELETE_UTXO, payload: { txid, vout, accountID } };
+}
+
+export function flushUtxos(accountID: AccountID): AnyAction {
+  return { type: FLUSH_UTXOS, payload: { accountID } };
 }

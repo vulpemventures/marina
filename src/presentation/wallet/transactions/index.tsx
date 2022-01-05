@@ -34,13 +34,13 @@ interface LocationState {
 
 export interface TransactionsProps {
   assets: IAssets;
-  getTransactions: () => Promise<TxDisplayInterface[]>;
+  transactions: TxDisplayInterface[];
   webExplorerURL: string;
 }
 
 const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
-  getTransactions,
+  transactions,
   webExplorerURL,
 }) => {
   const history = useHistory();
@@ -48,16 +48,8 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const getAssetImgPath = () => getAssetImage(state.assetHash);
 
-  const [transactions, setTransactions] = useState<TxDisplayInterface[]>([]);
+  // TxDetails Modal
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
-
-  // effect runs at render
-  useEffect(() => {
-    getTransactions()
-      .then(setTransactions)
-      .catch(() => setTransactions([]));
-    return () => setTransactions(transactions);
-  }, []);
 
   // Save mnemonic modal
   const handleReceive = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);

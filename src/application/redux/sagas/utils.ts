@@ -1,13 +1,13 @@
 import { StrictEffect, select, call } from 'redux-saga/effects';
 import { Account, AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
-import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
 import {
   selectAccount,
   selectAllAccountsIDs,
   selectUpdaterIsLoading,
 } from '../selectors/wallet.selector';
+import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 
 export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
   StrictEffect,

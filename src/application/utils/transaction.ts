@@ -21,7 +21,7 @@ import {
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
-import { Transfer, TxStatusEnum, TxDisplayInterface, TxType } from '../../domain/transaction';
+import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi } from './taxi';

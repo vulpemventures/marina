@@ -1,4 +1,4 @@
-import { balances, getAsset, isUnblindedOutput, TxInterface } from 'ldk';
+import { balances } from 'ldk';
 import { AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import { lbtcAssetByNetwork } from '../../utils';
@@ -29,7 +29,7 @@ const selectBalancesForAccount =
     const assets = Object.keys(balancesFromUtxos);
 
     for (const tx of txs) {
-      const allTxAssets = getSetOfAssetsInTx(tx);
+      const allTxAssets = tx.transfers.map((t) => t.asset);
       for (const a of allTxAssets) {
         if (!assets.includes(a)) {
           balancesFromUtxos[a] = 0;
@@ -46,18 +46,3 @@ const selectBalancesForAccount =
 
     return balancesFromUtxos;
   };
-
-function getSetOfAssetsInTx(tx: TxInterface): Set<string> {
-  const assets = new Set<string>();
-  for (const input of tx.vin) {
-    if (input.prevout && isUnblindedOutput(input.prevout)) {
-      assets.add(getAsset(input.prevout));
-    }
-  }
-
-  for (const output of tx.vout.filter(isUnblindedOutput)) {
-    assets.add(getAsset(output));
-  }
-
-  return assets;
-}

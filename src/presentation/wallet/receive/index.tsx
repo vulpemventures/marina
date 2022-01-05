@@ -38,7 +38,6 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
         dispatch(updateTaskAction(account.getAccountID())).catch(console.error);
       }, 2000);
     })().catch(console.error);
-    return () => setConfidentialAddress('');
   }, []);
 
   return (

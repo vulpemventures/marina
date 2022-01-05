@@ -7,11 +7,8 @@ import {
   EsploraRestorerOpts,
   masterPubKeyRestorerFromEsplora,
   NetworkString,
-  getScripts,
-  TxInterface,
-  networks,
 } from 'ldk';
-import { decrypt, toDisplayTransaction } from '../application/utils';
+import { decrypt } from '../application/utils';
 import {
   newMasterPublicKey,
   restoredMasterPublicKey,
@@ -71,12 +68,3 @@ export function createMnemonicAccount(
       ),
   };
 }
-
-export const toDisplayTxForAccount = (account: Account) => async (network: NetworkString) => {
-  const watchIdentity = await account.getWatchIdentity();
-  const addresses = await watchIdentity.getAddresses();
-  const walletScripts = getScripts(addresses);
-  return function (tx: TxInterface) {
-    return toDisplayTransaction(tx, Array.from(walletScripts.values()), networks[network]);
-  };
-};

@@ -75,7 +75,6 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
 
   useEffect(() => {
     tryToRestoreWallet().catch(console.error);
-    return () => setIsLoading(false);
   }, []);
 
   if (isLoading) {
