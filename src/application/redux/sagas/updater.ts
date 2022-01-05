@@ -11,8 +11,6 @@ import {
   NetworkString,
   getAsset,
 } from 'ldk';
-import { put, call, fork, all, take, AllEffect } from 'redux-saga/effects';
-import { buffers, Channel, channel } from '@redux-saga/core';
 import { Account, AccountID } from '../../../domain/account';
 import { UtxosAndTxsHistory } from '../../../domain/transaction';
 import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../../utils';
@@ -34,6 +32,8 @@ import { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
 import { UpdateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
+import { Channel, channel, buffers } from 'redux-saga';
+import { put, AllEffect, all, take, fork, call } from 'redux-saga/effects';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID
