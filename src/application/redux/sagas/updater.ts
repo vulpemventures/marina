@@ -33,6 +33,7 @@ import { UpdateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import { Channel, channel, buffers } from 'redux-saga';
 import { put, AllEffect, all, take, fork, call } from 'redux-saga/effects';
+import { selectEsploraForNetwork } from '../selectors/app.selector';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -158,9 +159,13 @@ function* createChannel<T>(): SagaGenerator<Channel<T>> {
   return yield call(channel, buffers.sliding(10));
 }
 
-function* requestAssetInfoFromEsplora(assetHash: string): SagaGenerator<Asset> {
-  const explorerURL = yield* selectExplorerSaga();
-  const getRequest = () => axios.get(`${explorerURL}/asset/${assetHash}`).then((r) => r.data);
+function* requestAssetInfoFromEsplora(
+  assetHash: string,
+  network: NetworkString
+): SagaGenerator<Asset> {
+  const explorerForNetwork = selectEsploraForNetwork(network);
+  const getRequest = () =>
+    axios.get(`${explorerForNetwork}/asset/${assetHash}`).then((r) => r.data);
   const result = yield call(getRequest);
 
   return {
@@ -200,26 +205,30 @@ function* needUpdate(assetHash: string): SagaGenerator<boolean> {
   return false;
 }
 
-function* assetsWorker(assetsChan: Channel<string>): SagaGenerator<void, string> {
+function* assetsWorker(
+  assetsChan: Channel<{ assetHash: string; network: NetworkString }>
+): SagaGenerator<void, { assetHash: string; network: NetworkString }> {
   while (true) {
-    const assetHashFromUpdater = yield take(assetsChan);
-    if (yield* needUpdate(assetHashFromUpdater)) {
+    const { assetHash, network } = yield take(assetsChan);
+    if (yield* needUpdate(assetHash)) {
       try {
-        const asset = yield* requestAssetInfoFromEsplora(assetHashFromUpdater);
-        yield put(addAsset(assetHashFromUpdater, asset));
+        const asset = yield* requestAssetInfoFromEsplora(assetHash, network);
+        yield put(addAsset(assetHash, asset));
       } catch (e) {
-        console.warn(`Error fetching asset ${assetHashFromUpdater}`, e);
+        console.warn(`Error fetching asset ${assetHash}`, e);
       }
     }
   }
 }
 
-export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<void, AddUtxoAction> {
+export function* watchForAddUtxoAction(
+  chan: Channel<{ assetHash: string; network: NetworkString }>
+): SagaGenerator<void, AddUtxoAction> {
   while (true) {
     const action = yield take(ADD_UTXO);
     const asset = getAsset(action.payload.utxo);
     if (asset) {
-      yield put(chan, asset);
+      yield put(chan, { assetHash: asset, network: action.payload.network });
     }
   }
 }
@@ -234,7 +243,7 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
   }
 
   // start the asset updater
-  const assetsHashChan = yield* createChannel<string>();
+  const assetsHashChan = yield* createChannel<{ assetHash: string; network: NetworkString }>();
   yield fork(assetsWorker, assetsHashChan);
   yield fork(watchForAddUtxoAction, assetsHashChan); // this will fee the assets chan
 

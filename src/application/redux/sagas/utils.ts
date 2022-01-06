@@ -1,13 +1,18 @@
 import { StrictEffect, select, call } from 'redux-saga/effects';
 import { Account, AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
-import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
+import {
+  selectEsploraForNetwork,
+  selectEsploraURL,
+  selectNetwork,
+} from '../selectors/app.selector';
 import {
   selectAccount,
   selectAllAccountsIDs,
   selectUpdaterIsLoading,
 } from '../selectors/wallet.selector';
 import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
+import { NetworkString } from 'ldk';
 
 export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
   StrictEffect,
@@ -69,4 +74,8 @@ export const selectUpdaterIsLoadingSaga = newSagaSelector(selectUpdaterIsLoading
 
 export function selectAccountSaga(accountID: AccountID): SagaGenerator<Account | undefined> {
   return newSagaSelector(selectAccount(accountID))();
+}
+
+export function selectExplorerSagaForNet(net: NetworkString): SagaGenerator<string> {
+  return newSagaSelector(selectEsploraForNetwork(net))();
 }

@@ -1,13 +1,19 @@
+import { NetworkString } from 'ldk';
 import { ExplorerURLs } from '../../../domain/app';
 import { appInitState } from '../reducers/app-reducer';
 import { RootReducerState } from './../../../domain/common';
 
-function getExplorerURLSelector(state: RootReducerState): ExplorerURLs {
+function getExplorerURLSelector(state: RootReducerState, net?: NetworkString): ExplorerURLs {
   return (
-    state.app.explorerByNetwork[state.app.network] ??
-    appInitState.explorerByNetwork[state.app.network]
+    state.app.explorerByNetwork[net ?? state.app.network] ??
+    appInitState.explorerByNetwork[net ?? state.app.network]
   );
 }
+
+export const selectEsploraForNetwork = (network: NetworkString) =>
+  function (state: RootReducerState): string {
+    return getExplorerURLSelector(state, network).esploraURL;
+  };
 
 export function selectEsploraURL(state: RootReducerState): string {
   return getExplorerURLSelector(state).esploraURL;
