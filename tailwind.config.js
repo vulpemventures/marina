@@ -3,9 +3,14 @@ const colors = require('tailwindcss/colors');
 
 module.exports = {
   // TODO: PostCSS plugin postcss-purgecss requires PostCSS 8
-  purge:[
-    './src/**/*.tsx',
-  ],
+  purge: {
+    enabled: true,
+    content: [
+        './**/*.html',
+        './**/*.tsx',
+        './**/*.js'
+    ]
+  },
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {

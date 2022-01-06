@@ -35,7 +35,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.isEnabled.name, []);
   }
 
-  getNetwork(): Promise<'liquid' | 'regtest'> {
+  getNetwork(): Promise<'liquid' | 'regtest' | 'testnet'> {
     return this.proxy(this.getNetwork.name, []);
   }
 
@@ -67,6 +67,10 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
       throw new Error('invalid recipients array');
     }
+
+    recipients.forEach((recipient: Recipient) => {
+      if (recipient.value < 0) throw new Error('invalid negative value');
+    });
 
     return this.proxy(this.sendTransaction.name, [recipients, feeAssetHash]);
   }
