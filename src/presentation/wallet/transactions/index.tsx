@@ -24,6 +24,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { MainAccountID } from '../../../domain/account';
+import { NetworkString } from 'ldk';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -36,12 +37,14 @@ export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
   webExplorerURL: string;
+  network: NetworkString;
 }
 
 const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
   webExplorerURL,
+  network,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
@@ -67,7 +70,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
   // update tx history for main account once at first render
   useEffect(() => {
-    dispatch(updateTaskAction(MainAccountID)).catch(console.error);
+    dispatch(updateTaskAction(MainAccountID, network)).catch(console.error);
     return () => {
       setModalTxDetails(undefined);
     };

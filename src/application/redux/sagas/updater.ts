@@ -12,7 +12,7 @@ import {
   getAsset,
 } from 'ldk';
 import { Account, AccountID } from '../../../domain/account';
-import { UtxosAndTxsHistory } from '../../../domain/transaction';
+import { UtxosAndTxs } from '../../../domain/transaction';
 import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../../utils';
 import { addTx } from '../actions/transaction';
 import { addUtxo, AddUtxoAction, deleteUtxo } from '../actions/utxos';
@@ -23,7 +23,6 @@ import {
   SagaGenerator,
   selectAccountSaga,
   selectExplorerSaga,
-  selectNetworkSaga,
 } from './utils';
 import { ADD_UTXO, UPDATE_TASK } from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
@@ -36,37 +35,43 @@ import { Channel, channel, buffers } from 'redux-saga';
 import { put, AllEffect, all, take, fork, call } from 'redux-saga/effects';
 
 function selectUnspentsAndTransactionsSaga(
-  accountID: AccountID
-): SagaGenerator<UtxosAndTxsHistory> {
-  return newSagaSelector(selectUnspentsAndTransactions(accountID))();
+  accountID: AccountID,
+  network: NetworkString
+): SagaGenerator<UtxosAndTxs | undefined> {
+  return newSagaSelector(selectUnspentsAndTransactions(accountID, network))();
 }
 
-const putAddUtxoAction = (accountID: AccountID) =>
+const putAddUtxoAction = (accountID: AccountID, net: NetworkString) =>
   function* (utxo: UnblindedOutput): SagaGenerator {
-    yield put(addUtxo(accountID, utxo));
+    yield put(addUtxo(accountID, utxo, net));
   };
 
-const putDeleteUtxoAction = (accountID: AccountID) =>
+const putDeleteUtxoAction = (accountID: AccountID, net: NetworkString) =>
   function* (outpoint: Outpoint): SagaGenerator {
-    yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout));
+    yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout, net));
   };
 
-function* getAddressesFromAccount(account: Account): SagaGenerator<AddressInterface[]> {
-  const getAddresses = () => account.getWatchIdentity().then((identity) => identity.getAddresses());
+function* getAddressesFromAccount(
+  account: Account,
+  network: NetworkString
+): SagaGenerator<AddressInterface[]> {
+  const getAddresses = () =>
+    account.getWatchIdentity(network).then((identity) => identity.getAddresses());
   return yield call(getAddresses);
 }
 
 // UtxosUpdater lets to update the utxos state for a given AccountID
 // it fetches and unblinds the unspents comming from the explorer
 function* utxosUpdater(
-  accountID: AccountID
+  accountID: AccountID,
+  network: NetworkString
 ): SagaGenerator<void, IteratorYieldResult<UnblindedOutput>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
   const explorerURL = yield* selectExplorerSaga();
-  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID);
-  const utxosMap = utxosTransactionsState.utxosMap ?? {};
-  const addresses = yield* getAddressesFromAccount(account);
+  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID, network);
+  const utxosMap = utxosTransactionsState?.utxosMap ?? {};
+  const addresses = yield* getAddressesFromAccount(account, network);
   const skippedOutpoints: string[] = []; // for deleting
   const utxosGenerator = fetchAndUnblindUtxosGenerator(addresses, explorerURL, (utxo) => {
     const outpoint = toStringOutpoint(utxo);
@@ -74,14 +79,17 @@ function* utxosUpdater(
     if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
     return skip;
   });
-  yield* processAsyncGenerator<UnblindedOutput>(utxosGenerator, putAddUtxoAction(accountID));
+  yield* processAsyncGenerator<UnblindedOutput>(
+    utxosGenerator,
+    putAddUtxoAction(accountID, network)
+  );
 
   const toDelete = Object.values(utxosMap).filter(
     (utxo) => !skippedOutpoints.includes(toStringOutpoint(utxo))
   );
 
   for (const utxo of toDelete) {
-    yield* putDeleteUtxoAction(accountID)(utxo);
+    yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
 }
 
@@ -94,14 +102,16 @@ const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScri
 
 // UtxosUpdater lets to update the utxos state for a given AccountID
 // it fetches and unblinds the unspents comming from the explorer
-function* txsUpdater(accountID: AccountID): SagaGenerator<void, IteratorYieldResult<TxInterface>> {
+function* txsUpdater(
+  accountID: AccountID,
+  network: NetworkString
+): SagaGenerator<void, IteratorYieldResult<TxInterface>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
   const explorerURL = yield* selectExplorerSaga();
-  const network = yield* selectNetworkSaga();
-  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID);
-  const txsHistory = utxosTransactionsState.transactions[network] ?? {};
-  const addresses = yield* getAddressesFromAccount(account);
+  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID, network);
+  const txsHistory = utxosTransactionsState?.transactions ?? {};
+  const addresses = yield* getAddressesFromAccount(account, network);
 
   const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
     try {
@@ -137,8 +147,11 @@ function* txsUpdater(accountID: AccountID): SagaGenerator<void, IteratorYieldRes
   );
 }
 
-function* updateTxsAndUtxos(accountID: AccountID): Generator<AllEffect<any>, void, any> {
-  yield all([txsUpdater(accountID), utxosUpdater(accountID)]);
+function* updateTxsAndUtxos(
+  accountID: AccountID,
+  network: NetworkString
+): Generator<AllEffect<any>, void, any> {
+  yield all([txsUpdater(accountID, network), utxosUpdater(accountID, network)]);
 }
 
 function* createChannel<T>(): SagaGenerator<Channel<T>> {
@@ -157,12 +170,14 @@ function* requestAssetInfoFromEsplora(assetHash: string): SagaGenerator<Asset> {
   };
 }
 
-function* updaterWorker(chanToListen: Channel<AccountID>): SagaGenerator<void, AccountID> {
+function* updaterWorker(
+  chanToListen: Channel<UpdateTaskAction['payload']>
+): SagaGenerator<void, UpdateTaskAction['payload']> {
   while (true) {
-    const accountID = yield take(chanToListen);
+    const { accountID, network } = yield take(chanToListen);
     try {
       yield put(pushUpdaterLoader());
-      yield* updateTxsAndUtxos(accountID);
+      yield* updateTxsAndUtxos(accountID, network);
     } finally {
       yield put(popUpdaterLoader());
     }
@@ -212,7 +227,7 @@ export function* watchForAddUtxoAction(chan: Channel<string>): SagaGenerator<voi
 // starts a set of workers in order to handle asynchronously the UPDATE_TASK action
 export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
   const MAX_UPDATER_WORKERS = 3;
-  const accountToUpdateChan = yield* createChannel<AccountID>();
+  const accountToUpdateChan = yield* createChannel<UpdateTaskAction['payload']>();
 
   for (let i = 0; i < MAX_UPDATER_WORKERS; i++) {
     yield fork(updaterWorker, accountToUpdateChan);

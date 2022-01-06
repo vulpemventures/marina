@@ -1,10 +1,10 @@
 import { AccountID, MainAccountID, MnemonicAccountData } from './account';
 import { PasswordHash } from './password-hash';
-import { UtxosAndTxsHistory } from './transaction';
+import { UtxosAndTxsByNetwork } from './transaction';
 
 export interface WalletState {
   [MainAccountID]: MnemonicAccountData;
-  unspentsAndTransactions: Record<AccountID, UtxosAndTxsHistory>;
+  unspentsAndTransactions: Record<AccountID, UtxosAndTxsByNetwork>;
   passwordHash: PasswordHash;
   deepRestorer: {
     gapLimit: number;

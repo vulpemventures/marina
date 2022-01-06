@@ -41,6 +41,7 @@ import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
+import { selectNetwork } from '../../application/redux/selectors/app.selector';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -127,25 +128,28 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getAddresses.name: {
           this.checkHostnameAuthorization(state);
-          const xpub = await selectMainAccount(state).getWatchIdentity();
+          const net = selectNetwork(state);
+          const xpub = await selectMainAccount(state).getWatchIdentity(net);
           return successMsg(await xpub.getAddresses());
         }
 
         case Marina.prototype.getNextAddress.name: {
           this.checkHostnameAuthorization(state);
           const account = selectMainAccount(state);
-          const xpub = await account.getWatchIdentity();
+          const net = selectNetwork(state);
+          const xpub = await account.getWatchIdentity(net);
           const nextAddress = await xpub.getNextAddress();
-          await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID()));
+          await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID(), net));
           return successMsg(nextAddress);
         }
 
         case Marina.prototype.getNextChangeAddress.name: {
           this.checkHostnameAuthorization(state);
           const account = selectMainAccount(state);
-          const xpub = await account.getWatchIdentity();
+          const net = selectNetwork(state);
+          const xpub = await account.getWatchIdentity(net);
           const nextChangeAddress = await xpub.getNextChangeAddress();
-          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getAccountID()));
+          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getAccountID(), net));
           return successMsg(nextChangeAddress);
         }
 
@@ -236,7 +240,8 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.isReady.name: {
           try {
-            await selectMainAccount(state).getWatchIdentity(); // check if Xpub is valid
+            const net = selectNetwork(state);
+            await selectMainAccount(state).getWatchIdentity(net); // check if Xpub is valid
             return successMsg(state.app.isOnboardingCompleted);
           } catch {
             // catch error = not ready

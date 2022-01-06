@@ -10,7 +10,7 @@ import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import { Account } from '../../../domain/account';
 import { Transaction } from 'liquidjs-lib';
-import { UnblindedOutput } from 'ldk';
+import { NetworkString, UnblindedOutput } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -23,6 +23,7 @@ export interface EndOfFlowProps {
   explorerURL: string;
   recipientAddress?: string;
   changeAddresses: string[];
+  network: NetworkString;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
@@ -32,6 +33,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   recipientAddress,
   selectedUtxos,
   changeAddresses,
+  network,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -46,7 +48,9 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       setSignedTx(undefined);
       if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
-      const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(pass)));
+      const identities = await Promise.all(
+        accounts.map((a) => a.getSigningIdentity(pass, network))
+      );
       const tx = await blindAndSignPset(
         pset,
         selectedUtxos,
@@ -63,7 +67,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       await Promise.all(
         accounts
           .map((a) => a.getAccountID())
-          .map(updateTaskAction)
+          .map((id) => updateTaskAction(id, network))
           .map(dispatch)
       );
       // flush pending tx state

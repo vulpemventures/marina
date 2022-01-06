@@ -154,7 +154,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     try {
       if (!feeAsset) throw new Error('fee asset not selected');
       setLoading(true);
-      await Promise.all(actionsFromState(state, feeAsset, account.getAccountID()).map(dispatch));
+      await Promise.all(
+        actionsFromState(state, feeAsset, account.getAccountID(), network).map(dispatch)
+      );
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,
       });
@@ -311,7 +313,7 @@ async function stateForTaxiPSET(
     throw new Error('Taxi topup should be defined for Taxi PSET');
   }
 
-  const restored = await account.getWatchIdentity();
+  const restored = await account.getWatchIdentity(network);
   const next = await restored.getNextChangeAddress();
   const feeChange = createAddress(next.confidentialAddress, next.derivationPath);
 
@@ -335,7 +337,12 @@ async function stateForTaxiPSET(
   return result;
 }
 
-function actionsFromState(state: State, feeCurrency: string, accountID: AccountID): AnyAction[] {
+function actionsFromState(
+  state: State,
+  feeCurrency: string,
+  accountID: AccountID,
+  network: NetworkString
+): AnyAction[] {
   if (!state.unsignedPset || !state.utxos) return [];
 
   const actions: AnyAction[] = [];
@@ -346,7 +353,7 @@ function actionsFromState(state: State, feeCurrency: string, accountID: AccountI
 
   if (state.feeChange) {
     actions.push(setFeeChangeAddress(state.feeChange));
-    actions.push(incrementChangeAddressIndex(accountID));
+    actions.push(incrementChangeAddressIndex(accountID, network));
   }
 
   return actions;

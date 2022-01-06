@@ -20,14 +20,22 @@ describe('migration from v1 to v2', () => {
     expect(walletStateV2.mainAccount.encryptedMnemonic).toEqual(walletStateV1.encryptedMnemonic);
     expect(walletStateV2.mainAccount.masterBlindingKey).toEqual(walletStateV1.masterBlindingKey);
     expect(walletStateV2.mainAccount.masterXPub).toEqual(walletStateV1.masterXPub);
-    expect(walletStateV2.mainAccount.restorerOpts).toEqual(walletStateV1.restorerOpts);
     expect(walletStateV2.deepRestorer).toEqual(walletStateV1.deepRestorer);
     expect(walletStateV2.passwordHash).toEqual(walletStateV1.passwordHash);
+
+    expect(walletStateV2.mainAccount.restorerOpts.liquid.lastUsedExternalIndex).toEqual(-1);
+    expect(walletStateV2.mainAccount.restorerOpts.liquid.lastUsedInternalIndex).toEqual(-1);
+    expect(walletStateV2.mainAccount.restorerOpts.testnet.lastUsedExternalIndex).toEqual(-1);
+    expect(walletStateV2.mainAccount.restorerOpts.testnet.lastUsedInternalIndex).toEqual(-1);
+    expect(walletStateV2.mainAccount.restorerOpts.regtest.lastUsedExternalIndex).toEqual(-1);
+    expect(walletStateV2.mainAccount.restorerOpts.regtest.lastUsedInternalIndex).toEqual(-1);
     // check that the unspents and transactions are reinitialized (the next update will fetch them)
     // we need this because the type of unspents and txs persisted has changed in V2
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.utxosMap);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.transactions.liquid);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.transactions.testnet);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.transactions.regtest);
+    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.liquid.utxosMap);
+    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.liquid.transactions);
+    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.testnet.utxosMap);
+    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.testnet.transactions);
+    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.regtest.utxosMap);
+    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.regtest.transactions);
   });
 });

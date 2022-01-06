@@ -1,6 +1,7 @@
 import { StateRestorerOpts } from 'ldk';
 import { createMigrate } from 'redux-persist';
 import { PersistedState } from 'redux-persist/es/types';
+import { walletInitState } from '../application/redux/reducers/wallet-reducer';
 import { EncryptedMnemonic } from './encrypted-mnemonic';
 import { MasterBlindingKey } from './master-blinding-key';
 import { MasterXPub } from './master-extended-pub';
@@ -25,15 +26,12 @@ export const walletMigrations = {
         encryptedMnemonic: state.encryptedMnemonic,
         masterBlindingKey: state.masterBlindingKey,
         masterXPub: state.masterXPub,
-        restorerOpts: state.restorerOpts,
+        restorerOpts: walletInitState.mainAccount.restorerOpts,
       },
       deepRestorer: state.deepRestorer,
       passwordHash: state.passwordHash,
       unspentsAndTransactions: {
-        mainAccount: {
-          utxosMap: {}, // the user will need to refetch the unspents and transactions
-          transactions: { liquid: {}, testnet: {}, regtest: {} },
-        },
+        mainAccount: walletInitState.unspentsAndTransactions.mainAccount,
       },
       updaterLoaders: 0,
       isVerified: state.isVerified,

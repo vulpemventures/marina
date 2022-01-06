@@ -36,9 +36,9 @@ export interface Account<
   WatchID extends IdentityInterface = IdentityInterface
 > {
   getAccountID(): AccountID;
-  getSigningIdentity(password: string): Promise<SignID>;
-  getWatchIdentity(): Promise<WatchID>;
-  getDeepRestorer(): Restorer<EsploraRestorerOpts, WatchID>;
+  getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
+  getWatchIdentity(network: NetworkString): Promise<WatchID>;
+  getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
 }
 
 // Main Account uses the default Mnemonic derivation path
@@ -47,24 +47,35 @@ export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
 
 export interface MnemonicAccountData {
   encryptedMnemonic: EncryptedMnemonic;
-  restorerOpts: StateRestorerOpts;
+  restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
 }
 
-export function createMnemonicAccount(
-  data: MnemonicAccountData,
-  network: NetworkString
-): MnemonicAccount {
+export function createMnemonicAccount(data: MnemonicAccountData): MnemonicAccount {
   return {
     getAccountID: () => MainAccountID,
-    getSigningIdentity: (password: string) =>
-      restoredMnemonic(decrypt(data.encryptedMnemonic, password), data.restorerOpts, network),
-    getWatchIdentity: () =>
-      restoredMasterPublicKey(data.masterXPub, data.masterBlindingKey, data.restorerOpts, network),
-    getDeepRestorer: () =>
+    getSigningIdentity: (password: string, network: NetworkString) =>
+      restoredMnemonic(
+        decrypt(data.encryptedMnemonic, password),
+        data.restorerOpts[network],
+        network
+      ),
+    getWatchIdentity: (network: NetworkString) =>
+      restoredMasterPublicKey(
+        data.masterXPub,
+        data.masterBlindingKey,
+        data.restorerOpts[network],
+        network
+      ),
+    getDeepRestorer: (network: NetworkString) =>
       masterPubKeyRestorerFromEsplora(
         newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
       ),
   };
 }
+
+export const initialRestorerOpts: StateRestorerOpts = {
+  lastUsedExternalIndex: -1,
+  lastUsedInternalIndex: -1,
+};

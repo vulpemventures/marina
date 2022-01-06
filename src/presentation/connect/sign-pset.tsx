@@ -12,6 +12,7 @@ import { selectAllAccounts } from '../../application/redux/selectors/wallet.sele
 import PopupWindowProxy from './popupWindowProxy';
 import { signPset } from '../../application/utils';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
+import { selectNetwork } from '../../application/redux/selectors/app.selector';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -25,6 +26,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   const [error, setError] = useState<string>('');
 
   const accounts = useSelector(selectAllAccounts);
+  const network = useSelector(selectNetwork);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
@@ -48,7 +50,9 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       const { tx } = connectData;
       if (!tx || !tx.pset) throw new Error('No transaction to sign');
 
-      const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(password)));
+      const identities = await Promise.all(
+        accounts.map((a) => a.getSigningIdentity(password, network))
+      );
       const signedPset = await signPset(tx.pset, identities);
 
       await sendResponseMessage(true, signedPset);

@@ -9,12 +9,14 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { selectNetwork } from '../../../application/redux/selectors/app.selector';
 
 const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const account = useSelector(selectAccountForAsset(match.params.asset));
+  const network = useSelector(selectNetwork);
 
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
@@ -30,12 +32,12 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
 
   useEffect(() => {
     (async () => {
-      const identity = await account.getWatchIdentity();
+      const identity = await account.getWatchIdentity(network);
       const addr = await identity.getNextAddress();
-      await dispatch(incrementAddressIndex(account.getAccountID())); // persist address
+      await dispatch(incrementAddressIndex(account.getAccountID(), network)); // persist address
       setConfidentialAddress(addr.confidentialAddress);
       setTimeout(() => {
-        dispatch(updateTaskAction(account.getAccountID())).catch(console.error);
+        dispatch(updateTaskAction(account.getAccountID(), network)).catch(console.error);
       }, 2000);
     })().catch(console.error);
   }, []);

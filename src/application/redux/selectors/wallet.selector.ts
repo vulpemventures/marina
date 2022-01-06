@@ -5,12 +5,12 @@ import {
   MainAccountID,
   Account,
 } from '../../../domain/account';
-import { MasterPublicKey, UnblindedOutput } from 'ldk';
+import { MasterPublicKey, NetworkString, UnblindedOutput } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
-import { TxDisplayInterface } from '../../../domain/transaction';
+import { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
 
 export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
-  return selectMainAccount(state).getWatchIdentity();
+  return selectMainAccount(state).getWatchIdentity(state.app.network);
 }
 
 export const selectUtxos =
@@ -20,9 +20,16 @@ export const selectUtxos =
   };
 
 const selectUtxosForAccount =
-  (accountID: AccountID) =>
+  (accountID: AccountID, net?: NetworkString) =>
   (state: RootReducerState): UnblindedOutput[] => {
-    return Object.values(selectUnspentsAndTransactions(accountID)(state).utxosMap);
+    const utxos = selectUnspentsAndTransactions(
+      accountID,
+      net ?? state.app.network
+    )(state)?.utxosMap;
+    if (utxos) {
+      return Object.values(utxos);
+    }
+    return [];
   };
 
 export const selectTransactions =
@@ -32,11 +39,16 @@ export const selectTransactions =
   };
 
 const selectTransactionsForAccount =
-  (accountID: AccountID) =>
+  (accountID: AccountID, net?: NetworkString) =>
   (state: RootReducerState): TxDisplayInterface[] => {
-    return Object.values(
-      selectUnspentsAndTransactions(accountID)(state).transactions[state.app.network]
-    );
+    const txs = selectUnspentsAndTransactions(
+      accountID,
+      net ?? state.app.network
+    )(state)?.transactions;
+    if (txs) {
+      return Object.values(txs);
+    }
+    return [];
   };
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {
@@ -47,7 +59,7 @@ export function hasMnemonicSelector(state: RootReducerState): boolean {
 }
 
 export function selectMainAccount(state: RootReducerState): MnemonicAccount {
-  return createMnemonicAccount(state.wallet.mainAccount, state.app.network);
+  return createMnemonicAccount(state.wallet.mainAccount);
 }
 
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
@@ -76,13 +88,9 @@ export const selectAccountForAsset = (_: string) => (state: RootReducerState) =>
 };
 
 export const selectUnspentsAndTransactions =
-  (accountID: AccountID) => (state: RootReducerState) => {
-    return (
-      state.wallet.unspentsAndTransactions[accountID] ?? {
-        utxosMap: {},
-        transactions: { regtest: {}, liquid: {} },
-      }
-    );
+  (accountID: AccountID, network: NetworkString) =>
+  (state: RootReducerState): UtxosAndTxs | undefined => {
+    return state.wallet.unspentsAndTransactions[accountID][network];
   };
 
 export const selectDeepRestorerIsLoading = (state: RootReducerState) => {

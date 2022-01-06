@@ -12,30 +12,41 @@ import {
   PUSH_UPDATER_LOADER,
 } from './action-types';
 import { AnyAction } from 'redux';
-import { WalletData } from '../../utils/wallet';
-import { AccountID } from '../../../domain/account';
-import { StateRestorerOpts } from 'ldk';
+import { AccountID, MnemonicAccountData } from '../../../domain/account';
+import { NetworkString, StateRestorerOpts } from 'ldk';
+import { PasswordHash } from '../../../domain/password-hash';
 
-export function setWalletData(walletData: WalletData): AnyAction {
+// this action is using during onboarding end-of-flow in order to set up the initial main account state + password hash
+export function setWalletData(
+  walletData: MnemonicAccountData,
+  passwordHash: PasswordHash
+): AnyAction {
   return {
     type: WALLET_SET_DATA,
-    payload: walletData,
+    payload: { walletData, passwordHash },
   };
 }
 
-export function setRestorerOpts(accountID: AccountID, restorerOpts: StateRestorerOpts): AnyAction {
+export function setRestorerOpts(
+  accountID: AccountID,
+  restorerOpts: StateRestorerOpts,
+  network: NetworkString
+): AnyAction {
   return {
     type: SET_RESTORER_OPTS,
-    payload: { accountID, restorerOpts },
+    payload: { accountID, restorerOpts, network },
   };
 }
 
-export function incrementAddressIndex(accountID: AccountID): AnyAction {
-  return { type: INCREMENT_EXTERNAL_ADDRESS_INDEX, payload: { accountID } };
+export function incrementAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
+  return { type: INCREMENT_EXTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
-export function incrementChangeAddressIndex(accountID: AccountID): AnyAction {
-  return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID } };
+export function incrementChangeAddressIndex(
+  accountID: AccountID,
+  network: NetworkString
+): AnyAction {
+  return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
 export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {

@@ -28,6 +28,7 @@ import PopupWindowProxy from './popupWindowProxy';
 import { Account, MainAccountID } from '../../domain/account';
 import { lbtcAssetByNetwork } from '../../application/utils';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
+import { selectNetwork } from '../../application/redux/selectors/app.selector';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -38,7 +39,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const assets = useSelector((state: RootReducerState) => state.assets);
   const mainAccount = useSelector(selectMainAccount);
 
-  const network = useSelector((state: RootReducerState) => state.app.network);
+  const network = useSelector(selectNetwork);
   const coins = useSelector(selectUtxos(MainAccountID));
 
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -78,10 +79,17 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         connectData.tx.feeAssetHash ?? lbtcAssetByNetwork(network)
       );
 
-      const { getter, changeAddresses } = await changeAddressGetter(mainAccount, assets, dispatch);
+      const { getter, changeAddresses } = await changeAddressGetter(
+        mainAccount,
+        assets,
+        dispatch,
+        network
+      );
 
       const accounts: Account[] = [mainAccount];
-      const identities = await Promise.all(accounts.map((a) => a.getSigningIdentity(password)));
+      const identities = await Promise.all(
+        accounts.map((a) => a.getSigningIdentity(password, network))
+      );
       const signedTxHex = await makeTransaction(
         identities,
         coins,
@@ -175,12 +183,13 @@ function assetsSet(recipients: RecipientInterface[], feeAsset: string): Set<stri
 async function changeAddressGetter(
   account: Account,
   assets: Set<string>,
-  dispatch: ProxyStoreDispatch
+  dispatch: ProxyStoreDispatch,
+  net: NetworkString
 ): Promise<{ getter: ChangeAddressFromAssetGetter; changeAddresses: string[] }> {
   const changeAddresses: Record<string, AddressInterface> = {};
   const persisted: Record<string, boolean> = {};
 
-  const id = await account.getWatchIdentity();
+  const id = await account.getWatchIdentity(net);
   for (const asset of assets) {
     changeAddresses[asset] = await id.getNextChangeAddress();
     persisted[asset] = false;
@@ -190,7 +199,7 @@ async function changeAddressGetter(
     getter: (asset: string) => {
       if (!assets.has(asset)) throw new Error('missing change address');
       if (!persisted[asset]) {
-        dispatch(incrementChangeAddressIndex(account.getAccountID())).catch(console.error);
+        dispatch(incrementChangeAddressIndex(account.getAccountID(), net)).catch(console.error);
         persisted[asset] = true;
       }
       return changeAddresses[asset].confidentialAddress;

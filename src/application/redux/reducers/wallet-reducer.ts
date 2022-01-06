@@ -3,8 +3,8 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import { WalletState } from '../../../domain/wallet';
 import { AnyAction } from 'redux';
-import { AccountID, MainAccountID } from '../../../domain/account';
-import { TxDisplayInterface } from '../../../domain/transaction';
+import { AccountID, initialRestorerOpts, MainAccountID } from '../../../domain/account';
+import { newEmptyUtxosAndTxsHistory, TxDisplayInterface } from '../../../domain/transaction';
 import { NetworkString, UnblindedOutput } from 'ldk';
 
 export const walletInitState: WalletState = {
@@ -13,15 +13,13 @@ export const walletInitState: WalletState = {
     masterBlindingKey: '',
     masterXPub: '',
     restorerOpts: {
-      lastUsedExternalIndex: 0,
-      lastUsedInternalIndex: 0,
+      liquid: initialRestorerOpts,
+      testnet: initialRestorerOpts,
+      regtest: initialRestorerOpts,
     },
   },
   unspentsAndTransactions: {
-    [MainAccountID]: {
-      utxosMap: {},
-      transactions: { regtest: {}, liquid: {}, testnet: {} },
-    },
+    [MainAccountID]: newEmptyUtxosAndTxsHistory(),
   },
   passwordHash: '',
   deepRestorer: {
@@ -34,16 +32,20 @@ export const walletInitState: WalletState = {
 
 const addUnspent =
   (state: WalletState) =>
-  (accountID: AccountID, utxo: UnblindedOutput): WalletState => {
+  (accountID: AccountID, utxo: UnblindedOutput, network: NetworkString): WalletState => {
+    console.log('ADD UTXO !!', accountID, network);
     return {
       ...state,
       unspentsAndTransactions: {
         ...state.unspentsAndTransactions,
         [accountID]: {
           ...state.unspentsAndTransactions[accountID],
-          utxosMap: {
-            ...state.unspentsAndTransactions[accountID].utxosMap,
-            [toStringOutpoint(utxo)]: utxo,
+          [network]: {
+            ...state.unspentsAndTransactions[accountID][network],
+            utxosMap: {
+              ...state.unspentsAndTransactions[accountID][network].utxosMap,
+              [toStringOutpoint(utxo)]: utxo,
+            },
           },
         },
       },
@@ -59,10 +61,10 @@ const addTx =
         ...state.unspentsAndTransactions,
         [accountID]: {
           ...state.unspentsAndTransactions[accountID],
-          transactions: {
-            ...state.unspentsAndTransactions[accountID].transactions,
-            [network]: {
-              ...state.unspentsAndTransactions[accountID].transactions[network],
+          [network]: {
+            ...state.unspentsAndTransactions[accountID][network],
+            transactions: {
+              ...state.unspentsAndTransactions[accountID][network].transactions,
               [tx.txId]: tx,
             },
           },
@@ -81,11 +83,16 @@ export function walletReducer(
     }
 
     case ACTION_TYPES.SET_RESTORER_OPTS: {
+      const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
       return {
         ...state,
-        [payload.accountID]: {
-          ...state[payload.accountID as AccountID],
-          restorerOpts: payload.restorerOpts,
+        [accountID]: {
+          ...state[accountID],
+          restorerOpts: {
+            ...state[accountID].restorerOpts,
+            [network]: payload.restorerOpts,
+          },
         },
       };
     }
@@ -94,26 +101,25 @@ export function walletReducer(
       return {
         ...state,
         passwordHash: payload.passwordHash,
-        mainAccount: { accountID: MainAccountID, ...payload },
-        unspentsAndTransactions: {
-          ...state.unspentsAndTransactions,
-          [MainAccountID]: {
-            utxosMap: {},
-            transactions: { regtest: {}, liquid: {}, testnet: {} },
-          },
-        },
+        mainAccount: { ...payload.walletData },
       };
     }
 
     case ACTION_TYPES.INCREMENT_INTERNAL_ADDRESS_INDEX: {
       const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
       return {
         ...state,
         [accountID]: {
           ...state[accountID],
           restorerOpts: {
             ...state[accountID]?.restorerOpts,
-            lastUsedInternalIndex: increment(state[accountID]?.restorerOpts.lastUsedInternalIndex),
+            [network]: {
+              ...state[accountID]?.restorerOpts[network],
+              lastUsedInternalIndex: increment(
+                state[accountID]?.restorerOpts[network]?.lastUsedInternalIndex
+              ),
+            },
           },
         },
       };
@@ -121,20 +127,26 @@ export function walletReducer(
 
     case ACTION_TYPES.INCREMENT_EXTERNAL_ADDRESS_INDEX: {
       const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
       return {
         ...state,
         [accountID]: {
           ...state[accountID],
           restorerOpts: {
             ...state[accountID]?.restorerOpts,
-            lastUsedExternalIndex: increment(state[accountID]?.restorerOpts.lastUsedExternalIndex),
+            [network]: {
+              ...state[accountID]?.restorerOpts[network],
+              lastUsedExternalIndex: increment(
+                state[accountID]?.restorerOpts[network]?.lastUsedExternalIndex
+              ),
+            },
           },
         },
       };
     }
 
     case ACTION_TYPES.ADD_UTXO: {
-      return addUnspent(state)(payload.accountID, payload.utxo);
+      return addUnspent(state)(payload.accountID, payload.utxo, payload.network);
     }
 
     case ACTION_TYPES.DELETE_UTXO: {
@@ -143,10 +155,12 @@ export function walletReducer(
         return state;
       }
 
+      const net = payload.network as NetworkString;
+
       const {
         [toStringOutpoint({ txid: payload.txid, vout: payload.vout })]: deleted,
         ...utxosMap
-      } = state.unspentsAndTransactions[accountID].utxosMap;
+      } = state.unspentsAndTransactions[accountID][net].utxosMap;
 
       return {
         ...state,
@@ -154,7 +168,10 @@ export function walletReducer(
           ...state.unspentsAndTransactions,
           [payload.accountID]: {
             ...state.unspentsAndTransactions[accountID],
-            utxosMap,
+            [net]: {
+              ...state.unspentsAndTransactions[accountID][net],
+              utxosMap,
+            },
           },
         },
       };
@@ -187,13 +204,17 @@ export function walletReducer(
 
     case ACTION_TYPES.FLUSH_UTXOS: {
       const accountID = payload.accountID as AccountID;
+      const net = payload.network as NetworkString;
       return {
         ...state,
         unspentsAndTransactions: {
           ...state.unspentsAndTransactions,
           [accountID]: {
             ...state.unspentsAndTransactions[accountID],
-            utxosMap: {},
+            [net]: {
+              ...state.unspentsAndTransactions[accountID][net],
+              utxosMap: {},
+            },
           },
         },
       };

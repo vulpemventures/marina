@@ -13,6 +13,7 @@ import {
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import { formatNetwork } from '../utils';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
+import { AccountID } from '../../domain/account';
 
 interface Props {
   btnDisabled?: boolean;
@@ -49,7 +50,8 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = async () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      await Promise.all(allAccountsIds.map(updateTaskAction).map(dispatch));
+      const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
+      await Promise.all(allAccountsIds.map(makeUpdateTaskForId).map(dispatch));
     } else {
       history.push(DEFAULT_ROUTE);
     }

@@ -1,6 +1,6 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
-import { testWalletData } from '../application/constants/cypress';
+import { testWalletData, testPasswordHash } from '../application/constants/cypress';
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setWalletData } from '../application/redux/actions/wallet';
@@ -35,7 +35,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
       case 'install':
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
-          marinaStore.dispatch(setWalletData(testWalletData));
+          marinaStore.dispatch(setWalletData(testWalletData, testPasswordHash));
           marinaStore.dispatch(enableWebsite('vulpemventures.github.io', 'regtest')); // skip the enable step too
           await setUpPopup();
           marinaStore.dispatch(onboardingCompleted());

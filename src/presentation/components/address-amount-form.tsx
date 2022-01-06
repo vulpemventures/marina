@@ -188,14 +188,14 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     }),
 
   handleSubmit: async (values, { props }) => {
-    const masterPubKey = await props.account.getWatchIdentity();
+    const masterPubKey = await props.account.getWatchIdentity(props.network);
     const changeAddressGenerated = await masterPubKey.getNextChangeAddress();
     const changeAddress = createAddress(
       changeAddressGenerated.confidentialAddress,
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(incrementChangeAddressIndex(props.account.getAccountID())); // persist address in wallet
+    await props.dispatch(incrementChangeAddressIndex(props.account.getAccountID(), props.network)); // persist address in wallet
 
     await props
       .dispatch(

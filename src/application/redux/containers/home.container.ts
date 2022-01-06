@@ -6,12 +6,14 @@ import { assetGetterFromIAssets } from '../../../domain/assets';
 import { lbtcAssetByNetwork } from '../../utils';
 import { MainAccountID } from '../../../domain/account';
 
-const mapStateToProps = (state: RootReducerState): HomeProps => ({
-  lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
-  transactionStep: state.transaction.step,
-  assetsBalance: selectBalances(MainAccountID)(state),
-  getAsset: assetGetterFromIAssets(state.assets),
-});
+const mapStateToProps = (state: RootReducerState): HomeProps => {
+  return {
+    lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
+    transactionStep: state.transaction.step,
+    assetsBalance: selectBalances(MainAccountID)(state),
+    getAsset: assetGetterFromIAssets(state.assets),
+  };
+};
 
 const Home = connect(mapStateToProps)(HomeView);
 

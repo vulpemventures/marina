@@ -2,6 +2,7 @@ import {
   AddressInterface,
   EsploraRestorerOpts,
   IdentityInterface,
+  NetworkString,
   Restorer,
   StateRestorerOpts,
 } from 'ldk';
@@ -22,12 +23,14 @@ import {
   selectAccountSaga,
   selectAllAccountsIDsSaga,
   selectExplorerSaga,
+  selectNetworkSaga,
 } from './utils';
 
 function* getDeepRestorerSaga(
-  account: Account
+  account: Account,
+  network: NetworkString
 ): SagaGenerator<Restorer<EsploraRestorerOpts, IdentityInterface>> {
-  return yield call(() => account.getDeepRestorer());
+  return yield call(() => account.getDeepRestorer(network));
 }
 
 function* restoreSaga(
@@ -38,15 +41,18 @@ function* restoreSaga(
   return yield call(restoreAddresses);
 }
 
+// deep restore an account, i.e recompute addresses and try to see if they have received any transaction
+// return the new StateRestorerOpts after this restoration
 function* deepRestore(
   accountID: AccountID,
   gapLimit: number,
-  esploraURL: string
+  esploraURL: string,
+  net: NetworkString
 ): SagaGenerator<StateRestorerOpts> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) throw new Error('Account not found');
 
-  const restorer = yield* getDeepRestorerSaga(account);
+  const restorer = yield* getDeepRestorerSaga(account, net);
   const restoredAddresses = yield* restoreSaga(restorer, { gapLimit, esploraURL });
   const stateRestorerOpts = getStateRestorerOptsFromAddresses(restoredAddresses);
   return stateRestorerOpts;
@@ -55,6 +61,9 @@ function* deepRestore(
 const selectDeepRestorerIsLoadingSaga = newSagaSelector(selectDeepRestorerIsLoading);
 const selectDeepRestorerGapLimitSaga = newSagaSelector(selectDeepRestorerGapLimit);
 
+// restoreAllAccounts will launch a deep restore for each account in the redux state
+// it will restore the account for the current selected network (the one set in redux state)
+// then it will update the restorerOpts in the state after restoration
 function* restoreAllAccounts(): SagaGenerator {
   const isRunning = yield* selectDeepRestorerIsLoadingSaga();
   if (isRunning) return;
@@ -66,9 +75,10 @@ function* restoreAllAccounts(): SagaGenerator {
     const esploraURL = yield* selectExplorerSaga();
     const accountsIDs = yield* selectAllAccountsIDsSaga();
     for (const ID of accountsIDs) {
-      const stateRestorerOpts = yield* deepRestore(ID, gapLimit, esploraURL);
-      yield put(setRestorerOpts(ID, stateRestorerOpts));
-      yield put(updateTaskAction(ID)); // update utxos and transactions according to the restored addresses
+      const network = yield* selectNetworkSaga();
+      const stateRestorerOpts = yield* deepRestore(ID, gapLimit, esploraURL, network);
+      yield put(setRestorerOpts(ID, stateRestorerOpts, network)); // update state with new restorerOpts
+      yield put(updateTaskAction(ID, network)); // update utxos and transactions according to the restored addresses (on network)
     }
     yield put(setDeepRestorerError(undefined));
   } catch (e) {

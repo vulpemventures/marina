@@ -70,7 +70,8 @@ function* dispatchUpdateTaskForAllAccountsIDs(): SagaGenerator<void, void> {
   const isUpdating = yield* selectUpdaterIsLoadingSaga();
   if (isUpdating) return; // skip if any updater worker is already running
   const accountIDs = yield* selectAllAccountsIDsSaga();
-  yield all(accountIDs.map((id) => put(updateTaskAction(id))));
+  const network = yield* selectNetworkSaga();
+  yield all(accountIDs.map((id) => put(updateTaskAction(id, network))));
 }
 
 const periodicUpdaterSaga = newPeriodicSagaTask(dispatchUpdateTaskForAllAccountsIDs, 60_000);
