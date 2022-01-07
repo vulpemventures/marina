@@ -15,13 +15,6 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import {
-  feeAmountFromTx,
-  fetchTopupFromTaxi,
-  createTaxiTxFromTopup,
-  taxiURL,
-  getAssetImage,
-} from '../../../application/utils';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { IAssets } from '../../../domain/assets';
@@ -41,6 +34,9 @@ import { incrementChangeAddressIndex } from '../../../application/redux/actions/
 import { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
 import { AnyAction } from 'redux';
+import { getAssetImage } from '../../../application/utils/constants';
+import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
+import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
 
 export interface ChooseFeeProps {
   network: NetworkString;

@@ -32,7 +32,6 @@ import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
 } from '../../application/redux/actions/wallet';
-import { lbtcAssetByNetwork, sortRecipients } from '../../application/utils';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
 import { Balance, Recipient, Utxo } from 'marina-provider';
@@ -42,6 +41,8 @@ import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
+import { lbtcAssetByNetwork } from '../../application/utils/network';
+import { sortRecipients } from '../../application/utils/transaction';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');

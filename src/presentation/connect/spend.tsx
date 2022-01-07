@@ -26,9 +26,9 @@ import { incrementChangeAddressIndex } from '../../application/redux/actions/wal
 import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
 import { Account, MainAccountID } from '../../domain/account';
-import { lbtcAssetByNetwork } from '../../application/utils';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
+import { lbtcAssetByNetwork } from '../../application/utils/network';
 
 export interface SpendPopupResponse {
   accepted: boolean;

@@ -1,6 +1,6 @@
 import lightniteAssetsHashes from '../constants/lightnite_asset_hash.json';
 import blockstreamAssetHashes from '../constants/blockstream_asset_hash.json';
-import { networks, NetworkString } from 'ldk';
+import { networks } from 'ldk';
 
 export const INVALID_MNEMONIC_ERROR = 'Invalid mnemonic';
 export const INVALID_PASSWORD_ERROR = 'Invalid password';
@@ -10,12 +10,6 @@ export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
   '50': 0.1,
   '100': 0.1,
-};
-
-export const taxiURL: Record<NetworkString, string> = {
-  regtest: 'http://localhost:8000',
-  testnet: 'http://todo.com', // TODO is there a taxi running on testnet ?
-  liquid: 'https://grpc.liquid.taxi',
 };
 
 const makeImagePath = (fileName: string): string => `assets/images/liquid-assets/${fileName}`;

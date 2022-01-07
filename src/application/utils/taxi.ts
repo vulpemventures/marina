@@ -5,6 +5,7 @@ import {
   TopupWithAssetReply,
   TopupWithAssetRequest,
 } from 'taxi-protobuf/generated/js/taxi_pb';
+import { NetworkString } from 'ldk';
 
 export async function fetchAssetsFromTaxi(taxiUrl: string): Promise<string[]> {
   const client = new TaxiClient(taxiUrl, undefined);
@@ -21,4 +22,10 @@ export const fetchTopupFromTaxi = async (
   request.setAssetHash(asset);
   const res = await client.topupWithAsset(request, null);
   return res.toObject();
+};
+
+export const taxiURL: Record<NetworkString, string> = {
+  regtest: 'http://localhost:8000',
+  testnet: 'http://todo.com', // TODO is there a taxi running on testnet ?
+  liquid: 'https://grpc.liquid.taxi',
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
-import { getAssetImage } from '../../../application/utils';
+import { getAssetImage } from '../../../application/utils/constants';
 import { fromSatoshi } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';

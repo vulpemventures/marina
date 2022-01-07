@@ -4,7 +4,7 @@ import { DEFAULT_ROUTE } from '../routes/constants';
 import ButtonAsset from './button-asset';
 import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
-import { getAssetImage } from '../../application/utils';
+import { getAssetImage } from '../../application/utils/constants';
 import { BalancesByAsset } from '../../application/redux/selectors/balance.selector';
 import { Asset } from '../../domain/assets';
 import ButtonList from './button-list';

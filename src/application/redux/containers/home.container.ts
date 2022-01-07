@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import HomeView, { HomeProps } from '../../../presentation/wallet/home';
 import { selectBalances } from '../selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../../domain/assets';
-import { lbtcAssetByNetwork } from '../../utils';
+import { lbtcAssetByNetwork } from '../../utils/network';
 import { MainAccountID } from '../../../domain/account';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => {

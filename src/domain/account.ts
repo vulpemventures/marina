@@ -8,7 +8,7 @@ import {
   masterPubKeyRestorerFromEsplora,
   NetworkString,
 } from 'ldk';
-import { decrypt } from '../application/utils';
+import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
   restoredMasterPublicKey,

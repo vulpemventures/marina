@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { debounce } from 'lodash';
-import { decrypt, INVALID_PASSWORD_ERROR } from '../../application/utils';
+import { INVALID_PASSWORD_ERROR } from '../../application/utils/constants';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
 import ShellPopUp from '../components/shell-popup';
 import { WalletState } from '../../domain/wallet';
 import { match } from '../../domain/password-hash';
 import { createPassword } from '../../domain/password';
+import { decrypt } from '../../application/utils/crypto';
 
 export interface SettingsShowMnemonicProps {
   wallet: WalletState;

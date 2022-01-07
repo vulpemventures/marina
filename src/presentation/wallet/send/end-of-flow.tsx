@@ -3,7 +3,6 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import { blindAndSignPset, broadcastTx } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
 import { createPassword } from '../../../domain/password';
@@ -15,6 +14,8 @@ import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
+import { broadcastTx } from '../../../application/utils/network';
+import { blindAndSignPset } from '../../../application/utils/transaction';
 
 export interface EndOfFlowProps {
   accounts: Account[];

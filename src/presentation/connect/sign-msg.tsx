@@ -7,7 +7,6 @@ import {
   connectWithConnectData,
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
-import { decrypt, INVALID_PASSWORD_ERROR } from '../../application/utils';
 import { signMessageWithMnemonic } from '../../application/utils/message';
 import { networks } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
@@ -15,7 +14,11 @@ import { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
 import { SignedMessage } from 'marina-provider';
 import { NetworkString } from 'ldk';
-import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
+import {
+  INVALID_PASSWORD_ERROR,
+  SOMETHING_WENT_WRONG_ERROR,
+} from '../../application/utils/constants';
+import { decrypt } from '../../application/utils/crypto';
 
 function signMsgWithPassword(
   message: string,

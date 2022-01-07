@@ -9,7 +9,7 @@ import {
 import { call, put, takeLeading } from 'redux-saga/effects';
 import { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../../presentation/utils/error';
-import { getStateRestorerOptsFromAddresses } from '../../utils';
+import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { START_DEEP_RESTORATION } from '../actions/action-types';
 import { updateTaskAction } from '../actions/updater';
 import { setDeepRestorerError, setDeepRestorerIsLoading, setRestorerOpts } from '../actions/wallet';

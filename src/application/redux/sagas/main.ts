@@ -9,7 +9,7 @@ import {
   delay,
   AllEffect,
 } from 'redux-saga/effects';
-import { fetchAssetsFromTaxi, taxiURL } from '../../utils';
+import { fetchAssetsFromTaxi, taxiURL } from '../../utils/taxi';
 import {
   RESET,
   RESET_APP,
@@ -61,6 +61,7 @@ function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
   return function* (): SagaGenerator<void, void> {
     while (true) {
       yield* task();
+      console.log('periodic task done');
       yield delay(intervalMs);
     }
   };

@@ -24,8 +24,7 @@ import { isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { fetchTopupFromTaxi } from './taxi';
-import { taxiURL } from './constants';
+import { fetchTopupFromTaxi, taxiURL } from './taxi';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {

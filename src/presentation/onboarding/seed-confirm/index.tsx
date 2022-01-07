@@ -7,7 +7,7 @@ import Shell from '../../components/shell';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { setOnboardingVerified } from '../../../application/redux/actions/onboarding';
-import { INVALID_MNEMONIC_ERROR } from '../../../application/utils';
+import { INVALID_MNEMONIC_ERROR } from '../../../application/utils/constants';
 
 const NULL_ERROR = '';
 

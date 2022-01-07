@@ -5,7 +5,7 @@ import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
-import { IDLE_MESSAGE_TYPE } from '../application/utils';
+import { IDLE_MESSAGE_TYPE } from '../application/utils/idle';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
 import {

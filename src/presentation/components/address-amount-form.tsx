@@ -8,15 +8,16 @@ import {
   setPendingTxStep,
 } from '../../application/redux/actions/transaction';
 import { createAddress } from '../../domain/address';
-import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
-import { defaultPrecision, isValidAddressForNetwork } from '../../application/utils';
 import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import { IAssets } from '../../domain/assets';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import { Account } from '../../domain/account';
 import { NetworkString } from 'ldk';
+import { isValidAddressForNetwork } from '../../application/utils/address';
+import { defaultPrecision } from '../../application/utils/constants';
+import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 
 interface AddressAmountFormValues {
   address: string;

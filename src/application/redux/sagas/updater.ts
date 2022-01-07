@@ -13,7 +13,6 @@ import {
 } from 'ldk';
 import { Account, AccountID } from '../../../domain/account';
 import { UtxosAndTxs } from '../../../domain/transaction';
-import { defaultPrecision, toDisplayTransaction, toStringOutpoint } from '../../utils';
 import { addTx } from '../actions/transaction';
 import { addUtxo, AddUtxoAction, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
@@ -34,6 +33,9 @@ import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import { Channel, channel, buffers } from 'redux-saga';
 import { put, AllEffect, all, take, fork, call } from 'redux-saga/effects';
 import { selectEsploraForNetwork } from '../selectors/app.selector';
+import { toStringOutpoint } from '../../utils/utxos';
+import { toDisplayTransaction } from '../../utils/transaction';
+import { defaultPrecision } from '../../utils/constants';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,

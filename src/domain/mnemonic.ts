@@ -1,5 +1,5 @@
 import { validateMnemonic } from 'bip39';
-import { INVALID_MNEMONIC_ERROR } from '../application/utils';
+import { INVALID_MNEMONIC_ERROR } from '../application/utils/constants';
 
 export type Mnemonic = string;
 

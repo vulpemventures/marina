@@ -11,7 +11,7 @@ import {
   startPeriodicUpdate,
   stopPeriodicUpdate,
 } from '../../../application/redux/actions/app';
-import { setIdleAction } from '../../../application/utils';
+import { setIdleAction } from '../../../application/utils/idle';
 import {
   AUTHENTICATION_SUCCESS,
   LOGOUT_SUCCESS,

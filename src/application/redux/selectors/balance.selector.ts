@@ -1,8 +1,8 @@
 import { balances } from 'ldk';
 import { AccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
-import { lbtcAssetByNetwork } from '../../utils';
 import { sumBalances } from '../../utils/balances';
+import { lbtcAssetByNetwork } from '../../utils/network';
 import { selectTransactions, selectUtxos } from './wallet.selector';
 
 export type BalancesByAsset = { [assetHash: string]: number };

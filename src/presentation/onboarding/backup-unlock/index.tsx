@@ -5,7 +5,7 @@ import * as Yup from 'yup';
 import Shell from '../../components/shell';
 import Input from '../../components/input';
 import Button from '../../components/button';
-import { decrypt } from '../../../application/utils';
+import { decrypt } from '../../../application/utils/crypto';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';

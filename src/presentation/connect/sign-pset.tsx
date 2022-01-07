@@ -10,7 +10,7 @@ import {
 import { useSelector } from 'react-redux';
 import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { signPset } from '../../application/utils';
+import { signPset } from '../../application/utils/transaction';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
 
