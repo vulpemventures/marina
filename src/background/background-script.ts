@@ -1,7 +1,7 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import { testWalletData, testPasswordHash } from '../application/constants/cypress';
-import { logOut, onboardingCompleted } from '../application/redux/actions/app';
+import { logOut, onboardingCompleted, startPeriodicUpdate } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
@@ -55,6 +55,8 @@ browser.runtime.onStartup.addListener(() => {
     if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic !== '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
+      // We also set up the periodic update if the user is onboarded
+      marinaStore.dispatch(startPeriodicUpdate());
     }
   })().catch(console.error);
 });

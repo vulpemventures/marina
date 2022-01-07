@@ -7,7 +7,6 @@ import {
   START_PERIODIC_UPDATE,
   SET_EXPLORER,
   RESET,
-  STOP_PERIODIC_UPDATE,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Password } from '../../../domain/password';
@@ -50,10 +49,6 @@ export function changeNetwork(network: NetworkString): AnyAction {
 
 export function startPeriodicUpdate(): AnyAction {
   return { type: START_PERIODIC_UPDATE };
-}
-
-export function stopPeriodicUpdate(): AnyAction {
-  return { type: STOP_PERIODIC_UPDATE };
 }
 
 export function reset(): AnyAction {

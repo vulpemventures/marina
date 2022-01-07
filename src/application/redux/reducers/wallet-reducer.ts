@@ -33,7 +33,6 @@ export const walletInitState: WalletState = {
 const addUnspent =
   (state: WalletState) =>
   (accountID: AccountID, utxo: UnblindedOutput, network: NetworkString): WalletState => {
-    console.log('ADD UTXO !!', accountID, network);
     return {
       ...state,
       unspentsAndTransactions: {

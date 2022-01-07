@@ -61,7 +61,6 @@ function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
   return function* (): SagaGenerator<void, void> {
     while (true) {
       yield* task();
-      console.log('periodic task done');
       yield delay(intervalMs);
     }
   };
