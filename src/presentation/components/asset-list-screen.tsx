@@ -9,6 +9,7 @@ import { BalancesByAsset } from '../../application/redux/selectors/balance.selec
 import { Asset } from '../../domain/assets';
 import ButtonList from './button-list';
 import { NetworkString } from 'ldk';
+import { sortAssets } from '../utils/sort';
 
 export interface AssetListProps {
   network: NetworkString;
@@ -27,16 +28,18 @@ const AssetListScreen: React.FC<AssetListProps> = ({
 }) => {
   const history = useHistory();
 
+  const sortedAssets = sortAssets(assets);
+
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState(assets);
+  const [searchResults, setSearchResults] = React.useState(sortedAssets);
 
   useEffect(() => {
     if (!searchTerm) {
-      setSearchResults(assets);
+      setSearchResults(sortedAssets);
     }
 
-    const results = assets.filter(
+    const results = sortedAssets.filter(
       (a) =>
         a.name.toLowerCase().includes(searchTerm) || a.ticker.toLowerCase().includes(searchTerm)
     );

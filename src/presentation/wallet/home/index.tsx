@@ -22,6 +22,7 @@ import { BalancesByAsset } from '../../../application/redux/selectors/balance.se
 import { AssetGetter } from '../../../domain/assets';
 import browser from 'webextension-polyfill';
 import { NetworkString } from 'ldk';
+import { sortAssets } from '../../utils/sort';
 
 export interface HomeProps {
   lbtcAssetHash: string;
@@ -72,6 +73,8 @@ const HomeView: React.FC<HomeProps> = ({
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
+  const sortedAssets = sortAssets(Object.keys(assetsBalance).map(hash => getAsset(hash)));
+
   useEffect(() => {
     switch (transactionStep) {
       case 'address-amount':
@@ -110,23 +113,20 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {Object.entries(assetsBalance)
-              .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
-              .map(([asset, balance]) => {
-                const { ticker, precision, name } = getAsset(asset);
-                return (
-                  <ButtonAsset
-                    assetImgPath={getAssetImage(asset)}
-                    assetHash={asset}
-                    assetName={name || 'unknown'}
-                    assetTicker={ticker}
-                    assetPrecision={precision}
-                    quantity={balance}
-                    key={asset}
-                    handleClick={handleAssetBalanceButtonClick}
-                  />
-                );
-              })}
+            {sortedAssets.map(({ assetHash, name, ticker, precision }, index) => {
+              return (
+                <ButtonAsset
+                  assetImgPath={getAssetImage(assetHash)}
+                  assetHash={assetHash}
+                  assetName={name || 'unknown'}
+                  assetTicker={ticker}
+                  assetPrecision={precision}
+                  quantity={assetsBalance[assetHash]}
+                  key={index}
+                  handleClick={handleAssetBalanceButtonClick}
+                />
+              );
+            })}
           </ButtonList>
         </div>
       </div>
