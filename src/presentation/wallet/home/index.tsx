@@ -19,7 +19,7 @@ import { fromSatoshiStr } from '../../utils';
 import { getAssetImage } from '../../../application/utils';
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { AssetGetter } from '../../../domain/assets';
+import { Asset, AssetGetter } from '../../../domain/assets';
 import browser from 'webextension-polyfill';
 import { NetworkString } from 'ldk';
 import { sortAssets } from '../../utils/sort';
@@ -113,7 +113,7 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {sortedAssets.map(({ assetHash, name, ticker, precision }, index) => {
+            {sortedAssets.map(({ assetHash, name, ticker, precision }: (Asset & { assetHash: string }), index: React.Key) => {
               return (
                 <ButtonAsset
                   assetImgPath={getAssetImage(assetHash)}
