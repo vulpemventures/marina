@@ -11,7 +11,7 @@ import { Asset } from '../../domain/assets';
 export function sortAssets(
   assets: (Asset & { assetHash: string })[]
 ): (Asset & { assetHash: string })[] {
-  const sortedFeaturedTickers = ['Any', 'L-BTC', 'USDT', 'LCAD'];
+  const sortedFeaturedTickers = ['L-BTC', 'USDT', 'LCAD'];
   const featuredAssets: (Asset & { assetHash: string })[] = [];
   for (const ticker of sortedFeaturedTickers) {
     for (const asset of assets) {
