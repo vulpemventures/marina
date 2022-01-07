@@ -113,20 +113,25 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {sortedAssets.map(({ assetHash, name, ticker, precision }: (Asset & { assetHash: string }), index: React.Key) => {
-              return (
-                <ButtonAsset
-                  assetImgPath={getAssetImage(assetHash)}
-                  assetHash={assetHash}
-                  assetName={name || 'unknown'}
-                  assetTicker={ticker}
-                  assetPrecision={precision}
-                  quantity={assetsBalance[assetHash]}
-                  key={index}
-                  handleClick={handleAssetBalanceButtonClick}
-                />
-              );
-            })}
+            {sortedAssets.map(
+              (
+                { assetHash, name, ticker, precision }: Asset & { assetHash: string },
+                index: React.Key
+              ) => {
+                return (
+                  <ButtonAsset
+                    assetImgPath={getAssetImage(assetHash)}
+                    assetHash={assetHash}
+                    assetName={name || 'unknown'}
+                    assetTicker={ticker}
+                    assetPrecision={precision}
+                    quantity={assetsBalance[assetHash]}
+                    key={index}
+                    handleClick={handleAssetBalanceButtonClick}
+                  />
+                );
+              }
+            )}
           </ButtonList>
         </div>
       </div>
