@@ -2,7 +2,7 @@ import { Asset } from '../../domain/assets';
 
 /**
  * Takes a list of assets, and sort it by the following criteria:
- * - afterwards, if present, featured assets order by L-BTC, USDT and LCAD
+ * - first, featured assets order by L-BTC, USDT and LCAD
  * - finally, all remaining assets in no particular order
  * @param assets list of assets in no particular order
  * @returns assets sorted by criteria defined above
