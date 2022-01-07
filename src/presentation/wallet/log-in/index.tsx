@@ -6,7 +6,7 @@ import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants'
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { useDispatch, useSelector } from 'react-redux';
-import { logIn, startPeriodicUpdate } from '../../../application/redux/actions/app';
+import { logIn } from '../../../application/redux/actions/app';
 import { setIdleAction } from '../../../application/utils';
 import {
   AUTHENTICATION_SUCCESS,
@@ -76,7 +76,6 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .then(() => {
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
           props.dispatch(updateTaxiAssets()).catch(console.error);
-          props.dispatch(startPeriodicUpdate()).catch(console.error);
           props.history.push(DEFAULT_ROUTE);
           setIdleAction(() => {
             props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
