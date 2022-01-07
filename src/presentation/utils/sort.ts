@@ -9,10 +9,10 @@ import { Asset } from '../../domain/assets';
  * @returns assets sorted by criteria defined above
  */
 export function sortAssets(
-  assets: (Asset & { assetHash: string; })[]
-): (Asset & { assetHash: string; })[] {
+  assets: (Asset & { assetHash: string })[]
+): (Asset & { assetHash: string })[] {
   const sortedFeaturedTickers = ['Any', 'L-BTC', 'USDT', 'LCAD'];
-  const featuredAssets: (Asset & { assetHash: string; })[] = [];
+  const featuredAssets: (Asset & { assetHash: string })[] = [];
   for (const ticker of sortedFeaturedTickers) {
     for (const asset of assets) {
       if (ticker === asset.ticker) {
@@ -20,8 +20,6 @@ export function sortAssets(
       }
     }
   }
-  const remainingAssets = assets.filter((asset) => (
-    !sortedFeaturedTickers.includes(asset.ticker)
-  ));
+  const remainingAssets = assets.filter((asset) => !sortedFeaturedTickers.includes(asset.ticker));
   return [...featuredAssets, ...remainingAssets];
 }
