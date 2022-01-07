@@ -73,7 +73,17 @@ const HomeView: React.FC<HomeProps> = ({
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
-  const sortedAssets = sortAssets(Object.keys(assetsBalance).map((hash) => getAsset(hash)));
+  // return assets based on balances by asset
+  const assets = (balances: BalancesByAsset) => {
+    return Object.keys(balances).map((hash) => getAsset(hash))
+  }
+
+  // sorted assets
+  const [sortedAssets, setSortedAssets] = useState(sortAssets(assets(assetsBalance)));
+
+  useEffect(() => {
+    setSortedAssets(sortAssets(assets(assetsBalance)));
+  }, [assetsBalance]);
 
   useEffect(() => {
     switch (transactionStep) {

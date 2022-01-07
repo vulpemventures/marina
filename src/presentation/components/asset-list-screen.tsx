@@ -28,7 +28,14 @@ const AssetListScreen: React.FC<AssetListProps> = ({
 }) => {
   const history = useHistory();
 
-  const sortedAssets = sortAssets(assets);
+
+  // sort assets
+  const [sortedAssets, setSortedAssets] = React.useState(sortAssets(assets));
+
+  useEffect(() => {
+    setSortedAssets(sortAssets(assets));
+    setSearchResults(sortedAssets);
+  }, [assets]);
 
   // Filter assets
   const [searchTerm, setSearchTerm] = React.useState('');
