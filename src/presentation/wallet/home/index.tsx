@@ -75,8 +75,8 @@ const HomeView: React.FC<HomeProps> = ({
 
   // return assets based on balances by asset
   const assets = (balances: BalancesByAsset) => {
-    return Object.keys(balances).map((hash) => getAsset(hash))
-  }
+    return Object.keys(balances).map((hash) => getAsset(hash));
+  };
 
   // sorted assets
   const [sortedAssets, setSortedAssets] = useState(sortAssets(assets(assetsBalance)));

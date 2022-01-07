@@ -28,7 +28,6 @@ const AssetListScreen: React.FC<AssetListProps> = ({
 }) => {
   const history = useHistory();
 
-
   // sort assets
   const [sortedAssets, setSortedAssets] = React.useState(sortAssets(assets));
 
