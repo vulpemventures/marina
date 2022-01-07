@@ -10,15 +10,26 @@ import { Asset } from '../../domain/assets';
 export function sortAssets(
   assets: (Asset & { assetHash: string })[]
 ): (Asset & { assetHash: string })[] {
+  let newAsset;
+  const newAssetTicker = 'Any';
   const sortedFeaturedTickers = ['L-BTC', 'USDT', 'LCAD'];
   const featuredAssets: (Asset & { assetHash: string })[] = [];
+  // push featured assets in order
   for (const ticker of sortedFeaturedTickers) {
     for (const asset of assets) {
       if (ticker === asset.ticker) {
         featuredAssets.push(asset);
       }
+      if (asset.ticker === newAssetTicker) {
+        newAsset = asset;
+      }
     }
   }
-  const remainingAssets = assets.filter((asset) => !sortedFeaturedTickers.includes(asset.ticker));
-  return [...featuredAssets, ...remainingAssets];
+  // get remaining assets - also includes new asset (has ticker 'Any')
+  const forbiddenTickers = [...sortedFeaturedTickers, newAssetTicker];
+  const remainingAssets = assets.filter((asset) => !forbiddenTickers.includes(asset.ticker));
+  // join the two sets of assets and add 'Any' at the end of the list if it exists
+  const sortedAssets = [...featuredAssets, ...remainingAssets];
+  if (newAsset) sortedAssets.push(newAsset);
+  return sortedAssets;
 }
