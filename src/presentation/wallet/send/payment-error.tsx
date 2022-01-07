@@ -2,7 +2,10 @@ import React from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
-import { INVALID_PASSWORD_ERROR , SOMETHING_WENT_WRONG_ERROR } from '../../../application/utils/constants';
+import {
+  INVALID_PASSWORD_ERROR,
+  SOMETHING_WENT_WRONG_ERROR,
+} from '../../../application/utils/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useSelector } from 'react-redux';
 import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
