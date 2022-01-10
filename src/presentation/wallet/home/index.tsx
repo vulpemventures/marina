@@ -19,9 +19,10 @@ import { fromSatoshiStr } from '../../utils';
 import { getAssetImage } from '../../../application/utils';
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { AssetGetter } from '../../../domain/assets';
+import { Asset, AssetGetter } from '../../../domain/assets';
 import browser from 'webextension-polyfill';
 import { NetworkString } from 'ldk';
+import { sortAssets } from '../../utils/sort';
 
 export interface HomeProps {
   lbtcAssetHash: string;
@@ -72,6 +73,18 @@ const HomeView: React.FC<HomeProps> = ({
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
+  // return assets based on balances by asset
+  const assets = (balances: BalancesByAsset) => {
+    return Object.keys(balances).map((hash) => getAsset(hash));
+  };
+
+  // sorted assets
+  const [sortedAssets, setSortedAssets] = useState(sortAssets(assets(assetsBalance)));
+
+  useEffect(() => {
+    setSortedAssets(sortAssets(assets(assetsBalance)));
+  }, [assetsBalance]);
+
   useEffect(() => {
     switch (transactionStep) {
       case 'address-amount':
@@ -110,23 +123,25 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {Object.entries(assetsBalance)
-              .sort(([a], [b]) => (a === lbtcAssetHash ? -Infinity : Infinity))
-              .map(([asset, balance]) => {
-                const { ticker, precision, name } = getAsset(asset);
+            {sortedAssets.map(
+              (
+                { assetHash, name, ticker, precision }: Asset & { assetHash: string },
+                index: React.Key
+              ) => {
                 return (
                   <ButtonAsset
-                    assetImgPath={getAssetImage(asset)}
-                    assetHash={asset}
+                    assetImgPath={getAssetImage(assetHash)}
+                    assetHash={assetHash}
                     assetName={name || 'unknown'}
                     assetTicker={ticker}
                     assetPrecision={precision}
-                    quantity={balance}
-                    key={asset}
+                    quantity={assetsBalance[assetHash]}
+                    key={index}
                     handleClick={handleAssetBalanceButtonClick}
                   />
                 );
-              })}
+              }
+            )}
           </ButtonList>
         </div>
       </div>
