@@ -24,7 +24,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);
   const handleExpand = () => setAddressExpanded(true);
-  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+  const handleBackBtn = () => history.replace(DEFAULT_ROUTE);
   const handleCopy = () => {
     navigator.clipboard.writeText(confidentialAddress).then(
       () => setButtonText('Copied'),
