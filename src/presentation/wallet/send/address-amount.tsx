@@ -11,7 +11,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import AddressAmountEnhancedForm from '../../components/address-amount-form';
 import { NetworkString } from 'ldk';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { Asset, IAssets } from '../../../domain/assets';
+import { Asset } from '../../../domain/assets';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Account } from '../../../domain/account';
 
@@ -21,7 +21,6 @@ export interface AddressAmountProps {
   transaction: TransactionState;
   balances: BalancesByAsset;
   transactionAsset: Asset;
-  assets: IAssets;
 }
 
 const AddressAmountView: React.FC<AddressAmountProps> = ({
@@ -30,7 +29,6 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
   transaction,
   balances,
   transactionAsset,
-  assets,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -58,11 +56,10 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
       <AddressAmountEnhancedForm
         dispatch={dispatch}
         history={history}
-        balances={balances}
+        balance={balances[transaction.sendAsset] ?? 0}
         transaction={transaction}
         network={network}
-        assets={assets}
-        assetPrecision={transactionAsset.precision}
+        asset={transactionAsset}
         account={account}
       />
     </ShellPopUp>

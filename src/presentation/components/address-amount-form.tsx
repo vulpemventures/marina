@@ -11,12 +11,11 @@ import { createAddress } from '../../domain/address';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
 import * as Yup from 'yup';
 import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
-import { IAssets } from '../../domain/assets';
+import { Asset } from '../../domain/assets';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import { Account } from '../../domain/account';
 import { NetworkString } from 'ldk';
 import { isValidAddressForNetwork } from '../../application/utils/address';
-import { defaultPrecision } from '../../application/utils/constants';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 
 interface AddressAmountFormValues {
@@ -28,12 +27,11 @@ interface AddressAmountFormValues {
 }
 
 interface AddressAmountFormProps {
-  balances: { [assetHash: string]: number };
+  balance: number;
   dispatch: ProxyStoreDispatch;
-  assetPrecision: number;
+  asset: Asset;
   history: RouteComponentProps['history'];
   transaction: TransactionState;
-  assets: IAssets;
   network: NetworkString;
   account: Account;
 }
@@ -151,17 +149,11 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
       props.transaction.sendAmount > 0
-        ? fromSatoshi(
-            props.transaction.sendAmount ?? 0,
-            props.assets[props.transaction.sendAsset].precision
-          )
+        ? fromSatoshi(props.transaction.sendAmount ?? 0, props.asset.precision)
         : ('' as unknown as number),
-    assetTicker: props.assets[props.transaction.sendAsset]?.ticker ?? '',
-    assetPrecision: props.assets[props.transaction.sendAsset]?.precision ?? defaultPrecision,
-    balance: fromSatoshi(
-      props.balances[props.transaction.sendAsset] ?? 0,
-      props.assets[props.transaction.sendAsset]?.precision
-    ),
+    assetTicker: props.asset.ticker ?? '??',
+    assetPrecision: props.asset.precision,
+    balance: fromSatoshi(props.balance ?? 0, props.asset.precision),
   }),
 
   validationSchema: (props: AddressAmountFormProps): any =>
@@ -176,15 +168,15 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
       amount: Yup.number()
         .required('Please enter a valid amount')
-        .min(getMinAmountFromPrecision(props.assetPrecision), 'Amount should be at least 1 satoshi')
+        .min(
+          getMinAmountFromPrecision(props.asset.precision),
+          'Amount should be at least 1 satoshi'
+        )
         .test('too-many-digits', 'Too many digits', (value) => {
           return value !== undefined && value.toString().length < 14;
         })
         .test('insufficient-funds', 'Insufficient funds', (value) => {
-          return (
-            value !== undefined &&
-            value <= fromSatoshi(props.balances[props.transaction.sendAsset], props.assetPrecision)
-          );
+          return value !== undefined && value <= fromSatoshi(props.balance, props.asset.precision);
         }),
     }),
 

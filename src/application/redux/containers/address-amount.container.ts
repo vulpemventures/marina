@@ -12,7 +12,6 @@ const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
   account: selectMainAccount(state),
   network: state.app.network,
   transaction: state.transaction,
-  assets: state.assets,
   balances: selectBalances(MainAccountID)(state),
   transactionAsset: assetGetterFromIAssets(state.assets)(state.transaction.sendAsset),
 });
