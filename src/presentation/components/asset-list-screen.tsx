@@ -67,7 +67,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({
       backBtnCb={handleBackBtn}
       backgroundImagePath="/assets/images/popup/bg-wave-bottom-sm.png"
       className="h-popupContent bg-primary container mx-auto text-center bg-bottom bg-no-repeat"
-      currentPage="select asset"
+      currentPage="Select asset"
     >
       <InputIcon
         className="my-4"
