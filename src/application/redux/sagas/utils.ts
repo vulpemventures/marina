@@ -1,5 +1,5 @@
-import { StrictEffect, select, call } from 'redux-saga/effects';
-import { Account, AccountID } from '../../../domain/account';
+import { StrictEffect, select, call, delay } from 'redux-saga/effects';
+import { Account, AccountID, MainAccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import {
   selectEsploraForNetwork,
@@ -10,6 +10,7 @@ import {
   selectAccount,
   selectAllAccountsIDs,
   selectUpdaterIsLoading,
+  selectUtxos,
 } from '../selectors/wallet.selector';
 import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 import { NetworkString } from 'ldk';
@@ -67,10 +68,20 @@ export function* processAsyncGenerator<NextType>(
   }
 }
 
+export function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
+  return function* (): SagaGenerator<void, void> {
+    while (true) {
+      yield* task();
+      yield delay(intervalMs);
+    }
+  };
+}
+
 export const selectNetworkSaga = newSagaSelector(selectNetwork);
 export const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
 export const selectExplorerSaga = newSagaSelector(selectEsploraURL);
 export const selectUpdaterIsLoadingSaga = newSagaSelector(selectUpdaterIsLoading);
+export const selectAllUnspentsSaga = newSagaSelector(selectUtxos(MainAccountID));
 
 export function selectAccountSaga(accountID: AccountID): SagaGenerator<Account | undefined> {
   return newSagaSelector(selectAccount(accountID))();

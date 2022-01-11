@@ -1,14 +1,4 @@
-import {
-  call,
-  put,
-  takeLeading,
-  fork,
-  all,
-  take,
-  cancel,
-  delay,
-  AllEffect,
-} from 'redux-saga/effects';
+import { call, put, takeLeading, fork, all, take, cancel, AllEffect } from 'redux-saga/effects';
 import { fetchAssetsFromTaxi, taxiURL } from '../../utils/taxi';
 import {
   RESET,
@@ -24,6 +14,7 @@ import { setTaxiAssets } from '../actions/taxi';
 import { selectTaxiAssets } from '../selectors/taxi.selector';
 import { updateTaskAction } from '../actions/updater';
 import {
+  newPeriodicSagaTask,
   newSagaSelector,
   SagaGenerator,
   selectAllAccountsIDsSaga,
@@ -55,15 +46,6 @@ function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
 // wait that previous update is done before begin the new one
 function* watchUpdateTaxi(): SagaGenerator<void, void> {
   yield takeLeading(UPDATE_TAXI_ASSETS, fetchAndSetTaxiAssets);
-}
-
-function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
-  return function* (): SagaGenerator<void, void> {
-    while (true) {
-      yield* task();
-      yield delay(intervalMs);
-    }
-  };
 }
 
 function* dispatchUpdateTaskForAllAccountsIDs(): SagaGenerator<void, void> {

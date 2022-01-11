@@ -17,11 +17,14 @@ import { addTx } from '../actions/transaction';
 import { addUtxo, AddUtxoAction, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
 import {
+  newPeriodicSagaTask,
   newSagaSelector,
   processAsyncGenerator,
   SagaGenerator,
   selectAccountSaga,
+  selectAllUnspentsSaga,
   selectExplorerSaga,
+  selectNetworkSaga,
 } from './utils';
 import { ADD_UTXO, UPDATE_TASK } from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
@@ -223,6 +226,18 @@ function* assetsWorker(
   }
 }
 
+function updateUtxoAssets(assetsChan: Channel<{ assetHash: string; network: NetworkString }>) {
+  return function* () {
+    const utxos = yield* selectAllUnspentsSaga();
+    const assets = new Set(utxos.map(getAsset));
+    const network = yield* selectNetworkSaga();
+
+    for (const assetHash of assets) {
+      yield put(assetsChan, { assetHash, network });
+    }
+  };
+}
+
 export function* watchForAddUtxoAction(
   chan: Channel<{ assetHash: string; network: NetworkString }>
 ): SagaGenerator<void, AddUtxoAction> {
@@ -245,9 +260,10 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
   }
 
   // start the asset updater
-  const assetsHashChan = yield* createChannel<{ assetHash: string; network: NetworkString }>();
-  yield fork(assetsWorker, assetsHashChan);
-  yield fork(watchForAddUtxoAction, assetsHashChan); // this will fee the assets chan
+  const assetsChan = yield* createChannel<{ assetHash: string; network: NetworkString }>();
+  yield fork(assetsWorker, assetsChan);
+  yield fork(watchForAddUtxoAction, assetsChan); // this will fee the assets chan
+  yield fork(newPeriodicSagaTask(updateUtxoAssets(assetsChan), 60_000)); // retry update of all utxos' assets every 60s
 
   // listen for UPDATE_TASK
   while (true) {
