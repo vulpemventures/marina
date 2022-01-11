@@ -46,11 +46,9 @@ const ButtonAsset: React.FC<Props> = ({
         </div>
       </div>
       <div className="flex flex-row">
-        {quantity && (
-          <div className="text-sm font-medium">
-            {formatDecimalAmount(fromSatoshi(quantity, assetPrecision))}
-          </div>
-        )}
+        <div className="text-sm font-medium">
+          {quantity && formatDecimalAmount(fromSatoshi(quantity, assetPrecision))}
+        </div>
         <img className="ml-1.5" src="assets/images/chevron-right.svg" alt="chevron-right" />
       </div>
     </button>
