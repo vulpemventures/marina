@@ -9,6 +9,7 @@ import { updateUtxos } from '../../../application/redux/actions/utxos';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
+import { DEFAULT_ROUTE } from '../../routes/constants';
 
 export interface ReceiveProps {
   pubKey: MasterPublicKey;
@@ -23,7 +24,7 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);
   const handleExpand = () => setAddressExpanded(true);
-  const handleBackBtn = () => history.goBack();
+  const handleBackBtn = () => history.push(DEFAULT_ROUTE);
   const handleCopy = () => {
     navigator.clipboard.writeText(confidentialAddress).then(
       () => setButtonText('Copied'),

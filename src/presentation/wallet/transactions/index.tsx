@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
 import {
+  BACKUP_UNLOCK_ROUTE,
   DEFAULT_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
@@ -35,12 +36,14 @@ export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
   webExplorerURL: string;
+  isWalletVerified: boolean;
 }
 
 const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
   webExplorerURL,
+  isWalletVerified,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
@@ -53,8 +56,16 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
-  const handleSaveMnemonicConfirm = () => history.push(RECEIVE_ADDRESS_ROUTE);
-  const handleReceive = () => showSaveMnemonicModal(true);
+  const handleSaveMnemonicConfirm = async () => {
+    await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
+  };
+  const handleReceive = () => {
+    if (!isWalletVerified) {
+      showSaveMnemonicModal(true);
+    } else {
+      history.push(RECEIVE_ADDRESS_ROUTE);
+    }
+  };
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
