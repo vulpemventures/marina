@@ -108,7 +108,11 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     } catch (err) {
       console.error(err);
       setErrorMessage((err as Error).message);
-      setFeeCurrency(undefined);
+      // undefining feeCurreny will make the component lose the currency icon.
+      // this error happens if the user tries to send the full balance.
+      // see https://github.com/vulpemventures/marina/issues/286 for more details
+      // commenting the next line to prevent this
+      // setFeeCurrency(undefined);
       setFeeChange(undefined);
       setTopup(undefined);
     } finally {
