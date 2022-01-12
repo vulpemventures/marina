@@ -17,7 +17,7 @@ import { addTx } from '../actions/transaction';
 import { addUtxo, AddUtxoAction, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
 import {
-  newPeriodicSagaTask,
+  createChannel,
   newSagaSelector,
   processAsyncGenerator,
   SagaGenerator,
@@ -33,7 +33,7 @@ import { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
 import { UpdateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
-import { Channel, channel, buffers } from 'redux-saga';
+import { Channel } from 'redux-saga';
 import { put, AllEffect, all, take, fork, call } from 'redux-saga/effects';
 import { selectEsploraForNetwork } from '../selectors/app.selector';
 import { toStringOutpoint } from '../../utils/utxos';
@@ -160,10 +160,6 @@ function* updateTxsAndUtxos(
   yield all([txsUpdater(accountID, network), utxosUpdater(accountID, network)]);
 }
 
-function* createChannel<T>(): SagaGenerator<Channel<T>> {
-  return yield call(channel, buffers.sliding(10));
-}
-
 function* requestAssetInfoFromEsplora(
   assetHash: string,
   network: NetworkString
@@ -263,11 +259,11 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
   const assetsChan = yield* createChannel<{ assetHash: string; network: NetworkString }>();
   yield fork(assetsWorker, assetsChan);
   yield fork(watchForAddUtxoAction, assetsChan); // this will fee the assets chan
-  yield fork(newPeriodicSagaTask(updateUtxoAssets(assetsChan), 60_000)); // retry update of all utxos' assets every 60s
 
   // listen for UPDATE_TASK
   while (true) {
     const { payload } = yield take(UPDATE_TASK);
+    yield fork(updateUtxoAssets(assetsChan));
     yield put(accountToUpdateChan, payload);
   }
 }

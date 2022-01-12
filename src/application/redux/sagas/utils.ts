@@ -1,4 +1,4 @@
-import { StrictEffect, select, call, delay } from 'redux-saga/effects';
+import { StrictEffect, select, call } from 'redux-saga/effects';
 import { Account, AccountID, MainAccountID } from '../../../domain/account';
 import { RootReducerState } from '../../../domain/common';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../selectors/wallet.selector';
 import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 import { NetworkString } from 'ldk';
+import { Channel, channel, buffers } from 'redux-saga';
 
 export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
   StrictEffect,
@@ -68,13 +69,8 @@ export function* processAsyncGenerator<NextType>(
   }
 }
 
-export function newPeriodicSagaTask(task: () => SagaGenerator, intervalMs: number) {
-  return function* (): SagaGenerator<void, void> {
-    while (true) {
-      yield* task();
-      yield delay(intervalMs);
-    }
-  };
+export function* createChannel<T>(): SagaGenerator<Channel<T>> {
+  return yield call(channel, buffers.sliding(10));
 }
 
 export const selectNetworkSaga = newSagaSelector(selectNetwork);

@@ -4,7 +4,6 @@ import {
   ONBOARDING_COMPLETETED,
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
-  START_PERIODIC_UPDATE,
   SET_EXPLORER,
   RESET,
 } from './action-types';
@@ -45,10 +44,6 @@ export function logOut(): AnyAction {
 
 export function changeNetwork(network: NetworkString): AnyAction {
   return { type: CHANGE_NETWORK_SUCCESS, payload: { network } };
-}
-
-export function startPeriodicUpdate(): AnyAction {
-  return { type: START_PERIODIC_UPDATE };
 }
 
 export function reset(): AnyAction {

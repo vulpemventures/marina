@@ -1,4 +1,4 @@
-import { call, put, takeLeading, fork, all, take, cancel, AllEffect } from 'redux-saga/effects';
+import { call, put, takeLeading, fork, all, AllEffect } from 'redux-saga/effects';
 import { fetchAssetsFromTaxi, taxiURL } from '../../utils/taxi';
 import {
   RESET,
@@ -6,24 +6,13 @@ import {
   RESET_CONNECT,
   RESET_TAXI,
   RESET_WALLET,
-  START_PERIODIC_UPDATE,
-  STOP_PERIODIC_UPDATE,
   UPDATE_TAXI_ASSETS,
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
 import { selectTaxiAssets } from '../selectors/taxi.selector';
-import { updateTaskAction } from '../actions/updater';
-import {
-  newPeriodicSagaTask,
-  newSagaSelector,
-  SagaGenerator,
-  selectAllAccountsIDsSaga,
-  selectNetworkSaga,
-  selectUpdaterIsLoadingSaga,
-} from './utils';
+import { newSagaSelector, SagaGenerator, selectNetworkSaga } from './utils';
 import { watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
-import { Task } from 'redux-saga';
 
 const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
 
@@ -48,29 +37,6 @@ function* watchUpdateTaxi(): SagaGenerator<void, void> {
   yield takeLeading(UPDATE_TAXI_ASSETS, fetchAndSetTaxiAssets);
 }
 
-function* dispatchUpdateTaskForAllAccountsIDs(): SagaGenerator<void, void> {
-  const isUpdating = yield* selectUpdaterIsLoadingSaga();
-  if (isUpdating) return; // skip if any updater worker is already running
-  const accountIDs = yield* selectAllAccountsIDsSaga();
-  const network = yield* selectNetworkSaga();
-  yield all(accountIDs.map((id) => put(updateTaskAction(id, network))));
-}
-
-const periodicUpdaterSaga = newPeriodicSagaTask(dispatchUpdateTaskForAllAccountsIDs, 60_000);
-const periodicTaxiUpdateSaga = newPeriodicSagaTask(fetchAndSetTaxiAssets, 120_000);
-
-// watch for every START_PERIODIC_UPDATE actions
-// and starts periodic tasks for all accounts + taxi
-function* watchPeriodicUpdater(): SagaGenerator<void, Task> {
-  while (yield take(START_PERIODIC_UPDATE)) {
-    const periodicUpdateTask = yield fork(periodicUpdaterSaga);
-    const periodicTaxiUpdateTask = yield fork(periodicTaxiUpdateSaga);
-    yield take(STOP_PERIODIC_UPDATE);
-    yield cancel(periodicUpdateTask);
-    yield cancel(periodicTaxiUpdateTask);
-  }
-}
-
 function* reset(): Generator<AllEffect<any>> {
   const actionsTypes = [RESET_APP, RESET_WALLET, RESET_CONNECT, RESET_TAXI];
   yield all(actionsTypes.map((type) => put({ type })));
@@ -86,7 +52,6 @@ function* mainSaga(): SagaGenerator<void, void> {
   yield fork(watchReset);
   yield fork(watchUpdateTaxi);
   yield fork(watchUpdateTask);
-  yield fork(watchPeriodicUpdater);
   yield fork(watchStartDeepRestorer);
 }
 
