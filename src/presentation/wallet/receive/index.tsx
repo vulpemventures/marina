@@ -10,6 +10,7 @@ import { incrementAddressIndex } from '../../../application/redux/actions/wallet
 import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { selectNetwork } from '../../../application/redux/selectors/app.selector';
+import { DEFAULT_ROUTE } from '../../routes/constants';
 
 const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
@@ -22,7 +23,7 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);
   const handleExpand = () => setAddressExpanded(true);
-  const handleBackBtn = () => history.goBack();
+  const handleBackBtn = () => history.replace(DEFAULT_ROUTE);
   const handleCopy = () => {
     navigator.clipboard.writeText(confidentialAddress).then(
       () => setButtonText('Copied'),

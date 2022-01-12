@@ -10,6 +10,7 @@ const mapStateToProps = (state: RootReducerState): TransactionsProps => ({
   transactions: selectTransactions(MainAccountID)(state),
   webExplorerURL: selectElectrsURL(state),
   network: selectNetwork(state),
+  isWalletVerified: state.wallet.isVerified,
 });
 
 const Transactions = connect(mapStateToProps)(TransactionsView);

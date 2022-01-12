@@ -80,7 +80,7 @@ browser.browserAction.onClicked.addListener(() => {
       return;
     } else {
       await browser.browserAction.setPopup({ popup: 'popup.html' });
-      await browser.browserAction.openPopup();
+      if (browser.browserAction.openPopup) await browser.browserAction.openPopup();
     }
   })().catch(console.error);
 });

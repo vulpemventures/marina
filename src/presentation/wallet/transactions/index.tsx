@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
 import {
+  BACKUP_UNLOCK_ROUTE,
   DEFAULT_ROUTE,
-  RECEIVE_SELECT_ASSET_ROUTE,
+  RECEIVE_ADDRESS_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
 } from '../../routes/constants';
 import Balance from '../../components/balance';
@@ -26,6 +27,7 @@ import moment from 'moment';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { MainAccountID } from '../../../domain/account';
 import { NetworkString } from 'ldk';
+import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -39,6 +41,7 @@ export interface TransactionsProps {
   transactions: TxDisplayInterface[];
   webExplorerURL: string;
   network: NetworkString;
+  isWalletVerified: boolean;
 }
 
 const TransactionsView: React.FC<TransactionsProps> = ({
@@ -46,6 +49,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   transactions,
   webExplorerURL,
   network,
+  isWalletVerified,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
@@ -56,7 +60,18 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
 
   // Save mnemonic modal
-  const handleReceive = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);
+  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+  const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+  const handleSaveMnemonicConfirm = async () => {
+    await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
+  };
+  const handleReceive = () => {
+    if (!isWalletVerified) {
+      showSaveMnemonicModal(true);
+    } else {
+      history.push(RECEIVE_ADDRESS_ROUTE);
+    }
+  };
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
@@ -172,6 +187,12 @@ const TransactionsView: React.FC<TransactionsProps> = ({
           See in Explorer
         </Button>
       </Modal>
+
+      <SaveMnemonicModal
+        isOpen={isSaveMnemonicModalOpen}
+        handleClose={handleSaveMnemonicClose}
+        handleConfirm={handleSaveMnemonicConfirm}
+      />
     </ShellPopUp>
   );
 };
