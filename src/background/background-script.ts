@@ -30,8 +30,6 @@ wrapMarinaStore(marinaStore); // wrap store to proxy store
  */
 browser.runtime.onInstalled.addListener(({ reason }) => {
   (async () => {
-    console.log('reason', reason);
-    console.log('marinaStore', marinaStore.getState());
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install': {
