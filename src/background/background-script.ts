@@ -30,9 +30,11 @@ wrapMarinaStore(marinaStore); // wrap store to proxy store
  */
 browser.runtime.onInstalled.addListener(({ reason }) => {
   (async () => {
+    console.log('reason', reason);
+    console.log('marinaStore', marinaStore.getState());
     switch (reason) {
       //On first install, open new tab for onboarding
-      case 'install':
+      case 'install': {
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
           marinaStore.dispatch(setWalletData(testWalletData));
@@ -41,10 +43,14 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           marinaStore.dispatch(onboardingCompleted());
           break;
         }
-
         // run onboarding flow on fullscreen
         welcomeTabID = await openInitializeWelcomeRoute();
         break;
+      }
+      case 'update': {
+        // avoid first click doing nothing after update
+        if (marinaStore?.getState()?.app?.isOnboardingCompleted) await setUpPopup();
+      }
     }
   })().catch(console.error);
 });
