@@ -189,11 +189,11 @@ export default class MarinaBroker extends Broker {
           try {
             txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           } catch (error) {
-            console.error(error);
+            throw new Error(`error broadcasting tx: ${error}`);
           }
 
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
-          console.debug('txid', txid);
+
           return successMsg(txid);
         }
 
