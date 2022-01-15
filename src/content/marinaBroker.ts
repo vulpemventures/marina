@@ -28,7 +28,7 @@ import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
 } from '../application/redux/actions/wallet';
-import { lbtcAssetByNetwork, sortRecipients } from '../application/utils';
+import { lbtcAssetByNetwork, sortRecipients, broadcastTx } from '../application/utils';
 import { walletTransactions } from '../application/redux/selectors/transaction.selector';
 import { balancesSelector } from '../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../domain/assets';
@@ -36,6 +36,7 @@ import { Balance, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../presentation/connect/sign-msg';
+import { selectEsploraURL } from '../application/redux/selectors/app.selector';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -180,7 +181,20 @@ export default class MarinaBroker extends Broker {
 
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
-          return successMsg(signedTxHex);
+
+          console.debug('signedTxHex', signedTxHex);
+
+          let txid;
+
+          try {
+            txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
+          } catch (error) {
+            throw new Error(`error broadcasting tx: ${error}`);
+          }
+
+          if (!txid) throw new Error('something went wrong with the tx broadcasting');
+
+          return successMsg(txid);
         }
 
         case Marina.prototype.signMessage.name: {
