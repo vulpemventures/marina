@@ -1,7 +1,6 @@
 import {
   MarinaProvider,
   AddressInterface,
-  TransactionHex,
   PsetBase64,
   SignedMessage,
   Transaction,
@@ -9,6 +8,7 @@ import {
   Balance,
   MarinaEventType,
   Recipient,
+  TransactionID,
 } from 'marina-provider';
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
@@ -63,7 +63,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     return this.proxy(this.blindTransaction.name, [psetBase64]);
   }
 
-  sendTransaction(recipients: Recipient[], feeAssetHash?: string): Promise<TransactionHex> {
+  sendTransaction(recipients: Recipient[], feeAssetHash?: string): Promise<TransactionID> {
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
       throw new Error('invalid recipients array');
     }

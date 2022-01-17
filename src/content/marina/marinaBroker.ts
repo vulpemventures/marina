@@ -40,8 +40,8 @@ import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
-import { selectNetwork } from '../../application/redux/selectors/app.selector';
-import { lbtcAssetByNetwork } from '../../application/utils/network';
+import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
+import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 
 export default class MarinaBroker extends Broker {
@@ -192,7 +192,20 @@ export default class MarinaBroker extends Broker {
 
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
-          return successMsg(signedTxHex);
+
+          console.debug('signedTxHex', signedTxHex);
+
+          let txid;
+
+          try {
+            txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
+          } catch (error) {
+            throw new Error(`error broadcasting tx: ${error}`);
+          }
+
+          if (!txid) throw new Error('something went wrong with the tx broadcasting');
+
+          return successMsg(txid);
         }
 
         case Marina.prototype.signMessage.name: {
