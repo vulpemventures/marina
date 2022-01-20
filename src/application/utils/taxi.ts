@@ -30,6 +30,6 @@ export const fetchTopupFromTaxi = async (
   taxiUrl: string,
   assetHash: string
 ): Promise<TopupWithAssetReply> => {
-  const { data } = await axios.post(`${taxiUrl}/asset/topup`, { assetHash });
+  const { data } = await axios.post(`${taxiUrl}/asset/topup`, assetHash);
   return data;
 };
