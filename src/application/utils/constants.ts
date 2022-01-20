@@ -12,13 +12,8 @@ export const feeLevelToSatsPerByte: { [key: string]: number } = {
 
 export const taxiURL: Record<NetworkString, string> = {
   regtest: 'http://localhost:8000',
-<<<<<<< HEAD
   testnet: 'https://grpc.liquid.taxi:18000/v1',
   liquid: 'https://grpc.liquid.taxi/v1',
-=======
-  testnet: 'https://grpc.liquid.taxi:18000',
-  liquid: 'https://grpc.liquid.taxi',
->>>>>>> master
 };
 
 const makeImagePath = (fileName: string): string => `assets/images/liquid-assets/${fileName}`;
