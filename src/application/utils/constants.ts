@@ -12,7 +12,7 @@ export const feeLevelToSatsPerByte: { [key: string]: number } = {
 
 export const taxiURL: Record<NetworkString, string> = {
   regtest: 'http://localhost:8000',
-  testnet: 'http://todo.com', // TODO is there a taxi running on testnet ?
+  testnet: 'https://grpc.liquid.taxi:18000',
   liquid: 'https://grpc.liquid.taxi',
 };
 
