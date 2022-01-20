@@ -1,24 +1,24 @@
 import axios from 'axios';
 
 interface AssetDetails {
-  assetHash: string,
-  assetPrice: number,
-  basisPoint: number,
+  assetHash: string;
+  assetPrice: number;
+  basisPoint: number;
 }
 
 export interface Topup {
-  assetAmount: number,
-  assetHash: string,
-  assetSpread: number,
-  partial: string,
-  topupId: string,
+  assetAmount: number;
+  assetHash: string;
+  assetSpread: number;
+  partial: string;
+  topupId: string;
 }
 
 export interface TopupWithAssetReply {
-  expiry: number,
-  privateBlindingKey: string,
-  publicBlindingKey: string,
-  topup?: Topup,
+  expiry: number;
+  privateBlindingKey: string;
+  publicBlindingKey: string;
+  topup?: Topup;
 }
 
 export const fetchAssetsFromTaxi = async (taxiUrl: string): Promise<string[]> => {
