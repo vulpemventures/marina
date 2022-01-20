@@ -35,7 +35,7 @@ import {
 } from '../../../application/redux/actions/transaction';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Address, createAddress } from '../../../domain/address';
-import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import { Topup } from '../../../application/utils/taxi';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
 
 export interface ChooseFeeProps {
@@ -76,7 +76,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [feeChange, setFeeChange] = useState<Address>();
-  const [topup, setTopup] = useState<Topup.AsObject>();
+  const [topup, setTopup] = useState<Topup>();
 
   const circleLoaderRef = React.useRef(null);
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');

@@ -21,9 +21,8 @@ import {
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { blindingKeyFromAddress, isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
-import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { fetchTopupFromTaxi } from './taxi';
+import { fetchTopupFromTaxi, Topup } from './taxi';
 import { taxiURL } from './constants';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
 
@@ -92,7 +91,7 @@ const throwErrorCoinSelector: CoinSelectorErrorFn = (
  * @param changeAddressGetter define the way we get change addresses (if needed).
  */
 export function createTaxiTxFromTopup(
-  taxiTopup: Topup.AsObject,
+  taxiTopup: Topup,
   unspents: UnblindedOutput[],
   recipients: RecipientInterface[],
   coinSelector: CoinSelector,
