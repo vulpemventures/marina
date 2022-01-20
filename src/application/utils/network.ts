@@ -5,8 +5,8 @@ import { IAssets } from '../../domain/assets';
 export const broadcastTx = async (baseUrl: string, txHex: string): Promise<string> => {
   const response = await axios.post(`${baseUrl}/tx`, txHex);
   if (response.status !== 200) {
-    console.error(response.data);
-    throw new Error(response.data);
+    console.error(response);
+    throw new Error(JSON.stringify(response));
   }
   return response.data;
 };
