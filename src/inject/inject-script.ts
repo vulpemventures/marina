@@ -1,7 +1,7 @@
 // this is an inject script, "injected" in web pages
 // this script set up window.marina provider
 
-import Marina from './marina';
+import Marina from './marina/provider';
 
 const marina = new Marina();
 (window as Record<string, any>)[Marina.PROVIDER_NAME] = marina;

@@ -1,19 +1,32 @@
-import { UnblindedOutput } from 'ldk';
+import { NetworkString, UnblindedOutput } from 'ldk';
 import { AnyAction } from 'redux';
-import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS, UPDATE_UTXOS } from './action-types';
+import { AccountID } from '../../../domain/account';
+import { ActionWithPayload } from '../../../domain/common';
+import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS } from './action-types';
 
-export function updateUtxos(): AnyAction {
-  return { type: UPDATE_UTXOS };
+export type AddUtxoAction = ActionWithPayload<{
+  accountID: AccountID;
+  utxo: UnblindedOutput;
+  network: NetworkString;
+}>;
+
+export function addUtxo(
+  accountID: AccountID,
+  utxo: UnblindedOutput,
+  network: NetworkString
+): AddUtxoAction {
+  return { type: ADD_UTXO, payload: { accountID, utxo, network } };
 }
 
-export function addUtxo(utxo: UnblindedOutput): AnyAction {
-  return { type: ADD_UTXO, payload: { utxo } };
+export function deleteUtxo(
+  accountID: AccountID,
+  txid: string,
+  vout: number,
+  network: NetworkString
+): AnyAction {
+  return { type: DELETE_UTXO, payload: { txid, vout, accountID, network } };
 }
 
-export function deleteUtxo(txid: string, vout: number): AnyAction {
-  return { type: DELETE_UTXO, payload: { txid, vout } };
-}
-
-export function flushUtxos(): AnyAction {
-  return { type: FLUSH_UTXOS };
+export function flushUtxos(accountID: AccountID, network: NetworkString): AnyAction {
+  return { type: FLUSH_UTXOS, payload: { accountID, network } };
 }

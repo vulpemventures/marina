@@ -11,7 +11,7 @@ import {
   TransactionID,
 } from 'marina-provider';
 import MarinaEventHandler from './marinaEventHandler';
-import WindowProxy from './proxy';
+import WindowProxy from '../proxy';
 
 export default class Marina extends WindowProxy implements MarinaProvider {
   static PROVIDER_NAME = 'marina';
@@ -19,7 +19,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   private eventHandler: MarinaEventHandler;
 
   constructor() {
-    super();
+    super(Marina.PROVIDER_NAME);
     this.eventHandler = new MarinaEventHandler();
   }
 

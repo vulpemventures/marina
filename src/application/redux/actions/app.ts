@@ -4,7 +4,6 @@ import {
   ONBOARDING_COMPLETETED,
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
-  START_PERIODIC_UPDATE,
   SET_EXPLORER,
   RESET,
 } from './action-types';
@@ -13,6 +12,7 @@ import { Password } from '../../../domain/password';
 import { match, PasswordHash } from '../../../domain/password-hash';
 import { ExplorerURLs } from '../../../domain/app';
 import { NetworkString } from 'ldk';
+import { INVALID_PASSWORD_ERROR } from '../../utils/constants';
 
 export const setExplorer = (explorer: ExplorerURLs, network: NetworkString): AnyAction => ({
   type: SET_EXPLORER,
@@ -26,7 +26,10 @@ export const onboardingCompleted = (): AnyAction => ({
 export function logIn(password: Password, passwordHash: PasswordHash): AnyAction {
   try {
     if (!match(password, passwordHash)) {
-      return { type: AUTHENTICATION_FAILURE, payload: { error: new Error('Invalid password') } };
+      return {
+        type: AUTHENTICATION_FAILURE,
+        payload: { error: new Error(INVALID_PASSWORD_ERROR) },
+      };
     }
 
     return { type: AUTHENTICATION_SUCCESS };
@@ -41,10 +44,6 @@ export function logOut(): AnyAction {
 
 export function changeNetwork(network: NetworkString): AnyAction {
   return { type: CHANGE_NETWORK_SUCCESS, payload: { network } };
-}
-
-export function startPeriodicUpdate(): AnyAction {
-  return { type: START_PERIODIC_UPDATE };
 }
 
 export function reset(): AnyAction {

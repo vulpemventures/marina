@@ -1,6 +1,7 @@
 import * as ACTION_TYPES from '../actions/action-types';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
+import { UnblindedOutput } from 'ldk';
 
 export type PendingTxStep = 'empty' | 'address-amount' | 'choose-fee' | 'confirmation';
 
@@ -12,16 +13,15 @@ export interface TransactionState {
   feeAsset: string;
   pset?: string;
   sendAddress?: Address;
-  changeAddress?: Address;
-  feeChangeAddress?: Address;
+  changeAddresses: Address[];
+  selectedUtxos?: UnblindedOutput[];
 }
 
 export const transactionInitState: TransactionState = {
   step: 'empty',
   sendAsset: '',
   sendAddress: undefined,
-  changeAddress: undefined,
-  feeChangeAddress: undefined,
+  changeAddresses: [],
   sendAmount: 0,
   feeAmount: 0,
   feeAsset: '',
@@ -32,19 +32,21 @@ export function transactionReducer(
   { type, payload }: AnyAction
 ): TransactionState {
   switch (type) {
+    case ACTION_TYPES.PENDING_TX_SET_STEP: {
+      return { ...state, step: payload.step };
+    }
+
     case ACTION_TYPES.PENDING_TX_SET_ASSET: {
       return {
         ...state,
-        step: 'address-amount',
         sendAsset: payload.asset,
       };
     }
     case ACTION_TYPES.PENDING_TX_SET_ADDRESSES_AND_AMOUNT: {
       return {
         ...state,
-        step: 'choose-fee',
-        sendAddress: payload.receipientAddress,
-        changeAddress: payload.changeAddress,
+        sendAddress: payload.recipientAddress,
+        changeAddresses: payload.changeAddresses,
         sendAmount: payload.amountInSatoshi,
       };
     }
@@ -52,7 +54,7 @@ export function transactionReducer(
     case ACTION_TYPES.PENDING_TX_SET_FEE_CHANGE_ADDRESS: {
       return {
         ...state,
-        feeChangeAddress: payload.feeChangeAddress,
+        changeAddresses: [...state.changeAddresses, payload.feeChangeAddress],
       };
     }
 
@@ -71,8 +73,8 @@ export function transactionReducer(
     case ACTION_TYPES.PENDING_TX_SET_PSET: {
       return {
         ...state,
-        step: 'confirmation',
         pset: payload.pset,
+        selectedUtxos: payload.utxos,
       };
     }
 

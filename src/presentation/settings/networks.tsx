@@ -2,7 +2,6 @@ import { NetworkString } from 'ldk';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { flushUtxos } from '../../application/redux/actions/utxos';
 import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { RootReducerState } from '../../domain/common';
@@ -15,15 +14,10 @@ const formattedNetworks = availableNetworks.map((n) => formatNetwork(n));
 
 export interface SettingsNetworksProps {
   restorationLoading: boolean;
-  updaterIsloading: boolean;
   error?: string;
 }
 
-const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
-  restorationLoading,
-  updaterIsloading,
-  error,
-}) => {
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, error }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const network = useSelector((state: RootReducerState) => state.app.network);
@@ -35,8 +29,11 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
     setIsLoading(true);
     const newNetwork = net.toLowerCase();
     if (newNetwork !== network) {
+      // switch the selected network
+
       await dispatch(changeNetwork(newNetwork as NetworkString));
-      await dispatch(flushUtxos());
+
+      // start deep restorer for all the accounts (done in background)
       await dispatch(setDeepRestorerGapLimit(20));
       await dispatch(startDeepRestorer());
     }
@@ -52,14 +49,13 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
     >
       <p className="font-regular my-8 text-base text-left">Select the network</p>
       <Select
-        disabled={isLoading || restorationLoading || updaterIsloading}
+        disabled={isLoading || restorationLoading}
         list={formattedNetworks}
         selected={selectedNetwork}
         onSelect={setSelectedValue}
       />
 
       {(isLoading || restorationLoading) && <p className="m-2">{'loading'}...</p>}
-      {updaterIsloading && <p className="m-2">{'updater is loading'}...</p>}
       {error && <p className="m-2">{error}</p>}
     </ShellPopUp>
   );

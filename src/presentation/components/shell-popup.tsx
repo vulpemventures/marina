@@ -4,11 +4,16 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { updateUtxos } from '../../application/redux/actions/utxos';
-import { flushPendingTx, updateTxs } from '../../application/redux/actions/transaction';
-import { RootReducerState } from '../../domain/common';
-import { selectUpdaterLoaders } from '../../application/redux/selectors/wallet.selector';
+import { flushPendingTx } from '../../application/redux/actions/transaction';
+import {
+  selectAllAccountsIDs,
+  selectDeepRestorerIsLoading,
+  selectUpdaterIsLoading,
+} from '../../application/redux/selectors/wallet.selector';
+import { updateTaskAction } from '../../application/redux/actions/updater';
 import { formatNetwork } from '../utils';
+import { selectNetwork } from '../../application/redux/selectors/app.selector';
+import { AccountID } from '../../domain/account';
 
 interface Props {
   btnDisabled?: boolean;
@@ -33,12 +38,10 @@ const ShellPopUp: React.FC<Props> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const network = useSelector((state: RootReducerState) => state.app.network);
-  const updaterLoaders = useSelector(selectUpdaterLoaders);
-
-  const deepRestorerLoading = useSelector(
-    (state: RootReducerState) => state.wallet.deepRestorer.isLoading
-  );
+  const allAccountsIds = useSelector(selectAllAccountsIDs);
+  const updaterIsLoading = useSelector(selectUpdaterIsLoading);
+  const deepRestorerLoading = useSelector(selectDeepRestorerIsLoading);
+  const network = useSelector(selectNetwork);
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
@@ -47,11 +50,12 @@ const ShellPopUp: React.FC<Props> = ({
   const goToHome = async () => {
     // If already home, refresh state and return balances
     if (history.location.pathname === '/') {
-      dispatch(updateUtxos()).catch(console.error);
-      dispatch(updateTxs()).catch(console.error);
+      const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
+      await Promise.all(allAccountsIds.map(makeUpdateTaskForId).map(dispatch));
+    } else {
+      history.push(DEFAULT_ROUTE);
     }
     await dispatch(flushPendingTx());
-    history.push(DEFAULT_ROUTE);
   };
   const handleBackBtn = () => {
     if (backBtnCb) {
@@ -112,7 +116,7 @@ const ShellPopUp: React.FC<Props> = ({
               </div>
             )}
           </div>
-          {(deepRestorerLoading || updaterLoaders.utxos || updaterLoaders.txs) && loader()}
+          {(deepRestorerLoading || updaterIsLoading) && loader()}
           <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>
@@ -139,7 +143,7 @@ const ShellPopUp: React.FC<Props> = ({
 
   function getLoaderText(): string | undefined {
     if (deepRestorerLoading) return 'Restoring...';
-    if (updaterLoaders.txs || updaterLoaders.utxos) return 'Updating...';
+    if (updaterIsLoading) return 'Updating...';
     return undefined;
   }
 

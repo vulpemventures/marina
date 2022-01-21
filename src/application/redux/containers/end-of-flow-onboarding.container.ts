@@ -14,6 +14,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
     network: state.app.network,
     hasMnemonicRegistered: hasMnemonicSelector(state),
     explorerURL: selectEsploraURL(state),
+    walletVerified: state.onboarding.verified,
   };
 };
 

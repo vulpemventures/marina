@@ -8,11 +8,11 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
-import { restorerOptsSelector } from '../../application/redux/selectors/wallet.selector';
-import { RootReducerState } from '../../domain/common';
-import { decrypt, mnemonicWallet } from '../../application/utils';
+import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
+import { signPset } from '../../application/utils/transaction';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
+import { selectNetwork } from '../../application/redux/selectors/app.selector';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -25,11 +25,8 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const network = useSelector((state: RootReducerState) => state.app.network);
-  const restorerOpts = useSelector(restorerOptsSelector);
-  const encryptedMnemonic = useSelector(
-    (state: RootReducerState) => state.wallet.encryptedMnemonic
-  );
+  const accounts = useSelector(selectAllAccounts);
+  const network = useSelector(selectNetwork);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
@@ -53,12 +50,11 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       const { tx } = connectData;
       if (!tx || !tx.pset) throw new Error('No transaction to sign');
 
-      const mnemo = await mnemonicWallet(
-        decrypt(encryptedMnemonic, password),
-        restorerOpts,
-        network
+      const identities = await Promise.all(
+        accounts.map((a) => a.getSigningIdentity(password, network))
       );
-      const signedPset = await mnemo.signPset(tx.pset);
+      const signedPset = await signPset(tx.pset, identities);
+
       await sendResponseMessage(true, signedPset);
 
       window.close();

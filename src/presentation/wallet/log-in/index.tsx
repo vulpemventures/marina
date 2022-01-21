@@ -7,7 +7,7 @@ import Button from '../../components/button';
 import Input from '../../components/input';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
-import { setIdleAction } from '../../../application/utils';
+import { setIdleAction } from '../../../application/utils/idle';
 import {
   AUTHENTICATION_SUCCESS,
   LOGOUT_SUCCESS,
@@ -76,15 +76,15 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .then(() => {
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
           props.dispatch(updateTaxiAssets()).catch(console.error);
-          props.history.push(DEFAULT_ROUTE);
           setIdleAction(() => {
             props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
           });
+          props.history.push(DEFAULT_ROUTE);
         } else {
           const err = logInAction.payload.error;
           setErrors({ password: err.message });
+          setSubmitting(false);
         }
-        setSubmitting(false);
       })
       .catch(console.error);
   },

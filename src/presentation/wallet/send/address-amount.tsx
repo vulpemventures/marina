@@ -2,36 +2,33 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
-import { getAssetImage } from '../../../application/utils';
+import { getAssetImage } from '../../../application/utils/constants';
 import { fromSatoshi } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import AddressAmountEnhancedForm from '../../components/address-amount-form';
-import { MasterPublicKey, NetworkString, StateRestorerOpts } from 'ldk';
+import { NetworkString } from 'ldk';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { Asset, IAssets } from '../../../domain/assets';
+import { Asset } from '../../../domain/assets';
 import { DEFAULT_ROUTE } from '../../routes/constants';
+import { Account } from '../../../domain/account';
 
 export interface AddressAmountProps {
-  masterPubKey: MasterPublicKey;
-  restorerOpts: StateRestorerOpts;
+  account: Account;
   network: NetworkString;
   transaction: TransactionState;
   balances: BalancesByAsset;
   transactionAsset: Asset;
-  assets: IAssets;
 }
 
 const AddressAmountView: React.FC<AddressAmountProps> = ({
-  masterPubKey,
-  restorerOpts,
+  account,
   network,
   transaction,
   balances,
   transactionAsset,
-  assets,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -59,13 +56,11 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
       <AddressAmountEnhancedForm
         dispatch={dispatch}
         history={history}
-        balances={balances}
+        balance={balances[transaction.sendAsset] ?? 0}
         transaction={transaction}
-        restorerOpts={restorerOpts}
         network={network}
-        pubKey={masterPubKey}
-        assets={assets}
-        assetPrecision={transactionAsset.precision}
+        asset={transactionAsset}
+        account={account}
       />
     </ShellPopUp>
   );

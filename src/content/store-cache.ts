@@ -6,6 +6,7 @@ import {
   compareUtxoState,
   networkChange,
 } from '../application/utils/marina-event';
+import { MainAccountID } from '../domain/account';
 import { RootReducerState } from '../domain/common';
 import { TxsHistory } from '../domain/transaction';
 
@@ -47,8 +48,9 @@ export function compareCacheForEvents(
 // create cache from State.
 export function newCacheFromState(state: RootReducerState): StoreCache {
   return {
-    utxoState: state.wallet.utxoMap,
-    txsHistoryState: state.txsHistory[state.app.network],
+    utxoState: state.wallet.unspentsAndTransactions[MainAccountID][state.app.network].utxosMap,
+    txsHistoryState:
+      state.wallet.unspentsAndTransactions[MainAccountID][state.app.network].transactions,
     enabledWebsitesState: state.connect.enabledSites,
     network: state.app.network,
   };

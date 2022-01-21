@@ -13,17 +13,21 @@ import ButtonList from '../../components/button-list';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
-import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import ShellPopUp from '../../components/shell-popup';
-import { getAssetImage, txTypeAsString } from '../../../application/utils';
+import { getAssetImage } from '../../../application/utils/constants';
+import { txTypeAsString } from '../../../application/utils/transaction';
 import { fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
 import { IAssets } from '../../../domain/assets';
-import { updateTxs, setAsset } from '../../../application/redux/actions/transaction';
+import { setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { MainAccountID } from '../../../domain/account';
+import { NetworkString } from 'ldk';
+import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -36,6 +40,7 @@ export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
   webExplorerURL: string;
+  network: NetworkString;
   isWalletVerified: boolean;
 }
 
@@ -43,6 +48,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
   webExplorerURL,
+  network,
   isWalletVerified,
 }) => {
   const history = useHistory();
@@ -78,9 +84,12 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     await browser.tabs.create({ url, active: false });
   };
 
-  // Update txs history once at first render
+  // update tx history for main account once at first render
   useEffect(() => {
-    dispatch(updateTxs()).catch(console.error);
+    dispatch(updateTaskAction(MainAccountID, network)).catch(console.error);
+    return () => {
+      setModalTxDetails(undefined);
+    };
   }, []);
 
   return (
@@ -90,48 +99,52 @@ const TransactionsView: React.FC<TransactionsProps> = ({
       className="container mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Transactions"
     >
-      <Balance
-        assetHash={state.assetHash}
-        assetBalance={fromSatoshiStr(
-          state.assetsBalance[state.assetHash] ?? 0,
-          state.assetPrecision
-        )}
-        assetImgPath={getAssetImgPath()}
-        assetTicker={state.assetTicker}
-        bigBalanceText={true}
-      />
+      {state && (
+        <>
+          <Balance
+            assetHash={state.assetHash}
+            assetBalance={fromSatoshiStr(
+              state.assetsBalance[state.assetHash] ?? 0,
+              state.assetPrecision
+            )}
+            assetImgPath={getAssetImgPath()}
+            assetTicker={state.assetTicker}
+            bigBalanceText={true}
+          />
 
-      <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
+          <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
 
-      <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
+          <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
-      <div className="h-60 rounded-xl mb-1">
-        <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-          {transactions
-            .filter(txHasAsset(state.assetHash))
-            // Descending order
-            .sort((a, b) => {
-              if (!a.blockTimeMs || !b.blockTimeMs) return 0;
-              const momentB = moment(b.blockTimeMs);
-              const momentA = moment(a.blockTimeMs);
-              return momentB.diff(momentA);
-            })
-            .map((tx, index) => {
-              return (
-                <ButtonTransaction
-                  assetHash={state.assetHash}
-                  assetPrecision={state.assetPrecision}
-                  assetTicker={state.assetTicker}
-                  key={index}
-                  handleClick={() => {
-                    setModalTxDetails(tx);
-                  }}
-                  tx={tx}
-                />
-              );
-            })}
-        </ButtonList>
-      </div>
+          <div className="h-60 rounded-xl mb-1">
+            <ButtonList title="Transactions" emptyText="Your transactions will appear here">
+              {transactions
+                .filter(txHasAsset(state.assetHash))
+                // Descending order
+                .sort((a, b) => {
+                  if (!a.blockTimeMs || !b.blockTimeMs) return 0;
+                  const momentB = moment(b.blockTimeMs);
+                  const momentA = moment(a.blockTimeMs);
+                  return momentB.diff(momentA);
+                })
+                .map((tx, index) => {
+                  return (
+                    <ButtonTransaction
+                      assetHash={state.assetHash}
+                      assetPrecision={state.assetPrecision}
+                      assetTicker={state.assetTicker}
+                      key={index}
+                      handleClick={() => {
+                        setModalTxDetails(tx);
+                      }}
+                      tx={tx}
+                    />
+                  );
+                })}
+            </ButtonList>
+          </div>
+        </>
+      )}
 
       <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">

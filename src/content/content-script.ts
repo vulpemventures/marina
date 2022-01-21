@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 
-import MarinaBroker from './marinaBroker';
+import MarinaBroker from './marina/marinaBroker';
 
 // start the broker + inject the inject-script.js script
 startContentScript().catch(console.error);
@@ -10,6 +10,7 @@ async function startContentScript() {
   if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
     const currentHostname = window.location.hostname;
     await MarinaBroker.Start(currentHostname);
+
     injectScript(browser.runtime.getURL('inject-script.js'));
   }
 }

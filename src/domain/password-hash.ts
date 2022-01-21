@@ -1,4 +1,4 @@
-import { hashPassword } from '../application/utils';
+import { hashPassword } from '../application/utils/crypto';
 import { Password } from './password';
 
 export type PasswordHash = string;

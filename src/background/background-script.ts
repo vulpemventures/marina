@@ -1,11 +1,11 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
-import { testWalletData } from '../application/constants/cypress';
-import { logOut, onboardingCompleted, startPeriodicUpdate } from '../application/redux/actions/app';
+import { testWalletData, testPasswordHash } from '../application/constants/cypress';
+import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
-import { IDLE_MESSAGE_TYPE } from '../application/utils';
+import { IDLE_MESSAGE_TYPE } from '../application/utils/idle';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
 import {
@@ -16,6 +16,7 @@ import {
 } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
+import { periodicTaxiUpdater, periodicUpdater } from './alarms';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -35,7 +36,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
       case 'install': {
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
-          marinaStore.dispatch(setWalletData(testWalletData));
+          marinaStore.dispatch(setWalletData(testWalletData, testPasswordHash));
           marinaStore.dispatch(enableWebsite('vulpemventures.github.io', 'regtest')); // skip the enable step too
           await setUpPopup();
           marinaStore.dispatch(onboardingCompleted());
@@ -56,11 +57,12 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    if (marinaStore.getState().wallet.encryptedMnemonic !== '') {
+    if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic !== '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
-      // We also set up the periodic update if the user is onboarded
-      marinaStore.dispatch(startPeriodicUpdate());
+      // We also set up the periodic updaters if the user is onboarded
+      periodicUpdater();
+      periodicTaxiUpdater();
     }
   })().catch(console.error);
 });
@@ -77,7 +79,7 @@ browser.browserAction.onClicked.addListener(() => {
     // the wallet creation process, we let user re-open it
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
-    if (marinaStore.getState().wallet.encryptedMnemonic === '') {
+    if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic === '') {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {
