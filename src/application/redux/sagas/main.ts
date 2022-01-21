@@ -11,7 +11,7 @@ import {
 import { setTaxiAssets } from '../actions/taxi';
 import { selectTaxiAssets } from '../selectors/taxi.selector';
 import { newSagaSelector, SagaGenerator, selectNetworkSaga } from './utils';
-import { watchUpdateTask } from './updater';
+import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
 
 const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
@@ -52,6 +52,7 @@ function* mainSaga(): SagaGenerator<void, void> {
   yield fork(watchReset);
   yield fork(watchUpdateTaxi);
   yield fork(watchUpdateTask);
+  yield fork(updateAfterEachLoginAction);
   yield fork(watchStartDeepRestorer);
 }
 

@@ -22,19 +22,20 @@ import {
   processAsyncGenerator,
   SagaGenerator,
   selectAccountSaga,
+  selectAllAccountsIDsSaga,
   selectAllUnspentsSaga,
   selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
-import { ADD_UTXO, UPDATE_TASK } from '../actions/action-types';
+import { ADD_UTXO, UPDATE_TASK, AUTHENTICATION_SUCCESS } from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
-import { UpdateTaskAction } from '../actions/updater';
+import { updateTaskAction, UpdateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import { Channel } from 'redux-saga';
-import { put, AllEffect, all, take, fork, call } from 'redux-saga/effects';
+import { put, AllEffect, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { selectEsploraForNetwork } from '../selectors/app.selector';
 import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
@@ -266,4 +267,16 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
     yield fork(updateUtxoAssets(assetsChan));
     yield put(accountToUpdateChan, payload);
   }
+}
+
+// starts an update for all accounts after each AUTHENTICATION_SUCCESS action
+// only updates the accounts for the current network
+export function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
+  yield takeLatest(AUTHENTICATION_SUCCESS, function* () {
+    const accountsID = yield* selectAllAccountsIDsSaga();
+    const network = yield* selectNetworkSaga();
+    for (const ID of accountsID) {
+      yield put(updateTaskAction(ID, network));
+    }
+  });
 }
