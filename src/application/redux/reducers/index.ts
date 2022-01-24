@@ -109,8 +109,8 @@ const marinaReducer = combineReducers({
   taxi: persist<TaxiState>({
     reducer: taxiReducer,
     key: 'taxi',
-    version: 1,
-    migrate: migrateAfter(taxiInitState),
+    version: 2,
+    migrate: migrateBefore(taxiInitState),
   }),
   connect: persist<ConnectData>({
     reducer: connectDataReducer,

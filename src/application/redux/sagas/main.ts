@@ -23,7 +23,7 @@ function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
     const currentTaxiAssets = yield* selectTaxiAssetsSaga();
     const sortAndJoin = (a: string[]) => a.sort().join('');
     if (sortAndJoin(assets) !== sortAndJoin(currentTaxiAssets)) {
-      yield put(setTaxiAssets(assets));
+      yield put(setTaxiAssets(network, assets));
     }
   } catch (err: unknown) {
     console.warn(`fetch taxi assets error: ${(err as Error).message || 'unknown'}`);

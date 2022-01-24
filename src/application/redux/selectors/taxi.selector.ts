@@ -1,5 +1,5 @@
 import { RootReducerState } from '../../../domain/common';
 
 export function selectTaxiAssets(state: RootReducerState): string[] {
-  return state.taxi.taxiAssets;
+  return state.taxi.taxiAssets[state.app.network];
 }
