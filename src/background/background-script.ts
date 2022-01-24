@@ -47,8 +47,16 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         break;
       }
       case 'update': {
-        // avoid first click doing nothing after update
-        if (marinaStore?.getState()?.app?.isOnboardingCompleted) await setUpPopup();
+        if (marinaStore?.getState()?.app?.isOnboardingCompleted) {
+          // After an update, and only if the user is already onboarded,
+          // we need the setup the popup or the first click on the
+          // extension icon will do nothing
+          await setUpPopup();
+          // After an update, all previous periodic updaters are lost.
+          // If the user is already onboarded, we need to re-enable them.
+          periodicUpdater();
+          periodicTaxiUpdater();
+        }
       }
     }
   })().catch(console.error);
@@ -84,6 +92,7 @@ browser.browserAction.onClicked.addListener(() => {
       return;
     } else {
       await browser.browserAction.setPopup({ popup: 'popup.html' });
+      // Function browser.browserAction.openPopup() exists in Firefox but not in Chrome
       if (browser.browserAction.openPopup) await browser.browserAction.openPopup();
     }
   })().catch(console.error);
