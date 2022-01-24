@@ -90,7 +90,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   }, []);
 
   const [state, setState] = useState(initialState);
-  const [feeAsset, setFeeAsset] = useState<string | undefined>(lbtcAssetHash);
+  const [feeAsset, setFeeAsset] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -270,25 +270,21 @@ function stateForRegularPSET(
   network: NetworkString
 ): () => Promise<State> {
   return function () {
-    return new Promise(() => {
-      const result: State = {};
-      result.unsignedPset = undefined;
-      result.feeChange = undefined;
-      result.utxos = [];
-      const w = walletFromCoins(utxos, network);
+    const result: State = {};
+    result.unsignedPset = undefined;
+    result.feeChange = undefined;
+    result.utxos = [];
+    const w = walletFromCoins(utxos, network);
 
-      result.unsignedPset = w.sendTx(
-        recipient,
-        greedyCoinSelectorWithSideEffect(({ selectedUtxos }) =>
-          result.utxos?.push(...selectedUtxos)
-        ),
-        change.value,
-        true
-      );
+    result.unsignedPset = w.sendTx(
+      recipient,
+      greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+      change.value,
+      true
+    );
 
-      result.topup = undefined;
-      return result;
-    });
+    result.topup = undefined;
+    return Promise.resolve(result);
   };
 }
 
