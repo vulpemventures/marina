@@ -9,23 +9,21 @@ import {
   UPDATE_TAXI_ASSETS,
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
-import { selectTaxiAssets } from '../selectors/taxi.selector';
-import { newSagaSelector, SagaGenerator, selectNetworkSaga } from './utils';
+import { newSagaSelector, SagaGenerator } from './utils';
 import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
 import { NetworkString } from 'ldk';
-
-const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
+import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
 
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
   yield* fetchTaxiAssetsForNetwork('liquid');
   yield* fetchTaxiAssetsForNetwork('testnet');
 }
 
-function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void, string[]>  {
+function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void, string[]> {
   try {
     const assets = yield call(fetchAssetsFromTaxi, taxiURL[network]);
-    const currentTaxiAssets = yield* selectTaxiAssetsSaga();
+    const currentTaxiAssets = yield* newSagaSelector(selectTaxiAssetsForNetwork(network))();
     const sortAndJoin = (a: string[]) => a.sort().join('');
     if (sortAndJoin(assets) !== sortAndJoin(currentTaxiAssets)) {
       yield put(setTaxiAssets(network, assets));

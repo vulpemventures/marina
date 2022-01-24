@@ -269,23 +269,25 @@ function stateForRegularPSET(
   utxos: UnblindedOutput[],
   network: NetworkString
 ): () => Promise<State> {
-  return async function() {
-    const result: State = {};
-    result.unsignedPset = undefined;
-    result.feeChange = undefined;
-    result.utxos = [];
-    const w = walletFromCoins(utxos, network);
+  return function () {
+    return new Promise(() => {
+      const result: State = {};
+      result.unsignedPset = undefined;
+      result.feeChange = undefined;
+      result.utxos = [];
+      const w = walletFromCoins(utxos, network);
 
-    result.unsignedPset = w.sendTx(
-      recipient,
-      greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-      change.value,
-      true
-    );
+      result.unsignedPset = w.sendTx(
+        recipient,
+        greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+        change.value,
+        true
+      );
 
-    result.topup = undefined;
-    return result;
-  }
+      result.topup = undefined;
+      return result;
+    })
+  };
 }
 
 function stateForTaxiPSET(
@@ -297,7 +299,7 @@ function stateForTaxiPSET(
   network: NetworkString,
   lastTopup?: Topup.AsObject
 ): () => Promise<State> {
-  return async function(){
+  return async function () {
     const result: State = {};
     result.unsignedPset = undefined;
     result.topup = lastTopup;
@@ -334,7 +336,7 @@ function stateForTaxiPSET(
     );
 
     return result;
-  }
+  };
 }
 
 function actionsFromState(

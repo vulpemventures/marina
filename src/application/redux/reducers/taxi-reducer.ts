@@ -8,10 +8,10 @@ export interface TaxiState {
 
 export const taxiInitState: TaxiState = {
   taxiAssets: {
-    'liquid': [],
-    'testnet': [],
-    'regtest': [],
-  }
+    liquid: [],
+    testnet: [],
+    regtest: [],
+  },
 };
 
 export function taxiReducer(
@@ -24,10 +24,13 @@ export function taxiReducer(
     }
 
     case SET_TAXI_ASSETS:
-      return { ...state, taxiAssets: {
-        ...state.taxiAssets,
-        [payload.network]: payload.assets,
-      } };
+      return {
+        ...state,
+        taxiAssets: {
+          ...state.taxiAssets,
+          [payload.network]: payload.assets,
+        },
+      };
 
     default:
       return state;
