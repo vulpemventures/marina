@@ -137,7 +137,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         )
       : stateForRegularPSET(getRecipient(), changeAddress, utxos, network);
 
-    newStatePromise.then(setState).catch(handleError).finally(done);
+    newStatePromise().then(setState).catch(handleError).finally(done);
 
     return () => {
       setState(initialState);
@@ -268,25 +268,27 @@ function stateForRegularPSET(
   change: Address,
   utxos: UnblindedOutput[],
   network: NetworkString
-): Promise<State> {
-  const result: State = {};
-  result.unsignedPset = undefined;
-  result.feeChange = undefined;
-  result.utxos = [];
-  const w = walletFromCoins(utxos, network);
+): () => Promise<State> {
+  return async function() {
+    const result: State = {};
+    result.unsignedPset = undefined;
+    result.feeChange = undefined;
+    result.utxos = [];
+    const w = walletFromCoins(utxos, network);
 
-  result.unsignedPset = w.sendTx(
-    recipient,
-    greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-    change.value,
-    true
-  );
+    result.unsignedPset = w.sendTx(
+      recipient,
+      greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+      change.value,
+      true
+    );
 
-  result.topup = undefined;
-  return Promise.resolve(result);
+    result.topup = undefined;
+    return result;
+  }
 }
 
-async function stateForTaxiPSET(
+function stateForTaxiPSET(
   account: Account,
   feeAsset: string,
   recipient: RecipientInterface,
@@ -294,43 +296,45 @@ async function stateForTaxiPSET(
   utxos: UnblindedOutput[],
   network: NetworkString,
   lastTopup?: Topup.AsObject
-): Promise<State> {
-  const result: State = {};
-  result.unsignedPset = undefined;
-  result.topup = lastTopup;
-  result.utxos = [];
+): () => Promise<State> {
+  return async function(){
+    const result: State = {};
+    result.unsignedPset = undefined;
+    result.topup = lastTopup;
+    result.utxos = [];
 
-  if (!lastTopup || feeAsset !== lastTopup.assetHash) {
-    result.topup = undefined;
-    result.topup = (await fetchTopupFromTaxi(taxiURL[network], feeAsset)).topup;
-  }
-
-  if (!result.topup) {
-    throw new Error('Taxi topup should be defined for Taxi PSET');
-  }
-
-  const restored = await account.getWatchIdentity(network);
-  const next = await restored.getNextChangeAddress();
-  const feeChange = createAddress(next.confidentialAddress, next.derivationPath);
-
-  const changeGetter = (asset: string) => {
-    if (asset === recipient.asset) {
-      return change.value;
+    if (!lastTopup || feeAsset !== lastTopup.assetHash) {
+      result.topup = undefined;
+      result.topup = (await fetchTopupFromTaxi(taxiURL[network], feeAsset)).topup;
     }
 
-    result.feeChange = feeChange;
-    return feeChange.value;
-  };
+    if (!result.topup) {
+      throw new Error('Taxi topup should be defined for Taxi PSET');
+    }
 
-  result.unsignedPset = createTaxiTxFromTopup(
-    result.topup,
-    utxos,
-    [recipient],
-    greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-    changeGetter
-  );
+    const restored = await account.getWatchIdentity(network);
+    const next = await restored.getNextChangeAddress();
+    const feeChange = createAddress(next.confidentialAddress, next.derivationPath);
 
-  return result;
+    const changeGetter = (asset: string) => {
+      if (asset === recipient.asset) {
+        return change.value;
+      }
+
+      result.feeChange = feeChange;
+      return feeChange.value;
+    };
+
+    result.unsignedPset = createTaxiTxFromTopup(
+      result.topup,
+      utxos,
+      [recipient],
+      greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+      changeGetter
+    );
+
+    return result;
+  }
 }
 
 function actionsFromState(
