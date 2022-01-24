@@ -1,31 +1,42 @@
-import { TaxiClient } from 'taxi-protobuf/generated/js/TaxiServiceClientPb';
-import {
-  AssetDetails,
-  ListAssetsRequest,
-  TopupWithAssetReply,
-  TopupWithAssetRequest,
-} from 'taxi-protobuf/generated/js/taxi_pb';
+import axios from 'axios';
 import { NetworkString } from 'ldk';
 
-export async function fetchAssetsFromTaxi(taxiUrl: string): Promise<string[]> {
-  const client = new TaxiClient(taxiUrl, undefined);
-  const res = await client.listAssets(new ListAssetsRequest(), null);
-  return res.getAssetsList().map((asset: AssetDetails) => asset.getAssetHash());
+interface AssetDetails {
+  assetHash: string;
+  assetPrice: number;
+  basisPoint: number;
 }
+
+export interface Topup {
+  assetAmount: number;
+  assetHash: string;
+  assetSpread: number;
+  partial: string;
+  topupId: string;
+}
+
+export interface TopupWithAssetReply {
+  expiry: number;
+  privateBlindingKey: string;
+  publicBlindingKey: string;
+  topup?: Topup;
+}
+
+export const fetchAssetsFromTaxi = async (taxiUrl: string): Promise<string[]> => {
+  const { data } = await axios.get(`${taxiUrl}/assets`);
+  return data.assets.map((asset: AssetDetails) => asset.assetHash);
+};
 
 export const fetchTopupFromTaxi = async (
   taxiUrl: string,
-  asset: string
-): Promise<TopupWithAssetReply.AsObject> => {
-  const client = new TaxiClient(taxiUrl, undefined);
-  const request = new TopupWithAssetRequest();
-  request.setAssetHash(asset);
-  const res = await client.topupWithAsset(request, null);
-  return res.toObject();
+  assetHash: string
+): Promise<TopupWithAssetReply> => {
+  const { data } = await axios.post(`${taxiUrl}/asset/topup`, { assetHash });
+  return data;
 };
 
 export const taxiURL: Record<NetworkString, string> = {
   regtest: 'http://localhost:8000',
-  testnet: 'http://todo.com', // TODO is there a taxi running on testnet ?
-  liquid: 'https://grpc.liquid.taxi',
+  testnet: 'https://grpc.liquid.taxi:18000/v1',
+  liquid: 'https://grpc.liquid.taxi/v1',
 };
