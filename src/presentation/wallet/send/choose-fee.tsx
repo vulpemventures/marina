@@ -279,14 +279,16 @@ function stateForRegularPSET(
 
       result.unsignedPset = w.sendTx(
         recipient,
-        greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
+        greedyCoinSelectorWithSideEffect(({ selectedUtxos }) =>
+          result.utxos?.push(...selectedUtxos)
+        ),
         change.value,
         true
       );
 
       result.topup = undefined;
       return result;
-    })
+    });
   };
 }
 
