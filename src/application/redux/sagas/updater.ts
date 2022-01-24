@@ -40,6 +40,7 @@ import { selectEsploraForNetwork } from '../selectors/app.selector';
 import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
+import { updateTaxiAssets } from '../actions/taxi';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -276,6 +277,7 @@ export function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
     const accountsID = yield* selectAllAccountsIDsSaga();
     const network = yield* selectNetworkSaga();
     for (const ID of accountsID) {
+      yield put(updateTaxiAssets());
       yield put(updateTaskAction(ID, network));
     }
   });

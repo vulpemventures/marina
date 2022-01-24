@@ -44,4 +44,4 @@ export const periodicUpdater = newPeriodicTask(
   dispatchUpdateTaskForAllAccountsIDs,
   1
 );
-export const periodicTaxiUpdater = newPeriodicTask(Alarm.TaxiUpdate, dispatchUpdateTaxiAction, 3);
+export const periodicTaxiUpdater = newPeriodicTask(Alarm.TaxiUpdate, dispatchUpdateTaxiAction, 1);

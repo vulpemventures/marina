@@ -13,12 +13,17 @@ import { selectTaxiAssets } from '../selectors/taxi.selector';
 import { newSagaSelector, SagaGenerator, selectNetworkSaga } from './utils';
 import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
+import { NetworkString } from 'ldk';
 
 const selectTaxiAssetsSaga = newSagaSelector(selectTaxiAssets);
 
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
+  yield* fetchTaxiAssetsForNetwork('liquid');
+  yield* fetchTaxiAssetsForNetwork('testnet');
+}
+
+function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void, string[]>  {
   try {
-    const network = yield* selectNetworkSaga();
     const assets = yield call(fetchAssetsFromTaxi, taxiURL[network]);
     const currentTaxiAssets = yield* selectTaxiAssetsSaga();
     const sortAndJoin = (a: string[]) => a.sort().join('');

@@ -43,6 +43,7 @@ import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
+import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -174,17 +175,17 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.sendTransaction.name: {
           this.checkHostnameAuthorization(state);
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
-          const lbtc = lbtcAssetByNetwork(state.app.network);
+          const lbtc = lbtcAssetByNetwork(selectNetwork(state));
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
 
-          if (![lbtc, ...state.taxi.taxiAssets].includes(feeAsset)) {
+          if (![lbtc, ...selectTaxiAssets(state)].includes(feeAsset)) {
             throw new Error(`${feeAsset} not supported as fee asset.`);
           }
 
           const { addressRecipients, data } = sortRecipients(recipients);
 
           await this.store.dispatchAsync(
-            setTxData(this.hostname, addressRecipients, feeAsset, state.app.network, data)
+            setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(state), data)
           );
           const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
             'spend'
@@ -265,8 +266,8 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getFeeAssets.name: {
           this.checkHostnameAuthorization(state);
-          const lbtcAsset = lbtcAssetByNetwork(state.app.network);
-          return successMsg([lbtcAsset, ...state.taxi.taxiAssets]);
+          const lbtcAsset = lbtcAssetByNetwork(selectNetwork(state));
+          return successMsg([lbtcAsset, ...selectTaxiAssets(state)]);
         }
 
         default:
