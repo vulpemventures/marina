@@ -32,6 +32,17 @@ export const fetchTopupFromTaxi = async (
   assetHash: string
 ): Promise<TopupWithAssetReply> => {
   const { data } = await axios.post(`${taxiUrl}/asset/topup`, { assetHash });
+  // Coerce assetAmount and assetSpread into number
+  // Temporary fix, waiting for this issue to close:
+  // https://github.com/vulpemventures/taxi-daemon/issues/91
+  if (data?.topup) {
+    for (const key of ['assetAmount', 'assetSpread']) {
+      data.topup[key] = parseInt(data.topup[key]);
+      if (typeof data.topup[key] !== 'number') {
+        throw new Error(`error coercing topup ${key} into number`);
+      }
+    }
+  }
   return data;
 };
 
