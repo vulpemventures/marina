@@ -6417,10 +6417,10 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.1.tgz#575f4c4b9ecf9f2b6a4bee533ea3fc7f20106055"
-  integrity sha512-+/V135nvUZZRFcP0g1W+E8bLm+woJFF+PW0FPfhl0satMzhBZWu9kOAPHMJKqIRNyi+7hSZGSS0I/qIMqov8Kw==
+ldk@0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.3.tgz#e2dc0c4810f58a9f9ab0dd0688539e3782afd898"
+  integrity sha512-VoQc5HOZIPhcVEbIaJivUPldTuw/6asLBNvbFaf7884WZFhBGUZNJ/+xoxFXgU7Wy2I3ssbu6a9p5HYNqJ6mXQ==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
