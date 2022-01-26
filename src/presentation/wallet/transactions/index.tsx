@@ -69,7 +69,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     if (!isWalletVerified) {
       showSaveMnemonicModal(true);
     } else {
-      history.push(RECEIVE_ADDRESS_ROUTE);
+      history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`);
     }
   };
   const handleSend = async () => {
