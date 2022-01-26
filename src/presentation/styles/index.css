@@ -12,6 +12,7 @@
 html,
 body {
   overflow: hidden;
+  font-size: 16px;
 }
 
 /* Remove blue border from buttons when clicked (default Chrome behavior) */
