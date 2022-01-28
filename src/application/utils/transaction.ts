@@ -45,6 +45,11 @@ function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, Buf
   return outPubkeys;
 }
 
+/**
+ * Computes the blinding data map used to blind the pset.
+ * @param pset the unblinded pset to compute the blinding data map
+ * @param utxos utxos to use in order to get the blinding data of confidential inputs (not needed for unconfidential ones). 
+ */
 function inputBlindingDataMap(
   pset: string,
   utxos: UnblindedOutput[]
@@ -59,6 +64,9 @@ function inputBlindingDataMap(
     index++;
     const utxo = utxos.find((u) => txidToBuffer(u.txid).equals(input.hash));
 
+    // if the input is confidential, unblindData will be defined
+    // in that case, we need to add it to the blinding data map
+    // this let to ignore unconfidential inputs
     if (utxo?.unblindData) {
       inputBlindingData.set(index, utxo.unblindData);
     }
