@@ -37,7 +37,7 @@ export const fetchTopupFromTaxi = async (
   // https://github.com/vulpemventures/taxi-daemon/issues/91
   if (data?.topup) {
     for (const key of ['assetAmount', 'assetSpread']) {
-      data.topup[key] = parseInt(data.topup[key]);
+      data.topup[key] = parseInt(data.topup[key], 10);
       if (typeof data.topup[key] !== 'number') {
         throw new Error(`error coercing topup ${key} into number`);
       }
