@@ -58,11 +58,8 @@ function inputBlindingDataMap(
   for (const input of psetToUnsignedTx(pset).ins) {
     index++;
     const utxo = utxos.find((u) => txidToBuffer(u.txid).equals(input.hash));
-    if (!utxo) {
-      throw new Error(`blindPSET error: utxo not found '${input.hash.reverse().toString('hex')}'`);
-    }
 
-    if (utxo.unblindData) {
+    if (utxo?.unblindData) {
       inputBlindingData.set(index, utxo.unblindData);
     }
   }
