@@ -35,7 +35,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
 
   const handleBackBtn = async () => {
     await dispatch(flushPendingTx()).catch(console.error);
-    history.push(DEFAULT_ROUTE);
+    history.goBack();
   };
 
   return (
