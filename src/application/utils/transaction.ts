@@ -48,7 +48,7 @@ function outPubKeysMap(pset: string, outputAddresses: string[]): Map<number, Buf
 /**
  * Computes the blinding data map used to blind the pset.
  * @param pset the unblinded pset to compute the blinding data map
- * @param utxos utxos to use in order to get the blinding data of confidential inputs (not needed for unconfidential ones). 
+ * @param utxos utxos to use in order to get the blinding data of confidential inputs (not needed for unconfidential ones).
  */
 function inputBlindingDataMap(
   pset: string,
