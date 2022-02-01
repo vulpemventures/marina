@@ -12,7 +12,6 @@ import AddressAmountEnhancedForm from '../../components/address-amount-form';
 import { NetworkString } from 'ldk';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset } from '../../../domain/assets';
-import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Account } from '../../../domain/account';
 
 export interface AddressAmountProps {
