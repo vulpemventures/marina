@@ -168,7 +168,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
 
       amount: Yup.number()
         .required('Please enter a valid amount')
-        .min(getMinAmountFromPrecision(props.assetPrecision), 'Amount should be at least 1 satoshi')
+        .min(getMinAmountFromPrecision(props.asset.precision), 'Amount should be at least 1 satoshi')
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return value !== undefined && value <= fromSatoshi(props.balance, props.asset.precision);
         }),
