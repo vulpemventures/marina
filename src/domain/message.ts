@@ -4,6 +4,7 @@ export interface RequestMessage {
   id: string;
   name: string;
   params?: Array<any>;
+  provider: string;
 }
 
 // the message received by the inject script

@@ -3,7 +3,7 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { getAssetImage } from '../../../application/utils';
+import { getAssetImage } from '../../../application/utils/constants';
 import { fromSatoshiStr } from '../../utils';
 import { AssetGetter } from '../../../domain/assets';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';

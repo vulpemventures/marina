@@ -1,24 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
-import { useDispatch } from 'react-redux';
-import { updateUtxos } from '../../../application/redux/actions/utxos';
+import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { masterPubKeyRestorerFromState, MasterPublicKey, StateRestorerOpts } from 'ldk';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
+import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { selectNetwork } from '../../../application/redux/selectors/app.selector';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 
-export interface ReceiveProps {
-  pubKey: MasterPublicKey;
-  restorerOpts: StateRestorerOpts;
-}
-
-const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
+const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+
+  const account = useSelector(selectAccountForAsset(match.params.asset));
+  const network = useSelector(selectNetwork);
 
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
@@ -34,13 +33,13 @@ const ReceiveView: React.FC<ReceiveProps> = ({ pubKey, restorerOpts }) => {
 
   useEffect(() => {
     (async () => {
-      const publicKey = await masterPubKeyRestorerFromState(pubKey)(restorerOpts);
-      const addr = await publicKey.getNextAddress();
+      const identity = await account.getWatchIdentity(network);
+      const addr = await identity.getNextAddress();
+      await dispatch(incrementAddressIndex(account.getAccountID(), network)); // persist address
       setConfidentialAddress(addr.confidentialAddress);
-      await dispatch(incrementAddressIndex()); // persist address
       setTimeout(() => {
-        dispatch(updateUtxos()).catch(console.error);
-      }, 8000);
+        dispatch(updateTaskAction(account.getAccountID(), network)).catch(console.error);
+      }, 2000);
     })().catch(console.error);
   }, []);
 

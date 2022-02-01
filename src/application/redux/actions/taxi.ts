@@ -1,10 +1,11 @@
+import { NetworkString } from 'ldk';
 import { AnyAction } from 'redux';
 import { SET_TAXI_ASSETS, UPDATE_TAXI_ASSETS } from './action-types';
 
-export function setTaxiAssets(newAssets: string[]): AnyAction {
+export function setTaxiAssets(network: NetworkString, newAssets: string[]): AnyAction {
   return {
     type: SET_TAXI_ASSETS,
-    payload: newAssets,
+    payload: { network, assets: newAssets },
   };
 }
 

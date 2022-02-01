@@ -15,10 +15,13 @@ const ALLOWED_REDIRECT_ROUTE = [CONNECT_ENABLE_ROUTE, CONNECT_SPEND_ROUTE];
  */
 
 interface ProtectedRouteProps extends RouteProps {
-  comp: React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
+  component: React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ comp: Component, ...rest }) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  component: Component,
+  ...rest
+}) => {
   const isAuthenticated = useSelector((state: RootReducerState) => state.app.isAuthenticated);
 
   // we check if an optional param is given

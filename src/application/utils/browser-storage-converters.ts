@@ -46,7 +46,7 @@ export function reviver(key: string, value: any) {
   return value;
 }
 
-function isBufferLike(x: any): boolean {
+export function isBufferLike(x: any): boolean {
   return isObject(x) && x.type === 'Buffer' && (isArray(x.data) || isString(x.data));
 }
 

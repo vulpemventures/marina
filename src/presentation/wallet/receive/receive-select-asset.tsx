@@ -13,15 +13,14 @@ export interface ReceiveSelectAssetProps {
 const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets }) => {
   const history = useHistory();
 
-  const handleSend = (_: string) => {
-    return Promise.resolve(history.push(RECEIVE_ADDRESS_ROUTE));
+  const handleSend = (asset: string) => {
+    return Promise.resolve(history.push(`${RECEIVE_ADDRESS_ROUTE}/${asset}`));
   };
 
   return (
     <AssetListScreen
       title="Receive Asset"
       onClick={handleSend}
-      network={network}
       assets={[UnknowAsset].concat(assets)}
     />
   );

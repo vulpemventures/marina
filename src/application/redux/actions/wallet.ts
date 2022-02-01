@@ -4,27 +4,49 @@ import {
   SET_DEEP_RESTORER_GAP_LIMIT,
   SET_DEEP_RESTORER_ERROR,
   START_DEEP_RESTORATION,
-  NEW_ADDRESS_SUCCESS,
-  NEW_CHANGE_ADDRESS_SUCCESS,
+  INCREMENT_EXTERNAL_ADDRESS_INDEX,
+  INCREMENT_INTERNAL_ADDRESS_INDEX,
   SET_VERIFIED,
-  SET_UPDATER_LOADER,
+  SET_RESTORER_OPTS,
+  POP_UPDATER_LOADER,
+  PUSH_UPDATER_LOADER,
 } from './action-types';
 import { AnyAction } from 'redux';
-import { WalletData } from '../../utils/wallet';
+import { AccountID, MnemonicAccountData } from '../../../domain/account';
+import { NetworkString, StateRestorerOpts } from 'ldk';
+import { PasswordHash } from '../../../domain/password-hash';
 
-export function setWalletData(walletData: WalletData): AnyAction {
+// this action is using during onboarding end-of-flow in order to set up the initial main account state + password hash
+export function setWalletData(
+  walletData: MnemonicAccountData,
+  passwordHash: PasswordHash
+): AnyAction {
   return {
     type: WALLET_SET_DATA,
-    payload: walletData,
+    payload: { walletData, passwordHash },
   };
 }
 
-export function incrementAddressIndex(): AnyAction {
-  return { type: NEW_ADDRESS_SUCCESS };
+export function setRestorerOpts(
+  accountID: AccountID,
+  restorerOpts: StateRestorerOpts,
+  network: NetworkString
+): AnyAction {
+  return {
+    type: SET_RESTORER_OPTS,
+    payload: { accountID, restorerOpts, network },
+  };
 }
 
-export function incrementChangeAddressIndex(): AnyAction {
-  return { type: NEW_CHANGE_ADDRESS_SUCCESS };
+export function incrementAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
+  return { type: INCREMENT_EXTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
+}
+
+export function incrementChangeAddressIndex(
+  accountID: AccountID,
+  network: NetworkString
+): AnyAction {
+  return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
 export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {
@@ -58,12 +80,10 @@ export function setVerified(): AnyAction {
   return { type: SET_VERIFIED };
 }
 
-const setUpdaterLoader =
-  (loader: string) =>
-  (isLoading: boolean): AnyAction => ({
-    type: SET_UPDATER_LOADER,
-    payload: { loader, isLoading },
-  });
+export const popUpdaterLoader = (): AnyAction => ({
+  type: POP_UPDATER_LOADER,
+});
 
-export const setUtxosUpdaterLoader = setUpdaterLoader('utxos');
-export const setTransactionsUpdaterLoader = setUpdaterLoader('transactions');
+export const pushUpdaterLoader = (): AnyAction => ({
+  type: PUSH_UPDATER_LOADER,
+});

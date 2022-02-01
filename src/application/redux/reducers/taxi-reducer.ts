@@ -1,12 +1,17 @@
+import { NetworkString } from 'ldk';
 import { AnyAction } from 'redux';
 import { RESET_TAXI, SET_TAXI_ASSETS } from '../actions/action-types';
 
 export interface TaxiState {
-  taxiAssets: string[];
+  taxiAssets: Record<NetworkString, string[]>;
 }
 
 export const taxiInitState: TaxiState = {
-  taxiAssets: [],
+  taxiAssets: {
+    liquid: [],
+    testnet: [],
+    regtest: [],
+  },
 };
 
 export function taxiReducer(
@@ -19,7 +24,13 @@ export function taxiReducer(
     }
 
     case SET_TAXI_ASSETS:
-      return { ...state, taxiAssets: payload };
+      return {
+        ...state,
+        taxiAssets: {
+          ...state.taxiAssets,
+          [payload.network]: payload.assets,
+        },
+      };
 
     default:
       return state;

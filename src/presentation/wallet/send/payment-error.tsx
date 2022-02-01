@@ -2,11 +2,15 @@ import React from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
-import { broadcastTx } from '../../../application/utils';
+import {
+  INVALID_PASSWORD_ERROR,
+  SOMETHING_WENT_WRONG_ERROR,
+} from '../../../application/utils/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useSelector } from 'react-redux';
 import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
-import { SOMETHING_WENT_WRONG_ERROR } from '../../../application/utils/constants';
+
+import { broadcastTx } from '../../../application/utils/network';
 
 interface LocationState {
   error: string;
@@ -46,7 +50,7 @@ const PaymentError: React.FC = () => {
       <h1 className="mt-8 text-lg font-medium">{SOMETHING_WENT_WRONG_ERROR}</h1>
       <p className="font-small mt-4 text-sm break-all">{state.error}</p>
       <img className="my-14 mx-auto" src="/assets/images/cross.svg" alt="error" />
-      {state.error !== 'Invalid password' && (
+      {state.error !== INVALID_PASSWORD_ERROR && (
         <Button className="w-36 container mx-auto mt-10" onClick={handleRetry} textBase={true}>
           Retry
         </Button>

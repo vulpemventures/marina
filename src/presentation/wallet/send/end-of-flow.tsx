@@ -3,53 +3,78 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
-import { blindAndSignPset, broadcastTx, decrypt, mnemonicWallet } from '../../../application/utils';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { debounce } from 'lodash';
-import { IWallet } from '../../../domain/wallet';
 import { createPassword } from '../../../domain/password';
-import { match } from '../../../domain/password-hash';
-import { NetworkString, StateRestorerOpts } from 'ldk';
 import { extractErrorMessage } from '../../utils/error';
+import { Account } from '../../../domain/account';
+import { Transaction } from 'liquidjs-lib';
+import { NetworkString, UnblindedOutput } from 'ldk';
+import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { useDispatch } from 'react-redux';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { flushPendingTx } from '../../../application/redux/actions/transaction';
+import { broadcastTx } from '../../../application/utils/network';
+import { blindAndSignPset } from '../../../application/utils/transaction';
 
 export interface EndOfFlowProps {
-  wallet: IWallet;
-  network: NetworkString;
-  restorerOpts: StateRestorerOpts;
+  accounts: Account[];
   pset?: string;
+  selectedUtxos: UnblindedOutput[];
   explorerURL: string;
   recipientAddress?: string;
+  changeAddresses: string[];
+  network: NetworkString;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
-  wallet,
-  network,
+  accounts,
   pset,
-  restorerOpts,
   explorerURL,
   recipientAddress,
+  selectedUtxos,
+  changeAddresses,
+  network,
 }) => {
   const history = useHistory();
+  const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
+  const [signedTx, setSignedTx] = useState<string>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const handleUnlock = async (password: string) => {
-    let tx = '';
-    if (!pset || !recipientAddress) return;
     try {
+      setSignedTx(undefined);
+      if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
-      if (!match(password, wallet.passwordHash)) {
-        throw new Error('Invalid password');
-      }
+      const identities = await Promise.all(
+        accounts.map((a) => a.getSigningIdentity(pass, network))
+      );
+      const tx = await blindAndSignPset(
+        pset,
+        selectedUtxos,
+        identities,
+        [recipientAddress],
+        changeAddresses
+      );
+      setSignedTx(tx);
 
-      const mnemonic = decrypt(wallet.encryptedMnemonic, pass);
+      const txid = Transaction.fromHex(tx).getId();
+      await broadcastTx(explorerURL, tx);
 
-      const mnemo = await mnemonicWallet(mnemonic, restorerOpts, network);
-      tx = await blindAndSignPset(mnemo, pset, [recipientAddress]);
+      // start updater
+      await Promise.all(
+        accounts
+          .map((a) => a.getAccountID())
+          .map((id) => updateTaskAction(id, network))
+          .map(dispatch)
+      );
+      // flush pending tx state
+      await dispatch(flushPendingTx());
 
-      const txid = await broadcastTx(explorerURL, tx);
+      // push to success page
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
         state: { txid },
@@ -58,7 +83,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {
-          tx: tx,
+          tx: signedTx,
           error: extractErrorMessage(error),
         },
       });

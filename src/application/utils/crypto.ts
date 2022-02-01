@@ -3,6 +3,7 @@ import { createEncryptedMnemonic, EncryptedMnemonic } from '../../domain/encrypt
 import { createMnemonic, Mnemonic } from '../../domain/mnemonic';
 import { Password } from '../../domain/password';
 import { createPasswordHash, PasswordHash } from '../../domain/password-hash';
+import { INVALID_PASSWORD_ERROR } from './constants';
 
 const iv = Buffer.alloc(16, 0);
 export function encrypt(payload: Mnemonic, password: Password): EncryptedMnemonic {
@@ -15,12 +16,16 @@ export function encrypt(payload: Mnemonic, password: Password): EncryptedMnemoni
 }
 
 export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemonic {
-  const hash = crypto.createHash('sha1').update(password);
-  const secret = hash.digest().slice(0, 16);
-  const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
-  let decrypted = key.update(encrypted, 'hex', 'utf8');
-  decrypted += key.final('utf8');
-  return createMnemonic(decrypted);
+  try {
+    const hash = crypto.createHash('sha1').update(password);
+    const secret = hash.digest().slice(0, 16);
+    const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
+    let decrypted = key.update(encrypted, 'hex', 'utf8');
+    decrypted += key.final('utf8');
+    return createMnemonic(decrypted);
+  } catch {
+    throw new Error(INVALID_PASSWORD_ERROR);
+  }
 }
 
 export function sha256Hash(str: string): string {

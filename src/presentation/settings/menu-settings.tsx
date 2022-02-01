@@ -11,6 +11,7 @@ import {
 
 const SettingsMenuSettings: React.FC = () => {
   const history = useHistory();
+
   const handleChangeCurrency = () => history.push(SETTINGS_CURRENCY_ROUTE);
   const handleExplorer = () => history.push(SETTINGS_EXPLORER_ROUTE);
   const handleNetworks = () => history.push(SETTINGS_NETWORKS_ROUTE);

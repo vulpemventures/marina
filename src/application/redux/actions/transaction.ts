@@ -4,27 +4,40 @@ import {
   PENDING_TX_SET_ADDRESSES_AND_AMOUNT,
   PENDING_TX_SET_FEE_CHANGE_ADDRESS,
   PENDING_TX_SET_FEE_AMOUNT_AND_ASSET,
-  UPDATE_TXS,
   PENDING_TX_SET_PSET,
+  PENDING_TX_SET_STEP,
   ADD_TX,
 } from './action-types';
 import { AnyAction } from 'redux';
 import { Address } from '../../../domain/address';
 import { TxDisplayInterface } from '../../../domain/transaction';
-import { NetworkString } from 'ldk';
+import { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
+import { AccountID } from '../../../domain/account';
+import { ActionWithPayload } from '../../../domain/common';
+import { PendingTxStep } from '../reducers/transaction-reducer';
+
+export type AddTxAction = ActionWithPayload<{
+  tx: TxInterface;
+  network: NetworkString;
+  accountID: AccountID;
+}>;
 
 export function setAsset(asset: string): AnyAction {
   return { type: PENDING_TX_SET_ASSET, payload: { asset } };
 }
 
+export function setPendingTxStep(step: PendingTxStep): AnyAction {
+  return { type: PENDING_TX_SET_STEP, payload: { step } };
+}
+
 export function setAddressesAndAmount(
-  receipientAddress: Address,
-  changeAddress: Address,
-  amountInSatoshi: number
+  amountInSatoshi: number,
+  changeAddresses?: Address[],
+  recipientAddress?: Address
 ): AnyAction {
   return {
     type: PENDING_TX_SET_ADDRESSES_AND_AMOUNT,
-    payload: { receipientAddress, changeAddress, amountInSatoshi },
+    payload: { recipientAddress, changeAddresses, amountInSatoshi },
   };
 }
 
@@ -40,22 +53,20 @@ export function flushPendingTx(): AnyAction {
   return { type: PENDING_TX_FLUSH };
 }
 
-export function updateTxs(): AnyAction {
-  return {
-    type: UPDATE_TXS,
-  };
-}
-
-export function setPset(pset: string): AnyAction {
+export function setPset(pset: string, utxos: UnblindedOutput[]): AnyAction {
   return {
     type: PENDING_TX_SET_PSET,
-    payload: { pset },
+    payload: { pset, utxos },
   };
 }
 
-export function addTx(tx: TxDisplayInterface, network: NetworkString): AnyAction {
+export function addTx(
+  accountID: AccountID,
+  tx: TxDisplayInterface,
+  network: NetworkString
+): AnyAction {
   return {
     type: ADD_TX,
-    payload: { tx, network },
+    payload: { tx, network, accountID },
   };
 }

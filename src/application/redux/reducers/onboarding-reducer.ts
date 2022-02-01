@@ -5,12 +5,14 @@ export interface OnboardingState {
   mnemonic: string;
   password: string;
   isFromPopupFlow: boolean;
+  verified: boolean;
 }
 
 const onboardingInitState: OnboardingState = {
   mnemonic: '',
   password: '',
   isFromPopupFlow: false,
+  verified: false,
 };
 
 export function onboardingReducer(
@@ -37,6 +39,14 @@ export function onboardingReducer(
         isFromPopupFlow: true,
       };
     }
+
+    case ACTION_TYPES.ONBOARDING_SET_VERIFIED: {
+      return {
+        ...state,
+        verified: true,
+      };
+    }
+
     default:
       return state;
   }

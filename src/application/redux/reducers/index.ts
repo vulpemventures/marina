@@ -1,22 +1,21 @@
 import { assetInitState, assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
 import { transactionReducer, TransactionState, transactionInitState } from './transaction-reducer';
-import { txsHistoryReducer, txsHistoryInitState } from './txs-history-reducer';
 import { AnyAction, combineReducers, Reducer } from 'redux';
 import { PersistMigrate, Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
 import browser from 'webextension-polyfill';
 import persistReducer, { PersistPartial } from 'redux-persist/es/persistReducer';
 import { IApp } from '../../../domain/app';
-import { TxsHistoryByNetwork } from '../../../domain/transaction';
-import { IWallet } from '../../../domain/wallet';
+import { WalletState } from '../../../domain/wallet';
 import { taxiReducer, TaxiState, taxiInitState } from './taxi-reducer';
 import { ConnectData } from '../../../domain/connect';
 import { IAssets } from '../../../domain/assets';
 import { PersistConfig } from 'redux-persist/lib/types';
 import { appReducer, appInitState } from './app-reducer';
-import { walletInitState, walletReducer } from './wallet-reducer';
+import { walletReducer } from './wallet-reducer';
 import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
+import { walletMigrate } from '../../../domain/migrations';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -100,24 +99,18 @@ const marinaReducer = combineReducers({
     version: 1,
     migrate: migrateAfter(transactionInitState),
   }),
-  txsHistory: persist<TxsHistoryByNetwork>({
-    reducer: txsHistoryReducer,
-    key: 'txsHistory',
-    version: 2,
-    migrate: migrateAfter(txsHistoryInitState),
-  }),
-  wallet: persist<IWallet>({
+  wallet: persist<WalletState>({
     reducer: walletReducer,
     key: 'wallet',
     blacklist: ['deepRestorer', 'updaterLoaders'],
-    version: 1,
-    migrate: migrateAfter(walletInitState),
+    version: 2,
+    migrate: walletMigrate,
   }),
   taxi: persist<TaxiState>({
     reducer: taxiReducer,
     key: 'taxi',
-    version: 1,
-    migrate: migrateAfter(taxiInitState),
+    version: 2,
+    migrate: migrateBefore(taxiInitState),
   }),
   connect: persist<ConnectData>({
     reducer: connectDataReducer,
