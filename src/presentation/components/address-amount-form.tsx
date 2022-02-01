@@ -150,7 +150,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         .required('Please enter a valid amount')
         .min(getMinAmountFromPrecision(props.assetPrecision), 'Amount should be at least 1 satoshi')
         .test('too-many-digits', 'Too many digits', (value) => {
-          return value !== undefined && value.toString().length < 14;
+          return value !== undefined && value.toString().length < 20;
         })
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return (
