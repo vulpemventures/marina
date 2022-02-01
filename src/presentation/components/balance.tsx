@@ -39,7 +39,7 @@ const Balance: React.FC<Props> = ({
       />
       <div>
         <p
-          className={cx('text-grayDark  font-medium', {
+          className={cx('text-grayDark font-medium max-h-10', {
             'text-3xl': bigBalanceText,
             'text-lg': !bigBalanceText,
           })}
