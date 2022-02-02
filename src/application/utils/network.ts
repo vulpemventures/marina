@@ -7,16 +7,9 @@ import { extractErrorMessage } from '../../presentation/utils/error';
 export const broadcastTx = async (baseUrl: string, txHex: string): Promise<string> => {
   try {
     const response = await axios.post(`${baseUrl}/tx`, txHex);
-    if (response.status !== 200) {
-      console.error(response.data);
-      throw new Error(response.data);
-    }
+    if (response.status !== 200) throw new Error(response.data);
     return response.data;
   } catch (error: unknown | AxiosError) {
-    console.log(error);
-    if (axios.isAxiosError(error) && error?.response?.data) {
-      throw new Error(error.response.data);
-    }
     throw new Error(extractErrorMessage(error));
   }
 };
