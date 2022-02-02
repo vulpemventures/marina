@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 const DEFAULT_ERROR_MSG = 'Unknown error';
 
