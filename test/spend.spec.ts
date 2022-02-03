@@ -37,6 +37,11 @@ describe('create send pset (build, blind & sign)', () => {
   const blindAndSign = (pset: string, changeAddress: string) =>
     blindAndSignPset(pset, unspents, [mnemonic], [RECEIVER], [changeAddress]);
 
+  test('address should have a public key', async () => {
+    const addr = await mnemonic.getNextAddress();
+    expect(addr.publicKey).toHaveLength(66);
+  })
+
   test('should be able to create a regular transaction', async () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
