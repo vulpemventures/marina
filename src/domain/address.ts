@@ -12,21 +12,21 @@ export function createAddress(
   address: Address['value'],
   derivationPath?: Address['derivationPath']
 ): Address {
-  // Non Confidential
-  if (address.startsWith('ert') || address.startsWith('ex')) {
-    addressLDK.fromBech32(address);
-    return {
-      derivationPath: derivationPath,
-      value: address,
-    };
-  } else {
-    // Confidential
+  try {
+    // confidential address
     const { blindingKey, unconfidentialAddress } = addressLDK.fromConfidential(address);
     return {
       value: address,
       blindingKey: blindingKey,
       derivationPath: derivationPath,
       unconfidentialAddress: unconfidentialAddress,
+    };
+  } catch (ignore) {
+    // unconfidential address
+    addressLDK.fromBech32(address);
+    return {
+      derivationPath: derivationPath,
+      value: address,
     };
   }
 }
