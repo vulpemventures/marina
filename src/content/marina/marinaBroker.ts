@@ -185,13 +185,14 @@ export default class MarinaBroker extends Broker {
 
           // validate object recipient (asset and value)
           // if no asset is present, assume lbtc for the current network
-          for (const recipient of recipients) {
-            if (!recipient.asset) {
+          for (const rcpt of recipients) {
+            if (!rcpt.asset) {
               if (!lbtc) throw new Error('missing asset on recipient');
-              recipient.asset = lbtc;
+              rcpt.asset = lbtc;
             }
-            if (!recipient.value) throw new Error('missing value on recipient');
-            if (recipient.value < 0) throw new Error('negative value on recipient');
+            if (!rcpt.value) throw new Error('missing value on recipient');
+            if (!Number.isSafeInteger(rcpt.value)) throw new Error('invalid value on recipient');
+            if (rcpt.value < 0) throw new Error('negative value on recipient');
           }
 
           const { addressRecipients, data } = sortRecipients(recipients);
