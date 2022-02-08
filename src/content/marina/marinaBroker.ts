@@ -178,8 +178,24 @@ export default class MarinaBroker extends Broker {
           const lbtc = lbtcAssetByNetwork(selectNetwork(state));
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
 
+          // validate if fee asset is valid
           if (![lbtc, ...selectTaxiAssets(state)].includes(feeAsset)) {
             throw new Error(`${feeAsset} not supported as fee asset.`);
+          }
+
+          // validate object recipient (asset and value)
+          // - if no asset is present, assume lbtc for the current network
+          // - value must be present, a safe integer and higher or equal to zero
+          // - if value is for example 1.0, parseInt it to eliminate float
+          for (const rcpt of recipients) {
+            if (!rcpt.asset) {
+              if (!lbtc) throw new Error('missing asset on recipient');
+              rcpt.asset = lbtc;
+            }
+            if (!rcpt.value) throw new Error('missing value on recipient');
+            if (!Number.isSafeInteger(rcpt.value)) throw new Error('invalid value on recipient');
+            if (rcpt.value < 0) throw new Error('negative value on recipient');
+            rcpt.value = parseInt(rcpt.value.toString(), 10);
           }
 
           const { addressRecipients, data } = sortRecipients(recipients);
