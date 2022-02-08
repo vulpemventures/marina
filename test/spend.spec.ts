@@ -9,6 +9,7 @@ jest.setTimeout(15000);
 const network = networks.regtest;
 
 const RECEIVER = 'AzpofttCgtcfk1PDWytoocvMWqQnLUJfjZw6MVmSdJQtwWnovQPgqiWSRTFZmKub3BNEpLYkyrr4czSp';
+const UNCONFIDENTIAL_ADDRESS = 'ert1q5xt7rk3cs0xuk5vkvzf9ks3k3vch755c27au29';
 
 describe('create send pset (build, blind & sign)', () => {
   const mnemonic: Mnemonic = makeRandomMnemonic();
@@ -27,9 +28,9 @@ describe('create send pset (build, blind & sign)', () => {
     return [addr, () => addr];
   };
 
-  const makeRecipients = (...args: Array<{ value: number }>) =>
-    args.map(({ value }) => ({
-      address: RECEIVER,
+  const makeRecipients = (values: Array<{ value: number }>, address = RECEIVER) =>
+    values.map(({ value }) => ({
+      address,
       asset: network.assetHash,
       value,
     }));
@@ -42,11 +43,27 @@ describe('create send pset (build, blind & sign)', () => {
     expect(addr.publicKey).toHaveLength(66);
   });
 
+  test('should be able to create a transaction with an unconfidential address', async () => {
+    const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
+
+    const pset = await createSendPset(
+      makeRecipients([{ value: 100000 }, { value: 11000 }], UNCONFIDENTIAL_ADDRESS),
+      await makeUnspents(),
+      network.assetHash,
+      getChangeAddress,
+      'regtest'
+    );
+
+    const signed = await blindAndSign(pset, changeAddress);
+    const txid = await broadcastTx(signed);
+    expect(txid).toHaveLength(64);
+  });
+
   test('should be able to create a regular transaction', async () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
     const pset = await createSendPset(
-      makeRecipients({ value: 100000 }, { value: 11000 }),
+      makeRecipients([{ value: 100000 }, { value: 11000 }]),
       await makeUnspents(),
       network.assetHash,
       getChangeAddress,
@@ -67,7 +84,7 @@ describe('create send pset (build, blind & sign)', () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
     const pset = await createSendPset(
-      makeRecipients({ value: 200 }),
+      makeRecipients([{ value: 200 }]),
       await makeUnspents(),
       network.assetHash,
       getChangeAddress,
