@@ -24,6 +24,7 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
+  selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
   selectUtxos,
@@ -38,12 +39,13 @@ import { Balance, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import { MainAccountID } from '../../domain/account';
+import { MainAccountID, AccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
+import { updateTaskAction } from '../../application/redux/actions/updater';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -284,6 +286,18 @@ export default class MarinaBroker extends Broker {
           this.checkHostnameAuthorization(state);
           const lbtcAsset = lbtcAssetByNetwork(selectNetwork(state));
           return successMsg([lbtcAsset, ...selectTaxiAssets(state)]);
+        }
+
+        case Marina.prototype.reloadCoins.name: {
+          this.checkHostnameAuthorization(state);
+          const store = this.store;
+          const network = selectNetwork(state);
+          const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
+          const allAccountsIds = selectAllAccountsIDs(state);
+          await Promise.all(
+            allAccountsIds.map(makeUpdateTaskForId).map((x) => store.dispatchAsync(x))
+          );
+          return successMsg();
         }
 
         default:
