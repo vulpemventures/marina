@@ -32,7 +32,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       <p className="font-sm mt-5 mb-1 text-left">Electrs URL</p>
       <Input name="electrsURL" placeholder="Electrs valid endpoint" type="text" {...props} />
 
-      <div className="bottom-20 right-8 absolute flex justify-end">
+      <div className="bottom-10 right-8 absolute flex justify-end">
         <div>
           <Button disabled={!!errors.esploraURL || isSubmitting} type="submit">
             Update
