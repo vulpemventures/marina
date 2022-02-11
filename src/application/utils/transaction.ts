@@ -67,9 +67,8 @@ function inputBlindingDataMap(
       (u) => txidToBuffer(u.txid).equals(input.hash) && u.vout === input.index
     );
 
-    // if the input is confidential we need to add it to the blinding data map
-    // this let to ignore unconfidential inputs
-    if (utxo && isConfidentialOutput(utxo.prevout)) {
+    // only add unblind data if the prevout of the input is confidential
+    if (utxo && utxo.unblindData && isConfidentialOutput(utxo.prevout)) {
       inputBlindingData.set(index, utxo.unblindData);
     }
   }
