@@ -1,6 +1,6 @@
 {
   "name": "marina",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "scripts": {
     "start": "NETWORK=regtest webpack --watch --config webpack.dev.js",
