@@ -18,6 +18,7 @@ import {
   getAsset,
   NetworkString,
   IdentityInterface,
+  isConfidentialOutput,
 } from 'ldk';
 import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
@@ -64,10 +65,9 @@ function inputBlindingDataMap(
     index++;
     const utxo = utxos.find((u) => txidToBuffer(u.txid).equals(input.hash));
 
-    // if the input is confidential, unblindData will be defined
-    // in that case, we need to add it to the blinding data map
+    // if the input is confidential we need to add it to the blinding data map
     // this let to ignore unconfidential inputs
-    if (utxo?.unblindData) {
+    if (utxo && isConfidentialOutput(utxo.prevout)) {
       inputBlindingData.set(index, utxo.unblindData);
     }
   }
