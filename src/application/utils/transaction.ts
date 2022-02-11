@@ -63,7 +63,9 @@ function inputBlindingDataMap(
   let index = -1;
   for (const input of psetToUnsignedTx(pset).ins) {
     index++;
-    const utxo = utxos.find((u) => txidToBuffer(u.txid).equals(input.hash));
+    const utxo = utxos.find(
+      (u) => txidToBuffer(u.txid).equals(input.hash) && u.vout === input.index
+    );
 
     // if the input is confidential we need to add it to the blinding data map
     // this let to ignore unconfidential inputs
