@@ -1,14 +1,14 @@
 import {
-  MarinaProvider,
   AddressInterface,
-  PsetBase64,
-  SignedMessage,
-  Transaction,
-  Utxo,
   Balance,
   MarinaEventType,
+  MarinaProvider,
+  PsetBase64,
   Recipient,
+  SignedMessage,
+  Transaction,
   TransactionID,
+  Utxo,
 } from 'marina-provider';
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
