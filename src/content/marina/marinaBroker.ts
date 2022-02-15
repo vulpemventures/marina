@@ -224,7 +224,7 @@ export default class MarinaBroker extends Broker {
 
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
-          return successMsg(txid);
+          return successMsg({ txid, hex: signedTxHex });
         }
 
         case Marina.prototype.signMessage.name: {

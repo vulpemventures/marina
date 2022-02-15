@@ -3,8 +3,9 @@ import axios, { AxiosError } from 'axios';
 import { networks, NetworkString } from 'ldk';
 import { IAssets } from '../../domain/assets';
 import { extractErrorMessage } from '../../presentation/utils/error';
+import { TransactionID } from 'marina-provider';
 
-export const broadcastTx = async (baseUrl: string, txHex: string): Promise<string> => {
+export const broadcastTx = async (baseUrl: string, txHex: string): Promise<TransactionID> => {
   try {
     const response = await axios.post(`${baseUrl}/tx`, txHex);
     if (response.status !== 200) throw new Error(response.data);
