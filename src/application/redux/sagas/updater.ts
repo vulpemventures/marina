@@ -100,7 +100,7 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
-  console.log(`${new Date()} utxos updated`);
+  console.log(`${new Date()} utxos updated`, Object.values(utxosMap));
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>

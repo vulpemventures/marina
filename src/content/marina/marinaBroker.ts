@@ -98,6 +98,10 @@ export default class MarinaBroker extends Broker {
     if (!this.hostnameEnabled(state)) throw new Error('User must authorize the current website');
   }
 
+  private reloadCoinsIfNotAuthenticated(state: RootReducerState): void {
+    if (!state.app.isAuthenticated) reloadCoins();
+  }
+
   private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
     if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
     const state = this.store.getState();
@@ -174,6 +178,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.sendTransaction.name: {
           this.checkHostnameAuthorization(state);
+          this.reloadCoinsIfNotAuthenticated(state);
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
           const lbtc = lbtcAssetByNetwork(selectNetwork(state));
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
@@ -242,12 +247,14 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getTransactions.name: {
           this.checkHostnameAuthorization(state);
+          this.reloadCoinsIfNotAuthenticated(state);
           const transactions = selectTransactions(MainAccountID)(state);
           return successMsg(transactions);
         }
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
+          this.reloadCoinsIfNotAuthenticated(state);
           const coins = selectUtxos(MainAccountID)(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
@@ -260,6 +267,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getBalances.name: {
           this.checkHostnameAuthorization(state);
+          this.reloadCoinsIfNotAuthenticated(state);
           const balances = selectBalances(MainAccountID)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
