@@ -10,7 +10,7 @@ import {
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
 import { newSagaSelector, SagaGenerator } from './utils';
-import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
+import { updateAfterEachLoginAction, updateAfterEachLogoutAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
 import { NetworkString } from 'ldk';
 import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
@@ -56,6 +56,7 @@ function* mainSaga(): SagaGenerator<void, void> {
   yield fork(watchUpdateTaxi);
   yield fork(watchUpdateTask);
   yield fork(updateAfterEachLoginAction);
+  yield fork(updateAfterEachLogoutAction);
   yield fork(watchStartDeepRestorer);
 }
 

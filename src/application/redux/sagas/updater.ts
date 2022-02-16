@@ -27,7 +27,7 @@ import {
   selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
-import { ADD_UTXO, UPDATE_TASK, AUTHENTICATION_SUCCESS } from '../actions/action-types';
+import { ADD_UTXO, UPDATE_TASK, AUTHENTICATION_SUCCESS, LOGOUT_SUCCESS } from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
@@ -41,6 +41,7 @@ import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
+import { clearAllPeriodicUpdaters, periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -99,6 +100,7 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
+  console.log(`${new Date()} utxos updated`);
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
@@ -153,6 +155,7 @@ function* txsUpdater(
     txsGenenerator,
     putAddTxAction(accountID, network, walletScripts)
   );
+  console.log(`${new Date()} txs updated`);
 }
 
 function* updateTxsAndUtxos(
@@ -274,11 +277,22 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
 // only updates the accounts for the current network
 export function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
   yield takeLatest(AUTHENTICATION_SUCCESS, function* () {
+    // enable periodic updaters
+    periodicUpdater();
+    periodicTaxiUpdater();
+    // update taxi assets, utxos and txs
     const accountsID = yield* selectAllAccountsIDsSaga();
     const network = yield* selectNetworkSaga();
     for (const ID of accountsID) {
       yield put(updateTaxiAssets());
       yield put(updateTaskAction(ID, network));
     }
+  });
+}
+
+// starts an update for all accounts after each LOGOUT_SUCCESS action
+export function* updateAfterEachLogoutAction(): SagaGenerator<void, void> {
+  yield takeLatest(LOGOUT_SUCCESS, function* () {
+    yield clearAllPeriodicUpdaters();
   });
 }
