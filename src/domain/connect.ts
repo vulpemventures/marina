@@ -15,6 +15,7 @@ export type ConnectData = {
     hostname?: string;
     pset?: string;
     data?: DataRecipient[];
+    isTaproot?: boolean;
   };
   msg?: {
     hostname?: string;

@@ -8,9 +8,9 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
-import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';
+import { selectAllAccounts, selectAccount } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { signPset } from '../../application/utils/transaction';
+import { signPset, signPsetTaprootUnsafe } from '../../application/utils/transaction';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
 
@@ -49,6 +49,18 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       if (!password || password.length === 0) throw new Error('Need password');
       const { tx } = connectData;
       if (!tx || !tx.pset) throw new Error('No transaction to sign');
+
+      if (tx.isTaproot && Boolean(tx.isTaproot)) {
+        const mainAccount = useSelector(selectAccount("mainAccount"));
+        if (!mainAccount) 
+          throw new Error('No main account setup');
+        
+        const mnemonic = mainAccount.getMnemonicUnsafe(password, network);
+        const signedPset = await signPsetTaprootUnsafe(tx.pset, mnemonic);
+        await sendResponseMessage(true, signedPset);
+
+        window.close();
+      }
 
       const identities = await Promise.all(
         accounts.map((a) => a.getSigningIdentity(password, network))

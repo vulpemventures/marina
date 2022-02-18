@@ -146,6 +146,15 @@ export async function signPset(
   return pset;
 }
 
+export async function signPsetTaprootUnsafe(
+  psetBase64: string,
+  mnemonic: string,
+): Promise<string> {
+  let pset = psetBase64;
+
+  return pset;
+}
+
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
   const recipientScript = addrLDK.toOutputScript(addressToFind);

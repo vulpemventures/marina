@@ -37,6 +37,7 @@ export interface Account<
 > {
   getAccountID(): AccountID;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
+  getMnemonicUnsafe(password: string, network: NetworkString): string;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
   getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
 }
@@ -61,6 +62,9 @@ export function createMnemonicAccount(data: MnemonicAccountData): MnemonicAccoun
         data.restorerOpts[network],
         network
       ),
+    getMnemonicUnsafe: (password: string, network: NetworkString) => {
+      return decrypt(data.encryptedMnemonic, password);
+    },
     getWatchIdentity: (network: NetworkString) =>
       restoredMasterPublicKey(
         data.masterXPub,
