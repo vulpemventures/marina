@@ -23,3 +23,11 @@ export async function tabIsOpen(tabID: number): Promise<boolean> {
   }
   return false;
 }
+
+export async function sleep(miliseconds: number) {
+  await Promise.resolve(
+    new Promise((resolve) => {
+      setTimeout(resolve, miliseconds);
+    })
+  );
+}
