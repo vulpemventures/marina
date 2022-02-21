@@ -52,12 +52,9 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           // extension icon will do nothing
           await setUpPopup();
           // After an update, all previous periodic updaters are lost.
-          // Re-enable them if the user is already onboarded and authenticated.
-          // Login enables periodic updaters, logout disables them
-          if (marinaStore.getState().app.isAuthenticated) {
-            periodicUpdater();
-            periodicTaxiUpdater();
-          }
+          // Re-enable them if the user is already onboarded
+          periodicUpdater();
+          periodicTaxiUpdater();
         }
       }
     }
@@ -70,11 +67,9 @@ browser.runtime.onStartup.addListener(() => {
     if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic !== '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
-      // Set up the periodic updaters if user is onboarded and authenticated
-      if (marinaStore.getState().app.isAuthenticated) {
-        periodicUpdater();
-        periodicTaxiUpdater();
-      }
+      // Set up the periodic updaters if user is onboarded
+      periodicUpdater();
+      periodicTaxiUpdater();
     }
   })().catch(console.error);
 });
