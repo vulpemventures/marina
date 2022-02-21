@@ -24,6 +24,7 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
+  selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
   selectUtxos,
@@ -38,12 +39,15 @@ import { Balance, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import { MainAccountID } from '../../domain/account';
+import { AccountID, MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
-import { broadcastTx, lbtcAssetByNetwork, reloadCoins } from '../../application/utils/network';
+import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
+import { sleep } from '../../application/utils/common';
+import { BrokerProxyStore } from '../brokerProxyStore';
+import { updateTaskAction } from '../../application/redux/actions/updater';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -98,13 +102,27 @@ export default class MarinaBroker extends Broker {
     if (!this.hostnameEnabled(state)) throw new Error('User must authorize the current website');
   }
 
-  private reloadCoinsIfNotAuthenticated(state: RootReducerState): void {
-    if (!state.app.isAuthenticated) reloadCoins();
+  private async reloadCoins(store: BrokerProxyStore) {
+    const state = store.getState();
+    const network = selectNetwork(state);
+    const allAccountsIds = selectAllAccountsIDs(state);
+    const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
+    allAccountsIds.map(makeUpdateTaskForId).map((x: any) => store.dispatch(x));
+    // wait max 10 seconds for update to finish
+    let attempts = 10;
+    while (attempts > 0) {
+      // we need to sleep to free the event loop to take care of the update tasks
+      await sleep(1000); // sleep for 1000 miliseconds
+      // after finished update, updaterLoaders will be back to 0
+      if (store.getState().wallet.updaterLoaders === 0) attempts = 0;
+      attempts--;
+    }
+    return store.getState();
   }
 
   private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
     if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
-    const state = this.store.getState();
+    let state = this.store.getState();
     const successMsg = (data?: any) => newSuccessResponseMessage(id, data);
 
     try {
@@ -178,7 +196,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.sendTransaction.name: {
           this.checkHostnameAuthorization(state);
-          this.reloadCoinsIfNotAuthenticated(state);
+          state = await this.reloadCoins(this.store);
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
           const lbtc = lbtcAssetByNetwork(selectNetwork(state));
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
@@ -247,14 +265,14 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getTransactions.name: {
           this.checkHostnameAuthorization(state);
-          this.reloadCoinsIfNotAuthenticated(state);
+          state = await this.reloadCoins(this.store);
           const transactions = selectTransactions(MainAccountID)(state);
           return successMsg(transactions);
         }
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          this.reloadCoinsIfNotAuthenticated(state);
+          state = await this.reloadCoins(this.store);
           const coins = selectUtxos(MainAccountID)(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
@@ -267,7 +285,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getBalances.name: {
           this.checkHostnameAuthorization(state);
-          this.reloadCoinsIfNotAuthenticated(state);
+          state = await this.reloadCoins(this.store);
           const balances = selectBalances(MainAccountID)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
@@ -296,7 +314,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.reloadCoins.name: {
           this.checkHostnameAuthorization(state);
-          reloadCoins();
+          state = await this.reloadCoins(this.store);
           return successMsg();
         }
 
