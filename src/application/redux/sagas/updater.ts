@@ -27,7 +27,12 @@ import {
   selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
-import { ADD_UTXO, UPDATE_TASK, AUTHENTICATION_SUCCESS, LOGOUT_SUCCESS } from '../actions/action-types';
+import {
+  ADD_UTXO,
+  UPDATE_TASK,
+  AUTHENTICATION_SUCCESS,
+  LOGOUT_SUCCESS,
+} from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
@@ -36,12 +41,15 @@ import { updateTaskAction, UpdateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import { Channel } from 'redux-saga';
 import { put, AllEffect, all, take, fork, call, takeLatest } from 'redux-saga/effects';
-import { selectEsploraForNetwork } from '../selectors/app.selector';
 import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
-import { clearAllPeriodicUpdaters, periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
+import {
+  clearAllPeriodicUpdaters,
+  periodicTaxiUpdater,
+  periodicUpdater,
+} from '../../../background/alarms';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -100,7 +108,6 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
-  console.log(`${new Date()} utxos updated`, Object.values(utxosMap));
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
@@ -155,7 +162,6 @@ function* txsUpdater(
     txsGenenerator,
     putAddTxAction(accountID, network, walletScripts)
   );
-  console.log(`${new Date()} txs updated`);
 }
 
 function* updateTxsAndUtxos(
@@ -169,7 +175,7 @@ function* requestAssetInfoFromEsplora(
   assetHash: string,
   network: NetworkString
 ): SagaGenerator<Asset> {
-  const explorerForNetwork = selectEsploraForNetwork(network);
+  const explorerForNetwork = yield* selectExplorerSaga();
   const getRequest = () =>
     axios.get(`${explorerForNetwork}/asset/${assetHash}`).then((r) => r.data);
   const result = yield call(getRequest);
