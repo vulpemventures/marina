@@ -27,11 +27,7 @@ import {
   selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
-import {
-  ADD_UTXO,
-  UPDATE_TASK,
-  AUTHENTICATION_SUCCESS,
-} from '../actions/action-types';
+import { ADD_UTXO, UPDATE_TASK, AUTHENTICATION_SUCCESS } from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import { RootReducerState } from '../../../domain/common';
