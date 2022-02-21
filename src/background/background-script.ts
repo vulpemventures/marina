@@ -136,7 +136,6 @@ try {
   browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
   browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
-    console.log(`${new Date()} idle.onStateChanged`, newState);
     if (newState !== 'active') {
       // this will handle the logout when the extension is closed
       marinaStore.dispatch(logOut());
