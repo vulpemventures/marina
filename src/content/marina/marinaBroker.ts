@@ -196,7 +196,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.sendTransaction.name: {
           this.checkHostnameAuthorization(state);
-          state = await this.reloadCoins(this.store);
+          // state = await this.reloadCoins(this.store);
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
           const lbtc = lbtcAssetByNetwork(selectNetwork(state));
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
@@ -265,14 +265,14 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getTransactions.name: {
           this.checkHostnameAuthorization(state);
-          state = await this.reloadCoins(this.store);
+          // state = await this.reloadCoins(this.store);
           const transactions = selectTransactions(MainAccountID)(state);
           return successMsg(transactions);
         }
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          state = await this.reloadCoins(this.store);
+          // state = await this.reloadCoins(this.store);
           const coins = selectUtxos(MainAccountID)(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
@@ -285,7 +285,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getBalances.name: {
           this.checkHostnameAuthorization(state);
-          state = await this.reloadCoins(this.store);
+          // state = await this.reloadCoins(this.store);
           const balances = selectBalances(MainAccountID)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
