@@ -54,12 +54,8 @@ export const periodicUpdater = newPeriodicTask(
   1
 );
 
-export const periodicTaxiUpdater = newPeriodicTask(
-  Alarm.TaxiUpdate,
-  dispatchUpdateTaxiAction,
-  1
-);
+export const periodicTaxiUpdater = newPeriodicTask(Alarm.TaxiUpdate, dispatchUpdateTaxiAction, 1);
 
 export const clearAllPeriodicUpdaters = () => {
   void browser.alarms.clearAll();
-}
+};
