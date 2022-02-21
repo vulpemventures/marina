@@ -297,12 +297,3 @@ export function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
     }
   });
 }
-
-// starts an update for all accounts after each LOGOUT_SUCCESS action
-export function* updateAfterEachLogoutAction(): SagaGenerator<void, void> {
-  yield takeLatest(LOGOUT_SUCCESS, function* () {
-    // commenting the next line for the time beeing
-    // will keep syncing in the background after logout
-    // yield clearAllPeriodicUpdaters();
-  });
-}
