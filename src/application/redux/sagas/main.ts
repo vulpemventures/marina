@@ -10,7 +10,11 @@ import {
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
 import { newSagaSelector, SagaGenerator } from './utils';
-import { updateAfterEachLoginAction, updateAfterEachLogoutAction, watchUpdateTask } from './updater';
+import {
+  updateAfterEachLoginAction,
+  updateAfterEachLogoutAction,
+  watchUpdateTask,
+} from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
 import { NetworkString } from 'ldk';
 import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
