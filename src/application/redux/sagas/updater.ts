@@ -31,7 +31,6 @@ import {
   ADD_UTXO,
   UPDATE_TASK,
   AUTHENTICATION_SUCCESS,
-  LOGOUT_SUCCESS,
 } from '../actions/action-types';
 import { Asset } from '../../../domain/assets';
 import axios from 'axios';
