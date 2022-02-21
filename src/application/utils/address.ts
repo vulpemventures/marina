@@ -1,4 +1,5 @@
-import { address, networks, NetworkString } from 'ldk';
+import { networks, NetworkString } from 'ldk';
+import { address } from 'liquidjs-lib';
 
 export const isConfidentialAddress = (addr: string): boolean => {
   try {
