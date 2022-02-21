@@ -108,15 +108,12 @@ export default class MarinaBroker extends Broker {
     const allAccountsIds = selectAllAccountsIDs(state);
     const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
     allAccountsIds.map(makeUpdateTaskForId).map((x: any) => store.dispatch(x));
-    // wait max 10 seconds for update to finish
-    let attempts = 10;
-    while (attempts > 0) {
-      // we need to sleep to free the event loop to take care of the update tasks
-      await sleep(1000); // sleep for 1000 miliseconds
-      // after finished update, updaterLoaders will be back to 0
-      if (store.getState().wallet.updaterLoaders === 0) attempts = 0;
-      attempts--;
-    }
+    // wait for updates to finish, give it 1 second to start the update
+    // we need to sleep to free the event loop to take care of the update tasks
+    do {
+      await sleep(1000);
+    } while (store.getState().wallet.updaterLoaders !== 0);
+    // return new state
     return store.getState();
   }
 
