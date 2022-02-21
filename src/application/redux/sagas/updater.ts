@@ -46,7 +46,7 @@ import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
 import {
-  clearAllPeriodicUpdaters,
+  // clearAllPeriodicUpdaters,
   periodicTaxiUpdater,
   periodicUpdater,
 } from '../../../background/alarms';
@@ -108,6 +108,7 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
+  console.log(`${new Date()} utxos updated`, utxosMap);
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
@@ -162,6 +163,7 @@ function* txsUpdater(
     txsGenenerator,
     putAddTxAction(accountID, network, walletScripts)
   );
+  console.log(`${new Date()} txs updated`, txsHistory);
 }
 
 function* updateTxsAndUtxos(
