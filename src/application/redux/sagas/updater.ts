@@ -158,7 +158,6 @@ function* txsUpdater(
     txsGenenerator,
     putAddTxAction(accountID, network, walletScripts)
   );
-  console.log(`${new Date()} txs updated`, txsHistory);
 }
 
 function* updateTxsAndUtxos(

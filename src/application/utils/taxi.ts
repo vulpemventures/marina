@@ -24,7 +24,6 @@ export interface TopupWithAssetReply {
 
 export const fetchAssetsFromTaxi = async (taxiUrl: string): Promise<string[]> => {
   const { data } = await axios.get(`${taxiUrl}/assets`);
-  console.log(`${new Date()} taxi updated`, data);
   return data.assets.map((asset: AssetDetails) => asset.assetHash);
 };
 
