@@ -114,6 +114,9 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
     debounce(handleUnlock, 2000, { leading: true, trailing: false })
   ).current;
 
+  // send response message false when user closes the window without answering
+  window.addEventListener('beforeunload', async () => await sendResponseMessage(false));
+
   return (
     <ShellConnectPopup
       className="h-popupContent max-w-sm pb-20 text-center bg-bottom bg-no-repeat"
