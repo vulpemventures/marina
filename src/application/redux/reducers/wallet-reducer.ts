@@ -32,7 +32,13 @@ export const walletInitState: WalletState = {
 
 const addUnspent =
   (state: WalletState) =>
-  (accountID: AccountID, utxo: UnblindedOutput, network: NetworkString): WalletState => {
+  (
+    accountID: AccountID,
+    utxo: UnblindedOutput & { status: { confirmed: boolean } },
+    network: NetworkString
+  ): WalletState => {
+    // don't add unconfirmed utxos to the set, will inflate the balance
+    if (!utxo.status.confirmed) return state;
     return {
       ...state,
       unspentsAndTransactions: {
