@@ -19,8 +19,12 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const popupWindowProxy = new PopupWindowProxy<boolean>();
 
+  const sendResponseMessage = (data: boolean) => {
+    return popupWindowProxy.sendResponse({ data });
+  };
+
   const handleReject = async () => {
-    await popupWindowProxy.sendResponse({ data: false });
+    await sendResponseMessage(false);
     window.close();
   };
 
@@ -29,7 +33,7 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
       await dispatch(enableWebsite(connectData.hostnameSelected, network));
       await dispatch(flushSelectedHostname(network));
     } finally {
-      await popupWindowProxy.sendResponse({ data: true });
+      await sendResponseMessage(true);
       window.close();
     }
   };
@@ -37,6 +41,9 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const debouncedHandleConnect = useRef(
     debounce(handleConnect, 2000, { leading: true, trailing: false })
   ).current;
+
+  // send response message false when user closes the window without answering
+  window.addEventListener('beforeunload', () => sendResponseMessage(false));
 
   return (
     <ShellConnectPopup
