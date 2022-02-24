@@ -10,6 +10,7 @@ import {
   UnblindedOutput,
   NetworkString,
   getAsset,
+  Output,
 } from 'ldk';
 import { Account, AccountID } from '../../../domain/account';
 import { UtxosAndTxs } from '../../../domain/transaction';
@@ -85,8 +86,10 @@ function* utxosUpdater(
   const utxosMap = utxosTransactionsState?.utxosMap ?? {};
   const addresses = yield* getAddressesFromAccount(account, network);
   const skippedOutpoints: string[] = []; // for deleting
+  const receivedUtxos: Record<string, Output> = {};
   const utxosGenerator = fetchAndUnblindUtxosGenerator(addresses, explorerURL, (utxo) => {
     const outpoint = toStringOutpoint(utxo);
+    receivedUtxos[outpoint] = utxo;
     const skip = utxosMap[outpoint] !== undefined;
     if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
     return skip;
@@ -103,7 +106,7 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
-  console.log(`${new Date()} utxos updated`, utxosMap);
+  console.log(`${new Date()} utxos received`, receivedUtxos);
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
