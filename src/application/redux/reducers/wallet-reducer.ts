@@ -176,6 +176,49 @@ export function walletReducer(
       };
     }
 
+    case ACTION_TYPES.LOCK_UTXO: {
+      const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
+      const utxo = payload.utxo as UnblindedOutput;
+      return {
+        ...state,
+        unspentsAndTransactions: {
+          ...state.unspentsAndTransactions,
+          [accountID]: {
+            ...state.unspentsAndTransactions[accountID],
+            [network]: {
+              ...state.unspentsAndTransactions[accountID][network],
+              lockedUtxos: {
+                ...state.unspentsAndTransactions[accountID][network].lockedUtxos,
+                [toStringOutpoint(utxo)]: Date.now(),
+              },
+            },
+          },
+        },
+      };
+    }
+
+    case ACTION_TYPES.UNLOCK_UTXO: {
+      const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
+      const utxo = payload.utxo as UnblindedOutput;
+      const { [toStringOutpoint(utxo)]: deleted, ...lockedUtxos } =
+        state.unspentsAndTransactions[accountID][network].lockedUtxos;
+      return {
+        ...state,
+        unspentsAndTransactions: {
+          ...state.unspentsAndTransactions,
+          [accountID]: {
+            ...state.unspentsAndTransactions[accountID],
+            [network]: {
+              ...state.unspentsAndTransactions[accountID][network],
+              lockedUtxos,
+            },
+          },
+        },
+      };
+    }
+
     case ACTION_TYPES.ADD_TX: {
       return addTx(state)(payload.accountID, payload.tx, payload.network);
     }

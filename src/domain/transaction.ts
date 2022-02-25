@@ -4,6 +4,7 @@ export type UtxosAndTxsByNetwork = Record<NetworkString, UtxosAndTxs>;
 
 export interface UtxosAndTxs {
   // outpoint string -> UnblindedOutput
+  lockedUtxos: Record<string, UnblindedOutput>;
   utxosMap: Record<string, UnblindedOutput>;
   transactions: TxsHistory;
 }
@@ -44,14 +45,17 @@ export function newEmptyUtxosAndTxsHistory(): UtxosAndTxsByNetwork {
     liquid: {
       utxosMap: {},
       transactions: {},
+      lockedUtxos: {},
     },
     testnet: {
       utxosMap: {},
       transactions: {},
+      lockedUtxos: {},
     },
     regtest: {
       utxosMap: {},
       transactions: {},
+      lockedUtxos: {},
     },
   };
 }
