@@ -42,7 +42,6 @@ import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
 import {
-  // clearAllPeriodicUpdaters,
   periodicTaxiUpdater,
   periodicUpdater,
 } from '../../../background/alarms';
