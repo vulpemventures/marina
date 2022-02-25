@@ -41,10 +41,7 @@ import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
-import {
-  periodicTaxiUpdater,
-  periodicUpdater,
-} from '../../../background/alarms';
+import { periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
