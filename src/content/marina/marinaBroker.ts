@@ -39,12 +39,14 @@ import { Balance, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import { MainAccountID, AccountID } from '../../domain/account';
+import { AccountID, MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
+import { sleep } from '../../application/utils/common';
+import { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 
 export default class MarinaBroker extends Broker {
@@ -100,9 +102,24 @@ export default class MarinaBroker extends Broker {
     if (!this.hostnameEnabled(state)) throw new Error('User must authorize the current website');
   }
 
+  private async reloadCoins(store: BrokerProxyStore) {
+    const state = store.getState();
+    const network = selectNetwork(state);
+    const allAccountsIds = selectAllAccountsIDs(state);
+    const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
+    allAccountsIds.map(makeUpdateTaskForId).map((x: any) => store.dispatch(x));
+    // wait for updates to finish, give it 1 second to start the update
+    // we need to sleep to free the event loop to take care of the update tasks
+    do {
+      await sleep(1000);
+    } while (store.getState().wallet.updaterLoaders !== 0);
+    // return new state
+    return store.getState();
+  }
+
   private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
     if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
-    const state = this.store.getState();
+    let state = this.store.getState();
     const successMsg = (data?: any) => newSuccessResponseMessage(id, data);
 
     try {
@@ -290,13 +307,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.reloadCoins.name: {
           this.checkHostnameAuthorization(state);
-          const store = this.store;
-          const network = selectNetwork(state);
-          const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
-          const allAccountsIds = selectAllAccountsIDs(state);
-          await Promise.all(
-            allAccountsIds.map(makeUpdateTaskForId).map((x) => store.dispatchAsync(x))
-          );
+          state = await this.reloadCoins(this.store);
           return successMsg();
         }
 

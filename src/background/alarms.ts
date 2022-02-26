@@ -18,10 +18,19 @@ function newPeriodicTask(alarm: Alarm, task: () => void, periodInMinutes: number
   return () => {
     browser.alarms.create(alarm, { periodInMinutes });
     browser.alarms.onAlarm.addListener(({ name }) => {
-      if (name === alarm) {
-        task();
-      }
+      if (name === alarm) task();
     });
+    // update utxos and taxi on first run
+    switch (alarm) {
+      case Alarm.WalletUpdate:
+        dispatchUpdateTaskForAllAccountsIDs();
+        break;
+      case Alarm.TaxiUpdate:
+        dispatchUpdateTaxiAction();
+        break;
+      default:
+        break;
+    }
   };
 }
 
@@ -44,4 +53,9 @@ export const periodicUpdater = newPeriodicTask(
   dispatchUpdateTaskForAllAccountsIDs,
   1
 );
+
 export const periodicTaxiUpdater = newPeriodicTask(Alarm.TaxiUpdate, dispatchUpdateTaxiAction, 1);
+
+export const clearAllPeriodicUpdaters = () => {
+  void browser.alarms.clearAll();
+};

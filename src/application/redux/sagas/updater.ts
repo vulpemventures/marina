@@ -10,6 +10,7 @@ import {
   UnblindedOutput,
   NetworkString,
   getAsset,
+  Output,
 } from 'ldk';
 import { Account, AccountID } from '../../../domain/account';
 import { UtxosAndTxs } from '../../../domain/transaction';
@@ -36,11 +37,11 @@ import { updateTaskAction, UpdateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import { Channel } from 'redux-saga';
 import { put, AllEffect, all, take, fork, call, takeLatest } from 'redux-saga/effects';
-import { selectEsploraForNetwork } from '../selectors/app.selector';
 import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
+import { periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -81,8 +82,10 @@ function* utxosUpdater(
   const utxosMap = utxosTransactionsState?.utxosMap ?? {};
   const addresses = yield* getAddressesFromAccount(account, network);
   const skippedOutpoints: string[] = []; // for deleting
+  const receivedUtxos: Record<string, Output> = {};
   const utxosGenerator = fetchAndUnblindUtxosGenerator(addresses, explorerURL, (utxo) => {
     const outpoint = toStringOutpoint(utxo);
+    receivedUtxos[outpoint] = utxo;
     const skip = utxosMap[outpoint] !== undefined;
     if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
     return skip;
@@ -99,6 +102,7 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
+  console.debug(`${new Date()} utxos received`, receivedUtxos);
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
@@ -166,7 +170,7 @@ function* requestAssetInfoFromEsplora(
   assetHash: string,
   network: NetworkString
 ): SagaGenerator<Asset> {
-  const explorerForNetwork = selectEsploraForNetwork(network);
+  const explorerForNetwork = yield* selectExplorerSaga();
   const getRequest = () =>
     axios.get(`${explorerForNetwork}/asset/${assetHash}`).then((r) => r.data);
   const result = yield call(getRequest);
@@ -274,6 +278,10 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
 // only updates the accounts for the current network
 export function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
   yield takeLatest(AUTHENTICATION_SUCCESS, function* () {
+    // enable periodic updaters
+    periodicUpdater();
+    periodicTaxiUpdater();
+    // update taxi assets, utxos and txs
     const accountsID = yield* selectAllAccountsIDsSaga();
     const network = yield* selectNetworkSaga();
     for (const ID of accountsID) {

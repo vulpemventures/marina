@@ -7,16 +7,11 @@ import Button from '../../components/button';
 import Input from '../../components/input';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
-import { setIdleAction } from '../../../application/utils/idle';
-import {
-  AUTHENTICATION_SUCCESS,
-  LOGOUT_SUCCESS,
-} from '../../../application/redux/actions/action-types';
+import { AUTHENTICATION_SUCCESS } from '../../../application/redux/actions/action-types';
 import { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
 import { RootReducerState } from '../../../domain/common';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { updateTaxiAssets } from '../../../application/redux/actions/taxi';
 import browser from 'webextension-polyfill';
 
 interface LogInFormValues {
@@ -75,10 +70,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .dispatch(logInAction)
       .then(() => {
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
-          props.dispatch(updateTaxiAssets()).catch(console.error);
-          setIdleAction(() => {
-            props.dispatch({ type: LOGOUT_SUCCESS }).catch(console.error);
-          });
+          props.dispatch({ type: AUTHENTICATION_SUCCESS }).catch(console.error);
           props.history.push(DEFAULT_ROUTE);
         } else {
           const err = logInAction.payload.error;

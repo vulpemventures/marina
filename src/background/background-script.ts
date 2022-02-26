@@ -5,7 +5,6 @@ import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
-import { IDLE_MESSAGE_TYPE } from '../application/utils/idle';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
 import {
@@ -53,7 +52,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           // extension icon will do nothing
           await setUpPopup();
           // After an update, all previous periodic updaters are lost.
-          // If the user is already onboarded, we need to re-enable them.
+          // Re-enable them if the user is already onboarded
           periodicUpdater();
           periodicTaxiUpdater();
         }
@@ -68,7 +67,7 @@ browser.runtime.onStartup.addListener(() => {
     if (marinaStore.getState().wallet.mainAccount.encryptedMnemonic !== '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
-      // We also set up the periodic updaters if the user is onboarded
+      // Set up the periodic updaters if user is onboarded
       periodicUpdater();
       periodicTaxiUpdater();
     }
@@ -133,7 +132,6 @@ try {
   // add listener on Idle API, sending a message if the new state isn't 'active'
   browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
     if (newState !== 'active') {
-      browser.runtime.sendMessage(undefined, { type: IDLE_MESSAGE_TYPE }).catch(console.error);
       // this will handle the logout when the extension is closed
       marinaStore.dispatch(logOut());
     }
