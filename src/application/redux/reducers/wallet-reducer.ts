@@ -28,6 +28,7 @@ export const walletInitState: WalletState = {
   },
   updaterLoaders: 0,
   isVerified: false,
+  lockedUtxos: {},
 };
 
 const addUnspent =
@@ -177,45 +178,22 @@ export function walletReducer(
     }
 
     case ACTION_TYPES.LOCK_UTXO: {
-      const accountID = payload.accountID as AccountID;
-      const network = payload.network as NetworkString;
       const utxo = payload.utxo as UnblindedOutput;
       return {
         ...state,
-        unspentsAndTransactions: {
-          ...state.unspentsAndTransactions,
-          [accountID]: {
-            ...state.unspentsAndTransactions[accountID],
-            [network]: {
-              ...state.unspentsAndTransactions[accountID][network],
-              lockedUtxos: {
-                ...state.unspentsAndTransactions[accountID][network].lockedUtxos,
-                [toStringOutpoint(utxo)]: Date.now(),
-              },
-            },
-          },
+        lockedUtxos: {
+          ...state.lockedUtxos,
+          [toStringOutpoint(utxo)]: Date.now(),
         },
       };
     }
 
     case ACTION_TYPES.UNLOCK_UTXO: {
-      const accountID = payload.accountID as AccountID;
-      const network = payload.network as NetworkString;
       const utxo = payload.utxo as UnblindedOutput;
-      const { [toStringOutpoint(utxo)]: deleted, ...lockedUtxos } =
-        state.unspentsAndTransactions[accountID][network].lockedUtxos;
+      const { [toStringOutpoint(utxo)]: deleted, ...lockedUtxos } = state.lockedUtxos;
       return {
         ...state,
-        unspentsAndTransactions: {
-          ...state.unspentsAndTransactions,
-          [accountID]: {
-            ...state.unspentsAndTransactions[accountID],
-            [network]: {
-              ...state.unspentsAndTransactions[accountID][network],
-              lockedUtxos,
-            },
-          },
-        },
+        lockedUtxos,
       };
     }
 

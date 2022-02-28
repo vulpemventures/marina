@@ -7,7 +7,6 @@ import {
   createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
-  greedyCoinSelector,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
@@ -27,6 +26,8 @@ import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi, taxiURL } from './taxi';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
+import { customCoinSelector } from '../redux/selectors/utxos.selector';
+import { marinaStore } from '../redux/store';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {
   return address.fromConfidential(addr).blindingKey;
@@ -202,7 +203,9 @@ export async function createSendPset(
   network: NetworkString,
   data?: DataRecipient[]
 ): Promise<string> {
-  const coinSelector = greedyCoinSelector();
+
+  console.log('xon createSendPset called');
+  const coinSelector = customCoinSelector(marinaStore.dispatch);
 
   if (feeAssetHash === lbtcAssetByNetwork(network)) {
     const targetRecipients = recipients.concat(
@@ -250,7 +253,7 @@ export async function createSendPset(
     topup,
     unspents,
     recipients,
-    greedyCoinSelector(),
+    customCoinSelector(),
     changeAddressGetter
   );
 }

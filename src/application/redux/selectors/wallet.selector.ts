@@ -26,6 +26,7 @@ const selectUtxosForAccount =
       accountID,
       net ?? state.app.network
     )(state)?.utxosMap;
+    console.log('xon utxos', utxos);
     if (utxos) {
       return Object.values(utxos);
     }
@@ -90,7 +91,11 @@ export const selectAccountForAsset = (_: string) => (state: RootReducerState) =>
 export const selectUnspentsAndTransactions =
   (accountID: AccountID, network: NetworkString) =>
   (state: RootReducerState): UtxosAndTxs | undefined => {
-    return state.wallet.unspentsAndTransactions[accountID][network];
+    const { utxosMap, transactions } = state.wallet.unspentsAndTransactions[accountID][network];
+    const lockedUtxos = state.wallet.lockedUtxos;
+    console.log('xon lockedUtxos', lockedUtxos);
+    for (const outpoint of Object.keys(lockedUtxos)) delete utxosMap[outpoint];
+    return { utxosMap, transactions };
   };
 
 export const selectDeepRestorerIsLoading = (state: RootReducerState) => {

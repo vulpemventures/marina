@@ -96,7 +96,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         connectData.tx,
         network,
         getter,
-        changeAddresses
+        changeAddresses,
       );
       await sendResponseMessage(true, signedTxHex);
 
@@ -217,8 +217,9 @@ async function makeTransaction(
   connectDataTx: ConnectData['tx'],
   network: NetworkString,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  changeAddresses: string[]
+  changeAddresses: string[],
 ) {
+  console.log('xon makeTransaction called');
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
     throw new Error('transaction data are missing');
 

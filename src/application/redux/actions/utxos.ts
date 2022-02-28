@@ -31,18 +31,11 @@ export function flushUtxos(accountID: AccountID, network: NetworkString): AnyAct
   return { type: FLUSH_UTXOS, payload: { accountID, network } };
 }
 
-export function lockUtxo(
-  accountID: AccountID,
-  network: NetworkString,
-  utxo: UnblindedOutput,
-): AnyAction {
-  return { type: LOCK_UTXO, payload: { accountID, network, utxo } };
+export function lockUtxo(utxo: UnblindedOutput): AnyAction {
+  console.log('xon lock utxo', utxo);
+  return { type: LOCK_UTXO, payload: { utxo } };
 }
 
-export function unlockUtxo(
-  accountID: AccountID,
-  network: NetworkString,
-  utxo: UnblindedOutput,
-): AnyAction {
-  return { type: UNLOCK_UTXO, payload: { accountID, network, utxo } };
+export function unlockUtxo(utxo: UnblindedOutput): AnyAction {
+  return { type: UNLOCK_UTXO, payload: { utxo } };
 }

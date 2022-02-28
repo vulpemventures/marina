@@ -13,4 +13,5 @@ export interface WalletState {
   };
   updaterLoaders: number;
   isVerified: boolean;
+  lockedUtxos: Record<string, number>;
 }
