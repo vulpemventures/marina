@@ -33,6 +33,7 @@ import { lbtcAssetByNetwork } from '../../application/utils/network';
 export interface SpendPopupResponse {
   accepted: boolean;
   signedTxHex?: string;
+  selectedUtxos?: UnblindedOutput[];
 }
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
@@ -54,8 +55,12 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
-    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex } });
+  const sendResponseMessage = (
+    accepted: boolean,
+    signedTxHex?: string,
+    selectedUtxos?: UnblindedOutput[]
+  ) => {
+    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex, selectedUtxos } });
   };
 
   const handleReject = async () => {
@@ -90,15 +95,16 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
       const identities = await Promise.all(
         accounts.map((a) => a.getSigningIdentity(password, network))
       );
-      const signedTxHex = await makeTransaction(
+
+      const { txHex, selectedUtxos } = await makeTransaction(
         identities,
         coins,
         connectData.tx,
         network,
         getter,
-        changeAddresses,
+        changeAddresses
       );
-      await sendResponseMessage(true, signedTxHex);
+      await sendResponseMessage(true, txHex, selectedUtxos);
 
       await dispatch(flushTx());
       window.close();
@@ -217,15 +223,14 @@ async function makeTransaction(
   connectDataTx: ConnectData['tx'],
   network: NetworkString,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  changeAddresses: string[],
+  changeAddresses: string[]
 ) {
-  console.log('xon makeTransaction called');
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
     throw new Error('transaction data are missing');
 
   const { recipients, feeAssetHash, data } = connectDataTx;
 
-  const unsignedPset = await createSendPset(
+  const { pset, selectedUtxos } = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
@@ -235,12 +240,12 @@ async function makeTransaction(
   );
 
   const txHex = await blindAndSignPset(
-    unsignedPset,
+    pset,
     coins,
     identities,
     recipients.map(({ address }) => address),
     changeAddresses
   );
 
-  return txHex;
+  return { txHex, selectedUtxos };
 }

@@ -46,7 +46,7 @@ describe('create send pset (build, blind & sign)', () => {
   test('should be able to create a transaction with an unconfidential address', async () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       makeRecipients([{ value: 100000 }, { value: 11000 }], UNCONFIDENTIAL_ADDRESS),
       await makeUnspents(),
       network.assetHash,
@@ -62,7 +62,7 @@ describe('create send pset (build, blind & sign)', () => {
   test('should be able to create a regular transaction', async () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       makeRecipients([{ value: 100000 }, { value: 11000 }]),
       await makeUnspents(),
       network.assetHash,
@@ -83,7 +83,7 @@ describe('create send pset (build, blind & sign)', () => {
 
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       makeRecipients([{ value: 200 }]),
       await makeUnspents(),
       network.assetHash,

@@ -5,6 +5,7 @@ import {
   CoinSelectionResult,
   CoinSelector,
   CoinSelectorErrorFn,
+  greedyCoinSelector,
   NetworkString,
   RecipientInterface,
   UnblindedOutput,
@@ -36,7 +37,6 @@ import { AnyAction } from 'redux';
 import { getAssetImage } from '../../../application/utils/constants';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
-import { customCoinSelector } from '../../../application/redux/selectors/utxos.selector';
 
 export interface ChooseFeeProps {
   network: NetworkString;
@@ -261,7 +261,7 @@ const sideEffectCoinSelector =
       };
   };
 
-const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(customCoinSelector());
+const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelector());
 
 function stateForRegularPSET(
   recipient: RecipientInterface,
@@ -331,7 +331,7 @@ function stateForTaxiPSET(
       [recipient],
       greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
       changeGetter
-    );
+    ).pset;
 
     return result;
   };

@@ -16,6 +16,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { broadcastTx } from '../../../application/utils/network';
 import { blindAndSignPset } from '../../../application/utils/transaction';
+import { lockUtxo } from '../../../application/redux/actions/utxos';
 
 export interface EndOfFlowProps {
   accounts: Account[];
@@ -64,6 +65,11 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       const txid = Transaction.fromHex(tx).getId();
       await broadcastTx(explorerURL, tx);
 
+      // lock utxos used in successful broadcast
+      for (const utxo of selectedUtxos) {
+        await dispatch(lockUtxo(utxo));
+      }
+
       // start updater
       await Promise.all(
         accounts
@@ -85,6 +91,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         state: {
           tx: signedTx,
           error: extractErrorMessage(error),
+          selectedUtxos,
         },
       });
     }

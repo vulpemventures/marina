@@ -7,24 +7,33 @@ import {
   SOMETHING_WENT_WRONG_ERROR,
 } from '../../../application/utils/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
 
 import { broadcastTx } from '../../../application/utils/network';
+import { UnblindedOutput } from 'ldk';
+import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import { lockUtxo } from '../../../application/redux/actions/utxos';
 
 interface LocationState {
   error: string;
   tx: string;
+  selectedUtxos: UnblindedOutput[];
 }
 
 const PaymentError: React.FC = () => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const explorer = useSelector(selectEsploraURL);
+  const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const handleRetry = () =>
     broadcastTx(explorer, state.tx)
       .then((txid) => {
+        // lock utxos used in successful broadcast
+        for (const utxo of state.selectedUtxos) {
+          void dispatch(lockUtxo(utxo));
+        }
         history.push({
           pathname: SEND_PAYMENT_SUCCESS_ROUTE,
           state: { txid },

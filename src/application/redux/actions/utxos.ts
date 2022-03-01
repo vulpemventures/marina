@@ -2,7 +2,7 @@ import { NetworkString, UnblindedOutput } from 'ldk';
 import { AnyAction } from 'redux';
 import { AccountID } from '../../../domain/account';
 import { ActionWithPayload } from '../../../domain/common';
-import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS, LOCK_UTXO, UNLOCK_UTXO } from './action-types';
+import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS, LOCK_UTXO } from './action-types';
 
 export type AddUtxoAction = ActionWithPayload<{
   accountID: AccountID;
@@ -32,10 +32,6 @@ export function flushUtxos(accountID: AccountID, network: NetworkString): AnyAct
 }
 
 export function lockUtxo(utxo: UnblindedOutput): AnyAction {
-  console.log('xon lock utxo', utxo);
+  console.log('xon lockUtxo called for utxo', utxo);
   return { type: LOCK_UTXO, payload: { utxo } };
-}
-
-export function unlockUtxo(utxo: UnblindedOutput): AnyAction {
-  return { type: UNLOCK_UTXO, payload: { utxo } };
 }

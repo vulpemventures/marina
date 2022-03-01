@@ -48,6 +48,7 @@ import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selecto
 import { sleep } from '../../application/utils/common';
 import { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
+import { lockUtxo } from '../../application/redux/actions/utxos';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -222,9 +223,8 @@ export default class MarinaBroker extends Broker {
           await this.store.dispatchAsync(
             setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(state), data)
           );
-          const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
-            'spend'
-          );
+          const { accepted, signedTxHex, selectedUtxos } =
+            await this.openAndWaitPopup<SpendPopupResponse>('spend');
 
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
@@ -240,6 +240,13 @@ export default class MarinaBroker extends Broker {
           }
 
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
+
+          // lock utxos used in successful broadcast
+          if (selectedUtxos) {
+            for (const utxo of selectedUtxos) {
+              await this.store.dispatchAsync(lockUtxo(utxo));
+            }
+          }
 
           return successMsg({ txid, hex: signedTxHex });
         }
@@ -267,6 +274,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
+          console.log('inside getCoins', state.wallet.lockedUtxos);
           const coins = selectUtxos(MainAccountID)(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,

@@ -7,6 +7,7 @@ import {
   createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
+  greedyCoinSelector,
   psetToUnsignedTx,
   RecipientInterface,
   TxInterface,
@@ -26,8 +27,6 @@ import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi, taxiURL } from './taxi';
 import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
-import { customCoinSelector } from '../redux/selectors/utxos.selector';
-import { marinaStore } from '../redux/store';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {
   return address.fromConfidential(addr).blindingKey;
@@ -175,7 +174,7 @@ export function createTaxiTxFromTopup(
   recipients: RecipientInterface[],
   coinSelector: CoinSelector,
   changeAddressGetter: ChangeAddressFromAssetGetter
-): string {
+): { pset: string; selectedUtxos: UnblindedOutput[] } {
   const { selectedUtxos, changeOutputs } = coinSelector(throwErrorCoinSelector)(
     unspents,
     recipients.concat({
@@ -185,7 +184,8 @@ export function createTaxiTxFromTopup(
     }),
     changeAddressGetter
   );
-  return addToTx(taxiTopup.partial, selectedUtxos, recipients.concat(changeOutputs));
+  const pset = addToTx(taxiTopup.partial, selectedUtxos, recipients.concat(changeOutputs));
+  return { pset, selectedUtxos };
 }
 
 /**
@@ -202,10 +202,8 @@ export async function createSendPset(
   changeAddressGetter: ChangeAddressFromAssetGetter,
   network: NetworkString,
   data?: DataRecipient[]
-): Promise<string> {
-
-  console.log('xon createSendPset called');
-  const coinSelector = customCoinSelector(marinaStore.dispatch);
+): Promise<{ pset: string; selectedUtxos: UnblindedOutput[] }> {
+  const coinSelector = greedyCoinSelector();
 
   if (feeAssetHash === lbtcAssetByNetwork(network)) {
     const targetRecipients = recipients.concat(
@@ -243,7 +241,7 @@ export async function createSendPset(
       pset = withDataOutputs(pset, data);
     }
 
-    return pset;
+    return { pset, selectedUtxos: selection.selectedUtxos };
   }
 
   const topup = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash)).topup;
@@ -253,7 +251,7 @@ export async function createSendPset(
     topup,
     unspents,
     recipients,
-    customCoinSelector(),
+    greedyCoinSelector(),
     changeAddressGetter
   );
 }
