@@ -39,7 +39,7 @@ const PaymentError: React.FC = () => {
       pathname: SEND_PAYMENT_SUCCESS_ROUTE,
       state: { txid },
     });
-  }
+  };
 
   const handleBackBtn = () => {
     history.push({
