@@ -92,8 +92,7 @@ export const selectAccountForAsset = (_: string) => (state: RootReducerState) =>
 export const selectUnspentsAndTransactions =
   (accountID: AccountID, network: NetworkString) =>
   (state: RootReducerState): UtxosAndTxs | undefined => {
-    const { utxosMap, transactions } = state.wallet.unspentsAndTransactions[accountID][network];
-    return { utxosMap, transactions };
+    return state.wallet.unspentsAndTransactions[accountID][network];
   };
 
 export const selectDeepRestorerIsLoading = (state: RootReducerState) => {
