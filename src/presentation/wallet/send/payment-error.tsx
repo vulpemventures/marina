@@ -27,21 +27,19 @@ const PaymentError: React.FC = () => {
   const explorer = useSelector(selectEsploraURL);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const handleRetry = () =>
-    broadcastTx(explorer, state.tx)
-      .then((txid) => {
-        // lock utxos used in successful broadcast
-        for (const utxo of state.selectedUtxos) {
-          void dispatch(lockUtxo(utxo));
-        }
-        history.push({
-          pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-          state: { txid },
-        });
-      })
-      .catch((error) => {
-        console.error(error.message);
-      });
+  const handleRetry = () => {
+    const txid = broadcastTx(explorer, state.tx);
+    if (!txid) throw new Error('something went wrong with the tx broadcasting');
+    // lock utxos used in successful broadcast
+    for (const utxo of state.selectedUtxos) {
+      void dispatch(lockUtxo(utxo));
+    }
+    // navigate to payment success page
+    history.push({
+      pathname: SEND_PAYMENT_SUCCESS_ROUTE,
+      state: { txid },
+    });
+  }
 
   const handleBackBtn = () => {
     history.push({

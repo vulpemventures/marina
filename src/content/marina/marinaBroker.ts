@@ -231,14 +231,7 @@ export default class MarinaBroker extends Broker {
 
           console.debug('signedTxHex', signedTxHex);
 
-          let txid;
-
-          try {
-            txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
-          } catch (error) {
-            throw new Error(`error broadcasting tx: ${error}`);
-          }
-
+          const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
           // lock utxos used in successful broadcast

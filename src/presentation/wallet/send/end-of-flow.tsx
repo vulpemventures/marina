@@ -8,7 +8,6 @@ import { debounce } from 'lodash';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import { Account } from '../../../domain/account';
-import { Transaction } from 'liquidjs-lib';
 import { NetworkString, UnblindedOutput } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { useDispatch } from 'react-redux';
@@ -62,8 +61,8 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       );
       setSignedTx(tx);
 
-      const txid = Transaction.fromHex(tx).getId();
-      await broadcastTx(explorerURL, tx);
+      const txid = await broadcastTx(explorerURL, tx);
+      if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
       // lock utxos used in successful broadcast
       for (const utxo of selectedUtxos) {
