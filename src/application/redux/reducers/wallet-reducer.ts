@@ -34,7 +34,7 @@ export const walletInitState: WalletState = {
 const addUnspent =
   (state: WalletState) =>
   (accountID: AccountID, utxo: UnblindedOutput, network: NetworkString): WalletState => {
-    // remove from locked list all utxos locked for more than 5 minutes
+    // remove from lockedUtxos all utxos locked for more than 5 minutes
     const expireTime = Date.now() - 300_000;
     const lockedUtxos: Record<string, number> = {};
     for (const key of Object.keys(state.lockedUtxos)) {

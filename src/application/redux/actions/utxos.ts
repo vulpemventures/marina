@@ -32,6 +32,5 @@ export function flushUtxos(accountID: AccountID, network: NetworkString): AnyAct
 }
 
 export function lockUtxo(utxo: UnblindedOutput): AnyAction {
-  console.log('xon lockUtxo called for utxo', utxo);
   return { type: LOCK_UTXO, payload: { utxo } };
 }
