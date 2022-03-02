@@ -106,4 +106,26 @@ describe('create send pset (build, blind & sign)', () => {
 
     await broadcastTx(signed);
   });
+
+  test('createSendPset should return selected utxos', async () => {
+    const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
+
+    const unspents = await makeUnspents();
+
+    const { pset, selectedUtxos } = await createSendPset(
+      makeRecipients([{ value: 100000 }, { value: 11000 }]),
+      unspents,
+      network.assetHash,
+      getChangeAddress,
+      'regtest'
+    );
+
+    // should return selected utxos and it should be the faucet unspent
+    expect(Object.keys(selectedUtxos)).toHaveLength(1);
+    expect(selectedUtxos[0].txid).toEqual(unspents[0].txid);
+
+    const signed = await blindAndSign(pset, changeAddress);
+    const txid = await broadcastTx(signed);
+    expect(txid).toHaveLength(64);
+  });
 });
