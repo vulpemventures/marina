@@ -27,8 +27,8 @@ const PaymentError: React.FC = () => {
   const explorer = useSelector(selectEsploraURL);
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const handleRetry = () => {
-    const txid = broadcastTx(explorer, state.tx);
+  const handleRetry = async () => {
+    const txid = await broadcastTx(explorer, state.tx);
     if (!txid) throw new Error('something went wrong with the tx broadcasting');
     // lock utxos used in successful broadcast
     for (const utxo of state.selectedUtxos) {
