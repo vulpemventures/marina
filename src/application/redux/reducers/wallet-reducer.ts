@@ -31,16 +31,22 @@ export const walletInitState: WalletState = {
   lockedUtxos: {},
 };
 
+// returns only utxos locked for less than 5 minutes
+const filterOnlyRecentLockedUtxos = (state: WalletState) => {
+  const expiredTime = Date.now() - 300_000; // 5 minutes
+  const lockedUtxos: Record<string, number> = {};
+  for (const key of Object.keys(state.lockedUtxos)) {
+    const isRecent = state.lockedUtxos[key] > expiredTime;
+    if (isRecent) lockedUtxos[key] = state.lockedUtxos[key];
+  }
+  return lockedUtxos;
+};
+
 const addUnspent =
   (state: WalletState) =>
   (accountID: AccountID, utxo: UnblindedOutput, network: NetworkString): WalletState => {
     // remove from lockedUtxos all utxos locked for more than 5 minutes
-    const expireTime = Date.now() - 300_000;
-    const lockedUtxos: Record<string, number> = {};
-    for (const key of Object.keys(state.lockedUtxos)) {
-      const stillValid = state.lockedUtxos[key] > expireTime;
-      if (stillValid) lockedUtxos[key] = state.lockedUtxos[key];
-    }
+    const lockedUtxos = filterOnlyRecentLockedUtxos(state);
     return {
       ...state,
       lockedUtxos,
