@@ -66,6 +66,35 @@ const addUnspent =
     };
   };
 
+const addUnconfirmed =
+  (state: WalletState) =>
+  (
+    unconfirmedUtxos: UnblindedOutput[],
+    accountID: AccountID,
+    network: NetworkString
+  ): WalletState => {
+    const unconfirmedUtxosMap: Record<string, UnblindedOutput> = {};
+    for (const utxo of unconfirmedUtxos) {
+      unconfirmedUtxosMap[toStringOutpoint(utxo)] = utxo;
+    }
+    return {
+      ...state,
+      unspentsAndTransactions: {
+        ...state.unspentsAndTransactions,
+        [accountID]: {
+          ...state.unspentsAndTransactions[accountID],
+          [network]: {
+            ...state.unspentsAndTransactions[accountID][network],
+            utxosMap: {
+              ...state.unspentsAndTransactions[accountID][network].utxosMap,
+              ...unconfirmedUtxosMap,
+            },
+          },
+        },
+      },
+    };
+  };
+
 const addTx =
   (state: WalletState) =>
   (accountID: AccountID, tx: TxDisplayInterface, network: NetworkString): WalletState => {
@@ -200,6 +229,11 @@ export function walletReducer(
           [toStringOutpoint(utxo)]: Date.now(),
         },
       };
+    }
+
+    case ACTION_TYPES.ADD_UNCONFIRMED_UTXOS: {
+      const { unconfirmedUtxos, accountID, network } = payload;
+      return addUnconfirmed(state)(unconfirmedUtxos, accountID, network);
     }
 
     case ACTION_TYPES.ADD_TX: {

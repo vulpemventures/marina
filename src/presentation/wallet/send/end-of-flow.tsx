@@ -8,14 +8,16 @@ import { debounce } from 'lodash';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import { Account } from '../../../domain/account';
-import { NetworkString, UnblindedOutput } from 'ldk';
+import { address, getNetwork, NetworkString, UnblindedOutput } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { useDispatch } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { broadcastTx } from '../../../application/utils/network';
 import { blindAndSignPset } from '../../../application/utils/transaction';
-import { lockUtxo } from '../../../application/redux/actions/utxos';
+import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/actions/utxos';
+import { UnconfirmedOutput } from '../../../domain/unconfirmed';
+import { Transaction } from 'liquidjs-lib';
 
 export interface EndOfFlowProps {
   accounts: Account[];
@@ -67,6 +69,30 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       // lock utxos used in successful broadcast
       for (const utxo of selectedUtxos) {
         await dispatch(lockUtxo(utxo));
+      }
+
+      // find unconfirmed utxos from change addresses
+      const unconfirmedOutputs: UnconfirmedOutput[] = [];
+      if (changeAddresses && identities[0]) {
+        const transaction = Transaction.fromHex(tx);
+        for (const addr of changeAddresses) {
+          const changeOutputScript = address.toOutputScript(addr, getNetwork(network));
+          const vout = transaction.outs.findIndex(
+            (o: any) => o.script.toString() === changeOutputScript.toString()
+          );
+          if (vout !== -1 && transaction?.outs[vout]?.script) {
+            const script = transaction.outs[vout].script.toString('hex');
+            const blindPrivKey = await identities[0].getBlindingPrivateKey(script);
+            unconfirmedOutputs.push({ txid, vout, blindPrivKey });
+          }
+        }
+      }
+
+      // add unconfirmed utxos from change addresses to utxo set
+      if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
+        await dispatch(
+          await addUnconfirmedUtxos(tx, unconfirmedOutputs, accounts[0].getAccountID(), network)
+        );
       }
 
       // start updater

@@ -202,7 +202,10 @@ export async function createSendPset(
   changeAddressGetter: ChangeAddressFromAssetGetter,
   network: NetworkString,
   data?: DataRecipient[]
-): Promise<{ pset: string; selectedUtxos: UnblindedOutput[] }> {
+): Promise<{
+  pset: string;
+  selectedUtxos: UnblindedOutput[];
+}> {
   const coinSelector = greedyCoinSelector();
 
   if (feeAssetHash === lbtcAssetByNetwork(network)) {

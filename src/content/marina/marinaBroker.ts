@@ -48,7 +48,7 @@ import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selecto
 import { sleep } from '../../application/utils/common';
 import { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
-import { lockUtxo } from '../../application/redux/actions/utxos';
+import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -223,7 +223,8 @@ export default class MarinaBroker extends Broker {
           await this.store.dispatchAsync(
             setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(state), data)
           );
-          const { accepted, signedTxHex, selectedUtxos } =
+
+          const { accepted, signedTxHex, selectedUtxos, unconfirmedOutputs } =
             await this.openAndWaitPopup<SpendPopupResponse>('spend');
 
           if (!accepted) throw new Error('the user rejected the create tx request');
@@ -239,6 +240,18 @@ export default class MarinaBroker extends Broker {
             for (const utxo of selectedUtxos) {
               await this.store.dispatchAsync(lockUtxo(utxo));
             }
+          }
+
+          // add unconfirmed utxos from change addresses to utxo set
+          if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
+            this.store.dispatch(
+              await addUnconfirmedUtxos(
+                signedTxHex,
+                unconfirmedOutputs,
+                MainAccountID,
+                selectNetwork(state)
+              )
+            );
           }
 
           return successMsg({ txid, hex: signedTxHex });

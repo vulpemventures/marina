@@ -2,7 +2,15 @@ import { NetworkString, UnblindedOutput } from 'ldk';
 import { AnyAction } from 'redux';
 import { AccountID } from '../../../domain/account';
 import { ActionWithPayload } from '../../../domain/common';
-import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS, LOCK_UTXO } from './action-types';
+import { UnconfirmedOutput } from '../../../domain/unconfirmed';
+import { makeUnconfirmedUtxos } from '../../utils/utxos';
+import {
+  ADD_UTXO,
+  DELETE_UTXO,
+  FLUSH_UTXOS,
+  LOCK_UTXO,
+  ADD_UNCONFIRMED_UTXOS,
+} from './action-types';
 
 export type AddUtxoAction = ActionWithPayload<{
   accountID: AccountID;
@@ -33,4 +41,18 @@ export function flushUtxos(accountID: AccountID, network: NetworkString): AnyAct
 
 export function lockUtxo(utxo: UnblindedOutput): AnyAction {
   return { type: LOCK_UTXO, payload: { utxo } };
+}
+
+export async function addUnconfirmedUtxos(
+  txHex: string,
+  unconfirmedOutputs: UnconfirmedOutput[],
+  accountID: AccountID,
+  network: NetworkString
+): Promise<AnyAction> {
+  const unconfirmedUtxos = await makeUnconfirmedUtxos(txHex, unconfirmedOutputs);
+  console.debug('add unconfirmedUtxos', unconfirmedUtxos);
+  return {
+    type: ADD_UNCONFIRMED_UTXOS,
+    payload: { unconfirmedUtxos, accountID, network },
+  };
 }
