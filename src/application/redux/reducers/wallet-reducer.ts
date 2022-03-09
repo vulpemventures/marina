@@ -6,6 +6,7 @@ import { AnyAction } from 'redux';
 import { AccountID, initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import { newEmptyUtxosAndTxsHistory, TxDisplayInterface } from '../../../domain/transaction';
 import { NetworkString, UnblindedOutput } from 'ldk';
+import { lockedUtxoMinimunTime } from '../../utils/constants';
 
 export const walletInitState: WalletState = {
   [MainAccountID]: {
@@ -33,7 +34,7 @@ export const walletInitState: WalletState = {
 
 // returns only utxos locked for less than 5 minutes
 const filterOnlyRecentLockedUtxos = (state: WalletState) => {
-  const expiredTime = Date.now() - 300_000; // 5 minutes
+  const expiredTime = Date.now() - lockedUtxoMinimunTime; // 5 minutes
   const lockedUtxos: Record<string, number> = {};
   for (const key of Object.keys(state.lockedUtxos)) {
     const isRecent = state.lockedUtxos[key] > expiredTime;
