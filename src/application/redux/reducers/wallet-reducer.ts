@@ -46,11 +46,8 @@ const filterOnlyRecentLockedUtxos = (state: WalletState) => {
 const addUnspent =
   (state: WalletState) =>
   (accountID: AccountID, utxo: UnblindedOutput, network: NetworkString): WalletState => {
-    // remove from lockedUtxos all utxos locked for more than 5 minutes
-    const lockedUtxos = filterOnlyRecentLockedUtxos(state);
     return {
       ...state,
-      lockedUtxos,
       unspentsAndTransactions: {
         ...state.unspentsAndTransactions,
         [accountID]: {
@@ -229,6 +226,14 @@ export function walletReducer(
           ...state.lockedUtxos,
           [toStringOutpoint(utxo)]: Date.now(),
         },
+      };
+    }
+
+    case ACTION_TYPES.UNLOCK_UTXOS: {
+      const lockedUtxos = filterOnlyRecentLockedUtxos(state);
+      return {
+        ...state,
+        lockedUtxos,
       };
     }
 

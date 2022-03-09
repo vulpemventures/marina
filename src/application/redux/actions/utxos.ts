@@ -10,6 +10,7 @@ import {
   FLUSH_UTXOS,
   LOCK_UTXO,
   ADD_UNCONFIRMED_UTXOS,
+  UNLOCK_UTXOS,
 } from './action-types';
 
 export type AddUtxoAction = ActionWithPayload<{
@@ -41,6 +42,10 @@ export function flushUtxos(accountID: AccountID, network: NetworkString): AnyAct
 
 export function lockUtxo(utxo: UnblindedOutput): AnyAction {
   return { type: LOCK_UTXO, payload: { utxo } };
+}
+
+export function unlockUtxos(): AnyAction {
+  return { type: UNLOCK_UTXOS, payload: {} };
 }
 
 export async function addUnconfirmedUtxos(

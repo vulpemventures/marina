@@ -15,7 +15,7 @@ import {
 import { Account, AccountID } from '../../../domain/account';
 import { UtxosAndTxs } from '../../../domain/transaction';
 import { addTx } from '../actions/transaction';
-import { addUtxo, AddUtxoAction, deleteUtxo } from '../actions/utxos';
+import { addUtxo, AddUtxoAction, deleteUtxo, unlockUtxos } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
 import {
   createChannel,
@@ -102,6 +102,12 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
+
+  // only run on successful update
+  if (Object.keys(receivedUtxos).length > 0) {
+    yield put(unlockUtxos());
+  }
+
   console.debug(`${new Date()} utxos received`, receivedUtxos);
 }
 
