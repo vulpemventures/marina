@@ -28,7 +28,7 @@ export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemo
   }
 }
 
-export function sha256Hash(str: string): string {
+export function sha256Hash(str: crypto.BinaryLike): string {
   return crypto.createHash('sha256').update(str).digest('hex');
 }
 
