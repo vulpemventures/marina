@@ -50,3 +50,6 @@ export function getAssetImage(assetHash: string): string {
 }
 
 export const defaultPrecision = 8;
+
+// minimum time utxos are locked (5 minutes)
+export const lockedUtxoMinimunTime = 300_000;

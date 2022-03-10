@@ -10,9 +10,11 @@ import {
   WithConnectDataProps,
 } from '../../application/redux/containers/with-connect-data.container';
 import { RootReducerState } from '../../domain/common';
-import type {
+import {
+  address,
   AddressInterface,
   ChangeAddressFromAssetGetter,
+  getNetwork,
   IdentityInterface,
   NetworkString,
   RecipientInterface,
@@ -29,10 +31,14 @@ import { Account, MainAccountID } from '../../domain/account';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
+import { Transaction } from 'liquidjs-lib';
+import { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export interface SpendPopupResponse {
   accepted: boolean;
   signedTxHex?: string;
+  selectedUtxos?: UnblindedOutput[];
+  unconfirmedOutputs?: UnconfirmedOutput[];
 }
 
 const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
@@ -54,8 +60,15 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
-  const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
-    return popupWindowProxy.sendResponse({ data: { accepted, signedTxHex } });
+  const sendResponseMessage = (
+    accepted: boolean,
+    signedTxHex?: string,
+    selectedUtxos?: UnblindedOutput[],
+    unconfirmedOutputs?: UnconfirmedOutput[]
+  ) => {
+    return popupWindowProxy.sendResponse({
+      data: { accepted, signedTxHex, selectedUtxos, unconfirmedOutputs },
+    });
   };
 
   const handleReject = async () => {
@@ -90,7 +103,8 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
       const identities = await Promise.all(
         accounts.map((a) => a.getSigningIdentity(password, network))
       );
-      const signedTxHex = await makeTransaction(
+
+      const { txHex, selectedUtxos } = await makeTransaction(
         identities,
         coins,
         connectData.tx,
@@ -98,7 +112,26 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         getter,
         changeAddresses
       );
-      await sendResponseMessage(true, signedTxHex);
+
+      // find unconfirmed utxos from change addresses
+      const unconfirmedOutputs: UnconfirmedOutput[] = [];
+      if (changeAddresses && identities?.[0]) {
+        const transaction = Transaction.fromHex(txHex);
+        const txid = transaction.getId();
+        for (const addr of changeAddresses) {
+          const changeOutputScript = address.toOutputScript(addr, getNetwork(network));
+          const vout = transaction.outs.findIndex(
+            (o: any) => o.script.toString() === changeOutputScript.toString()
+          );
+          if (vout !== -1 && transaction?.outs[vout]?.script) {
+            const script = transaction.outs[vout].script.toString('hex');
+            const blindPrivKey = await identities[0].getBlindingPrivateKey(script);
+            unconfirmedOutputs.push({ txid, vout, blindPrivKey });
+          }
+        }
+      }
+
+      await sendResponseMessage(true, txHex, selectedUtxos, unconfirmedOutputs);
 
       await dispatch(flushTx());
       window.close();
@@ -224,7 +257,7 @@ async function makeTransaction(
 
   const { recipients, feeAssetHash, data } = connectDataTx;
 
-  const unsignedPset = await createSendPset(
+  const { pset, selectedUtxos } = await createSendPset(
     recipients,
     coins,
     feeAssetHash,
@@ -234,12 +267,12 @@ async function makeTransaction(
   );
 
   const txHex = await blindAndSignPset(
-    unsignedPset,
+    pset,
     coins,
     identities,
     recipients.map(({ address }) => address),
     changeAddresses
   );
 
-  return txHex;
+  return { txHex, selectedUtxos };
 }

@@ -10,7 +10,7 @@ import { WalletState } from './wallet';
 // inspired by: https://gist.github.com/lafiosca/b7bbb569ae3fe5c1ce110bf71d7ee153
 
 export type WalletPersistedStateV2 = WalletState & Partial<PersistedState>; // the current version
-type keysAddedInV2 = 'unspentsAndTransactions' | 'mainAccount' | 'updaterLoaders';
+type keysAddedInV2 = 'unspentsAndTransactions' | 'mainAccount' | 'updaterLoaders' | 'lockedUtxos';
 type deletedInV2 = {
   encryptedMnemonic: EncryptedMnemonic;
   masterBlindingKey: MasterBlindingKey;
@@ -35,6 +35,7 @@ export const walletMigrations = {
       },
       updaterLoaders: 0,
       isVerified: state.isVerified,
+      lockedUtxos: walletInitState.lockedUtxos,
     };
   },
 };

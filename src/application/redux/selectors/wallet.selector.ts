@@ -8,6 +8,7 @@ import {
 import { MasterPublicKey, NetworkString, UnblindedOutput } from 'ldk';
 import { RootReducerState } from '../../../domain/common';
 import { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
+import { toStringOutpoint } from '../../utils/utxos';
 
 export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
   return selectMainAccount(state).getWatchIdentity(state.app.network);
@@ -16,7 +17,10 @@ export function masterPubKeySelector(state: RootReducerState): Promise<MasterPub
 export const selectUtxos =
   (...accounts: AccountID[]) =>
   (state: RootReducerState): UnblindedOutput[] => {
-    return accounts.flatMap((ID) => selectUtxosForAccount(ID)(state));
+    const lockedOutpoints = Object.keys(state.wallet.lockedUtxos);
+    return accounts
+      .flatMap((ID) => selectUtxosForAccount(ID)(state))
+      .filter((utxo) => !lockedOutpoints.includes(toStringOutpoint(utxo)));
   };
 
 const selectUtxosForAccount =
@@ -26,9 +30,7 @@ const selectUtxosForAccount =
       accountID,
       net ?? state.app.network
     )(state)?.utxosMap;
-    if (utxos) {
-      return Object.values(utxos);
-    }
+    if (utxos) return Object.values(utxos);
     return [];
   };
 

@@ -174,7 +174,7 @@ export function createTaxiTxFromTopup(
   recipients: RecipientInterface[],
   coinSelector: CoinSelector,
   changeAddressGetter: ChangeAddressFromAssetGetter
-): string {
+): { pset: string; selectedUtxos: UnblindedOutput[] } {
   const { selectedUtxos, changeOutputs } = coinSelector(throwErrorCoinSelector)(
     unspents,
     recipients.concat({
@@ -184,7 +184,8 @@ export function createTaxiTxFromTopup(
     }),
     changeAddressGetter
   );
-  return addToTx(taxiTopup.partial, selectedUtxos, recipients.concat(changeOutputs));
+  const pset = addToTx(taxiTopup.partial, selectedUtxos, recipients.concat(changeOutputs));
+  return { pset, selectedUtxos };
 }
 
 /**
@@ -201,7 +202,10 @@ export async function createSendPset(
   changeAddressGetter: ChangeAddressFromAssetGetter,
   network: NetworkString,
   data?: DataRecipient[]
-): Promise<string> {
+): Promise<{
+  pset: string;
+  selectedUtxos: UnblindedOutput[];
+}> {
   const coinSelector = greedyCoinSelector();
 
   if (feeAssetHash === lbtcAssetByNetwork(network)) {
@@ -240,7 +244,7 @@ export async function createSendPset(
       pset = withDataOutputs(pset, data);
     }
 
-    return pset;
+    return { pset, selectedUtxos: selection.selectedUtxos };
   }
 
   const topup = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash)).topup;
