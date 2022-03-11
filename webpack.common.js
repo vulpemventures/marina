@@ -4,6 +4,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { ProvidePlugin } = require('webpack');
 
 module.exports = {
+  experiments: {
+    asyncWebAssembly: true, // this is required for wasm (tiny-secp256k1) to work
+  },
   entry: {
     'index': './src/presentation/index.tsx',
     'background-script': './src/background/background-script.ts',
