@@ -1,7 +1,11 @@
 const hexRegExp = /^([A-Fa-f0-9]{2})+/;
 
 export function readHex(text: string): [string, string] {
-    const match = text.match(hexRegExp);
+    return readWithRegExp(hexRegExp, text);
+}
+
+function readWithRegExp(regexp: RegExp, text: string): [string, string] {
+    const match = text.match(regexp);
     if (!match) {
         return ['', text];
     }
