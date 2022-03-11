@@ -20,7 +20,7 @@ import {
   IdentityInterface,
   isConfidentialOutput,
 } from 'ldk';
-import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
+import { AssetHash, confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
@@ -426,8 +426,9 @@ function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
     const opReturnPayment = payments.embed({ data: [Buffer.from(recipient.data, 'hex')] });
     pset.addOutput({
       script: opReturnPayment.output!,
-      asset: recipient.asset,
+      asset: AssetHash.fromHex(recipient.asset, false).bytes,
       value: confidential.satoshiToConfidentialValue(recipient.value),
+      nonce: Buffer.alloc(1),
     });
   }
 
