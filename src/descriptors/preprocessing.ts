@@ -1,8 +1,5 @@
-import { BIP32Factory } from 'bip32';
 import { toXpub } from 'ldk';
-
-// eslint-disable-next-line
-const bip32 = BIP32Factory(require('tiny-secp256k1'));
+import { bip32 } from '../bip32';
 
 const extendedPubKeyRegexp = /[a-z]pub[a-km-zA-HJ-NP-Z1-9]{100,108}/;
 

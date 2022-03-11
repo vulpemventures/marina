@@ -3,11 +3,8 @@ import { compile, NodeType } from '../src/descriptors/ast';
 import { parseScript } from '../src/descriptors/parser';
 import { Context, preprocessor } from '../src/descriptors/preprocessing';
 import { evaluate } from '../src/descriptors';
-import { BIP32Factory } from 'bip32';
 import { toXpub } from 'ldk';
-
-// eslint-disable-next-line
-const bip32 = BIP32Factory(require('tiny-secp256k1'));
+import { bip32 } from '../src/bip32';
 
 describe('evaluate', () => {
   it('should replace xpubs', () => {
