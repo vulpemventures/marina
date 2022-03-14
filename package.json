@@ -52,6 +52,7 @@
     "stream-browserify": "^3.0.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.1.2",
     "taxi-protobuf": "vulpemventures/taxi-protobuf",
+    "tiny-secp256k1": "^2.2.1",
     "uuid": "^8.3.2",
     "webext-redux": "^2.1.7",
     "webextension-polyfill": "^0.8.0",
