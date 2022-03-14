@@ -6457,10 +6457,9 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.4.5:
+"ldk@git+https://github.com/vulpemventures/ldk.git#master":
   version "0.4.5"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.5.tgz#963fa7b546677ac3a6b840d867b5db3d18565ddc"
-  integrity sha512-9W2ekBjolI2oS74eci3lnt3bs6rcuxONg0s+VfTWntG2YEmJTzefyoiR3uxCIzJF/i6dudJr53gsx08O0fRywg==
+  resolved "git+https://github.com/vulpemventures/ldk.git#c15f9190e1d747470a999164cf70024529cfaa08"
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
@@ -6469,7 +6468,7 @@ ldk@^0.4.5:
     ecpair "^2.0.1"
     liquidjs-lib "^6.0.1"
     marina-provider "^1.0.0"
-    slip77 "^0.1.1"
+    slip77 "^0.2.0"
     tiny-secp256k1 "^2.2.1"
     tslib "^2.3.1"
 
@@ -6523,6 +6522,28 @@ liquidjs-lib@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.1.tgz#34c01329617c7ea7a0407b6304644740bb331b19"
   integrity sha512-1JwoRwh3SpV8k9M5EAHLzn84rxHEhTb3XBWerDPJiwyPhK9u2VOZ+vtrFCn6CQ7PSo/takkRbDW+cdyFeAFFKA==
+  dependencies:
+    "@types/randombytes" "^2.0.0"
+    "@types/wif" "^2.0.2"
+    "@vulpemventures/secp256k1-zkp" "^2.0.0"
+    axios "^0.21.1"
+    bech32 "^2.0.0"
+    bip174-liquid "^1.0.3"
+    bip32 "^2.0.4"
+    bip66 "^1.1.0"
+    bitcoin-ops "^1.4.0"
+    blech32 "^1.1.0"
+    bs58check "^2.0.0"
+    create-hash "^1.2.0"
+    ecpair "^2.0.1"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.1.2"
+    wif "^2.0.1"
+
+liquidjs-lib@^6.0.2-liquid.0:
+  version "6.0.2-liquid.0"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.0.tgz#cde6bed858d3b797c0076327ddc67a73892dfe61"
+  integrity sha512-ls8WOJRKq6d8550D/UXxIfzGPyWii2BwrTZhYZVPzZKx0Byf0/p4YLC1pColW6ouqxVWGcpCHXU/wY9t3cPy2A==
   dependencies:
     "@types/randombytes" "^2.0.0"
     "@types/wif" "^2.0.2"
@@ -8763,14 +8784,13 @@ slice-ansi@^4.0.0:
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
 
-slip77@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/slip77/-/slip77-0.1.1.tgz#171a5489a3b4ba099c04621866bf8a0587cccbd2"
-  integrity sha512-C/6oIYbq4jwDzllpQiIK2dtjhx3SyZCTNJ91H2mfeIFuDDjNZF9aJyFhZO60NKJfLuSyOukIYKlSYXi0sxcnog==
+slip77@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/slip77/-/slip77-0.2.0.tgz#7aaee4cdbbb148a8cbf9ecffe86dd7f8c0fce38c"
+  integrity sha512-LQaxb1Hef10kU36qvk71tlSt5BWph7GM0j+t2n5zs169X4QfnNbb6xqKZ38X3ETzGmCQaVdBwr925HDagHra/Q==
   dependencies:
     "@types/node" "^13.9.1"
     create-hmac "^1.1.7"
-    tiny-secp256k1 "^1.1.3"
     typeforce "^1.18.0"
 
 snapdragon-node@^2.0.1:

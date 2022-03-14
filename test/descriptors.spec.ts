@@ -3,8 +3,7 @@ import { compile, NodeType } from '../src/descriptors/ast';
 import { parseScript } from '../src/descriptors/parser';
 import { Context, preprocessor } from '../src/descriptors/preprocessing';
 import { evaluate } from '../src/descriptors';
-import { toXpub } from 'ldk';
-import { bip32 } from '../src/bip32';
+import { toXpub, bip32 } from 'ldk';
 
 describe('evaluate', () => {
   it('should replace xpubs', () => {

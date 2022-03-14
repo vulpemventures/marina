@@ -1,5 +1,4 @@
-import { toXpub } from 'ldk';
-import { bip32 } from '../bip32';
+import { toXpub, bip32 } from 'ldk';
 
 const extendedPubKeyRegexp = /[a-z]pub[a-km-zA-HJ-NP-Z1-9]{100,108}/;
 

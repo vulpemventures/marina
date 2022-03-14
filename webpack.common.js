@@ -26,7 +26,7 @@ module.exports = {
       "path": require.resolve("path-browserify"), 
       "fs": false 
     },
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js', '.wasm'],
   },
   plugins: [
     new ProvidePlugin({
