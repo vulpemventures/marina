@@ -6457,16 +6457,17 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-"ldk@git+https://github.com/vulpemventures/ldk.git#master":
-  version "0.4.5"
-  resolved "git+https://github.com/vulpemventures/ldk.git#c15f9190e1d747470a999164cf70024529cfaa08"
+ldk@^0.4.6:
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.6.tgz#68e2bc226549c6fa0d14fc170f9e24b226922ee4"
+  integrity sha512-vnnbGspP9HYRtQ2hGAu/emUdXZbUvlTVpOYWZDFTiwUruLtw1hbFMn0Q7V6XRnRD9+H/G4nrIKA9aNEjTt5NFQ==
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
     ecpair "^2.0.1"
-    liquidjs-lib "^6.0.1"
+    liquidjs-lib "^6.0.2-liquid.0"
     marina-provider "^1.0.0"
     slip77 "^0.2.0"
     tiny-secp256k1 "^2.2.1"
@@ -6517,28 +6518,6 @@ lines-and-columns@^1.1.6:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
-
-liquidjs-lib@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.1.tgz#34c01329617c7ea7a0407b6304644740bb331b19"
-  integrity sha512-1JwoRwh3SpV8k9M5EAHLzn84rxHEhTb3XBWerDPJiwyPhK9u2VOZ+vtrFCn6CQ7PSo/takkRbDW+cdyFeAFFKA==
-  dependencies:
-    "@types/randombytes" "^2.0.0"
-    "@types/wif" "^2.0.2"
-    "@vulpemventures/secp256k1-zkp" "^2.0.0"
-    axios "^0.21.1"
-    bech32 "^2.0.0"
-    bip174-liquid "^1.0.3"
-    bip32 "^2.0.4"
-    bip66 "^1.1.0"
-    bitcoin-ops "^1.4.0"
-    blech32 "^1.1.0"
-    bs58check "^2.0.0"
-    create-hash "^1.2.0"
-    ecpair "^2.0.1"
-    typeforce "^1.11.3"
-    varuint-bitcoin "^1.1.2"
-    wif "^2.0.1"
 
 liquidjs-lib@^6.0.2-liquid.0:
   version "6.0.2-liquid.0"
