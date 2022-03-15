@@ -1,6 +1,7 @@
-import { RootReducerState } from './../../../domain/common';
+import type { RootReducerState } from './../../../domain/common';
 import { connect } from 'react-redux';
-import HomeView, { HomeProps } from '../../../presentation/wallet/home';
+import type { HomeProps } from '../../../presentation/wallet/home';
+import HomeView from '../../../presentation/wallet/home';
 import { selectBalances } from '../selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../../domain/assets';
 import { lbtcAssetByNetwork } from '../../utils/network';

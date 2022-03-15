@@ -1,8 +1,9 @@
-import SettingsDeepRestorerView, {
+import type {
   DeepRestorerProps,
 } from './../../../presentation/settings/deep-restorer';
+import SettingsDeepRestorerView from './../../../presentation/settings/deep-restorer';
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
+import type { RootReducerState } from '../../../domain/common';
 
 const mapStateToProps = (state: RootReducerState): DeepRestorerProps => ({
   restorationLoading: state.wallet.deepRestorer.isLoading,

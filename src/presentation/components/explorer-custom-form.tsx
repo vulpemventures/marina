@@ -1,11 +1,12 @@
-import { FormikProps, withFormik } from 'formik';
+import type { FormikProps} from 'formik';
+import { withFormik } from 'formik';
 import React from 'react';
 import { setExplorer } from '../../application/redux/actions/app';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import Button from './button';
 import Input from './input';
 import * as Yup from 'yup';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 
 interface SettingsExplorerFormValues {
   esploraURL: string;

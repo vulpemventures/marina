@@ -1,6 +1,6 @@
-import { AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 import { Store } from 'webext-redux';
-import { RootReducerState } from '../domain/common';
+import type { RootReducerState } from '../domain/common';
 
 // this overwrites the Store class in order to type correctly the dispatch function
 // (webext-redux) typings do not returns a promise.

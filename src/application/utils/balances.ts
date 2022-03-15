@@ -1,4 +1,4 @@
-import { BalancesByAsset } from '../redux/selectors/balance.selector';
+import type { BalancesByAsset } from '../redux/selectors/balance.selector';
 
 const addBalance = (toAdd: BalancesByAsset) => (base: BalancesByAsset) => {
   const result = base;

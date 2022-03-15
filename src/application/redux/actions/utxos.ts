@@ -1,7 +1,7 @@
-import { NetworkString, UnblindedOutput } from 'ldk';
-import { AnyAction } from 'redux';
-import { AccountID } from '../../../domain/account';
-import { ActionWithPayload } from '../../../domain/common';
+import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { AnyAction } from 'redux';
+import type { AccountID } from '../../../domain/account';
+import type { ActionWithPayload } from '../../../domain/common';
 import { ADD_UTXO, DELETE_UTXO, FLUSH_UTXOS } from './action-types';
 
 export type AddUtxoAction = ActionWithPayload<{

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 
 interface AssetDetails {
   assetHash: string;

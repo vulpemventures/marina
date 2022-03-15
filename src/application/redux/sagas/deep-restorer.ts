@@ -1,4 +1,4 @@
-import {
+import type {
   AddressInterface,
   EsploraRestorerOpts,
   IdentityInterface,
@@ -7,7 +7,7 @@ import {
   StateRestorerOpts,
 } from 'ldk';
 import { call, put, takeLeading } from 'redux-saga/effects';
-import { Account, AccountID } from '../../../domain/account';
+import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../../presentation/utils/error';
 import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { START_DEEP_RESTORATION } from '../actions/action-types';
@@ -17,9 +17,10 @@ import {
   selectDeepRestorerGapLimit,
   selectDeepRestorerIsLoading,
 } from '../selectors/wallet.selector';
+import type {
+  SagaGenerator} from './utils';
 import {
   newSagaSelector,
-  SagaGenerator,
   selectAccountSaga,
   selectAllAccountsIDsSaga,
   selectExplorerSaga,

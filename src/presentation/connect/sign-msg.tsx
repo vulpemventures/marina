@@ -3,17 +3,18 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
+import type {
+  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
 import {
-  connectWithConnectData,
-  WithConnectDataProps,
+  connectWithConnectData
 } from '../../application/redux/containers/with-connect-data.container';
 import { signMessageWithMnemonic } from '../../application/utils/message';
-import { networks } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
-import { RootReducerState } from '../../domain/common';
+import type { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
-import { SignedMessage } from 'marina-provider';
-import { NetworkString } from 'ldk';
+import type { SignedMessage } from 'marina-provider';
+import type { NetworkString} from 'ldk';
+import { networks } from 'ldk';
 import {
   INVALID_PASSWORD_ERROR,
   SOMETHING_WENT_WRONG_ERROR,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';

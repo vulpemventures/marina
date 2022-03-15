@@ -1,6 +1,6 @@
-import { RootReducerState } from './../../domain/common';
+import type { RootReducerState } from './../../domain/common';
 import { serializerAndDeserializer } from './store';
-import { AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 import { Store } from 'webext-redux';
 import browser from 'webextension-polyfill';
 

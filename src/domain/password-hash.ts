@@ -1,5 +1,5 @@
 import { hashPassword } from '../application/utils/crypto';
-import { Password } from './password';
+import type { Password } from './password';
 
 export type PasswordHash = string;
 

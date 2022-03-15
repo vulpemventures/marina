@@ -1,19 +1,20 @@
-import {
+import type {
   StateRestorerOpts,
+  CosignerMultisig,
+  XPub,
+  AddressInterface,
+  NetworkString} from 'ldk';
+import {
   Mnemonic,
   IdentityType,
   mnemonicRestorerFromState,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
-  CosignerMultisig,
   MultisigWatchOnly,
-  XPub,
-  restorerFromState,
-  AddressInterface,
-  NetworkString,
+  restorerFromState
 } from 'ldk';
-import { MasterBlindingKey } from '../../domain/master-blinding-key';
-import { MasterXPub } from '../../domain/master-extended-pub';
+import type { MasterBlindingKey } from '../../domain/master-blinding-key';
+import type { MasterXPub } from '../../domain/master-extended-pub';
 
 export function getStateRestorerOptsFromAddresses(
   addresses: AddressInterface[]

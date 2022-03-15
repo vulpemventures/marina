@@ -1,10 +1,11 @@
-import { FormikProps, withFormik } from 'formik';
+import type { FormikProps} from 'formik';
+import { withFormik } from 'formik';
 import React from 'react';
 import * as Yup from 'yup';
 import Button from './button';
 import Input from './input';
 import Modal from './modal';
-import { DebouncedFunc } from 'lodash';
+import type { DebouncedFunc } from 'lodash';
 
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;

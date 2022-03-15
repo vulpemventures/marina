@@ -1,13 +1,14 @@
+import type {
+  IApp} from '../../../domain/app';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
-  IApp,
   NigiriDefaultExplorerURLs,
 } from '../../../domain/app';
-import { IError } from '../../../domain/common';
-import { AnyAction } from 'redux';
+import type { IError } from '../../../domain/common';
+import type { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 
 export const appInitState: IApp = {
   isOnboardingCompleted: false,

@@ -1,19 +1,22 @@
 import { stringify } from '../../application/utils/browser-storage-converters';
+import type {
+  StoreCache} from '../store-cache';
 import {
   compareCacheForEvents,
   newCacheFromState,
-  newStoreCache,
-  StoreCache,
+  newStoreCache
 } from '../store-cache';
-import Broker, { BrokerOption } from '../broker';
-import {
+import type { BrokerOption } from '../broker';
+import Broker from '../broker';
+import type {
   MessageHandler,
+  RequestMessage} from '../../domain/message';
+import {
   newErrorResponseMessage,
-  newSuccessResponseMessage,
-  RequestMessage,
+  newSuccessResponseMessage
 } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
-import { RootReducerState } from '../../domain/common';
+import type { RootReducerState } from '../../domain/common';
 import {
   disableWebsite,
   flushMsg,
@@ -35,18 +38,19 @@ import {
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import { Balance, Recipient, Utxo } from 'marina-provider';
-import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
-import { SpendPopupResponse } from '../../presentation/connect/spend';
-import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import { AccountID, MainAccountID } from '../../domain/account';
+import type { Balance, Recipient, Utxo } from 'marina-provider';
+import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
+import type { SpendPopupResponse } from '../../presentation/connect/spend';
+import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
+import type { AccountID} from '../../domain/account';
+import { MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
 import { sleep } from '../../application/utils/common';
-import { BrokerProxyStore } from '../brokerProxyStore';
+import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 
 export default class MarinaBroker extends Broker {

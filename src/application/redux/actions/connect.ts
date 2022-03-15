@@ -1,7 +1,7 @@
-import { NetworkString, RecipientInterface } from 'ldk';
-import { DataRecipient } from 'marina-provider';
-import { AnyAction } from 'redux';
-import { ConnectData } from '../../../domain/connect';
+import type { NetworkString, RecipientInterface } from 'ldk';
+import type { DataRecipient } from 'marina-provider';
+import type { AnyAction } from 'redux';
+import type { ConnectData } from '../../../domain/connect';
 import {
   DISABLE_WEBSITE,
   ENABLE_WEBSITE,

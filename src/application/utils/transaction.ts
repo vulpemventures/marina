@@ -1,32 +1,38 @@
+import type {
+  ChangeAddressFromAssetGetter,
+  CoinSelector,
+  RecipientInterface,
+  TxInterface,
+  UnblindedOutput,
+  CoinSelectorErrorFn,
+  NetworkString,
+  IdentityInterface} from 'ldk';
 import {
   address,
   address as addrLDK,
   addToTx,
-  ChangeAddressFromAssetGetter,
-  CoinSelector,
   createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
   greedyCoinSelector,
   psetToUnsignedTx,
-  RecipientInterface,
-  TxInterface,
-  UnblindedOutput,
-  CoinSelectorErrorFn,
   isUnblindedOutput,
   getSats,
   getAsset,
-  NetworkString,
-  IdentityInterface,
   isConfidentialOutput,
+  networks,
+  AssetHash, 
+  payments,
 } from 'ldk';
-import { AssetHash, confidential, networks, payments, Psbt } from 'liquidjs-lib';
+import { confidential, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
-import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
-import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import type { Transfer, TxDisplayInterface} from '../../domain/transaction';
+import { TxStatusEnum, TxType } from '../../domain/transaction';
+import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi, taxiURL } from './taxi';
-import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
+import type { DataRecipient, Recipient } from 'marina-provider';
+import { isAddressRecipient, isDataRecipient } from 'marina-provider';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {
   return address.fromConfidential(addr).blindingKey;

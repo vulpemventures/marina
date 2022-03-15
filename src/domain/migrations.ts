@@ -1,11 +1,11 @@
-import { StateRestorerOpts } from 'ldk';
+import type { StateRestorerOpts } from 'ldk';
 import { createMigrate } from 'redux-persist';
-import { PersistedState } from 'redux-persist/es/types';
+import type { PersistedState } from 'redux-persist/es/types';
 import { walletInitState } from '../application/redux/reducers/wallet-reducer';
-import { EncryptedMnemonic } from './encrypted-mnemonic';
-import { MasterBlindingKey } from './master-blinding-key';
-import { MasterXPub } from './master-extended-pub';
-import { WalletState } from './wallet';
+import type { EncryptedMnemonic } from './encrypted-mnemonic';
+import type { MasterBlindingKey } from './master-blinding-key';
+import type { MasterXPub } from './master-extended-pub';
+import type { WalletState } from './wallet';
 
 // inspired by: https://gist.github.com/lafiosca/b7bbb569ae3fe5c1ce110bf71d7ee153
 

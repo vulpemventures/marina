@@ -7,11 +7,12 @@ import {
   SET_EXPLORER,
   RESET,
 } from './action-types';
-import { AnyAction } from 'redux';
-import { Password } from '../../../domain/password';
-import { match, PasswordHash } from '../../../domain/password-hash';
-import { ExplorerURLs } from '../../../domain/app';
-import { NetworkString } from 'ldk';
+import type { AnyAction } from 'redux';
+import type { Password } from '../../../domain/password';
+import type { PasswordHash } from '../../../domain/password-hash';
+import { match } from '../../../domain/password-hash';
+import type { ExplorerURLs } from '../../../domain/app';
+import type { NetworkString } from 'ldk';
 import { INVALID_PASSWORD_ERROR } from '../../utils/constants';
 
 export const setExplorer = (explorer: ExplorerURLs, network: NetworkString): AnyAction => ({

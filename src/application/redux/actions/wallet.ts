@@ -11,10 +11,10 @@ import {
   POP_UPDATER_LOADER,
   PUSH_UPDATER_LOADER,
 } from './action-types';
-import { AnyAction } from 'redux';
-import { AccountID, MnemonicAccountData } from '../../../domain/account';
-import { NetworkString, StateRestorerOpts } from 'ldk';
-import { PasswordHash } from '../../../domain/password-hash';
+import type { AnyAction } from 'redux';
+import type { AccountID, MnemonicAccountData } from '../../../domain/account';
+import type { NetworkString, StateRestorerOpts } from 'ldk';
+import type { PasswordHash } from '../../../domain/password-hash';
 
 // this action is using during onboarding end-of-flow in order to set up the initial main account state + password hash
 export function setWalletData(

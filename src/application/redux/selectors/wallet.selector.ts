@@ -1,13 +1,14 @@
-import {
+import type {
   AccountID,
-  createMnemonicAccount,
   MnemonicAccount,
-  MainAccountID,
-  Account,
+  Account} from '../../../domain/account';
+import {
+  createMnemonicAccount,
+  MainAccountID
 } from '../../../domain/account';
-import { MasterPublicKey, NetworkString, UnblindedOutput } from 'ldk';
-import { RootReducerState } from '../../../domain/common';
-import { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
+import type { MasterPublicKey, NetworkString, UnblindedOutput } from 'ldk';
+import type { RootReducerState } from '../../../domain/common';
+import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
 
 export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
   return selectMainAccount(state).getWatchIdentity(state.app.network);

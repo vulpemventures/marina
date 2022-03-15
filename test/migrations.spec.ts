@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { walletMigrations, WalletPersistedStateV1 } from '../src/domain/migrations';
+import type { WalletPersistedStateV1 } from '../src/domain/migrations';
+import { walletMigrations } from '../src/domain/migrations';
 
 describe('migration from v1 to v2', () => {
   it('should be able to compute v2 from v1', () => {

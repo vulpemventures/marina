@@ -1,6 +1,7 @@
-import { NetworkString, Outpoint, toOutpoint, UnblindedOutput } from 'ldk';
-import { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
-import { MarinaEventType } from 'marina-provider';
+import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
+import { toOutpoint } from 'ldk';
+import type { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
+import type { MarinaEventType } from 'marina-provider';
 
 export interface MarinaEvent<P extends any> {
   type: MarinaEventType;

@@ -1,10 +1,10 @@
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
 import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { RootReducerState } from '../../domain/common';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { RootReducerState } from '../../domain/common';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';

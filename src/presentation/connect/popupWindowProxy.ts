@@ -1,4 +1,4 @@
-import { PopupResponseMessage } from '../../domain/message';
+import type { PopupResponseMessage } from '../../domain/message';
 import WindowProxy from '../../inject/proxy';
 import { POPUP_RESPONSE } from './popupBroker';
 

@@ -1,4 +1,4 @@
-import { PopupName } from '../../domain/message';
+import type { PopupName } from '../../domain/message';
 
 // Connect
 const makeConnectRoute = (popupName: PopupName) => `/connect/${popupName}`;

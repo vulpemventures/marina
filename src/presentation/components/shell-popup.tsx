@@ -3,7 +3,7 @@ import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushPendingTx } from '../../application/redux/actions/transaction';
 import {
   selectAllAccountsIDs,
@@ -13,7 +13,7 @@ import {
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import { formatNetwork } from '../utils';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
-import { AccountID } from '../../domain/account';
+import type { AccountID } from '../../domain/account';
 
 interface Props {
   btnDisabled?: boolean;

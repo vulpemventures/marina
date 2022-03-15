@@ -1,11 +1,11 @@
-import { ConnectData } from './connect';
-import { WalletState } from './wallet';
-import { IApp } from './app';
-import { OnboardingState } from '../application/redux/reducers/onboarding-reducer';
-import { TransactionState } from '../application/redux/reducers/transaction-reducer';
-import { TaxiState } from '../application/redux/reducers/taxi-reducer';
-import { IAssets } from './assets';
-import { Action } from 'redux';
+import type { ConnectData } from './connect';
+import type { WalletState } from './wallet';
+import type { IApp } from './app';
+import type { OnboardingState } from '../application/redux/reducers/onboarding-reducer';
+import type { TransactionState } from '../application/redux/reducers/transaction-reducer';
+import type { TaxiState } from '../application/redux/reducers/taxi-reducer';
+import type { IAssets } from './assets';
+import type { Action } from 'redux';
 
 export interface RootReducerState {
   app: IApp;

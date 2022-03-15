@@ -1,7 +1,8 @@
 import { connect } from 'react-redux';
 import { MainAccountID } from '../../../domain/account';
-import { RootReducerState } from '../../../domain/common';
-import TransactionsView, { TransactionsProps } from '../../../presentation/wallet/transactions';
+import type { RootReducerState } from '../../../domain/common';
+import type { TransactionsProps } from '../../../presentation/wallet/transactions';
+import TransactionsView from '../../../presentation/wallet/transactions';
 import { selectElectrsURL, selectNetwork } from '../selectors/app.selector';
 import { selectTransactions } from '../selectors/wallet.selector';
 

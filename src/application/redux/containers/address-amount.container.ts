@@ -1,10 +1,11 @@
 import { connect } from 'react-redux';
 import { MainAccountID } from '../../../domain/account';
 import { assetGetterFromIAssets } from '../../../domain/assets';
-import { RootReducerState } from '../../../domain/common';
-import AddressAmountView, {
+import type { RootReducerState } from '../../../domain/common';
+import type {
   AddressAmountProps,
 } from '../../../presentation/wallet/send/address-amount';
+import AddressAmountView from '../../../presentation/wallet/send/address-amount';
 import { selectBalances } from '../selectors/balance.selector';
 import { selectMainAccount } from '../selectors/wallet.selector';
 

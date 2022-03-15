@@ -1,6 +1,8 @@
 import React from 'react';
-import { RouteComponentProps, useHistory } from 'react-router-dom';
-import { FormikProps, withFormik } from 'formik';
+import type { RouteComponentProps} from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
+import type { FormikProps} from 'formik';
+import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
@@ -8,10 +10,10 @@ import Input from '../../components/input';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
 import { AUTHENTICATION_SUCCESS } from '../../../application/redux/actions/action-types';
-import { PasswordHash } from '../../../domain/password-hash';
+import type { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
-import { RootReducerState } from '../../../domain/common';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { RootReducerState } from '../../../domain/common';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import browser from 'webextension-polyfill';
 
 interface LogInFormValues {

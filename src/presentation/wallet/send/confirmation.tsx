@@ -5,9 +5,9 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { getAssetImage } from '../../../application/utils/constants';
 import { fromSatoshiStr } from '../../utils';
-import { AssetGetter } from '../../../domain/assets';
-import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { NetworkString } from 'ldk';
+import type { AssetGetter } from '../../../domain/assets';
+import type { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
+import type { NetworkString } from 'ldk';
 
 export interface ConfirmationProps {
   network: NetworkString;

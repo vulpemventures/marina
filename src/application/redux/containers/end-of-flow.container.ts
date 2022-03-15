@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import EndOfFlow, { EndOfFlowProps } from '../../../presentation/wallet/send/end-of-flow';
+import type { RootReducerState } from '../../../domain/common';
+import type { EndOfFlowProps } from '../../../presentation/wallet/send/end-of-flow';
+import EndOfFlow from '../../../presentation/wallet/send/end-of-flow';
 import { selectAllAccounts } from '../selectors/wallet.selector';
 import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
 

@@ -1,13 +1,15 @@
 import React from 'react';
-import { RouteComponentProps, useHistory } from 'react-router';
-import { FormikProps, withFormik } from 'formik';
+import type { RouteComponentProps} from 'react-router';
+import { useHistory } from 'react-router';
+import type { FormikProps} from 'formik';
+import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
 import Input from '../components/input';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 
 interface SettingsChangePasswordFormValues {
   currentPassword: string;

@@ -3,9 +3,10 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
+import type {
+  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
 import {
-  connectWithConnectData,
-  WithConnectDataProps,
+  connectWithConnectData
 } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
 import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';

@@ -1,4 +1,5 @@
-import { call, put, takeLeading, fork, all, AllEffect } from 'redux-saga/effects';
+import type { AllEffect } from 'redux-saga/effects';
+import { call, put, takeLeading, fork, all } from 'redux-saga/effects';
 import { fetchAssetsFromTaxi, taxiURL } from '../../utils/taxi';
 import {
   RESET,
@@ -9,10 +10,11 @@ import {
   UPDATE_TAXI_ASSETS,
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
-import { newSagaSelector, SagaGenerator } from './utils';
+import type { SagaGenerator } from './utils';
+import { newSagaSelector } from './utils';
 import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
 
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {

@@ -1,6 +1,8 @@
-import { compile, Result } from './ast';
+import type { Result } from './ast';
+import { compile } from './ast';
 import { parseScript } from './parser';
-import { Context, preprocessor } from './preprocessing';
+import type { Context} from './preprocessing';
+import { preprocessor } from './preprocessing';
 
 /**
  * evaluate a template string and return witness scripts and redeem script associated with it

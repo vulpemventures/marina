@@ -1,8 +1,9 @@
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import PaymentSuccessView, {
+import type { RootReducerState } from '../../../domain/common';
+import type {
   PaymentSuccessProps,
 } from '../../../presentation/wallet/send/payment-success';
+import PaymentSuccessView from '../../../presentation/wallet/send/payment-success';
 import { selectElectrsURL } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): PaymentSuccessProps => ({

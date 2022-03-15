@@ -1,7 +1,8 @@
 import * as bip39 from 'bip39';
-import { networks, payments, bip32 } from 'ldk';
+import type { networks} from 'ldk';
+import { payments, bip32 } from 'ldk';
 import * as bitcoinMessage from 'bitcoinjs-message';
-import { SignedMessage } from 'marina-provider';
+import type { SignedMessage } from 'marina-provider';
 
 export async function signMessageWithMnemonic(
   message: string,

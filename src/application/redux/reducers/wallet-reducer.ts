@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
-import { WalletState } from '../../../domain/wallet';
-import { AnyAction } from 'redux';
-import { AccountID, initialRestorerOpts, MainAccountID } from '../../../domain/account';
-import { newEmptyUtxosAndTxsHistory, TxDisplayInterface } from '../../../domain/transaction';
-import { NetworkString, UnblindedOutput } from 'ldk';
+import type { WalletState } from '../../../domain/wallet';
+import type { AnyAction } from 'redux';
+import type { AccountID} from '../../../domain/account';
+import { initialRestorerOpts, MainAccountID } from '../../../domain/account';
+import type { TxDisplayInterface } from '../../../domain/transaction';
+import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
+import type { NetworkString, UnblindedOutput } from 'ldk';
 
 export const walletInitState: WalletState = {
   [MainAccountID]: {

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import {
+import type {
   ChangeAddressFromAssetGetter,
   CoinSelectionResult,
   CoinSelector,
   CoinSelectorErrorFn,
-  greedyCoinSelector,
   NetworkString,
   RecipientInterface,
-  UnblindedOutput,
+  UnblindedOutput} from 'ldk';
+import {
+  greedyCoinSelector,
   walletFromCoins,
 } from 'ldk';
 import Balance from '../../components/balance';
@@ -17,9 +18,9 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { IAssets } from '../../../domain/assets';
+import type { IAssets } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
-import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import {
   flushPendingTx,
   setFeeAssetAndAmount,
@@ -27,13 +28,14 @@ import {
   setPendingTxStep,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { Address, createAddress } from '../../../domain/address';
-import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { Address} from '../../../domain/address';
+import { createAddress } from '../../../domain/address';
+import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
-import { Account, AccountID } from '../../../domain/account';
+import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
-import { AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 import { getAssetImage } from '../../../application/utils/constants';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';

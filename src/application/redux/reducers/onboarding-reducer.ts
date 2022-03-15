@@ -1,4 +1,4 @@
-import { AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
 
 export interface OnboardingState {

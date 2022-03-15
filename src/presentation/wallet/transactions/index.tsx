@@ -17,16 +17,16 @@ import ShellPopUp from '../../components/shell-popup';
 import { getAssetImage } from '../../../application/utils/constants';
 import { txTypeAsString } from '../../../application/utils/transaction';
 import { fromSatoshiStr } from '../../utils';
-import { TxDisplayInterface } from '../../../domain/transaction';
-import { IAssets } from '../../../domain/assets';
+import type { TxDisplayInterface } from '../../../domain/transaction';
+import type { IAssets } from '../../../domain/assets';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { MainAccountID } from '../../../domain/account';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 
 interface LocationState {

@@ -1,8 +1,9 @@
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import EndOfFlowOnboardingView, {
+import type { RootReducerState } from '../../../domain/common';
+import type {
   EndOfFlowProps,
 } from '../../../presentation/onboarding/end-of-flow';
+import EndOfFlowOnboardingView from '../../../presentation/onboarding/end-of-flow';
 import { selectEsploraURL } from '../selectors/app.selector';
 import { hasMnemonicSelector } from '../selectors/wallet.selector';
 

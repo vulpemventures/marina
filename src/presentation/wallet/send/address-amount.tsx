@@ -6,13 +6,13 @@ import { getAssetImage } from '../../../application/utils/constants';
 import { fromSatoshi } from '../../utils';
 import { useDispatch } from 'react-redux';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
-import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import AddressAmountEnhancedForm from '../../components/address-amount-form';
-import { NetworkString } from 'ldk';
-import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import { Asset } from '../../../domain/assets';
-import { Account } from '../../../domain/account';
+import type { NetworkString } from 'ldk';
+import type { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
+import type { Asset } from '../../../domain/assets';
+import type { Account } from '../../../domain/account';
 
 export interface AddressAmountProps {
   account: Account;

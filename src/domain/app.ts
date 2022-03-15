@@ -1,5 +1,5 @@
-import { NetworkString } from 'ldk';
-import { IError } from './common';
+import type { NetworkString } from 'ldk';
+import type { IError } from './common';
 
 export interface IApp {
   errors?: Record<string, IError>;

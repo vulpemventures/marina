@@ -1,5 +1,5 @@
 import cx from 'classnames';
-import { FormikProps } from 'formik';
+import type { FormikProps } from 'formik';
 
 interface InputProps<FormValues> extends FormikProps<FormValues> {
   name: keyof FormValues;

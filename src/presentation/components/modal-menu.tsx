@@ -2,7 +2,7 @@ import React, { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 import { logOut } from '../../application/redux/actions/app';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
   DEFAULT_ROUTE,

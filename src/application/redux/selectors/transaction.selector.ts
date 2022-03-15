@@ -1,4 +1,4 @@
-import { TxDisplayInterface } from '../../../domain/transaction';
+import type { TxDisplayInterface } from '../../../domain/transaction';
 
 export const txHasAsset =
   (assetHash: string) =>

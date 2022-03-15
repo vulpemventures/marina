@@ -1,7 +1,8 @@
 import { script } from 'liquidjs-lib';
 import { compile, NodeType } from '../src/descriptors/ast';
 import { parseScript } from '../src/descriptors/parser';
-import { Context, preprocessor } from '../src/descriptors/preprocessing';
+import type { Context} from '../src/descriptors/preprocessing';
+import { preprocessor } from '../src/descriptors/preprocessing';
 import { evaluate } from '../src/descriptors';
 import { toXpub, bip32 } from 'ldk';
 

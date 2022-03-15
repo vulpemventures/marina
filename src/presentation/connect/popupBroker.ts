@@ -1,9 +1,10 @@
 import Broker from '../../content/broker';
-import {
+import type {
   MessageHandler,
+  RequestMessage} from '../../domain/message';
+import {
   newErrorResponseMessage,
-  newSuccessResponseMessage,
-  RequestMessage,
+  newSuccessResponseMessage
 } from '../../domain/message';
 import PopupWindowProxy from './popupWindowProxy';
 

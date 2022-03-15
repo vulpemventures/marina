@@ -1,4 +1,5 @@
-import { AST, NodeType } from './ast';
+import type { AST} from './ast';
+import { NodeType } from './ast';
 import { readHex, readUntil } from './utils';
 import { script } from 'liquidjs-lib';
 

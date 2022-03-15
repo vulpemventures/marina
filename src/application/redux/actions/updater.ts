@@ -1,6 +1,6 @@
-import { NetworkString } from 'ldk';
-import { AccountID } from '../../../domain/account';
-import { ActionWithPayload } from '../../../domain/common';
+import type { NetworkString } from 'ldk';
+import type { AccountID } from '../../../domain/account';
+import type { ActionWithPayload } from '../../../domain/common';
 import { UPDATE_TASK } from './action-types';
 
 export type UpdateTaskAction = ActionWithPayload<{ accountID: AccountID; network: NetworkString }>;

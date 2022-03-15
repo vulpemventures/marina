@@ -1,12 +1,13 @@
-import {
+import type {
   IdentityInterface,
   MasterPublicKey,
   Mnemonic,
   StateRestorerOpts,
   Restorer,
   EsploraRestorerOpts,
-  masterPubKeyRestorerFromEsplora,
-  NetworkString,
+  NetworkString} from 'ldk';
+import {
+  masterPubKeyRestorerFromEsplora
 } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
@@ -14,9 +15,9 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import { EncryptedMnemonic } from './encrypted-mnemonic';
-import { MasterBlindingKey } from './master-blinding-key';
-import { MasterXPub } from './master-extended-pub';
+import type { EncryptedMnemonic } from './encrypted-mnemonic';
+import type { MasterBlindingKey } from './master-blinding-key';
+import type { MasterXPub } from './master-extended-pub';
 
 export const MainAccountID = 'mainAccount';
 export const RestrictedAssetAccountID = 'restrictedAssetAccount';

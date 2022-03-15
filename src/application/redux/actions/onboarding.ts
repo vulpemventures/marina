@@ -4,7 +4,7 @@ import {
   ONBOARDING_SET_IS_FROM_POPUP_FLOW,
   ONBOARDING_SET_VERIFIED,
 } from './action-types';
-import { AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 
 export function setPasswordAndOnboardingMnemonic(
   password: string,

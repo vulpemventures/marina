@@ -1,7 +1,7 @@
 import * as ACTION_TYPES from '../actions/action-types';
-import { AnyAction } from 'redux';
-import { Address } from '../../../domain/address';
-import { UnblindedOutput } from 'ldk';
+import type { AnyAction } from 'redux';
+import type { Address } from '../../../domain/address';
+import type { UnblindedOutput } from 'ldk';
 
 export type PendingTxStep = 'empty' | 'address-amount' | 'choose-fee' | 'confirmation';
 

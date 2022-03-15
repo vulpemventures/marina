@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { RouteComponentProps, useHistory } from 'react-router-dom';
+import type { RouteComponentProps} from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
 import { updateTaskAction } from '../../../application/redux/actions/updater';

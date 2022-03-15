@@ -1,7 +1,8 @@
 import { connect } from 'react-redux';
 import { MainAccountID } from '../../../domain/account';
-import { RootReducerState } from '../../../domain/common';
-import ChooseFeeView, { ChooseFeeProps } from '../../../presentation/wallet/send/choose-fee';
+import type { RootReducerState } from '../../../domain/common';
+import type { ChooseFeeProps } from '../../../presentation/wallet/send/choose-fee';
+import ChooseFeeView from '../../../presentation/wallet/send/choose-fee';
 import { lbtcAssetByNetwork } from '../../utils/network';
 import { selectBalances } from '../selectors/balance.selector';
 import { selectTaxiAssets } from '../selectors/taxi.selector';

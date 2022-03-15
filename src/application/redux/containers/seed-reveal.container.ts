@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import SeedRevealView, { SeedRevealProps } from '../../../presentation/onboarding/seed-reveal';
+import type { RootReducerState } from '../../../domain/common';
+import type { SeedRevealProps } from '../../../presentation/onboarding/seed-reveal';
+import SeedRevealView from '../../../presentation/onboarding/seed-reveal';
 
 const mapStateToProps = (state: RootReducerState): SeedRevealProps => ({
   onboardingMnemonic: state.onboarding.mnemonic,

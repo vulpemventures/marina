@@ -1,7 +1,7 @@
-import { NetworkString } from 'ldk';
-import { ExplorerURLs } from '../../../domain/app';
+import type { NetworkString } from 'ldk';
+import type { ExplorerURLs } from '../../../domain/app';
 import { appInitState } from '../reducers/app-reducer';
-import { RootReducerState } from './../../../domain/common';
+import type { RootReducerState } from './../../../domain/common';
 
 function getExplorerURLSelector(state: RootReducerState, net?: NetworkString): ExplorerURLs {
   return (
