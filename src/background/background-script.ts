@@ -7,13 +7,8 @@ import { setWalletData } from '../application/redux/actions/wallet';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
-import type {
-  OpenPopupMessage,
-  PopupName} from '../domain/message';
-import {
-  isOpenPopupMessage,
-  isPopupResponseMessage
-} from '../domain/message';
+import type { OpenPopupMessage, PopupName } from '../domain/message';
+import { isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { periodicTaxiUpdater, periodicUpdater } from './alarms';

@@ -3,7 +3,8 @@ import type {
   CosignerMultisig,
   XPub,
   AddressInterface,
-  NetworkString} from 'ldk';
+  NetworkString,
+} from 'ldk';
 import {
   Mnemonic,
   IdentityType,
@@ -11,7 +12,7 @@ import {
   MasterPublicKey,
   masterPubKeyRestorerFromState,
   MultisigWatchOnly,
-  restorerFromState
+  restorerFromState,
 } from 'ldk';
 import type { MasterBlindingKey } from '../../domain/master-blinding-key';
 import type { MasterXPub } from '../../domain/master-extended-pub';

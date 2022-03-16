@@ -7,11 +7,9 @@ import type {
   CoinSelectorErrorFn,
   NetworkString,
   RecipientInterface,
-  UnblindedOutput} from 'ldk';
-import {
-  greedyCoinSelector,
-  walletFromCoins,
+  UnblindedOutput,
 } from 'ldk';
+import { greedyCoinSelector, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -29,7 +27,7 @@ import {
   setPset,
 } from '../../../application/redux/actions/transaction';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import type { Address} from '../../../domain/address';
+import type { Address } from '../../../domain/address';
 import { createAddress } from '../../../domain/address';
 import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';

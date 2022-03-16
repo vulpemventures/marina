@@ -1,6 +1,6 @@
-import type { StrictEffect} from 'redux-saga/effects';
+import type { StrictEffect } from 'redux-saga/effects';
 import { select, call } from 'redux-saga/effects';
-import type { Account, AccountID} from '../../../domain/account';
+import type { Account, AccountID } from '../../../domain/account';
 import { MainAccountID } from '../../../domain/account';
 import type { RootReducerState } from '../../../domain/common';
 import {
@@ -16,7 +16,7 @@ import {
 } from '../selectors/wallet.selector';
 import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 import type { NetworkString } from 'ldk';
-import type { Channel} from 'redux-saga';
+import type { Channel } from 'redux-saga';
 import { channel, buffers } from 'redux-saga';
 
 export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<

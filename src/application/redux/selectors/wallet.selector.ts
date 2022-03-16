@@ -1,11 +1,5 @@
-import type {
-  AccountID,
-  MnemonicAccount,
-  Account} from '../../../domain/account';
-import {
-  createMnemonicAccount,
-  MainAccountID
-} from '../../../domain/account';
+import type { AccountID, MnemonicAccount, Account } from '../../../domain/account';
+import { createMnemonicAccount, MainAccountID } from '../../../domain/account';
 import type { MasterPublicKey, NetworkString, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';

@@ -2,9 +2,7 @@ import { connect } from 'react-redux';
 import { MainAccountID } from '../../../domain/account';
 import { assetGetterFromIAssets } from '../../../domain/assets';
 import type { RootReducerState } from '../../../domain/common';
-import type {
-  ReceiveSelectAssetProps,
-} from '../../../presentation/wallet/receive/receive-select-asset';
+import type { ReceiveSelectAssetProps } from '../../../presentation/wallet/receive/receive-select-asset';
 import ReceiveSelectAssetView from '../../../presentation/wallet/receive/receive-select-asset';
 import { selectBalances } from '../selectors/balance.selector';
 

@@ -1,6 +1,5 @@
 import type { NetworkString, UnblindedOutput } from 'ldk';
-import type {
-  MarinaEvent} from '../application/utils/marina-event';
+import type { MarinaEvent } from '../application/utils/marina-event';
 import {
   compareEnabledWebsites,
   compareTxsHistoryState,

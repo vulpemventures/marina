@@ -3,17 +3,14 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
-import type {
-  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
-import {
-  connectWithConnectData
-} from '../../application/redux/containers/with-connect-data.container';
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import { signMessageWithMnemonic } from '../../application/utils/message';
 import { useSelector } from 'react-redux';
 import type { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
 import type { SignedMessage } from 'marina-provider';
-import type { NetworkString} from 'ldk';
+import type { NetworkString } from 'ldk';
 import { networks } from 'ldk';
 import {
   INVALID_PASSWORD_ERROR,

@@ -1,11 +1,6 @@
 import Broker from '../../content/broker';
-import type {
-  MessageHandler,
-  RequestMessage} from '../../domain/message';
-import {
-  newErrorResponseMessage,
-  newSuccessResponseMessage
-} from '../../domain/message';
+import type { MessageHandler, RequestMessage } from '../../domain/message';
+import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import PopupWindowProxy from './popupWindowProxy';
 
 export const POPUP_RESPONSE = 'POPUP_RESPONSE';

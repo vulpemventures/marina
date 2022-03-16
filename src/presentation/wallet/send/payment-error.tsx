@@ -9,7 +9,6 @@ import {
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useSelector } from 'react-redux';
 import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
-
 import { broadcastTx } from '../../../application/utils/network';
 
 interface LocationState {

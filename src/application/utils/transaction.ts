@@ -6,7 +6,8 @@ import type {
   UnblindedOutput,
   CoinSelectorErrorFn,
   NetworkString,
-  IdentityInterface} from 'ldk';
+  IdentityInterface,
+} from 'ldk';
 import {
   address,
   address as addrLDK,
@@ -21,12 +22,12 @@ import {
   getAsset,
   isConfidentialOutput,
   networks,
-  AssetHash, 
+  AssetHash,
   payments,
 } from 'ldk';
 import { confidential, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
-import type { Transfer, TxDisplayInterface} from '../../domain/transaction';
+import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
 import { TxStatusEnum, TxType } from '../../domain/transaction';
 import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';

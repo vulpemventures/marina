@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import type { RouteProps, RouteComponentProps} from 'react-router-dom';
+import type { RouteProps, RouteComponentProps } from 'react-router-dom';
 import { Route, Redirect, useParams } from 'react-router-dom';
 import type { RootReducerState } from '../../domain/common';
 import { CONNECT_ENABLE_ROUTE, CONNECT_SPEND_ROUTE } from './constants';

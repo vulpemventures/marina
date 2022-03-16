@@ -17,8 +17,7 @@ import {
   selectDeepRestorerGapLimit,
   selectDeepRestorerIsLoading,
 } from '../selectors/wallet.selector';
-import type {
-  SagaGenerator} from './utils';
+import type { SagaGenerator } from './utils';
 import {
   newSagaSelector,
   selectAccountSaga,

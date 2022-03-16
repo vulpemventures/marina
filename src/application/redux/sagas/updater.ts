@@ -5,22 +5,22 @@ import type {
   BlindingKeyGetter,
   UnblindedOutput,
   NetworkString,
-  Output} from 'ldk';
+  Output,
+} from 'ldk';
 import {
   fetchAndUnblindUtxosGenerator,
   address,
   networks,
   fetchAndUnblindTxsGenerator,
-  getAsset
+  getAsset,
 } from 'ldk';
 import type { Account, AccountID } from '../../../domain/account';
 import type { UtxosAndTxs } from '../../../domain/transaction';
 import { addTx } from '../actions/transaction';
-import type { AddUtxoAction} from '../actions/utxos';
+import type { AddUtxoAction } from '../actions/utxos';
 import { addUtxo, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
-import type {
-  SagaGenerator} from './utils';
+import type { SagaGenerator } from './utils';
 import {
   createChannel,
   newSagaSelector,
@@ -40,7 +40,7 @@ import type { UpdateTaskAction } from '../actions/updater';
 import { updateTaskAction } from '../actions/updater';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import type { Channel } from 'redux-saga';
-import type { AllEffect} from 'redux-saga/effects';
+import type { AllEffect } from 'redux-saga/effects';
 import { put, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';

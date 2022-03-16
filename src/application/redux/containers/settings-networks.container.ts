@@ -1,6 +1,4 @@
-import type {
-  SettingsNetworksProps,
-} from './../../../presentation/settings/networks';
+import type { SettingsNetworksProps } from './../../../presentation/settings/networks';
 import SettingsNetworksView from './../../../presentation/settings/networks';
 import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';

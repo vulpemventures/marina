@@ -1,5 +1,4 @@
-import type {
-  IApp} from '../../../domain/app';
+import type { IApp } from '../../../domain/app';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,

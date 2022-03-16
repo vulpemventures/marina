@@ -1,6 +1,6 @@
 import { assetInitState, assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
-import type { TransactionState} from './transaction-reducer';
+import type { TransactionState } from './transaction-reducer';
 import { transactionReducer, transactionInitState } from './transaction-reducer';
 import type { AnyAction, Reducer } from 'redux';
 import { combineReducers } from 'redux';
@@ -11,7 +11,7 @@ import type { PersistPartial } from 'redux-persist/es/persistReducer';
 import persistReducer from 'redux-persist/es/persistReducer';
 import type { IApp } from '../../../domain/app';
 import type { WalletState } from '../../../domain/wallet';
-import type { TaxiState} from './taxi-reducer';
+import type { TaxiState } from './taxi-reducer';
 import { taxiReducer, taxiInitState } from './taxi-reducer';
 import type { ConnectData } from '../../../domain/connect';
 import type { IAssets } from '../../../domain/assets';

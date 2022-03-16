@@ -5,9 +5,7 @@ import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import type { RootReducerState } from '../../domain/common';
 import { setExplorer } from '../../application/redux/actions/app';
 import Select from '../components/select';
-import type {
-  ExplorerType,
-  ExplorerURLs} from '../../domain/app';
+import type { ExplorerType, ExplorerURLs } from '../../domain/app';
 import {
   BlockstreamExplorerURLs,
   MempoolExplorerURLs,

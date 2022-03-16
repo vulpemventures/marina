@@ -1,4 +1,4 @@
-import type { FormikProps} from 'formik';
+import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import React from 'react';
 import { setExplorer } from '../../application/redux/actions/app';

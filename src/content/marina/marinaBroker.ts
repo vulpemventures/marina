@@ -1,20 +1,10 @@
 import { stringify } from '../../application/utils/browser-storage-converters';
-import type {
-  StoreCache} from '../store-cache';
-import {
-  compareCacheForEvents,
-  newCacheFromState,
-  newStoreCache
-} from '../store-cache';
+import type { StoreCache } from '../store-cache';
+import { compareCacheForEvents, newCacheFromState, newStoreCache } from '../store-cache';
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import type {
-  MessageHandler,
-  RequestMessage} from '../../domain/message';
-import {
-  newErrorResponseMessage,
-  newSuccessResponseMessage
-} from '../../domain/message';
+import type { MessageHandler, RequestMessage } from '../../domain/message';
+import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
 import type { RootReducerState } from '../../domain/common';
 import {
@@ -42,7 +32,7 @@ import type { Balance, Recipient, Utxo } from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import type { AccountID} from '../../domain/account';
+import type { AccountID } from '../../domain/account';
 import { MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';

@@ -1,7 +1,7 @@
 import React from 'react';
-import type { RouteComponentProps} from 'react-router';
+import type { RouteComponentProps } from 'react-router';
 import { useHistory } from 'react-router';
-import type { FormikProps} from 'formik';
+import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import ShellPopUp from '../components/shell-popup';

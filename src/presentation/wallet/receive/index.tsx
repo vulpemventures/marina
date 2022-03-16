@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { RouteComponentProps} from 'react-router-dom';
+import type { RouteComponentProps } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import Button from '../../components/button';

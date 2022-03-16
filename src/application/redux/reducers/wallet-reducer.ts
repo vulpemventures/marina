@@ -3,7 +3,7 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
-import type { AccountID} from '../../../domain/account';
+import type { AccountID } from '../../../domain/account';
 import { initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';

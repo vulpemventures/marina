@@ -1,7 +1,7 @@
 import React from 'react';
-import type { RouteComponentProps} from 'react-router-dom';
+import type { RouteComponentProps } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
-import type { FormikProps} from 'formik';
+import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants';

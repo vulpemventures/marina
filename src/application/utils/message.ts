@@ -1,5 +1,5 @@
 import * as bip39 from 'bip39';
-import type { networks} from 'ldk';
+import type { networks } from 'ldk';
 import { payments, bip32 } from 'ldk';
 import * as bitcoinMessage from 'bitcoinjs-message';
 import type { SignedMessage } from 'marina-provider';

@@ -1,4 +1,4 @@
-import type { FormikProps} from 'formik';
+import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import type { RouteComponentProps } from 'react-router';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';

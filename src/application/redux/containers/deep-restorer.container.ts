@@ -1,6 +1,4 @@
-import type {
-  DeepRestorerProps,
-} from './../../../presentation/settings/deep-restorer';
+import type { DeepRestorerProps } from './../../../presentation/settings/deep-restorer';
 import SettingsDeepRestorerView from './../../../presentation/settings/deep-restorer';
 import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';

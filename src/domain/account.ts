@@ -5,10 +5,9 @@ import type {
   StateRestorerOpts,
   Restorer,
   EsploraRestorerOpts,
-  NetworkString} from 'ldk';
-import {
-  masterPubKeyRestorerFromEsplora
+  NetworkString,
 } from 'ldk';
+import { masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,

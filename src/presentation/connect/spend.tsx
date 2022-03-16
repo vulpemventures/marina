@@ -5,11 +5,8 @@ import { formatAddress, fromSatoshi } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
 import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
-import type {
-  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
-import {
-  connectWithConnectData
-} from '../../application/redux/containers/with-connect-data.container';
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import type { RootReducerState } from '../../domain/common';
 import type {
   AddressInterface,
@@ -26,7 +23,7 @@ import { blindAndSignPset, createSendPset } from '../../application/utils/transa
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import type { Account} from '../../domain/account';
+import type { Account } from '../../domain/account';
 import { MainAccountID } from '../../domain/account';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';

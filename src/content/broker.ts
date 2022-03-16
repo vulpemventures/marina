@@ -1,14 +1,8 @@
 import browser from 'webextension-polyfill';
 import { serializerAndDeserializer } from '../application/redux/store';
 import { stringify } from '../application/utils/browser-storage-converters';
-import type {
-  MessageHandler,
-  PopupName,
-  RequestMessage,
-  ResponseMessage} from '../domain/message';
-import {
-  isResponseMessage
-} from '../domain/message';
+import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
+import { isResponseMessage } from '../domain/message';
 import { BrokerProxyStore } from './brokerProxyStore';
 
 export type BrokerOption = (broker: Broker) => void;

@@ -1,6 +1,6 @@
 import type { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
-import type { ConnectData} from '../../../domain/connect';
+import type { ConnectData } from '../../../domain/connect';
 import { newEmptyConnectData } from '../../../domain/connect';
 import type { NetworkString } from 'ldk';
 

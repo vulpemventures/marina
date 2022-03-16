@@ -1,11 +1,8 @@
 import React, { useRef } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import type {
-  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
-import {
-  connectWithConnectData
-} from '../../application/redux/containers/with-connect-data.container';
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import { useDispatch, useSelector } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { enableWebsite, flushSelectedHostname } from '../../application/redux/actions/connect';
