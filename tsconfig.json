@@ -21,7 +21,6 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "target": "ES2020",
-    "importsNotUsedAsValues": "error",
   },
   "include": [
     "src",
