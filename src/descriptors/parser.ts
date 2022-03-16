@@ -1,23 +1,12 @@
-import type { AST} from './ast';
-import { NodeType } from './ast';
+import { AST, ScriptType } from './ast';
+import { TypeAST } from './ast';
 import { readHex, readUntil } from './utils';
 import { script } from 'liquidjs-lib';
 
 const EXPECT_TOKEN = (token: string) => new Error(`Expected ${token}`);
 
-function cmd(type: NodeType): string {
-  switch (type) {
-    case NodeType.ASM:
-      return 'asm';
-    case NodeType.RAW:
-      return 'raw';
-    case NodeType.ELP2WSH:
-      return 'elp2wsh';
-    case NodeType.ELTR:
-      return 'eltr';
-    default:
-      throw new Error(`not a command node: ${type}`);
-  }
+function cmd(type: ScriptType): string {
+  return type.toString();
 }
 
 type Parser = (text: string) => [AST | undefined, string];
@@ -60,24 +49,24 @@ function oneOf(...parsers: Parser[]): Parser {
   };
 }
 
-const parseRawHex: Parser = (text: string) => {
+const parseHEX: Parser = (text: string) => {
   const [hex, remainingText] = readHex(text);
-  return [{ type: NodeType.RAW, value: hex, children: [] }, remainingText];
+  return [{ type: TypeAST.HEX, value: hex, children: [] }, remainingText];
 };
 
-const parseKey: Parser = (text: string) => {
+const parseKEY: Parser = (text: string) => {
   const [hex, remainingText] = readHex(text);
   if (hex.length !== 64) {
     throw EXPECT_TOKEN('key (hex string with len=64)');
   }
 
-  return [{ type: NodeType.KEY, value: hex, children: [] }, remainingText];
+  return [{ type: TypeAST.KEY, value: hex, children: [] }, remainingText];
 };
 
 const parseASMScript: Parser = (text: string) => {
-  const [asm, remainingText] = readUntil(text, ')');
-  const asmScript = script.fromASM(asm);
-  return [{ type: NodeType.ASM, value: asmScript.toString('hex'), children: [] }, remainingText];
+  const [str, remainingText] = readUntil(text, ')');
+  const asmScript = script.fromASM(str);
+  return [{ type: TypeAST.HEX, value: asmScript.toString('hex'), children: [] }, remainingText];
 };
 
 // parse a token, does not create any AST node
@@ -91,45 +80,50 @@ const parseToken =
     throw EXPECT_TOKEN(token);
   };
 
-const parseTreeStart: Parser = (text: string) => {
+const parseTreeToken: Parser = (text: string) => {
   const [, remainingText] = parseToken('{')(text);
-  return [{ type: NodeType.TREE_NODE, value: undefined, children: [] }, remainingText];
+  return [{ type: TypeAST.TREE, value: undefined, children: [] }, remainingText];
 };
 
 // tree parser
-const parseTree: Parser = (text: string) => {
+const parseTREE: Parser = (text: string) => {
   if (text.startsWith('{')) {
-    return compose(parseTreeStart, parseTree, parseComma, parseTree, parseToken('}'))(text);
+    return compose(parseTreeToken, parseTREE, parseComma, parseTREE, parseToken('}'))(text);
   }
 
-  return parseScript(text);
+  return parseSCRIPT(text);
 };
 
-const parseStartCmd =
-  (type: NodeType, hasChildren = false): Parser =>
+const parseScriptToken =
+  (type: ScriptType): Parser =>
   (text: string) => {
     const res = parseToken(`${cmd(type)}(`)(text);
-    if (!hasChildren) return res;
-    return [{ type, value: undefined, children: [] }, res[1]];
+    return [{ type: TypeAST.SCRIPT, value: type, children: [] }, res[1]];
   };
 
 const parseEndCmd = parseToken(')');
 const parseComma = parseToken(',');
 
-export const parseScript: Parser = (text: string) => {
-  return oneOf(parseASM, parseRAW, parseELP2WSH, parseELTR)(text);
+export const parseSCRIPT: Parser = (text: string) => {
+  return oneOf(parseASM, parseRAW, parseELTR)(text);
 };
 
-const parseRAW = compose(parseStartCmd(NodeType.RAW), parseRawHex, parseEndCmd);
-
-const parseELP2WSH = compose(parseStartCmd(NodeType.ELP2WSH, true), parseScript, parseEndCmd);
-
-const parseELTR = compose(
-  parseStartCmd(NodeType.ELTR, true),
-  parseKey,
-  parseComma,
-  parseTree,
-  parseEndCmd
+const parseRAW = compose(
+  parseScriptToken(ScriptType.RAW), // raw(
+  parseHEX, // hex of any length
+  parseEndCmd // ')'
 );
 
-const parseASM = compose(parseStartCmd(NodeType.ASM), parseASMScript, parseEndCmd);
+const parseELTR = compose(
+  parseScriptToken(ScriptType.ELTR), // eltr(
+  parseKEY, // 64 hex chars
+  parseComma, // ','
+  parseTREE, // TREE
+  parseEndCmd // ')'
+);
+
+const parseASM = compose(
+  parseScriptToken(ScriptType.ASM), // asm(
+  parseASMScript, // opcodes
+  parseEndCmd // ')'
+);

@@ -1,7 +1,6 @@
-import type { Result } from './ast';
-import { compile } from './ast';
-import { parseScript } from './parser';
-import type { Context} from './preprocessing';
+import { compile, Result } from './ast';
+import { parseSCRIPT } from './parser';
+import type { Context } from './preprocessing';
 import { preprocessor } from './preprocessing';
 
 /**
@@ -11,7 +10,7 @@ import { preprocessor } from './preprocessing';
  **/
 export function evaluate(ctx: Context, template: string): Result {
   const processedTemplate = preprocessor(ctx, template);
-  const [ast] = parseScript(processedTemplate);
+  const [ast] = parseSCRIPT(processedTemplate);
   if (!ast) throw new Error('Failed to parse template');
   return compile(ast);
 }
