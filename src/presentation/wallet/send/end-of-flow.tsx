@@ -8,7 +8,7 @@ import { debounce } from 'lodash';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import type { Account } from '../../../domain/account';
-import { Transaction } from 'liquidjs-lib';
+import { Transaction } from 'ldk';
 import type { NetworkString, UnblindedOutput } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { useDispatch } from 'react-redux';

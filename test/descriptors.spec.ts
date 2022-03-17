@@ -1,10 +1,9 @@
-import { script } from 'liquidjs-lib';
 import { compile, ScriptType, TypeAST } from '../src/descriptors/ast';
 import { parseSCRIPT } from '../src/descriptors/parser';
 import type { Context } from '../src/descriptors/preprocessing';
 import { preprocessor } from '../src/descriptors/preprocessing';
 import { evaluate } from '../src/descriptors';
-import { toXpub, bip32 } from 'ldk';
+import { toXpub, bip32, script } from 'ldk';
 
 describe('evaluate', () => {
   it('should replace xpubs', () => {

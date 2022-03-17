@@ -1,4 +1,4 @@
-import type {
+import {
   ChangeAddressFromAssetGetter,
   CoinSelector,
   RecipientInterface,
@@ -7,10 +7,8 @@ import type {
   CoinSelectorErrorFn,
   NetworkString,
   IdentityInterface,
-} from 'ldk';
-import {
+  ecc,
   address,
-  address as addrLDK,
   addToTx,
   createFeeOutput,
   decodePset,
@@ -24,8 +22,9 @@ import {
   networks,
   AssetHash,
   payments,
+  confidential,
+  Psbt
 } from 'ldk';
-import { confidential, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
 import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
 import { TxStatusEnum, TxType } from '../../domain/transaction';
@@ -88,12 +87,16 @@ async function blindPset(psetBase64: string, utxos: UnblindedOutput[], outputAdd
   const inputBlindingData = inputBlindingDataMap(psetBase64, utxos);
 
   return (
-    await decodePset(psetBase64).blindOutputsByIndex(inputBlindingData, outputPubKeys)
+    await decodePset(psetBase64).blindOutputsByIndex(
+      Psbt.ECCKeysGenerator(ecc),
+      inputBlindingData, 
+      outputPubKeys
+    )
   ).toBase64();
 }
 
 function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
-  const excludeScripts = excludeAddresses.map((a) => addrLDK.toOutputScript(a));
+  const excludeScripts = excludeAddresses.map((a) => address.toOutputScript(a));
   const tx = psetToUnsignedTx(psetBase64);
   for (const out of tx.outs) {
     if (out.script.length > 0 && !excludeScripts.includes(out.script)) {
@@ -105,6 +108,8 @@ function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
 
   return true;
 }
+
+const sigValidator = Psbt.ECDSASigValidator(ecc)
 
 /**
  * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.
@@ -129,7 +134,7 @@ export async function blindAndSignPset(
   const signedPset = await signPset(blindedPset, identities);
 
   const decodedPset = decodePset(signedPset);
-  if (!decodedPset.validateSignaturesOfAllInputs()) {
+  if (!decodedPset.validateSignaturesOfAllInputs(sigValidator)) {
     throw new Error('PSET is not fully signed');
   }
 
@@ -144,7 +149,7 @@ export async function signPset(
   for (const id of identities) {
     pset = await id.signPset(pset);
     try {
-      if (decodePset(pset).validateSignaturesOfAllInputs()) break;
+      if (decodePset(pset).validateSignaturesOfAllInputs(sigValidator)) break;
     } catch {
       continue;
     }
@@ -155,7 +160,7 @@ export async function signPset(
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
-  const recipientScript = addrLDK.toOutputScript(addressToFind);
+  const recipientScript = address.toOutputScript(addressToFind);
   return utx.outs.findIndex((out) => out.script.equals(recipientScript));
 }
 

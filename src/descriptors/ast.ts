@@ -1,4 +1,6 @@
-import { bip341 } from 'liquidjs-lib';
+import { bip341, ecc } from 'ldk';
+
+const { taprootOutputScript, taprootSignScriptStack } = bip341.BIP341Factory(ecc);
 
 export enum TypeAST {
   SCRIPT = 0, // one of ScriptType
@@ -138,7 +140,7 @@ function compileELTR(ast: AST): Result {
   const prefixedInternalKey = Buffer.concat([Buffer.of(0x00), internalKey]);
 
   // segwit v1 scriptPubKey
-  const scriptPubKey = bip341.taprootOutputScript(prefixedInternalKey, tree);
+  const scriptPubKey = taprootOutputScript(prefixedInternalKey, tree);
 
   return {
     witnesses: (leafScript: string): Buffer[] => {
@@ -148,7 +150,7 @@ function compileELTR(ast: AST): Result {
       }
 
       const path = bip341.findScriptPath(tree, bip341.tapLeafHash(leaf));
-      return bip341.taprootSignScriptStack(prefixedInternalKey, leaf, tree.hash, path);
+      return taprootSignScriptStack(prefixedInternalKey, leaf, tree.hash, path);
     },
     scriptPubKey: () => scriptPubKey,
     taprootHashTree: tree,

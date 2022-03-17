@@ -1,7 +1,7 @@
 import { AST, ScriptType } from './ast';
 import { TypeAST } from './ast';
 import { readHex, readUntil } from './utils';
-import { script } from 'liquidjs-lib';
+import { script } from 'ldk';
 
 const EXPECT_TOKEN = (token: string) => new Error(`Expected ${token}`);
 
