@@ -5,17 +5,19 @@ import PopupWindowProxy from './popupWindowProxy';
 
 export const POPUP_RESPONSE = 'POPUP_RESPONSE';
 
-export default class PopupBroker extends Broker {
+type PopupMsgs = 'POPUP_RESPONSE';
+
+export default class PopupBroker extends Broker<PopupMsgs> {
   static Start() {
     const broker = new PopupBroker(PopupWindowProxy.PROVIDER_NAME);
     broker.start();
   }
 
-  start() {
+  protected start() {
     super.start(this.messageHandler);
   }
 
-  private messageHandler: MessageHandler = ({ id, name, params }: RequestMessage) => {
+  private messageHandler: MessageHandler<PopupMsgs> = ({ id, name, params }: RequestMessage<PopupMsgs>) => {
     try {
       // only handle POPUP_RESPONSE message (sent via PopupWindowProxy)
       if (name === POPUP_RESPONSE) {

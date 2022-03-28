@@ -43,10 +43,11 @@ import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 
-export default class MarinaBroker extends Broker {
+export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
   private cache: StoreCache;
   private hostname: string;
+  private selectedAccount: AccountID = 'mainAccount';
 
   static async Start(hostname?: string) {
     const broker = new MarinaBroker(hostname, [await MarinaBroker.WithProxyStore()]);
@@ -60,7 +61,7 @@ export default class MarinaBroker extends Broker {
     this.subscribeToStoreEvents();
   }
 
-  start() {
+  protected start() {
     super.start(this.marinaMessageHandler);
   }
 
@@ -111,22 +112,27 @@ export default class MarinaBroker extends Broker {
     return store.getState();
   }
 
-  private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
+  private accountExists(name: string): boolean {
+    if (!this.store) throw MarinaBroker.NotSetUpError;
+    return selectAllAccountsIDs(this.store.getState()).includes(name);
+  }
+
+  private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
     if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
     let state = this.store.getState();
-    const successMsg = (data?: any) => newSuccessResponseMessage(id, data);
+    const successMsg = <T = any>(data?: T) => newSuccessResponseMessage(id, data);
 
     try {
       switch (name) {
-        case Marina.prototype.getNetwork.name: {
+        case 'getNetwork': {
           return successMsg(state.app.network);
         }
 
-        case Marina.prototype.isEnabled.name: {
+        case 'isEnabled': {
           return successMsg(this.hostnameEnabled(state));
         }
 
-        case Marina.prototype.enable.name: {
+        case 'enable': {
           if (!this.hostnameEnabled(state)) {
             await this.store.dispatchAsync(selectHostname(this.hostname, state.app.network));
             const accepted = await this.openAndWaitPopup<boolean>('enable');
@@ -136,19 +142,19 @@ export default class MarinaBroker extends Broker {
           throw new Error('current site is already enabled');
         }
 
-        case Marina.prototype.disable.name: {
+        case 'disable': {
           await this.store.dispatchAsync(disableWebsite(this.hostname, state.app.network));
           return successMsg();
         }
 
-        case Marina.prototype.getAddresses.name: {
+        case 'getAddresses': {
           this.checkHostnameAuthorization(state);
           const net = selectNetwork(state);
           const xpub = await selectMainAccount(state).getWatchIdentity(net);
           return successMsg(await xpub.getAddresses());
         }
 
-        case Marina.prototype.getNextAddress.name: {
+        case 'getNextAddress': {
           this.checkHostnameAuthorization(state);
           const account = selectMainAccount(state);
           const net = selectNetwork(state);
@@ -158,7 +164,7 @@ export default class MarinaBroker extends Broker {
           return successMsg(nextAddress);
         }
 
-        case Marina.prototype.getNextChangeAddress.name: {
+        case 'getNextChangeAddress': {
           this.checkHostnameAuthorization(state);
           const account = selectMainAccount(state);
           const net = selectNetwork(state);
@@ -168,7 +174,7 @@ export default class MarinaBroker extends Broker {
           return successMsg(nextChangeAddress);
         }
 
-        case Marina.prototype.signTransaction.name: {
+        case 'signTransaction': {
           this.checkHostnameAuthorization(state);
           if (!params || params.length !== 1) {
             throw new Error('Missing params');
@@ -185,7 +191,7 @@ export default class MarinaBroker extends Broker {
           return successMsg(signedPset);
         }
 
-        case Marina.prototype.sendTransaction.name: {
+        case 'sendTransaction': {
           this.checkHostnameAuthorization(state);
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
           const lbtc = lbtcAssetByNetwork(selectNetwork(state));
@@ -223,8 +229,6 @@ export default class MarinaBroker extends Broker {
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
-          console.debug('signedTxHex', signedTxHex);
-
           let txid;
 
           try {
@@ -238,7 +242,7 @@ export default class MarinaBroker extends Broker {
           return successMsg({ txid, hex: signedTxHex });
         }
 
-        case Marina.prototype.signMessage.name: {
+        case 'signMessage': {
           this.checkHostnameAuthorization(state);
           const [message] = params as [string];
           await this.store.dispatchAsync(setMsg(this.hostname, message));
@@ -253,13 +257,13 @@ export default class MarinaBroker extends Broker {
           return successMsg(signedMessage);
         }
 
-        case Marina.prototype.getTransactions.name: {
+        case 'getTransactions': {
           this.checkHostnameAuthorization(state);
           const transactions = selectTransactions(MainAccountID)(state);
           return successMsg(transactions);
         }
 
-        case Marina.prototype.getCoins.name: {
+        case 'getCoins': {
           this.checkHostnameAuthorization(state);
           const coins = selectUtxos(MainAccountID)(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
@@ -271,7 +275,7 @@ export default class MarinaBroker extends Broker {
           return successMsg(results);
         }
 
-        case Marina.prototype.getBalances.name: {
+        case 'getBalances': {
           this.checkHostnameAuthorization(state);
           const balances = selectBalances(MainAccountID)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
@@ -282,7 +286,7 @@ export default class MarinaBroker extends Broker {
           return successMsg(balancesResult);
         }
 
-        case Marina.prototype.isReady.name: {
+        case 'isReady': {
           try {
             const net = selectNetwork(state);
             await selectMainAccount(state).getWatchIdentity(net); // check if Xpub is valid
@@ -293,16 +297,46 @@ export default class MarinaBroker extends Broker {
           }
         }
 
-        case Marina.prototype.getFeeAssets.name: {
+        case 'getFeeAssets': {
           this.checkHostnameAuthorization(state);
           const lbtcAsset = lbtcAssetByNetwork(selectNetwork(state));
           return successMsg([lbtcAsset, ...selectTaxiAssets(state)]);
         }
 
-        case Marina.prototype.reloadCoins.name: {
+        case 'reloadCoins': {
           this.checkHostnameAuthorization(state);
           state = await this.reloadCoins(this.store);
           return successMsg();
+        }
+
+        case 'getSelectedAccount': {
+          this.checkHostnameAuthorization(state);
+          return successMsg(this.selectedAccount);
+        }
+
+        case 'useAccount': {
+          this.checkHostnameAuthorization(state);
+          const [accountName] = params as [string];
+          if (!this.accountExists(accountName)) {
+            throw new Error(`Account ${accountName} not found`);
+          }
+
+          return successMsg(true);
+        }
+
+        case 'importTemplate': {
+          this.checkHostnameAuthorization(state);
+          const [template] = params as [string];
+          throw new Error('not implemented');
+        }
+
+        case 'createAccount': {
+          this.checkHostnameAuthorization(state);
+          const [accountName] = params as [string];
+          if (this.accountExists(accountName)) {
+            throw new Error(`Account ${accountName} already exists`);
+          }
+          // create the new account
         }
 
         default:

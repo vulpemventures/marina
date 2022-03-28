@@ -1,6 +1,7 @@
 import type {
   AddressInterface,
   Balance,
+  DescriptorTemplate,
   MarinaEventType,
   MarinaProvider,
   PsetBase64,
@@ -13,7 +14,7 @@ import type {
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
 
-export default class Marina extends WindowProxy implements MarinaProvider {
+export default class Marina extends WindowProxy<keyof MarinaProvider> implements MarinaProvider {
   static PROVIDER_NAME = 'marina';
 
   private eventHandler: MarinaEventHandler;
@@ -23,36 +24,48 @@ export default class Marina extends WindowProxy implements MarinaProvider {
     this.eventHandler = new MarinaEventHandler();
   }
 
+  getSelectedAccount(): Promise<string> {
+    return this.proxy('getSelectedAccount', []);
+  }
+
+  createAccount(accountName: string): Promise<void> {
+    return this.proxy('createAccount', [accountName]);
+  }
+
+  importTemplate(template: DescriptorTemplate): Promise<boolean> {
+    return this.proxy('importTemplate', [template]);
+  }
+
   enable(): Promise<void> {
-    return this.proxy(this.enable.name, []);
+    return this.proxy('enable', []);
   }
 
   disable(): Promise<void> {
-    return this.proxy(this.disable.name, []);
+    return this.proxy('disable', []);
   }
 
   isEnabled(): Promise<boolean> {
-    return this.proxy(this.isEnabled.name, []);
+    return this.proxy('isEnabled', []);
   }
 
   getNetwork(): Promise<'liquid' | 'regtest' | 'testnet'> {
-    return this.proxy(this.getNetwork.name, []);
+    return this.proxy('getNetwork', []);
   }
 
   getAddresses(): Promise<AddressInterface[]> {
-    return this.proxy(this.getAddresses.name, []);
+    return this.proxy('getAddresses', []);
   }
 
   getNextAddress(): Promise<AddressInterface> {
-    return this.proxy(this.getNextAddress.name, []);
+    return this.proxy('getNextAddress', []);
   }
 
   getNextChangeAddress(): Promise<AddressInterface> {
-    return this.proxy(this.getNextChangeAddress.name, []);
+    return this.proxy('getNextChangeAddress', []);
   }
 
-  setAccount(account: number): Promise<void> {
-    throw new Error('Method not implemented.');
+  useAccount(account: string): Promise<boolean> {
+    return this.proxy('useAccount', [account]);
   }
 
   blindTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
@@ -60,7 +73,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
       throw new Error('you must specify a pset to blind (base64 encoded)');
     }
 
-    return this.proxy(this.blindTransaction.name, [psetBase64]);
+    return this.proxy('blindTransaction', [psetBase64]);
   }
 
   sendTransaction(recipients: Recipient[], feeAssetHash?: string): Promise<SentTransaction> {
@@ -68,7 +81,7 @@ export default class Marina extends WindowProxy implements MarinaProvider {
       throw new Error('invalid recipients array');
     }
 
-    return this.proxy(this.sendTransaction.name, [recipients, feeAssetHash]);
+    return this.proxy('sendTransaction', [recipients, feeAssetHash]);
   }
 
   signTransaction(psetBase64: PsetBase64): Promise<PsetBase64> {
@@ -76,26 +89,26 @@ export default class Marina extends WindowProxy implements MarinaProvider {
       throw new Error('you must specify a pset to sign (base64 encoded)');
     }
 
-    return this.proxy(this.signTransaction.name, [psetBase64]);
+    return this.proxy('signTransaction', [psetBase64]);
   }
 
   signMessage(message: string): Promise<SignedMessage> {
     if (!message || message.length === 0) {
       throw new Error('message cannot be empty');
     }
-    return this.proxy(this.signMessage.name, [message]);
+    return this.proxy('signMessage', [message]);
   }
 
   getCoins(): Promise<Utxo[]> {
-    return this.proxy(this.getCoins.name, []);
+    return this.proxy('getCoins', []);
   }
 
   getTransactions(): Promise<Transaction[]> {
-    return this.proxy(this.getTransactions.name, []);
+    return this.proxy('getTransactions', []);
   }
 
   getBalances(): Promise<Balance[]> {
-    return this.proxy(this.getBalances.name, []);
+    return this.proxy('getBalances', []);
   }
 
   on(type: MarinaEventType, callback: (payload: any) => void) {
@@ -109,14 +122,14 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   }
 
   isReady(): Promise<boolean> {
-    return this.proxy(this.isReady.name, []);
+    return this.proxy('isReady', []);
   }
 
   getFeeAssets(): Promise<string[]> {
-    return this.proxy(this.getFeeAssets.name, []);
+    return this.proxy('getFeeAssets', []);
   }
 
   reloadCoins(): Promise<void> {
-    return this.proxy(this.reloadCoins.name, []);
+    return this.proxy('reloadCoins', []);
   }
 }

@@ -1,4 +1,4 @@
-import type {
+import {
   IdentityInterface,
   MasterPublicKey,
   Mnemonic,
@@ -6,6 +6,8 @@ import type {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
+  restorerFromState,
+  IdentityType,
 } from 'ldk';
 import { masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
@@ -14,14 +16,13 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
+import { CovenantDescriptors, CovenantIdentity, CovenantIdentityWatchOnly, covenantRestorerFromEsplora, restoredCovenantIdentity, restoredCovenantWatchOnlyIdentity } from './covenant-identity';
 import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
 
 export const MainAccountID = 'mainAccount';
-export const RestrictedAssetAccountID = 'restrictedAssetAccount';
-
-export type AccountID = typeof MainAccountID;
+export type AccountID = string;
 
 /**
  * Account domain represents the keys of the User
@@ -73,6 +74,49 @@ export function createMnemonicAccount(data: MnemonicAccountData): MnemonicAccoun
         newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
       ),
   };
+}
+
+// Covenant account
+export type CovenantAccount = Account
+
+export interface CovenantAccountData {
+  covenantDescriptors: CovenantDescriptors;
+  encryptedMnemonic: EncryptedMnemonic;
+  restorerOpts: Record<NetworkString, StateRestorerOpts>;
+  masterXPub: MasterXPub;
+  masterBlindingKey: MasterBlindingKey;
+}
+
+export function createCovenantAccount(data: CovenantAccountData): CovenantAccount {
+  return {
+    getAccountID: () => data.covenantDescriptors.namespace,
+    getSigningIdentity: (password: string, network: NetworkString) => restoredCovenantIdentity(
+      data.covenantDescriptors,
+      decrypt(data.encryptedMnemonic, password),
+      network,
+      data.restorerOpts[network]
+    ),
+    getWatchIdentity: (network: NetworkString) =>
+      restoredCovenantWatchOnlyIdentity(
+        data.covenantDescriptors,
+        data.masterXPub,
+        data.masterBlindingKey,
+        network,
+        data.restorerOpts[network]
+      ),
+    getDeepRestorer: (network: NetworkString) =>
+      covenantRestorerFromEsplora(
+        new CovenantIdentityWatchOnly({
+          type: IdentityType.MasterPublicKey,
+          chain: network,
+          opts: {
+            ...data.covenantDescriptors,
+            masterBlindingKey: data.masterBlindingKey,
+            masterPublicKey: data.masterXPub,
+          }
+        }),
+      )
+  }
 }
 
 export const initialRestorerOpts: StateRestorerOpts = {

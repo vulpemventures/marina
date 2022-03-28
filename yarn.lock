@@ -6475,9 +6475,8 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-"ldk@git+https://github.com/vulpemventures/ldk.git":
+ldk@../ldk/:
   version "0.4.6"
-  resolved "git+https://github.com/vulpemventures/ldk.git#4268fe3328c37604e929b18165a9463034921bc0"
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
@@ -6777,7 +6776,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marina-provider@^1.0.0, marina-provider@^1.4.8:
+marina-provider@../marina-provider/:
+  version "1.5.0"
+
+marina-provider@^1.0.0:
   version "1.4.8"
   resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.8.tgz#7d5b2dc2c7dc5df11caa13efca2750a1d74c3f08"
   integrity sha512-sZSuVxbqxq4Bev0cmJussww1MOXO+VzsS3nbxBD5nsqKUJUVDCzNo6ERLiXkeT9JZTg1kyaCrr80Ed4M2QBYkQ==
