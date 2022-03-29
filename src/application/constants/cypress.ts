@@ -1,4 +1,4 @@
-import type { MnemonicAccountData } from '../../domain/account';
+import { AccountType, MnemonicAccountData } from '../../domain/account';
 import { initialRestorerOpts } from '../../domain/account';
 import type { PasswordHash } from '../../domain/password-hash';
 
@@ -12,6 +12,7 @@ export const testPasswordHash: PasswordHash =
  * 	| pwd = marinatest
  */
 export const testWalletData: MnemonicAccountData = {
+  type: AccountType.SingleSigAccount,
   restorerOpts: {
     liquid: initialRestorerOpts,
     testnet: initialRestorerOpts,

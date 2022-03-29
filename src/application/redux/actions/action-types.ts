@@ -1,5 +1,6 @@
 // Wallet
-export const WALLET_SET_DATA = 'WALLET_SET_DATA';
+export const SET_MNEMONIC = 'SET_MNEMONIC';
+export const SET_ACCOUNT_DATA = 'SET_ACCOUNT_DATA';
 export const SET_RESTORER_OPTS = 'SET_RESTORER_OPTS';
 export const ADD_UTXO = 'ADD_UTXO';
 export const DELETE_UTXO = 'DELETE_UTXO';

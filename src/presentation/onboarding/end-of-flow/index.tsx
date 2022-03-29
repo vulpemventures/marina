@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
-import { setVerified, setWalletData } from '../../../application/redux/actions/wallet';
+import { setEncryptedMnemonic, setVerified, setAccount } from '../../../application/redux/actions/wallet';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { walletInitState } from '../../../application/redux/reducers/wallet-reducer';
 import { encrypt, hashPassword } from '../../../application/utils/crypto';
 import { setUpPopup } from '../../../application/utils/popup';
 import { getStateRestorerOptsFromAddresses } from '../../../application/utils/restorer';
-import type { MnemonicAccountData } from '../../../domain/account';
+import { AccountType, MainAccountID, MnemonicAccountData } from '../../../domain/account';
 import { createMasterBlindingKey } from '../../../domain/master-blinding-key';
 import { createMasterXPub } from '../../../domain/master-extended-pub';
 import { createMnemonic } from '../../../domain/mnemonic';
@@ -62,7 +62,8 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
           await dispatch(reset());
         }
 
-        await dispatch(setWalletData(accountData, passwordHash));
+        await dispatch(setEncryptedMnemonic(accountData.encryptedMnemonic, passwordHash));
+        await dispatch(setAccount<MnemonicAccountData>(MainAccountID, accountData));
         // set the popup
         await setUpPopup();
         await dispatch(onboardingCompleted());
@@ -136,9 +137,10 @@ export async function createWalletFromMnemonic(
   const passwordHash = hashPassword(password);
   const addresses = await mnemonicIdentity.getAddresses();
 
-  const accountData = {
+  const accountData: MnemonicAccountData = {
+    type: AccountType.SingleSigAccount,
     restorerOpts: {
-      ...walletInitState.mainAccount.restorerOpts,
+      ...walletInitState.accounts[MainAccountID].restorerOpts,
       [chain]: getStateRestorerOptsFromAddresses(addresses),
     },
     encryptedMnemonic,

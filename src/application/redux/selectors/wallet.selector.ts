@@ -1,12 +1,8 @@
-import type { AccountID, MnemonicAccount, Account } from '../../../domain/account';
-import { createMnemonicAccount, MainAccountID } from '../../../domain/account';
-import type { MasterPublicKey, NetworkString, UnblindedOutput } from 'ldk';
+import type { AccountID, Account, AccountData } from '../../../domain/account';
+import { createAccount, MainAccountID } from '../../../domain/account';
+import type { NetworkString, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
-
-export function masterPubKeySelector(state: RootReducerState): Promise<MasterPublicKey> {
-  return selectMainAccount(state).getWatchIdentity(state.app.network);
-}
 
 export const selectUtxos =
   (...accounts: AccountID[]) =>
@@ -48,34 +44,44 @@ const selectTransactionsForAccount =
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {
   return (
-    state.wallet.mainAccount.encryptedMnemonic !== '' &&
-    state.wallet.mainAccount.encryptedMnemonic !== undefined
+    state.wallet.encryptedMnemonic !== '' &&
+    state.wallet.encryptedMnemonic !== undefined
   );
 }
 
-export function selectMainAccount(state: RootReducerState): MnemonicAccount {
-  return createMnemonicAccount(state.wallet.mainAccount);
+function selectInjectedAccountData(id: AccountID) {
+  return (state: RootReducerState): AccountData | undefined => {
+    const account = state.wallet.accounts[id];
+    if (!account) {
+      return;
+    }
+    return { ...account, encryptedMnemonic: state.wallet.encryptedMnemonic, type: account.type };
+  };
 }
 
+
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
-  const mainAccount = selectMainAccount(state);
-  return [mainAccount];
+  return selectAllAccountsIDs(state)
+    .map((id) => selectInjectedAccountData(id)(state))
+    .map((data) => data ? createAccount(data) : null)
+    .filter((account): account is Account => account !== null); 
 };
 
 export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
-  return selectAllAccounts(state).map((account) => account.getAccountID());
+  return Object.keys(state.wallet.accounts);
 };
 
-export const selectAccount = (
-  accountID: AccountID
-): ((state: RootReducerState) => Account | undefined) => {
-  if (accountID === MainAccountID) {
-    return selectMainAccount;
+export function selectAccount(accountID: AccountID) {
+  const accountDataSelector = selectInjectedAccountData(accountID);
+  
+  return (state: RootReducerState): Account => {
+    const accountData = accountDataSelector(state);
+    if (accountData) return createAccount(accountData);
+    throw new Error(`Account ${accountID} not found`);
   }
-
-  // TODO multiple accounts: we need to modify the way we select account via ID
-  return () => undefined;
 };
+
+export const selectMainAccount = selectAccount(MainAccountID);
 
 // By definition, each asset hash should be associated with a single Account
 export const selectAccountForAsset = (_: string) => (state: RootReducerState) => {

@@ -3,21 +3,23 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
-import type { AccountID } from '../../../domain/account';
+import { AccountData, AccountID, createAccount, MnemonicAccountData } from '../../../domain/account';
 import { initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
 import type { NetworkString, UnblindedOutput } from 'ldk';
 
 export const walletInitState: WalletState = {
-  [MainAccountID]: {
-    encryptedMnemonic: '',
-    masterBlindingKey: '',
-    masterXPub: '',
-    restorerOpts: {
-      liquid: initialRestorerOpts,
-      testnet: initialRestorerOpts,
-      regtest: initialRestorerOpts,
+  encryptedMnemonic: '',
+  accounts: {
+    [MainAccountID]: {
+      masterBlindingKey: '',
+      masterXPub: '',
+      restorerOpts: {
+        liquid: initialRestorerOpts,
+        testnet: initialRestorerOpts,
+        regtest: initialRestorerOpts,
+      },
     },
   },
   unspentsAndTransactions: {
@@ -88,21 +90,35 @@ export function walletReducer(
       const network = payload.network as NetworkString;
       return {
         ...state,
-        [accountID]: {
-          ...state[accountID],
-          restorerOpts: {
-            ...state[accountID].restorerOpts,
-            [network]: payload.restorerOpts,
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID].restorerOpts,
+              [network]: payload.restorerOpts,
+            },
           },
-        },
+        }
       };
     }
 
-    case ACTION_TYPES.WALLET_SET_DATA: {
+    case ACTION_TYPES.SET_MNEMONIC: {
       return {
         ...state,
+        encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
-        mainAccount: { ...payload.walletData },
+      };
+    }
+
+    case ACTION_TYPES.SET_ACCOUNT_DATA: {
+      const data = payload.accountData as AccountData;
+      const accountID = payload.accountID as AccountID;
+      return {
+        ...state,
+        accounts: {
+          [accountID]: data,
+        }
       };
     }
 
@@ -111,17 +127,20 @@ export function walletReducer(
       const network = payload.network as NetworkString;
       return {
         ...state,
-        [accountID]: {
-          ...state[accountID],
-          restorerOpts: {
-            ...state[accountID]?.restorerOpts,
-            [network]: {
-              ...state[accountID]?.restorerOpts[network],
-              lastUsedInternalIndex: increment(
-                state[accountID]?.restorerOpts[network]?.lastUsedInternalIndex
-              ),
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID]?.restorerOpts,
+              [network]: {
+                ...state.accounts[accountID]?.restorerOpts[network],
+                lastUsedInternalIndex: increment(
+                  state.accounts[accountID]?.restorerOpts[network]?.lastUsedInternalIndex
+                ),
+              },
             },
-          },
+          }
         },
       };
     }
@@ -131,15 +150,18 @@ export function walletReducer(
       const network = payload.network as NetworkString;
       return {
         ...state,
-        [accountID]: {
-          ...state[accountID],
-          restorerOpts: {
-            ...state[accountID]?.restorerOpts,
-            [network]: {
-              ...state[accountID]?.restorerOpts[network],
-              lastUsedExternalIndex: increment(
-                state[accountID]?.restorerOpts[network]?.lastUsedExternalIndex
-              ),
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID]?.restorerOpts,
+              [network]: {
+                ...state.accounts[accountID]?.restorerOpts[network],
+                lastUsedExternalIndex: increment(
+                  state.accounts[accountID]?.restorerOpts[network]?.lastUsedExternalIndex
+                ),
+              },
             },
           },
         },

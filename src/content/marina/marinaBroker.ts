@@ -3,7 +3,7 @@ import type { StoreCache } from '../store-cache';
 import { compareCacheForEvents, newCacheFromState, newStoreCache } from '../store-cache';
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import type { MessageHandler, RequestMessage } from '../../domain/message';
+import type { MessageHandler } from '../../domain/message';
 import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
 import type { RootReducerState } from '../../domain/common';
@@ -25,6 +25,7 @@ import {
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
+  setAccount,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
@@ -42,6 +43,7 @@ import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selecto
 import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
+import { marinaStore } from '../../application/redux/store';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -337,6 +339,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error(`Account ${accountName} already exists`);
           }
           // create the new account
+          throw new Error('not implemented');
         }
 
         default:

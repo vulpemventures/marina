@@ -24,6 +24,11 @@ import type { MasterXPub } from './master-extended-pub';
 export const MainAccountID = 'mainAccount';
 export type AccountID = string;
 
+export enum AccountType {
+  SingleSigAccount = 0,
+  CovenantAccount = 1,
+}
+
 /**
  * Account domain represents the keys of the User
  *
@@ -42,18 +47,41 @@ export interface Account<
   getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
 }
 
+// AccountData is the base interface of all accounts data
+// it is used to discriminate account by their type
+export interface AccountData {
+  type: AccountType;
+  [key: string]: any;
+}
+
 // Main Account uses the default Mnemonic derivation path
 // single-sig account used to send/receive regular assets
 export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
 
-export interface MnemonicAccountData {
+export interface MnemonicAccountData extends AccountData {
+  type: AccountType.SingleSigAccount;
   encryptedMnemonic: EncryptedMnemonic;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
 }
 
-export function createMnemonicAccount(data: MnemonicAccountData): MnemonicAccount {
+// Covenant account is decribed with
+// - an eltr output descriptor template
+// - a namespace (used to derive the mnemonic)
+export type CovenantAccount = Account<CovenantIdentity, CovenantIdentityWatchOnly>;
+
+export interface CovenantAccountData extends AccountData {
+  type: AccountType.CovenantAccount;
+  covenantDescriptors: CovenantDescriptors;
+  encryptedMnemonic: EncryptedMnemonic;
+  restorerOpts: Record<NetworkString, StateRestorerOpts>;
+  masterXPub: MasterXPub;
+  masterBlindingKey: MasterBlindingKey;
+}
+
+// Factory for mainAccount
+function createMainAccount(data: MnemonicAccountData): MnemonicAccount {
   return {
     getAccountID: () => MainAccountID,
     getSigningIdentity: (password: string, network: NetworkString) =>
@@ -76,18 +104,8 @@ export function createMnemonicAccount(data: MnemonicAccountData): MnemonicAccoun
   };
 }
 
-// Covenant account
-export type CovenantAccount = Account
-
-export interface CovenantAccountData {
-  covenantDescriptors: CovenantDescriptors;
-  encryptedMnemonic: EncryptedMnemonic;
-  restorerOpts: Record<NetworkString, StateRestorerOpts>;
-  masterXPub: MasterXPub;
-  masterBlindingKey: MasterBlindingKey;
-}
-
-export function createCovenantAccount(data: CovenantAccountData): CovenantAccount {
+// Factory for covenantAccount
+function createCovenantAccount(data: CovenantAccountData): CovenantAccount {
   return {
     getAccountID: () => data.covenantDescriptors.namespace,
     getSigningIdentity: (password: string, network: NetworkString) => restoredCovenantIdentity(
@@ -117,6 +135,18 @@ export function createCovenantAccount(data: CovenantAccountData): CovenantAccoun
         }),
       )
   }
+}
+
+const factories = new Map<AccountType, (data: any) => Account>()
+  .set(AccountType.SingleSigAccount, createMainAccount)
+  .set(AccountType.CovenantAccount, createCovenantAccount);
+
+export const createAccount = (data: AccountData): Account => {
+  const factory = factories.get(data.type);
+  if (!factory) {
+    throw new Error(`Unknown account type ${data.type}`);
+  }
+  return factory(data);
 }
 
 export const initialRestorerOpts: StateRestorerOpts = {

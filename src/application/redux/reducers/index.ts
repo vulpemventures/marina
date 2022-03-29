@@ -107,7 +107,7 @@ const marinaReducer = combineReducers({
     reducer: walletReducer,
     key: 'wallet',
     blacklist: ['deepRestorer', 'updaterLoaders'],
-    version: 2,
+    version: 3,
     migrate: walletMigrate,
   }),
   taxi: persist<TaxiState>({
