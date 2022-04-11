@@ -20,6 +20,10 @@ export type ConnectData = {
     hostname?: string;
     message?: string;
   };
+  createAccount?: {
+    namespace?: string;
+    hostname?: string;
+  };
 };
 
 export function newEmptyConnectData(): ConnectData {

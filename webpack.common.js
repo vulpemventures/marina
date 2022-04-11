@@ -26,7 +26,7 @@ module.exports = {
       "path": require.resolve("path-browserify"), 
       "fs": false 
     },
-    extensions: ['.tsx', '.ts', '.js', '.wasm'],
+    extensions: ['.tsx', '.ts', '.js'],
   },
   plugins: [
     new ProvidePlugin({
@@ -40,5 +40,5 @@ module.exports = {
       ],
     }),
   ],
-  output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
+  output: { filename: '[name].js', path: path.resolve(__dirname, 'dist'), publicPath: '' },
 };

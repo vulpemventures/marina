@@ -1,8 +1,10 @@
 import * as bip39 from 'bip39';
 import type { networks } from 'ldk';
-import { payments, bip32 } from 'ldk';
+import { payments } from 'ldk';
 import * as bitcoinMessage from 'bitcoinjs-message';
 import type { SignedMessage } from 'marina-provider';
+import ecc from '../../ecclib';
+import BIP32Factory from 'bip32';
 
 export async function signMessageWithMnemonic(
   message: string,
@@ -10,7 +12,7 @@ export async function signMessageWithMnemonic(
   network: networks.Network
 ): Promise<SignedMessage> {
   const seed = await bip39.mnemonicToSeed(mnemonic);
-  const node = bip32.fromSeed(seed, network);
+  const node = BIP32Factory(ecc).fromSeed(seed, network);
   const child = node.derivePath("m/84'/0'/0'/0/0");
   const signature = await bitcoinMessage.signAsync(message, child.privateKey!, true, {
     segwitType: 'p2wpkh',

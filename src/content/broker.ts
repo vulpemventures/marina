@@ -71,11 +71,12 @@ export default class Broker<T extends string = string> {
       b.store = proxyStore;
     };
   }
-
 }
 
 // custom type guard for MessageEvent
-function isMessageEvent<T extends string>(event: MessageEvent<any>): event is MessageEvent<RequestMessage<T>> {
+function isMessageEvent<T extends string>(
+  event: MessageEvent<any>
+): event is MessageEvent<RequestMessage<T>> {
   return (
     event.source === window && event.data && event.data.id && event.data.name && event.data.provider
   );

@@ -12,6 +12,7 @@ import {
   flushMsg,
   flushTx,
   selectHostname,
+  setCreateAccountData,
   setMsg,
   setTx,
   setTxData,
@@ -25,7 +26,7 @@ import {
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
-  setAccount,
+  setCovenantTemplate,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
@@ -33,7 +34,7 @@ import type { Balance, Recipient, Utxo } from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import type { AccountID } from '../../domain/account';
+import { AccountID, AccountType, CovenantAccountData } from '../../domain/account';
 import { MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
@@ -43,7 +44,7 @@ import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selecto
 import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
-import { marinaStore } from '../../application/redux/store';
+import { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -323,13 +324,24 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error(`Account ${accountName} not found`);
           }
 
+          this.selectedAccount = accountName;
           return successMsg(true);
         }
 
         case 'importTemplate': {
           this.checkHostnameAuthorization(state);
+          const accountData = state.wallet.accounts[this.selectedAccount];
+          if (accountData.type !== AccountType.CovenantAccount) {
+            throw new Error('Only covenant accounts can import templates');
+          }
+
+          if ((accountData as CovenantAccountData).covenantDescriptors.template) {
+            throw new Error('This account already has a template');
+          } 
+
           const [template] = params as [string];
-          throw new Error('not implemented');
+          await this.store.dispatchAsync(setCovenantTemplate(this.selectedAccount, template));
+          return successMsg(true);
         }
 
         case 'createAccount': {
@@ -338,8 +350,16 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (this.accountExists(accountName)) {
             throw new Error(`Account ${accountName} already exists`);
           }
-          // create the new account
-          throw new Error('not implemented');
+
+          await this.store.dispatchAsync(setCreateAccountData({
+            namespace: accountName,
+            hostname: this.hostname
+          }));
+
+          const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>('create-account');
+          if (!accepted) throw new Error('user rejected the create account request');
+
+          return successMsg(accepted);
         }
 
         default:

@@ -8,7 +8,7 @@ import { formatAddress } from '../../utils';
 import { useDispatch, useSelector } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
-import { selectAccountForAsset } from '../../../application/redux/selectors/wallet.selector';
+import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { selectNetwork } from '../../../application/redux/selectors/app.selector';
 import { DEFAULT_ROUTE } from '../../routes/constants';
@@ -17,7 +17,7 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const account = useSelector(selectAccountForAsset(match.params.asset));
+  const account = useSelector(selectMainAccount);
   const network = useSelector(selectNetwork);
 
   const [confidentialAddress, setConfidentialAddress] = useState('');

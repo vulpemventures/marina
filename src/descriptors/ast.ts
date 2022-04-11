@@ -1,6 +1,7 @@
-import { bip341, ecc } from 'ldk';
+import { bip341 } from 'ldk';
+import ecc from '../ecclib';
 
-const { taprootOutputScript, taprootSignScriptStack } = bip341.BIP341Factory(ecc);
+const { taprootOutputScript, taprootSignScriptStack } = bip341.BIP341Factory(ecc);
 
 export enum TypeAST {
   SCRIPT = 0, // one of ScriptType

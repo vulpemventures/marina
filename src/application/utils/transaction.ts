@@ -7,7 +7,6 @@ import {
   CoinSelectorErrorFn,
   NetworkString,
   IdentityInterface,
-  ecc,
   address,
   addToTx,
   createFeeOutput,
@@ -23,7 +22,7 @@ import {
   AssetHash,
   payments,
   confidential,
-  Psbt
+  Psbt,
 } from 'ldk';
 import { isConfidentialAddress } from './address';
 import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
@@ -33,6 +32,7 @@ import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi, taxiURL } from './taxi';
 import type { DataRecipient, Recipient } from 'marina-provider';
 import { isAddressRecipient, isDataRecipient } from 'marina-provider';
+import ecc from '../../ecclib';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {
   return address.fromConfidential(addr).blindingKey;
@@ -89,7 +89,7 @@ async function blindPset(psetBase64: string, utxos: UnblindedOutput[], outputAdd
   return (
     await decodePset(psetBase64).blindOutputsByIndex(
       Psbt.ECCKeysGenerator(ecc),
-      inputBlindingData, 
+      inputBlindingData,
       outputPubKeys
     )
   ).toBase64();
@@ -109,7 +109,7 @@ function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
   return true;
 }
 
-const sigValidator = Psbt.ECDSASigValidator(ecc)
+const sigValidator = Psbt.ECDSASigValidator(ecc);
 
 /**
  * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.

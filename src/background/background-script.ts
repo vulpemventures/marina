@@ -4,6 +4,7 @@ import { testWalletData, testPasswordHash } from '../application/constants/cypre
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setAccount, setEncryptedMnemonic } from '../application/redux/actions/wallet';
+import { selectEncryptedMnemonic } from '../application/redux/selectors/wallet.selector';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
@@ -32,7 +33,9 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
       case 'install': {
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
-          marinaStore.dispatch(setEncryptedMnemonic(testWalletData.encryptedMnemonic, testPasswordHash));
+          marinaStore.dispatch(
+            setEncryptedMnemonic(testWalletData.encryptedMnemonic, testPasswordHash)
+          );
           marinaStore.dispatch(setAccount(MainAccountID, testWalletData));
           marinaStore.dispatch(enableWebsite('vulpemventures.github.io', 'regtest')); // skip the enable step too
           await setUpPopup();
@@ -62,7 +65,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    if (marinaStore.getState().wallet.accounts[MainAccountID].encryptedMnemonic !== '') {
+    if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
       // Set up the periodic updaters if user is onboarded
@@ -84,7 +87,7 @@ browser.browserAction.onClicked.addListener(() => {
     // the wallet creation process, we let user re-open it
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
-    if (marinaStore.getState().wallet.accounts[MainAccountID].encryptedMnemonic === '') {
+    if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {

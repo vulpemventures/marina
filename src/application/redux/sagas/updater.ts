@@ -1,3 +1,5 @@
+import ecc from '../../../ecclib';
+
 import type {
   Outpoint,
   AddressInterface,
@@ -88,7 +90,7 @@ function* utxosUpdater(
   const addresses = yield* getAddressesFromAccount(account, network);
   const skippedOutpoints: string[] = []; // for deleting
   const receivedUtxos: Record<string, Output> = {};
-  const utxosGenerator = fetchAndUnblindUtxosGenerator(addresses, explorerURL, (utxo) => {
+  const utxosGenerator = fetchAndUnblindUtxosGenerator(ecc, addresses, explorerURL, (utxo) => {
     const outpoint = toStringOutpoint(utxo);
     receivedUtxos[outpoint] = utxo;
     const skip = utxosMap[outpoint] !== undefined;

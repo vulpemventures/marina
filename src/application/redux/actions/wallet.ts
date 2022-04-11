@@ -11,6 +11,7 @@ import {
   POP_UPDATER_LOADER,
   PUSH_UPDATER_LOADER,
   SET_MNEMONIC,
+  SET_COVENANT_TEMPLATE,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import { AccountData, AccountID } from '../../../domain/account';
@@ -18,7 +19,10 @@ import type { NetworkString, StateRestorerOpts } from 'ldk';
 import type { PasswordHash } from '../../../domain/password-hash';
 import { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';
 
-export function setEncryptedMnemonic(encryptedMnemonic: EncryptedMnemonic, passwordHash: PasswordHash) {
+export function setEncryptedMnemonic(
+  encryptedMnemonic: EncryptedMnemonic,
+  passwordHash: PasswordHash
+) {
   return {
     type: SET_MNEMONIC,
     payload: {
@@ -33,6 +37,13 @@ export function setAccount<T extends AccountData>(accountID: AccountID, accountD
   return {
     type: SET_ACCOUNT_DATA,
     payload: { accountData, accountID },
+  };
+}
+
+export function setCovenantTemplate(accountID: AccountID, template: string): AnyAction {
+  return {
+    type: SET_COVENANT_TEMPLATE,
+    payload: { accountID, template },
   };
 }
 

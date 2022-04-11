@@ -109,10 +109,6 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
     handleModalUnlockClose();
   };
 
-  const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  ).current;
-
   // send response message false when user closes the window without answering
   window.addEventListener('beforeunload', () => sendResponseMessage(false));
 
@@ -170,7 +166,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={handleUnlock}
       />
     </ShellConnectPopup>
   );

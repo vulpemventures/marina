@@ -16,6 +16,7 @@ import {
 } from 'ldk';
 import type { MasterBlindingKey } from '../../domain/master-blinding-key';
 import type { MasterXPub } from '../../domain/master-extended-pub';
+import ecc from '../../ecclib';
 
 export function getStateRestorerOptsFromAddresses(
   addresses: AddressInterface[]
@@ -54,6 +55,7 @@ export function restoredMnemonic(
 ): Promise<Mnemonic> {
   const mnemonicID = new Mnemonic({
     chain,
+    ecclib: ecc,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
   });
@@ -81,6 +83,7 @@ export function newMasterPublicKey(
   return new MasterPublicKey({
     chain: network,
     type: IdentityType.MasterPublicKey,
+    ecclib: ecc,
     opts: {
       masterPublicKey: masterXPub,
       masterBlindingKey: masterBlindingKey,
@@ -110,6 +113,7 @@ export function newMultisigWatchOnly(
   return new MultisigWatchOnly({
     chain: network,
     type: IdentityType.MultisigWatchOnly,
+    ecclib: ecc,
     opts: {
       requiredSignatures,
       cosigners: cosigners.concat([signerXPub]),

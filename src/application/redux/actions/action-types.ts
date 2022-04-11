@@ -1,6 +1,8 @@
 // Wallet
 export const SET_MNEMONIC = 'SET_MNEMONIC';
 export const SET_ACCOUNT_DATA = 'SET_ACCOUNT_DATA';
+export const SET_COVENANT_TEMPLATE = 'SET_COVENANT_TEMPLATE';
+export const CREATE_ACCOUNT = 'CREATE_ACCOUNT';
 export const SET_RESTORER_OPTS = 'SET_RESTORER_OPTS';
 export const ADD_UTXO = 'ADD_UTXO';
 export const DELETE_UTXO = 'DELETE_UTXO';
@@ -49,6 +51,7 @@ export const ADD_ASSET = 'ADD_ASSET';
 export const ENABLE_WEBSITE = 'ENABLE_WEBSITE';
 export const DISABLE_WEBSITE = 'DISABLE_WEBSITE';
 export const SET_TX_DATA = 'SET_TX_DATA';
+export const SET_CREATE_ACCOUNT_DATA = 'SET_CREATE_ACCOUNT_DATA';
 export const FLUSH_TX = 'FLUSH_TX';
 export const SET_MSG = 'SET_MSG';
 export const FLUSH_MSG = 'FLUSH_MSG';

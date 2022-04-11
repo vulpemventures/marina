@@ -20,6 +20,7 @@ import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
   yield* fetchTaxiAssetsForNetwork('liquid');
   yield* fetchTaxiAssetsForNetwork('testnet');
+  yield* fetchTaxiAssetsForNetwork('regtest');
 }
 
 function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void, string[]> {

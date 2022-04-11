@@ -2,7 +2,7 @@ import type { PopupResponseMessage } from '../../domain/message';
 import WindowProxy from '../../inject/proxy';
 import { POPUP_RESPONSE } from './popupBroker';
 
-export default class PopupWindowProxy<T> extends WindowProxy {
+export default class PopupWindowProxy<T> extends WindowProxy<string> {
   static PROVIDER_NAME = 'connect';
 
   constructor() {

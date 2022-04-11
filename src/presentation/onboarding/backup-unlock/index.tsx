@@ -72,7 +72,7 @@ const BackUpUnlock: React.FC = () => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const encryptedMnemonic = useSelector(
-    (s: RootReducerState) => s.wallet.mainAccount.encryptedMnemonic
+    (s: RootReducerState) => s.wallet.encryptedMnemonic
   );
 
   return (

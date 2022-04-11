@@ -92,10 +92,6 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
     handleModalUnlockClose();
   };
 
-  const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  ).current;
-
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -115,7 +111,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       )}
       <ModalUnlock
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={handleUnlock}
         isModalUnlockOpen={isModalUnlockOpen}
       />
     </ShellPopUp>

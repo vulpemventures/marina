@@ -1,3 +1,4 @@
+import ecc from '../ecclib';
 import {
   IdentityInterface,
   MasterPublicKey,
@@ -6,7 +7,6 @@ import {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
-  restorerFromState,
   IdentityType,
 } from 'ldk';
 import { masterPubKeyRestorerFromEsplora } from 'ldk';
@@ -16,7 +16,14 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import { CovenantDescriptors, CovenantIdentity, CovenantIdentityWatchOnly, covenantRestorerFromEsplora, restoredCovenantIdentity, restoredCovenantWatchOnlyIdentity } from './covenant-identity';
+import {
+  CovenantDescriptors,
+  CovenantIdentity,
+  CovenantIdentityWatchOnly,
+  covenantRestorerFromEsplora,
+  restoredCovenantIdentity,
+  restoredCovenantWatchOnlyIdentity,
+} from './covenant-identity';
 import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
@@ -60,7 +67,6 @@ export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
 
 export interface MnemonicAccountData extends AccountData {
   type: AccountType.SingleSigAccount;
-  encryptedMnemonic: EncryptedMnemonic;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
@@ -74,22 +80,20 @@ export type CovenantAccount = Account<CovenantIdentity, CovenantIdentityWatchOnl
 export interface CovenantAccountData extends AccountData {
   type: AccountType.CovenantAccount;
   covenantDescriptors: CovenantDescriptors;
-  encryptedMnemonic: EncryptedMnemonic;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
 }
 
 // Factory for mainAccount
-function createMainAccount(data: MnemonicAccountData): MnemonicAccount {
+function createMainAccount(
+  encryptedMnemonic: EncryptedMnemonic,
+  data: MnemonicAccountData
+): MnemonicAccount {
   return {
     getAccountID: () => MainAccountID,
     getSigningIdentity: (password: string, network: NetworkString) =>
-      restoredMnemonic(
-        decrypt(data.encryptedMnemonic, password),
-        data.restorerOpts[network],
-        network
-      ),
+      restoredMnemonic(decrypt(encryptedMnemonic, password), data.restorerOpts[network], network),
     getWatchIdentity: (network: NetworkString) =>
       restoredMasterPublicKey(
         data.masterXPub,
@@ -105,15 +109,19 @@ function createMainAccount(data: MnemonicAccountData): MnemonicAccount {
 }
 
 // Factory for covenantAccount
-function createCovenantAccount(data: CovenantAccountData): CovenantAccount {
+function createCovenantAccount(
+  encryptedMnemonic: EncryptedMnemonic,
+  data: CovenantAccountData
+): CovenantAccount {
   return {
     getAccountID: () => data.covenantDescriptors.namespace,
-    getSigningIdentity: (password: string, network: NetworkString) => restoredCovenantIdentity(
-      data.covenantDescriptors,
-      decrypt(data.encryptedMnemonic, password),
-      network,
-      data.restorerOpts[network]
-    ),
+    getSigningIdentity: (password: string, network: NetworkString) =>
+      restoredCovenantIdentity(
+        data.covenantDescriptors,
+        decrypt(encryptedMnemonic, password),
+        network,
+        data.restorerOpts[network]
+      ),
     getWatchIdentity: (network: NetworkString) =>
       restoredCovenantWatchOnlyIdentity(
         data.covenantDescriptors,
@@ -127,27 +135,31 @@ function createCovenantAccount(data: CovenantAccountData): CovenantAccount {
         new CovenantIdentityWatchOnly({
           type: IdentityType.MasterPublicKey,
           chain: network,
+          ecclib: ecc,
           opts: {
             ...data.covenantDescriptors,
             masterBlindingKey: data.masterBlindingKey,
             masterPublicKey: data.masterXPub,
-          }
-        }),
-      )
-  }
+          },
+        })
+      ),
+  };
 }
 
-const factories = new Map<AccountType, (data: any) => Account>()
+const factories = new Map<
+  AccountType,
+  (encryptedMnemonic: EncryptedMnemonic, data: any) => Account
+>()
   .set(AccountType.SingleSigAccount, createMainAccount)
   .set(AccountType.CovenantAccount, createCovenantAccount);
 
-export const createAccount = (data: AccountData): Account => {
+export const createAccount = (encryptedMnemonic: EncryptedMnemonic, data: AccountData): Account => {
   const factory = factories.get(data.type);
   if (!factory) {
     throw new Error(`Unknown account type ${data.type}`);
   }
-  return factory(data);
-}
+  return factory(encryptedMnemonic, data);
+};
 
 export const initialRestorerOpts: StateRestorerOpts = {
   lastUsedExternalIndex: -1,

@@ -61,6 +61,13 @@ export function connectDataReducer(
       };
     }
 
+    case ACTION_TYPES.SET_CREATE_ACCOUNT_DATA: {
+      return {
+        ...state,
+        createAccount: payload.connectData
+      };
+    }
+
     case ACTION_TYPES.SELECT_HOSTNAME: {
       return {
         ...state,

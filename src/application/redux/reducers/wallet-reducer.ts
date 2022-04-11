@@ -3,7 +3,12 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
-import { AccountData, AccountID, createAccount, MnemonicAccountData } from '../../../domain/account';
+import {
+  AccountData,
+  AccountID,
+  AccountType,
+  CovenantAccountData,
+} from '../../../domain/account';
 import { initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
@@ -13,6 +18,7 @@ export const walletInitState: WalletState = {
   encryptedMnemonic: '',
   accounts: {
     [MainAccountID]: {
+      type: AccountType.SingleSigAccount,
       masterBlindingKey: '',
       masterXPub: '',
       restorerOpts: {
@@ -99,7 +105,7 @@ export function walletReducer(
               [network]: payload.restorerOpts,
             },
           },
-        }
+        },
       };
     }
 
@@ -110,6 +116,27 @@ export function walletReducer(
         passwordHash: payload.passwordHash,
       };
     }
+    
+    case ACTION_TYPES.SET_COVENANT_TEMPLATE: {
+      const accountID = payload.accountID as AccountID;
+      if (state.accounts[accountID]?.type !== AccountType.CovenantAccount) return state;
+
+      const accountWithTemplate: CovenantAccountData = {
+        ...state.accounts[accountID] as CovenantAccountData,
+        covenantDescriptors: {
+          namespace: payload.accountID,
+          template: payload.template,
+        }
+      }
+
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [accountID]: accountWithTemplate,
+        }
+      };
+    }
 
     case ACTION_TYPES.SET_ACCOUNT_DATA: {
       const data = payload.accountData as AccountData;
@@ -118,7 +145,7 @@ export function walletReducer(
         ...state,
         accounts: {
           [accountID]: data,
-        }
+        },
       };
     }
 
@@ -140,7 +167,7 @@ export function walletReducer(
                 ),
               },
             },
-          }
+          },
         },
       };
     }

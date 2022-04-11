@@ -32,7 +32,7 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('createAccount', [accountName]);
   }
 
-  importTemplate(template: DescriptorTemplate): Promise<boolean> {
+  importTemplate(template: DescriptorTemplate, changeTemplate?: DescriptorTemplate) {
     return this.proxy('importTemplate', [template]);
   }
 

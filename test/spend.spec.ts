@@ -3,6 +3,7 @@ import { decodePset, fetchAndUnblindUtxos, networks, payments, Transaction } fro
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
+import ecc from '../src/ecclib';
 
 jest.setTimeout(15000);
 
@@ -18,7 +19,7 @@ describe('create send pset (build, blind & sign)', () => {
   const makeUnspents = async () => {
     const addr = await mnemonic.getNextAddress();
     await faucet(addr.confidentialAddress, 10000);
-    const u = await fetchAndUnblindUtxos([addr], APIURL);
+    const u = await fetchAndUnblindUtxos(ecc, [addr], APIURL);
     unspents.push(...u);
     return u;
   };

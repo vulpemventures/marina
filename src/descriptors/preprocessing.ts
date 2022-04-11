@@ -1,31 +1,34 @@
-import { toXpub, bip32 } from 'ldk';
-
-const extendedPubKeyRegexp = /[a-z]pub[a-km-zA-HJ-NP-Z1-9]{100,108}/;
+const namespaceRegexp = /[$][a-z]+/;
 
 export interface Context {
-  xpubs: Map<string, { derivationPath: string }>; // map xpub to derivation path
+  // map namespace token to public key
+  namespaces: Map<string, { pubkey: string }>; 
 }
 
 function replaceAll(str: string, find: string, replace: string): string {
   return str.split(find).join(replace);
 }
 
-export function processXPubs(xpubsContext: Context['xpubs'], text: string): string {
-  const xpubsInText = extendedPubKeyRegexp.exec(text);
-  if (!xpubsInText) return text;
+export function getNamespaces(text: string): Array<string> {
+  let namespaces = namespaceRegexp.exec(text);
+  if (!namespaces) return [];
+  return namespaces.map(n => n.slice(1)) // remove the '$' token
+}
+
+export function processNamespaces(ctx: Context['namespaces'], text: string): string {
+  const namespaces = getNamespaces(text);
+  if (!namespaces.length) return text;
 
   let processedText = text;
-  for (const xpub of xpubsInText) {
-    const xpubCxt = xpubsContext.get(xpub);
-    if (!xpubCxt) throw new Error(`Could not find xpub context: ${xpub}`);
-    const bip32Node = bip32.fromBase58(toXpub(xpub));
-    const pubkey = bip32Node.derivePath(xpubCxt.derivationPath).publicKey.toString('hex');
-    processedText = replaceAll(processedText, xpub, pubkey);
+  for (const namespace of namespaces) {
+    const namespacePublicKey = ctx.get(namespace)?.pubkey;
+    if (!namespacePublicKey) throw new Error(`Could not find namespace context: ${namespace}`);
+    processedText = replaceAll(processedText, '$' + namespace, namespacePublicKey);
   }
 
   return processedText;
 }
 
 export function preprocessor(ctx: Context, text: string): string {
-  return processXPubs(ctx.xpubs, text);
+  return processNamespaces(ctx.namespaces, text);
 }

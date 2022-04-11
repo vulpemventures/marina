@@ -3,19 +3,20 @@ import { parseSCRIPT } from '../src/descriptors/parser';
 import type { Context } from '../src/descriptors/preprocessing';
 import { preprocessor } from '../src/descriptors/preprocessing';
 import { evaluate } from '../src/descriptors';
-import { toXpub, bip32, script } from 'ldk';
+import { toXpub, script } from 'ldk';
+import ecc from '../src/ecclib';
+import BIP32Factory from 'bip32';
 
 describe('evaluate', () => {
-  it('should replace xpubs', () => {
+  it('should replace namespace tokens', () => {
     const xpub =
       'vpub5SLqN2bLY4WeaAsje9qzuLmXM3DYdtxWYG2PipZAki3fbdCfpum3hf4ZVgigwfJGk3BT9KvSpUkqNEJhdHQjXdqjSRxYq7AETSXPjVH7UMq';
-    const path = 'm/0/1';
-    const text = `asm(OP_DUP OP_HASH160 ${xpub} OP_EQUALVERIFY OP_CHECKSIG)`;
+    const text = `asm(OP_DUP OP_HASH160 $marina OP_EQUALVERIFY OP_CHECKSIG)`;
+    const key = BIP32Factory(ecc).fromBase58(toXpub(xpub)).derivePath('0/1').publicKey.toString('hex');
     const ctx: Context = {
-      xpubs: new Map().set(xpub, { derivationPath: path }),
+      namespaces: new Map().set('marina', { pubkey: key }),
     };
 
-    const key = bip32.fromBase58(toXpub(xpub)).derivePath('m/0/1').publicKey.toString('hex');
     const processedText = preprocessor(ctx, text);
 
     expect(processedText).toEqual(`asm(OP_DUP OP_HASH160 ${key} OP_EQUALVERIFY OP_CHECKSIG)`);

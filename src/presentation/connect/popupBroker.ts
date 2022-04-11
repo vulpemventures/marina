@@ -17,7 +17,11 @@ export default class PopupBroker extends Broker<PopupMsgs> {
     super.start(this.messageHandler);
   }
 
-  private messageHandler: MessageHandler<PopupMsgs> = ({ id, name, params }: RequestMessage<PopupMsgs>) => {
+  private messageHandler: MessageHandler<PopupMsgs> = ({
+    id,
+    name,
+    params,
+  }: RequestMessage<PopupMsgs>) => {
     try {
       // only handle POPUP_RESPONSE message (sent via PopupWindowProxy)
       if (name === POPUP_RESPONSE) {

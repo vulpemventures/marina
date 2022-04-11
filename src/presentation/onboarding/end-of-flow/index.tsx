@@ -4,7 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
-import { setEncryptedMnemonic, setVerified, setAccount } from '../../../application/redux/actions/wallet';
+import {
+  setEncryptedMnemonic,
+  setVerified,
+  setAccount,
+} from '../../../application/redux/actions/wallet';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { walletInitState } from '../../../application/redux/reducers/wallet-reducer';
 import { encrypt, hashPassword } from '../../../application/utils/crypto';
@@ -21,6 +25,7 @@ import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
+import ecc from '../../../ecclib';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -122,6 +127,7 @@ export async function createWalletFromMnemonic(
   esploraURL: string
 ): Promise<{ accountData: MnemonicAccountData; passwordHash: PasswordHash }> {
   const toRestore = new Mnemonic({
+    ecclib: ecc,
     chain,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
