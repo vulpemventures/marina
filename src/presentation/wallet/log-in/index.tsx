@@ -1,5 +1,5 @@
-import React from 'react';
 import type { RouteComponentProps } from 'react-router-dom';
+import React from 'react';
 import { useHistory } from 'react-router-dom';
 import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
@@ -26,7 +26,7 @@ interface LogInFormProps {
   passwordHash: PasswordHash;
 }
 
-const LogInForm = (props: FormikProps<LogInFormValues>) => {
+const LogInForm: React.FC<FormikProps<LogInFormValues>> = (props) => {
   const { isSubmitting, handleSubmit } = props;
 
   const openOnboardingTab = async () => {
@@ -35,25 +35,25 @@ const LogInForm = (props: FormikProps<LogInFormValues>) => {
   };
 
   return (
-    <div className="flex flex-col">
-      <form onSubmit={handleSubmit} className="mt-10">
-        <Input
-          name="password"
-          type="password"
-          placeholder="Enter your password"
-          title="Password"
-          {...props}
-        />
-        <Button className="w-full mb-8 text-base" disabled={isSubmitting} type="submit">
-          Log in
-        </Button>
-      </form>
-      <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
-        <span className="cursor-pointer" onClick={openOnboardingTab}>
-          Restore account
-        </span>
+    <form onSubmit={handleSubmit} className="mt-10">
+      <div className="flex flex-col">
+          <Input
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            title="Password"
+            {...props}
+          />
+          <Button className="w-full mb-8 text-base" disabled={isSubmitting} type="submit">
+            Log in
+          </Button>
+        <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
+          <span className="cursor-pointer" onClick={openOnboardingTab}>
+            Restore account
+          </span>
+        </div>
       </div>
-    </div>
+    </form>
   );
 };
 

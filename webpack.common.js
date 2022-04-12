@@ -5,7 +5,9 @@ const { ProvidePlugin } = require('webpack');
 
 module.exports = {
   experiments: {
-    asyncWebAssembly: true, // this is required for wasm (tiny-secp256k1) to work
+    topLevelAwait: true,
+    asyncWebAssembly: true,
+    syncWebAssembly: true
   },
   entry: {
     'index': './src/presentation/index.tsx',
@@ -15,18 +17,23 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: 'ts-loader', options: { allowTsInNodeModules: true } },
+      { test: /\.wasm$/, type: 'asset/inline' },
+      { test: /\.tsx?$/, loader: 'ts-loader', options: { configFile: 'tsconfig.json', allowTsInNodeModules: true } },
       { test: /\.css$/i, include: path.resolve(__dirname, 'src'), use: ['style-loader', 'css-loader', 'postcss-loader'] },
     ],
   },
   resolve: {
-    fallback: { 
+    fallback: {
       "crypto": require.resolve("crypto-browserify"), 
       "stream": require.resolve("stream-browserify"), 
       "path": require.resolve("path-browserify"), 
       "fs": false 
     },
-    extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      "tiny-secp256k1": path.resolve(__dirname, 'node_modules/tiny-secp256k1/lib/secp256k1.wasm'),
+      "tiny-secp256k1-lib": path.resolve(__dirname, 'node_modules/tiny-secp256k1/lib'),
+    },
+    extensions: ['.tsx', '.ts', '.js', '.wasm'],
   },
   plugins: [
     new ProvidePlugin({
@@ -40,5 +47,5 @@ module.exports = {
       ],
     }),
   ],
-  output: { filename: '[name].js', path: path.resolve(__dirname, 'dist'), publicPath: '' },
+  output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
 };
