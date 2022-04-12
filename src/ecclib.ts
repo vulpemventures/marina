@@ -1,8 +1,17 @@
+/**
+ * ecclib.ts is a *standalone* file, it shouldn't be imported in other files.
+ * webpack.common.js will use it to inject wasm module as a base64 string instead of a wasm file.
+ * This is useful for browsers that do not let us embed .wasm file in content-script context.
+ */
+
 // @ts-ignore
+// eslint-disable-next-line
 import b64wasm from 'tiny-secp256k1-lib/secp256k1.wasm';
 // @ts-ignore
+// eslint-disable-next-line
 import * as rand from "tiny-secp256k1-lib/rand.browser.js";
 // @ts-ignore
+// eslint-disable-next-line
 import * as validate_error from "tiny-secp256k1-lib/validate_error.js";
 import type { TinySecp256k1Interface as LDKSecpI, bip341 } from 'ldk';
 
