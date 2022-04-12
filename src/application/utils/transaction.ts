@@ -1,4 +1,4 @@
-import {
+import type {
   ChangeAddressFromAssetGetter,
   CoinSelector,
   RecipientInterface,
@@ -6,7 +6,8 @@ import {
   UnblindedOutput,
   CoinSelectorErrorFn,
   NetworkString,
-  IdentityInterface,
+  IdentityInterface} from 'ldk';
+import {
   address,
   addToTx,
   createFeeOutput,
@@ -32,7 +33,7 @@ import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi, taxiURL } from './taxi';
 import type { DataRecipient, Recipient } from 'marina-provider';
 import { isAddressRecipient, isDataRecipient } from 'marina-provider';
-import ecc from '../../ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {
   return address.fromConfidential(addr).blindingKey;

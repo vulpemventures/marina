@@ -4,8 +4,8 @@ import type { Context } from '../src/descriptors/preprocessing';
 import { preprocessor } from '../src/descriptors/preprocessing';
 import { evaluate } from '../src/descriptors';
 import { toXpub, script } from 'ldk';
-import ecc from '../src/ecclib';
 import BIP32Factory from 'bip32';
+import * as ecc from 'tiny-secp256k1';
 
 describe('evaluate', () => {
   it('should replace namespace tokens', () => {

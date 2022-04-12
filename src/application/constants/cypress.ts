@@ -1,5 +1,5 @@
-import { AccountType, MnemonicAccountData } from '../../domain/account';
-import { initialRestorerOpts } from '../../domain/account';
+import type { MnemonicAccountData } from '../../domain/account';
+import { AccountType , initialRestorerOpts } from '../../domain/account';
 import type { PasswordHash } from '../../domain/password-hash';
 
 export const testPasswordHash: PasswordHash =

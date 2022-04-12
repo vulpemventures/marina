@@ -3,8 +3,8 @@ import type { networks } from 'ldk';
 import { payments } from 'ldk';
 import * as bitcoinMessage from 'bitcoinjs-message';
 import type { SignedMessage } from 'marina-provider';
-import ecc from '../../ecclib';
 import BIP32Factory from 'bip32';
+import * as ecc from 'tiny-secp256k1';
 
 export async function signMessageWithMnemonic(
   message: string,

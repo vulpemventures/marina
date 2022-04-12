@@ -1,4 +1,4 @@
-import ecc from '../../../ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 import type {
   Outpoint,

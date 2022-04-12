@@ -3,13 +3,13 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
-import {
+import type {
   AccountData,
   AccountID,
-  AccountType,
-  CovenantAccountData,
-} from '../../../domain/account';
-import { initialRestorerOpts, MainAccountID } from '../../../domain/account';
+  CovenantAccountData} from '../../../domain/account';
+import {
+  AccountType
+ initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
 import type { NetworkString, UnblindedOutput } from 'ldk';

@@ -10,7 +10,7 @@ function replaceAll(str: string, find: string, replace: string): string {
 }
 
 export function getNamespaces(text: string): Array<string> {
-  let namespaces = namespaceRegexp.exec(text);
+  const namespaces = namespaceRegexp.exec(text);
   if (!namespaces) return [];
   return namespaces.map(n => n.slice(1)) // remove the '$' token
 }

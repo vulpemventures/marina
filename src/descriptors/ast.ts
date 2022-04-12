@@ -1,5 +1,5 @@
 import { bip341 } from 'ldk';
-import ecc from '../ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 const { taprootOutputScript, taprootSignScriptStack } = bip341.BIP341Factory(ecc);
 

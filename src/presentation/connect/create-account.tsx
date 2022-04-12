@@ -2,21 +2,23 @@ import { IdentityType } from 'ldk';
 import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAccount } from '../../application/redux/actions/wallet';
+import type {
+  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
 import {
-  connectWithConnectData,
-  WithConnectDataProps,
+  connectWithConnectData
 } from '../../application/redux/containers/with-connect-data.container';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { selectEncryptedMnemonic } from '../../application/redux/selectors/wallet.selector';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { decrypt } from '../../application/utils/crypto';
-import { AccountType, CovenantAccountData, initialRestorerOpts } from '../../domain/account';
+import type { CovenantAccountData} from '../../domain/account';
+import { AccountType, initialRestorerOpts } from '../../domain/account';
 import { CovenantIdentity } from '../../domain/covenant-identity';
 import Button from '../components/button';
 import ModalUnlock from '../components/modal-unlock';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import PopupWindowProxy from './popupWindowProxy';
-import ecc from '../../ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 export interface CreateAccountPopupResponse {
   accepted: boolean;

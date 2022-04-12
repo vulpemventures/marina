@@ -14,7 +14,8 @@ import { walletInitState } from '../../../application/redux/reducers/wallet-redu
 import { encrypt, hashPassword } from '../../../application/utils/crypto';
 import { setUpPopup } from '../../../application/utils/popup';
 import { getStateRestorerOptsFromAddresses } from '../../../application/utils/restorer';
-import { AccountType, MainAccountID, MnemonicAccountData } from '../../../domain/account';
+import type { MnemonicAccountData } from '../../../domain/account';
+import { AccountType, MainAccountID } from '../../../domain/account';
 import { createMasterBlindingKey } from '../../../domain/master-blinding-key';
 import { createMasterXPub } from '../../../domain/master-extended-pub';
 import { createMnemonic } from '../../../domain/mnemonic';
@@ -25,7 +26,7 @@ import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
-import ecc from '../../../ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 export interface EndOfFlowProps {
   mnemonic: string;

@@ -1,6 +1,6 @@
 import { generateMnemonic } from 'bip39';
 import { IdentityType, Mnemonic } from 'ldk';
-import ecc from '../src/ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 export function makeRandomMnemonic(): Mnemonic {
   const mnemo = generateMnemonic();

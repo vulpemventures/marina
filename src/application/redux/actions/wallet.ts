@@ -14,10 +14,10 @@ import {
   SET_COVENANT_TEMPLATE,
 } from './action-types';
 import type { AnyAction } from 'redux';
-import { AccountData, AccountID } from '../../../domain/account';
+import type { AccountData, AccountID } from '../../../domain/account';
 import type { NetworkString, StateRestorerOpts } from 'ldk';
 import type { PasswordHash } from '../../../domain/password-hash';
-import { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';
+import type { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';
 
 export function setEncryptedMnemonic(
   encryptedMnemonic: EncryptedMnemonic,

@@ -16,7 +16,7 @@ import {
 } from 'ldk';
 import type { MasterBlindingKey } from '../../domain/master-blinding-key';
 import type { MasterXPub } from '../../domain/master-extended-pub';
-import ecc from '../../ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 export function getStateRestorerOptsFromAddresses(
   addresses: AddressInterface[]

@@ -3,7 +3,7 @@ import { decodePset, fetchAndUnblindUtxos, networks, payments, Transaction } fro
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import ecc from '../src/ecclib';
+import * as ecc from 'tiny-secp256k1';
 
 jest.setTimeout(15000);
 

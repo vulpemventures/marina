@@ -1,28 +1,29 @@
-import {
+import type {
   AddressInterface,
-  Identity,
   IdentityInterface,
   IdentityOpts,
+  Restorer,
+  EsploraRestorerOpts,
+  NetworkString,
+  StateRestorerOpts} from 'ldk';
+import {
+  Identity,
   crypto,
   Mnemonic,
   address,
   Psbt,
   restorerFromEsplora,
-  Restorer,
-  EsploraRestorerOpts,
   IdentityType,
-  NetworkString,
   restorerFromState,
-  StateRestorerOpts,
   Transaction,
   bip341,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { evaluate } from '../descriptors';
-import { Result } from '../descriptors/ast';
-import { Context } from '../descriptors/preprocessing';
+import type { Result } from '../descriptors/ast';
+import type { Context } from '../descriptors/preprocessing';
 import { SLIP77Factory } from 'slip77';
-import ecc from '../ecclib';
+import * as ecc from 'tiny-secp256k1';
 import BIP32Factory from 'bip32';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure

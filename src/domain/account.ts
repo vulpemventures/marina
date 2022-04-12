@@ -1,24 +1,25 @@
-import ecc from '../ecclib';
-import {
+import * as ecc from 'tiny-secp256k1';
+import type {
   IdentityInterface,
   MasterPublicKey,
   Mnemonic,
   StateRestorerOpts,
   Restorer,
   EsploraRestorerOpts,
-  NetworkString,
+  NetworkString} from 'ldk';
+import {
   IdentityType,
-} from 'ldk';
-import { masterPubKeyRestorerFromEsplora } from 'ldk';
+ masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import {
+import type {
   CovenantDescriptors,
-  CovenantIdentity,
+  CovenantIdentity} from './covenant-identity';
+import {
   CovenantIdentityWatchOnly,
   covenantRestorerFromEsplora,
   restoredCovenantIdentity,

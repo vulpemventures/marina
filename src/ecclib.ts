@@ -1,9 +1,10 @@
-import b64wasm from 'tiny-secp256k1';
+// @ts-ignore
+import b64wasm from 'tiny-secp256k1-lib/secp256k1.wasm';
 // @ts-ignore
 import * as rand from "tiny-secp256k1-lib/rand.browser.js";
 // @ts-ignore
 import * as validate_error from "tiny-secp256k1-lib/validate_error.js";
-import { TinySecp256k1Interface as LDKSecpI, bip341 } from 'ldk';
+import type { TinySecp256k1Interface as LDKSecpI, bip341 } from 'ldk';
 
 const secp256k1imports = {
     "./rand.js": rand,
@@ -11,16 +12,6 @@ const secp256k1imports = {
 };
 
 type TinySecp256k1Interface = LDKSecpI & bip341.TinySecp256k1Interface;
-
-function _base64ToArrayBuffer(base64: string) {
-    var binary_string = window.atob(base64);
-    var len = binary_string.length;
-    var bytes = new Uint8Array(len);
-    for (var i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
 
 class WasmModule<T = any> {
     static BASE64_WASM_PREFIX = 'data:application/wasm;base64,';

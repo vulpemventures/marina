@@ -34,8 +34,8 @@ import type { Balance, Recipient, Utxo } from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import { AccountID, AccountType, CovenantAccountData } from '../../domain/account';
-import { MainAccountID } from '../../domain/account';
+import type { AccountID, CovenantAccountData } from '../../domain/account';
+import { AccountType , MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
@@ -44,7 +44,7 @@ import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selecto
 import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
-import { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
+import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
