@@ -39,7 +39,7 @@
   "web_accessible_resources": [
     "inject-script.js"
   ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
   "browser_action": {
     "default_icon": {
       "16": "assets/images/logo/marina_logo_16x16.png",
