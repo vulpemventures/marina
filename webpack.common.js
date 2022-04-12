@@ -27,10 +27,11 @@ module.exports = {
       "crypto": require.resolve("crypto-browserify"), 
       "stream": require.resolve("stream-browserify"), 
       "path": require.resolve("path-browserify"), 
-      "fs": false 
+      "fs": false,
     },
     alias: {
-      "tiny-secp256k1": path.resolve(__dirname, 'node_modules/tiny-secp256k1/lib/secp256k1.wasm'),
+      "./wasm_loader.js": path.resolve(__dirname, 'src/ecclib.ts'),
+      "./wasm_loader.browser.js": path.resolve(__dirname, 'src/ecclib.ts'),
       "tiny-secp256k1-lib": path.resolve(__dirname, 'node_modules/tiny-secp256k1/lib'),
     },
     extensions: ['.tsx', '.ts', '.js', '.wasm'],
