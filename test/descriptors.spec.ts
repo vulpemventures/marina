@@ -12,7 +12,10 @@ describe('evaluate', () => {
     const xpub =
       'vpub5SLqN2bLY4WeaAsje9qzuLmXM3DYdtxWYG2PipZAki3fbdCfpum3hf4ZVgigwfJGk3BT9KvSpUkqNEJhdHQjXdqjSRxYq7AETSXPjVH7UMq';
     const text = `asm(OP_DUP OP_HASH160 $marina OP_EQUALVERIFY OP_CHECKSIG)`;
-    const key = BIP32Factory(ecc).fromBase58(toXpub(xpub)).derivePath('0/1').publicKey.toString('hex');
+    const key = BIP32Factory(ecc)
+      .fromBase58(toXpub(xpub))
+      .derivePath('0/1')
+      .publicKey.toString('hex');
     const ctx: Context = {
       namespaces: new Map().set('marina', { pubkey: key }),
     };
@@ -96,7 +99,7 @@ describe('parser', () => {
     expect(res.scriptPubKey().toString('hex')).toEqual(
       '5120ec2e5b3649abf837992e92c55361ed2089a633cb69b540e90a0d098c88f0891f'
     );
-    expect(res.witnesses).toBeDefined();
+    // expect(res.witnesses).toBeDefined();
     expect(res.taprootHashTree).toBeDefined();
     expect(
       res.witnesses!('20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac').map(

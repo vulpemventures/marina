@@ -1,8 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import { debounce } from 'lodash';
 import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
 import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import { signMessageWithMnemonic } from '../../application/utils/message';

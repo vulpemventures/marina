@@ -64,7 +64,7 @@ export function connectDataReducer(
     case ACTION_TYPES.SET_CREATE_ACCOUNT_DATA: {
       return {
         ...state,
-        createAccount: payload.connectData
+        createAccount: payload.connectData,
       };
     }
 

@@ -17,7 +17,7 @@ const SettingsShowMnemonicView: React.FC<SettingsShowMnemonicProps> = ({ wallet 
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);
   const handleModalUnlockCancel = () => showUnlockModal(false);
-  
+
   const handleShowMnemonic = (password: string) => {
     if (!match(password, wallet.passwordHash)) {
       throw new Error(INVALID_PASSWORD_ERROR);

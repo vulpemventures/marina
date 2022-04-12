@@ -1,5 +1,5 @@
-import type { AST} from './ast';
-import { ScriptType , TypeAST } from './ast';
+import type { AST } from './ast';
+import { ScriptType, TypeAST } from './ast';
 import { readHex, readUntil } from './utils';
 import { script } from 'ldk';
 

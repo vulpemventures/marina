@@ -6,7 +6,8 @@ import type {
   UnblindedOutput,
   CoinSelectorErrorFn,
   NetworkString,
-  IdentityInterface} from 'ldk';
+  IdentityInterface,
+} from 'ldk';
 import {
   address,
   addToTx,

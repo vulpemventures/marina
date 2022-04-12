@@ -37,16 +37,16 @@ const LogInForm: React.FC<FormikProps<LogInFormValues>> = (props) => {
   return (
     <form onSubmit={handleSubmit} className="mt-10">
       <div className="flex flex-col">
-          <Input
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            title="Password"
-            {...props}
-          />
-          <Button className="w-full mb-8 text-base" disabled={isSubmitting} type="submit">
-            Log in
-          </Button>
+        <Input
+          name="password"
+          type="password"
+          placeholder="Enter your password"
+          title="Password"
+          {...props}
+        />
+        <Button className="w-full mb-8 text-base" disabled={isSubmitting} type="submit">
+          Log in
+        </Button>
         <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
           <span className="cursor-pointer" onClick={openOnboardingTab}>
             Restore account

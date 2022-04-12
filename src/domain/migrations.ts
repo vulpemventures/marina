@@ -45,7 +45,7 @@ export const walletMigrations = {
         restorerOpts: {
           liquid: initialRestorerOpts,
           testnet: initialRestorerOpts,
-          regtest: initialRestorerOpts
+          regtest: initialRestorerOpts,
         },
       },
       deepRestorer: state.deepRestorer,

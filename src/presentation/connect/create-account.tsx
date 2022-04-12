@@ -1,17 +1,14 @@
 import { IdentityType } from 'ldk';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAccount } from '../../application/redux/actions/wallet';
-import type {
-  WithConnectDataProps} from '../../application/redux/containers/with-connect-data.container';
-import {
-  connectWithConnectData
-} from '../../application/redux/containers/with-connect-data.container';
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { selectEncryptedMnemonic } from '../../application/redux/selectors/wallet.selector';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { decrypt } from '../../application/utils/crypto';
-import type { CovenantAccountData} from '../../domain/account';
+import type { CovenantAccountData } from '../../domain/account';
 import { AccountType, initialRestorerOpts } from '../../domain/account';
 import { CovenantIdentity } from '../../domain/covenant-identity';
 import Button from '../components/button';
@@ -53,8 +50,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
     try {
       if (!password || password.length === 0) throw new Error('Need password');
       const { createAccount } = connectData;
-      if (!createAccount || !createAccount.namespace)
-        throw new Error('Namespace is invalid');
+      if (!createAccount || !createAccount.namespace) throw new Error('Namespace is invalid');
       const identity = new CovenantIdentity({
         ecclib: ecc,
         type: IdentityType.Mnemonic,

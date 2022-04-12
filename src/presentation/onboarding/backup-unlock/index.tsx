@@ -71,9 +71,7 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
 const BackUpUnlock: React.FC = () => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const encryptedMnemonic = useSelector(
-    (s: RootReducerState) => s.wallet.encryptedMnemonic
-  );
+  const encryptedMnemonic = useSelector((s: RootReducerState) => s.wallet.encryptedMnemonic);
 
   return (
     <Shell hasBackBtn={false}>

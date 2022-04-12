@@ -3,7 +3,6 @@ import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { PasswordHash } from './password-hash';
 import type { UtxosAndTxsByNetwork } from './transaction';
 
-
 export interface WalletState {
   encryptedMnemonic: EncryptedMnemonic;
   accounts: {

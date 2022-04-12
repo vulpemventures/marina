@@ -5,7 +5,7 @@ import * as Yup from 'yup';
 import Button from './button';
 import Input from './input';
 import Modal from './modal';
-import { debounce } from 'lodash';
+import { debounce } from 'lodash';
 
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
@@ -71,14 +71,11 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   handleUnlock,
   isModalUnlockOpen,
 }) => {
-  if (!isModalUnlockOpen) {
-    return <></>;
-  }
-
   const deboundedHandleUnlock = useRef(
     debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  )
+  );
 
+  if (!isModalUnlockOpen) return <></>;
   return (
     <Modal isOpen={isModalUnlockOpen} onClose={handleModalUnlockClose}>
       <ModalUnlockEnhancedForm

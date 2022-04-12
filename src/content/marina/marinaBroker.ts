@@ -35,7 +35,7 @@ import type { SignTransactionPopupResponse } from '../../presentation/connect/si
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID, CovenantAccountData } from '../../domain/account';
-import { AccountType , MainAccountID } from '../../domain/account';
+import { AccountType, MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
@@ -337,7 +337,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
           if ((accountData as CovenantAccountData).covenantDescriptors.template) {
             throw new Error('This account already has a template');
-          } 
+          }
 
           const [template] = params as [string];
           await this.store.dispatchAsync(setCovenantTemplate(this.selectedAccount, template));
@@ -351,12 +351,16 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error(`Account ${accountName} already exists`);
           }
 
-          await this.store.dispatchAsync(setCreateAccountData({
-            namespace: accountName,
-            hostname: this.hostname
-          }));
+          await this.store.dispatchAsync(
+            setCreateAccountData({
+              namespace: accountName,
+              hostname: this.hostname,
+            })
+          );
 
-          const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>('create-account');
+          const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>(
+            'create-account'
+          );
           if (!accepted) throw new Error('user rejected the create account request');
 
           return successMsg(accepted);

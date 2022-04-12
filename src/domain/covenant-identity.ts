@@ -5,7 +5,8 @@ import type {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
-  StateRestorerOpts} from 'ldk';
+  StateRestorerOpts,
+} from 'ldk';
 import {
   Identity,
   crypto,
@@ -22,7 +23,7 @@ import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { evaluate } from '../descriptors';
 import type { Result } from '../descriptors/ast';
 import type { Context } from '../descriptors/preprocessing';
-import { SLIP77Factory } from 'slip77';
+import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
 import BIP32Factory from 'bip32';
 
@@ -60,7 +61,7 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
   private changeIndex = 0;
   protected cache = new Map<string, TaprootAddressInterface>();
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
-  readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode']; 
+  readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CovenantIdentityOpts['namespace'];
   template?: string;
 
@@ -68,10 +69,11 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     super(args);
     this.namespace = args.opts.namespace;
     this.template = args.opts.template;
-    this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(args.opts.masterBlindingKey);
+    this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
+      args.opts.masterBlindingKey
+    );
     this.masterPubKeyNode = BIP32Factory(this.ecclib).fromBase58(args.opts.masterPublicKey);
   }
-
 
   private deriveMasterXPub(isChange: boolean, index: number): string {
     return this.masterPubKeyNode.derivePath(makePath(isChange, index)).publicKey.toString('hex');
@@ -103,7 +105,11 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     const descriptorResult = evaluate(this.getContext(isChange, index), this.template);
     const outputScript = descriptorResult.scriptPubKey().toString('hex');
     if (!descriptorResult.taprootHashTree) throw new Error('taprootHashTree is missing');
-    return { ...this.outputScriptToAddressInterface(outputScript), result: descriptorResult, derivationPath: makePath(isChange, index) };
+    return {
+      ...this.outputScriptToAddressInterface(outputScript),
+      result: descriptorResult,
+      derivationPath: makePath(isChange, index),
+    };
   }
 
   getNextAddress(): Promise<TaprootAddressInterface> {
@@ -175,7 +181,7 @@ function withoutUndefined<T>(arr: Array<T | undefined>): Array<T> {
 export class CovenantIdentity extends CovenantIdentityWatchOnly implements IdentityInterface {
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
-  
+
   readonly masterPublicKey: string;
   readonly masterBlindingKey: string;
 
@@ -211,7 +217,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
   private signSchnorr(derivationPath: string, msg: Buffer): Buffer {
     const signer = this.masterPrivateKeyNode.derivePath(derivationPath);
-    return signer.signSchnorr(msg)
+    return signer.signSchnorr(msg);
   }
 
   signPset(psetBase64: string): Promise<string> {
@@ -219,7 +225,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
     // check if all inputs have witnessUtxo
     // this is needed to get prevout values and assets
-    const inputsWitnessUtxos = pset.data.inputs.map(i => i.witnessUtxo);
+    const inputsWitnessUtxos = pset.data.inputs.map((i) => i.witnessUtxo);
     const inputsUtxos = withoutUndefined(inputsWitnessUtxos);
     if (inputsUtxos.length !== inputsWitnessUtxos.length) {
       throw new Error('missing witnessUtxo, all inputs need witnessUtxo');
@@ -234,7 +240,6 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
         const cachedAddrInfos = this.cache.get(script);
         // check if we own the input, and if have `witnesses` member
         if (cachedAddrInfos && cachedAddrInfos.result.witnesses && cachedAddrInfos.derivationPath) {
-
           try {
             const leafScript = input.finalScriptWitness.toString('hex');
             // witnesses func will throw if the leaf is not a valid leaf
@@ -244,23 +249,20 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
             // default leaf version is used
             const leafHash = bip341.tapLeafHash({
               scriptHex: leafScript,
-            })
+            });
 
             const sighashForSig = pset.TX.hashForWitnessV1(
               index,
-              inputsUtxos.map(u => u.script),
-              inputsUtxos.map(u => ({ value: u.value, asset: u.asset })),
+              inputsUtxos.map((u) => u.script),
+              inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
               Transaction.SIGHASH_DEFAULT,
               this.network.genesisBlockHash,
               leafHash
-            )
+            );
 
             const sig = this.signSchnorr(cachedAddrInfos.derivationPath, sighashForSig);
 
-            const witnessStack = [
-              sig,
-              ...taprootSignScriptStack,
-            ];
+            const witnessStack = [sig, ...taprootSignScriptStack];
 
             const signedPset = pset
               .updateInput(index, { finalScriptWitness: Buffer.concat(witnessStack) })

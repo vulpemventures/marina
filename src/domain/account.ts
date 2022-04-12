@@ -6,19 +6,16 @@ import type {
   StateRestorerOpts,
   Restorer,
   EsploraRestorerOpts,
-  NetworkString} from 'ldk';
-import {
-  IdentityType,
- masterPubKeyRestorerFromEsplora } from 'ldk';
+  NetworkString,
+} from 'ldk';
+import { IdentityType, masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type {
-  CovenantDescriptors,
-  CovenantIdentity} from './covenant-identity';
+import type { CovenantDescriptors, CovenantIdentity } from './covenant-identity';
 import {
   CovenantIdentityWatchOnly,
   covenantRestorerFromEsplora,

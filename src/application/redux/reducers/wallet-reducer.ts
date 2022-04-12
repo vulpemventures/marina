@@ -3,13 +3,8 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
-import type {
-  AccountData,
-  AccountID,
-  CovenantAccountData} from '../../../domain/account';
-import {
-  AccountType
- initialRestorerOpts, MainAccountID } from '../../../domain/account';
+import type { AccountData, AccountID, CovenantAccountData } from '../../../domain/account';
+import { AccountType, initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
 import type { NetworkString, UnblindedOutput } from 'ldk';
@@ -116,25 +111,25 @@ export function walletReducer(
         passwordHash: payload.passwordHash,
       };
     }
-    
+
     case ACTION_TYPES.SET_COVENANT_TEMPLATE: {
       const accountID = payload.accountID as AccountID;
       if (state.accounts[accountID]?.type !== AccountType.CovenantAccount) return state;
 
       const accountWithTemplate: CovenantAccountData = {
-        ...state.accounts[accountID] as CovenantAccountData,
+        ...(state.accounts[accountID] as CovenantAccountData),
         covenantDescriptors: {
           namespace: payload.accountID,
           template: payload.template,
-        }
-      }
+        },
+      };
 
       return {
         ...state,
         accounts: {
           ...state.accounts,
           [accountID]: accountWithTemplate,
-        }
+        },
       };
     }
 

@@ -1,4 +1,4 @@
-import type { AccountID, Account, AccountData, AccountType } from '../../../domain/account';
+import type { AccountID, Account, AccountData } from '../../../domain/account';
 import { createAccount, MainAccountID } from '../../../domain/account';
 import type { NetworkString, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';

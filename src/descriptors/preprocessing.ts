@@ -2,7 +2,7 @@ const namespaceRegexp = /[$][a-z]+/;
 
 export interface Context {
   // map namespace token to public key
-  namespaces: Map<string, { pubkey: string }>; 
+  namespaces: Map<string, { pubkey: string }>;
 }
 
 function replaceAll(str: string, find: string, replace: string): string {
@@ -12,7 +12,7 @@ function replaceAll(str: string, find: string, replace: string): string {
 export function getNamespaces(text: string): Array<string> {
   const namespaces = namespaceRegexp.exec(text);
   if (!namespaces) return [];
-  return namespaces.map(n => n.slice(1)) // remove the '$' token
+  return namespaces.map((n) => n.slice(1)); // remove the '$' token
 }
 
 export function processNamespaces(ctx: Context['namespaces'], text: string): string {

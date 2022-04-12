@@ -1,11 +1,11 @@
 import { bip341 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 
-const { taprootOutputScript, taprootSignScriptStack } = bip341.BIP341Factory(ecc);
+const bip341lib = bip341.BIP341Factory(ecc);
 
 export enum TypeAST {
   SCRIPT = 0, // one of ScriptType
-  TREE, // { asm(...) | TREE, asm(...) | TREE }
+  TREE, // {asm(...)|TREE,asm(...)|TREE}
   HEX, // ? bits hex
   KEY, // 64 bits hex
 }
@@ -141,7 +141,7 @@ function compileELTR(ast: AST): Result {
   const prefixedInternalKey = Buffer.concat([Buffer.of(0x00), internalKey]);
 
   // segwit v1 scriptPubKey
-  const scriptPubKey = taprootOutputScript(prefixedInternalKey, tree);
+  const scriptPubKey = bip341lib.taprootOutputScript(prefixedInternalKey, tree);
 
   return {
     witnesses: (leafScript: string): Buffer[] => {
@@ -151,7 +151,7 @@ function compileELTR(ast: AST): Result {
       }
 
       const path = bip341.findScriptPath(tree, bip341.tapLeafHash(leaf));
-      return taprootSignScriptStack(prefixedInternalKey, leaf, tree.hash, path);
+      return bip341lib.taprootSignScriptStack(prefixedInternalKey, leaf, tree.hash, path);
     },
     scriptPubKey: () => scriptPubKey,
     taprootHashTree: tree,
