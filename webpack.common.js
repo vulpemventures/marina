@@ -6,8 +6,6 @@ const { ProvidePlugin } = require('webpack');
 module.exports = {
   experiments: {
     topLevelAwait: true,
-    asyncWebAssembly: true,
-    syncWebAssembly: true
   },
   entry: {
     'index': './src/presentation/index.tsx',
