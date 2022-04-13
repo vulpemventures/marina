@@ -22,7 +22,7 @@ const secp256k1imports = {
 
 type TinySecp256k1Interface = LDKSecpI & bip341.TinySecp256k1Interface;
 
-class WasmModule<T = any> {
+class WasmModule {
   static BASE64_WASM_PREFIX = 'data:application/wasm;base64,';
   private _instance: WebAssembly.Instance;
 
@@ -30,33 +30,18 @@ class WasmModule<T = any> {
     this._instance = module;
   }
 
-  static async fromBase64<T = any>(
-    base64: string,
-    imports: Record<string, any> = {}
-  ): Promise<WasmModule<T>> {
+  static async fromBase64(base64: string, imports: Record<string, any> = {}): Promise<WasmModule> {
     const withoutPrefix = base64.replace(WasmModule.BASE64_WASM_PREFIX, '');
-    console.log(Buffer.from(withoutPrefix, 'base64'));
     const m = await WebAssembly.compile(Buffer.from(withoutPrefix, 'base64'));
     const instance = await WebAssembly.instantiate(m, imports);
-    return new WasmModule<T>(instance);
+    return new WasmModule(instance);
   }
 
-  get exports(): T {
-    return this._instance.exports as unknown as T;
+  get exports() {
+    return this._instance.exports;
   }
 }
-console.log(b64wasm);
-
-const secp256k1 = await WasmModule.fromBase64<TinySecp256k1Interface>(
-  b64wasm as unknown as string,
-  secp256k1imports
-);
+const secp256k1 = await WasmModule.fromBase64(b64wasm, secp256k1imports);
 const ecc = secp256k1.exports;
-
-console.log(
-  ecc.isPoint(
-    Buffer.from('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', 'hex')
-  )
-);
 
 export default ecc;
