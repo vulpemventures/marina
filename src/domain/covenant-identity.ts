@@ -1,4 +1,4 @@
-import type {
+import {
   AddressInterface,
   IdentityInterface,
   IdentityOpts,
@@ -6,6 +6,7 @@ import type {
   EsploraRestorerOpts,
   NetworkString,
   StateRestorerOpts,
+  fromXpub,
 } from 'ldk';
 import {
   Identity,
@@ -18,6 +19,7 @@ import {
   restorerFromState,
   Transaction,
   bip341,
+  toXpub
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { evaluate } from '../descriptors';
@@ -72,7 +74,7 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
       args.opts.masterBlindingKey
     );
-    this.masterPubKeyNode = BIP32Factory(this.ecclib).fromBase58(args.opts.masterPublicKey);
+    this.masterPubKeyNode = BIP32Factory(this.ecclib).fromBase58(toXpub(args.opts.masterPublicKey));
   }
 
   private deriveMasterXPub(isChange: boolean, index: number): string {

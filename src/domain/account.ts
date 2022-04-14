@@ -30,7 +30,7 @@ export const MainAccountID = 'mainAccount';
 export type AccountID = string;
 
 export enum AccountType {
-  SingleSigAccount = 0,
+  MainAccount = 0,
   CovenantAccount = 1,
 }
 
@@ -46,7 +46,9 @@ export interface Account<
   SignID extends IdentityInterface = IdentityInterface,
   WatchID extends IdentityInterface = IdentityInterface
 > {
+  type: AccountType;
   getAccountID(): AccountID;
+  isReady(): boolean;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
   getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
@@ -64,7 +66,7 @@ export interface AccountData {
 export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
 
 export interface MnemonicAccountData extends AccountData {
-  type: AccountType.SingleSigAccount;
+  type: AccountType.MainAccount;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
@@ -89,6 +91,8 @@ function createMainAccount(
   data: MnemonicAccountData
 ): MnemonicAccount {
   return {
+    type: AccountType.MainAccount,
+    isReady: () => true,
     getAccountID: () => MainAccountID,
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredMnemonic(decrypt(encryptedMnemonic, password), data.restorerOpts[network], network),
@@ -112,6 +116,8 @@ function createCovenantAccount(
   data: CovenantAccountData
 ): CovenantAccount {
   return {
+    type: AccountType.CovenantAccount,
+    isReady: () => data.covenantDescriptors.template !== undefined,
     getAccountID: () => data.covenantDescriptors.namespace,
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredCovenantIdentity(
@@ -148,7 +154,7 @@ const factories = new Map<
   AccountType,
   (encryptedMnemonic: EncryptedMnemonic, data: any) => Account
 >()
-  .set(AccountType.SingleSigAccount, createMainAccount)
+  .set(AccountType.MainAccount, createMainAccount)
   .set(AccountType.CovenantAccount, createCovenantAccount);
 
 export const createAccount = (encryptedMnemonic: EncryptedMnemonic, data: AccountData): Account => {

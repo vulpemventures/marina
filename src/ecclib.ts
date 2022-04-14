@@ -13,14 +13,11 @@ import * as rand from 'tiny-secp256k1-lib/rand.browser.js';
 // @ts-ignore
 // eslint-disable-next-line
 import * as validate_error from 'tiny-secp256k1-lib/validate_error.js';
-import type { TinySecp256k1Interface as LDKSecpI, bip341 } from 'ldk';
 
 const secp256k1imports = {
   './rand.js': rand,
   './validate_error.js': validate_error,
 };
-
-type TinySecp256k1Interface = LDKSecpI & bip341.TinySecp256k1Interface;
 
 class WasmModule {
   static BASE64_WASM_PREFIX = 'data:application/wasm;base64,';

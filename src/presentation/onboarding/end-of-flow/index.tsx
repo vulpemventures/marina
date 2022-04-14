@@ -145,7 +145,7 @@ export async function createWalletFromMnemonic(
   const addresses = await mnemonicIdentity.getAddresses();
 
   const accountData: MnemonicAccountData = {
-    type: AccountType.SingleSigAccount,
+    type: AccountType.MainAccount,
     restorerOpts: {
       ...walletInitState.accounts[MainAccountID].restorerOpts,
       [chain]: getStateRestorerOptsFromAddresses(addresses),

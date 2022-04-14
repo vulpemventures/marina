@@ -12,7 +12,7 @@ export const testPasswordHash: PasswordHash =
  * 	| pwd = marinatest
  */
 export const testWalletData: MnemonicAccountData = {
-  type: AccountType.SingleSigAccount,
+  type: AccountType.MainAccount,
   restorerOpts: {
     liquid: initialRestorerOpts,
     testnet: initialRestorerOpts,

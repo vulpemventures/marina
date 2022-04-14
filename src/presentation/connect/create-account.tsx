@@ -21,7 +21,7 @@ export interface CreateAccountPopupResponse {
   accepted: boolean;
 }
 
-const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData }) => {
+const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const popupWindowProxy = new PopupWindowProxy<CreateAccountPopupResponse>();
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -141,4 +141,4 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   );
 };
 
-export default connectWithConnectData(ConnectSignTransaction);
+export default connectWithConnectData(ConnectCreateAccount);

@@ -13,7 +13,7 @@ export const walletInitState: WalletState = {
   encryptedMnemonic: '',
   accounts: {
     [MainAccountID]: {
-      type: AccountType.SingleSigAccount,
+      type: AccountType.MainAccount,
       masterBlindingKey: '',
       masterXPub: '',
       restorerOpts: {
@@ -139,7 +139,8 @@ export function walletReducer(
       return {
         ...state,
         accounts: {
-          [accountID]: data,
+          ...state.accounts,
+          [accountID]: data
         },
       };
     }

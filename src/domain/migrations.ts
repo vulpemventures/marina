@@ -32,13 +32,13 @@ export const walletMigrations = {
     ...state,
     encryptedMnemonic: state[MainAccountID].encryptedMnemonic,
     accounts: {
-      [MainAccountID]: { ...state[MainAccountID], type: AccountType.SingleSigAccount },
+      [MainAccountID]: { ...state[MainAccountID], type: AccountType.MainAccount },
     },
   }),
   2: (state: WalletPersistedStateV1): WalletPersistedStateV2 => {
     return {
       mainAccount: {
-        type: AccountType.SingleSigAccount,
+        type: AccountType.MainAccount,
         encryptedMnemonic: state.encryptedMnemonic,
         masterBlindingKey: state.masterBlindingKey,
         masterXPub: state.masterXPub,
