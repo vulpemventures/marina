@@ -1,6 +1,10 @@
-# Marina
+# Marina Wallet
+Liquid Network browser extension
 
-Liquid Wallet browser extension.
+
+![mockup_marina-p-2000 2825524f](https://user-images.githubusercontent.com/3596602/163511145-3085879d-486c-42d1-880a-1f8ba3f98803.png)
+
+
 
 ## Install
 
