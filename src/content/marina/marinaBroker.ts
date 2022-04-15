@@ -18,6 +18,7 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
+  selectAccount,
   selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
@@ -34,7 +35,7 @@ import type { Balance, Recipient, Utxo } from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import type { AccountID, CovenantAccountData } from '../../domain/account';
+import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
@@ -50,7 +51,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
   private cache: StoreCache;
   private hostname: string;
-  private selectedAccount: AccountID = 'mainAccount';
+  private selectedAccount: AccountID = MainAccountID;
 
   static async Start(hostname?: string) {
     const broker = new MarinaBroker(hostname, [await MarinaBroker.WithProxyStore()]);
@@ -89,6 +90,10 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         );
       }
     });
+  }
+
+  private get accountSelector() {
+    return selectAccount(this.selectedAccount);
   }
 
   private hostnameEnabled(state: RootReducerState): boolean {
@@ -153,23 +158,23 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'getAddresses': {
           this.checkHostnameAuthorization(state);
           const net = selectNetwork(state);
-          const xpub = await selectMainAccount(state).getWatchIdentity(net);
-          return successMsg(await xpub.getAddresses());
+          const watchOnlyIdentity = await this.accountSelector(state).getWatchIdentity(net);
+          return successMsg(await watchOnlyIdentity.getAddresses());
         }
 
         case 'getNextAddress': {
           this.checkHostnameAuthorization(state);
-          const account = selectMainAccount(state);
+          const account = this.accountSelector(state);
           const net = selectNetwork(state);
-          const xpub = await account.getWatchIdentity(net);
-          const nextAddress = await xpub.getNextAddress();
+          const watchOnlyIdentity = await account.getWatchIdentity(net);
+          const nextAddress = await watchOnlyIdentity.getNextAddress();
           await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID(), net));
           return successMsg(nextAddress);
         }
 
         case 'getNextChangeAddress': {
           this.checkHostnameAuthorization(state);
-          const account = selectMainAccount(state);
+          const account = this.accountSelector(state);
           const net = selectNetwork(state);
           const xpub = await account.getWatchIdentity(net);
           const nextChangeAddress = await xpub.getNextChangeAddress();
@@ -262,13 +267,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getTransactions': {
           this.checkHostnameAuthorization(state);
-          const transactions = selectTransactions(MainAccountID)(state);
+          const transactions = selectTransactions(this.selectedAccount)(state);
           return successMsg(transactions);
         }
 
         case 'getCoins': {
           this.checkHostnameAuthorization(state);
-          const coins = selectUtxos(MainAccountID)(state);
+          const coins = selectUtxos(this.selectedAccount)(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
@@ -280,7 +285,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getBalances': {
           this.checkHostnameAuthorization(state);
-          const balances = selectBalances(MainAccountID)(state);
+          const balances = selectBalances(this.selectedAccount)(state);
           const assetGetter = assetGetterFromIAssets(state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
@@ -333,10 +338,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const accountData = state.wallet.accounts[this.selectedAccount];
           if (accountData.type !== AccountType.CovenantAccount) {
             throw new Error('Only covenant accounts can import templates');
-          }
-
-          if ((accountData as CovenantAccountData).covenantDescriptors.template) {
-            throw new Error('This account already has a template');
           }
 
           const [template] = params as [string];

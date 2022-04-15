@@ -97,7 +97,7 @@ const parseTREE: Parser = (text: string) => {
 const parseScriptToken =
   (type: ScriptType): Parser =>
   (text: string) => {
-    const res = parseToken(`${cmd(type)}(`)(text);
+    const res = compose(parseToken(cmd(type)), parseToken('('))(text);
     return [{ type: TypeAST.SCRIPT, value: type, children: [] }, res[1]];
   };
 

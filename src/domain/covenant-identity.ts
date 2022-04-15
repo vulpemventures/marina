@@ -1,14 +1,5 @@
 import {
-  AddressInterface,
-  IdentityInterface,
-  IdentityOpts,
-  Restorer,
-  EsploraRestorerOpts,
-  NetworkString,
-  StateRestorerOpts,
-  fromXpub,
-} from 'ldk';
-import {
+
   Identity,
   crypto,
   Mnemonic,
@@ -19,7 +10,15 @@ import {
   restorerFromState,
   Transaction,
   bip341,
-  toXpub
+  toXpub} from 'ldk';
+import type {
+  AddressInterface,
+  IdentityInterface,
+  IdentityOpts,
+  Restorer,
+  EsploraRestorerOpts,
+  NetworkString,
+  StateRestorerOpts
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { evaluate } from '../descriptors';
@@ -47,6 +46,7 @@ export interface TaprootAddressInterface extends AddressInterface {
 export interface CovenantDescriptors {
   namespace: string;
   template?: string;
+  changeTemplate?: string;
 }
 
 export type CovenantIdentityOpts = CovenantDescriptors & {
@@ -65,12 +65,16 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CovenantIdentityOpts['namespace'];
-  template?: string;
+  readonly covenant: CovenantDescriptors;
 
   constructor(args: IdentityOpts<TemplateIdentityWatchOnlyOpts>) {
     super(args);
     this.namespace = args.opts.namespace;
-    this.template = args.opts.template;
+    this.covenant = {
+      namespace: args.opts.namespace,
+      template: args.opts.template,
+      changeTemplate: args.opts.changeTemplate,
+    };
     this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
       args.opts.masterBlindingKey
     );
@@ -83,7 +87,7 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
 
   private getContext(isChange: boolean, index: number): Context {
     return {
-      namespaces: new Map().set(this.namespace, this.deriveMasterXPub(isChange, index)),
+      namespaces: new Map().set(this.namespace, { pubkey: this.deriveMasterXPub(isChange, index) }),
     };
   }
 
@@ -102,9 +106,15 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     this.cache.set(scriptPubKey.toString('hex'), addr);
   }
 
+  private getTemplate(isChange: boolean): string {
+    if (isChange && this.covenant.changeTemplate) return this.covenant.changeTemplate;
+    if (!this.covenant.template) throw new Error('template is missing');
+    return this.covenant.template;
+  }
+
   getAddress(isChange: boolean, index: number): TaprootAddressInterface {
-    if (!this.template) throw new Error('template is missing');
-    const descriptorResult = evaluate(this.getContext(isChange, index), this.template);
+    const template = this.getTemplate(isChange);
+    const descriptorResult = evaluate(this.getContext(isChange, index), template);
     const outputScript = descriptorResult.scriptPubKey().toString('hex');
     if (!descriptorResult.taprootHashTree) throw new Error('taprootHashTree is missing');
     return {

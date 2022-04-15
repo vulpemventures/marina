@@ -1,6 +1,6 @@
-import ShellPopUp from "../components/shell-popup";
-import { Account } from "../../domain/account";
-import ButtonList from "../components/button-list";
+import ShellPopUp from '../components/shell-popup';
+import type { Account } from '../../domain/account';
+import ButtonList from '../components/button-list';
 
 export interface SettingsAccountsProps {
   accounts: Account[];

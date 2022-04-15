@@ -121,6 +121,7 @@ export function walletReducer(
         covenantDescriptors: {
           namespace: payload.accountID,
           template: payload.template,
+          changeTemplate: payload.changeTemplate,
         },
       };
 
@@ -140,7 +141,11 @@ export function walletReducer(
         ...state,
         accounts: {
           ...state.accounts,
-          [accountID]: data
+          [accountID]: data,
+        },
+        unspentsAndTransactions: {
+          ...state.unspentsAndTransactions,
+          [accountID]: newEmptyUtxosAndTxsHistory(),
         },
       };
     }

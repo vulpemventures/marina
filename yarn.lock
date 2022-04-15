@@ -2141,10 +2141,9 @@ bitcoinjs-message@^2.2.0:
     secp256k1 "^3.0.1"
     varuint-bitcoin "^1.0.1"
 
-blech32@^1.1.1:
+"blech32@git+https://github.com/louisinger/blech32.git#fix-blech32m":
   version "1.1.1"
-  resolved "https://registry.yarnpkg.com/blech32/-/blech32-1.1.1.tgz#b3260d953710c25a2bdac08bfe919d0db1cb3203"
-  integrity sha512-5EvwgaKzsUMU9En0aAum5Gq48Gp40ODxUZTAPK5gg5BNxjkjDve3Qh/yLEg33wYEaNXL3IFRsnQoky5+bA9tLQ==
+  resolved "git+https://github.com/louisinger/blech32.git#db9aee913ea58ff31c1fa83030746dc677cbcf25"
   dependencies:
     long "^4.0.0"
 
@@ -6475,16 +6474,16 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-"ldk@git+https://github.com/louisinger/ldk.git#removesecp":
-  version "0.4.7"
-  resolved "git+https://github.com/louisinger/ldk.git#89bb26caf8f45891b8527d608ca727feeb5e9b8f"
+"ldk@git+https://github.com/louisinger/ldk.git#bump-liquidjs":
+  version "0.4.8"
+  resolved "git+https://github.com/louisinger/ldk.git#c8a33e48118fd8b16a7d99a4c5256b5ab2521c55"
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
     ecpair "^2.0.1"
-    liquidjs-lib "^6.0.2-liquid.5"
+    liquidjs-lib "git+https://github.com/louisinger/liquidjs-lib.git#witness_version_ser"
     slip77 "^0.2.0"
     tslib "^2.3.1"
 
@@ -6534,10 +6533,9 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-liquidjs-lib@^6.0.2-liquid.5:
+"liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib.git#witness_version_ser":
   version "6.0.2-liquid.5"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.5.tgz#075f1b9d0152d832880806853e56249ae9cca885"
-  integrity sha512-9zaEGC7q+ermW9Zo3ia7CCOD2S7TfQlXynL5AumepMeG3NsmioIVp+nobC4NDAphUC5/56HRsu54M4hpqgkRtw==
+  resolved "git+https://github.com/louisinger/liquidjs-lib.git#5eaa6e6ff8c801f84622406d22eac78afe26f907"
   dependencies:
     "@types/randombytes" "^2.0.0"
     "@types/wif" "^2.0.2"
@@ -6548,7 +6546,7 @@ liquidjs-lib@^6.0.2-liquid.5:
     bip32 "^2.0.4"
     bip66 "^1.1.0"
     bitcoin-ops "^1.4.0"
-    blech32 "^1.1.1"
+    blech32 "git+https://github.com/louisinger/blech32.git#fix-blech32m"
     bs58check "^2.0.0"
     create-hash "^1.2.0"
     ecpair "^2.0.1"

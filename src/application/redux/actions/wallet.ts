@@ -40,10 +40,14 @@ export function setAccount<T extends AccountData>(accountID: AccountID, accountD
   };
 }
 
-export function setCovenantTemplate(accountID: AccountID, template: string): AnyAction {
+export function setCovenantTemplate(
+  accountID: AccountID,
+  template: string,
+  changeTemplate?: string
+): AnyAction {
   return {
     type: SET_COVENANT_TEMPLATE,
-    payload: { accountID, template },
+    payload: { accountID, template, changeTemplate },
   };
 }
 

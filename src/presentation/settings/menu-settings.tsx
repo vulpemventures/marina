@@ -53,7 +53,7 @@ const SettingsMenuSettings: React.FC = () => {
             <img className="w-5 h-5" src="assets/images/chevron-right.svg" alt="chevron" />
           </li>
         </button>
-        
+
         <button onClick={handleAccounts}>
           <li className="settings-list-item">
             <span className="font-regular text-base">Accounts</span>
