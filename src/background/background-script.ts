@@ -149,13 +149,17 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
 const POPUP_HTML = 'popup.html';
 
 async function createBrowserPopup(name?: PopupName) {
+  const [defaultWindowWidth, rightMargin] = [1360, 100];
+  const window = await browser.windows.getLastFocused().catch(console.error);
+  const windowWidth = window?.width || defaultWindowWidth;
+  const width = 360; // popup width
   const options = {
     url: `${POPUP_HTML}#/connect/${name}`,
     type: 'popup',
     height: 600,
-    width: 360,
+    width,
     focused: true,
-    left: 100,
+    left: windowWidth - rightMargin - width,
     top: 100,
   };
   await browser.windows.create(options as any);
