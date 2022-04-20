@@ -1,8 +1,6 @@
 import {
-
   Identity,
   crypto,
-  Mnemonic,
   address,
   Psbt,
   restorerFromEsplora,
@@ -10,7 +8,13 @@ import {
   restorerFromState,
   Transaction,
   bip341,
-  toXpub} from 'ldk';
+  toXpub,
+  witnessStackToScriptWitness,
+  checkIdentityType,
+  checkMnemonic,
+  networks,
+  fromXpub,
+} from 'ldk';
 import type {
   AddressInterface,
   IdentityInterface,
@@ -18,7 +22,8 @@ import type {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
-  StateRestorerOpts
+  StateRestorerOpts,
+  Mnemonic,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { evaluate } from '../descriptors';
@@ -26,17 +31,24 @@ import type { Result } from '../descriptors/ast';
 import type { Context } from '../descriptors/preprocessing';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
+import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
+import { mnemonicToSeedSync } from 'bip39';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
   const hash = crypto.sha256(Buffer.from(namespace));
   const hash128 = hash.slice(0, 16);
-  const A = hash128.readUint32LE(0);
-  const B = hash128.readUint32LE(4);
-  const C = hash128.readUint32LE(8);
-  const D = hash128.readUint32LE(12);
-  return `m/13'/${A}'/${B}'/${C}'/${D}'`;
+  const A = hash128.readUInt32LE(0) || 0x80000000;
+  const B = hash128.readUint32LE(4) || 0x80000000;
+  const C = hash128.readUint32LE(8) || 0x80000000;
+  const D = hash128.readUint32LE(12) || 0x80000000;
+  return `m/${A}/${B}/${C}/${D}`;
+}
+
+function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32Interface {
+  const path = namespaceToDerivationPath(namespace);
+  return m.derivePath(path);
 }
 
 export interface TaprootAddressInterface extends AddressInterface {
@@ -58,6 +70,10 @@ export type TemplateIdentityWatchOnlyOpts = CovenantDescriptors & {
   masterPublicKey: string;
 };
 
+interface IdentityOptsWithSchnorr<opt> extends IdentityOpts<opt> {
+  ecclib: IdentityOpts<opt>['ecclib'] & bip341.TinySecp256k1Interface;
+}
+
 export class CovenantIdentityWatchOnly extends Identity implements IdentityInterface {
   private index = 0;
   private changeIndex = 0;
@@ -66,8 +82,9 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CovenantIdentityOpts['namespace'];
   readonly covenant: CovenantDescriptors;
+  readonly ecclib: IdentityOpts<any>['ecclib'] & bip341.TinySecp256k1Interface;
 
-  constructor(args: IdentityOpts<TemplateIdentityWatchOnlyOpts>) {
+  constructor(args: IdentityOptsWithSchnorr<TemplateIdentityWatchOnlyOpts>) {
     super(args);
     this.namespace = args.opts.namespace;
     this.covenant = {
@@ -75,19 +92,25 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
       template: args.opts.template,
       changeTemplate: args.opts.changeTemplate,
     };
+    this.ecclib = args.ecclib;
     this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
       args.opts.masterBlindingKey
     );
     this.masterPubKeyNode = BIP32Factory(this.ecclib).fromBase58(toXpub(args.opts.masterPublicKey));
   }
 
-  private deriveMasterXPub(isChange: boolean, index: number): string {
-    return this.masterPubKeyNode.derivePath(makePath(isChange, index)).publicKey.toString('hex');
+  private deriveMasterXPub(isChange: boolean, index: number, forSchnorr: boolean): string {
+    return this.masterPubKeyNode
+      .derivePath(makePath(isChange, index))
+      .publicKey.slice(forSchnorr ? 1 : 0)
+      .toString('hex');
   }
 
   private getContext(isChange: boolean, index: number): Context {
     return {
-      namespaces: new Map().set(this.namespace, { pubkey: this.deriveMasterXPub(isChange, index) }),
+      namespaces: new Map().set(this.namespace, {
+        pubkey: this.deriveMasterXPub(isChange, index, true),
+      }),
     };
   }
 
@@ -194,33 +217,35 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
 
-  readonly masterPublicKey: string;
-  readonly masterBlindingKey: string;
+  constructor(args: IdentityOptsWithSchnorr<CovenantIdentityOpts>) {
+    checkIdentityType(args.type, IdentityType.Mnemonic);
+    checkMnemonic(args.opts.mnemonic);
 
-  constructor(args: IdentityOpts<CovenantIdentityOpts>) {
-    // we use mnemonic identity to build the bip32 & slip77 nodes
-    const mnemonic = new Mnemonic({
-      ...args,
-      opts: {
-        mnemonic: args.opts.mnemonic,
-        baseDerivationPath: namespaceToDerivationPath(args.opts.namespace),
-      },
-    });
+    const seed = mnemonicToSeedSync(args.opts.mnemonic);
+    const bip32 = BIP32Factory(args.ecclib);
+
+    const masterPrivateKeyNode = bip32.fromSeed(seed, networks[args.chain]);
+    const baseNode = makeBaseNodeFromNamespace(masterPrivateKeyNode, args.opts.namespace);
+
+    const masterPublicKey = fromXpub(
+      bip32.fromPublicKey(baseNode.publicKey, baseNode.chainCode, baseNode.network).toBase58(),
+      args.chain
+    );
+
+    const masterBlindingKeyNode = SLIP77Factory(args.ecclib).fromSeed(seed);
 
     super({
       ...args,
       opts: {
         namespace: args.opts.namespace,
         template: args.opts.template,
-        masterPublicKey: mnemonic.masterPublicKey,
-        masterBlindingKey: mnemonic.masterBlindingKey,
+        masterPublicKey: masterPublicKey,
+        masterBlindingKey: masterBlindingKeyNode.masterKey.toString('hex'),
       },
     });
 
-    this.masterPrivateKeyNode = mnemonic.masterPrivateKeyNode;
-    this.masterBlindingKeyNode = mnemonic.masterBlindingKeyNode;
-    this.masterPublicKey = mnemonic.masterPublicKey;
-    this.masterBlindingKey = mnemonic.masterBlindingKey;
+    this.masterPrivateKeyNode = baseNode;
+    this.masterBlindingKeyNode = masterBlindingKeyNode;
   }
 
   isAbleToSign(): boolean {
@@ -229,22 +254,24 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
   private signSchnorr(derivationPath: string, msg: Buffer): Buffer {
     const signer = this.masterPrivateKeyNode.derivePath(derivationPath);
-    return signer.signSchnorr(msg);
+    return Buffer.from(this.ecclib.signSchnorr(msg, signer.privateKey!, Buffer.alloc(32)));
   }
 
   signPset(psetBase64: string): Promise<string> {
-    const pset = Psbt.fromBase64(psetBase64);
+    let pset = psetBase64; // we'll mutate the pset to sign with signature if needed
+    let inputsSigned = 0;
+    const getPset = () => Psbt.fromBase64(pset);
 
     // check if all inputs have witnessUtxo
     // this is needed to get prevout values and assets
-    const inputsWitnessUtxos = pset.data.inputs.map((i) => i.witnessUtxo);
+    const inputsWitnessUtxos = getPset().data.inputs.map((i) => i.witnessUtxo);
     const inputsUtxos = withoutUndefined(inputsWitnessUtxos);
     if (inputsUtxos.length !== inputsWitnessUtxos.length) {
       throw new Error('missing witnessUtxo, all inputs need witnessUtxo');
     }
 
-    for (let index = 0; index < pset.data.inputs.length; index++) {
-      const input = pset.data.inputs[index];
+    for (let index = 0; index < getPset().data.inputs.length; index++) {
+      const input = getPset().data.inputs[index];
       // current version of pset does not support taproot field (BIP371)
       // as a temp solution, we use the finalScriptWitness to "signal" the leaf to sign
       if (input.witnessUtxo && input.finalScriptWitness) {
@@ -253,7 +280,8 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
         // check if we own the input, and if have `witnesses` member
         if (cachedAddrInfos && cachedAddrInfos.result.witnesses && cachedAddrInfos.derivationPath) {
           try {
-            const leafScript = input.finalScriptWitness.toString('hex');
+            const leafScript = input.finalScriptWitness.slice(2).toString('hex');
+
             // witnesses func will throw if the leaf is not a valid leaf
             // this MUST skip error in order to skip the signed inputs
             const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
@@ -263,7 +291,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
               scriptHex: leafScript,
             });
 
-            const sighashForSig = pset.TX.hashForWitnessV1(
+            const sighashForSig = getPset().TX.hashForWitnessV1(
               index,
               inputsUtxos.map((u) => u.script),
               inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
@@ -274,13 +302,25 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
             const sig = this.signSchnorr(cachedAddrInfos.derivationPath, sighashForSig);
 
+            // verify schnorr sig
+            const pubkeytosign = this.masterPrivateKeyNode
+              .derivePath(cachedAddrInfos.derivationPath)
+              .publicKey.slice(1);
+            if (!this.ecclib.verifySchnorr(sighashForSig, pubkeytosign, sig)) {
+              throw new Error('schnorr sig verification failed');
+            }
+
             const witnessStack = [sig, ...taprootSignScriptStack];
 
-            const signedPset = pset
-              .updateInput(index, { finalScriptWitness: Buffer.concat(witnessStack) })
+            const toSign = getPset();
+            toSign.data.inputs[index]['finalScriptWitness'] = undefined; // clear the witness data (required for updateInput)
+            pset = toSign
+              .updateInput(index, { finalScriptWitness: witnessStackToScriptWitness(witnessStack) })
               .toBase64();
-            return Promise.resolve(signedPset);
+
+            inputsSigned++;
           } catch (e) {
+            console.warn(e);
             // we skip errors, try to sign the next input
             continue;
           }
@@ -288,7 +328,8 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
       }
     }
 
-    return Promise.reject(new Error('no input to sign with leaf found'));
+    if (inputsSigned === 0) return Promise.reject(new Error('no inputs to sign'));
+    return Promise.resolve(pset);
   }
 }
 

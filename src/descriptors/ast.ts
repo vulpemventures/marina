@@ -135,8 +135,7 @@ function compileELTR(ast: AST): Result {
   const internalKey = compileKEY(ast.children[0]);
   const leaves = compileTREE(ast.children[1]);
 
-  const tree = bip341.toHashTree(leaves);
-
+  const tree = bip341.toHashTree(leaves, true);
   // this is a trick for the bip341 functions (accept only prefixed keys)
   const prefixedInternalKey = Buffer.concat([Buffer.of(0x00), internalKey]);
 

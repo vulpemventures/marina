@@ -111,7 +111,24 @@ function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
   return true;
 }
 
-const sigValidator = Psbt.ECDSASigValidator(ecc);
+const functionOR =
+  (...fns: any[]) =>
+  (errorMsg: string) =>
+  (...args: any[]) => {
+    for (const fn of fns) {
+      try {
+        return fn(...args);
+      } catch (e) {
+        // do nothing
+      }
+    }
+
+    throw new Error(errorMsg);
+  };
+const sigValidator = functionOR(
+  Psbt.ECDSASigValidator(ecc),
+  Psbt.SchnorrSigValidator(ecc)
+)('invalid signature');
 
 /**
  * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.
@@ -124,7 +141,8 @@ export async function blindAndSignPset(
   selectedUtxos: UnblindedOutput[],
   identities: IdentityInterface[],
   recipientAddresses: string[],
-  changeAddresses: string[]
+  changeAddresses: string[],
+  skipSigValidation = false
 ): Promise<string> {
   const outputAddresses = recipientAddresses.concat(changeAddresses);
 
@@ -136,8 +154,10 @@ export async function blindAndSignPset(
   const signedPset = await signPset(blindedPset, identities);
 
   const decodedPset = decodePset(signedPset);
-  if (!decodedPset.validateSignaturesOfAllInputs(sigValidator)) {
-    throw new Error('PSET is not fully signed');
+  if (!skipSigValidation) {
+    if (!decodedPset.validateSignaturesOfAllInputs(sigValidator)) {
+      throw new Error('PSET is not fully signed');
+    }
   }
 
   return decodedPset.finalizeAllInputs().extractTransaction().toHex();
