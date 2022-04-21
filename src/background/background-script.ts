@@ -147,16 +147,33 @@ async function openInitializeWelcomeRoute(): Promise<number | undefined> {
 }
 
 const POPUP_HTML = 'popup.html';
+const POPUP_HEIGHT = 600;
+const POPUP_WIDTH = 360;
 
 async function createBrowserPopup(name?: PopupName) {
+  let _left = 0;
+  let _top = 0;
+  try {
+    // Position popup in top right corner of window.
+    const { left, top, width } = await browser.windows.getLastFocused();
+    if (typeof left !== 'undefined' && typeof top !== 'undefined' && typeof width !== 'undefined') {
+      _top = top;
+      _left = left + (width - POPUP_WIDTH);
+    }
+  } catch (_) {
+    // The following properties are more than likely to be 0
+    const { screenX, screenY, outerWidth } = window;
+    _top = Math.max(screenY, 0);
+    _left = Math.max(screenX + (outerWidth - POPUP_WIDTH), 0);
+  }
   const options = {
     url: `${POPUP_HTML}#/connect/${name}`,
     type: 'popup',
-    height: 600,
-    width: 360,
+    height: POPUP_HEIGHT,
+    width: POPUP_WIDTH,
     focused: true,
-    left: 100,
-    top: 100,
+    left: _left,
+    top: _top,
   };
   await browser.windows.create(options as any);
 }
