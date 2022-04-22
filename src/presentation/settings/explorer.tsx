@@ -23,7 +23,7 @@ function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
     case 'regtest':
       return ['Nigiri', 'Custom'];
     case 'testnet':
-      return ['Testnet', 'Custom'];
+      return['Blockstream', 'Mempool', 'Custom'];
     default:
       return explorerTypesForNetwork('liquid');
   }
