@@ -35,7 +35,7 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   }
 
   return (
-    <div className="bg-smokeLight fixed inset-0 z-50 flex">
+    <div className="bg-smokeLight fixed inset-0 z-50 pr-2 flex">
       <div
         className="rounded-xl w-36 h-44 top-10 relative flex flex-col px-6 py-4 ml-auto bg-white"
         ref={ref}
