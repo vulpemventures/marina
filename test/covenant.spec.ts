@@ -12,7 +12,6 @@ import { blindAndSignPset, createSendPset } from '../src/application/utils/trans
 import { CovenantIdentity } from '../src/domain/covenant-identity';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
-import { ScriptWiz, VM_NETWORK, VM_NETWORK_VERSION } from '@script-wiz/lib';
 
 const TEST_NAMESPACE = 'test';
 
@@ -33,7 +32,7 @@ describe('covenant identity', () => {
     return await fetchAndUnblindUtxos(ecc, [addr], APIURL);
   };
 
-  test('should be able to create a covenant identity without template set up', () => {
+  test('should be able to instantiate a covenant identity without template set up', () => {
     const random = makeRandomCovenantIdentity();
     expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
     expect(random.covenant.template).toBeUndefined();
@@ -41,16 +40,14 @@ describe('covenant identity', () => {
   });
 
   test('should be able to send and receive coin with new elements tapscript opcodes', async () => {
-    const inspectOutputIsLbtc = (index: number) => {
-      const wiz = new ScriptWiz({ network: VM_NETWORK.LIQUID, ver: VM_NETWORK_VERSION.TAPSCRIPT });
-      wiz.parseNumber(index);
-      wiz.parseOpcode('OP_INSPECTOUTPUTASSET');
-      wiz.parseNumber(1);
-      wiz.parseOpcode('OP_EQUALVERIFY');
-      wiz.parseHex(Buffer.from(networks.regtest.assetHash, 'hex').reverse().toString('hex'));
-      wiz.parseOpcode('OP_EQUALVERIFY');
-      return script.toASM(Buffer.from(wiz.compile().substring(2), 'hex'));
-    };
+    const inspectOutputIsLbtc = (index: number) => script.toASM([
+      script.number.encode(index),
+      script.OPS.OP_INSPECTOUTPUTASSET,
+      script.number.encode(1), // 1 = UNCONFIDENTIAL
+      script.OPS.OP_EQUALVERIFY,
+      Buffer.from(networks.regtest.assetHash, 'hex').reverse(),
+      script.OPS.OP_EQUALVERIFY
+    ]);
 
     const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG ${inspectOutputIsLbtc(2)}`;
     const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;

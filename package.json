@@ -62,7 +62,6 @@
   "devDependencies": {
     "@headlessui/react": "^1.1.1",
     "@poziworld/cypress-browser-extension-plugin": "^0.2.2",
-    "@script-wiz/lib": "^0.1.77",
     "@tailwindcss/forms": "^0.3.2",
     "@tailwindcss/line-clamp": "^0.2.0",
     "@types/chai": "^4.2.21",
