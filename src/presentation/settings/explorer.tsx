@@ -7,9 +7,10 @@ import { setExplorer } from '../../application/redux/actions/app';
 import Select from '../components/select';
 import {
   BlockstreamExplorerURLs,
+  BlockstreamTestnetExplorerURLs,
   ExplorerType,
-  ExplorerURLs,
   MempoolExplorerURLs,
+  MempoolTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/app';
 import SettingsCustomExplorerForm from '../components/explorer-custom-form';
@@ -37,23 +38,37 @@ const SettingsExplorer: React.FC = () => {
   const app = useSelector((state: RootReducerState) => state.app);
   const network = app.network;
 
-  const handleChange = async (urls: ExplorerURLs) => {
-    await dispatch(setExplorer(urls, network));
+  const handleChange = async (explorer: ExplorerType) => {
+    let urls;
+    if (explorerTypesForNetwork(network).includes(explorer)) {
+      switch (network) {
+        case 'liquid':
+          if (explorer === 'Blockstream') urls = BlockstreamExplorerURLs;
+          if (explorer === 'Mempool') urls = MempoolExplorerURLs;
+          break;
+        case 'testnet':
+          if (explorer === 'Blockstream') urls = BlockstreamTestnetExplorerURLs;
+          if (explorer === 'Mempool') urls = MempoolTestnetExplorerURLs;
+          break;
+        case 'regtest':
+          if (explorer === 'Nigiri') urls = NigiriDefaultExplorerURLs;
+          break;
+        default:
+      }
+      if (urls) await dispatch(setExplorer(urls, network));
+    }
   };
 
   const onSelect = (newValue: string) => {
     switch (newValue) {
       case 'Blockstream':
-        handleChange(BlockstreamExplorerURLs).catch(console.error);
+        handleChange('Blockstream').catch(console.error);
         break;
       case 'Mempool':
-        handleChange(MempoolExplorerURLs).catch(console.error);
+        handleChange('Mempool').catch(console.error);
         break;
       case 'Nigiri':
-        handleChange(NigiriDefaultExplorerURLs).catch(console.error);
-        break;
-      case 'Testnet':
-        handleChange(BlockstreamExplorerURLs).catch(console.error);
+        handleChange('Nigiri').catch(console.error);
         break;
       case 'Custom':
         setCustom(true);
