@@ -284,6 +284,8 @@ export default class MarinaBroker extends Broker {
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
+            prevout: unblindedOutput.prevout,
+            unblindData: unblindedOutput.unblindData,
             asset: getAsset(unblindedOutput),
             value: getSats(unblindedOutput),
           }));
