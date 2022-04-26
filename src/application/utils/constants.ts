@@ -29,7 +29,7 @@ const assetHashToImagePath = new Map<string, string>();
 // set icons for all assets received from blockstream icons
 for (const hash of Object.keys(iconsImageData)) {
   assetHashToImagePath.set(hash, makeDataImage(iconsImageData[hash]));
-};
+}
 
 // set icons for lbt in testnet and regtest
 const lbtc = makeDataImage(iconsImageData[networks.liquid.assetHash]);
@@ -37,11 +37,15 @@ assetHashToImagePath.set(networks.testnet.assetHash, lbtc);
 assetHashToImagePath.set(networks.regtest.assetHash, lbtc);
 
 // set icons for usdt in testnet
-const usdt = makeDataImage(iconsImageData['ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2']);
+const usdt = makeDataImage(
+  iconsImageData['ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2']
+);
 assetHashToImagePath.set('f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958', usdt);
 
 // set icons for lcad in testnet
-const lcad = makeDataImage(iconsImageData['0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a']);
+const lcad = makeDataImage(
+  iconsImageData['0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a']
+);
 assetHashToImagePath.set('ac3e0ff248c5051ffd61e00155b7122e5ebc04fd397a0ecbdd4f4e4a56232926', lcad);
 
 // set a default icon for each blockstream asset if doesn't exists already
