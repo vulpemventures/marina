@@ -23,6 +23,10 @@ async function main() {
     const blockstreamPath = `${BASE_PATH}/blockstream_asset_hash.json`;
     writeToFile(blockstreamPath, blockstreamAssetHashes);
 
+    // Blockstream icons data image
+    const icons = await axios.get('https://assets.blockstream.info/icons');
+    const iconsPath = `${BASE_PATH}/blockstream_icons_data_image.json`;
+    writeToFile(iconsPath, icons.data);
 
   } catch (e) {
     console.error(e)
