@@ -40,14 +40,15 @@ describe('covenant identity', () => {
   });
 
   test('should be able to send and receive coin with new elements tapscript opcodes', async () => {
-    const inspectOutputIsLbtc = (index: number) => script.toASM([
-      script.number.encode(index),
-      script.OPS.OP_INSPECTOUTPUTASSET,
-      script.number.encode(1), // 1 = UNCONFIDENTIAL
-      script.OPS.OP_EQUALVERIFY,
-      Buffer.from(networks.regtest.assetHash, 'hex').reverse(),
-      script.OPS.OP_EQUALVERIFY
-    ]);
+    const inspectOutputIsLbtc = (index: number) =>
+      script.toASM([
+        script.number.encode(index),
+        script.OPS.OP_INSPECTOUTPUTASSET,
+        script.number.encode(1), // 1 = UNCONFIDENTIAL
+        script.OPS.OP_EQUALVERIFY,
+        Buffer.from(networks.regtest.assetHash, 'hex').reverse(),
+        script.OPS.OP_EQUALVERIFY,
+      ]);
 
     const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG ${inspectOutputIsLbtc(2)}`;
     const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
@@ -80,6 +81,42 @@ describe('covenant identity', () => {
         finalScriptWitness: witnessStackToScriptWitness([Buffer.from(leafToSpendScript!, 'hex')]),
       })
       .toBase64();
+
+    const signed = await blindAndSignPset(
+      pset,
+      utxos,
+      [id],
+      [addr.confidentialAddress],
+      [addr.confidentialAddress],
+      true
+    );
+    const txid = await broadcastTx(signed);
+    expect(txid).toBeDefined();
+  });
+
+  test('should be able to auto-sign CHECKSIG tapscript owned by marina', async () => {
+    const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG`;
+    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
+    const id = makeRandomCovenantIdentity(template);
+    const addr = await id.getNextAddress();
+
+    await faucet(addr.confidentialAddress, 10000);
+    const utxos = await getUnspents(addr);
+    expect(utxos.length).toBeGreaterThanOrEqual(1);
+
+    const pset = await createSendPset(
+      [
+        {
+          address: addr.confidentialAddress,
+          asset: networks.regtest.assetHash,
+          value: 1000,
+        },
+      ],
+      utxos,
+      networks.regtest.assetHash,
+      () => addr.confidentialAddress,
+      'regtest'
+    );
 
     const signed = await blindAndSignPset(
       pset,

@@ -9,14 +9,14 @@ function replaceAll(str: string, find: string, replace: string): string {
   return str.split(find).join(replace);
 }
 
-export function getNamespaces(text: string): Array<string> {
+function findNamespaces(text: string): Array<string> {
   const namespaces = namespaceRegexp.exec(text);
   if (!namespaces) return [];
   return namespaces.map((n) => n.slice(1)); // remove the '$' token
 }
 
 export function processNamespaces(ctx: Context['namespaces'], text: string): string {
-  const namespaces = getNamespaces(text);
+  const namespaces = findNamespaces(text);
   if (!namespaces.length) return text;
 
   let processedText = text;

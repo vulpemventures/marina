@@ -34,6 +34,8 @@ import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
+import type { ScriptInputsNeeds } from './script-analyser';
+import { analyzeTapscriptTree } from './script-analyser';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
@@ -53,6 +55,7 @@ function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32I
 
 export interface TaprootAddressInterface extends AddressInterface {
   result: Result;
+  tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
 }
 
 export interface CovenantDescriptors {
@@ -129,6 +132,12 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     this.cache.set(scriptPubKey.toString('hex'), addr);
   }
 
+  protected getAddressByPublicKey(publicKey: string) {
+    for (const addr of this.cache.values()) {
+      if (addr.publicKey === publicKey) return addr;
+    }
+  }
+
   private getTemplate(isChange: boolean): string {
     if (isChange && this.covenant.changeTemplate) return this.covenant.changeTemplate;
     if (!this.covenant.template) throw new Error('template is missing');
@@ -144,6 +153,8 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
       ...this.outputScriptToAddressInterface(outputScript),
       result: descriptorResult,
       derivationPath: makePath(isChange, index),
+      publicKey: this.deriveMasterXPub(isChange, index, true),
+      tapscriptNeeds: analyzeTapscriptTree(descriptorResult.taprootHashTree),
     };
   }
 
@@ -274,13 +285,19 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
       const input = getPset().data.inputs[index];
       // current version of pset does not support taproot field (BIP371)
       // as a temp solution, we use the finalScriptWitness to "signal" the leaf to sign
-      if (input.witnessUtxo && input.finalScriptWitness) {
+      // if no finalScriptWitness has been set, we'll try to find an "auto-sign" path
+      if (input.witnessUtxo) {
         const script = input.witnessUtxo.script.toString('hex');
         const cachedAddrInfos = this.cache.get(script);
         // check if we own the input, and if have `witnesses` member
-        if (cachedAddrInfos && cachedAddrInfos.result.witnesses && cachedAddrInfos.derivationPath) {
+        if (cachedAddrInfos && cachedAddrInfos.result.witnesses) {
           try {
-            const leafScript = input.finalScriptWitness.slice(2).toString('hex');
+            let leafScript = input.finalScriptWitness?.slice(2).toString('hex');
+            if (!leafScript) {
+              leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
+            }
+
+            if (!leafScript) continue; // not spendable
 
             // witnesses func will throw if the leaf is not a valid leaf
             // this MUST skip error in order to skip the signed inputs
@@ -300,17 +317,19 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
               leafHash
             );
 
-            const sig = this.signSchnorr(cachedAddrInfos.derivationPath, sighashForSig);
+            const scriptNeeds = cachedAddrInfos.tapscriptNeeds[leafScript];
+            if (!scriptNeeds) continue;
 
-            // verify schnorr sig
-            const pubkeytosign = this.masterPrivateKeyNode
-              .derivePath(cachedAddrInfos.derivationPath)
-              .publicKey.slice(1);
-            if (!this.ecclib.verifySchnorr(sighashForSig, pubkeytosign, sig)) {
-              throw new Error('schnorr sig verification failed');
-            }
+            const sigs = scriptNeeds.sigs.map((sig) => {
+              const addr = this.getAddressByPublicKey(sig.pubkey);
+              if (addr && addr.derivationPath) {
+                return this.signSchnorr(addr.derivationPath, sighashForSig);
+              }
 
-            const witnessStack = [sig, ...taprootSignScriptStack];
+              return undefined;
+            });
+
+            const witnessStack = [...withoutUndefined(sigs), ...taprootSignScriptStack];
 
             const toSign = getPset();
             toSign.data.inputs[index]['finalScriptWitness'] = undefined; // clear the witness data (required for updateInput)
@@ -330,6 +349,25 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
     if (inputsSigned === 0) return Promise.reject(new Error('no inputs to sign'));
     return Promise.resolve(pset);
+  }
+
+  private hasPrivateKey(pubkey: string): boolean {
+    return this.getAddressByPublicKey(pubkey) !== undefined;
+  }
+
+  private getFirstAutoSpendableTapscriptPath(
+    taprootAddr: TaprootAddressInterface
+  ): string | undefined {
+    for (const [script, needs] of Object.entries(taprootAddr.tapscriptNeeds)) {
+      if (needs.introspection) continue;
+      const hasAllPrivateKeys = needs.sigs.reduce(
+        (b, s) => b && this.hasPrivateKey(s.pubkey),
+        true
+      );
+      if (hasAllPrivateKeys) return script;
+    }
+
+    return undefined;
   }
 }
 

@@ -36,7 +36,7 @@ export interface Result {
   // in case of segwit v0 = [redeemScript()]
   // in case of segwit v1 = [leafScript, taprootControlBlock]
   witnesses?(...args: any[]): Buffer[];
-  taprootHashTree?: bip341.HashTree; // optional, should be undefined if not a tr template
+  taprootHashTree?: bip341.HashTree; // optional, should be undefined if not an eltr template
 }
 
 type ScriptCompileFunction = (ast: AST) => Result;
