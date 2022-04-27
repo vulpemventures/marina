@@ -227,6 +227,7 @@ function withoutUndefined<T>(arr: Array<T | undefined>): Array<T> {
 export class CovenantIdentity extends CovenantIdentityWatchOnly implements IdentityInterface {
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
+  readonly xpub: string;
 
   constructor(args: IdentityOptsWithSchnorr<CovenantIdentityOpts>) {
     checkIdentityType(args.type, IdentityType.Mnemonic);
@@ -255,6 +256,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
       },
     });
 
+    this.xpub = masterPublicKey;
     this.masterPrivateKeyNode = baseNode;
     this.masterBlindingKeyNode = masterBlindingKeyNode;
   }

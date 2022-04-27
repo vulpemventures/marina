@@ -1,8 +1,9 @@
 import type { AccountID, Account, AccountData } from '../../../domain/account';
 import { createAccount, MainAccountID } from '../../../domain/account';
-import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
+import { toStringOutpoint } from '../../utils/utxos';
 
 export const selectUtxos =
   (...accounts: AccountID[]) =>
@@ -54,6 +55,22 @@ function selectInjectedAccountData(id: AccountID) {
     }
     return { ...account, encryptedMnemonic: state.wallet.encryptedMnemonic, type: account.type };
   };
+}
+
+const selectAccountIDFromCoin = (coin: Outpoint) => (state: RootReducerState): AccountID | undefined => {
+  const selectedNetwork = state.app.network;
+  const strOutpoint = toStringOutpoint(coin);
+  for (const [accountID, coinsAndTxs] of Object.entries(state.wallet.unspentsAndTransactions)) {
+    const utxos = coinsAndTxs[selectedNetwork].utxosMap;
+    if (utxos && utxos[strOutpoint]) {
+      return accountID;
+    }
+  }
+}
+
+export const selectAccountsFromCoins = (coins: Outpoint[]) => (state: RootReducerState): Account[] => {
+  const accountsIDs = new Set(coins.map(selectAccountIDFromCoin).map(f => f(state)).filter(id => id));
+  return Array.from(accountsIDs).map(id => selectAccount(id as AccountID)(state));
 }
 
 export const selectAllAccounts = (state: RootReducerState): Account[] => {

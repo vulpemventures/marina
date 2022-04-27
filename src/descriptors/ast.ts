@@ -146,7 +146,7 @@ function compileELTR(ast: AST): Result {
     witnesses: (leafScript: string): Buffer[] => {
       const leaf = leaves.find((l) => l.scriptHex === leafScript);
       if (!leaf) {
-        throw new Error('Could not find leaf script');
+        throw new Error('Could not find leaf script for script ' + leafScript);
       }
 
       const path = bip341.findScriptPath(tree, bip341.tapLeafHash(leaf));

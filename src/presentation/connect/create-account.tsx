@@ -70,8 +70,8 @@ const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) =
             regtest: initialRestorerOpts,
             testnet: initialRestorerOpts,
           },
-          masterBlindingKey: identity.masterBlindingKey,
-          masterXPub: identity.masterPublicKey,
+          masterBlindingKey: identity.masterBlindingKeyNode.masterKey.toString('hex'),
+          masterXPub: identity.xpub,
         })
       );
 

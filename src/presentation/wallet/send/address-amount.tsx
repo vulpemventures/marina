@@ -15,7 +15,7 @@ import type { Asset } from '../../../domain/assets';
 import type { Account } from '../../../domain/account';
 
 export interface AddressAmountProps {
-  account: Account;
+  changeAccount: Account;
   network: NetworkString;
   transaction: TransactionState;
   balances: BalancesByAsset;
@@ -23,7 +23,7 @@ export interface AddressAmountProps {
 }
 
 const AddressAmountView: React.FC<AddressAmountProps> = ({
-  account,
+  changeAccount,
   network,
   transaction,
   balances,
@@ -59,7 +59,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
         transaction={transaction}
         network={network}
         asset={transactionAsset}
-        account={account}
+        account={changeAccount}
       />
     </ShellPopUp>
   );

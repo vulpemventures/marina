@@ -1,6 +1,6 @@
 // analyse a script to know what it need as input
 
-import type { bip341} from 'ldk';
+import type { bip341 } from 'ldk';
 import { script } from 'ldk';
 const { OPS } = script;
 

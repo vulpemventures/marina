@@ -17,7 +17,7 @@ import { broadcastTx } from '../../../application/utils/network';
 import { blindAndSignPset } from '../../../application/utils/transaction';
 
 export interface EndOfFlowProps {
-  accounts: Account[];
+  signerAccounts: Account[];
   pset?: string;
   selectedUtxos: UnblindedOutput[];
   explorerURL: string;
@@ -27,7 +27,7 @@ export interface EndOfFlowProps {
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
-  accounts,
+  signerAccounts,
   pset,
   explorerURL,
   recipientAddress,
@@ -49,14 +49,15 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
       const identities = await Promise.all(
-        accounts.map((a) => a.getSigningIdentity(pass, network))
+        signerAccounts.map((a) => a.getSigningIdentity(pass, network))
       );
       const tx = await blindAndSignPset(
         pset,
         selectedUtxos,
         identities,
         [recipientAddress],
-        changeAddresses
+        changeAddresses,
+        true
       );
       setSignedTx(tx);
 
@@ -65,7 +66,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
 
       // start updater
       await Promise.all(
-        accounts
+        signerAccounts
           .map((a) => a.getAccountID())
           .map((id) => updateTaskAction(id, network))
           .map(dispatch)
