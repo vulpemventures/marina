@@ -57,21 +57,30 @@ function selectInjectedAccountData(id: AccountID) {
   };
 }
 
-const selectAccountIDFromCoin = (coin: Outpoint) => (state: RootReducerState): AccountID | undefined => {
-  const selectedNetwork = state.app.network;
-  const strOutpoint = toStringOutpoint(coin);
-  for (const [accountID, coinsAndTxs] of Object.entries(state.wallet.unspentsAndTransactions)) {
-    const utxos = coinsAndTxs[selectedNetwork].utxosMap;
-    if (utxos && utxos[strOutpoint]) {
-      return accountID;
+const selectAccountIDFromCoin =
+  (coin: Outpoint) =>
+  (state: RootReducerState): AccountID | undefined => {
+    const selectedNetwork = state.app.network;
+    const strOutpoint = toStringOutpoint(coin);
+    for (const [accountID, coinsAndTxs] of Object.entries(state.wallet.unspentsAndTransactions)) {
+      const utxos = coinsAndTxs[selectedNetwork].utxosMap;
+      if (utxos && utxos[strOutpoint]) {
+        return accountID;
+      }
     }
-  }
-}
+  };
 
-export const selectAccountsFromCoins = (coins: Outpoint[]) => (state: RootReducerState): Account[] => {
-  const accountsIDs = new Set(coins.map(selectAccountIDFromCoin).map(f => f(state)).filter(id => id));
-  return Array.from(accountsIDs).map(id => selectAccount(id as AccountID)(state));
-}
+export const selectAccountsFromCoins =
+  (coins: Outpoint[]) =>
+  (state: RootReducerState): Account[] => {
+    const accountsIDs = new Set(
+      coins
+        .map(selectAccountIDFromCoin)
+        .map((f) => f(state))
+        .filter((id) => id)
+    );
+    return Array.from(accountsIDs).map((id) => selectAccount(id as AccountID)(state));
+  };
 
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
   return selectAllAccountsIDs(state)

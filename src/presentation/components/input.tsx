@@ -52,7 +52,9 @@ export default function Input<FormValues>({
         <p className="text-red h-10 mt-2 text-xs text-left">{status[name]}</p>
       ) : (
         errors[name] &&
-        touched[name] && <p className="text-red h-10 mt-2 text-xs text-left">{errors[name] as string}</p>
+        touched[name] && (
+          <p className="text-red h-10 mt-2 text-xs text-left">{errors[name] as string}</p>
+        )
       )}
     </div>
   );
