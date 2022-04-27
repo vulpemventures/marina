@@ -6719,9 +6719,9 @@ marina-provider@^1.0.0:
   integrity sha512-jnckZGyPIg0wS/+KgFO2yAwE6isk3KxrxWOeFNStUR5fZOgUwtREV5J7wEfvoGZ3yW9H++fMR72SbJ+KHct1Vw==
 
 marina-provider@^1.4.8:
-  version "1.4.8"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.8.tgz#7d5b2dc2c7dc5df11caa13efca2750a1d74c3f08"
-  integrity sha512-sZSuVxbqxq4Bev0cmJussww1MOXO+VzsS3nbxBD5nsqKUJUVDCzNo6ERLiXkeT9JZTg1kyaCrr80Ed4M2QBYkQ==
+  version "1.4.9"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.9.tgz#38aba3757a15a48b5e737f62ef8f32b65c9a52d5"
+  integrity sha512-iA/6OJSVwxJMtzx6Ix+1ps0fRt5AHFCUZkQzcUcNmopONRUG/8EoF7n62fOYY0ajsSMPnZypWES8OHHhM0CLug==
 
 marky@^1.2.2:
   version "1.2.2"
