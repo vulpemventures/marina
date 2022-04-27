@@ -9,10 +9,19 @@ interface AnalyzerTest {
 
 const TESTS: AnalyzerTest[] = [
   {
+    scriptASM: 'OP_HASH160 OP_EQUALVERIFY',
+    expected: {
+      sigs: [],
+      hasIntrospection: false,
+      needParameters: true,
+    },
+  },
+  {
     scriptASM: 'ca44d0e46b2a09e3c57981a6b8ae679e35f44dceff0bebe6ae31104db7dbac0c OP_CHECKSIG',
     expected: {
       sigs: [{ pubkey: 'ca44d0e46b2a09e3c57981a6b8ae679e35f44dceff0bebe6ae31104db7dbac0c' }],
-      introspection: false,
+      hasIntrospection: false,
+      needParameters: false,
     },
   },
   {
@@ -20,7 +29,8 @@ const TESTS: AnalyzerTest[] = [
       'OP_INSPECTINPUTOUTPOINT OP_FALSE ca44d0e46b2a09e3c57981a6b8ae679e35f44dceff0bebe6ae31104db7dbac0c OP_CHECKSIG',
     expected: {
       sigs: [{ pubkey: 'ca44d0e46b2a09e3c57981a6b8ae679e35f44dceff0bebe6ae31104db7dbac0c' }],
-      introspection: true,
+      hasIntrospection: true,
+      needParameters: false,
     },
   },
   {
@@ -31,7 +41,8 @@ const TESTS: AnalyzerTest[] = [
         { pubkey: 'ca44d0e46b2a09e3c57981a6b8ae679e35f44dceff0bebe6ae31104db7dbac0c' },
         { pubkey: 'c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5' },
       ],
-      introspection: false,
+      hasIntrospection: false,
+      needParameters: false,
     },
   },
 ];

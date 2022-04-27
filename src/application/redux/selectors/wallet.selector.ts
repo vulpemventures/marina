@@ -1,5 +1,11 @@
-import type { AccountID, Account, AccountData } from '../../../domain/account';
-import { createAccount, MainAccountID } from '../../../domain/account';
+import type {
+  AccountID,
+  Account,
+  AccountData,
+  CovenantAccountData} from '../../../domain/account';
+import {
+  AccountType,
+ createAccount, MainAccountID } from '../../../domain/account';
 import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
@@ -91,6 +97,14 @@ export const selectAllAccounts = (state: RootReducerState): Account[] => {
 
 export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
   return Object.keys(state.wallet.accounts);
+};
+
+export const selectAllAccountsIDsSpendableViaUI = (state: RootReducerState): AccountID[] => {
+  return selectAllAccountsIDs(state).filter(
+    (id) =>
+      state.wallet.accounts[id].type !== AccountType.CovenantAccount ||
+      (state.wallet.accounts[id] as CovenantAccountData).covenantDescriptors.isSpendableViaUI
+  );
 };
 
 export function selectAccount(accountID: AccountID) {

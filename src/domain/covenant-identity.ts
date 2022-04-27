@@ -62,6 +62,7 @@ export interface CovenantDescriptors {
   namespace: string;
   template?: string;
   changeTemplate?: string;
+  isSpendableViaUI?: boolean;
 }
 
 export type CovenantIdentityOpts = CovenantDescriptors & {
@@ -361,7 +362,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
     taprootAddr: TaprootAddressInterface
   ): string | undefined {
     for (const [script, needs] of Object.entries(taprootAddr.tapscriptNeeds)) {
-      if (needs.introspection) continue;
+      if (needs.hasIntrospection || needs.needParameters) continue;
       const hasAllPrivateKeys = needs.sigs.reduce(
         (b, s) => b && this.hasPrivateKey(s.pubkey),
         true

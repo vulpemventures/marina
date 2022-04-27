@@ -28,6 +28,7 @@ import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
   setCovenantTemplate,
+  setIsSpendableViaUI,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
@@ -46,6 +47,7 @@ import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
+import type { TaprootAddressInterface } from '../../domain/covenant-identity';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -340,8 +342,37 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Only covenant accounts can import templates');
           }
 
-          const [template] = params as [string];
-          await this.store.dispatchAsync(setCovenantTemplate(this.selectedAccount, template));
+          const [template, changeTemplate] = params as [string, string];
+          await this.store.dispatchAsync(
+            setCovenantTemplate(this.selectedAccount, template, changeTemplate)
+          );
+          const selectedAccount = selectAccount(this.selectedAccount)(state);
+          const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(state));
+
+          const nextAddress = await watchIdentity.getNextAddress();
+          let isSpendableViaUI =
+            Object.values((nextAddress as TaprootAddressInterface).tapscriptNeeds).find(
+              (needsOfLeaf) =>
+                needsOfLeaf.sigs.length === 1 &&
+                !needsOfLeaf.needParameters &&
+                !needsOfLeaf.hasIntrospection
+            ) !== undefined;
+
+          if (changeTemplate) {
+            const nextChangeAddress = await watchIdentity.getNextChangeAddress();
+            isSpendableViaUI =
+              isSpendableViaUI ||
+              Object.values((nextChangeAddress as TaprootAddressInterface).tapscriptNeeds).find(
+                (needsOfLeaf) =>
+                  needsOfLeaf.sigs.length === 1 &&
+                  !needsOfLeaf.needParameters &&
+                  !needsOfLeaf.hasIntrospection
+              ) !== undefined;
+          }
+
+          await this.store.dispatchAsync(
+            setIsSpendableViaUI(this.selectedAccount, isSpendableViaUI)
+          );
           return successMsg(true);
         }
 

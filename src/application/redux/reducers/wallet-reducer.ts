@@ -112,6 +112,22 @@ export function walletReducer(
       };
     }
 
+    case ACTION_TYPES.SET_COVENANT_IS_SPENDABLE_UI: {
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [payload.accountID as AccountID]: {
+            ...state.accounts[payload.accountID],
+            covenantDescriptors: {
+              ...state.accounts[payload.accountID].covenantDescriptors,
+              isSpendableViaUI: payload.isSpendableViaUI,
+            },
+          },
+        },
+      };
+    }
+
     case ACTION_TYPES.SET_COVENANT_TEMPLATE: {
       const accountID = payload.accountID as AccountID;
       if (state.accounts[accountID]?.type !== AccountType.CovenantAccount) return state;

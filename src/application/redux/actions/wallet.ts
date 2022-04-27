@@ -12,6 +12,7 @@ import {
   PUSH_UPDATER_LOADER,
   SET_MNEMONIC,
   SET_COVENANT_TEMPLATE,
+  SET_COVENANT_IS_SPENDABLE_UI,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { AccountData, AccountID } from '../../../domain/account';
@@ -37,6 +38,13 @@ export function setAccount<T extends AccountData>(accountID: AccountID, accountD
   return {
     type: SET_ACCOUNT_DATA,
     payload: { accountData, accountID },
+  };
+}
+
+export function setIsSpendableViaUI(accountID: AccountID, isSpendableViaUI: boolean) {
+  return {
+    type: SET_COVENANT_IS_SPENDABLE_UI,
+    payload: { accountID, isSpendableViaUI },
   };
 }
 

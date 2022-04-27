@@ -4,10 +4,10 @@ import type { RootReducerState } from '../../../domain/common';
 import type { SendSelectAssetProps } from '../../../presentation/wallet/send/send-select-asset';
 import SendSelectAssetView from '../../../presentation/wallet/send/send-select-asset';
 import { selectBalances } from '../selectors/balance.selector';
-import { selectAllAccountsIDs } from '../selectors/wallet.selector';
+import { selectAllAccountsIDsSpendableViaUI } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): SendSelectAssetProps => {
-  const balances = selectBalances(...selectAllAccountsIDs(state))(state);
+  const balances = selectBalances(...selectAllAccountsIDsSpendableViaUI(state))(state);
   const getAsset = assetGetterFromIAssets(state.assets);
   return {
     balanceAssets: Object.keys(balances).map(getAsset),

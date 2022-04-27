@@ -48,7 +48,7 @@ export interface ChooseFeeProps {
   balances: BalancesByAsset;
   taxiAssets: string[];
   lbtcAssetHash: string;
-  account: Account;
+  changeAccount: Account;
   utxos: UnblindedOutput[];
 }
 
@@ -71,7 +71,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   balances,
   taxiAssets,
   lbtcAssetHash,
-  account,
+  changeAccount,
   utxos,
 }) => {
   const history = useHistory();
@@ -127,7 +127,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const newStatePromise = isTaxi()
       ? stateForTaxiPSET(
-          account,
+          changeAccount,
           feeAsset,
           getRecipient(),
           changeAddress,
@@ -151,7 +151,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (!feeAsset) throw new Error('fee asset not selected');
       setLoading(true);
       await Promise.all(
-        actionsFromState(state, feeAsset, account.getAccountID(), network).map(dispatch)
+        actionsFromState(state, feeAsset, changeAccount.getAccountID(), network).map(dispatch)
       );
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,

@@ -17,8 +17,108 @@ interface SignatureNeed {
  */
 export interface ScriptInputsNeeds {
   sigs: SignatureNeed[];
-  introspection: boolean;
+  hasIntrospection: boolean;
+  needParameters: boolean;
 }
+
+const NEED_PARAMS_OPCODES = [
+  OPS.OP_PUSHDATA1,
+  OPS.OP_PUSHDATA2,
+  OPS.OP_PUSHDATA4,
+  OPS.OP_1NEGATE,
+  OPS.OP_RESERVED,
+  OPS.OP_IF,
+  OPS.OP_VERIF,
+  OPS.OP_VERNOTIF,
+  OPS.OP_ELSE,
+  OPS.OP_ENDIF,
+  OPS.OP_VERIFY,
+  OPS.OP_TOALTSTACK,
+  OPS.OP_FROMALTSTACK,
+  OPS.OP_2DROP,
+  OPS.OP_2DUP,
+  OPS.OP_3DUP,
+  OPS.OP_2OVER,
+  OPS.OP_2ROT,
+  OPS.OP_2SWAP,
+  OPS.OP_NIP,
+  OPS.OP_OVER,
+  OPS.OP_PICK,
+  OPS.OP_ROLL,
+  OPS.OP_ROT,
+  OPS.OP_SWAP,
+  OPS.OP_TUCK,
+  OPS.OP_CAT,
+  OPS.OP_SUBSTR,
+  OPS.OP_SUBSTR_LAZY,
+  OPS.OP_LEFT,
+  OPS.OP_RIGHT,
+  OPS.OP_SIZE,
+  OPS.OP_INVERT,
+  OPS.OP_AND,
+  OPS.OP_OR,
+  OPS.OP_XOR,
+  OPS.OP_EQUAL,
+  OPS.OP_EQUALVERIFY,
+  OPS.OP_RESERVED1,
+  OPS.OP_RESERVED2,
+  OPS.OP_1ADD,
+  OPS.OP_1SUB,
+  OPS.OP_2MUL,
+  OPS.OP_2DIV,
+  OPS.OP_NEGATE,
+  OPS.OP_ABS,
+  OPS.OP_NOT,
+  OPS.OP_0NOTEQUAL,
+  OPS.OP_ADD,
+  OPS.OP_SUB,
+  OPS.OP_MUL,
+  OPS.OP_DIV,
+  OPS.OP_MOD,
+  OPS.OP_LSHIFT,
+  OPS.OP_RSHIFT,
+  OPS.OP_BOOLAND,
+  OPS.OP_BOOLOR,
+  OPS.OP_NUMEQUAL,
+  OPS.OP_NUMEQUALVERIFY,
+  OPS.OP_NUMNOTEQUAL,
+  OPS.OP_LESSTHAN,
+  OPS.OP_GREATERTHAN,
+  OPS.OP_LESSTHANOREQUAL,
+  OPS.OP_GREATERTHANOREQUAL,
+  OPS.OP_MIN,
+  OPS.OP_MAX,
+  OPS.OP_WITHIN,
+  OPS.OP_RIPEMD160,
+  OPS.OP_SHA1,
+  OPS.OP_SHA256,
+  OPS.OP_HASH160,
+  OPS.OP_HASH256,
+  OPS.OP_CODESEPARATOR,
+  OPS.OP_CHECKMULTISIG,
+  OPS.OP_CHECKMULTISIGVERIFY,
+  OPS.OP_DETERMINISTICRANDOM,
+  OPS.OP_SHA256INITIALIZE,
+  OPS.OP_SHA256UPDATE,
+  OPS.OP_SHA256FINALIZE,
+  OPS.OP_ADD64,
+  OPS.OP_SUB64,
+  OPS.OP_MUL64,
+  OPS.OP_DIV64,
+  OPS.OP_NEG64,
+  OPS.OP_LESSTHAN64,
+  OPS.OP_LESSTHANOREQUAL64,
+  OPS.OP_GREATERTHAN64,
+  OPS.OP_GREATERTHANOREQUAL64,
+  OPS.OP_SCRIPTNUMTOLE64,
+  OPS.OP_LE64TOSCRIPTNUM,
+  OPS.OP_LE32TOLE64,
+  OPS.OP_ECMULSCALARVERIFY,
+  OPS.OP_TWEAKVERIFY,
+  OPS.OP_PUBKEYHASH,
+  OPS.OP_PUBKEY,
+  OPS.OP_INVALIDOPCODE,
+];
 
 const INTROSPECTION_OPCODES = [
   OPS.OP_INSPECTINPUTOUTPOINT,
@@ -27,14 +127,11 @@ const INTROSPECTION_OPCODES = [
   OPS.OP_INSPECTINPUTSCRIPTPUBKEY,
   OPS.OP_INSPECTINPUTSEQUENCE,
   OPS.OP_INSPECTINPUTISSUANCE,
-  // current index
   OPS.OP_PUSHCURRENTINPUTINDEX,
-  // outputs
   OPS.OP_INSPECTOUTPUTASSET,
   OPS.OP_INSPECTOUTPUTVALUE,
   OPS.OP_INSPECTOUTPUTNONCE,
   OPS.OP_INSPECTOUTPUTSCRIPTPUBKEY,
-  // transaction
   OPS.OP_INSPECTVERSION,
   OPS.OP_INSPECTLOCKTIME,
   OPS.OP_INSPECTNUMINPUTS,
@@ -50,30 +147,51 @@ function validatePosition(stack: Buffer[], pos: number) {
 function mergeNeeds(...needs: ScriptInputsNeeds[]): ScriptInputsNeeds {
   return {
     sigs: needs.reduce((acc: ScriptInputsNeeds['sigs'], need) => acc.concat(need.sigs), []),
-    introspection: needs.reduce(
-      (acc: ScriptInputsNeeds['introspection'], need) => acc || need.introspection,
+    hasIntrospection: needs.reduce(
+      (acc: ScriptInputsNeeds['hasIntrospection'], need) => acc || need.hasIntrospection,
+      false
+    ),
+    needParameters: needs.reduce(
+      (acc: ScriptInputsNeeds['needParameters'], need) => acc || need.needParameters,
       false
     ),
   };
 }
 
+const needParametersAnalyser: NeedAnalyserFunction = (stack) => (pos) => {
+  if (!validatePosition(stack, pos)) throw new Error('Invalid position (NEED PARAM OPCODE)');
+  return {
+    sigs: [],
+    hasIntrospection: false,
+    needParameters: true,
+  };
+};
+
 const introspectionAnalyzer: NeedAnalyserFunction = (stack) => (pos) => {
   if (!validatePosition(stack, pos)) throw new Error('invalid position (INTROSPECTION OPCODE)');
   return {
     sigs: [],
-    introspection: true,
+    hasIntrospection: true,
+    needParameters: false,
   };
 };
 
 const checksigAnalyzer: NeedAnalyserFunction = (stack) => (pos) => {
   if (!validatePosition(stack, pos)) throw new Error('invalid position (CHECKSIG)');
-  if (!validatePosition(stack, pos - 1)) throw new Error('invalid position (CHECKSIG PUBKEY)');
+  if (!validatePosition(stack, pos - 1)) {
+    return {
+      sigs: [],
+      hasIntrospection: false,
+      needParameters: true,
+    };
+  }
 
   const pubkey = stack[pos - 1];
 
   return {
     sigs: [{ pubkey: pubkey.toString('hex') }],
-    introspection: false,
+    hasIntrospection: false,
+    needParameters: false,
   };
 };
 
@@ -85,6 +203,7 @@ const ANALYZERS_BY_OPCODE = new Map<string, NeedAnalyserFunction>().set(
 );
 
 INTROSPECTION_OPCODES.forEach((op) => ANALYZERS_BY_OPCODE.set(hex(op), introspectionAnalyzer));
+NEED_PARAMS_OPCODES.forEach((op) => ANALYZERS_BY_OPCODE.set(hex(op), needParametersAnalyser));
 
 function decompileScript(b: Buffer): Buffer[] {
   const stack = script.decompile(b);
@@ -103,7 +222,8 @@ export function analyse(scriptHex: string): ScriptInputsNeeds {
 
   let needs: ScriptInputsNeeds = {
     sigs: [],
-    introspection: false,
+    hasIntrospection: false,
+    needParameters: false,
   };
 
   for (let i = 0; i < stack.length; i++) {
