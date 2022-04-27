@@ -6718,7 +6718,7 @@ marina-provider@^1.0.0:
   resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.5.tgz#2ec20ac786f7a333c9f2ed9f515a3a464d039eb8"
   integrity sha512-jnckZGyPIg0wS/+KgFO2yAwE6isk3KxrxWOeFNStUR5fZOgUwtREV5J7wEfvoGZ3yW9H++fMR72SbJ+KHct1Vw==
 
-marina-provider@^1.4.8:
+marina-provider@^1.4.9:
   version "1.4.9"
   resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.9.tgz#38aba3757a15a48b5e737f62ef8f32b65c9a52d5"
   integrity sha512-iA/6OJSVwxJMtzx6Ix+1ps0fRt5AHFCUZkQzcUcNmopONRUG/8EoF7n62fOYY0ajsSMPnZypWES8OHHhM0CLug==
