@@ -6500,16 +6500,17 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-"ldk@git+https://github.com/louisinger/ldk.git#bump-liquidjs":
-  version "0.4.8"
-  resolved "git+https://github.com/louisinger/ldk.git#547b729290a7584ade41cc9ac74f0f9edc024b25"
+ldk@^0.4.11:
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.11.tgz#7e5f4cceb29b1cdfda79eb49675a18aa75f21571"
+  integrity sha512-Kfcgkc7i63C1Tov0oZ2rX0NDsKBl5ut62taJwQqiZWsdG1xRIiqf6v4E9+8NiollaVg5w7mNqNouw9Muky+XMQ==
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
     ecpair "^2.0.1"
-    liquidjs-lib "git+https://github.com/louisinger/liquidjs-lib.git#includeScriptHex-in-hashTree"
+    liquidjs-lib "^6.0.2-liquid.7"
     slip77 "^0.2.0"
     tslib "^2.3.1"
 
@@ -6559,9 +6560,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-"liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib.git#includeScriptHex-in-hashTree":
-  version "6.0.2-liquid.6"
-  resolved "git+https://github.com/louisinger/liquidjs-lib.git#5eeb13ebda242b0100d7bb4fa5f62feefac0e2e4"
+liquidjs-lib@^6.0.2-liquid.7:
+  version "6.0.2-liquid.7"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.7.tgz#7a3aac47f4ef92b10f69dffd2582c49842e95235"
+  integrity sha512-SKVVweS4jNwPmA1lBVX5I0Qm6Xkw3LWUbcwE57NgLcv+RwcQcU7IkKd8bMyslSmt00P+oC58lDJoSW5HzeJzaA==
   dependencies:
     "@types/randombytes" "^2.0.0"
     "@types/wif" "^2.0.2"
@@ -6804,9 +6806,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-"marina-provider@git+https://github.com/louisinger/marina-provider.git#segwitv1marina":
-  version "1.4.8"
-  resolved "git+https://github.com/louisinger/marina-provider.git#e47bdcf289a5695d074da42cf7e6ec3b445a8746"
+marina-provider@^1.4.10:
+  version "1.4.10"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.10.tgz#9b7c3ad13d809cf3716ae174cdb12d06ca49780e"
+  integrity sha512-zyDaX4KhgPv1GXeebPfVhjkEE9rFApyWSbHNLi0CfIlxHSCsgt8t+KhQ1UFijh5k+nE9gsCD8bVhbfyNo2Ft1A==
 
 marky@^1.2.2:
   version "1.2.4"
