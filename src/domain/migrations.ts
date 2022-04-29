@@ -9,15 +9,14 @@ import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
 import type { WalletState } from './wallet';
 
-// inspired by: https://gist.github.com/lafiosca/b7bbb569ae3fe5c1ce110bf71d7ee153
 export type WalletPersistedStateV3 = WalletState & Partial<PersistedState>;
 type keysAddedInV3 = 'encryptedMnemonic' | 'accounts';
 type deletedInV3 = {
   [MainAccountID]: MnemonicAccountData;
 };
 
-export type WalletPersistedStateV2 = Omit<WalletPersistedStateV3, keysAddedInV3> & deletedInV3;
-type keysAddedInV2 = 'unspentsAndTransactions' | 'mainAccount' | 'updaterLoaders';
+export type WalletPersistedStateV2 = Omit<WalletPersistedStateV3, keysAddedInV3> & deletedInV3; // the current version
+type keysAddedInV2 = 'unspentsAndTransactions' | 'mainAccount' | 'updaterLoaders' | 'lockedUtxos';
 type deletedInV2 = {
   encryptedMnemonic: EncryptedMnemonic;
   masterBlindingKey: MasterBlindingKey;
@@ -55,6 +54,7 @@ export const walletMigrations = {
       },
       updaterLoaders: 0,
       isVerified: state.isVerified,
+      lockedUtxos: walletInitState.lockedUtxos,
     };
   },
 };

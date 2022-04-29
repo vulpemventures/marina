@@ -8,6 +8,7 @@ import { AccountType, initialRestorerOpts, MainAccountID } from '../../../domain
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
 import type { NetworkString, UnblindedOutput } from 'ldk';
+import { lockedUtxoMinimunTime } from '../../utils/constants';
 
 export const walletInitState: WalletState = {
   encryptedMnemonic: '',
@@ -33,6 +34,18 @@ export const walletInitState: WalletState = {
   },
   updaterLoaders: 0,
   isVerified: false,
+  lockedUtxos: {},
+};
+
+// returns only utxos locked for less than 5 minutes
+const filterOnlyRecentLockedUtxos = (state: WalletState) => {
+  const expiredTime = Date.now() - lockedUtxoMinimunTime; // 5 minutes
+  const lockedUtxos: Record<string, number> = {};
+  for (const key of Object.keys(state.lockedUtxos)) {
+    const isRecent = state.lockedUtxos[key] > expiredTime;
+    if (isRecent) lockedUtxos[key] = state.lockedUtxos[key];
+  }
+  return lockedUtxos;
 };
 
 const addUnspent =
@@ -49,6 +62,35 @@ const addUnspent =
             utxosMap: {
               ...state.unspentsAndTransactions[accountID][network].utxosMap,
               [toStringOutpoint(utxo)]: utxo,
+            },
+          },
+        },
+      },
+    };
+  };
+
+const addUnconfirmed =
+  (state: WalletState) =>
+  (
+    unconfirmedUtxos: UnblindedOutput[],
+    accountID: AccountID,
+    network: NetworkString
+  ): WalletState => {
+    const unconfirmedUtxosMap: Record<string, UnblindedOutput> = {};
+    for (const utxo of unconfirmedUtxos) {
+      unconfirmedUtxosMap[toStringOutpoint(utxo)] = utxo;
+    }
+    return {
+      ...state,
+      unspentsAndTransactions: {
+        ...state.unspentsAndTransactions,
+        [accountID]: {
+          ...state.unspentsAndTransactions[accountID],
+          [network]: {
+            ...state.unspentsAndTransactions[accountID][network],
+            utxosMap: {
+              ...state.unspentsAndTransactions[accountID][network].utxosMap,
+              ...unconfirmedUtxosMap,
             },
           },
         },
@@ -242,6 +284,30 @@ export function walletReducer(
           },
         },
       };
+    }
+
+    case ACTION_TYPES.LOCK_UTXO: {
+      const utxo = payload.utxo as UnblindedOutput;
+      return {
+        ...state,
+        lockedUtxos: {
+          ...state.lockedUtxos,
+          [toStringOutpoint(utxo)]: Date.now(),
+        },
+      };
+    }
+
+    case ACTION_TYPES.UNLOCK_UTXOS: {
+      const lockedUtxos = filterOnlyRecentLockedUtxos(state);
+      return {
+        ...state,
+        lockedUtxos,
+      };
+    }
+
+    case ACTION_TYPES.ADD_UNCONFIRMED_UTXOS: {
+      const { unconfirmedUtxos, accountID, network } = payload;
+      return addUnconfirmed(state)(unconfirmedUtxos, accountID, network);
     }
 
     case ACTION_TYPES.ADD_TX: {

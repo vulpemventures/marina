@@ -48,6 +48,7 @@ import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 import type { TaprootAddressInterface } from '../../domain/covenant-identity';
+import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -232,22 +233,34 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           await this.store.dispatchAsync(
             setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(state), data)
           );
-          const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
-            'spend'
-          );
+
+          const { accepted, signedTxHex, selectedUtxos, unconfirmedOutputs } =
+            await this.openAndWaitPopup<SpendPopupResponse>('spend');
 
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
-          let txid;
+          const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
+          if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
-          try {
-            txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
-          } catch (error) {
-            throw new Error(`error broadcasting tx: ${error}`);
+          // lock utxos used in successful broadcast
+          if (selectedUtxos) {
+            for (const utxo of selectedUtxos) {
+              await this.store.dispatchAsync(lockUtxo(utxo));
+            }
           }
 
-          if (!txid) throw new Error('something went wrong with the tx broadcasting');
+          // add unconfirmed utxos from change addresses to utxo set
+          if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
+            this.store.dispatch(
+              await addUnconfirmedUtxos(
+                signedTxHex,
+                unconfirmedOutputs,
+                MainAccountID,
+                selectNetwork(state)
+              )
+            );
+          }
 
           return successMsg({ txid, hex: signedTxHex });
         }
@@ -279,6 +292,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
+            prevout: unblindedOutput.prevout,
+            unblindData: unblindedOutput.unblindData,
             asset: getAsset(unblindedOutput),
             value: getSats(unblindedOutput),
           }));

@@ -24,7 +24,7 @@ export const BlockstreamExplorerURLs: ExplorerURLs = {
 };
 
 export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {
-  type: 'Testnet',
+  type: 'Blockstream',
   electrsURL: 'https://blockstream.info/liquidtestnet',
   esploraURL: 'https://blockstream.info/liquidtestnet/api',
 };
@@ -39,4 +39,10 @@ export const MempoolExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
   electrsURL: 'https://liquid.network',
   esploraURL: 'https://liquid.network/api',
+};
+
+export const MempoolTestnetExplorerURLs: ExplorerURLs = {
+  type: 'Mempool',
+  electrsURL: 'https://liquid.network/liquidtestnet',
+  esploraURL: 'https://liquid.network/liquidtestnet/api',
 };

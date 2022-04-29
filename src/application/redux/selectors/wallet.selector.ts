@@ -1,11 +1,5 @@
-import type {
-  AccountID,
-  Account,
-  AccountData,
-  CovenantAccountData} from '../../../domain/account';
-import {
-  AccountType,
- createAccount, MainAccountID } from '../../../domain/account';
+import type { AccountID, Account, AccountData, CovenantAccountData } from '../../../domain/account';
+import { AccountType, createAccount, MainAccountID } from '../../../domain/account';
 import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
@@ -14,7 +8,10 @@ import { toStringOutpoint } from '../../utils/utxos';
 export const selectUtxos =
   (...accounts: AccountID[]) =>
   (state: RootReducerState): UnblindedOutput[] => {
-    return accounts.flatMap((ID) => selectUtxosForAccount(ID)(state));
+    const lockedOutpoints = Object.keys(state.wallet.lockedUtxos);
+    return accounts
+      .flatMap((ID) => selectUtxosForAccount(ID)(state))
+      .filter((utxo) => !lockedOutpoints.includes(toStringOutpoint(utxo)));
   };
 
 const selectUtxosForAccount =
@@ -24,9 +21,7 @@ const selectUtxosForAccount =
       accountID,
       net ?? state.app.network
     )(state)?.utxosMap;
-    if (utxos) {
-      return Object.values(utxos);
-    }
+    if (utxos) return Object.values(utxos);
     return [];
   };
 

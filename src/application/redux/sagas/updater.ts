@@ -19,8 +19,8 @@ import {
 import type { Account, AccountID } from '../../../domain/account';
 import type { UtxosAndTxs } from '../../../domain/transaction';
 import { addTx } from '../actions/transaction';
-import type { AddUtxoAction } from '../actions/utxos';
-import { addUtxo, deleteUtxo } from '../actions/utxos';
+import type { AddUtxoAction} from '../actions/utxos';
+import { unlockUtxos , addUtxo, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
 import type { SagaGenerator } from './utils';
 import {
@@ -109,6 +109,12 @@ function* utxosUpdater(
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
+
+  // only run on successful update
+  if (Object.keys(receivedUtxos).length > 0) {
+    yield put(unlockUtxos());
+  }
+
   console.debug(`${new Date()} utxos received`, receivedUtxos);
 }
 

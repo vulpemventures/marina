@@ -47,7 +47,7 @@ describe('create send pset (build, blind & sign)', () => {
   test('should be able to create a transaction with an unconfidential address', async () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       makeRecipients([{ value: 100000 }, { value: 11000 }], UNCONFIDENTIAL_ADDRESS),
       await makeUnspents(),
       network.assetHash,
@@ -63,7 +63,7 @@ describe('create send pset (build, blind & sign)', () => {
   test('should be able to create a regular transaction', async () => {
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       makeRecipients([{ value: 100000 }, { value: 11000 }]),
       await makeUnspents(),
       network.assetHash,
@@ -84,7 +84,7 @@ describe('create send pset (build, blind & sign)', () => {
 
     const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       makeRecipients([{ value: 200 }]),
       await makeUnspents(),
       network.assetHash,
@@ -106,5 +106,27 @@ describe('create send pset (build, blind & sign)', () => {
     expect(signedTx.outs.map((o) => o.script.toString('hex'))).toContain(opReturnScript);
 
     await broadcastTx(signed);
+  });
+
+  test('createSendPset should return selected utxos', async () => {
+    const [changeAddress, getChangeAddress] = await makeChangeAddressGetter();
+
+    const unspents = await makeUnspents();
+
+    const { pset, selectedUtxos } = await createSendPset(
+      makeRecipients([{ value: 100000 }, { value: 11000 }]),
+      unspents,
+      network.assetHash,
+      getChangeAddress,
+      'regtest'
+    );
+
+    // should return selected utxos and it should be the faucet unspent
+    expect(Object.keys(selectedUtxos)).toHaveLength(1);
+    expect(selectedUtxos[0].txid).toEqual(unspents[0].txid);
+
+    const signed = await blindAndSign(pset, changeAddress);
+    const txid = await broadcastTx(signed);
+    expect(txid).toHaveLength(64);
   });
 });

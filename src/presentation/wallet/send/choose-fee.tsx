@@ -331,7 +331,7 @@ function stateForTaxiPSET(
       [recipient],
       greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
       changeGetter
-    );
+    ).pset;
 
     return result;
   };

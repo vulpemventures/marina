@@ -62,7 +62,7 @@ describe('covenant identity', () => {
     const utxos = await getUnspents(addr);
     expect(utxos.length).toBeGreaterThanOrEqual(1);
 
-    let pset = await createSendPset(
+    let { pset } = await createSendPset(
       [
         {
           address: addr.confidentialAddress,
@@ -104,7 +104,7 @@ describe('covenant identity', () => {
     const utxos = await getUnspents(addr);
     expect(utxos.length).toBeGreaterThanOrEqual(1);
 
-    const pset = await createSendPset(
+    const { pset } = await createSendPset(
       [
         {
           address: addr.confidentialAddress,
