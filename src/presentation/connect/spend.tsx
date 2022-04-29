@@ -13,11 +13,9 @@ import type {
   IdentityInterface,
   NetworkString,
   RecipientInterface,
-  UnblindedOutput} from 'ldk';
-import {
-  address,
-  getNetwork
+  UnblindedOutput,
 } from 'ldk';
+import { address, getNetwork } from 'ldk';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import type { ConnectData } from '../../domain/connect';

@@ -1,4 +1,4 @@
-import type { UnblindedOutput} from 'ldk';
+import type { UnblindedOutput } from 'ldk';
 import { unblindOutput } from 'ldk';
 import { Transaction } from 'liquidjs-lib';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';

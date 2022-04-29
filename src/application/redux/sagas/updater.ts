@@ -19,8 +19,8 @@ import {
 import type { Account, AccountID } from '../../../domain/account';
 import type { UtxosAndTxs } from '../../../domain/transaction';
 import { addTx } from '../actions/transaction';
-import type { AddUtxoAction} from '../actions/utxos';
-import { unlockUtxos , addUtxo, deleteUtxo } from '../actions/utxos';
+import type { AddUtxoAction } from '../actions/utxos';
+import { unlockUtxos, addUtxo, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
 import type { SagaGenerator } from './utils';
 import {
