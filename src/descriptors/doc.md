@@ -7,26 +7,22 @@ Giving a string template, the `evaluate` function is able to compute:
 - redeem script
 - witness scripts if needed (the unsigned part of the witness).
 
+The descriptor is also able to replace special tokens (named "namespace") by a public key. It lets to link template with marina covenant accounts (identitfied by their namespace).
+
 ## Example
 
-Assuming `xpub0123456789` is one of the Marina accounts master extended public key, and given the following template:
+Assuming `vulpem` is one of the Marina accounts, and given the following template:
 
 ```
-elp2wsh(asm(xpub0123456789 OP_CHECKSIG))
+elp2wsh(asm($vulpem OP_CHECKSIG))
 ```
 
-Marina will creates a `Context` object mapping each `xpub...` in the template to their actual derivation path:
+Marina will creates a `Context` object mapping each `$vulpem` in the template to their actual derivation path:
 
 - in case of signing an input: the path equals the one of the utxo.
 - in case of create a new address: the path equals the one of the next address.
 
 Then calling `evaluate` we are able to get our witness script and redeem script:
-
-```ts
-const result = evaluate(marinaContext, 'elp2wsh(asm(xpub0123456789 OP_CHECKSIG))');
-const witness = result.witnesses[0]; // segwit v0 has 1 witness
-const redeemScript = result.redeemScript; // OP_O ....
-```
 
 > The `result` object value depends on the Context!
 
