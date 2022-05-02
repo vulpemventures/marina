@@ -40,7 +40,7 @@ import { SignTransactionPopupResponse } from '../../presentation/connect/sign-ps
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { AccountID, MainAccountID } from '../../domain/account';
-import { getAsset, getSats } from 'ldk';
+import { AddressInterface, getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -49,6 +49,8 @@ import { sleep } from '../../application/utils/common';
 import { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
+import { UnconfirmedOutput } from '../../domain/unconfirmed';
+import { address, networks, Transaction } from 'liquidjs-lib';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -324,6 +326,69 @@ export default class MarinaBroker extends Broker {
           this.checkHostnameAuthorization(state);
           state = await this.reloadCoins(this.store);
           return successMsg();
+        }
+
+        case Marina.prototype.broadcastTransaction.name: {
+          this.checkHostnameAuthorization(state);
+          const network = selectNetwork(state);
+          const [signedTxHex] = params as [string];
+          const tx = Transaction.fromHex(signedTxHex);
+
+          // broadcast tx
+          const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
+          if (!txid) throw new Error('something went wrong with the tx broadcasting');
+
+          // credit change utxos:
+          // - get all addresses used by marina
+          // - iterate over all transaction outputs and check if belongs to marina
+          // - if any, add unconfirmed utxos to utxo set
+
+          // get all marina addresses
+          const xpub = await selectMainAccount(state).getWatchIdentity(network);
+          const addresses = await xpub.getAddresses();
+
+          // array to store all utxos to be found
+          const unconfirmedOutputs: UnconfirmedOutput[] = [];
+
+          // iterate over transaction outputs
+          tx.outs.forEach((out, vout) => {
+            try {
+              // get address from output script
+              const addressFromOutputScript = address.fromOutputScript(
+                Buffer.from(out.script),
+                networks[network]
+              );
+              // iterate over marina addresses
+              addresses.forEach((addr: AddressInterface) => {
+                // get unconfidential address for addr
+                const unconfidentialAddress = address.fromConfidential(
+                  addr.confidentialAddress
+                ).unconfidentialAddress;
+                // compare with address from output script
+                if (
+                  addressFromOutputScript === unconfidentialAddress ||
+                  addressFromOutputScript === addr.confidentialAddress
+                ) {
+                  unconfirmedOutputs.push({
+                    txid,
+                    vout,
+                    blindPrivKey: addr.blindingPrivateKey,
+                  });
+                }
+              });
+            } catch (_) {
+              // probably this out doesn't belong to us
+            }
+          });
+
+          // add unconfirmed utxos from change addresses to utxo set
+          if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
+            this.store.dispatch(
+              await addUnconfirmedUtxos(signedTxHex, unconfirmedOutputs, MainAccountID, network)
+            );
+          }
+
+          return successMsg({ txid, hex: signedTxHex });
         }
 
         default:

@@ -119,4 +119,8 @@ export default class Marina extends WindowProxy implements MarinaProvider {
   reloadCoins(): Promise<void> {
     return this.proxy(this.reloadCoins.name, []);
   }
+
+  broadcastTransaction(signedTxHex: string): Promise<SentTransaction> {
+    return this.proxy(this.broadcastTransaction.name, [signedTxHex]);
+  }
 }
