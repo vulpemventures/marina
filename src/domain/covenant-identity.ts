@@ -27,7 +27,7 @@ import type {
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { evaluate } from '../descriptors';
-import type { Result } from '../descriptors/ast';
+import type { TemplateResult } from '../descriptors/ast';
 import type { Context } from '../descriptors/preprocessing';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
@@ -53,9 +53,24 @@ function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32I
   return m.derivePath(path);
 }
 
-export interface TaprootAddressInterface extends AddressInterface {
-  result: Result;
+interface ExtendedTaprootAddressInterface extends AddressInterface {
+  result: TemplateResult;
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
+  internalTaprootKey?: string;
+}
+
+export type TaprootAddressInterface = AddressInterface & Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
+  taprootHashTree?: bip341.HashTree;
+};
+
+function asTaprootAddressInterface(extended: ExtendedTaprootAddressInterface): TaprootAddressInterface {
+  return {
+    confidentialAddress: extended.confidentialAddress,
+    blindingPrivateKey: extended.blindingPrivateKey,
+    derivationPath: extended.derivationPath,
+    taprootHashTree: extended.result.taprootHashTree,
+    internalTaprootKey: extended.internalTaprootKey,
+  };
 }
 
 export interface CovenantDescriptors {
@@ -81,7 +96,7 @@ interface IdentityOptsWithSchnorr<opt> extends IdentityOpts<opt> {
 export class CovenantIdentityWatchOnly extends Identity implements IdentityInterface {
   private index = 0;
   private changeIndex = 0;
-  protected cache = new Map<string, TaprootAddressInterface>();
+  protected cache = new Map<string, ExtendedTaprootAddressInterface>();
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CovenantIdentityOpts['namespace'];
@@ -128,7 +143,7 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
-  private cacheAddress(addr: TaprootAddressInterface) {
+  private cacheAddress(addr: ExtendedTaprootAddressInterface) {
     const scriptPubKey = address.toOutputScript(addr.confidentialAddress, this.network);
     this.cache.set(scriptPubKey.toString('hex'), addr);
   }
@@ -145,7 +160,8 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     return this.covenant.template;
   }
 
-  getAddress(isChange: boolean, index: number): TaprootAddressInterface {
+  // TODO add optional internalPublicKey field
+  getAddress(isChange: boolean, index: number): ExtendedTaprootAddressInterface {
     const template = this.getTemplate(isChange);
     const descriptorResult = evaluate(this.getContext(isChange, index), template);
     const outputScript = descriptorResult.scriptPubKey().toString('hex');
@@ -153,8 +169,8 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     return {
       ...this.outputScriptToAddressInterface(outputScript),
       result: descriptorResult,
-      derivationPath: makePath(isChange, index),
-      publicKey: this.deriveMasterXPub(isChange, index, true),
+      derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
+      publicKey: this.deriveMasterXPub(isChange, index, true), // = $test (eltr(c64....., { $test OPCHECKSIG }))
       tapscriptNeeds: analyzeTapscriptTree(descriptorResult.taprootHashTree),
     };
   }
@@ -163,14 +179,14 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     const addr = this.getAddress(false, this.index);
     this.cacheAddress(addr);
     this.index++;
-    return Promise.resolve(addr);
+    return Promise.resolve(asTaprootAddressInterface(addr));
   }
 
   getNextChangeAddress(): Promise<TaprootAddressInterface> {
     const addr = this.getAddress(true, this.changeIndex);
     this.cacheAddress(addr);
     this.changeIndex++;
-    return Promise.resolve(addr);
+    return Promise.resolve(asTaprootAddressInterface(addr));
   }
 
   private outputScriptToAddressInterface(outputScript: string): AddressInterface {
@@ -194,7 +210,7 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
   }
 
   getAddresses(): Promise<TaprootAddressInterface[]> {
-    return Promise.resolve(Array.from(this.cache.values()));
+    return Promise.resolve(Array.from(this.cache.values()).map(asTaprootAddressInterface));
   }
 
   getBlindingPrivateKey(script: string): Promise<string> {
@@ -252,6 +268,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
       opts: {
         namespace: args.opts.namespace,
         template: args.opts.template,
+        changeTemplate: args.opts.changeTemplate,
         masterPublicKey: masterPublicKey,
         masterBlindingKey: masterBlindingKeyNode.masterKey.toString('hex'),
       },
@@ -286,9 +303,9 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
     for (let index = 0; index < getPset().data.inputs.length; index++) {
       const input = getPset().data.inputs[index];
-      // current version of pset does not support taproot field (BIP371)
+      // current version of pset does not support taproot fields (BIP371)
       // as a temp solution, we use the finalScriptWitness to "signal" the leaf to sign
-      // if no finalScriptWitness has been set, we'll try to find an "auto-sign" path
+      // if no finalScriptWitness has been set, we'll try to find an "auto-sign" path 
       if (input.witnessUtxo) {
         const script = input.witnessUtxo.script.toString('hex');
         const cachedAddrInfos = this.cache.get(script);
@@ -311,6 +328,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
               scriptHex: leafScript,
             });
 
+            // TODO check for witness v0 (not eltr template)
             const sighashForSig = getPset().TX.hashForWitnessV1(
               index,
               inputsUtxos.map((u) => u.script),
@@ -326,7 +344,8 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
             const sigs = scriptNeeds.sigs.map((sig) => {
               const addr = this.getAddressByPublicKey(sig.pubkey);
               if (addr && addr.derivationPath) {
-                return this.signSchnorr(addr.derivationPath, sighashForSig);
+                const pathToPrivKey = addr.derivationPath.slice(namespaceToDerivationPath(this.namespace).length + 1)
+                return this.signSchnorr(pathToPrivKey, sighashForSig);
               }
 
               return undefined;
@@ -359,7 +378,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
   }
 
   private getFirstAutoSpendableTapscriptPath(
-    taprootAddr: TaprootAddressInterface
+    taprootAddr: ExtendedTaprootAddressInterface
   ): string | undefined {
     for (const [script, needs] of Object.entries(taprootAddr.tapscriptNeeds)) {
       if (needs.hasIntrospection || needs.needParameters) continue;

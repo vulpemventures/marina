@@ -29,7 +29,7 @@ export interface AST<V = any> {
 }
 
 // (template string, context) --parser--> AST --compiler--> Result object
-export interface Result {
+export interface TemplateResult {
   scriptPubKey(): Buffer; // the address' script
   redeemScript?(): Buffer; // optional, only if needed to spend the scriptPubKey (e.g. for P2SH, P2WSH, P2WSH-P2SH...)
   // optional, returns witnesses needed to spend the scriptPubKey
@@ -39,7 +39,7 @@ export interface Result {
   taprootHashTree?: bip341.HashTree; // optional, should be undefined if not an eltr template
 }
 
-type ScriptCompileFunction = (ast: AST) => Result;
+type ScriptCompileFunction = (ast: AST) => TemplateResult;
 
 function checkScriptNode(ast: AST, scriptType: ScriptType): void {
   if (ast.type !== TypeAST.SCRIPT) {
@@ -57,7 +57,7 @@ function checkScriptNode(ast: AST, scriptType: ScriptType): void {
   }
 }
 
-function compileHEX(ast: AST): Result {
+function compileHEX(ast: AST): TemplateResult {
   if (ast.type !== TypeAST.HEX) {
     throw new Error('Expected hex node');
   }
@@ -70,13 +70,13 @@ function compileHEX(ast: AST): Result {
 }
 
 // 'raw' node
-function compileRAW(ast: AST): Result {
+function compileRAW(ast: AST): TemplateResult {
   checkScriptNode(ast, ScriptType.RAW);
   return compileHEX(ast.children[0]);
 }
 
 // 'asm' node, which is a subset of raw
-function compileASM(ast: AST): Result {
+function compileASM(ast: AST): TemplateResult {
   checkScriptNode(ast, ScriptType.ASM);
   return compileHEX(ast.children[0]);
 }
@@ -121,7 +121,7 @@ function compileKEY(ast: AST): Buffer {
   return Buffer.from(ast.value, 'hex');
 }
 
-function compileELTR(ast: AST): Result {
+function compileELTR(ast: AST): TemplateResult {
   checkScriptNode(ast, ScriptType.ELTR);
 
   if (ast.children[0].type !== TypeAST.KEY) {
@@ -167,7 +167,7 @@ const compileFunctionsForScript: Map<ScriptType, ScriptCompileFunction> = new Ma
 const topLevelOnly = [ScriptType.RAW, ScriptType.ELTR];
 
 // main compile function
-function compileScript(ast: AST, isTop = false): Result {
+function compileScript(ast: AST, isTop = false): TemplateResult {
   const compileFunction = compileFunctionsForScript.get(ast.value);
   if (!compileFunction) {
     throw new Error(`node type: ${ast.type} is not a descriptor`);
@@ -180,6 +180,6 @@ function compileScript(ast: AST, isTop = false): Result {
   return compileFunction(ast);
 }
 
-export function compile(ast: AST): Result {
+export function compile(ast: AST): TemplateResult {
   return compileScript(ast, true); // top level
 }
