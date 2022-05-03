@@ -40,7 +40,7 @@ import { SignTransactionPopupResponse } from '../../presentation/connect/sign-ps
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { AccountID, MainAccountID } from '../../domain/account';
-import { AddressInterface, getAsset, getSats } from 'ldk';
+import { AddressInterface, getAsset, getSats, UnblindedOutput } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -332,20 +332,52 @@ export default class MarinaBroker extends Broker {
           this.checkHostnameAuthorization(state);
           const network = selectNetwork(state);
           const [signedTxHex] = params as [string];
-          const tx = Transaction.fromHex(signedTxHex);
 
           // broadcast tx
           const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
+
+          // will need tx to lock selected utxos and credit unconfirmed utxos
+          const tx = Transaction.fromHex(signedTxHex);
+
+          // lock selected utxos used in this transaction:
+          // - get all coins from marina
+          // - iterate over all transaction inputs and check if is a coin of ours
+          // - if any, lock selected utxos
+
+          // get all coins from marina
+          const coins = selectUtxos(MainAccountID)(state);
+
+          // array to store all utxos selected in this transaction
+          const selectedUtxos: UnblindedOutput[] = [];
+
+          // find all inputs that are a coin of ours
+          tx.ins.forEach((_in) => {
+            const { hash, index } = _in; // txid and vout
+            const txid = hash.reverse().toString('hex');
+            for (const coin of coins) {
+              if (coin.txid === txid && coin.vout === index) {
+                selectedUtxos.push(coin);
+                break;
+              }
+            }
+          });
+
+          // lock utxos used in this transaction
+          if (selectedUtxos && selectedUtxos.length > 0) {
+            for (const utxo of selectedUtxos) {
+              await this.store.dispatchAsync(lockUtxo(utxo));
+            }
+          }
 
           // credit change utxos:
           // - get all addresses used by marina
           // - iterate over all transaction outputs and check if belongs to marina
           // - if any, add unconfirmed utxos to utxo set
 
-          // get all marina addresses
+          // get all marina addresses (reversed for performance reasons)
           const xpub = await selectMainAccount(state).getWatchIdentity(network);
-          const addresses = await xpub.getAddresses();
+          const addresses = (await xpub.getAddresses()).reverse();
 
           // array to store all utxos to be found
           const unconfirmedOutputs: UnconfirmedOutput[] = [];
@@ -359,7 +391,7 @@ export default class MarinaBroker extends Broker {
                 networks[network]
               );
               // iterate over marina addresses
-              addresses.forEach((addr: AddressInterface) => {
+              for (const addr of addresses) {
                 // get unconfidential address for addr
                 const unconfidentialAddress = address.fromConfidential(
                   addr.confidentialAddress
@@ -374,10 +406,11 @@ export default class MarinaBroker extends Broker {
                     vout,
                     blindPrivKey: addr.blindingPrivateKey,
                   });
+                  break;
                 }
-              });
+              }
             } catch (_) {
-              // probably this out doesn't belong to us
+              // probably this output doesn't belong to us
             }
           });
 
