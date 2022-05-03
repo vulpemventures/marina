@@ -6,7 +6,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
-import type { Account } from '../../../domain/account';
+import { Account } from '../../../domain/account';
 import { address, getNetwork, Transaction } from 'ldk';
 import type { NetworkString, UnblindedOutput } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
@@ -20,6 +20,7 @@ import type { UnconfirmedOutput } from '../../../domain/unconfirmed';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
+  changeAccount?: Account;
   pset?: string;
   selectedUtxos: UnblindedOutput[];
   explorerURL: string;
@@ -30,6 +31,7 @@ export interface EndOfFlowProps {
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
   signerAccounts,
+  changeAccount,
   pset,
   explorerURL,
   recipientAddress,
@@ -72,8 +74,10 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       }
 
       // find unconfirmed utxos from change addresses
-      const unconfirmedOutputs: UnconfirmedOutput[] = [];
-      if (changeAddresses && identities[0]) {
+      if (changeAddresses && changeAccount) {
+        const unconfirmedOutputs: UnconfirmedOutput[] = [];
+        const changeIdentity = await changeAccount.getWatchIdentity(network);
+        
         const transaction = Transaction.fromHex(tx);
         for (const addr of changeAddresses) {
           const changeOutputScript = address.toOutputScript(addr, getNetwork(network));
@@ -82,22 +86,22 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
           );
           if (vout !== -1 && transaction?.outs[vout]?.script) {
             const script = transaction.outs[vout].script.toString('hex');
-            const blindPrivKey = await identities[0].getBlindingPrivateKey(script);
+            const blindPrivKey = await changeIdentity.getBlindingPrivateKey(script);
             unconfirmedOutputs.push({ txid, vout, blindPrivKey });
           }
         }
-      }
 
-      // add unconfirmed utxos from change addresses to utxo set
-      if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
-        await dispatch(
-          await addUnconfirmedUtxos(
-            tx,
-            unconfirmedOutputs,
-            signerAccounts[0].getAccountID(),
-            network
-          )
-        );
+        // add unconfirmed utxos from change addresses to utxo set
+        if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
+          await dispatch(
+            await addUnconfirmedUtxos(
+              tx,
+              unconfirmedOutputs,
+              changeAccount.getAccountID(),
+              network
+            )
+          );
+        }
       }
 
       // start updater

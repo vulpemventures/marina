@@ -2,11 +2,12 @@ import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';
 import type { EndOfFlowProps } from '../../../presentation/wallet/send/end-of-flow';
 import EndOfFlow from '../../../presentation/wallet/send/end-of-flow';
-import { selectAccountsFromCoins } from '../selectors/wallet.selector';
+import { selectAccountsFromCoins, selectMainAccount } from '../selectors/wallet.selector';
 import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({
   signerAccounts: selectAccountsFromCoins(state.transaction.selectedUtxos ?? [])(state),
+  changeAccount: selectMainAccount(state),
   pset: state.transaction.pset,
   explorerURL: selectEsploraURL(state),
   recipientAddress: state.transaction.sendAddress?.value,
