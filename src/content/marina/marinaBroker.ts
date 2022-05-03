@@ -40,7 +40,7 @@ import { SignTransactionPopupResponse } from '../../presentation/connect/sign-ps
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { AccountID, MainAccountID } from '../../domain/account';
-import { AddressInterface, getAsset, getSats, UnblindedOutput } from 'ldk';
+import { getAsset, getSats, UnblindedOutput } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
