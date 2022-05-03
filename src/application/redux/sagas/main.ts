@@ -10,7 +10,7 @@ import {
   UPDATE_TAXI_ASSETS,
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
-import type { SagaGenerator } from './utils';
+import { SagaGenerator, selectNetworkSaga } from './utils';
 import { newSagaSelector } from './utils';
 import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
@@ -20,7 +20,12 @@ import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
   yield* fetchTaxiAssetsForNetwork('liquid');
   yield* fetchTaxiAssetsForNetwork('testnet');
-  yield* fetchTaxiAssetsForNetwork('regtest');
+
+  const network = yield* selectNetworkSaga();
+
+  if (network === 'regtest') {
+    yield* fetchTaxiAssetsForNetwork('regtest');
+  }
 }
 
 function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void, string[]> {
