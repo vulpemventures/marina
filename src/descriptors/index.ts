@@ -1,4 +1,4 @@
-import type { Result } from './ast';
+import type { TemplateResult } from './ast';
 import { compile } from './ast';
 import { parseSCRIPT } from './parser';
 import type { Context } from './preprocessing';
@@ -9,7 +9,7 @@ import { preprocessor } from './preprocessing';
  * @param ctx used to replace xpubs with their current derivated public keys
  * @param template the string to evaluate
  **/
-export function evaluate(ctx: Context, template: string): Result {
+export function evaluate(ctx: Context, template: string): TemplateResult {
   const processedTemplate = preprocessor(ctx, template);
   const [ast] = parseSCRIPT(processedTemplate);
   if (!ast) throw new Error('Failed to parse template');
