@@ -9,7 +9,11 @@ import {
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import { CustomScriptIdentity, CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
+import type {
+  CustomScriptIdentityOpts} from '../src/domain/customscript-identity';
+import {
+  CustomScriptIdentity
+} from '../src/domain/customscript-identity';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 
@@ -56,10 +60,13 @@ const failingArgs: { name: string; opts: CustomScriptIdentityOpts }[] = [
       namespace: TEST_NAMESPACE,
       changeTemplate: 'raw(00)', // good one
     },
-  }
-]
+  },
+];
 
-function makeRandomCovenantIdentity(template?: string, changeTemplate?: string): CustomScriptIdentity {
+function makeRandomCovenantIdentity(
+  template?: string,
+  changeTemplate?: string
+): CustomScriptIdentity {
   const mnemo = makeRandomMnemonic();
   return new CustomScriptIdentity({
     type: IdentityType.Mnemonic,
@@ -76,12 +83,15 @@ describe('CustomScriptIdentity', () => {
 
   for (const failingArg of failingArgs) {
     test(`fails with ${failingArg.name}`, () => {
-      expect(() => new CustomScriptIdentity({
-        type: IdentityType.Mnemonic,
-        chain: 'regtest',
-        opts: failingArg.opts,
-        ecclib: ecc,
-      })).toThrow();
+      expect(
+        () =>
+          new CustomScriptIdentity({
+            type: IdentityType.Mnemonic,
+            chain: 'regtest',
+            opts: failingArg.opts,
+            ecclib: ecc,
+          })
+      ).toThrow();
     });
   }
 
@@ -108,7 +118,9 @@ describe('CustomScriptIdentity', () => {
     const id = makeRandomCovenantIdentity(template);
     const addr = await id.getNextAddress();
     expect(addr.taprootHashTree).toBeDefined();
-    expect(addr.taprootInternalKey).toStrictEqual('c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5');
+    expect(addr.taprootInternalKey).toStrictEqual(
+      'c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'
+    );
     const leafToSpendScript = addr.taprootHashTree?.left?.scriptHex;
     expect(leafToSpendScript).toBeDefined();
 

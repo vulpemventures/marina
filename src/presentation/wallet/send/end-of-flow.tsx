@@ -6,7 +6,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
-import { Account } from '../../../domain/account';
+import type { Account } from '../../../domain/account';
 import { address, getNetwork, Transaction } from 'ldk';
 import type { NetworkString, UnblindedOutput } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/updater';
@@ -77,7 +77,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       if (changeAddresses && changeAccount) {
         const unconfirmedOutputs: UnconfirmedOutput[] = [];
         const changeIdentity = await changeAccount.getWatchIdentity(network);
-        
+
         const transaction = Transaction.fromHex(tx);
         for (const addr of changeAddresses) {
           const changeOutputScript = address.toOutputScript(addr, getNetwork(network));
@@ -94,12 +94,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         // add unconfirmed utxos from change addresses to utxo set
         if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
           await dispatch(
-            await addUnconfirmedUtxos(
-              tx,
-              unconfirmedOutputs,
-              changeAccount.getAccountID(),
-              network
-            )
+            await addUnconfirmedUtxos(tx, unconfirmedOutputs, changeAccount.getAccountID(), network)
           );
         }
       }

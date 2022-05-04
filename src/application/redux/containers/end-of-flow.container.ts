@@ -8,7 +8,7 @@ import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({
   signerAccounts: selectAccountsFromCoins(state.transaction.selectedUtxos ?? [])(state),
   // TODO always use MainAccount as change account ?
-  changeAccount: selectMainAccount(state), 
+  changeAccount: selectMainAccount(state),
   pset: state.transaction.pset,
   explorerURL: selectEsploraURL(state),
   recipientAddress: state.transaction.sendAddress?.value,

@@ -1,4 +1,9 @@
-import type { AccountID, Account, AccountData, CustomScriptAccountData } from '../../../domain/account';
+import type {
+  AccountID,
+  Account,
+  AccountData,
+  CustomScriptAccountData,
+} from '../../../domain/account';
 import { AccountType, createAccount, MainAccountID } from '../../../domain/account';
 import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';

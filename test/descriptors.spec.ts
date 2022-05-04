@@ -99,7 +99,9 @@ describe('parser', () => {
     expect(res.scriptPubKey().toString('hex')).toEqual(
       '5120ec2e5b3649abf837992e92c55361ed2089a633cb69b540e90a0d098c88f0891f'
     );
-    expect(res.taprootInternalKey).toStrictEqual('c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5');
+    expect(res.taprootInternalKey).toStrictEqual(
+      'c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'
+    );
     expect(res.taprootHashTree).toBeDefined();
     expect(
       res.witnesses!('20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac').map(
@@ -121,23 +123,22 @@ describe('parser', () => {
 });
 
 const validateTests: [string, boolean][] = [
- ['', false],
- ['eltr($test, { asm($test OP_CHECKSIG) })', false], 
- ['eltr($test, { asm($test OP_CHECKSIG), raw(00) })', true],
- ['raw(this is not an hex value)', false],
- ['raw(00)', true],
- ['raw(010203040506070809101112131415)', true],
- ['raw($test)', true],
- ['asm(666)', false],
- ['asm($marina OP_CHECKSIG)', true],
- ['asm(OP_CHECKSIG OP_TRUE OP_INSPECTOUTPUTASSET unexepectedstringattheend)', false],
-]
+  ['', false],
+  ['eltr($test, { asm($test OP_CHECKSIG) })', false],
+  ['eltr($test, { asm($test OP_CHECKSIG), raw(00) })', true],
+  ['raw(this is not an hex value)', false],
+  ['raw(00)', true],
+  ['raw(010203040506070809101112131415)', true],
+  ['raw($test)', true],
+  ['asm(666)', false],
+  ['asm($marina OP_CHECKSIG)', true],
+  ['asm(OP_CHECKSIG OP_TRUE OP_INSPECTOUTPUTASSET unexepectedstringattheend)', false],
+];
 
 describe('validate', () => {
   for (const [text, expected] of validateTests) {
     it(`should${expected ? '' : ' not'} validate template: "${text}"`, () => {
       expect(validate(text)).toBe(expected);
-    }
-    );
+    });
   }
-})
+});

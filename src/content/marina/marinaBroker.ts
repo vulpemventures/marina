@@ -49,7 +49,8 @@ import { updateTaskAction } from '../../application/redux/actions/updater';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 import type { TaprootAddressInterface } from '../../domain/customscript-identity';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
-import { analyzeTapscriptTree, ScriptInputsNeeds } from '../../domain/script-analyser';
+import type { ScriptInputsNeeds } from '../../domain/script-analyser';
+import { analyzeTapscriptTree } from '../../domain/script-analyser';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -365,13 +366,21 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const selectedAccount = selectAccount(this.selectedAccount)(state);
           const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(state));
 
-          const nextAddress = (await watchIdentity.getNextAddress() as TaprootAddressInterface);
-          const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) => needsOfLeaf.sigs.length === 1 && !needsOfLeaf.needParameters && !needsOfLeaf.hasIntrospection;  
-          let isSpendableViaUI = Object.values(analyzeTapscriptTree(nextAddress.taprootHashTree)).some(autoSpendableLeaf);
+          const nextAddress = (await watchIdentity.getNextAddress()) as TaprootAddressInterface;
+          const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
+            needsOfLeaf.sigs.length === 1 &&
+            !needsOfLeaf.needParameters &&
+            !needsOfLeaf.hasIntrospection;
+          let isSpendableViaUI = Object.values(
+            analyzeTapscriptTree(nextAddress.taprootHashTree)
+          ).some(autoSpendableLeaf);
 
           if (changeTemplate) {
-            const nextChangeAddress = (await watchIdentity.getNextChangeAddress() as TaprootAddressInterface);
-            isSpendableViaUI ||= Object.values(analyzeTapscriptTree(nextChangeAddress.TaprootAddressInterface)).some(autoSpendableLeaf);
+            const nextChangeAddress =
+              (await watchIdentity.getNextChangeAddress()) as TaprootAddressInterface;
+            isSpendableViaUI ||= Object.values(
+              analyzeTapscriptTree(nextChangeAddress.TaprootAddressInterface)
+            ).some(autoSpendableLeaf);
           }
 
           await this.store.dispatchAsync(

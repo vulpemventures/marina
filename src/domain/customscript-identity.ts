@@ -58,12 +58,15 @@ interface ExtendedTaprootAddressInterface extends AddressInterface {
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
 }
 
-export type TaprootAddressInterface = AddressInterface & Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
-  taprootHashTree?: bip341.HashTree;
-  taprootInternalKey?: string;
-};
+export type TaprootAddressInterface = AddressInterface &
+  Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
+    taprootHashTree?: bip341.HashTree;
+    taprootInternalKey?: string;
+  };
 
-function asTaprootAddressInterface(extended: ExtendedTaprootAddressInterface): TaprootAddressInterface {
+function asTaprootAddressInterface(
+  extended: ExtendedTaprootAddressInterface
+): TaprootAddressInterface {
   return {
     confidentialAddress: extended.confidentialAddress,
     blindingPrivateKey: extended.blindingPrivateKey,
@@ -179,7 +182,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       ...this.outputScriptToAddressInterface(outputScript),
       result: descriptorResult,
       derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
-      publicKey: this.deriveMasterXPub(isChange, index, true), // = $test (eltr(c64....., { $test OPCHECKSIG }))
+      publicKey: this.deriveMasterXPub(isChange, index, true), // = $test (eltr(c64....., { $test OPCHECKSIG }))
       tapscriptNeeds: analyzeTapscriptTree(descriptorResult.taprootHashTree),
     };
   }
@@ -250,7 +253,10 @@ function withoutUndefined<T>(arr: Array<T | undefined>): Array<T> {
   return arr.filter((x) => x !== undefined) as Array<T>;
 }
 
-export class CustomScriptIdentity extends CustomScriptIdentityWatchOnly implements IdentityInterface {
+export class CustomScriptIdentity
+  extends CustomScriptIdentityWatchOnly
+  implements IdentityInterface
+{
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly xpub: string;
@@ -314,7 +320,7 @@ export class CustomScriptIdentity extends CustomScriptIdentityWatchOnly implemen
       const input = getPset().data.inputs[index];
       // current version of pset does not support taproot fields (BIP371)
       // as a temp solution, we use the finalScriptWitness to "signal" the leaf to sign
-      // if no finalScriptWitness has been set, we'll try to find an "auto-sign" path 
+      // if no finalScriptWitness has been set, we'll try to find an "auto-sign" path
       if (input.witnessUtxo) {
         const script = input.witnessUtxo.script.toString('hex');
         const cachedAddrInfos = this.cache.get(script);
@@ -353,7 +359,9 @@ export class CustomScriptIdentity extends CustomScriptIdentityWatchOnly implemen
             const sigs = scriptNeeds.sigs.map((sig) => {
               const addr = this.getAddressByPublicKey(sig.pubkey);
               if (addr && addr.derivationPath) {
-                const pathToPrivKey = addr.derivationPath.slice(namespaceToDerivationPath(this.namespace).length + 1)
+                const pathToPrivKey = addr.derivationPath.slice(
+                  namespaceToDerivationPath(this.namespace).length + 1
+                );
                 return this.signSchnorr(pathToPrivKey, sighashForSig);
               }
 

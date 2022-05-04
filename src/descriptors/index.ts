@@ -1,8 +1,8 @@
 import type { TemplateResult } from './ast';
 import { compile } from './ast';
 import { parseSCRIPT } from './parser';
-import { Context, findNamespaces } from './preprocessing';
-import { preprocessor } from './preprocessing';
+import type { Context} from './preprocessing';
+import { findNamespaces , preprocessor } from './preprocessing';
 
 /**
  * evaluate a template string and return witness scripts and redeem script associated with it

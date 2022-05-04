@@ -10,8 +10,8 @@ import {
   UPDATE_TAXI_ASSETS,
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
-import { SagaGenerator, selectNetworkSaga } from './utils';
-import { newSagaSelector } from './utils';
+import type { SagaGenerator} from './utils';
+import { selectNetworkSaga , newSagaSelector } from './utils';
 import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
 import { watchStartDeepRestorer } from './deep-restorer';
 import type { NetworkString } from 'ldk';
@@ -27,7 +27,9 @@ function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
     try {
       yield* fetchTaxiAssetsForNetwork('regtest');
     } catch {
-      console.warn('fail to update your taxi assets for regtest network, please check if taxi is running locally on localhost:8000');
+      console.warn(
+        'fail to update your taxi assets for regtest network, please check if taxi is running locally on localhost:8000'
+      );
     }
   }
 }
