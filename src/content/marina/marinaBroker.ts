@@ -354,7 +354,7 @@ export default class MarinaBroker extends Broker {
           // find all inputs that are a coin of ours
           tx.ins.forEach((_in) => {
             const { hash, index } = _in; // txid and vout
-            const txid = hash.reverse().toString('hex');
+            const txid = hash.slice().reverse().toString('hex');
             for (const coin of coins) {
               if (coin.txid === txid && coin.vout === index) {
                 selectedUtxos.push(coin);
