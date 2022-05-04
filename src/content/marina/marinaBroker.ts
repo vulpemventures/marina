@@ -358,7 +358,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Only covenant accounts can import templates');
           }
 
-          const [template, changeTemplate] = params as [string, string];
+          const [template, changeTemplate] = params as [string, string?];
           await this.store.dispatchAsync(
             setCovenantTemplate(this.selectedAccount, template, changeTemplate)
           );
@@ -366,9 +366,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(state));
 
           const nextAddress = (await watchIdentity.getNextAddress() as TaprootAddressInterface);
-          const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) => needsOfLeaf.sigs.length === 0 && !needsOfLeaf.needParameters && !needsOfLeaf.hasIntrospection;  
+          const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) => needsOfLeaf.sigs.length === 1 && !needsOfLeaf.needParameters && !needsOfLeaf.hasIntrospection;  
           let isSpendableViaUI = Object.values(analyzeTapscriptTree(nextAddress.taprootHashTree)).some(autoSpendableLeaf);
-          
+
           if (changeTemplate) {
             const nextChangeAddress = (await watchIdentity.getNextChangeAddress() as TaprootAddressInterface);
             isSpendableViaUI ||= Object.values(analyzeTapscriptTree(nextChangeAddress.TaprootAddressInterface)).some(autoSpendableLeaf);

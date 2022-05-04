@@ -33,7 +33,7 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
   }
 
   importTemplate(template: DescriptorTemplate, changeTemplate?: DescriptorTemplate) {
-    return this.proxy('importTemplate', [template]);
+    return this.proxy('importTemplate', [template, changeTemplate]);
   }
 
   enable(): Promise<void> {
