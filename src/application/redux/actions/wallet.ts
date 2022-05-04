@@ -41,10 +41,10 @@ export function setAccount<T extends AccountData>(accountID: AccountID, accountD
   };
 }
 
-export function setIsSpendableViaUI(accountID: AccountID, isSpendableViaUI: boolean) {
+export function setIsSpendableByMarina(accountID: AccountID, isSpendableByMarina: boolean) {
   return {
     type: SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA,
-    payload: { accountID, isSpendableViaUI },
+    payload: { accountID, isSpendableByMarina },
   };
 }
 

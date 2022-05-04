@@ -28,7 +28,7 @@ import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
   setCustomScriptTemplate,
-  setIsSpendableViaUI,
+  setIsSpendableByMarina,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
@@ -38,7 +38,8 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import { analyzeTapscriptTree, getAsset, getSats, ScriptInputsNeeds } from 'ldk';
+import type { ScriptInputsNeeds } from 'ldk';
+import { analyzeTapscriptTree, getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -369,20 +370,20 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             needsOfLeaf.sigs.length === 1 &&
             !needsOfLeaf.needParameters &&
             !needsOfLeaf.hasIntrospection;
-          let isSpendableViaUI = Object.values(
+          let isSpendableByMarina = Object.values(
             analyzeTapscriptTree(nextAddress.taprootHashTree)
           ).some(autoSpendableLeaf);
 
           if (changeTemplate) {
             const nextChangeAddress =
               (await watchIdentity.getNextChangeAddress()) as TaprootAddressInterface;
-            isSpendableViaUI ||= Object.values(
+            isSpendableByMarina ||= Object.values(
               analyzeTapscriptTree(nextChangeAddress.TaprootAddressInterface)
             ).some(autoSpendableLeaf);
           }
 
           await this.store.dispatchAsync(
-            setIsSpendableViaUI(this.selectedAccount, isSpendableViaUI)
+            setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
           );
           return successMsg(true);
         }

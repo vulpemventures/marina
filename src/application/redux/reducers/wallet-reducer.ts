@@ -163,7 +163,7 @@ export function walletReducer(
             ...state.accounts[payload.accountID],
             covenantDescriptors: {
               ...state.accounts[payload.accountID].covenantDescriptors,
-              isSpendableViaUI: payload.isSpendableViaUI,
+              isSpendableByMarina: payload.isSpendableByMarina,
             },
           },
         },

@@ -83,7 +83,7 @@ export interface CovenantDescriptors {
   namespace: string;
   template?: string;
   changeTemplate?: string;
-  isSpendableViaUI?: boolean;
+  isSpendableByMarina?: boolean;
 }
 
 export type CustomScriptIdentityOpts = CovenantDescriptors & {
