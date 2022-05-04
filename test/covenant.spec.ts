@@ -54,8 +54,9 @@ describe('covenant identity', () => {
     const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
     const id = makeRandomCovenantIdentity(template);
     const addr = await id.getNextAddress();
-    expect(addr.result.taprootHashTree).toBeDefined();
-    const leafToSpendScript = addr.result.taprootHashTree?.left?.scriptHex;
+    expect(addr.taprootHashTree).toBeDefined();
+    expect(addr.taprootInternalKey).toStrictEqual('c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5');
+    const leafToSpendScript = addr.taprootHashTree?.left?.scriptHex;
     expect(leafToSpendScript).toBeDefined();
 
     await faucet(addr.confidentialAddress, 10000);

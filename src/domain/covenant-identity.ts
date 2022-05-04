@@ -56,11 +56,11 @@ function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32I
 interface ExtendedTaprootAddressInterface extends AddressInterface {
   result: TemplateResult;
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
-  internalTaprootKey?: string;
 }
 
 export type TaprootAddressInterface = AddressInterface & Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
   taprootHashTree?: bip341.HashTree;
+  taprootInternalKey?: string;
 };
 
 function asTaprootAddressInterface(extended: ExtendedTaprootAddressInterface): TaprootAddressInterface {
@@ -69,7 +69,7 @@ function asTaprootAddressInterface(extended: ExtendedTaprootAddressInterface): T
     blindingPrivateKey: extended.blindingPrivateKey,
     derivationPath: extended.derivationPath,
     taprootHashTree: extended.result.taprootHashTree,
-    internalTaprootKey: extended.internalTaprootKey,
+    taprootInternalKey: extended.result.taprootInternalKey,
   };
 }
 

@@ -99,7 +99,7 @@ describe('parser', () => {
     expect(res.scriptPubKey().toString('hex')).toEqual(
       '5120ec2e5b3649abf837992e92c55361ed2089a633cb69b540e90a0d098c88f0891f'
     );
-    // expect(res.witnesses).toBeDefined();
+    expect(res.taprootInternalKey).toStrictEqual('c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5');
     expect(res.taprootHashTree).toBeDefined();
     expect(
       res.witnesses!('20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac').map(

@@ -37,6 +37,7 @@ export interface TemplateResult {
   // in case of segwit v1 = [leafScript, taprootControlBlock]
   witnesses?(...args: any[]): Buffer[];
   taprootHashTree?: bip341.HashTree; // optional, should be undefined if not an eltr template
+  taprootInternalKey?: string; // optional, should be undefined if not an eltr template
 }
 
 type ScriptCompileFunction = (ast: AST) => TemplateResult;
@@ -154,6 +155,7 @@ function compileELTR(ast: AST): TemplateResult {
     },
     scriptPubKey: () => scriptPubKey,
     taprootHashTree: tree,
+    taprootInternalKey: internalKey.toString('hex'),
   };
 }
 
