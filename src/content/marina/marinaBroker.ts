@@ -282,7 +282,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          const coins = selectUtxos(MainAccountID)(state);
+          const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
@@ -346,7 +346,7 @@ export default class MarinaBroker extends Broker {
           // - if any, lock selected utxos
 
           // get all coins from marina
-          const coins = selectUtxos(MainAccountID)(state);
+          const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
 
           // array to store all utxos selected in this transaction
           const selectedUtxos: UnblindedOutput[] = [];
