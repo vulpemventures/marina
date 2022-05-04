@@ -1,4 +1,4 @@
-import type { AddressInterface } from 'ldk';
+import type { AddressInterface, IdentityOpts } from 'ldk';
 import {
   fetchAndUnblindUtxos,
   IdentityType,
@@ -9,13 +9,56 @@ import {
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import { CovenantIdentity } from '../src/domain/covenant-identity';
+import { CovenantIdentity, CovenantIdentityOpts } from '../src/domain/covenant-identity';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 
 const TEST_NAMESPACE = 'test';
 
 jest.setTimeout(15000);
+
+
+const failingArgs: { name: string; opts: CovenantIdentityOpts }[] = [
+  {
+    name: 'no mnemonic',
+    opts: {
+      mnemonic: '',
+      namespace: TEST_NAMESPACE,
+    },
+  },
+  {
+    name: 'no namespace',
+    opts: {
+      mnemonic: makeRandomMnemonic().mnemonic,
+      namespace: '',
+    },
+  },
+  {
+    name: 'bad template',
+    opts: {
+      mnemonic: makeRandomMnemonic().mnemonic,
+      namespace: TEST_NAMESPACE,
+      template: 'this is a bad template',
+    },
+  },
+  {
+    name: 'bad change template',
+    opts: {
+      mnemonic: makeRandomMnemonic().mnemonic,
+      namespace: TEST_NAMESPACE,
+      template: 'raw(00)', // good one
+      changeTemplate: 'this is a bad template',
+    },
+  },
+  {
+    name: 'change template without template',
+    opts: {
+      mnemonic: makeRandomMnemonic().mnemonic,
+      namespace: TEST_NAMESPACE,
+      changeTemplate: 'raw(00)', // good one
+    },
+  }
+]
 
 function makeRandomCovenantIdentity(template?: string, changeTemplate?: string): CovenantIdentity {
   const mnemo = makeRandomMnemonic();
@@ -31,6 +74,17 @@ describe('covenant identity', () => {
   const getUnspents = async (addr: AddressInterface) => {
     return await fetchAndUnblindUtxos(ecc, [addr], APIURL);
   };
+
+  for (const failingArg of failingArgs) {
+    test(`fails with ${failingArg.name}`, () => {
+      expect(() => new CovenantIdentity({
+        type: IdentityType.Mnemonic,
+        chain: 'regtest',
+        opts: failingArg.opts,
+        ecclib: ecc,
+      })).toThrow();
+    });
+  }
 
   test('should be able to instantiate a covenant identity without template set up', () => {
     const random = makeRandomCovenantIdentity();

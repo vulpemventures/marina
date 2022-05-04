@@ -26,7 +26,7 @@ import type {
   Mnemonic,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
-import { evaluate } from '../descriptors';
+import { evaluate, validate } from '../descriptors';
 import type { TemplateResult } from '../descriptors/ast';
 import type { Context } from '../descriptors/preprocessing';
 import { SLIP77Factory } from 'slip77';
@@ -105,7 +105,17 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
 
   constructor(args: IdentityOptsWithSchnorr<TemplateIdentityWatchOnlyOpts>) {
     super(args);
+
+    if (args.opts.namespace.length === 0) throw new Error('namespace is required');
     this.namespace = args.opts.namespace;
+
+    if (args.opts.changeTemplate) {
+      if (!validate(args.opts.changeTemplate)) throw new Error('invalid changeTemplate');
+      if (!args.opts.template) throw new Error('template is required if u setup change template');
+    }
+
+    if (args.opts.template && !validate(args.opts.template)) throw new Error('invalid template');
+
     this.covenant = {
       namespace: args.opts.namespace,
       template: args.opts.template,
@@ -160,7 +170,6 @@ export class CovenantIdentityWatchOnly extends Identity implements IdentityInter
     return this.covenant.template;
   }
 
-  // TODO add optional internalPublicKey field
   getAddress(isChange: boolean, index: number): ExtendedTaprootAddressInterface {
     const template = this.getTemplate(isChange);
     const descriptorResult = evaluate(this.getContext(isChange, index), template);

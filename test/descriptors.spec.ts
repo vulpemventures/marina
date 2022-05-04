@@ -2,7 +2,7 @@ import { compile, ScriptType, TypeAST } from '../src/descriptors/ast';
 import { parseSCRIPT } from '../src/descriptors/parser';
 import type { Context } from '../src/descriptors/preprocessing';
 import { preprocessor } from '../src/descriptors/preprocessing';
-import { evaluate } from '../src/descriptors';
+import { evaluate, validate } from '../src/descriptors';
 import { toXpub, script } from 'ldk';
 import BIP32Factory from 'bip32';
 import * as ecc from 'tiny-secp256k1';
@@ -119,3 +119,25 @@ describe('parser', () => {
     ]);
   });
 });
+
+const validateTests: [string, boolean][] = [
+ ['', false],
+ ['eltr($test, { asm($test OP_CHECKSIG) })', false], 
+ ['eltr($test, { asm($test OP_CHECKSIG), raw(00) })', true],
+ ['raw(this is not an hex value)', false],
+ ['raw(00)', true],
+ ['raw(010203040506070809101112131415)', true],
+ ['raw($test)', true],
+ ['asm(666)', false],
+ ['asm($marina OP_CHECKSIG)', true],
+ ['asm(OP_CHECKSIG OP_TRUE OP_INSPECTOUTPUTASSET unexepectedstringattheend)', false],
+]
+
+describe('validate', () => {
+  for (const [text, expected] of validateTests) {
+    it(`should${expected ? '' : ' not'} validate template: "${text}"`, () => {
+      expect(validate(text)).toBe(expected);
+    }
+    );
+  }
+})

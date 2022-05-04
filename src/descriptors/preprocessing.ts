@@ -9,7 +9,7 @@ function replaceAll(str: string, find: string, replace: string): string {
   return str.split(find).join(replace);
 }
 
-function findNamespaces(text: string): Array<string> {
+export function findNamespaces(text: string): Array<string> {
   const namespaces = namespaceRegexp.exec(text);
   if (!namespaces) return [];
   return namespaces.map((n) => n.slice(1)); // remove the '$' token
