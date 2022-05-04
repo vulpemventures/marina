@@ -381,7 +381,7 @@ export default class MarinaBroker extends Broker {
           selectAllAccounts(state).forEach(async (account) => {
             const identity = await account.getWatchIdentity(network);
             allAddresses = [...allAddresses, ...(await identity.getAddresses())];
-          })
+          });
 
           // array to store all utxos to be found
           const unconfirmedOutputs: UnconfirmedOutput[] = [];
