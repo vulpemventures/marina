@@ -9,7 +9,7 @@ import {
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import { CustomScriptIdentity, CustomScriptIdentityOpts } from '../src/domain/covenant-identity';
+import { CustomScriptIdentity, CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 

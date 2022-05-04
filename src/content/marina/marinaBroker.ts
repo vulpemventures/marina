@@ -47,7 +47,7 @@ import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
-import type { TaprootAddressInterface } from '../../domain/covenant-identity';
+import type { TaprootAddressInterface } from '../../domain/customscript-identity';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { analyzeTapscriptTree, ScriptInputsNeeds } from '../../domain/script-analyser';
 

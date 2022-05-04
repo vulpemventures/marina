@@ -15,13 +15,13 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type { CovenantDescriptors, CustomScriptIdentity } from './covenant-identity';
+import type { CovenantDescriptors, CustomScriptIdentity } from './customscript-identity';
 import {
   CustomScriptIdentityWatchOnly,
   customScriptRestorerFromEsplora,
   restoredCustomScriptIdentity,
   restoredCustomScriptWatchOnlyIdentity,
-} from './covenant-identity';
+} from './customscript-identity';
 import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';

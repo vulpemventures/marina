@@ -24,7 +24,11 @@ function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
   const network = yield* selectNetworkSaga();
 
   if (network === 'regtest') {
-    yield* fetchTaxiAssetsForNetwork('regtest');
+    try {
+      yield* fetchTaxiAssetsForNetwork('regtest');
+    } catch {
+      console.warn('fail to update your taxi assets for regtest network, please check if taxi is running locally on localhost:8000');
+    }
   }
 }
 

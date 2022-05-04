@@ -10,7 +10,7 @@ import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { decrypt } from '../../application/utils/crypto';
 import type { CustomScriptAccountData } from '../../domain/account';
 import { AccountType, initialRestorerOpts } from '../../domain/account';
-import { CustomScriptIdentity } from '../../domain/covenant-identity';
+import { CustomScriptIdentity } from '../../domain/customscript-identity';
 import Button from '../components/button';
 import ModalUnlock from '../components/modal-unlock';
 import ShellConnectPopup from '../components/shell-connect-popup';
