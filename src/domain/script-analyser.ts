@@ -236,7 +236,8 @@ export function analyse(scriptHex: string): ScriptInputsNeeds {
   return needs;
 }
 
-export function analyzeTapscriptTree(tree: bip341.HashTree): Record<string, ScriptInputsNeeds> {
+export function analyzeTapscriptTree(tree?: bip341.HashTree): Record<string, ScriptInputsNeeds> {
+  if (!tree) return {};
   const children = {
     ...(tree.left ? analyzeTapscriptTree(tree.left) : {}),
     ...(tree.right ? analyzeTapscriptTree(tree.right) : {}),
