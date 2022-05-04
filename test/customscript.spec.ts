@@ -17,7 +17,6 @@ const TEST_NAMESPACE = 'test';
 
 jest.setTimeout(15000);
 
-
 const failingArgs: { name: string; opts: CustomScriptIdentityOpts }[] = [
   {
     name: 'no mnemonic',
