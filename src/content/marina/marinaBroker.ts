@@ -24,6 +24,7 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
+  selectAllAccounts,
   selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
@@ -40,7 +41,7 @@ import { SignTransactionPopupResponse } from '../../presentation/connect/sign-ps
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { AccountID, MainAccountID } from '../../domain/account';
-import { getAsset, getSats, UnblindedOutput } from 'ldk';
+import { AddressInterface, getAsset, getSats, UnblindedOutput } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -375,9 +376,12 @@ export default class MarinaBroker extends Broker {
           // - iterate over all transaction outputs and check if belongs to marina
           // - if any, add unconfirmed utxos to utxo set
 
-          // get all marina addresses (reversed for performance reasons)
-          const xpub = await selectMainAccount(state).getWatchIdentity(network);
-          const addresses = (await xpub.getAddresses()).reverse();
+          // get all marina addresses (from all accounts)
+          let allAddresses: AddressInterface[];
+          selectAllAccounts(state).forEach(async (account) => {
+            const identity = await account.getWatchIdentity(network);
+            allAddresses = [...allAddresses, ...(await identity.getAddresses())];
+          })
 
           // array to store all utxos to be found
           const unconfirmedOutputs: UnconfirmedOutput[] = [];
@@ -391,7 +395,7 @@ export default class MarinaBroker extends Broker {
                 networks[network]
               );
               // iterate over marina addresses
-              for (const addr of addresses) {
+              for (const addr of allAddresses) {
                 // get unconfidential address for addr
                 const unconfidentialAddress = address.fromConfidential(
                   addr.confidentialAddress
