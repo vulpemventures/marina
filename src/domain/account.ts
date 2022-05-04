@@ -15,12 +15,12 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type { CovenantDescriptors, CovenantIdentity } from './covenant-identity';
+import type { CovenantDescriptors, CustomScriptIdentity } from './covenant-identity';
 import {
-  CovenantIdentityWatchOnly,
-  covenantRestorerFromEsplora,
-  restoredCovenantIdentity,
-  restoredCovenantWatchOnlyIdentity,
+  CustomScriptIdentityWatchOnly,
+  customScriptRestorerFromEsplora,
+  restoredCustomScriptIdentity,
+  restoredCustomScriptWatchOnlyIdentity,
 } from './covenant-identity';
 import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { MasterBlindingKey } from './master-blinding-key';
@@ -31,13 +31,13 @@ export type AccountID = string;
 
 export enum AccountType {
   MainAccount = 0,
-  CovenantAccount = 1,
+  CustomScriptAccount = 1,
 }
 
 /**
  * Account domain represents the keys of the User
  *
- * - each Account is a derived of master private key (computed from mnemonic).
+ * - each Account is derived from master private key (computed from mnemonic).
  * - an Account returns two types of identities: a WatchOnly identity and a signing Identity.
  *    the watch-only identity is used to update utxos and transactions state
  *    the signing identity is used to sign inputs. it needs the user's password to decrypt the mnemonic.
@@ -72,13 +72,13 @@ export interface MnemonicAccountData extends AccountData {
   masterBlindingKey: MasterBlindingKey;
 }
 
-// Covenant account is decribed with
+// custom script account is decribed with
 // - an eltr output descriptor template
 // - a namespace (used to derive the mnemonic)
-export type CovenantAccount = Account<CovenantIdentity, CovenantIdentityWatchOnly>;
+export type CustomScriptAccount = Account<CustomScriptIdentity, CustomScriptIdentityWatchOnly>;
 
-export interface CovenantAccountData extends AccountData {
-  type: AccountType.CovenantAccount;
+export interface CustomScriptAccountData extends AccountData {
+  type: AccountType.CustomScriptAccount;
   covenantDescriptors: CovenantDescriptors;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
@@ -110,24 +110,24 @@ function createMainAccount(
   };
 }
 
-// Factory for covenantAccount
-function createCovenantAccount(
+// Factory for customScriptAccount
+function createCustomScriptAccount(
   encryptedMnemonic: EncryptedMnemonic,
-  data: CovenantAccountData
-): CovenantAccount {
+  data: CustomScriptAccountData
+): CustomScriptAccount {
   return {
-    type: AccountType.CovenantAccount,
+    type: AccountType.CustomScriptAccount,
     isReady: () => data.covenantDescriptors.template !== undefined,
     getAccountID: () => data.covenantDescriptors.namespace,
     getSigningIdentity: (password: string, network: NetworkString) =>
-      restoredCovenantIdentity(
+      restoredCustomScriptIdentity(
         data.covenantDescriptors,
         decrypt(encryptedMnemonic, password),
         network,
         data.restorerOpts[network]
       ),
     getWatchIdentity: (network: NetworkString) =>
-      restoredCovenantWatchOnlyIdentity(
+      restoredCustomScriptWatchOnlyIdentity(
         data.covenantDescriptors,
         data.masterXPub,
         data.masterBlindingKey,
@@ -135,8 +135,8 @@ function createCovenantAccount(
         data.restorerOpts[network]
       ),
     getDeepRestorer: (network: NetworkString) =>
-      covenantRestorerFromEsplora(
-        new CovenantIdentityWatchOnly({
+      customScriptRestorerFromEsplora(
+        new CustomScriptIdentityWatchOnly({
           type: IdentityType.MasterPublicKey,
           chain: network,
           ecclib: ecc,
@@ -155,7 +155,7 @@ const factories = new Map<
   (encryptedMnemonic: EncryptedMnemonic, data: any) => Account
 >()
   .set(AccountType.MainAccount, createMainAccount)
-  .set(AccountType.CovenantAccount, createCovenantAccount);
+  .set(AccountType.CustomScriptAccount, createCustomScriptAccount);
 
 export const createAccount = (encryptedMnemonic: EncryptedMnemonic, data: AccountData): Account => {
   const factory = factories.get(data.type);

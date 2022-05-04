@@ -1,4 +1,4 @@
-import type { AccountID, Account, AccountData, CovenantAccountData } from '../../../domain/account';
+import type { AccountID, Account, AccountData, CustomScriptAccountData } from '../../../domain/account';
 import { AccountType, createAccount, MainAccountID } from '../../../domain/account';
 import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
@@ -97,8 +97,8 @@ export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
 export const selectAllAccountsIDsSpendableViaUI = (state: RootReducerState): AccountID[] => {
   return selectAllAccountsIDs(state).filter(
     (id) =>
-      state.wallet.accounts[id].type !== AccountType.CovenantAccount ||
-      (state.wallet.accounts[id] as CovenantAccountData).covenantDescriptors.isSpendableViaUI
+      state.wallet.accounts[id].type !== AccountType.CustomScriptAccount ||
+      (state.wallet.accounts[id] as CustomScriptAccountData).covenantDescriptors.isSpendableViaUI
   );
 };
 

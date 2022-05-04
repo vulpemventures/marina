@@ -3,7 +3,7 @@ import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
-import type { AccountData, AccountID, CovenantAccountData } from '../../../domain/account';
+import type { AccountData, AccountID, CustomScriptAccountData } from '../../../domain/account';
 import { AccountType, initialRestorerOpts, MainAccountID } from '../../../domain/account';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
@@ -154,7 +154,7 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.SET_COVENANT_IS_SPENDABLE_UI: {
+    case ACTION_TYPES.SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA: {
       return {
         ...state,
         accounts: {
@@ -170,12 +170,12 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.SET_COVENANT_TEMPLATE: {
+    case ACTION_TYPES.SET_CS_ACCOUNT_TEMPLATE: {
       const accountID = payload.accountID as AccountID;
-      if (state.accounts[accountID]?.type !== AccountType.CovenantAccount) return state;
+      if (state.accounts[accountID]?.type !== AccountType.CustomScriptAccount) return state;
 
-      const accountWithTemplate: CovenantAccountData = {
-        ...(state.accounts[accountID] as CovenantAccountData),
+      const accountWithTemplate: CustomScriptAccountData = {
+        ...(state.accounts[accountID] as CustomScriptAccountData),
         covenantDescriptors: {
           namespace: payload.accountID,
           template: payload.template,

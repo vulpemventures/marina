@@ -8,9 +8,9 @@ import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { selectEncryptedMnemonic } from '../../application/redux/selectors/wallet.selector';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { decrypt } from '../../application/utils/crypto';
-import type { CovenantAccountData } from '../../domain/account';
+import type { CustomScriptAccountData } from '../../domain/account';
 import { AccountType, initialRestorerOpts } from '../../domain/account';
-import { CovenantIdentity } from '../../domain/covenant-identity';
+import { CustomScriptIdentity } from '../../domain/covenant-identity';
 import Button from '../components/button';
 import ModalUnlock from '../components/modal-unlock';
 import ShellConnectPopup from '../components/shell-connect-popup';
@@ -51,7 +51,7 @@ const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) =
       if (!password || password.length === 0) throw new Error('Need password');
       const { createAccount } = connectData;
       if (!createAccount || !createAccount.namespace) throw new Error('Namespace is invalid');
-      const identity = new CovenantIdentity({
+      const identity = new CustomScriptIdentity({
         ecclib: ecc,
         type: IdentityType.Mnemonic,
         chain: 'liquid',
@@ -62,8 +62,8 @@ const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) =
       });
 
       await dispatch(
-        setAccount<CovenantAccountData>(createAccount.namespace, {
-          type: AccountType.CovenantAccount,
+        setAccount<CustomScriptAccountData>(createAccount.namespace, {
+          type: AccountType.CustomScriptAccount,
           covenantDescriptors: identity.covenant,
           restorerOpts: {
             liquid: initialRestorerOpts,

@@ -11,8 +11,8 @@ import {
   POP_UPDATER_LOADER,
   PUSH_UPDATER_LOADER,
   SET_MNEMONIC,
-  SET_COVENANT_TEMPLATE,
-  SET_COVENANT_IS_SPENDABLE_UI,
+  SET_CS_ACCOUNT_TEMPLATE,
+  SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { AccountData, AccountID } from '../../../domain/account';
@@ -43,18 +43,18 @@ export function setAccount<T extends AccountData>(accountID: AccountID, accountD
 
 export function setIsSpendableViaUI(accountID: AccountID, isSpendableViaUI: boolean) {
   return {
-    type: SET_COVENANT_IS_SPENDABLE_UI,
+    type: SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA,
     payload: { accountID, isSpendableViaUI },
   };
 }
 
-export function setCovenantTemplate(
+export function setCustomScriptTemplate(
   accountID: AccountID,
   template: string,
   changeTemplate?: string
 ): AnyAction {
   return {
-    type: SET_COVENANT_TEMPLATE,
+    type: SET_CS_ACCOUNT_TEMPLATE,
     payload: { accountID, template, changeTemplate },
   };
 }

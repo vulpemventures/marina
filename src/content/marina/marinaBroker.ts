@@ -27,7 +27,7 @@ import {
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
-  setCovenantTemplate,
+  setCustomScriptTemplate,
   setIsSpendableViaUI,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
@@ -354,13 +354,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'importTemplate': {
           this.checkHostnameAuthorization(state);
           const accountData = state.wallet.accounts[this.selectedAccount];
-          if (accountData.type !== AccountType.CovenantAccount) {
-            throw new Error('Only covenant accounts can import templates');
+          if (accountData.type !== AccountType.CustomScriptAccount) {
+            throw new Error('Only custom script accounts can import templates');
           }
 
           const [template, changeTemplate] = params as [string, string?];
           await this.store.dispatchAsync(
-            setCovenantTemplate(this.selectedAccount, template, changeTemplate)
+            setCustomScriptTemplate(this.selectedAccount, template, changeTemplate)
           );
           const selectedAccount = selectAccount(this.selectedAccount)(state);
           const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(state));

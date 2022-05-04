@@ -80,7 +80,7 @@ export interface CovenantDescriptors {
   isSpendableViaUI?: boolean;
 }
 
-export type CovenantIdentityOpts = CovenantDescriptors & {
+export type CustomScriptIdentityOpts = CovenantDescriptors & {
   mnemonic: string;
 };
 
@@ -93,13 +93,13 @@ interface IdentityOptsWithSchnorr<opt> extends IdentityOpts<opt> {
   ecclib: IdentityOpts<opt>['ecclib'] & bip341.TinySecp256k1Interface;
 }
 
-export class CovenantIdentityWatchOnly extends Identity implements IdentityInterface {
+export class CustomScriptIdentityWatchOnly extends Identity implements IdentityInterface {
   private index = 0;
   private changeIndex = 0;
   protected cache = new Map<string, ExtendedTaprootAddressInterface>();
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
-  readonly namespace: CovenantIdentityOpts['namespace'];
+  readonly namespace: CustomScriptIdentityOpts['namespace'];
   readonly covenant: CovenantDescriptors;
   readonly ecclib: IdentityOpts<any>['ecclib'] & bip341.TinySecp256k1Interface;
 
@@ -250,12 +250,12 @@ function withoutUndefined<T>(arr: Array<T | undefined>): Array<T> {
   return arr.filter((x) => x !== undefined) as Array<T>;
 }
 
-export class CovenantIdentity extends CovenantIdentityWatchOnly implements IdentityInterface {
+export class CustomScriptIdentity extends CustomScriptIdentityWatchOnly implements IdentityInterface {
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly xpub: string;
 
-  constructor(args: IdentityOptsWithSchnorr<CovenantIdentityOpts>) {
+  constructor(args: IdentityOptsWithSchnorr<CustomScriptIdentityOpts>) {
     checkIdentityType(args.type, IdentityType.Mnemonic);
     checkMnemonic(args.opts.mnemonic);
 
@@ -404,7 +404,7 @@ export class CovenantIdentity extends CovenantIdentityWatchOnly implements Ident
 
 // restorers
 
-export function covenantRestorerFromEsplora<T extends CovenantIdentityWatchOnly>(
+export function customScriptRestorerFromEsplora<T extends CustomScriptIdentityWatchOnly>(
   toRestore: T
 ): Restorer<EsploraRestorerOpts, T> {
   return restorerFromEsplora(toRestore, function (isChange: boolean, index: number): string {
@@ -412,14 +412,14 @@ export function covenantRestorerFromEsplora<T extends CovenantIdentityWatchOnly>
   });
 }
 
-export function restoredCovenantIdentity(
+export function restoredCustomScriptIdentity(
   covenantDescriptors: CovenantDescriptors,
   mnemonic: string,
   network: NetworkString,
   restorerOpts: StateRestorerOpts
-): Promise<CovenantIdentity> {
-  return restorerFromState<CovenantIdentity>(
-    new CovenantIdentity({
+): Promise<CustomScriptIdentity> {
+  return restorerFromState<CustomScriptIdentity>(
+    new CustomScriptIdentity({
       type: IdentityType.Mnemonic,
       chain: network,
       ecclib: ecc,
@@ -431,15 +431,15 @@ export function restoredCovenantIdentity(
   )(restorerOpts);
 }
 
-export function restoredCovenantWatchOnlyIdentity(
+export function restoredCustomScriptWatchOnlyIdentity(
   covenantDescriptors: CovenantDescriptors,
   masterPublicKey: string,
   masterBlindingKey: string,
   network: NetworkString,
   restorerOpts: StateRestorerOpts
-): Promise<CovenantIdentityWatchOnly> {
-  return restorerFromState<CovenantIdentityWatchOnly>(
-    new CovenantIdentityWatchOnly({
+): Promise<CustomScriptIdentityWatchOnly> {
+  return restorerFromState<CustomScriptIdentityWatchOnly>(
+    new CustomScriptIdentityWatchOnly({
       type: IdentityType.MasterPublicKey,
       chain: network,
       ecclib: ecc,

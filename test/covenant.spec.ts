@@ -1,4 +1,4 @@
-import type { AddressInterface, IdentityOpts } from 'ldk';
+import type { AddressInterface } from 'ldk';
 import {
   fetchAndUnblindUtxos,
   IdentityType,
@@ -9,7 +9,7 @@ import {
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import { CovenantIdentity, CovenantIdentityOpts } from '../src/domain/covenant-identity';
+import { CustomScriptIdentity, CustomScriptIdentityOpts } from '../src/domain/covenant-identity';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 
@@ -18,7 +18,7 @@ const TEST_NAMESPACE = 'test';
 jest.setTimeout(15000);
 
 
-const failingArgs: { name: string; opts: CovenantIdentityOpts }[] = [
+const failingArgs: { name: string; opts: CustomScriptIdentityOpts }[] = [
   {
     name: 'no mnemonic',
     opts: {
@@ -60,9 +60,9 @@ const failingArgs: { name: string; opts: CovenantIdentityOpts }[] = [
   }
 ]
 
-function makeRandomCovenantIdentity(template?: string, changeTemplate?: string): CovenantIdentity {
+function makeRandomCovenantIdentity(template?: string, changeTemplate?: string): CustomScriptIdentity {
   const mnemo = makeRandomMnemonic();
-  return new CovenantIdentity({
+  return new CustomScriptIdentity({
     type: IdentityType.Mnemonic,
     chain: 'regtest',
     opts: { mnemonic: mnemo.mnemonic, namespace: TEST_NAMESPACE, template, changeTemplate },
@@ -70,14 +70,14 @@ function makeRandomCovenantIdentity(template?: string, changeTemplate?: string):
   });
 }
 
-describe('covenant identity', () => {
+describe('CustomScriptIdentity', () => {
   const getUnspents = async (addr: AddressInterface) => {
     return await fetchAndUnblindUtxos(ecc, [addr], APIURL);
   };
 
   for (const failingArg of failingArgs) {
     test(`fails with ${failingArg.name}`, () => {
-      expect(() => new CovenantIdentity({
+      expect(() => new CustomScriptIdentity({
         type: IdentityType.Mnemonic,
         chain: 'regtest',
         opts: failingArg.opts,
