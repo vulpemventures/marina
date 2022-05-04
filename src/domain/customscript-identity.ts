@@ -14,6 +14,9 @@ import {
   checkMnemonic,
   networks,
   fromXpub,
+  validate,
+  makeEvaluateDescriptor,
+  analyzeTapscriptTree,
 } from 'ldk';
 import type {
   AddressInterface,
@@ -24,18 +27,18 @@ import type {
   NetworkString,
   StateRestorerOpts,
   Mnemonic,
+  TemplateResult,
+  Context,
+  ScriptInputsNeeds,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
-import { evaluate, validate } from '../descriptors';
-import type { TemplateResult } from '../descriptors/ast';
-import type { Context } from '../descriptors/preprocessing';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
-import type { ScriptInputsNeeds } from './script-analyser';
-import { analyzeTapscriptTree } from './script-analyser';
+
+const evaluate = makeEvaluateDescriptor(ecc);
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {

@@ -9,11 +9,8 @@ import {
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import type {
-  CustomScriptIdentityOpts} from '../src/domain/customscript-identity';
-import {
-  CustomScriptIdentity
-} from '../src/domain/customscript-identity';
+import type { CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
+import { CustomScriptIdentity } from '../src/domain/customscript-identity';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 
