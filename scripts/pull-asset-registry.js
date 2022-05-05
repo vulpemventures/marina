@@ -5,7 +5,7 @@ const BASE_PATH = './src/application/constants';
 
 async function main() {
   try {
-    const res = await axios.get('https://assets.blockstream.info/');
+    let res = await axios.get('https://assets.blockstream.info/');
 
     // Light Nite assets
     const lightNiteAssetHashes = Object.values(res.data)
@@ -16,10 +16,8 @@ async function main() {
     writeToFile(lightNitePath, lightNiteAssetHashes);
 
     // Blockstream
-    const blockstreamAssetHashes = Object.values(res.data)
-      .filter(asset => asset.entity.domain.includes("blockstream.com"))
-      .map(asset => asset.asset_id);
-
+    res = await axios.get('https://raw.githubusercontent.com/Blockstream/asset_registry_db/master/icons.json');
+    const blockstreamAssetHashes = Object.keys(res.data);
     const blockstreamPath = `${BASE_PATH}/blockstream_asset_hash.json`;
     writeToFile(blockstreamPath, blockstreamAssetHashes);
   } catch (e) {

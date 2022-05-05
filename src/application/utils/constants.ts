@@ -20,8 +20,7 @@ const makeLocalImagePath = (fileName: string): string => `assets/images/liquid-a
 const LIGHTNITE_IMG = makeLocalImagePath('lightnite.png'); // default for lightnite assets
 const UNKNOW_IMG = makeLocalImagePath('question-mark.svg'); // this is used in case of not found
 
-// maps assetHash to a string usable inside a <img src> tag
-// string can be 'path/to/image.png' or 'data:image/png;base64, 123...'
+// maps assetHash to a url
 const assetHashToImagePath = new Map<string, string>();
 
 // set icons for all assets received from blockstream icons
