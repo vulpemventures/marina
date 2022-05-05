@@ -24,7 +24,6 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
-  selectAllAccounts,
   selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
@@ -36,12 +35,12 @@ import {
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import { Balance, Recipient, Utxo } from 'marina-provider';
+import { Balance, RawHex, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { AccountID, MainAccountID } from '../../domain/account';
-import { AddressInterface, getAsset, getSats, UnblindedOutput } from 'ldk';
+import { getAsset, getSats, UnblindedOutput } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -50,8 +49,8 @@ import { sleep } from '../../application/utils/common';
 import { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
+import { getUtxosFromTx } from '../../application/utils/utxos';
 import { UnconfirmedOutput } from '../../domain/unconfirmed';
-import { address, networks, Transaction } from 'liquidjs-lib';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -119,6 +118,31 @@ export default class MarinaBroker extends Broker {
     } while (store.getState().wallet.updaterLoaders !== 0);
     // return new state
     return store.getState();
+  }
+
+  // locks utxos used on transaction
+  // credit change utxos to balance
+  private async lockAndLoadUtxos(
+    signedTxHex: RawHex,
+    selectedUtxos: UnblindedOutput[] | undefined,
+    changeUtxos: UnconfirmedOutput[] | undefined,
+    store: BrokerProxyStore
+  ) {
+    const state = store.getState();
+
+    // lock utxos used on transaction
+    if (selectedUtxos) {
+      for (const utxo of selectedUtxos) {
+        await store.dispatchAsync(lockUtxo(utxo));
+      }
+    }
+
+    // credit change utxos to balance
+    if (changeUtxos && changeUtxos.length > 0) {
+      store.dispatch(
+        await addUnconfirmedUtxos(signedTxHex, changeUtxos, MainAccountID, selectNetwork(state))
+      );
+    }
   }
 
   private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
@@ -238,24 +262,8 @@ export default class MarinaBroker extends Broker {
           const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
-          // lock utxos used in successful broadcast
-          if (selectedUtxos) {
-            for (const utxo of selectedUtxos) {
-              await this.store.dispatchAsync(lockUtxo(utxo));
-            }
-          }
-
-          // add unconfirmed utxos from change addresses to utxo set
-          if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
-            this.store.dispatch(
-              await addUnconfirmedUtxos(
-                signedTxHex,
-                unconfirmedOutputs,
-                MainAccountID,
-                selectNetwork(state)
-              )
-            );
-          }
+          // lock selected utxos and credit change utxos (aka unconfirmed outputs)
+          await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, unconfirmedOutputs, this.store);
 
           return successMsg({ txid, hex: signedTxHex });
         }
@@ -331,99 +339,16 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.broadcastTransaction.name: {
           this.checkHostnameAuthorization(state);
-          const network = selectNetwork(state);
           const [signedTxHex] = params as [string];
 
           // broadcast tx
           const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
-          // will need tx to lock selected utxos and credit unconfirmed utxos
-          const tx = Transaction.fromHex(signedTxHex);
+          const { selectedUtxos, changeUtxos } = await getUtxosFromTx(signedTxHex, state);
 
-          // lock selected utxos used in this transaction:
-          // - get all coins from marina
-          // - iterate over all transaction inputs and check if is a coin of ours
-          // - if any, lock selected utxos
-
-          // get all coins from marina
-          const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
-
-          // array to store all utxos selected in this transaction
-          const selectedUtxos: UnblindedOutput[] = [];
-
-          // find all inputs that are a coin of ours
-          tx.ins.forEach((_in) => {
-            const { hash, index } = _in; // txid and vout
-            const txid = hash.slice().reverse().toString('hex');
-            for (const coin of coins) {
-              if (coin.txid === txid && coin.vout === index) {
-                selectedUtxos.push(coin);
-                break;
-              }
-            }
-          });
-
-          // lock utxos used in this transaction
-          if (selectedUtxos && selectedUtxos.length > 0) {
-            for (const utxo of selectedUtxos) {
-              await this.store.dispatchAsync(lockUtxo(utxo));
-            }
-          }
-
-          // credit change utxos:
-          // - get all addresses used by marina
-          // - iterate over all transaction outputs and check if belongs to marina
-          // - if any, add unconfirmed utxos to utxo set
-
-          // get all marina addresses (from all accounts)
-          let allAddresses: AddressInterface[];
-          selectAllAccounts(state).forEach(async (account) => {
-            const identity = await account.getWatchIdentity(network);
-            allAddresses = [...allAddresses, ...(await identity.getAddresses())];
-          });
-
-          // array to store all utxos to be found
-          const unconfirmedOutputs: UnconfirmedOutput[] = [];
-
-          // iterate over transaction outputs
-          tx.outs.forEach((out, vout) => {
-            try {
-              // get address from output script
-              const addressFromOutputScript = address.fromOutputScript(
-                Buffer.from(out.script),
-                networks[network]
-              );
-              // iterate over marina addresses
-              for (const addr of allAddresses) {
-                // get unconfidential address for addr
-                const unconfidentialAddress = address.fromConfidential(
-                  addr.confidentialAddress
-                ).unconfidentialAddress;
-                // compare with address from output script
-                if (
-                  addressFromOutputScript === unconfidentialAddress ||
-                  addressFromOutputScript === addr.confidentialAddress
-                ) {
-                  unconfirmedOutputs.push({
-                    txid,
-                    vout,
-                    blindPrivKey: addr.blindingPrivateKey,
-                  });
-                  break;
-                }
-              }
-            } catch (_) {
-              // probably this output doesn't belong to us
-            }
-          });
-
-          // add unconfirmed utxos from change addresses to utxo set
-          if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
-            this.store.dispatch(
-              await addUnconfirmedUtxos(signedTxHex, unconfirmedOutputs, MainAccountID, network)
-            );
-          }
+          // lock selected utxos and credit change utxos
+          await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, changeUtxos, this.store);
 
           return successMsg({ txid, hex: signedTxHex });
         }
