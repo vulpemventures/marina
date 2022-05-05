@@ -4,7 +4,7 @@ import type {
   AccountData,
   CustomScriptAccountData,
 } from '../../../domain/account';
-import { AccountType, createAccount, MainAccountID } from '../../../domain/account';
+import { AccountType, accountFromMnemonicAndData, MainAccountID } from '../../../domain/account';
 import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
@@ -91,7 +91,7 @@ export const selectAccountsFromCoins =
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
   return selectAllAccountsIDs(state)
     .map((id) => selectInjectedAccountData(id)(state))
-    .map((data) => (data ? createAccount(state.wallet.encryptedMnemonic, data) : null))
+    .map((data) => (data ? accountFromMnemonicAndData(state.wallet.encryptedMnemonic, data) : null))
     .filter((account): account is Account => account !== null);
 };
 
@@ -112,7 +112,7 @@ export function selectAccount(accountID: AccountID) {
 
   return (state: RootReducerState): Account => {
     const accountData = accountDataSelector(state);
-    if (accountData) return createAccount(state.wallet.encryptedMnemonic, accountData);
+    if (accountData) return accountFromMnemonicAndData(state.wallet.encryptedMnemonic, accountData);
     throw new Error(`Account ${accountID} not found`);
   };
 }

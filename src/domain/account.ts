@@ -157,7 +157,10 @@ const factories = new Map<
   .set(AccountType.MainAccount, createMainAccount)
   .set(AccountType.CustomScriptAccount, createCustomScriptAccount);
 
-export const createAccount = (encryptedMnemonic: EncryptedMnemonic, data: AccountData): Account => {
+export const accountFromMnemonicAndData = (
+  encryptedMnemonic: EncryptedMnemonic,
+  data: AccountData
+): Account => {
   const factory = factories.get(data.type);
   if (!factory) {
     throw new Error(`Unknown account type ${data.type}`);
