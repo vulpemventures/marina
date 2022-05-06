@@ -8,14 +8,8 @@ import {
 } from 'ldk';
 import { address, networks, Transaction } from 'liquidjs-lib';
 import { RawHex } from 'marina-provider';
-import { RootReducerState } from '../../domain/common';
+import { Account } from '../../domain/account';
 import { UnconfirmedOutput } from '../../domain/unconfirmed';
-import { selectNetwork } from '../redux/selectors/app.selector';
-import {
-  selectAllAccounts,
-  selectAllAccountsIDs,
-  selectUtxos,
-} from '../redux/selectors/wallet.selector';
 
 export const toStringOutpoint = (outpoint: { txid: string; vout: number }): string => {
   return `${outpoint.txid}:${outpoint.vout}`;
@@ -43,8 +37,10 @@ export interface UtxosFromTx {
 
 // given a signed tx hex, get selected utxos and change utxos
 export const getUtxosFromTx = async (
+  accounts: Account[],
+  coins: UnblindedOutput[],
+  network: NetworkString,
   signedTxHex: RawHex,
-  state: RootReducerState
 ): Promise<UtxosFromTx> => {
   const tx = Transaction.fromHex(signedTxHex);
   const txid = tx.getId();
@@ -52,9 +48,6 @@ export const getUtxosFromTx = async (
   // get selected utxos used in this transaction:
   // - get all coins from marina
   // - iterate over all transaction inputs and check if is a coin of ours
-
-  // get all coins from marina
-  const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
 
   // array to store all utxos selected in this transaction
   const selectedUtxos: UnblindedOutput[] = [];
@@ -80,8 +73,8 @@ export const getUtxosFromTx = async (
 
   // get all marina addresses (from all accounts)
   let allAddresses: AddressInterface[] = [];
-  for (const account of selectAllAccounts(state)) {
-    const identity = await account.getWatchIdentity(selectNetwork(state));
+  for (const account of accounts) {
+    const identity = await account.getWatchIdentity(network);
     allAddresses = [...allAddresses, ...(await identity.getAddresses())];
   }
 
@@ -91,7 +84,7 @@ export const getUtxosFromTx = async (
       // get address from output script
       const addressFromOutputScript = address.fromOutputScript(
         Buffer.from(out.script),
-        networks[selectNetwork(state)]
+        networks[network]
       );
       // iterate over marina addresses
       for (const addr of allAddresses) {

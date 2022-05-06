@@ -24,6 +24,7 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
+  selectAllAccounts,
   selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
@@ -340,12 +341,22 @@ export default class MarinaBroker extends Broker {
         case Marina.prototype.broadcastTransaction.name: {
           this.checkHostnameAuthorization(state);
           const [signedTxHex] = params as [string];
+          const network = selectNetwork(state);
 
           // broadcast tx
           const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
-          const { selectedUtxos, changeUtxos } = await getUtxosFromTx(signedTxHex, state);
+          // get selected and change utxos from transaction
+          const accounts = selectAllAccounts(state);
+          const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
+
+          const { selectedUtxos, changeUtxos } = await getUtxosFromTx(
+            accounts,
+            coins,
+            network,
+            signedTxHex
+          );
 
           // lock selected utxos and credit change utxos
           await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, changeUtxos, this.store);
