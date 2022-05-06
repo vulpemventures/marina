@@ -57,34 +57,9 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
   return (
     <form onSubmit={handleSubmit} className="mt-10">
-      <div className={cx({ 'mb-12': !errors.address || !touched.address })}>
-        <label className="block">
-          <p className="mb-2 text-base font-medium text-left">Address</p>
-          <input
-            className={cx(
-              'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
-              {
-                'border-red': errors.address && touched.address,
-                'border-grayLight': !errors.address || !touched.address,
-              }
-            )}
-            id="address"
-            name="address"
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder=""
-            type="text"
-            value={values.address}
-          />
-        </label>
-        {errors.address && touched.address && (
-          <p className="text-red h-10 mt-2 text-xs font-medium text-left">{errors.address}</p>
-        )}
-      </div>
-
       <div className={cx({ 'mb-12': !errors.amount || !touched.amount })}>
         <label className="block">
-          <p className="mb-2 text-base font-medium text-left">Amount</p>
+          <p className="mb-2 text-base font-medium text-left">Invoice Amount</p>
           <div
             className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
               'text-grayDark': touched.amount,
