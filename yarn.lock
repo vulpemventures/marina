@@ -2143,7 +2143,7 @@ bip174@^2.0.1:
   resolved "https://registry.yarnpkg.com/bip174/-/bip174-2.1.0.tgz#cd3402581feaa5116f0f00a0eaee87a5843a2d30"
   integrity sha512-lkc0XyiX9E9KiVAS1ZiOqK1xfiwvf4FXDDdkDq5crcDzOq+xGytY+14qCsqz7kCiy8rpN1CRNfacRhf9G3JNSA==
 
-bip32@^2.0.4:
+bip32@^2.0.4, bip32@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/bip32/-/bip32-2.0.6.tgz#6a81d9f98c4cd57d05150c60d8f9e75121635134"
   integrity sha512-HpV5OMLLGTjSVblmrtYRfFFKuQB+GArM0+XP8HGWfJ5vxYBqo+DesvJwOdC2WJ3bCkZShGf0QIfoIpeomVzVdA==
@@ -2281,6 +2281,20 @@ boltz-core-liquid@^0.5.1:
     liquidjs-lib "^6.0.2-liquid.2"
     tiny-secp256k1 "^2.2.1"
     varuint-bitcoin "^1.1.2"
+
+bolt11@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/bolt11/-/bolt11-1.4.0.tgz#d8ff0f6b8f89aaa07ed8c02e330a344b8c158263"
+  integrity sha512-TeGIOpFNrvNA1XGvwBr+lYmzKfoJeyMRt7nsGmIci+5gbmSz7s46jwKLNYXH3IoxV7fjmYUEUu2NM19n9w0msg==
+  dependencies:
+    "@types/bn.js" "^4.11.3"
+    bech32 "^1.1.2"
+    bitcoinjs-lib "^6.0.0"
+    bn.js "^4.11.8"
+    create-hash "^1.2.0"
+    lodash "^4.17.11"
+    safe-buffer "^5.1.1"
+    secp256k1 "^4.0.2"
 
 boolbase@^1.0.0:
   version "1.0.0"
