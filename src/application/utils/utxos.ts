@@ -40,7 +40,7 @@ export const getUtxosFromTx = async (
   accounts: Account[],
   coins: UnblindedOutput[],
   network: NetworkString,
-  signedTxHex: RawHex,
+  signedTxHex: RawHex
 ): Promise<UtxosFromTx> => {
   const tx = Transaction.fromHex(signedTxHex);
   const txid = tx.getId();
