@@ -1,9 +1,12 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import type { Asset } from '../../../domain/assets';
+import {
+  RECEIVE_ADDRESS_ROUTE,
+  LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE,
+} from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
 import type { NetworkString } from 'ldk';
-import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE } from '../../routes/constants';
 import { LN_SWAP_BOLTZ } from '../../../application/utils/constants';
 
 export interface ReceiveSelectAssetProps {
