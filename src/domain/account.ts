@@ -8,6 +8,11 @@ import {
   masterPubKeyRestorerFromEsplora,
   NetworkString,
 } from 'ldk';
+import * as ecc from 'tiny-secp256k1';
+import ECPairFactory, { ECPairInterface } from 'ecpair';
+import BIP32Factory from 'bip32';
+import * as bip39 from 'bip39';
+import { networks } from 'liquidjs-lib';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
@@ -36,6 +41,11 @@ export interface Account<
   WatchID extends IdentityInterface = IdentityInterface
 > {
   getAccountID(): AccountID;
+  getSigningKeyUnsafe(
+    password: string,
+    derivationPath: string,
+    network: NetworkString
+  ): ECPairInterface;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
   getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
@@ -55,6 +65,18 @@ export interface MnemonicAccountData {
 export function createMnemonicAccount(data: MnemonicAccountData): MnemonicAccount {
   return {
     getAccountID: () => MainAccountID,
+    getSigningKeyUnsafe: (password: string, derivationPath: string, network: NetworkString) => {
+      const mnemonic = decrypt(data.encryptedMnemonic, password);
+      // retreive the wallet's seed from mnemonic
+      const walletSeed = bip39.mnemonicToSeedSync(mnemonic);
+      // generate the master private key from the wallet seed
+      const networkObj = (networks as Record<string, any>)[network];
+      const bip32 = BIP32Factory(ecc);
+      const masterPrivateKeyNode = bip32.fromSeed(walletSeed, networkObj);
+
+      const { privateKey } = masterPrivateKeyNode.derivePath(derivationPath);
+      return ECPairFactory(ecc).fromPrivateKey(privateKey!, { network: networkObj });
+    },
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredMnemonic(
         decrypt(data.encryptedMnemonic, password),

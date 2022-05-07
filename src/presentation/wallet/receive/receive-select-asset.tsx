@@ -1,6 +1,9 @@
 import React from 'react';
 import { useHistory } from 'react-router';
-import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE } from '../../routes/constants';
+import {
+  RECEIVE_ADDRESS_ROUTE,
+  LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE,
+} from '../../routes/constants';
 import { Asset } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
 import { NetworkString } from 'ldk';
