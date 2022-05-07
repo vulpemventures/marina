@@ -12,6 +12,7 @@ import {
   AddressInterface,
   NetworkString,
 } from 'ldk';
+import * as ecc from 'tiny-secp256k1';
 import { MasterBlindingKey } from '../../domain/master-blinding-key';
 import { MasterXPub } from '../../domain/master-extended-pub';
 
@@ -54,6 +55,7 @@ export function restoredMnemonic(
     chain,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
+    ecclib: ecc,
   });
 
   return mnemonicRestorerFromState(mnemonicID)(restorerOpts);
@@ -83,6 +85,7 @@ export function newMasterPublicKey(
       masterPublicKey: masterXPub,
       masterBlindingKey: masterBlindingKey,
     },
+    ecclib: ecc,
   });
 }
 
@@ -112,5 +115,6 @@ export function newMultisigWatchOnly(
       requiredSignatures,
       cosigners: cosigners.concat([signerXPub]),
     },
+    ecclib: ecc,
   });
 }

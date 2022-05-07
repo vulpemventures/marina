@@ -12,6 +12,7 @@ import {
   getAsset,
   Output,
 } from 'ldk';
+import * as ecc from 'tiny-secp256k1';
 import { Account, AccountID } from '../../../domain/account';
 import { UtxosAndTxs } from '../../../domain/transaction';
 import { addTx } from '../actions/transaction';
@@ -83,7 +84,7 @@ function* utxosUpdater(
   const addresses = yield* getAddressesFromAccount(account, network);
   const skippedOutpoints: string[] = []; // for deleting
   const receivedUtxos: Record<string, Output> = {};
-  const utxosGenerator = fetchAndUnblindUtxosGenerator(addresses, explorerURL, (utxo) => {
+  const utxosGenerator = fetchAndUnblindUtxosGenerator(ecc, addresses, explorerURL, (utxo) => {
     const outpoint = toStringOutpoint(utxo);
     receivedUtxos[outpoint] = utxo;
     const skip = utxosMap[outpoint] !== undefined;
