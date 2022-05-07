@@ -19,6 +19,7 @@ import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
+import * as ecc from 'tiny-secp256k1';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -122,6 +123,7 @@ export async function createWalletFromMnemonic(
     chain,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
+    ecclib: ecc,
   });
 
   const mnemonicIdentity = await mnemonicRestorerFromEsplora(toRestore)({

@@ -67,7 +67,7 @@ import Confirmation from '../../application/redux/containers/confirmation.contai
 import SendEndOfFlow from '../../application/redux/containers/end-of-flow.container';
 import PaymentSuccess from '../../application/redux/containers/payment-success.container';
 import PaymentError from '../wallet/send/payment-error';
-// Lightning 
+// Lightning
 import LightningAmountInvoice from '../../application/redux/containers/lightning-enter-amount-invoice.container';
 
 // Settings
@@ -109,7 +109,11 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SEND_PAYMENT_SUCCESS_ROUTE} component={PaymentSuccess} />
       <ProtectedRoute exact path={SEND_PAYMENT_ERROR_ROUTE} component={PaymentError} />
       {/*Lightning*/}
-      <ProtectedRoute exact path={LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE} component={LightningAmountInvoice} />
+      <ProtectedRoute
+        exact
+        path={LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE}
+        component={LightningAmountInvoice}
+      />
 
       {/*Settings*/}
       <ProtectedRoute exact path={SETTINGS_MENU_SECURITY_ROUTE} component={SettingsMenuSecurity} />

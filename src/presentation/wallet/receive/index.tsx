@@ -11,7 +11,6 @@ import { selectAccountForAsset } from '../../../application/redux/selectors/wall
 import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { selectNetwork } from '../../../application/redux/selectors/app.selector';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { LN_SWAP_BOLTZ } from '../../../application/utils/constants';
 
 const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();

@@ -20,7 +20,9 @@ import {
   IdentityInterface,
   isConfidentialOutput,
 } from 'ldk';
-import { confidential, networks, payments, Psbt } from 'liquidjs-lib';
+import * as ecc from 'tiny-secp256k1';
+
+import { AssetHash, confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
 import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
 import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
@@ -81,7 +83,11 @@ async function blindPset(psetBase64: string, utxos: UnblindedOutput[], outputAdd
   const inputBlindingData = inputBlindingDataMap(psetBase64, utxos);
 
   return (
-    await decodePset(psetBase64).blindOutputsByIndex(inputBlindingData, outputPubKeys)
+    await decodePset(psetBase64).blindOutputsByIndex(
+      Psbt.ECCKeysGenerator(ecc),
+      inputBlindingData,
+      outputPubKeys
+    )
   ).toBase64();
 }
 
@@ -122,7 +128,7 @@ export async function blindAndSignPset(
   const signedPset = await signPset(blindedPset, identities);
 
   const decodedPset = decodePset(signedPset);
-  if (!decodedPset.validateSignaturesOfAllInputs()) {
+  if (!decodedPset.validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc))) {
     throw new Error('PSET is not fully signed');
   }
 
@@ -137,7 +143,7 @@ export async function signPset(
   for (const id of identities) {
     pset = await id.signPset(pset);
     try {
-      if (decodePset(pset).validateSignaturesOfAllInputs()) break;
+      if (decodePset(pset).validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc))) break;
     } catch {
       continue;
     }
@@ -430,8 +436,9 @@ function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
     const opReturnPayment = payments.embed({ data: [Buffer.from(recipient.data, 'hex')] });
     pset.addOutput({
       script: opReturnPayment.output!,
-      asset: recipient.asset,
+      asset: AssetHash.fromHex(recipient.asset, false).bytes,
       value: confidential.satoshiToConfidentialValue(recipient.value),
+      nonce: Buffer.alloc(0),
     });
   }
 
