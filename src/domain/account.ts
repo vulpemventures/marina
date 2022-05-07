@@ -9,7 +9,8 @@ import type {
   NetworkString,
 } from 'ldk';
 import { IdentityType, masterPubKeyRestorerFromEsplora } from 'ldk';
-import ECPairFactory, { ECPairInterface } from 'ecpair';
+import ECPairFactory from 'ecpair';
+import type { ECPairInterface } from 'ecpair';
 import BIP32Factory from 'bip32';
 import * as bip39 from 'bip39';
 import { networks } from 'liquidjs-lib';

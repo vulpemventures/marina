@@ -51,6 +51,16 @@ interface CreateSwapCommonRequest {
   pairId: 'L-BTC/BTC',
   orderSide: 'buy' | 'sell',
 }
+interface CreateSwapCommonRequest {
+  type: 'submarine' | 'reversesubmarine';
+  pairId: 'L-BTC/BTC';
+  orderSide: 'buy' | 'sell';
+}
+
+interface CreateSwapCommonResponse {
+  id: string;
+  timeoutBlockHeight: number;
+}
 
 export default class Boltz {
   url: string;

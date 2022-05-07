@@ -58,6 +58,7 @@ export function restoredMnemonic(
     ecclib: ecc,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
+    ecclib: ecc,
   });
 
   return mnemonicRestorerFromState(mnemonicID)(restorerOpts);
@@ -118,5 +119,6 @@ export function newMultisigWatchOnly(
       requiredSignatures,
       cosigners: cosigners.concat([signerXPub]),
     },
+    ecclib: ecc,
   });
 }

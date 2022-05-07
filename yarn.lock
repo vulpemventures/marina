@@ -1276,6 +1276,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/wif@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@types/wif/-/wif-2.0.2.tgz#5bd845e29406bc7d49acca6d2a6c3230f3b53d3c"
+  integrity sha512-IiIuBeJzlh4LWJ7kVTrX0nwB60OG0vvGTaWC/SgSbVFw7uYUTF6gEuvDZ1goWkeirekJDD58Y8g7NljQh2fNkA==
+  dependencies:
+    "@types/node" "*"
+
 "@types/yargs-parser@*":
   version "21.0.0"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-21.0.0.tgz#0c60e537fa790f5f9472ed2776c2b71ec117351b"
@@ -2143,7 +2150,7 @@ bip174@^2.0.1:
   resolved "https://registry.yarnpkg.com/bip174/-/bip174-2.1.0.tgz#cd3402581feaa5116f0f00a0eaee87a5843a2d30"
   integrity sha512-lkc0XyiX9E9KiVAS1ZiOqK1xfiwvf4FXDDdkDq5crcDzOq+xGytY+14qCsqz7kCiy8rpN1CRNfacRhf9G3JNSA==
 
-bip32@^2.0.4, bip32@^2.0.6:
+bip32@^2.0.4:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/bip32/-/bip32-2.0.6.tgz#6a81d9f98c4cd57d05150c60d8f9e75121635134"
   integrity sha512-HpV5OMLLGTjSVblmrtYRfFFKuQB+GArM0+XP8HGWfJ5vxYBqo+DesvJwOdC2WJ3bCkZShGf0QIfoIpeomVzVdA==
@@ -2295,6 +2302,22 @@ bolt11@^1.4.0:
     lodash "^4.17.11"
     safe-buffer "^5.1.1"
     secp256k1 "^4.0.2"
+
+boltz-core-liquid@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/boltz-core-liquid/-/boltz-core-liquid-0.5.1.tgz#fda2816fb757f0c883e5b05bb3fb74c65f96f83d"
+  integrity sha512-3DF82/tfxVtPkljkgExT7XZ+slbvvTsHVyV0KEDw1IQc0o6sND87UxTF0ELob1CHnO5wCRngW3dlh9NZ97bH/Q==
+  dependencies:
+    "@boltz/bitcoin-ops" "^2.0.0"
+    bip32 "^3.0.1"
+    bip65 "^1.0.3"
+    bip66 "^1.1.5"
+    bitcoinjs-lib "^6.0.1"
+    bn.js "^5.2.0"
+    ecpair "^2.0.1"
+    liquidjs-lib "^6.0.2-liquid.2"
+    tiny-secp256k1 "^2.2.1"
+    varuint-bitcoin "^1.1.2"
 
 boolbase@^1.0.0:
   version "1.0.0"
@@ -9825,6 +9848,11 @@ typescript@^4.3.5:
   version "4.7.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.7.2.tgz#1f9aa2ceb9af87cca227813b4310fff0b51593c4"
   integrity sha512-Mamb1iX2FDUpcTRzltPxgWMKy3fhg0TN378ylbktPGPK/99KbDtMQ4W1hwgsbPAsG3a0xKa1vmw4VKZQbkvz5A==
+
+uint8array-tools@0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/uint8array-tools/-/uint8array-tools-0.0.7.tgz#a7a2bb5d8836eae2fade68c771454e6a438b390d"
+  integrity sha512-vrrNZJiusLWoFWBqz5Y5KMCgP9W9hnjZHzZiZRT8oNAkq3d5Z5Oe76jAvVVSRh4U8GGR90N2X1dWtrhvx6L8UQ==
 
 uint8array-tools@0.0.7:
   version "0.0.7"
