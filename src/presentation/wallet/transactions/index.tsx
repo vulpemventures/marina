@@ -14,7 +14,7 @@ import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ShellPopUp from '../../components/shell-popup';
-import { getAssetImage } from '../../../application/utils/constants';
+import { getAssetImage, onErrorImg } from '../../../application/utils/constants';
 import { txTypeAsString } from '../../../application/utils/transaction';
 import { fromSatoshiStr } from '../../utils';
 import { TxDisplayInterface } from '../../../domain/transaction';
@@ -152,6 +152,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
             className="w-8 h-8 mt-0.5 block mx-auto mb-2"
             src={getAssetImgPath()}
             alt="liquid bitcoin logo"
+            onError={onErrorImg}
           />
           <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>
           {modalTxDetails && modalTxDetails.blockTimeMs && (

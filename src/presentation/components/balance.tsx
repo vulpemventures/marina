@@ -3,6 +3,7 @@ import cx from 'classnames';
 import browser from 'webextension-polyfill';
 import { useSelector } from 'react-redux';
 import { selectElectrsURL } from '../../application/redux/selectors/app.selector';
+import { onErrorImg } from '../../application/utils/constants';
 
 interface Props {
   assetBalance: string | number;
@@ -36,6 +37,7 @@ const Balance: React.FC<Props> = ({
         className="w-11 mt-0.5 block mx-auto mb-2"
         src={assetImgPath}
         alt="liquid bitcoin logo"
+        onError={onErrorImg}
       />
       <div>
         <p
