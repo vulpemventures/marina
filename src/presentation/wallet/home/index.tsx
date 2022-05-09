@@ -91,7 +91,7 @@ const HomeView: React.FC<HomeProps> = ({
           <Balance
             assetHash={lbtcAssetHash}
             assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetHash] ?? 0)}
-            assetImgPath="assets/images/liquid-assets/liquid-btc.svg"
+            assetImgPath={getAssetImage(lbtcAssetHash)}
             assetTicker="L-BTC"
             bigBalanceText={true}
           />
