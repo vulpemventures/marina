@@ -9,7 +9,6 @@ import {
   Transaction,
   bip341,
   toXpub,
-  witnessStackToScriptWitness,
   checkIdentityType,
   checkMnemonic,
   networks,
@@ -307,79 +306,104 @@ export class CustomScriptIdentity
   }
 
   signPset(psetBase64: string): Promise<string> {
-    let pset = psetBase64; // we'll mutate the pset to sign with signature if needed
+    const pset = Psbt.fromBase64(psetBase64); // we'll mutate the pset to sign with signature if needed
     let inputsSigned = 0;
-    const getPset = () => Psbt.fromBase64(pset);
 
     // check if all inputs have witnessUtxo
     // this is needed to get prevout values and assets
-    const inputsWitnessUtxos = getPset().data.inputs.map((i) => i.witnessUtxo);
+    const inputsWitnessUtxos = pset.data.inputs.map((i) => i.witnessUtxo);
     const inputsUtxos = withoutUndefined(inputsWitnessUtxos);
     if (inputsUtxos.length !== inputsWitnessUtxos.length) {
       throw new Error('missing witnessUtxo, all inputs need witnessUtxo');
     }
 
-    for (let index = 0; index < getPset().data.inputs.length; index++) {
-      const input = getPset().data.inputs[index];
-      // current version of pset does not support taproot fields (BIP371)
-      // as a temp solution, we use the finalScriptWitness to "signal" the leaf to sign
-      // if no finalScriptWitness has been set, we'll try to find an "auto-sign" path
+    for (let index = 0; index < pset.txInputs.length; index++) {
+      const input = pset.data.inputs[index];
       if (input.witnessUtxo) {
         const script = input.witnessUtxo.script.toString('hex');
         const cachedAddrInfos = this.cache.get(script);
-        // check if we own the input, and if have `witnesses` member
+        // check if we own the input
         if (cachedAddrInfos && cachedAddrInfos.result.witnesses) {
           try {
-            let leafScript = input.finalScriptWitness?.slice(2).toString('hex');
-            if (!leafScript) {
-              leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
-            }
+            // check if the pset signals how to spend the input
+            const isKeyPath = input.tapKeySig !== undefined || input.tapMerkleRoot !== undefined;
+            const isScriptPath = input.tapLeafScript !== undefined && input.tapLeafScript.length > 0;
 
-            if (!leafScript) continue; // not spendable
+            if (isKeyPath && isScriptPath) throw new Error('cannot spend input with both tapKeySig and tapScriptSig');
 
-            // witnesses func will throw if the leaf is not a valid leaf
-            // this MUST skip error in order to skip the signed inputs
-            const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
+            if (isKeyPath) {
+              if (input.tapKeySig !== undefined) continue; // already signed
 
-            // default leaf version is used
-            const leafHash = bip341.tapLeafHash({
-              scriptHex: leafScript,
-            });
-
-            // TODO check for witness v0 (not eltr template)
-            const sighashForSig = getPset().TX.hashForWitnessV1(
-              index,
-              inputsUtxos.map((u) => u.script),
-              inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
-              Transaction.SIGHASH_DEFAULT,
-              this.network.genesisBlockHash,
-              leafHash
-            );
-
-            const scriptNeeds = cachedAddrInfos.tapscriptNeeds[leafScript];
-            if (!scriptNeeds) continue;
-
-            const sigs = scriptNeeds.sigs.map((sig) => {
-              const addr = this.getAddressByPublicKey(sig.pubkey);
-              if (addr && addr.derivationPath) {
-                const pathToPrivKey = addr.derivationPath.slice(
-                  namespaceToDerivationPath(this.namespace).length + 1
-                );
-                return this.signSchnorr(pathToPrivKey, sighashForSig);
+              if (!this.hasPrivateKey(cachedAddrInfos.result.taprootInternalKey!)) {
+                throw new Error('marina fails to sign input (internal key not owned by the account)');
               }
 
-              return undefined;
-            });
+              const toSignAddress = this.getAddressByPublicKey(cachedAddrInfos.result.taprootInternalKey!);
+              if (toSignAddress && toSignAddress.derivationPath) {
+                const pathToPrivKey = toSignAddress.derivationPath.slice(
+                  namespaceToDerivationPath(this.namespace).length + 1
+                );
+                const signer = this.masterPrivateKeyNode.derivePath(pathToPrivKey);
+                pset.signInput(index, signer).toBase64();
+                inputsSigned++;
+                continue;
+              }
+            }
 
-            const witnessStack = [...withoutUndefined(sigs), ...taprootSignScriptStack];
+              const leafScript = (input.tapLeafScript && input.tapLeafScript.length > 0) 
+                ? input.tapLeafScript[0].script.toString('hex') 
+                : this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos); 
 
-            const toSign = getPset();
-            toSign.data.inputs[index]['finalScriptWitness'] = undefined; // clear the witness data (required for updateInput)
-            pset = toSign
-              .updateInput(index, { finalScriptWitness: witnessStackToScriptWitness(witnessStack) })
-              .toBase64();
+              if (!leafScript) {
+                throw new Error('marina fails to sign input (no auto spendable tapscript)');
+              }
 
-            inputsSigned++;
+              // witnesses func will throw if the leaf is not a valid leaf
+              const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
+              const leafHash = bip341.tapLeafHash({
+                scriptHex: leafScript,
+              });
+
+              pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
+              pset.updateInput(index, {
+                tapLeafScript: [{ 
+                  leafVersion: 0xc4, 
+                  script: Buffer.from(leafScript, 'hex'), 
+                  controlBlock: taprootSignScriptStack[1]
+                }],
+              })
+
+              // TODO check for witness v0 (not eltr template)
+              const sighashForSig = pset.TX.hashForWitnessV1(
+                index,
+                inputsUtxos.map((u) => u.script),
+                inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
+                Transaction.SIGHASH_DEFAULT,
+                this.network.genesisBlockHash,
+                leafHash
+              );
+
+              const scriptNeeds = cachedAddrInfos.tapscriptNeeds[leafScript];
+              if (!scriptNeeds) continue;
+
+              for (const need of scriptNeeds.sigs) {
+                const addr = this.getAddressByPublicKey(need.pubkey);
+                if (addr && addr.derivationPath) {
+                  const pathToPrivKey = addr.derivationPath.slice(
+                    namespaceToDerivationPath(this.namespace).length + 1
+                  );
+                  const sig = this.signSchnorr(pathToPrivKey, sighashForSig);
+                  pset.updateInput(index, {
+                    tapScriptSig: [{
+                      leafHash,
+                      pubkey: Buffer.from(need.pubkey, 'hex'),
+                      signature: sig,
+                    }]
+                  })
+                }
+              } 
+
+              inputsSigned++;
           } catch (e) {
             console.warn(e);
             // we skip errors, try to sign the next input
@@ -389,8 +413,8 @@ export class CustomScriptIdentity
       }
     }
 
-    if (inputsSigned === 0) return Promise.reject(new Error('no inputs to sign'));
-    return Promise.resolve(pset);
+    if (inputsSigned === 0) return Promise.reject(new Error('0 inputs has been signed'));
+    return Promise.resolve(pset.toBase64());
   }
 
   private hasPrivateKey(pubkey: string): boolean {

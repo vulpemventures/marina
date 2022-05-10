@@ -5,7 +5,6 @@ import {
   networks,
   Psbt,
   script,
-  witnessStackToScriptWitness,
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
@@ -60,7 +59,7 @@ const failingArgs: { name: string; opts: CustomScriptIdentityOpts }[] = [
   },
 ];
 
-function makeRandomCovenantIdentity(
+function makeRandomCustomScriptIdentity(
   template?: string,
   changeTemplate?: string
 ): CustomScriptIdentity {
@@ -93,7 +92,7 @@ describe('CustomScriptIdentity', () => {
   }
 
   test('should be able to instantiate a covenant identity without template set up', () => {
-    const random = makeRandomCovenantIdentity();
+    const random = makeRandomCustomScriptIdentity();
     expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
     expect(random.covenant.template).toBeUndefined();
     expect(random.covenant.changeTemplate).toBeUndefined();
@@ -112,7 +111,7 @@ describe('CustomScriptIdentity', () => {
 
     const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG ${inspectOutputIsLbtc(2)}`;
     const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
-    const id = makeRandomCovenantIdentity(template);
+    const id = makeRandomCustomScriptIdentity(template);
     const addr = await id.getNextAddress();
     expect(addr.taprootHashTree).toBeDefined();
     expect(addr.taprootInternalKey).toStrictEqual(
@@ -141,7 +140,7 @@ describe('CustomScriptIdentity', () => {
 
     pset = Psbt.fromBase64(pset)
       .updateInput(0, {
-        finalScriptWitness: witnessStackToScriptWitness([Buffer.from(leafToSpendScript!, 'hex')]),
+        tapLeafScript: [{ leafVersion: 0, script: Buffer.from(leafToSpendScript!, 'hex'), controlBlock: Buffer.alloc(33) }]
       })
       .toBase64();
 
@@ -153,6 +152,7 @@ describe('CustomScriptIdentity', () => {
       [addr.confidentialAddress],
       true
     );
+    console.log(signed)
     const txid = await broadcastTx(signed);
     expect(txid).toBeDefined();
   });
@@ -160,7 +160,7 @@ describe('CustomScriptIdentity', () => {
   test('should be able to auto-sign CHECKSIG tapscript owned by marina', async () => {
     const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG`;
     const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
-    const id = makeRandomCovenantIdentity(template);
+    const id = makeRandomCustomScriptIdentity(template);
     const addr = await id.getNextAddress();
 
     await faucet(addr.confidentialAddress, 10000);

@@ -6,9 +6,10 @@ import type {
   UnblindedOutput,
   CoinSelectorErrorFn,
   NetworkString,
-  IdentityInterface,
-} from 'ldk';
+  IdentityInterface} from 'ldk';
 import {
+  witnessStackToScriptWitness,
+
   address,
   addToTx,
   createFeeOutput,
@@ -151,17 +152,39 @@ export async function blindAndSignPset(
     throw new Error('blindPSET error: not fully blinded');
   }
 
-  const signedPset = await signPset(blindedPset, identities);
+  const signedPsetBase64 = await signPset(blindedPset, identities);
 
-  const decodedPset = decodePset(signedPset);
+  const pset = Psbt.fromBase64(signedPsetBase64);
   if (!skipSigValidation) {
-    if (!decodedPset.validateSignaturesOfAllInputs(sigValidator)) {
+    if (!pset.validateSignaturesOfAllInputs(sigValidator)) {
       throw new Error('PSET is not fully signed');
     }
   }
 
-  return decodedPset.finalizeAllInputs().extractTransaction().toHex();
+  for (let i = 0; i < pset.txInputs.length; i++) {
+    const input = pset.data.inputs[i];
+    // we need to use special finalizer in case of tapscript
+    if (atLeastOne(input.tapLeafScript) && atLeastOne(input.tapScriptSig)) {
+      pset.finalizeInput(i, (_, input) => {
+        return {
+          finalScriptSig: undefined,
+          finalScriptWitness: witnessStackToScriptWitness([
+            ...input.tapScriptSig!.map((s) => s.signature),
+            input.tapLeafScript![0].script,
+            input.tapLeafScript![0].controlBlock,
+          ]
+          ),
+        }
+      })
+    } else {
+      pset.finalizeInput(i); // default finalizer handles taproot key path and non taproot sigs
+    }
+  }
+
+  return pset.extractTransaction().toHex();
 }
+
+const atLeastOne = (arr: any[] | undefined) => arr && arr.length > 0;
 
 export async function signPset(
   psetBase64: string,

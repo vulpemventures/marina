@@ -32,7 +32,7 @@
     "decimal.js": "^10.2.1",
     "formik": "^2.2.9",
     "google-protobuf": "^3.15.8",
-    "ldk": "git+https://github.com/louisinger/ldk.git#descriptors-and-script-analyzer",
+    "ldk": "git+https://github.com/louisinger/ldk.git#bip371-liquidjs",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
     "marina-provider": "1.4.10",
