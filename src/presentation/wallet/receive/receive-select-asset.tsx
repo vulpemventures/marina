@@ -7,18 +7,17 @@ import {
 } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
 import type { NetworkString } from 'ldk';
-import { LN_SWAP_BOLTZ } from '../../../application/utils/constants';
 
 export interface ReceiveSelectAssetProps {
   network: NetworkString;
-  assets: Array<Asset & { assetHash: string }>;
+  assets: Array<Asset & { assetHash: string, canSubmarineSwap: boolean}>;
 }
 
 const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets }) => {
   const history = useHistory();
 
-  const handleSend = (asset: string) => {
-    if (asset === LN_SWAP_BOLTZ) {
+  const handleSend = async (asset: string, isSubmarineSwap: boolean) => {
+    if (isSubmarineSwap) {
       return Promise.resolve(history.push(`${LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE}`));
     }
     return Promise.resolve(history.push(`${RECEIVE_ADDRESS_ROUTE}/${asset}`));
@@ -28,23 +27,17 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
     <AssetListScreen
       title="Receive Asset"
       onClick={handleSend}
-      assets={[UnknowAsset, LightingSwap].concat(assets)}
+      assets={[UnknowAsset].concat(assets)}
     />
   );
 };
 
-const UnknowAsset: Asset & { assetHash: string } = {
+const UnknowAsset: Asset & { assetHash: string, canSubmarineSwap: boolean} = {
   ticker: 'Any',
   name: 'New asset',
   precision: 8,
   assetHash: 'new_asset',
-};
-
-const LightingSwap: Asset & { assetHash: string } = {
-  ticker: 'LN-BTC',
-  name: 'Lightning Network',
-  precision: 8,
-  assetHash: LN_SWAP_BOLTZ,
+  canSubmarineSwap: false,
 };
 
 export default ReceiveSelectAssetView;

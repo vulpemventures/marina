@@ -60,7 +60,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
     <form onSubmit={handleSubmit} className="mt-10">
       <div className={cx({ 'mb-12': !errors.amount || !touched.amount })}>
         <label className="block">
-          <p className="mb-2 text-base font-medium text-left">Invoice Amount</p>
+          <p className="mb-2 text-base font-medium text-left">Amount</p>
           <div
             className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
               'text-grayDark': touched.amount,

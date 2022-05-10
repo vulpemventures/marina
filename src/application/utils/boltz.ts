@@ -1,5 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { NetworkString } from 'ldk';
+import { extractErrorMessage } from '../../presentation/utils/error';
 
 interface CreateSwapCommonRequest {
   type: 'submarine' | 'reversesubmarine';
@@ -38,12 +39,6 @@ export type ReverseSubmarineSwapResponse = {
   redeemScript: string;
 };
 
-const config = {
-  headers: {
-    'Content-Type': 'application/json',
-  },
-};
-
 export const boltzUrl: Record<NetworkString, string> = {
   regtest: 'http://localhost:9090',
   testnet: 'https://testnet.boltz.exchange/api',
@@ -64,14 +59,8 @@ export default class Boltz {
       pairId: 'L-BTC/BTC',
       orderSide: 'sell',
     };
-    const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };
-    const { status, statusText, data } = await axios.post(`${this.url}/createswap`, params, config);
-
-    if (status !== 201) {
-      throw new Error(`Boltz createSubmarineSwap failed with status ${status} - ${statusText}`);
-    }
-
-    return data;
+    const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };   
+    return await this.callCreateSwap(params);
   };
 
   createReverseSubmarineSwap = async (
@@ -83,14 +72,30 @@ export default class Boltz {
       orderSide: 'buy',
     };
     const params: CreateSwapCommonRequest & ReverseSubmarineSwapRequest = { ...base, ...req };
-    const { status, statusText, data } = await axios.post(`${this.url}/createswap`, params, config);
-
-    if (status !== 201) {
-      throw new Error(
-        `Boltz createReverseSubmarineSwap failed with status ${status} - ${statusText}`
-      );
-    }
-
-    return data;
+    return await this.callCreateSwap(params);
   };
+
+  private callCreateSwap = async (params: CreateSwapCommonRequest): Promise<CreateSwapCommonResponse & any> => {
+    try {
+      const { status, data } = await axios.post(
+        `${this.url}/createswap`, 
+        params, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }  
+      );
+      if (status !== 201) {
+        throw new Error(data);
+      }
+      return data;
+    } catch (error: unknown | AxiosError) {
+      const errorExtracted = extractErrorMessage(error);
+      if (errorExtracted.error) {
+        throw new Error(errorExtracted.error);
+      }
+      throw new Error(errorExtracted);
+    }
+  }
 }

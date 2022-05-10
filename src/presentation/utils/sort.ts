@@ -8,12 +8,12 @@ import type { Asset } from '../../domain/assets';
  * @returns assets sorted by criteria defined above
  */
 export function sortAssets(
-  assets: (Asset & { assetHash: string })[]
-): (Asset & { assetHash: string })[] {
+  assets: (Asset & { assetHash: string, canSubmarineSwap: boolean })[]
+): (Asset & { assetHash: string, canSubmarineSwap: boolean })[] {
   let newAsset;
   const newAssetTicker = 'Any';
   const sortedFeaturedTickers = ['L-BTC', 'USDT', 'LCAD'];
-  const featuredAssets: (Asset & { assetHash: string })[] = [];
+  const featuredAssets: (Asset & { assetHash: string, canSubmarineSwap: boolean })[] = [];
   // push featured assets in order
   for (const ticker of sortedFeaturedTickers) {
     for (const asset of assets) {

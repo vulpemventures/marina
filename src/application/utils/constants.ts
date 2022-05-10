@@ -4,8 +4,6 @@ export const INVALID_MNEMONIC_ERROR = 'Invalid mnemonic';
 export const INVALID_PASSWORD_ERROR = 'Invalid password';
 export const SOMETHING_WENT_WRONG_ERROR = 'Oops, something went wrong...';
 
-export const LN_SWAP_BOLTZ = 'ln_swap_boltz';
-
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
   '50': 0.1,
