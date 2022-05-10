@@ -129,5 +129,29 @@ export default class Boltz {
       throw new Error(errorExtracted);
     }
   };
+
+  private callCreateSwap = async (params: CreateSwapCommonRequest): Promise<CreateSwapCommonResponse & any> => {
+    try {
+      const { status, data } = await axios.post(
+        `${this.url}/createswap`,
+        params,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (status !== 201) {
+        throw new Error(data);
+      }
+      return data;
+    } catch (error: unknown | AxiosError) {
+      const errorExtracted = extractErrorMessage(error);
+      if (errorExtracted.error) {
+        throw new Error(errorExtracted.error);
+      }
+      throw new Error(errorExtracted);
+    }
+  }
 }
 

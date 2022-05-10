@@ -46,7 +46,7 @@
     "moment": "^2.29.1",
     "path-browserify": "^1.0.1",
     "postcss": "^7.0.35",
-    "qrcode.react": "^1.0.1",
+    "qrcode.react": "^3.0.1",
     "react": "^18.1.0",
     "react-combine-reducers": "^1.1.1",
     "react-dom": "^17.0.2",

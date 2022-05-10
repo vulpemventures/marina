@@ -5,9 +5,9 @@ import { useDispatch } from 'react-redux';
 import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { AssetSwap } from '../../../domain/assets';
+import type { AssetSwap } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 
 export interface SendSelectAssetProps {
   network: NetworkString;
