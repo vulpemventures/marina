@@ -6,8 +6,6 @@ export const INVALID_MNEMONIC_ERROR = 'Invalid mnemonic';
 export const INVALID_PASSWORD_ERROR = 'Invalid password';
 export const SOMETHING_WENT_WRONG_ERROR = 'Oops, something went wrong...';
 
-export const LN_SWAP_BOLTZ = 'ln_swap_boltz';
-
 export const feeLevelToSatsPerByte: { [key: string]: number } = {
   '0': 0.1,
   '50': 0.1,
@@ -19,10 +17,10 @@ const makeImagePath = (fileName: string): string => `assets/images/liquid-assets
 const LBTC_IMG = makeImagePath('liquid-btc.svg');
 const USDT_IMG = makeImagePath('liquid-tether.svg');
 const LCAD_IMG = makeImagePath('liquid-cad.png');
-const ZAP_IMG = makeImagePath('zap.png');
 const JADE_IMG = makeImagePath('blockstream-jade.svg');
 const BLOCKSTREAM_IMG = makeImagePath('blockstream.png');
 const LIGHTNITE_IMG = makeImagePath('lightnite.png');
+
 
 const UNKNOW_IMG = makeImagePath('question-mark.svg'); // this is used in case of not found
 
@@ -30,7 +28,6 @@ const assetHashToImagePath = new Map<string, string>()
   .set(networks.liquid.assetHash, LBTC_IMG)
   .set(networks.regtest.assetHash, LBTC_IMG)
   .set(networks.testnet.assetHash, LBTC_IMG)
-  .set(LN_SWAP_BOLTZ, ZAP_IMG)
   .set('ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2', USDT_IMG) // mainnet USDt
   .set('f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958', USDT_IMG) // testnet USDt
   .set('0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a', LCAD_IMG) // mainnet LCAD
