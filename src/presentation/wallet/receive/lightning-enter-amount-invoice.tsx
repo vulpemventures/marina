@@ -19,8 +19,7 @@ import { incrementAddressIndex } from '../../../application/redux/actions/wallet
 import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { broadcastTx } from '../../../application/utils/network';
 import { sleep } from '../../../application/utils/common';
-import ModalUnlock from '../../components/modal-unlock';
-import { createPassword } from '../../../domain/password';
+
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
@@ -47,19 +46,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
   const [isInvoiceExpanded, setisInvoiceExpanded] = useState(false);
 
   const [txID, setTxID] = useState('');
-
-  const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
-  const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleUnlockModalOpen = () => showUnlockModal(true);
-
-  const handleUnlock = async (password: string) => {
-    const pass = createPassword(password);
-  };
-
-  const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  ).current;
-
 
   const handleBackBtn = () => history.goBack();
   const handleBackToHome = () => history.push(DEFAULT_ROUTE);
@@ -265,11 +251,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
           </div>
         </form>
       )}
-      <ModalUnlock
-        handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
-        isModalUnlockOpen={isModalUnlockOpen}
-      />
     </ShellPopUp>
   );
 };
