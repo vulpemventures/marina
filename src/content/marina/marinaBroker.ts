@@ -24,6 +24,7 @@ import {
   setTxData,
 } from '../../application/redux/actions/connect';
 import {
+  selectAllAccounts,
   selectAllAccountsIDs,
   selectMainAccount,
   selectTransactions,
@@ -35,12 +36,12 @@ import {
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import { Balance, Recipient, Utxo } from 'marina-provider';
+import { Balance, RawHex, Recipient, Utxo } from 'marina-provider';
 import { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import { SpendPopupResponse } from '../../presentation/connect/spend';
 import { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import { AccountID, MainAccountID } from '../../domain/account';
-import { getAsset, getSats } from 'ldk';
+import { getAsset, getSats, UnblindedOutput } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -49,6 +50,8 @@ import { sleep } from '../../application/utils/common';
 import { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
+import { getUtxosFromTx } from '../../application/utils/utxos';
+import { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export default class MarinaBroker extends Broker {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -116,6 +119,31 @@ export default class MarinaBroker extends Broker {
     } while (store.getState().wallet.updaterLoaders !== 0);
     // return new state
     return store.getState();
+  }
+
+  // locks utxos used on transaction
+  // credit change utxos to balance
+  private async lockAndLoadUtxos(
+    signedTxHex: RawHex,
+    selectedUtxos: UnblindedOutput[] | undefined,
+    changeUtxos: UnconfirmedOutput[] | undefined,
+    store: BrokerProxyStore
+  ) {
+    const state = store.getState();
+
+    // lock utxos used on transaction
+    if (selectedUtxos) {
+      for (const utxo of selectedUtxos) {
+        await store.dispatchAsync(lockUtxo(utxo));
+      }
+    }
+
+    // credit change utxos to balance
+    if (changeUtxos && changeUtxos.length > 0) {
+      store.dispatch(
+        await addUnconfirmedUtxos(signedTxHex, changeUtxos, MainAccountID, selectNetwork(state))
+      );
+    }
   }
 
   private marinaMessageHandler: MessageHandler = async ({ id, name, params }: RequestMessage) => {
@@ -235,24 +263,8 @@ export default class MarinaBroker extends Broker {
           const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
-          // lock utxos used in successful broadcast
-          if (selectedUtxos) {
-            for (const utxo of selectedUtxos) {
-              await this.store.dispatchAsync(lockUtxo(utxo));
-            }
-          }
-
-          // add unconfirmed utxos from change addresses to utxo set
-          if (unconfirmedOutputs && unconfirmedOutputs.length > 0) {
-            this.store.dispatch(
-              await addUnconfirmedUtxos(
-                signedTxHex,
-                unconfirmedOutputs,
-                MainAccountID,
-                selectNetwork(state)
-              )
-            );
-          }
+          // lock selected utxos and credit change utxos (aka unconfirmed outputs)
+          await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, unconfirmedOutputs, this.store);
 
           return successMsg({ txid, hex: signedTxHex });
         }
@@ -280,7 +292,7 @@ export default class MarinaBroker extends Broker {
 
         case Marina.prototype.getCoins.name: {
           this.checkHostnameAuthorization(state);
-          const coins = selectUtxos(MainAccountID)(state);
+          const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
@@ -324,6 +336,32 @@ export default class MarinaBroker extends Broker {
           this.checkHostnameAuthorization(state);
           state = await this.reloadCoins(this.store);
           return successMsg();
+        }
+
+        case Marina.prototype.broadcastTransaction.name: {
+          this.checkHostnameAuthorization(state);
+          const [signedTxHex] = params as [string];
+          const network = selectNetwork(state);
+
+          // broadcast tx
+          const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
+          if (!txid) throw new Error('something went wrong with the tx broadcasting');
+
+          // get selected and change utxos from transaction
+          const accounts = selectAllAccounts(state);
+          const coins = selectUtxos(...selectAllAccountsIDs(state))(state);
+
+          const { selectedUtxos, changeUtxos } = await getUtxosFromTx(
+            accounts,
+            coins,
+            network,
+            signedTxHex
+          );
+
+          // lock selected utxos and credit change utxos
+          await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, changeUtxos, this.store);
+
+          return successMsg({ txid, hex: signedTxHex });
         }
 
         default:
