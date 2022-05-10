@@ -1,6 +1,7 @@
 import QRCode from 'qrcode.react';
+import { debounce } from 'lodash';
 import { randomBytes } from 'crypto';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useHistory } from 'react-router';
 import { address, crypto, networks, Transaction } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
@@ -18,6 +19,8 @@ import { incrementAddressIndex } from '../../../application/redux/actions/wallet
 import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { broadcastTx } from '../../../application/utils/network';
 import { sleep } from '../../../application/utils/common';
+import ModalUnlock from '../../components/modal-unlock';
+import { createPassword } from '../../../domain/password';
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
@@ -34,7 +37,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
   const account = useSelector(selectMainAccount);
 
   const [values, setValues] = useState({ amount: '' });
-  const [errors, setErrors] = useState({ amount: '' });
+  const [errors, setErrors] = useState({ amount: '', submit: '' });
   const [touched, setTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
@@ -45,6 +48,19 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
 
   const [txID, setTxID] = useState('');
 
+  const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
+  const handleModalUnlockClose = () => showUnlockModal(false);
+  const handleUnlockModalOpen = () => showUnlockModal(true);
+
+  const handleUnlock = async (password: string) => {
+    const pass = createPassword(password);
+  };
+
+  const debouncedHandleUnlock = useRef(
+    debounce(handleUnlock, 2000, { leading: true, trailing: false })
+  ).current;
+
+
   const handleBackBtn = () => history.goBack();
   const handleBackToHome = () => history.push(DEFAULT_ROUTE);
   const handleExpand = () => setisInvoiceExpanded(true);
@@ -54,6 +70,8 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       (err) => console.error('Could not copy text: ', err)
     );
   };
+
+
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -66,24 +84,24 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
 
     if (!isSet(value)) {
       setTouched(false);
-      setErrors({ amount: '' });
+      setErrors({ amount: '', submit: '' });
       setValues({ amount: value });
       return;
     }
 
     if (Number.isNaN(value)) {
-      setErrors({ amount: 'Not valid number' });
+      setErrors({ amount: 'Not valid number', submit: '' });
       setValues({ amount: value });
       return;
     }
 
     if (Number(value) <= 0) {
-      setErrors({ amount: 'Number must be positive' });
+      setErrors({ amount: 'Number must be positive', submit: '' });
       setValues({ amount: value });
       return;
     }
 
-    setErrors({ amount: '' });
+    setErrors({ amount: '', submit: '' });
     setValues({ amount: value });
   };
 
@@ -100,8 +118,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       // claim pub key
       const identity = await account.getWatchIdentity(network);
       const addr = await identity.getNextAddress();
-      // very unsafe, migrate to Psbt approach to claim the funds soon
-      const keyPairUnsafe = account.getSigningKeyUnsafe('ciaociao', addr.derivationPath!, network);
+
       const pubKey = addr.publicKey!;
       await dispatch(incrementAddressIndex(account.getAccountID(), network)); // persist address
 
@@ -111,8 +128,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
           preimageHash: preimageHash,
           claimPublicKey: pubKey,
         });
-
-      console.log(lockupAddress, redeemScript);
 
       setInvoice(invoice);
       setIsLookingForPayment(true);
@@ -129,6 +144,8 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       const transaction = Transaction.fromHex(hex);
       const { script, value, asset, nonce } = transaction.outs[utxo.vout];
 
+      // very unsafe, migrate to Psbt approach to claim the funds soon
+      const keyPairUnsafe = account.getSigningKeyUnsafe('ciaociao', addr.derivationPath!, network);
       const claimTransaction = constructClaimTransaction(
         [
           {
@@ -152,11 +169,10 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
 
       const txid = await broadcastTx(explorerUrl, claimTransaction.toHex());
       setTxID(txid);
-
-      setIsSubmitting(false);
       setIsLookingForPayment(false);
+      setIsSubmitting(false);
     } catch (err: any) {
-      console.error(err);
+      setErrors({ submit: err.message, amount: '' });
 
       setIsSubmitting(false);
       setIsLookingForPayment(false);
@@ -173,12 +189,19 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       {invoice && isSet(invoice) ? (
         <div className="flex flex-col items-center justify-between">
           <div className="flex flex-col items-center">
-            <QRCode size={176} value={invoice.toLowerCase()} />
+            <div className="mt-4">
+              <QRCode size={176} value={invoice.toLowerCase()} />
+            </div>
+            {lookingForPayment && !isSet(txID) ? (
+              <p className="mt-2.5 mb-2.5 text-xs font-medium">⏳ Waiting for payment...</p>
+            ): !lookingForPayment && isSet(txID) ? (
+              <p className="mt-2.5 mb-2.5 text-xs font-medium">✅ Invoice paid!</p>
+            ) : null}
             {isInvoiceExpanded ? (
               <p className="mt-2.5 text-xs font-medium break-all">{invoice}</p>
             ) : (
               <>
-                <p className="font-regular mt-2.5 mb-6 text-lg">{formatAddress(invoice)}</p>
+                <p className="font-regular mt-2.5 text-lg">{formatAddress(invoice)}</p>
                 <button
                   className="mt-1.5 text-xs font-medium text-primary focus:outline-none"
                   onClick={handleExpand}
@@ -187,28 +210,13 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
                 </button>
               </>
             )}
-            {lookingForPayment && !isSet(txID) && (
-              <p className="mt-2.5 text-xs font-medium">Waiting for payment...</p>
-            )}
           </div>
+          {isSet(errors.submit) && (
+            <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.submit}</p>
+          )}
           <Button className="w-3/5" onClick={handleCopy}>
             <span className="text-base antialiased font-bold">{buttonText}</span>
           </Button>
-        </div>
-      ) : isSet(txID) && !lookingForPayment ? (
-        <div className="flex flex-col items-center justify-between">
-          <div className="flex flex-col items-center">
-            <p className="font-regular mt-2.5 mb-6 text-lg">🎉 Invoice Paid</p>
-            <p className="mt-2.5 text-xs font-medium">Transaction ID: {txID}</p>
-            <button className="container flex flex-row-reverse mt-24" onClick={handleBackToHome}>
-              <span className="text-primary text-sm font-bold">Go to Home</span>
-              <img
-                className="mr-2"
-                src="/assets/images/arrow-narrow-right.svg"
-                alt="navigate home"
-              />
-            </button>
-          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-10">
@@ -242,7 +250,10 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
               <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.amount}</p>
             )}
           </div>
-
+          
+          {isSet(errors.submit) && (
+              <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.submit}</p>
+          )}
           <div className="text-right">
             <Button
               className="w-2/5 -mt-2 text-base"
@@ -254,6 +265,11 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
           </div>
         </form>
       )}
+      <ModalUnlock
+        handleModalUnlockClose={handleModalUnlockClose}
+        handleUnlock={debouncedHandleUnlock}
+        isModalUnlockOpen={isModalUnlockOpen}
+      />
     </ShellPopUp>
   );
 };

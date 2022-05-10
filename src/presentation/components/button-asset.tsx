@@ -8,14 +8,16 @@ interface Props {
   assetTicker: string;
   assetImgPath: string;
   assetPrecision: number;
+  canSubmarineSwap: boolean;
   disabled?: boolean;
   handleClick: ({
     assetHash,
     assetName,
     assetTicker,
     assetPrecision,
+    canSubmarineSwap,
   }: {
-    [key: string]: string | number;
+    [key: string]: string | number | boolean;
   }) => void;
   type?: 'submit' | 'button' | 'reset';
   quantity?: number;
@@ -27,6 +29,7 @@ const ButtonAsset: React.FC<Props> = ({
   assetTicker,
   assetImgPath,
   assetPrecision,
+  canSubmarineSwap,
   disabled = false,
   quantity,
   handleClick,
@@ -36,7 +39,7 @@ const ButtonAsset: React.FC<Props> = ({
     <button
       disabled={disabled}
       className="focus:outline-none h-14 flex flex-row items-center justify-between w-full px-4 py-2 bg-white rounded-full shadow-md"
-      onClick={() => handleClick({ assetHash, assetName, assetTicker, assetPrecision })}
+      onClick={() => handleClick({ assetHash, assetName, assetTicker, assetPrecision, canSubmarineSwap })}
       type={type}
     >
       <div className="flex flex-row items-center">

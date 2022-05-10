@@ -31,12 +31,12 @@ const HomeView: React.FC<HomeProps> = ({
   lbtcAssetHash,
   getAsset,
   transactionStep,
-  assetsBalance,
+  assetsBalance
 }) => {
   const history = useHistory();
 
-  const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number }) => {
-    const { assetHash, assetTicker, assetPrecision } = asset;
+  const handleAssetBalanceButtonClick = (asset: { [key: string]: string | number | boolean }) => {
+    const { assetHash, assetTicker, assetPrecision, canSubmarineSwap } = asset;
     history.push({
       pathname: TRANSACTIONS_ROUTE,
       state: {
@@ -44,6 +44,7 @@ const HomeView: React.FC<HomeProps> = ({
         assetHash,
         assetTicker,
         assetPrecision,
+        canSubmarineSwap
       },
     });
   };
@@ -56,7 +57,13 @@ const HomeView: React.FC<HomeProps> = ({
 
   // return assets based on balances by asset
   const assets = (balances: BalancesByAsset) => {
-    return Object.keys(balances).map((hash) => getAsset(hash));
+    return Object.keys(balances).map((assetHash: string) => {
+      const canSubmarineSwap = [lbtcAssetHash].includes(assetHash);
+      return {
+        ...getAsset(assetHash),
+        canSubmarineSwap
+      }
+    });
   };
 
   // sorted assets
@@ -106,7 +113,7 @@ const HomeView: React.FC<HomeProps> = ({
           <ButtonList title="Assets" emptyText="You don't own any asset...">
             {sortedAssets.map(
               (
-                { assetHash, name, ticker, precision }: Asset & { assetHash: string },
+                { assetHash, name, ticker, precision, canSubmarineSwap }: Asset & { assetHash: string, canSubmarineSwap: boolean },
                 index: React.Key
               ) => {
                 return (
@@ -116,6 +123,7 @@ const HomeView: React.FC<HomeProps> = ({
                     assetName={name || 'unknown'}
                     assetTicker={ticker}
                     assetPrecision={precision}
+                    canSubmarineSwap={canSubmarineSwap}
                     quantity={assetsBalance[assetHash]}
                     key={index}
                     handleClick={handleAssetBalanceButtonClick}
