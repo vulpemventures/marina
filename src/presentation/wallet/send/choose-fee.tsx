@@ -6,6 +6,7 @@ import {
   CoinSelector,
   CoinSelectorErrorFn,
   greedyCoinSelector,
+  networks,
   NetworkString,
   RecipientInterface,
   UnblindedOutput,
@@ -135,7 +136,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           network,
           state.topup
         )
-      : stateForRegularPSET(getRecipient(), changeAddress, utxos, network);
+      : stateForRegularPSET(getRecipient(), changeAddress.value, utxos, network, account);
 
     newStatePromise().then(setState).catch(handleError).finally(done);
 
@@ -265,26 +266,41 @@ const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelect
 
 function stateForRegularPSET(
   recipient: RecipientInterface,
-  change: Address,
+  changeAddress: string,
   utxos: UnblindedOutput[],
-  network: NetworkString
+  network: NetworkString,
+  lbtcChangeAccount: Account
 ): () => Promise<State> {
-  return function () {
+  return async function () {
     const result: State = {};
-    result.unsignedPset = undefined;
-    result.feeChange = undefined;
     result.utxos = [];
     const w = walletFromCoins(utxos, network);
+
+    if (recipient.asset !== networks[network].assetHash) {
+      const watchID = await lbtcChangeAccount.getWatchIdentity(network);
+      const nextChangeAddress = await watchID.getNextChangeAddress();
+      result.feeChange = createAddress(
+        nextChangeAddress.confidentialAddress,
+        nextChangeAddress.derivationPath
+      );
+    }
 
     result.unsignedPset = w.sendTx(
       recipient,
       greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-      change.value,
+      (asset: string) => {
+        if (asset === recipient.asset) {
+          return changeAddress;
+        } else {
+          if (!result.feeChange) throw new Error('no fee change address');
+          return result.feeChange.value;
+        }
+      },
       true
     );
 
     result.topup = undefined;
-    return Promise.resolve(result);
+    return result;
   };
 }
 

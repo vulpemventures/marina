@@ -152,7 +152,7 @@ function* txsUpdater(
     identityBlindKeyGetter,
     explorerURL,
     // Check if tx exists in React state, if yes: skip unblinding and fetching
-    (tx) => txsHistory[tx.txid] !== undefined
+    (tx) => txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0
   );
 
   const walletScripts = addresses.map((a) =>
