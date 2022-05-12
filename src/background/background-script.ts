@@ -13,6 +13,7 @@ import {
   OpenPopupMessage,
   PopupName,
 } from '../domain/message';
+import Marina from '../inject/marina/provider';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { periodicTaxiUpdater, periodicUpdater } from './alarms';
@@ -33,6 +34,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install': {
+        window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#installed`)); 
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
           marinaStore.dispatch(setWalletData(testWalletData, testPasswordHash));
@@ -46,6 +48,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         break;
       }
       case 'update': {
+        window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#updated`)); 
         if (marinaStore?.getState()?.app?.isOnboardingCompleted) {
           // After an update, and only if the user is already onboarded,
           // we need the setup the popup or the first click on the
