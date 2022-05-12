@@ -34,7 +34,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install': {
-        window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#installed`)); 
+        window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#installed`));
         // /!\ skip onboarding in test env
         if (process.env.NODE_ENV === 'test') {
           marinaStore.dispatch(setWalletData(testWalletData, testPasswordHash));
@@ -48,7 +48,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
         break;
       }
       case 'update': {
-        window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#updated`)); 
+        window.dispatchEvent(new Event(`${Marina.PROVIDER_NAME}#updated`));
         if (marinaStore?.getState()?.app?.isOnboardingCompleted) {
           // After an update, and only if the user is already onboarded,
           // we need the setup the popup or the first click on the
