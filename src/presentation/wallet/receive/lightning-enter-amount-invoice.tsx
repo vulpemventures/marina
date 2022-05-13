@@ -1,7 +1,6 @@
 import QRCode from 'qrcode.react';
-import { debounce } from 'lodash';
 import { randomBytes } from 'crypto';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router';
 import { address, crypto, networks, Transaction } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
@@ -9,7 +8,6 @@ import cx from 'classnames';
 import { fetchTxHex, fetchUtxos, NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import Button from '../../components/button';
 import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
-import { DEFAULT_ROUTE } from '../../routes/constants';
 import { formatAddress, toSatoshi } from '../../utils/format';
 import { Account } from '../../../domain/account';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';

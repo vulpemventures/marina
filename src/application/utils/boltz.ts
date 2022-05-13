@@ -130,7 +130,9 @@ export default class Boltz {
     }
   };
 
-  private callCreateSwap = async (params: CreateSwapCommonRequest): Promise<CreateSwapCommonResponse & any> => {
+  private callCreateSwap = async (
+    params: CreateSwapCommonRequest
+  ): Promise<CreateSwapCommonResponse & any> => {
     try {
       const { status, data } = await axios.post(
         `${this.url}/createswap`,
@@ -152,6 +154,6 @@ export default class Boltz {
       }
       throw new Error(errorExtracted);
     }
-  }
+  };
 }
 
