@@ -47,7 +47,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
   const [txID, setTxID] = useState('');
 
   const handleBackBtn = () => history.goBack();
-  const handleBackToHome = () => history.push(DEFAULT_ROUTE);
   const handleExpand = () => setisInvoiceExpanded(true);
   const handleCopy = () => {
     navigator.clipboard.writeText(invoice).then(
