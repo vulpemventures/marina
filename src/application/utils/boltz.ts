@@ -59,7 +59,7 @@ export default class Boltz {
       pairId: 'L-BTC/BTC',
       orderSide: 'sell',
     };
-    const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };   
+    const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };
     return await this.callCreateSwap(params);
   };
 
@@ -75,17 +75,15 @@ export default class Boltz {
     return await this.callCreateSwap(params);
   };
 
-  private callCreateSwap = async (params: CreateSwapCommonRequest): Promise<CreateSwapCommonResponse & any> => {
+  private callCreateSwap = async (
+    params: CreateSwapCommonRequest
+  ): Promise<CreateSwapCommonResponse & any> => {
     try {
-      const { status, data } = await axios.post(
-        `${this.url}/createswap`, 
-        params, 
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }  
-      );
+      const { status, data } = await axios.post(`${this.url}/createswap`, params, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (status !== 201) {
         throw new Error(data);
       }
@@ -97,5 +95,5 @@ export default class Boltz {
       }
       throw new Error(errorExtracted);
     }
-  }
+  };
 }

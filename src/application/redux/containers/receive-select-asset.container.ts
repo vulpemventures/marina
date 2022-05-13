@@ -18,8 +18,8 @@ const mapStateToProps = (state: RootReducerState): ReceiveSelectAssetProps => {
       const canSubmarineSwap = [lbtcAssetByNetwork(network)].includes(assetHash);
       return {
         ...getAsset(assetHash),
-        canSubmarineSwap
-      }
+        canSubmarineSwap,
+      };
     }),
   };
 };
