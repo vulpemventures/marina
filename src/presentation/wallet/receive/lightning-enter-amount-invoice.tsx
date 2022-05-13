@@ -20,7 +20,6 @@ import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { broadcastTx } from '../../../application/utils/network';
 import { sleep } from '../../../application/utils/common';
 
-
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
   account: Account;
@@ -56,8 +55,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       (err) => console.error('Could not copy text: ', err)
     );
   };
-
-
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -168,18 +165,18 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
     <ShellPopUp
       backBtnCb={isSubmitting || lookingForPayment || isSet(txID) ? handleBackBtn : undefined}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
-      className="h-popupContent container mx-auto text-center bg-bottom bg-no-repeat"
+      className="h-popupContent bg-primary flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Receive⚡️"
     >
       {invoice && isSet(invoice) ? (
-        <div className="flex flex-col items-center justify-between">
+        <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-center p-10 mx-auto bg-white">
           <div className="flex flex-col items-center">
             <div className="mt-4">
               <QRCode size={176} value={invoice.toLowerCase()} />
             </div>
             {lookingForPayment && !isSet(txID) ? (
               <p className="mt-2.5 mb-2.5 text-xs font-medium">⏳ Waiting for payment...</p>
-            ): !lookingForPayment && isSet(txID) ? (
+            ) : !lookingForPayment && isSet(txID) ? (
               <p className="mt-2.5 mb-2.5 text-xs font-medium">✅ Invoice paid!</p>
             ) : null}
             {isInvoiceExpanded ? (
@@ -196,59 +193,58 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
               </>
             )}
           </div>
-          {isSet(errors.submit) && (
-            <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.submit}</p>
-          )}
-          <Button className="w-3/5" onClick={handleCopy}>
+          <p className="text-red h-10 mt-1 text-xs font-medium text-left">
+            {isSet(errors.submit) ? errors.submit : ''}
+          </p>
+          <Button className="w-3/5 mt-4" onClick={handleCopy}>
             <span className="text-base antialiased font-bold">{buttonText}</span>
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-10">
-          <div>
-            <label className="block">
-              <p className="mb-2 text-base font-medium text-left">Amount</p>
-              <div
-                className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
-                  'text-grayDark': touched,
-                })}
+        <div className="w-full h-screen p-10 bg-white">
+          <form onSubmit={handleSubmit} className="mt-10">
+            <div>
+              <label className="block">
+                <p className="mb-2 text-base font-medium text-left">Amount</p>
+                <div
+                  className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
+                    'text-grayDark': touched,
+                  })}
+                >
+                  <input
+                    className={cx(
+                      'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
+                      {
+                        'border-red': isSet(errors.amount) && touched,
+                        'border-grayLight': !isSet(errors.amount) || touched,
+                      }
+                    )}
+                    id="amount"
+                    name="amount"
+                    onChange={handleChange}
+                    placeholder="0"
+                    type="number"
+                    lang="en"
+                    value={values.amount}
+                  />
+                </div>
+              </label>
+            </div>
+            <p className="text-red h-10 mt-1 text-xs font-medium text-left">
+              {isSet(errors.submit) && errors.submit}
+              {isSet(errors.amount) && touched && errors.amount}
+            </p>
+            <div className="text-right">
+              <Button
+                className="w-3/5 mt-2 text-base"
+                disabled={isSubmitting || (isSet(errors.amount) && touched) || !touched}
+                type="submit"
               >
-                <input
-                  className={cx(
-                    'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
-                    {
-                      'border-red': isSet(errors.amount) && touched,
-                      'border-grayLight': !isSet(errors.amount) || touched,
-                    }
-                  )}
-                  id="amount"
-                  name="amount"
-                  onChange={handleChange}
-                  placeholder="0"
-                  type="number"
-                  lang="en"
-                  value={values.amount}
-                />
-              </div>
-            </label>
-            {isSet(errors.amount) && touched && (
-              <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.amount}</p>
-            )}
-          </div>
-
-          {isSet(errors.submit) && (
-              <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.submit}</p>
-          )}
-          <div className="text-right mt-12">
-            <Button
-              className="w-2/5 -mt-2 text-base"
-              disabled={isSubmitting || (isSet(errors.amount) && touched) || !touched}
-              type="submit"
-            >
-              Generate
-            </Button>
-          </div>
-        </form>
+                Generate
+              </Button>
+            </div>
+          </form>
+        </div>
       )}
     </ShellPopUp>
   );
