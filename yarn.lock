@@ -2077,9 +2077,9 @@ bitcoinjs-message@^2.2.0:
     varuint-bitcoin "^1.0.1"
 
 blech32@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/blech32/-/blech32-1.0.1.tgz#400b9a8953ff80164553a8cf58fece208762e16b"
-  integrity sha512-1/vr1wwB8jvfVCkLQMVXLaIyx7Lgxh/6IqVuQlSsCNzWNzU+64oXzOQ/9BRnN4GANjx9i0O3OSQonDlL4FraSA==
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/blech32/-/blech32-1.1.2.tgz#545459680555e229603241be3b9bf0979f6fbb3a"
+  integrity sha512-C5qxzoF9KyX88X8Zz18cZ6BOeL0n5/Eg/cDot1frntkArRMwg1djNim5wA6QFWwu0lJ1LN8iiRMN4Lp2kZzdfA==
   dependencies:
     long "^4.0.0"
 
@@ -6417,15 +6417,16 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-"ldk@git+https://github.com/louisinger/ldk.git#hotfix-crafsinglerecipientpset":
-  version "0.4.4"
-  resolved "git+https://github.com/louisinger/ldk.git#8a33b057938f55a4dc4a6e901900ac0df0e5c5b9"
+ldk@^0.4.12:
+  version "0.4.12"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.4.12.tgz#c064a66c581e89f3c6fa3982389f5dfd5d7c83d5"
+  integrity sha512-oknXQ3B7rEWt3R2WJHFP+8FUW5wEUDtox3fvpUuZ8dW+5zZjykeT87VGfiOynvtoOHVGF/J0IxB1vsBk/6uUCg==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
-    liquidjs-lib "^5.2.2"
+    liquidjs-lib "^5.2.3"
     marina-provider "^1.0.0"
     slip77 "^0.1.1"
     tslib "^2.3.1"
@@ -6476,7 +6477,7 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-liquidjs-lib@^5.2.2:
+liquidjs-lib@^5.2.3:
   version "5.2.3"
   resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.2.3.tgz#1018393fc8a2bacd96e52373cdb90975984cedfa"
   integrity sha512-jV2GZ24kfT8k02G5Igk14Pr2AqDTig2MaqMlf4CullACwwhNMKf8GE3EyQcf6Q4qJanBQ4TyxG84S9LNCS8r6w==
@@ -6713,9 +6714,9 @@ map-visit@^1.0.0:
     object-visit "^1.0.0"
 
 marina-provider@^1.0.0:
-  version "1.4.5"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.4.5.tgz#2ec20ac786f7a333c9f2ed9f515a3a464d039eb8"
-  integrity sha512-jnckZGyPIg0wS/+KgFO2yAwE6isk3KxrxWOeFNStUR5fZOgUwtREV5J7wEfvoGZ3yW9H++fMR72SbJ+KHct1Vw==
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.5.0.tgz#76487563dd60f7f498c4c4fd42ffd9fb5412cebc"
+  integrity sha512-JpvFaSFg8O4U3pWHufX57iZyiitJZDv3vc7XdmcVDHoCmDqYG6o/d2qvJ9pRvF1SDG2WsBA7+jNihy5NHjDsTA==
 
 marina-provider@^1.4.9:
   version "1.4.9"
