@@ -8,11 +8,10 @@ import type { BalancesByAsset } from '../../application/redux/selectors/balance.
 import type { Asset } from '../../domain/assets';
 import ButtonList from './button-list';
 import { sortAssets } from '../utils/sort';
-import Modal from './modal';
-import ModalBottomSheet from './modal-bottom-sheet';
+import ModalSelectNetwork from './modal-select-network';
 
 export interface AssetListProps {
-  assets: Array<Asset & { assetHash: string, canSubmarineSwap: boolean }>; // the assets to display
+  assets: Array<Asset & { assetHash: string; canSubmarineSwap: boolean }>; // the assets to display
   onClick: (assetHash: string, isSubmarineSwap: boolean) => Promise<void>;
   balances?: BalancesByAsset;
   title: string;
@@ -23,8 +22,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, bal
 
   // bottom sheet modal
   const [showBottomSheet, setShowBottomSheet] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState("");
-
+  const [selectedAsset, setSelectedAsset] = useState('');
 
   // sort assets
   const [sortedAssets, setSortedAssets] = useState(sortAssets(assets));
@@ -60,15 +58,12 @@ const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, bal
     setSearchTerm(searchTerm);
   };
 
-  const handleClick = async ({
-    assetHash,
-    canSubmarineSwap
-  }: any) => {
+  const handleClick = async ({ assetHash, canSubmarineSwap }: any) => {
     if (canSubmarineSwap) {
       setShowBottomSheet(true);
       setSelectedAsset(assetHash);
     } else {
-      await onClick(assetHash as string, false)
+      await onClick(assetHash as string, false);
     }
   };
 
@@ -107,27 +102,12 @@ const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, bal
           ))}
         </ButtonList>
       </div>
-      <ModalBottomSheet isOpen={showBottomSheet} onClose={() => setShowBottomSheet(false)}>
-        <h1 className="text-lg mb-4">Select network</h1>
-        <div className="flex justify-center">
-          <div className="h-15 p-2" onClick={() => onClick(selectedAsset, false)}>
-            <img
-              className="h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/networks/liquid.svg'}
-              alt="liquid network logo"
-            />
-            <p className='text-xs'>Liquid Network</p>
-          </div>
-          <div className="h-15 p-2" onClick={() => onClick(selectedAsset, true)}>
-            <img
-              className="h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/networks/lightning.svg'}
-              alt="lightning network logo"
-            />
-            <p className='text-xs'>Lightning Network</p>
-          </div>
-        </div>
-      </ModalBottomSheet>
+      <ModalSelectNetwork
+        isOpen={showBottomSheet}
+        onClose={() => setShowBottomSheet(false)}
+        onLightning={() => onClick(selectedAsset, true)}
+        onLiquid={() => onClick(selectedAsset, false)}
+      ></ModalSelectNetwork>
     </ShellPopUp>
   );
 };
