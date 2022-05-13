@@ -16,7 +16,7 @@ export interface ReceiveSelectAssetProps {
 const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets }) => {
   const history = useHistory();
 
-  const handleSend = async (asset: string, isSubmarineSwap: boolean) => {
+  const handleReceive = async (asset: string, isSubmarineSwap: boolean) => {
     if (isSubmarineSwap) {
       return Promise.resolve(history.push(`${LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE}`));
     }
@@ -26,7 +26,7 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
   return (
     <AssetListScreen
       title="Receive Asset"
-      onClick={handleSend}
+      onClick={handleReceive}
       assets={[UnknowAsset].concat(assets)}
     />
   );
