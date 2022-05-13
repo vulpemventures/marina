@@ -14,16 +14,15 @@ const mapStateToProps = (state: RootReducerState): SendSelectAssetProps => {
   const network = selectNetwork(state);
   const getAsset = assetGetterFromIAssets(state.assets);
   return {
-    balanceAssets:
-      Object.keys(balances).map((assetHash: string) => {
-        const canSubmarineSwap = [lbtcAssetByNetwork(network)].includes(assetHash);
-        return {
-          ...getAsset(assetHash),
-          canSubmarineSwap
-        }
-      }),
+    balanceAssets: Object.keys(balances).map((assetHash: string) => {
+      const canSubmarineSwap = [lbtcAssetByNetwork(network)].includes(assetHash);
+      return {
+        ...getAsset(assetHash),
+        canSubmarineSwap,
+      };
+    }),
     balances,
-    network
+    network,
   };
 };
 

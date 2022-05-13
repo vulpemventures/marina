@@ -31,7 +31,7 @@ const HomeView: React.FC<HomeProps> = ({
   lbtcAssetHash,
   getAsset,
   transactionStep,
-  assetsBalance
+  assetsBalance,
 }) => {
   const history = useHistory();
 
@@ -44,7 +44,7 @@ const HomeView: React.FC<HomeProps> = ({
         assetHash,
         assetTicker,
         assetPrecision,
-        canSubmarineSwap
+        canSubmarineSwap,
       },
     });
   };
@@ -61,8 +61,8 @@ const HomeView: React.FC<HomeProps> = ({
       const canSubmarineSwap = [lbtcAssetHash].includes(assetHash);
       return {
         ...getAsset(assetHash),
-        canSubmarineSwap
-      }
+        canSubmarineSwap,
+      };
     });
   };
 
@@ -113,7 +113,13 @@ const HomeView: React.FC<HomeProps> = ({
           <ButtonList title="Assets" emptyText="You don't own any asset...">
             {sortedAssets.map(
               (
-                { assetHash, name, ticker, precision, canSubmarineSwap }: Asset & { assetHash: string, canSubmarineSwap: boolean },
+                {
+                  assetHash,
+                  name,
+                  ticker,
+                  precision,
+                  canSubmarineSwap,
+                }: Asset & { assetHash: string; canSubmarineSwap: boolean },
                 index: React.Key
               ) => {
                 return (
