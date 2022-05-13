@@ -10,7 +10,7 @@ import { NetworkString } from 'ldk';
 
 export interface ReceiveSelectAssetProps {
   network: NetworkString;
-  assets: Array<Asset & { assetHash: string, canSubmarineSwap: boolean}>;
+  assets: Array<Asset & { assetHash: string; canSubmarineSwap: boolean }>;
 }
 
 const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets }) => {
@@ -32,7 +32,7 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
   );
 };
 
-const UnknowAsset: Asset & { assetHash: string, canSubmarineSwap: boolean} = {
+const UnknowAsset: Asset & { assetHash: string; canSubmarineSwap: boolean } = {
   ticker: 'Any',
   name: 'New asset',
   precision: 8,
