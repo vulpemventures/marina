@@ -22,11 +22,15 @@ export interface LightningAmountInvoiceProps {
   network: NetworkString;
   account: Account;
   utxos: UnblindedOutput[];
+  explorerURL: string;
 }
 
 const isSet = (value: string): boolean => value.length > 0;
 
-const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ network }) => {
+const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
+  explorerURL,
+  network,
+}) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const history = useHistory();
@@ -112,15 +116,13 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       setInvoice(invoice);
       setIsLookingForPayment(true);
 
-      const explorerUrl = 'https://liquid.network/liquidtestnet/api';
-
       let utxos: Outpoint[] = [];
       while (utxos.length === 0) {
         await sleep(5000);
-        utxos = await fetchUtxos(lockupAddress, explorerUrl);
+        utxos = await fetchUtxos(lockupAddress, explorerURL);
       }
       const [utxo] = utxos;
-      const hex = await fetchTxHex(utxo.txid, explorerUrl);
+      const hex = await fetchTxHex(utxo.txid, explorerURL);
       const transaction = Transaction.fromHex(hex);
       const { script, value, asset, nonce } = transaction.outs[utxo.vout];
 
@@ -147,7 +149,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
         networks.testnet.assetHash
       );
 
-      const txid = await broadcastTx(explorerUrl, claimTransaction.toHex());
+      const txid = await broadcastTx(explorerURL, claimTransaction.toHex());
       setTxID(txid);
       setIsLookingForPayment(false);
       setIsSubmitting(false);
