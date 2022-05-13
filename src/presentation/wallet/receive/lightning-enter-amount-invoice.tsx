@@ -159,7 +159,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
       setIsSubmitting(false);
     } catch (err: any) {
       setErrors({ submit: err.message, amount: '' });
-
       setIsSubmitting(false);
       setIsLookingForPayment(false);
     }
@@ -206,7 +205,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-10">
-          <div className={cx({ 'mb-12': !isSet(errors.amount) || touched })}>
+          <div>
             <label className="block">
               <p className="mb-2 text-base font-medium text-left">Amount</p>
               <div
@@ -236,11 +235,11 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({ net
               <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.amount}</p>
             )}
           </div>
-          
+
           {isSet(errors.submit) && (
               <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.submit}</p>
           )}
-          <div className="text-right">
+          <div className="text-right mt-12">
             <Button
               className="w-2/5 -mt-2 text-base"
               disabled={isSubmitting || (isSet(errors.amount) && touched) || !touched}
