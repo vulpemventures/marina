@@ -85,6 +85,18 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       return;
     }
 
+    if (Number(value) <= 0.0005) {
+      setErrors({ amount: 'Number must be higher then 0.0005', submit: '' });
+      setValues({ amount: value });
+      return;
+    }
+
+    if (Number(value) > 0.1) {
+      setErrors({ amount: 'Number must be lower then 0.1', submit: '' });
+      setValues({ amount: value });
+      return;
+    }
+
     setErrors({ amount: '', submit: '' });
     setValues({ amount: value });
   };
