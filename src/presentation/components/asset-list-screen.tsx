@@ -68,7 +68,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, bal
       setShowBottomSheet(true);
       setSelectedAsset(assetHash);
     } else {
-      onClick(assetHash as string, false)
+      await onClick(assetHash as string, false)
     }
   };
 
@@ -108,25 +108,24 @@ const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, bal
         </ButtonList>
       </div>
       <ModalBottomSheet isOpen={showBottomSheet} onClose={() => setShowBottomSheet(false)}>
-        <h1 className="text-lg">Select network</h1>
+        <h1 className="text-lg mb-4">Select network</h1>
         <div className="flex justify-center">
           <div className="h-15 p-2" onClick={() => onClick(selectedAsset, false)}>
             <img
-              className="w-10 h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/liquid-network-logo.png'}
+              className="h-10 mt-0.5 block mx-auto mb-2"
+              src={'assets/images/networks/liquid.svg'}
               alt="liquid network logo"
             />
             <p className='text-xs'>Liquid Network</p>
           </div>
           <div className="h-15 p-2" onClick={() => onClick(selectedAsset, true)}>
             <img
-              className="w-10 h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/zap.png'}
+              className="h-10 mt-0.5 block mx-auto mb-2"
+              src={'assets/images/networks/lightning.svg'}
               alt="lightning network logo"
             />
             <p className='text-xs'>Lightning Network</p>
           </div>
-
         </div>
       </ModalBottomSheet>
     </ShellPopUp>
