@@ -28,7 +28,7 @@ import { updateTaskAction } from '../../../application/redux/actions/updater';
 import { MainAccountID } from '../../../domain/account';
 import { NetworkString } from 'ldk';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import ModalBottomSheet from '../../components/modal-bottom-sheet';
+import ModalSelectNetwork from '../../components/modal-select-network';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -73,7 +73,8 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const handleReceive = () => {
     if (!isWalletVerified) {
       showSaveMnemonicModal(true);
-    } if (state.canSubmarineSwap) {
+    }
+    if (state.canSubmarineSwap) {
       setShowBottomSheet(true);
     } else {
       history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`);
@@ -158,28 +159,12 @@ const TransactionsView: React.FC<TransactionsProps> = ({
         </>
       )}
 
-      <ModalBottomSheet isOpen={showBottomSheet} onClose={() => setShowBottomSheet(false)}>
-        <h1 className="text-lg">Select network</h1>
-        <div className="flex justify-center">
-          <div className="h-15 p-2" onClick={console.log}>
-            <img
-              className="h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/networks/liquid.svg'}
-              alt="liquid network logo"
-            />
-            <p className='text-xs'>Liquid Network</p>
-          </div>
-          <div className="h-15 p-2" onClick={console.log}>
-            <img
-              className="h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/networks/lightning.svg'}
-              alt="lightning network logo"
-            />
-            <p className='text-xs'>Lightning Network</p>
-          </div>
-
-        </div>
-      </ModalBottomSheet>
+      <ModalSelectNetwork
+        isOpen={showBottomSheet}
+        onClose={() => setShowBottomSheet(false)}
+        onLightning={console.log}
+        onLiquid={console.log}
+      ></ModalSelectNetwork>
 
       <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">
