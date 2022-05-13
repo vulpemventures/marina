@@ -5,11 +5,10 @@ import { useHistory } from 'react-router';
 import { address, crypto, networks, Transaction } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
-import { fetchTxHex, fetchUtxos, NetworkString, Outpoint, UnblindedOutput } from 'ldk';
+import { fetchTxHex, fetchUtxos, NetworkString, Outpoint } from 'ldk';
 import Button from '../../components/button';
 import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
 import { formatAddress, toSatoshi } from '../../utils/format';
-import { Account } from '../../../domain/account';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -20,8 +19,6 @@ import { sleep } from '../../../application/utils/common';
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
-  account: Account;
-  utxos: UnblindedOutput[];
   explorerURL: string;
 }
 
