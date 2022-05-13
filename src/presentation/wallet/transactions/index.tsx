@@ -161,16 +161,16 @@ const TransactionsView: React.FC<TransactionsProps> = ({
         <div className="flex justify-center">
           <div className="h-15 p-2" onClick={console.log}>
             <img
-              className="w-10 h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/liquid-network-logo.png'}
+              className="h-10 mt-0.5 block mx-auto mb-2"
+              src={'assets/images/networks/liquid.svg'}
               alt="liquid network logo"
             />
             <p className='text-xs'>Liquid Network</p>
           </div>
           <div className="h-15 p-2" onClick={console.log}>
             <img
-              className="w-10 h-10 mt-0.5 block mx-auto mb-2"
-              src={'assets/images/zap.png'}
+              className="h-10 mt-0.5 block mx-auto mb-2"
+              src={'assets/images/networks/lightning.svg'}
               alt="lightning network logo"
             />
             <p className='text-xs'>Lightning Network</p>
