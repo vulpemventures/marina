@@ -2,7 +2,7 @@ import QRCode from 'qrcode.react';
 import { randomBytes } from 'crypto';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router';
-import { address, crypto, networks, Transaction } from 'liquidjs-lib';
+import { address, crypto, Transaction } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import { fetchTxHex, fetchUtxos, NetworkString, Outpoint } from 'ldk';
@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
-import { broadcastTx } from '../../../application/utils/network';
+import { broadcastTx, lbtcAssetByNetwork } from '../../../application/utils/network';
 import { sleep } from '../../../application/utils/common';
 
 export interface LightningAmountInvoiceProps {
@@ -155,7 +155,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
         address.toOutputScript(addr.confidentialAddress),
         1,
         true,
-        networks.testnet.assetHash
+        lbtcAssetByNetwork(network)
       );
 
       const txid = await broadcastTx(explorerURL, claimTransaction.toHex());
