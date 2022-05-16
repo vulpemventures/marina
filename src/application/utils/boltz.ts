@@ -75,24 +75,40 @@ export default class Boltz {
     return await this.callCreateSwap(params);
   };
 
+  getPair = async (pair: string) => {
+    const data = await this.getApi(`${this.url}/getpairs`);
+    if (!data?.pairs?.[pair]) return;
+    return data.pairs[pair];
+  };
+
   private callCreateSwap = async (
     params: CreateSwapCommonRequest
   ): Promise<CreateSwapCommonResponse & any> => {
+    return this.postApi(`${this.url}/createswap`, params);
+  };
+
+  private getApi = async (url: string): Promise<any> => {
     try {
-      const { status, data } = await axios.post(`${this.url}/createswap`, params, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (status !== 201) {
-        throw new Error(data);
-      }
+      const config = { headers: { 'Content-Type': 'application/json' } };
+      const { status, data } = await axios.get(url, config);
+      if (status !== 200) throw new Error(data);
       return data;
     } catch (error: unknown | AxiosError) {
       const errorExtracted = extractErrorMessage(error);
-      if (errorExtracted.error) {
-        throw new Error(errorExtracted.error);
-      }
+      if (errorExtracted.error) throw new Error(errorExtracted.error);
+      throw new Error(errorExtracted);
+    }
+  };
+
+  private postApi = async (url: string, params: any = {}): Promise<any> => {
+    try {
+      const config = { headers: { 'Content-Type': 'application/json' } };
+      const { status, data } = await axios.post(url, params, config);
+      if (status !== 201) throw new Error(data);
+      return data;
+    } catch (error: unknown | AxiosError) {
+      const errorExtracted = extractErrorMessage(error);
+      if (errorExtracted.error) throw new Error(errorExtracted.error);
       throw new Error(errorExtracted);
     }
   };
