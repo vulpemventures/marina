@@ -226,7 +226,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
           </Button>
         </div>
       ) : (
-        <div className="w-full h-screen p-10 bg-white">
+        <div className="w-full h-full p-10 bg-white">
           <form onSubmit={handleSubmit} className="mt-10">
             <div>
               <label className="block">
