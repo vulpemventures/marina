@@ -1,4 +1,3 @@
-import QRCode from 'qrcode.react';
 import { randomBytes } from 'crypto';
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
@@ -8,17 +7,15 @@ import cx from 'classnames';
 import { fetchTxHex, fetchUtxos, NetworkString, Outpoint } from 'ldk';
 import Button from '../../components/button';
 import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
-import { formatAddress, fromSatoshi, toSatoshi } from '../../utils/format';
+import { fromSatoshi, toSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { broadcastTx, lbtcAssetByNetwork } from '../../../application/utils/network';
-import { sleep } from '../../../application/utils/common';
-
-
-const isSet = (value: string): boolean => value.length > 0;
+import { isSet, sleep } from '../../../application/utils/common';
+import LightningResultView from './lightning-result';
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
@@ -40,8 +37,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
   const [invoice, setInvoice] = useState('');
-  const [buttonText, setButtonText] = useState('Copy');
-  const [isInvoiceExpanded, setisInvoiceExpanded] = useState(false);
   const [limits, setLimits] = useState({ maximal: 0.1, minimal: 0.0005 });
   const [txID, setTxID] = useState('');
 
@@ -62,13 +57,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   }, []);
 
   const handleBackBtn = () => history.goBack();
-  const handleExpand = () => setisInvoiceExpanded(true);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(invoice).then(
-      () => setButtonText('Copied'),
-      (err) => console.error('Could not copy text: ', err)
-    );
-  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -192,37 +180,12 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       currentPage="Receive⚡️"
     >
       {invoice && isSet(invoice) ? (
-        <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-center p-10 mx-auto bg-white">
-          <div className="flex flex-col items-center">
-            <div className="mt-4">
-              <QRCode size={176} value={invoice.toLowerCase()} />
-            </div>
-            {lookingForPayment && !isSet(txID) ? (
-              <p className="mt-2.5 mb-2.5 text-xs font-medium">⏳ Waiting for payment...</p>
-            ) : !lookingForPayment && isSet(txID) ? (
-              <p className="mt-2.5 mb-2.5 text-xs font-medium">✅ Invoice paid!</p>
-            ) : null}
-            {isInvoiceExpanded ? (
-              <p className="mt-2.5 text-xs font-medium break-all">{invoice}</p>
-            ) : (
-              <>
-                <p className="font-regular mt-2.5 text-lg">{formatAddress(invoice)}</p>
-                <button
-                  className="mt-1.5 text-xs font-medium text-primary focus:outline-none"
-                  onClick={handleExpand}
-                >
-                  Expand
-                </button>
-              </>
-            )}
-          </div>
-          <p className="text-red h-10 mt-1 text-xs font-medium text-left">
-            {isSet(errors.submit) ? errors.submit : ''}
-          </p>
-          <Button className="w-3/5 mt-4" onClick={handleCopy}>
-            <span className="text-base antialiased font-bold">{buttonText}</span>
-          </Button>
-        </div>
+        <LightningResultView
+          errors={errors}
+          invoice={invoice}
+          lookingForPayment={lookingForPayment}
+          txID={txID}
+        />
       ) : (
         <div className="w-full h-full p-10 bg-white">
           <form onSubmit={handleSubmit} className="mt-10">
