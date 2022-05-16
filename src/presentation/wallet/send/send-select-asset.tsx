@@ -8,7 +8,6 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { Asset } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
 import { NetworkString } from 'ldk';
-import { lbtcAssetByNetwork } from '../../../application/utils/network';
 
 export interface SendSelectAssetProps {
   network: NetworkString;
