@@ -3,7 +3,7 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
-import { getAssetImage } from '../../../application/utils/constants';
+import { getAssetImage, onErrorImg } from '../../../application/utils/constants';
 import { fromSatoshiStr } from '../../utils';
 import type { AssetGetter } from '../../../domain/assets';
 import type { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
@@ -33,6 +33,7 @@ const ConfirmationView: React.FC<ConfirmationProps> = ({ network, getAsset, tran
         className="w-11 mt-0.5 block mx-auto mb-2"
         src={getAssetImage(sendAsset)}
         alt="liquid asset logo"
+        onError={onErrorImg}
       />
 
       <div className="px-3 mt-3">
