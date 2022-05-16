@@ -17,12 +17,13 @@ import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { broadcastTx, lbtcAssetByNetwork } from '../../../application/utils/network';
 import { sleep } from '../../../application/utils/common';
 
+
+const isSet = (value: string): boolean => value.length > 0;
+
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
   explorerURL: string;
 }
-
-const isSet = (value: string): boolean => value.length > 0;
 
 const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   explorerURL,
@@ -38,13 +39,10 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   const [touched, setTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
-
   const [invoice, setInvoice] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
   const [isInvoiceExpanded, setisInvoiceExpanded] = useState(false);
-
   const [limits, setLimits] = useState({ maximal: 0.1, minimal: 0.0005 });
-
   const [txID, setTxID] = useState('');
 
   const boltz = new Boltz(network);
