@@ -32,13 +32,13 @@ import {
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import type { Balance, Recipient, Utxo } from 'marina-provider';
+import type { Balance, DescriptorTemplate, Recipient, Utxo } from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import type { ScriptInputsNeeds } from 'ldk';
+import { ScriptInputsNeeds, validate } from 'ldk';
 import { analyzeTapscriptTree, getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
@@ -48,7 +48,7 @@ import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import { updateTaskAction } from '../../application/redux/actions/updater';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
-import type { TaprootAddressInterface } from '../../domain/customscript-identity';
+import type { CustomScriptIdentityWatchOnly, TaprootAddressInterface } from '../../domain/customscript-identity';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
@@ -105,14 +105,18 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     return enabledSites.includes(this.hostname);
   }
 
-  private checkHostnameAuthorization(state: RootReducerState) {
-    if (!this.hostnameEnabled(state)) throw new Error('User must authorize the current website');
+  private checkHostnameAuthorization() {
+    if (!this.hostnameEnabled(this.state)) throw new Error('User must authorize the current website');
+  }
+
+  get state() {
+    if (!this.store) throw MarinaBroker.NotSetUpError;
+    return this.store.getState();
   }
 
   private async reloadCoins(store: BrokerProxyStore) {
-    const state = store.getState();
-    const network = selectNetwork(state);
-    const allAccountsIds = selectAllAccountsIDs(state);
+    const network = selectNetwork(this.state);
+    const allAccountsIds = selectAllAccountsIDs(this.state);
     const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
     allAccountsIds.map(makeUpdateTaskForId).map((x: any) => store.dispatch(x));
     // wait for updates to finish, give it 1 second to start the update
@@ -120,8 +124,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     do {
       await sleep(1000);
     } while (store.getState().wallet.updaterLoaders !== 0);
-    // return new state
-    return store.getState();
   }
 
   private accountExists(name: string): boolean {
@@ -131,22 +133,21 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
   private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
     if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
-    let state = this.store.getState();
     const successMsg = <T = any>(data?: T) => newSuccessResponseMessage(id, data);
 
     try {
       switch (name) {
         case 'getNetwork': {
-          return successMsg(state.app.network);
+          return successMsg(this.state.app.network);
         }
 
         case 'isEnabled': {
-          return successMsg(this.hostnameEnabled(state));
+          return successMsg(this.hostnameEnabled(this.state));
         }
 
         case 'enable': {
-          if (!this.hostnameEnabled(state)) {
-            await this.store.dispatchAsync(selectHostname(this.hostname, state.app.network));
+          if (!this.hostnameEnabled(this.state)) {
+            await this.store.dispatchAsync(selectHostname(this.hostname, this.state.app.network));
             const accepted = await this.openAndWaitPopup<boolean>('enable');
             if (!accepted) throw new Error(`user rejected to enable ${this.hostname}`);
             return successMsg();
@@ -155,21 +156,21 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'disable': {
-          await this.store.dispatchAsync(disableWebsite(this.hostname, state.app.network));
+          await this.store.dispatchAsync(disableWebsite(this.hostname, this.state.app.network));
           return successMsg();
         }
 
         case 'getAddresses': {
-          this.checkHostnameAuthorization(state);
-          const net = selectNetwork(state);
-          const watchOnlyIdentity = await this.accountSelector(state).getWatchIdentity(net);
+          this.checkHostnameAuthorization();
+          const net = selectNetwork(this.state);
+          const watchOnlyIdentity = await this.accountSelector(this.state).getWatchIdentity(net);
           return successMsg(await watchOnlyIdentity.getAddresses());
         }
 
         case 'getNextAddress': {
-          this.checkHostnameAuthorization(state);
-          const account = this.accountSelector(state);
-          const net = selectNetwork(state);
+          this.checkHostnameAuthorization();
+          const account = this.accountSelector(this.state);
+          const net = selectNetwork(this.state);
           const watchOnlyIdentity = await account.getWatchIdentity(net);
           const nextAddress = await watchOnlyIdentity.getNextAddress();
           await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID(), net));
@@ -177,9 +178,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'getNextChangeAddress': {
-          this.checkHostnameAuthorization(state);
-          const account = this.accountSelector(state);
-          const net = selectNetwork(state);
+          this.checkHostnameAuthorization();
+          const account = this.accountSelector(this.state);
+          const net = selectNetwork(this.state);
           const xpub = await account.getWatchIdentity(net);
           const nextChangeAddress = await xpub.getNextChangeAddress();
           await this.store.dispatchAsync(incrementChangeAddressIndex(account.getAccountID(), net));
@@ -187,7 +188,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'signTransaction': {
-          this.checkHostnameAuthorization(state);
+          this.checkHostnameAuthorization();
           if (!params || params.length !== 1) {
             throw new Error('Missing params');
           }
@@ -204,13 +205,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'sendTransaction': {
-          this.checkHostnameAuthorization(state);
+          this.checkHostnameAuthorization();
           const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
-          const lbtc = lbtcAssetByNetwork(selectNetwork(state));
+          const lbtc = lbtcAssetByNetwork(selectNetwork(this.state));
           const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
 
           // validate if fee asset is valid
-          if (![lbtc, ...selectTaxiAssets(state)].includes(feeAsset)) {
+          if (![lbtc, ...selectTaxiAssets(this.state)].includes(feeAsset)) {
             throw new Error(`${feeAsset} not supported as fee asset.`);
           }
 
@@ -232,7 +233,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const { addressRecipients, data } = sortRecipients(recipients);
 
           await this.store.dispatchAsync(
-            setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(state), data)
+            setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(this.state), data)
           );
 
           const { accepted, signedTxHex, selectedUtxos, unconfirmedOutputs } =
@@ -241,7 +242,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
-          const txid = await broadcastTx(selectEsploraURL(state), signedTxHex);
+          const txid = await broadcastTx(selectEsploraURL(this.state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
           // lock utxos used in successful broadcast
@@ -258,7 +259,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
                 signedTxHex,
                 unconfirmedOutputs,
                 MainAccountID,
-                selectNetwork(state)
+                selectNetwork(this.state)
               )
             );
           }
@@ -267,7 +268,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'signMessage': {
-          this.checkHostnameAuthorization(state);
+          this.checkHostnameAuthorization();
           const [message] = params as [string];
           await this.store.dispatchAsync(setMsg(this.hostname, message));
           const { accepted, signedMessage } = await this.openAndWaitPopup<SignMessagePopupResponse>(
@@ -282,14 +283,14 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'getTransactions': {
-          this.checkHostnameAuthorization(state);
-          const transactions = selectTransactions(this.selectedAccount)(state);
+          this.checkHostnameAuthorization();
+          const transactions = selectTransactions(this.selectedAccount)(this.state);
           return successMsg(transactions);
         }
 
         case 'getCoins': {
-          this.checkHostnameAuthorization(state);
-          const coins = selectUtxos(this.selectedAccount)(state);
+          this.checkHostnameAuthorization();
+          const coins = selectUtxos(this.selectedAccount)(this.state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
@@ -302,9 +303,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'getBalances': {
-          this.checkHostnameAuthorization(state);
-          const balances = selectBalances(this.selectedAccount)(state);
-          const assetGetter = assetGetterFromIAssets(state.assets);
+          this.checkHostnameAuthorization();
+          const balances = selectBalances(this.selectedAccount)(this.state);
+          const assetGetter = assetGetterFromIAssets(this.state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
             balancesResult.push({ asset: assetGetter(assetHash), amount });
@@ -314,9 +315,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'isReady': {
           try {
-            const net = selectNetwork(state);
-            await selectMainAccount(state).getWatchIdentity(net); // check if Xpub is valid
-            return successMsg(state.app.isOnboardingCompleted);
+            const net = selectNetwork(this.state);
+            await selectMainAccount(this.state).getWatchIdentity(net); // check if Xpub is valid
+            return successMsg(this.state.app.isOnboardingCompleted);
           } catch {
             // catch error = not ready
             return successMsg(false);
@@ -324,24 +325,24 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'getFeeAssets': {
-          this.checkHostnameAuthorization(state);
-          const lbtcAsset = lbtcAssetByNetwork(selectNetwork(state));
-          return successMsg([lbtcAsset, ...selectTaxiAssets(state)]);
+          this.checkHostnameAuthorization();
+          const lbtcAsset = lbtcAssetByNetwork(selectNetwork(this.state));
+          return successMsg([lbtcAsset, ...selectTaxiAssets(this.state)]);
         }
 
         case 'reloadCoins': {
-          this.checkHostnameAuthorization(state);
-          state = await this.reloadCoins(this.store);
+          this.checkHostnameAuthorization();
+          await this.reloadCoins(this.store);
           return successMsg();
         }
 
         case 'getSelectedAccount': {
-          this.checkHostnameAuthorization(state);
+          this.checkHostnameAuthorization();
           return successMsg(this.selectedAccount);
         }
 
         case 'useAccount': {
-          this.checkHostnameAuthorization(state);
+          this.checkHostnameAuthorization();
           const [accountName] = params as [string];
           if (!this.accountExists(accountName)) {
             throw new Error(`Account ${accountName} not found`);
@@ -352,18 +353,27 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'importTemplate': {
-          this.checkHostnameAuthorization(state);
-          const accountData = state.wallet.accounts[this.selectedAccount];
+          this.checkHostnameAuthorization();
+          const accountData = this.state.wallet.accounts[this.selectedAccount];
           if (accountData.type !== AccountType.CustomScriptAccount) {
             throw new Error('Only custom script accounts can import templates');
           }
 
-          const [template, changeTemplate] = params as [string, string?];
+          const [covenant, changeCovenant] = params as [DescriptorTemplate, DescriptorTemplate?];
+          if (!validate(covenant.template)) {
+            throw new Error('Invalid template');
+          }
+
+          if (changeCovenant && !validate(changeCovenant.template)) {
+            throw new Error('Invalid change template');
+          }
+
           await this.store.dispatchAsync(
-            setCustomScriptTemplate(this.selectedAccount, template, changeTemplate)
+            setCustomScriptTemplate(this.selectedAccount, covenant.template, changeCovenant?.template)
           );
-          const selectedAccount = selectAccount(this.selectedAccount)(state);
-          const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(state));
+
+          const selectedAccount = selectAccount(this.selectedAccount)(this.state);
+          const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(this.state));
 
           const nextAddress = (await watchIdentity.getNextAddress()) as TaprootAddressInterface;
           const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
@@ -374,7 +384,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             analyzeTapscriptTree(nextAddress.taprootHashTree)
           ).some(autoSpendableLeaf);
 
-          if (changeTemplate) {
+          if (changeCovenant) {
             const nextChangeAddress =
               (await watchIdentity.getNextChangeAddress()) as TaprootAddressInterface;
             isSpendableByMarina ||= Object.values(
@@ -389,7 +399,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'createAccount': {
-          this.checkHostnameAuthorization(state);
+          this.checkHostnameAuthorization();
           const [accountName] = params as [string];
           if (this.accountExists(accountName)) {
             throw new Error(`Account ${accountName} already exists`);

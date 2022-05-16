@@ -307,7 +307,6 @@ export class CustomScriptIdentity
 
   signPset(psetBase64: string): Promise<string> {
     const pset = Psbt.fromBase64(psetBase64); // we'll mutate the pset to sign with signature if needed
-    let inputsSigned = 0;
 
     // check if all inputs have witnessUtxo
     // this is needed to get prevout values and assets
@@ -345,7 +344,6 @@ export class CustomScriptIdentity
                 );
                 const signer = this.masterPrivateKeyNode.derivePath(pathToPrivKey);
                 pset.signInput(index, signer).toBase64();
-                inputsSigned++;
                 continue;
               }
             }
@@ -402,8 +400,6 @@ export class CustomScriptIdentity
                   })
                 }
               } 
-
-              inputsSigned++;
           } catch (e) {
             console.warn(e);
             // we skip errors, try to sign the next input
@@ -413,7 +409,6 @@ export class CustomScriptIdentity
       }
     }
 
-    if (inputsSigned === 0) return Promise.reject(new Error('0 inputs has been signed'));
     return Promise.resolve(pset.toBase64());
   }
 
