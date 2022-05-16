@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
 import { NetworkString } from 'ldk';
 import { extractErrorMessage } from '../../presentation/utils/error';
