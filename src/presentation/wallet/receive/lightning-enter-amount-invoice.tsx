@@ -1,6 +1,6 @@
 import QRCode from 'qrcode.react';
 import { randomBytes } from 'crypto';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { address, crypto, Transaction } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
@@ -8,7 +8,7 @@ import cx from 'classnames';
 import { fetchTxHex, fetchUtxos, NetworkString, Outpoint } from 'ldk';
 import Button from '../../components/button';
 import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
-import { formatAddress, toSatoshi } from '../../utils/format';
+import { formatAddress, fromSatoshi, toSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -43,7 +43,25 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   const [buttonText, setButtonText] = useState('Copy');
   const [isInvoiceExpanded, setisInvoiceExpanded] = useState(false);
 
+  const [limits, setLimits] = useState({ maximal: 0.1, minimal: 0.0005 });
+
   const [txID, setTxID] = useState('');
+
+  const boltz = new Boltz(network);
+
+  useEffect(() => {
+    // get maximal and minimal amount for pair
+    const fetchData = async () => {
+      const pair = await boltz.getPair('L-BTC/BTC');
+      if (pair?.limits) {
+        setLimits({
+          maximal: fromSatoshi(pair.limits.maximal),
+          minimal: fromSatoshi(pair.limits.minimal),
+        });
+      }
+    };
+    fetchData().catch(console.error);
+  }, []);
 
   const handleBackBtn = () => history.goBack();
   const handleExpand = () => setisInvoiceExpanded(true);
@@ -82,14 +100,14 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       return;
     }
 
-    if (Number(value) <= 0.0005) {
-      setErrors({ amount: 'Number must be higher then 0.0005', submit: '' });
+    if (Number(value) <= limits.minimal) {
+      setErrors({ amount: `Number must be higher then ${limits.minimal}`, submit: '' });
       setValues({ amount: value });
       return;
     }
 
-    if (Number(value) > 0.1) {
-      setErrors({ amount: 'Number must be lower then 0.1', submit: '' });
+    if (Number(value) > limits.maximal) {
+      setErrors({ amount: `Number must be lower then ${limits.maximal}`, submit: '' });
       setValues({ amount: value });
       return;
     }
@@ -106,7 +124,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       // preimage
       const preimage = randomBytes(32);
       const preimageHash = crypto.sha256(preimage).toString('hex');
-      const boltz = new Boltz(network);
 
       // claim pub key
       const identity = await account.getWatchIdentity(network);
