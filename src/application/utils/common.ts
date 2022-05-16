@@ -31,3 +31,5 @@ export async function sleep(miliseconds: number) {
     })
   );
 }
+
+export const isSet = (value: string): boolean => value.length > 0;
