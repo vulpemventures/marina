@@ -1,11 +1,5 @@
 import type { AddressInterface } from 'ldk';
-import {
-  fetchAndUnblindUtxos,
-  IdentityType,
-  networks,
-  Psbt,
-  script,
-} from 'ldk';
+import { fetchAndUnblindUtxos, IdentityType, networks, Psbt, script } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
 import type { CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
@@ -140,7 +134,13 @@ describe('CustomScriptIdentity', () => {
 
     pset = Psbt.fromBase64(pset)
       .updateInput(0, {
-        tapLeafScript: [{ leafVersion: 0, script: Buffer.from(leafToSpendScript!, 'hex'), controlBlock: Buffer.alloc(33) }]
+        tapLeafScript: [
+          {
+            leafVersion: 0,
+            script: Buffer.from(leafToSpendScript!, 'hex'),
+            controlBlock: Buffer.alloc(33),
+          },
+        ],
       })
       .toBase64();
 

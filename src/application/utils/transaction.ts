@@ -6,10 +6,10 @@ import type {
   UnblindedOutput,
   CoinSelectorErrorFn,
   NetworkString,
-  IdentityInterface} from 'ldk';
+  IdentityInterface,
+} from 'ldk';
 import {
   witnessStackToScriptWitness,
-
   address,
   addToTx,
   createFeeOutput,
@@ -172,10 +172,9 @@ export async function blindAndSignPset(
             ...input.tapScriptSig!.map((s) => s.signature),
             input.tapLeafScript![0].script,
             input.tapLeafScript![0].controlBlock,
-          ]
-          ),
-        }
-      })
+          ]),
+        };
+      });
     } else {
       pset.finalizeInput(i); // default finalizer handles taproot key path and non taproot sigs
     }

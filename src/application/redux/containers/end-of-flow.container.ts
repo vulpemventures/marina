@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';
 import type { EndOfFlowProps } from '../../../presentation/wallet/send/end-of-flow';
 import EndOfFlow from '../../../presentation/wallet/send/end-of-flow';
-import { selectAccountsFromCoins, selectChangeAccount, selectMainAccount } from '../selectors/wallet.selector';
+import { selectAccountsFromCoins, selectChangeAccount } from '../selectors/wallet.selector';
 import { selectEsploraURL, selectNetwork } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({

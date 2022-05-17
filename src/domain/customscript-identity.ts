@@ -326,18 +326,24 @@ export class CustomScriptIdentity
           try {
             // check if the pset signals how to spend the input
             const isKeyPath = input.tapKeySig !== undefined || input.tapMerkleRoot !== undefined;
-            const isScriptPath = input.tapLeafScript !== undefined && input.tapLeafScript.length > 0;
+            const isScriptPath =
+              input.tapLeafScript !== undefined && input.tapLeafScript.length > 0;
 
-            if (isKeyPath && isScriptPath) throw new Error('cannot spend input with both tapKeySig and tapScriptSig');
+            if (isKeyPath && isScriptPath)
+              throw new Error('cannot spend input with both tapKeySig and tapScriptSig');
 
             if (isKeyPath) {
               if (input.tapKeySig !== undefined) continue; // already signed
 
               if (!this.hasPrivateKey(cachedAddrInfos.result.taprootInternalKey!)) {
-                throw new Error('marina fails to sign input (internal key not owned by the account)');
+                throw new Error(
+                  'marina fails to sign input (internal key not owned by the account)'
+                );
               }
 
-              const toSignAddress = this.getAddressByPublicKey(cachedAddrInfos.result.taprootInternalKey!);
+              const toSignAddress = this.getAddressByPublicKey(
+                cachedAddrInfos.result.taprootInternalKey!
+              );
               if (toSignAddress && toSignAddress.derivationPath) {
                 const pathToPrivKey = toSignAddress.derivationPath.slice(
                   namespaceToDerivationPath(this.namespace).length + 1
@@ -348,58 +354,63 @@ export class CustomScriptIdentity
               }
             }
 
-              const leafScript = (input.tapLeafScript && input.tapLeafScript.length > 0) 
-                ? input.tapLeafScript[0].script.toString('hex') 
-                : this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos); 
+            const leafScript =
+              input.tapLeafScript && input.tapLeafScript.length > 0
+                ? input.tapLeafScript[0].script.toString('hex')
+                : this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
 
-              if (!leafScript) {
-                throw new Error('marina fails to sign input (no auto spendable tapscript)');
-              }
+            if (!leafScript) {
+              throw new Error('marina fails to sign input (no auto spendable tapscript)');
+            }
 
-              // witnesses func will throw if the leaf is not a valid leaf
-              const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
-              const leafHash = bip341.tapLeafHash({
-                scriptHex: leafScript,
-              });
+            // witnesses func will throw if the leaf is not a valid leaf
+            const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
+            const leafHash = bip341.tapLeafHash({
+              scriptHex: leafScript,
+            });
 
-              pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
-              pset.updateInput(index, {
-                tapLeafScript: [{ 
-                  leafVersion: 0xc4, 
-                  script: Buffer.from(leafScript, 'hex'), 
-                  controlBlock: taprootSignScriptStack[1]
-                }],
-              })
+            pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
+            pset.updateInput(index, {
+              tapLeafScript: [
+                {
+                  leafVersion: 0xc4,
+                  script: Buffer.from(leafScript, 'hex'),
+                  controlBlock: taprootSignScriptStack[1],
+                },
+              ],
+            });
 
-              // TODO check for witness v0 (not eltr template)
-              const sighashForSig = pset.TX.hashForWitnessV1(
-                index,
-                inputsUtxos.map((u) => u.script),
-                inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
-                Transaction.SIGHASH_DEFAULT,
-                this.network.genesisBlockHash,
-                leafHash
-              );
+            // TODO check for witness v0 (not eltr template)
+            const sighashForSig = pset.TX.hashForWitnessV1(
+              index,
+              inputsUtxos.map((u) => u.script),
+              inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
+              Transaction.SIGHASH_DEFAULT,
+              this.network.genesisBlockHash,
+              leafHash
+            );
 
-              const scriptNeeds = cachedAddrInfos.tapscriptNeeds[leafScript];
-              if (!scriptNeeds) continue;
+            const scriptNeeds = cachedAddrInfos.tapscriptNeeds[leafScript];
+            if (!scriptNeeds) continue;
 
-              for (const need of scriptNeeds.sigs) {
-                const addr = this.getAddressByPublicKey(need.pubkey);
-                if (addr && addr.derivationPath) {
-                  const pathToPrivKey = addr.derivationPath.slice(
-                    namespaceToDerivationPath(this.namespace).length + 1
-                  );
-                  const sig = this.signSchnorr(pathToPrivKey, sighashForSig);
-                  pset.updateInput(index, {
-                    tapScriptSig: [{
+            for (const need of scriptNeeds.sigs) {
+              const addr = this.getAddressByPublicKey(need.pubkey);
+              if (addr && addr.derivationPath) {
+                const pathToPrivKey = addr.derivationPath.slice(
+                  namespaceToDerivationPath(this.namespace).length + 1
+                );
+                const sig = this.signSchnorr(pathToPrivKey, sighashForSig);
+                pset.updateInput(index, {
+                  tapScriptSig: [
+                    {
                       leafHash,
                       pubkey: Buffer.from(need.pubkey, 'hex'),
                       signature: sig,
-                    }]
-                  })
-                }
-              } 
+                    },
+                  ],
+                });
+              }
+            }
           } catch (e) {
             console.warn(e);
             // we skip errors, try to sign the next input

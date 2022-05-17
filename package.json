@@ -3,7 +3,7 @@
   "version": "0.4.5",
   "private": true,
   "scripts": {
-    "start": "NETWORK=regtest webpack --watch --config webpack.dev.js",
+    "start": "NETWORK=regtest webpack --config webpack.dev.js",
     "build": "NODE_ENV=production webpack --config webpack.prod.js",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts,.tsx src test",

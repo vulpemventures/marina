@@ -1,7 +1,7 @@
-import { AddressInterface, getNetwork, IdentityInterface, NetworkString, UnblindedOutput } from 'ldk';
-import { unblindOutput, address, networks, Transaction } from 'ldk';
-import { RawHex } from 'marina-provider';
-import { Account } from '../../domain/account';
+import type { AddressInterface, IdentityInterface, NetworkString, UnblindedOutput } from 'ldk';
+import { getNetwork, unblindOutput, address, networks, Transaction } from 'ldk';
+import type { RawHex } from 'marina-provider';
+import type { Account } from '../../domain/account';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export const toStringOutpoint = (outpoint: { txid: string; vout: number }): string => {

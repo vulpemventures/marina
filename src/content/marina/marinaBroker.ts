@@ -39,8 +39,8 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import { ScriptInputsNeeds, UnblindedOutput, validate } from 'ldk';
-import { analyzeTapscriptTree, getAsset, getSats } from 'ldk';
+import type { ScriptInputsNeeds, UnblindedOutput } from 'ldk';
+import { validate, analyzeTapscriptTree, getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -52,7 +52,7 @@ import type { CreateAccountPopupResponse } from '../../presentation/connect/crea
 import type { TaprootAddressInterface } from '../../domain/customscript-identity';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
-import { UnconfirmedOutput } from '../../domain/unconfirmed';
+import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -109,7 +109,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   }
 
   private checkHostnameAuthorization() {
-    if (!this.hostnameEnabled(this.state)) throw new Error('User must authorize the current website');
+    if (!this.hostnameEnabled(this.state))
+      throw new Error('User must authorize the current website');
   }
 
   get state() {
@@ -381,7 +382,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           }
 
           await this.store.dispatchAsync(
-            setCustomScriptTemplate(this.selectedAccount, covenant.template, changeCovenant?.template)
+            setCustomScriptTemplate(
+              this.selectedAccount,
+              covenant.template,
+              changeCovenant?.template
+            )
           );
 
           const selectedAccount = selectAccount(this.selectedAccount)(this.state);

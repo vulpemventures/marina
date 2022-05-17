@@ -19,7 +19,7 @@ export const appInitState: IApp = {
     liquid: BlockstreamExplorerURLs,
     testnet: BlockstreamTestnetExplorerURLs,
   },
-  changeAccount: MainAccountID
+  changeAccount: MainAccountID,
 };
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {

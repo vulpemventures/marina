@@ -15,7 +15,7 @@ import { match } from '../../../domain/password-hash';
 import type { ExplorerURLs } from '../../../domain/app';
 import type { NetworkString } from 'ldk';
 import { INVALID_PASSWORD_ERROR } from '../../utils/constants';
-import { AccountID } from '../../../domain/account';
+import type { AccountID } from '../../../domain/account';
 
 export const setExplorer = (explorer: ExplorerURLs, network: NetworkString): AnyAction => ({
   type: SET_EXPLORER,
