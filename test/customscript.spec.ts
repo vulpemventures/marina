@@ -152,7 +152,6 @@ describe('CustomScriptIdentity', () => {
       [addr.confidentialAddress],
       true
     );
-    console.log(signed)
     const txid = await broadcastTx(signed);
     expect(txid).toBeDefined();
   });
