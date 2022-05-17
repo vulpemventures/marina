@@ -31,7 +31,7 @@
     "decimal.js": "^10.2.1",
     "formik": "^2.2.6",
     "google-protobuf": "^3.15.8",
-    "ldk": "^0.4.12",
+    "ldk": "0.4.12",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
     "marina-provider": "^1.4.9",
