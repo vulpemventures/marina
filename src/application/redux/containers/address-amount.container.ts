@@ -6,11 +6,11 @@ import AddressAmountView from '../../../presentation/wallet/send/address-amount'
 import { selectBalances } from '../selectors/balance.selector';
 import {
   selectAllAccountsIDsSpendableViaUI,
-  selectMainAccount,
+  selectChangeAccount,
 } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): AddressAmountProps => ({
-  changeAccount: selectMainAccount(state),
+  changeAccount: selectChangeAccount(state),
   network: state.app.network,
   transaction: state.transaction,
   balances: selectBalances(...selectAllAccountsIDsSpendableViaUI(state))(state),

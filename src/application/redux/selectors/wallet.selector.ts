@@ -140,3 +140,7 @@ export const selectUpdaterIsLoading = (state: RootReducerState) => {
 export const selectEncryptedMnemonic = (state: RootReducerState) => {
   return state.wallet.encryptedMnemonic;
 };
+
+export const selectChangeAccount = (state: RootReducerState) => {
+  return selectAccount(state.app.changeAccount)(state);
+};
