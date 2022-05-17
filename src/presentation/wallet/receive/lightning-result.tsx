@@ -34,9 +34,9 @@ const LightningResultView = ({
     <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-between px-10 py-4 mx-auto bg-white">
 
       {lookingForPayment && !isSet(txID) ? (
-        <Result text="⏳ Waiting for payment..." />
+        <Result text="⏳  Waiting for payment..." />
       ) : !lookingForPayment && isSet(txID) ? (
-        <Result text="✅ Invoice paid!" />
+        <Result text="✅  Invoice paid!" />
       ) : null}
 
       {isInvoiceExpanded ? (
