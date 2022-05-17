@@ -2,6 +2,9 @@
   "name": "marina",
   "version": "0.4.5",
   "private": true,
+  "resolutions": {
+    "blech32": "1.0.1"
+  },
   "scripts": {
     "start": "NETWORK=regtest webpack --watch --config webpack.dev.js",
     "build": "NODE_ENV=production webpack --config webpack.prod.js",
