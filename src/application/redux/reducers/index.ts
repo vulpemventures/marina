@@ -87,7 +87,7 @@ const marinaReducer = combineReducers({
   app: persist<IApp>({
     reducer: appReducer,
     key: 'app',
-    version: 1,
+    version: 2,
     migrate: migrateAfter(appInitState),
   }),
   assets: persist<IAssets>({

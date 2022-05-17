@@ -1,4 +1,5 @@
 import type { NetworkString } from 'ldk';
+import type { AccountID } from './account';
 import type { IError } from './common';
 
 export interface IApp {
@@ -7,6 +8,7 @@ export interface IApp {
   isOnboardingCompleted: boolean;
   network: NetworkString;
   explorerByNetwork: Record<NetworkString, ExplorerURLs>;
+  changeAccount: AccountID;
 }
 
 export type ExplorerType = 'Blockstream' | 'Testnet' | 'Mempool' | 'Nigiri' | 'Custom';

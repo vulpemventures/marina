@@ -6,6 +6,7 @@ import { selectAllAccounts } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): SettingsAccountsProps => ({
   accounts: selectAllAccounts(state),
+  selectedChangeAccount: state.app.changeAccount,
 });
 
 const SettingsAccounts = connect(mapStateToProps)(SettingsAccountsView);

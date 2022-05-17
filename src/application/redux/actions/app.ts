@@ -6,6 +6,7 @@ import {
   CHANGE_NETWORK_SUCCESS,
   SET_EXPLORER,
   RESET,
+  SET_CHANGE_ACCOUNT,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { Password } from '../../../domain/password';
@@ -14,6 +15,7 @@ import { match } from '../../../domain/password-hash';
 import type { ExplorerURLs } from '../../../domain/app';
 import type { NetworkString } from 'ldk';
 import { INVALID_PASSWORD_ERROR } from '../../utils/constants';
+import { AccountID } from '../../../domain/account';
 
 export const setExplorer = (explorer: ExplorerURLs, network: NetworkString): AnyAction => ({
   type: SET_EXPLORER,
@@ -49,4 +51,8 @@ export function changeNetwork(network: NetworkString): AnyAction {
 
 export function reset(): AnyAction {
   return { type: RESET };
+}
+
+export function setChangeAccount(accountID: AccountID): AnyAction {
+  return { type: SET_CHANGE_ACCOUNT, payload: { accountID } };
 }
