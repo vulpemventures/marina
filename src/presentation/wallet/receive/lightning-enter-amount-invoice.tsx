@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { address, crypto, Transaction } from 'liquidjs-lib';
+import { crypto, script } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
-import { fetchTxHex, fetchUtxos, NetworkString, Outpoint } from 'ldk';
+import { fetchUtxos, NetworkString, Outpoint } from 'ldk';
 import Button from '../../components/button';
 import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
 import { fromSatoshi, toSatoshi } from '../../utils/format';
@@ -12,13 +12,12 @@ import { selectMainAccount } from '../../../application/redux/selectors/wallet.s
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
-import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
-import { broadcastTx, lbtcAssetByNetwork } from '../../../application/utils/network';
+import { broadcastTx } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
 import LightningResultView from './lightning-result';
 import ModalUnlock from '../../components/modal-unlock';
 import { debounce } from 'lodash';
-import bolt11 from 'bolt11';
+import { getClaimTransaction, getInvoiceTag, isValidInvoice } from '../../utils/boltz';
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
@@ -129,12 +128,8 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
           claimPublicKey: pubKey,
         });
 
-      // decode lightning invoice
-      const decodedInvoice = bolt11.decode(invoice);
-
       // check if invoice is valid
-      const paymentHash = decodedInvoice.tags[0].data;
-      if (paymentHash !== preimageHash) {
+      if (!isValidInvoice(invoice, preimage, pubKey, redeemScript)) {
         setErrors({ submit: 'Invalid invoice received, please try again', amount: '' });
         setIsSubmitting(false);
         setIsLookingForPayment(false);
@@ -146,9 +141,9 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       setIsLookingForPayment(true);
 
       // check invoice expiration
-      const expiryTime = Number(decodedInvoice.tags[3].data); // 3600 seconds
+      const expireTime = Number(getInvoiceTag(invoice, 'expire_time')); // 3600 seconds
       const waitPerCycle = 5 // 5 seconds
-      let maxNumOfCycles = expiryTime / waitPerCycle
+      let maxNumOfCycles = expireTime / waitPerCycle
 
       // wait for utxo to arrive
       let utxos: Outpoint[] = [];
@@ -166,36 +161,19 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
         return;
       }
 
-      // utxo has arrived, prepare claim transaction
-      const [utxo] = utxos;
-      const hex = await fetchTxHex(utxo.txid, explorerURL);
-      const transaction = Transaction.fromHex(hex);
-      const { script, value, asset, nonce } = transaction.outs[utxo.vout];
+      // get claim transaction
+      const claimTransaction = await getClaimTransaction(
+        account,
+        addr,
+        explorerURL,
+        network,
+        password,
+        preimage,
+        redeemScript,
+        utxos,
+      )
 
-      // very unsafe, migrate to Psbt approach to claim the funds soon
-      const keyPairUnsafe = account.getSigningKeyUnsafe(password, addr.derivationPath!, network);
-      const claimTransaction = constructClaimTransaction(
-        [
-          {
-            keys: keyPairUnsafe,
-            redeemScript: Buffer.from(redeemScript, 'hex'),
-            preimage,
-            type: OutputType.Bech32,
-            txHash: transaction.getHash(),
-            vout: utxo.vout,
-            script,
-            value,
-            asset,
-            nonce,
-          },
-        ],
-        address.toOutputScript(addr.confidentialAddress),
-        1,
-        true,
-        lbtcAssetByNetwork(network)
-      );
-
-      // broadcast transaction
+      // broadcast claim transaction
       const txid = await broadcastTx(explorerURL, claimTransaction.toHex());
 
       // update states
