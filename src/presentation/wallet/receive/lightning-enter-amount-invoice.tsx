@@ -18,6 +18,7 @@ import { isSet, sleep } from '../../../application/utils/common';
 import LightningResultView from './lightning-result';
 import ModalUnlock from '../../components/modal-unlock';
 import { debounce } from 'lodash';
+import bolt11 from 'bolt11';
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
@@ -117,10 +118,10 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       // claim pub key
       const identity = await account.getWatchIdentity(network);
       const addr = await identity.getNextAddress();
-
       const pubKey = addr.publicKey!;
       await dispatch(incrementAddressIndex(account.getAccountID(), network)); // persist address
 
+      // create submarine swap
       const { redeemScript, lockupAddress, invoice }: ReverseSubmarineSwapResponse =
         await boltz.createReverseSubmarineSwap({
           invoiceAmount: toSatoshi(Number(values.amount)),
@@ -128,14 +129,44 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
           claimPublicKey: pubKey,
         });
 
+      // decode lightning invoice
+      const decodedInvoice = bolt11.decode(invoice);
+
+      // check if invoice is valid
+      const paymentHash = decodedInvoice.tags[0].data;
+      if (paymentHash !== preimageHash) {
+        setErrors({ submit: 'Invalid invoice received, please try again', amount: '' });
+        setIsSubmitting(false);
+        setIsLookingForPayment(false);
+        return;
+      }
+
+      // all good, update states
       setInvoice(invoice);
       setIsLookingForPayment(true);
 
+      // check invoice expiration
+      const expiryTime = Number(decodedInvoice.tags[3].data); // 3600 seconds
+      const waitPerCycle = 5 // 5 seconds
+      let maxNumOfCycles = expiryTime / waitPerCycle
+
+      // wait for utxo to arrive
       let utxos: Outpoint[] = [];
-      while (utxos.length === 0) {
-        await sleep(5000);
+      while (utxos.length === 0 && maxNumOfCycles > 0) {
+        await sleep(waitPerCycle * 1000);
         utxos = await fetchUtxos(lockupAddress, explorerURL);
+        maxNumOfCycles -= 1;
       }
+
+      // payment was never made, and the invoice expired
+      if (maxNumOfCycles === 0) {
+        setErrors({ submit: 'Invoice has expired', amount: '' });
+        setIsSubmitting(false);
+        setIsLookingForPayment(false);
+        return;
+      }
+
+      // utxo has arrived, prepare claim transaction
       const [utxo] = utxos;
       const hex = await fetchTxHex(utxo.txid, explorerURL);
       const transaction = Transaction.fromHex(hex);
@@ -164,7 +195,10 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
         lbtcAssetByNetwork(network)
       );
 
+      // broadcast transaction
       const txid = await broadcastTx(explorerURL, claimTransaction.toHex());
+
+      // update states
       setTxID(txid);
       setIsLookingForPayment(false);
       setIsSubmitting(false);
