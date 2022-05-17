@@ -16,6 +16,8 @@ import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { broadcastTx, lbtcAssetByNetwork } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
 import LightningResultView from './lightning-result';
+import ModalUnlock from '../../components/modal-unlock';
+import { debounce } from 'lodash';
 
 export interface LightningAmountInvoiceProps {
   network: NetworkString;
@@ -31,14 +33,15 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   const history = useHistory();
   const account = useSelector(selectMainAccount);
 
-  const [values, setValues] = useState({ amount: '' });
   const [errors, setErrors] = useState({ amount: '', submit: '' });
-  const [touched, setTouched] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lookingForPayment, setIsLookingForPayment] = useState(false);
   const [invoice, setInvoice] = useState('');
+  const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [limits, setLimits] = useState({ maximal: 0.1, minimal: 0.0005 });
+  const [lookingForPayment, setIsLookingForPayment] = useState(false);
+  const [touched, setTouched] = useState(false);
   const [txID, setTxID] = useState('');
+  const [values, setValues] = useState({ amount: '' });
 
   const boltz = new Boltz(network);
 
@@ -63,9 +66,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
 
     setTouched(true);
 
-    const {
-      target: { value },
-    } = event;
+    const value = event.target.value;
 
     if (!isSet(value)) {
       setTouched(false);
@@ -102,10 +103,12 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
     setValues({ amount: value });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleUnlock = async (password: string) => {
     // disable Generate button
     setIsSubmitting(true);
+    // close Modal
+    showUnlockModal(false);
+
     try {
       // preimage
       const preimage = randomBytes(32);
@@ -139,7 +142,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       const { script, value, asset, nonce } = transaction.outs[utxo.vout];
 
       // very unsafe, migrate to Psbt approach to claim the funds soon
-      const keyPairUnsafe = account.getSigningKeyUnsafe('ciaociao', addr.derivationPath!, network);
+      const keyPairUnsafe = account.getSigningKeyUnsafe(password, addr.derivationPath!, network);
       const claimTransaction = constructClaimTransaction(
         [
           {
@@ -172,6 +175,10 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
     }
   };
 
+  const handleModalUnlockClose = () => showUnlockModal(false);
+  const handleUnlockModalOpen = () => showUnlockModal(true);
+  const debouncedHandleUnlock = debounce(handleUnlock, 2000, { leading: true, trailing: false });
+
   return (
     <ShellPopUp
       backBtnCb={isSubmitting || lookingForPayment || isSet(txID) ? handleBackBtn : undefined}
@@ -188,7 +195,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
         />
       ) : (
         <div className="w-full h-full p-10 bg-white">
-          <form onSubmit={handleSubmit} className="mt-10">
+          <form className="mt-10">
             <div>
               <label className="block">
                 <p className="mb-2 text-base font-medium text-left">Amount</p>
@@ -211,7 +218,6 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
                     placeholder="0"
                     type="number"
                     lang="en"
-                    value={values.amount}
                   />
                 </div>
               </label>
@@ -224,7 +230,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
               <Button
                 className="w-3/5 mt-2 text-base"
                 disabled={isSubmitting || (isSet(errors.amount) && touched) || !touched}
-                type="submit"
+                onClick={handleUnlockModalOpen}
               >
                 Generate
               </Button>
@@ -232,6 +238,11 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
           </form>
         </div>
       )}
+      <ModalUnlock
+        isModalUnlockOpen={isModalUnlockOpen}
+        handleModalUnlockClose={handleModalUnlockClose}
+        handleUnlock={debouncedHandleUnlock}
+      />
     </ShellPopUp>
   );
 };
