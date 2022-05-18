@@ -7,9 +7,12 @@ import type {
   CoinSelectorErrorFn,
   NetworkString,
   RecipientInterface,
-  UnblindedOutput,
+  UnblindedOutput} from 'ldk';
+import {
+  getNetwork,
+  greedyCoinSelector,
+  walletFromCoins,
 } from 'ldk';
-import { greedyCoinSelector, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -135,7 +138,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           network,
           state.topup
         )
-      : stateForRegularPSET(getRecipient(), changeAddress, utxos, network);
+      : stateForRegularPSET(getRecipient(), changeAddress.value, utxos, network, changeAccount);
 
     newStatePromise().then(setState).catch(handleError).finally(done);
 
@@ -265,26 +268,41 @@ const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelect
 
 function stateForRegularPSET(
   recipient: RecipientInterface,
-  change: Address,
+  changeAddress: string,
   utxos: UnblindedOutput[],
-  network: NetworkString
+  network: NetworkString,
+  lbtcChangeAccount: Account
 ): () => Promise<State> {
-  return function () {
+  return async function () {
     const result: State = {};
-    result.unsignedPset = undefined;
-    result.feeChange = undefined;
     result.utxos = [];
     const w = walletFromCoins(utxos, network);
+
+    if (recipient.asset !== getNetwork(network).assetHash) {
+      const watchID = await lbtcChangeAccount.getWatchIdentity(network);
+      const nextChangeAddress = await watchID.getNextChangeAddress();
+      result.feeChange = createAddress(
+        nextChangeAddress.confidentialAddress,
+        nextChangeAddress.derivationPath
+      );
+    }
 
     result.unsignedPset = w.sendTx(
       recipient,
       greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-      change.value,
+      (asset: string) => {
+        if (asset === recipient.asset) {
+          return changeAddress;
+        } else {
+          if (!result.feeChange) throw new Error('no fee change address');
+          return result.feeChange.value;
+        }
+      },
       true
     );
 
     result.topup = undefined;
-    return Promise.resolve(result);
+    return result;
   };
 }
 
