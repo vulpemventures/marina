@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { crypto, script } from 'liquidjs-lib';
+import { crypto } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import { fetchUtxos, NetworkString, Outpoint } from 'ldk';
