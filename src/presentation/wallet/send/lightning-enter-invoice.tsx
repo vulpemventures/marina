@@ -108,9 +108,11 @@ const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ explorerURL, ne
       // create submarine swap
       const { address, expectedAmount, redeemScript }: SubmarineSwapResponse =
         await boltz.createSubmarineSwap({ invoice, refundPublicKey });
+
       // push to store payment to be made
       await dispatch(setAddressesAndAmount(expectedAmount, [changeAddress], { value: address }));
       await dispatch(setPendingTxStep('address-amount'));
+
       // go to choose fee route
       history.push(SEND_CHOOSE_FEE_ROUTE);
     } catch (err: any) {
