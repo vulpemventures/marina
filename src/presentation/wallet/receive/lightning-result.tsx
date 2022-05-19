@@ -28,11 +28,12 @@ const LightningResultView = ({
     );
   };
 
-  const Result = ({ text }: { text: string }) => <p className="mb-4 text-xs font-medium">{text}</p>;
+  const Result = ({ text }: { text: string }) => (
+    <p className="mb-4 text-xs font-medium whitespace-pre">{text}</p>
+  );
 
   return (
     <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-between px-10 py-4 mx-auto bg-white">
-
       {lookingForPayment && !isSet(txID) ? (
         <Result text="⏳  Waiting for payment..." />
       ) : !lookingForPayment && isSet(txID) ? (
@@ -49,7 +50,7 @@ const LightningResultView = ({
       )}
 
       <button
-        className="text-xs font-medium text-primary focus:outline-none"
+        className="text-primary focus:outline-none text-xs font-medium"
         onClick={handleExpand}
       >
         {isInvoiceExpanded ? 'Show QR code' : 'Expand'}

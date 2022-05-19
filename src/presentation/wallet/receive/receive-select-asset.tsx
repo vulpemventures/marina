@@ -1,10 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import type { Asset } from '../../../domain/assets';
-import {
-  RECEIVE_ADDRESS_ROUTE,
-  LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE,
-} from '../../routes/constants';
+import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_ROUTE } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
 import type { NetworkString } from 'ldk';
 
@@ -18,7 +15,7 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
 
   const handleReceive = async (asset: string, isSubmarineSwap: boolean) => {
     if (isSubmarineSwap) {
-      return Promise.resolve(history.push(`${LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE}`));
+      return Promise.resolve(history.push(`${LIGHTNING_ENTER_AMOUNT_ROUTE}`));
     }
     return Promise.resolve(history.push(`${RECEIVE_ADDRESS_ROUTE}/${asset}`));
   };
