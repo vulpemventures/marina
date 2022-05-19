@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHistory } from 'react-router';
-import { SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
+import { LIGHTNING_ENTER_INVOICE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
@@ -24,12 +24,9 @@ const SendSelectAssetView: React.FC<SendSelectAssetProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const handleSend = async (assetHash: string, isSubmarineSwap: boolean) => {
-    if (isSubmarineSwap) {
-      // send to swap flow
-      return;
-    }
     await dispatch(setAsset(assetHash));
-    return Promise.resolve(history.push(SEND_ADDRESS_AMOUNT_ROUTE));
+    const route = isSubmarineSwap ? LIGHTNING_ENTER_INVOICE_ROUTE : SEND_ADDRESS_AMOUNT_ROUTE;
+    return Promise.resolve(history.push(route));
   };
 
   return (

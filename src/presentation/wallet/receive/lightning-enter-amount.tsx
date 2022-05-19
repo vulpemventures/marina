@@ -17,17 +17,19 @@ import { isSet, sleep } from '../../../application/utils/common';
 import LightningResultView from './lightning-result';
 import ModalUnlock from '../../components/modal-unlock';
 import { debounce } from 'lodash';
-import { getClaimTransaction, getInvoiceTag, isValidInvoice } from '../../utils/boltz';
+import {
+  DEFAULT_LIGHTNING_LIMITS,
+  getClaimTransaction,
+  getInvoiceTag,
+  isValidInvoice,
+} from '../../utils/boltz';
 
-export interface LightningAmountInvoiceProps {
+export interface LightningAmountProps {
   network: NetworkString;
   explorerURL: string;
 }
 
-const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
-  explorerURL,
-  network,
-}) => {
+const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, network }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const history = useHistory();
@@ -37,7 +39,7 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   const [invoice, setInvoice] = useState('');
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [limits, setLimits] = useState({ maximal: 0.1, minimal: 0.0005 });
+  const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
   const [touched, setTouched] = useState(false);
   const [txID, setTxID] = useState('');
@@ -118,9 +120,9 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
       const identity = await account.getWatchIdentity(network);
       const addr = await identity.getNextAddress();
       const pubKey = addr.publicKey!;
-      await dispatch(incrementAddressIndex(account.getAccountID(), network)); // persist address
+      await dispatch(incrementAddressIndex(account.getAccountID(), network));
 
-      // create submarine swap
+      // create reverse submarine swap
       const { redeemScript, lockupAddress, invoice }: ReverseSubmarineSwapResponse =
         await boltz.createReverseSubmarineSwap({
           invoiceAmount: toSatoshi(Number(values.amount)),
@@ -142,8 +144,8 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
 
       // check invoice expiration
       const expireTime = Number(getInvoiceTag(invoice, 'expire_time')); // 3600 seconds
-      const waitPerCycle = 5 // 5 seconds
-      let maxNumOfCycles = expireTime / waitPerCycle
+      const waitPerCycle = 5; // 5 seconds
+      let maxNumOfCycles = expireTime / waitPerCycle;
 
       // wait for utxo to arrive
       let utxos: Outpoint[] = [];
@@ -170,8 +172,8 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
         password,
         preimage,
         redeemScript,
-        utxos,
-      )
+        utxos
+      );
 
       // broadcast claim transaction
       const txid = await broadcastTx(explorerURL, claimTransaction.toHex());
@@ -259,4 +261,4 @@ const LightningAmountInvoiceView: React.FC<LightningAmountInvoiceProps> = ({
   );
 };
 
-export default LightningAmountInvoiceView;
+export default LightningAmountView;
