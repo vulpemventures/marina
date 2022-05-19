@@ -37,7 +37,8 @@ import {
   BACKUP_UNLOCK_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
-  LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE,
+  LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_ENTER_INVOICE_ROUTE,
 } from './constants';
 
 // Connect
@@ -68,7 +69,8 @@ import SendEndOfFlow from '../../application/redux/containers/end-of-flow.contai
 import PaymentSuccess from '../../application/redux/containers/payment-success.container';
 import PaymentError from '../wallet/send/payment-error';
 // Lightning
-import LightningAmountInvoice from '../../application/redux/containers/lightning-enter-amount-invoice.container';
+import LightningAmount from '../../application/redux/containers/lightning-enter-amount.container';
+import LightningInvoice from '../../application/redux/containers/lightning-enter-invoice.container';
 
 // Settings
 import SettingsMenuSecurity from '../settings/menu-security';
@@ -111,8 +113,13 @@ const Routes: React.FC = () => {
       {/*Lightning*/}
       <ProtectedRoute
         exact
-        path={LIGHTNING_ENTER_AMOUNT_INVOICE_ROUTE}
-        component={LightningAmountInvoice}
+        path={LIGHTNING_ENTER_AMOUNT_ROUTE}
+        component={LightningAmount}
+      />
+      <ProtectedRoute
+        exact
+        path={LIGHTNING_ENTER_INVOICE_ROUTE}
+        component={LightningInvoice} // TODO
       />
 
       {/*Settings*/}
