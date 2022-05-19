@@ -131,7 +131,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
         });
 
       // check if invoice is valid
-      if (!isValidInvoice(invoice, preimage, pubKey, redeemScript)) {
+      if (!isValidInvoice(invoice, lockupAddress, preimage, pubKey, redeemScript)) {
         setErrors({ submit: 'Invalid invoice received, please try again', amount: '' });
         setIsSubmitting(false);
         setIsLookingForPayment(false);
