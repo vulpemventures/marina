@@ -115,11 +115,7 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SEND_PAYMENT_SUCCESS_ROUTE} component={PaymentSuccess} />
       <ProtectedRoute exact path={SEND_PAYMENT_ERROR_ROUTE} component={PaymentError} />
       {/*Lightning*/}
-      <ProtectedRoute
-        exact
-        path={LIGHTNING_ENTER_AMOUNT_ROUTE}
-        component={LightningAmount}
-      />
+      <ProtectedRoute exact path={LIGHTNING_ENTER_AMOUNT_ROUTE} component={LightningAmount} />
       <ProtectedRoute
         exact
         path={LIGHTNING_ENTER_INVOICE_ROUTE}
