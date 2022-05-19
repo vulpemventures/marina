@@ -136,7 +136,6 @@ export async function createWalletFromMnemonic(
     chain,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
-    ecclib: ecc,
   });
 
   const mnemonicIdentity = await mnemonicRestorerFromEsplora(toRestore)({

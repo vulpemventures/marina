@@ -128,18 +128,17 @@ export const getInvoiceExpireDate = (invoice: string): number => {
   return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
 }
 
-export const isValidInvoice = (
-  invoice: string,
-  preimage: Buffer,
-  pubKey: string,
-  redeemScript: string
-): boolean => {
-  // check invoice payment_hash tag
-  const paymentHash = getInvoiceTag(invoice, 'payment_hash');
-  const preimageHash = crypto.sha256(preimage).toString('hex');
-  if (paymentHash !== preimageHash) return false;
+// validates if address derives from a given redeem script
+const addressDerivesFromScript = (lockupAddress: string, redeemScript: string) => {
+  const addressScript = address.toOutputScript(lockupAddress);
+  const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
+  const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
+  const expectedAddressScriptASM = `OP_0 ${sha256}`;
+  return addressScriptASM === expectedAddressScriptASM;
+};
 
-  // check redeemScript
+// validates if we can redeem this redeem script
+const validReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
   const scriptAssembly = script
     .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
     .split(' ');
@@ -164,6 +163,20 @@ export const isValidInvoice = (
     'OP_CHECKSIG',
   ];
   return scriptAssembly.join() === expectedScript.join();
+};
+
+export const isValidInvoice = (
+  invoice: string,
+  lockupAddress: string,
+  preimage: Buffer,
+  pubKey: string,
+  redeemScript: string
+): boolean => {
+  return (
+    correctPaymentHashInInvoice(invoice, preimage) &&
+    addressDerivesFromScript(lockupAddress, redeemScript) &&
+    validReedemScript(preimage, pubKey, redeemScript)
+  );
 };
 
 export const getClaimTransaction = async (

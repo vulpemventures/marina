@@ -16,7 +16,7 @@ import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utils';
 import type { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { AssetSwap } from '../../../domain/assets';
+import type { AssetSwap } from '../../../domain/assets';
 import { sortAssets } from '../../utils/sort';
 
 export interface HomeProps {

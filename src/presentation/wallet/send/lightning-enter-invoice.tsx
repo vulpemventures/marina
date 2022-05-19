@@ -2,19 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import Button from '../../components/button';
 import { fromSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
 } from '../../../application/redux/actions/wallet';
 import { isSet } from '../../../application/utils/common';
 import { DEFAULT_LIGHTNING_LIMITS, getInvoiceValue, isValidSubmarineSwap } from '../../utils/boltz';
-import Boltz, { SubmarineSwapResponse } from '../../../application/utils/boltz';
+import type { SubmarineSwapResponse } from '../../../application/utils/boltz';
+import Boltz from '../../../application/utils/boltz';
 import { createAddress } from '../../../domain/address';
 import {
   setAddressesAndAmount,
