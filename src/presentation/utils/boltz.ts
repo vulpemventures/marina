@@ -1,6 +1,8 @@
-import bolt11, { TagData } from 'bolt11';
-import { fetchTxHex, Outpoint, AddressInterface, NetworkString, getNetwork } from 'ldk';
-import { MnemonicAccount } from '../../domain/account';
+import type { TagData } from 'bolt11';
+import bolt11 from 'bolt11';
+import type { Outpoint, AddressInterface, NetworkString} from 'ldk';
+import { fetchTxHex, getNetwork } from 'ldk';
+import type { MnemonicAccount } from '../../domain/account';
 import {
   address,
   AssetHash,
@@ -124,6 +126,44 @@ export const getInvoiceValue = (invoice: string): number => {
 export const getInvoiceExpireDate = (invoice: string): number => {
   const { timeExpireDate } = bolt11.decode(invoice);
   return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
+}
+
+export const isValidInvoice = (
+  invoice: string,
+  preimage: Buffer,
+  pubKey: string,
+  redeemScript: string
+): boolean => {
+  // check invoice payment_hash tag
+  const paymentHash = getInvoiceTag(invoice, 'payment_hash');
+  const preimageHash = crypto.sha256(preimage).toString('hex');
+  if (paymentHash !== preimageHash) return false;
+
+  // check redeemScript
+  const scriptAssembly = script
+    .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
+    .split(' ');
+  const cltv = scriptAssembly[10];
+  const refundPubKey = scriptAssembly[13];
+  const expectedScript = [
+    'OP_SIZE',
+    '20',
+    'OP_EQUAL',
+    'OP_IF',
+    'OP_HASH160',
+    crypto.hash160(preimage).toString('hex'),
+    'OP_EQUALVERIFY',
+    pubKey,
+    'OP_ELSE',
+    'OP_DROP',
+    cltv,
+    'OP_NOP2',
+    'OP_DROP',
+    refundPubKey,
+    'OP_ENDIF',
+    'OP_CHECKSIG',
+  ];
+  return scriptAssembly.join() === expectedScript.join();
 };
 
 export const getClaimTransaction = async (

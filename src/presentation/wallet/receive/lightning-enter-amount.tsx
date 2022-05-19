@@ -4,13 +4,15 @@ import { useHistory } from 'react-router';
 import { crypto } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
-import { fetchUtxos, NetworkString, Outpoint } from 'ldk';
+import type { NetworkString, Outpoint } from 'ldk';
+import { fetchUtxos } from 'ldk';
 import Button from '../../components/button';
-import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
+import type { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
+import Boltz from '../../../application/utils/boltz';
 import { fromSatoshi, toSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { broadcastTx } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
@@ -23,6 +25,7 @@ import {
   getInvoiceExpireDate,
   isValidReverseSubmarineSwap,
 } from '../../utils/boltz';
+
 export interface LightningAmountProps {
   network: NetworkString;
   explorerURL: string;
