@@ -100,15 +100,6 @@ export const getInvoiceExpireDate = (invoice: string): number => {
   return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
 }
 
-// validates if address derives from a given redeem script
-const addressDerivesFromScript = (lockupAddress: string, redeemScript: string) => {
-  const addressScript = address.toOutputScript(lockupAddress);
-  const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
-  const sha256 = crypto.hash160(Buffer.from(redeemScript, 'hex')).toString('hex');
-  const expectedAddressScriptASM = `OP_0 ${sha256}`; // P2SH
-  return addressScriptASM === expectedAddressScriptASM;
-};
-
 // validates if we can redeem with this redeem script
 const validReverseSwapReedemScript = (
   preimage: Buffer,
