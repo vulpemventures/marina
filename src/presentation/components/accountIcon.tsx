@@ -1,3 +1,4 @@
+import React from 'react';
 import { AccountType } from '../../domain/account';
 
 // TODO account icons ??
@@ -12,7 +13,7 @@ function getImgFilename(type: AccountType): string {
   }
 }
 
-const accountIcon: React.FC<{ type: AccountType }> = ({ type }) => {
+const AccountIcon: React.FC<{ type: AccountType }> = ({ type }) => {
   return (
     <img
       className="w-8 mr-1.5"
@@ -22,4 +23,4 @@ const accountIcon: React.FC<{ type: AccountType }> = ({ type }) => {
   );
 };
 
-export default accountIcon;
+export default React.memo(AccountIcon);
