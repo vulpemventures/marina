@@ -3,17 +3,19 @@ import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
+import { getAssetImage, onErrorImg } from '../../../application/utils/constants';
 import { fromSatoshiStr } from '../../utils';
 import type { AssetGetter } from '../../../domain/assets';
 import type { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
-import AssetIcon from '../../components/assetIcon';
+import type { NetworkString } from 'ldk';
 
 export interface ConfirmationProps {
+  network: NetworkString;
   transaction: TransactionState;
   getAsset: AssetGetter;
 }
 
-const ConfirmationView: React.FC<ConfirmationProps> = ({ getAsset, transaction }) => {
+const ConfirmationView: React.FC<ConfirmationProps> = ({ network, getAsset, transaction }) => {
   const history = useHistory();
   const { sendAddress, sendAsset, sendAmount, feeAsset, feeAmount } = transaction;
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
@@ -27,7 +29,12 @@ const ConfirmationView: React.FC<ConfirmationProps> = ({ getAsset, transaction }
       currentPage="Confirmation"
     >
       <h1 className="text-2xl">{getAsset(sendAsset).name}</h1>
-      <AssetIcon className="w-11 mt-0.5 block mx-auto mb-2" assetHash={sendAsset} />
+      <img
+        className="w-11 mt-0.5 block mx-auto mb-2"
+        src={getAssetImage(sendAsset)}
+        alt="liquid asset logo"
+        onError={onErrorImg}
+      />
 
       <div className="px-3 mt-3">
         <h2 className="text-lg font-medium text-left">To</h2>

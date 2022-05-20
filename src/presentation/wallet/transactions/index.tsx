@@ -14,6 +14,7 @@ import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ShellPopUp from '../../components/shell-popup';
+import { getAssetImage, onErrorImg } from '../../../application/utils/constants';
 import { txTypeAsString } from '../../../application/utils/transaction';
 import { fromSatoshiStr } from '../../utils';
 import type { TxDisplayInterface } from '../../../domain/transaction';
@@ -27,7 +28,6 @@ import { updateTaskAction } from '../../../application/redux/actions/task';
 import { MainAccountID } from '../../../domain/account';
 import type { NetworkString } from 'ldk';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import AssetIcon from '../../components/assetIcon';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -54,6 +54,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+  const getAssetImgPath = () => getAssetImage(state.assetHash);
 
   // TxDetails Modal
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
@@ -106,6 +107,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
               state.assetsBalance[state.assetHash] ?? 0,
               state.assetPrecision
             )}
+            assetImgPath={getAssetImgPath()}
             assetTicker={state.assetTicker}
             bigBalanceText={true}
           />
@@ -146,7 +148,12 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
       <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
         <div className="mx-auto text-center">
-          <AssetIcon assetHash={state.assetHash} className="w-8 h-8 mt-0.5 block mx-auto mb-2" />
+          <img
+            className="w-8 h-8 mt-0.5 block mx-auto mb-2"
+            src={getAssetImgPath()}
+            alt="liquid bitcoin logo"
+            onError={onErrorImg}
+          />
           <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>
           {modalTxDetails && modalTxDetails.blockTimeMs && (
             <p className="text-xs font-light">

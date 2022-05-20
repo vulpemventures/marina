@@ -34,6 +34,7 @@ import { incrementChangeAddressIndex } from '../../../application/redux/actions/
 import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
+import { getAssetImage } from '../../../application/utils/constants';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
 
@@ -172,6 +173,10 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     }
   };
 
+  const getFeeCurrencyImgPath = (): string => {
+    return getAssetImage(feeAsset || '');
+  };
+
   return (
     <ShellPopUp
       backBtnCb={handleBackBtn}
@@ -181,6 +186,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     >
       <Balance
         assetBalance={formatDecimalAmount(fromSatoshi(balances[feeAsset || lbtcAssetHash] ?? 0))}
+        assetImgPath={getFeeCurrencyImgPath()}
         assetHash={sendAsset}
         assetTicker={assets[feeAsset || '']?.ticker ?? ''}
         className="mt-4"
