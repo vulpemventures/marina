@@ -66,34 +66,6 @@ const reverseSwapAddressDerivesFromScript = (lockupAddress: string, redeemScript
   return addressScriptASM === expectedAddressScriptASM;
 };
 
-// validates if we can redeem with this redeem script
-const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
-  const scriptAssembly = script
-    .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
-    .split(' ');
-  const cltv = scriptAssembly[10];
-  const refundPubKey = scriptAssembly[13];
-  const expectedScript = [
-    'OP_SIZE',
-    '20',
-    'OP_EQUAL',
-    'OP_IF',
-    'OP_HASH160',
-    crypto.hash160(preimage).toString('hex'),
-    'OP_EQUALVERIFY',
-    pubKey,
-    'OP_ELSE',
-    'OP_DROP',
-    cltv,
-    'OP_NOP2',
-    'OP_DROP',
-    refundPubKey,
-    'OP_ENDIF',
-    'OP_CHECKSIG',
-  ];
-  return scriptAssembly.join() === expectedScript.join();
-};
-
 export const isValidReverseSubmarineSwap = (
   invoice: string,
   lockupAddress: string,
@@ -132,13 +104,17 @@ export const getInvoiceExpireDate = (invoice: string): number => {
 const addressDerivesFromScript = (lockupAddress: string, redeemScript: string) => {
   const addressScript = address.toOutputScript(lockupAddress);
   const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
-  const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
-  const expectedAddressScriptASM = `OP_0 ${sha256}`;
+  const sha256 = crypto.hash160(Buffer.from(redeemScript, 'hex')).toString('hex');
+  const expectedAddressScriptASM = `OP_0 ${sha256}`; // P2SH
   return addressScriptASM === expectedAddressScriptASM;
 };
 
-// validates if we can redeem this redeem script
-const validReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
+// validates if we can redeem with this redeem script
+const validReverseSwapReedemScript = (
+  preimage: Buffer,
+  pubKey: string,
+  redeemScript: string
+) => {
   const scriptAssembly = script
     .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
     .split(' ');
@@ -174,8 +150,8 @@ export const isValidInvoice = (
 ): boolean => {
   return (
     correctPaymentHashInInvoice(invoice, preimage) &&
-    addressDerivesFromScript(lockupAddress, redeemScript) &&
-    validReedemScript(preimage, pubKey, redeemScript)
+    reverseSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
+    validReverseSwapReedemScript(preimage, pubKey, redeemScript)
   );
 };
 
