@@ -10,18 +10,12 @@ export const DEFAULT_LIGHTNING_LIMITS = { maximal: 0.04294967, minimal: 0.0005 }
 
 // Submarine swaps
 
-// validates if invoice has correct payment hash tag
-const correctPaymentHashInInvoice = (invoice: string, preimage: Buffer) => {
-  const paymentHash = getInvoiceTag(invoice, 'payment_hash');
-  const preimageHash = crypto.sha256(preimage).toString('hex');
-  return paymentHash === preimageHash;
-};
-
+// validates redeem script is in expected template
 const validSwapReedemScript = (redeemScript: string, refundPublicKey: string) => {
   const scriptAssembly = script
     .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
     .split(' ');
-  const xxx = scriptAssembly[4];
+  const boltzHash = scriptAssembly[4];
   const cltv = scriptAssembly[6];
   const preimageHash = scriptAssembly[1];
   const expectedScript = [
@@ -29,7 +23,7 @@ const validSwapReedemScript = (redeemScript: string, refundPublicKey: string) =>
     preimageHash,
     'OP_EQUAL',
     'OP_IF',
-    xxx,
+    boltzHash,
     'OP_ELSE',
     cltv,
     'OP_NOP2',
@@ -48,11 +42,18 @@ export const isValidSubmarineSwap = (
 
 // Reverse submarine swaps
 
+// validates if invoice has correct payment hash tag
+const correctPaymentHashInInvoice = (invoice: string, preimage: Buffer) => {
+  const paymentHash = getInvoiceTag(invoice, 'payment_hash');
+  const preimageHash = crypto.sha256(preimage).toString('hex');
+  return paymentHash === preimageHash;
+};
+
 // validates if reverse swap address derives from redeem script
 const reverseSwapAddressDerivesFromScript = (lockupAddress: string, redeemScript: string) => {
   const addressScript = address.toOutputScript(lockupAddress);
   const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
-  const sha256 = crypto.hash160(Buffer.from(redeemScript, 'hex')).toString('hex');
+  const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
   const expectedAddressScriptASM = `OP_0 ${sha256}`; // P2SH
   return addressScriptASM === expectedAddressScriptASM;
 };
