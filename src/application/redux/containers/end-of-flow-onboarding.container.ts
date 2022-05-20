@@ -3,7 +3,7 @@ import type { RootReducerState } from '../../../domain/common';
 import type { EndOfFlowProps } from '../../../presentation/onboarding/end-of-flow';
 import EndOfFlowOnboardingView from '../../../presentation/onboarding/end-of-flow';
 import { selectEsploraURL } from '../selectors/app.selector';
-import { hasMnemonicSelector } from '../selectors/wallet.selector';
+import { hasMnemonicSelector, selectDeepRestorerIsLoading } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
   return {
@@ -14,6 +14,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
     hasMnemonicRegistered: hasMnemonicSelector(state),
     explorerURL: selectEsploraURL(state),
     walletVerified: state.onboarding.verified,
+    restorerIsLoading: selectDeepRestorerIsLoading(state),
   };
 };
 

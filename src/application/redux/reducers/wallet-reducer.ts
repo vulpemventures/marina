@@ -30,7 +30,7 @@ export const walletInitState: WalletState = {
   passwordHash: '',
   deepRestorer: {
     gapLimit: 20,
-    isLoading: false,
+    restorerLoaders: 0,
   },
   updaterLoaders: 0,
   isVerified: false,
@@ -321,13 +321,6 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.SET_DEEP_RESTORER_IS_LOADING: {
-      return {
-        ...state,
-        deepRestorer: { ...state.deepRestorer, isLoading: payload.isLoading },
-      };
-    }
-
     case ACTION_TYPES.SET_DEEP_RESTORER_ERROR: {
       return {
         ...state,
@@ -371,6 +364,26 @@ export function walletReducer(
       return {
         ...state,
         updaterLoaders: neverNegative(state.updaterLoaders - 1),
+      };
+    }
+
+    case ACTION_TYPES.PUSH_RESTORER_LOADER: {
+      return {
+        ...state,
+        deepRestorer: {
+          ...state.deepRestorer,
+          restorerLoaders: neverNegative(state.deepRestorer.restorerLoaders + 1),
+        },
+      };
+    }
+
+    case ACTION_TYPES.POP_RESTORER_LOADER: {
+      return {
+        ...state,
+        deepRestorer: {
+          ...state.deepRestorer,
+          restorerLoaders: neverNegative(state.deepRestorer.restorerLoaders - 1),
+        },
       };
     }
 

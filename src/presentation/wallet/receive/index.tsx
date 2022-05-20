@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
-import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { updateTaskAction } from '../../../application/redux/actions/task';
 import { selectNetwork } from '../../../application/redux/selectors/app.selector';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 

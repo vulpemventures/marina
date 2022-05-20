@@ -3,17 +3,21 @@ import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
-import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
+import { setDeepRestorerGapLimit } from '../../application/redux/actions/wallet';
 import Button from '../components/button';
+import type { AccountID } from '../../domain/account';
+import { restoreTaskAction } from '../../application/redux/actions/task';
 
 export interface DeepRestorerProps {
   restorationLoading: boolean;
+  allAccountsIDs: AccountID[];
   gapLimit: number;
   error?: string;
 }
 
 const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
   restorationLoading,
+  allAccountsIDs,
   error,
   gapLimit,
 }) => {
@@ -21,7 +25,7 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const onClickRestore = async () => {
-    await dispatch(startDeepRestorer());
+    await Promise.all(allAccountsIDs.map(restoreTaskAction).map(dispatch));
   };
 
   return (

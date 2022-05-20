@@ -125,8 +125,8 @@ export const selectUnspentsAndTransactions =
     return state.wallet.unspentsAndTransactions[accountID][network];
   };
 
-export const selectDeepRestorerIsLoading = (state: RootReducerState) => {
-  return state.wallet.deepRestorer.isLoading;
+export const selectDeepRestorerIsLoading = (state: RootReducerState): boolean => {
+  return state.wallet.deepRestorer.restorerLoaders > 0;
 };
 
 export const selectDeepRestorerGapLimit = (state: RootReducerState) => {

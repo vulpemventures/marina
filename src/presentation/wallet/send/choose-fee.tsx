@@ -7,12 +7,9 @@ import type {
   CoinSelectorErrorFn,
   NetworkString,
   RecipientInterface,
-  UnblindedOutput} from 'ldk';
-import {
-  getNetwork,
-  greedyCoinSelector,
-  walletFromCoins,
+  UnblindedOutput,
 } from 'ldk';
+import { getNetwork, greedyCoinSelector, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';

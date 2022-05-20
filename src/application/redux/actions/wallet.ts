@@ -1,9 +1,7 @@
 import {
-  SET_DEEP_RESTORER_IS_LOADING,
   SET_ACCOUNT_DATA,
   SET_DEEP_RESTORER_GAP_LIMIT,
   SET_DEEP_RESTORER_ERROR,
-  START_DEEP_RESTORATION,
   INCREMENT_EXTERNAL_ADDRESS_INDEX,
   INCREMENT_INTERNAL_ADDRESS_INDEX,
   SET_VERIFIED,
@@ -13,6 +11,8 @@ import {
   SET_MNEMONIC,
   SET_CS_ACCOUNT_TEMPLATE,
   SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA,
+  POP_RESTORER_LOADER,
+  PUSH_RESTORER_LOADER,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { AccountData, AccountID } from '../../../domain/account';
@@ -81,13 +81,6 @@ export function incrementChangeAddressIndex(
   return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
-export function setDeepRestorerIsLoading(isLoading: boolean): AnyAction {
-  return {
-    type: SET_DEEP_RESTORER_IS_LOADING,
-    payload: { isLoading },
-  };
-}
-
 export function setDeepRestorerGapLimit(gapLimit: number): AnyAction {
   return {
     type: SET_DEEP_RESTORER_GAP_LIMIT,
@@ -102,12 +95,6 @@ export function setDeepRestorerError(error: Error | undefined): AnyAction {
   };
 }
 
-export function startDeepRestorer(): AnyAction {
-  return {
-    type: START_DEEP_RESTORATION,
-  };
-}
-
 export function setVerified(): AnyAction {
   return { type: SET_VERIFIED };
 }
@@ -118,4 +105,12 @@ export const popUpdaterLoader = (): AnyAction => ({
 
 export const pushUpdaterLoader = (): AnyAction => ({
   type: PUSH_UPDATER_LOADER,
+});
+
+export const popRestorerLoader = (): AnyAction => ({
+  type: POP_RESTORER_LOADER,
+});
+
+export const pushRestorerLoader = (): AnyAction => ({
+  type: PUSH_RESTORER_LOADER,
 });

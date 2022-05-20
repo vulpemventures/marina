@@ -12,7 +12,7 @@ export interface WalletState {
   passwordHash: PasswordHash;
   deepRestorer: {
     gapLimit: number;
-    isLoading: boolean;
+    restorerLoaders: number;
     error?: string;
   };
   updaterLoaders: number;

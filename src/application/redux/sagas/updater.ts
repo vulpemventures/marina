@@ -38,8 +38,8 @@ import type { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import type { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
-import type { UpdateTaskAction } from '../actions/updater';
-import { updateTaskAction } from '../actions/updater';
+import type { UpdateTaskAction } from '../actions/task';
+import { updateTaskAction } from '../actions/task';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
 import type { Channel } from 'redux-saga';
 import type { AllEffect } from 'redux-saga/effects';
@@ -125,8 +125,8 @@ const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScri
     );
   };
 
-// UtxosUpdater lets to update the utxos state for a given AccountID
-// it fetches and unblinds the unspents comming from the explorer
+// txsUpdater lets to update the transaction state for a given AccountID
+// it fetches and unblinds the output and the prevouts of the new transactions comming from the explorer
 function* txsUpdater(
   accountID: AccountID,
   network: NetworkString
@@ -159,6 +159,7 @@ function* txsUpdater(
     identityBlindKeyGetter,
     explorerURL,
     // Check if tx exists in React state, if yes: skip unblinding and fetching
+    // however prevent fetching if no transfers has been computed (avoid sync errors)
     (tx) => txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0
   );
 

@@ -27,6 +27,7 @@ import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
 import * as ecc from 'tiny-secp256k1';
+import { restoreTaskAction } from '../../../application/redux/actions/task';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -36,6 +37,7 @@ export interface EndOfFlowProps {
   explorerURL: string;
   hasMnemonicRegistered: boolean;
   walletVerified: boolean;
+  restorerIsLoading: boolean;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
@@ -46,6 +48,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   explorerURL,
   hasMnemonicRegistered,
   walletVerified,
+  restorerIsLoading,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +76,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         // set the popup
         await setUpPopup();
         await dispatch(onboardingCompleted());
+        await dispatch(restoreTaskAction(MainAccountID));
       }
 
       if (walletVerified) {
@@ -92,7 +96,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
     tryToRestoreWallet().catch(console.error);
   }, []);
 
-  if (isLoading) {
+  if (isLoading || restorerIsLoading) {
     return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
   }
 

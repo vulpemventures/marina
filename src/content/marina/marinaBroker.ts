@@ -47,7 +47,7 @@ import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
 import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
-import { updateTaskAction } from '../../application/redux/actions/updater';
+import { restoreTaskAction, updateTaskAction } from '../../application/redux/actions/task';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 import type { TaprootAddressInterface } from '../../domain/customscript-identity';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
@@ -412,6 +412,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           await this.store.dispatchAsync(
             setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
           );
+
+          await this.store.dispatchAsync(restoreTaskAction(this.selectedAccount));
           return successMsg(true);
         }
 

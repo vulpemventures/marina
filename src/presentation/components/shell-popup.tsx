@@ -10,7 +10,7 @@ import {
   selectDeepRestorerIsLoading,
   selectUpdaterIsLoading,
 } from '../../application/redux/selectors/wallet.selector';
-import { updateTaskAction } from '../../application/redux/actions/updater';
+import { updateTaskAction } from '../../application/redux/actions/task';
 import { formatNetwork } from '../utils';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
 import type { AccountID } from '../../domain/account';

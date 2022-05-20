@@ -1,10 +1,10 @@
 import type { NetworkString } from 'ldk';
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { setDeepRestorerGapLimit, startDeepRestorer } from '../../application/redux/actions/wallet';
+import { restoreTaskAction } from '../../application/redux/actions/task';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import type { RootReducerState } from '../../domain/common';
+import type { AccountID } from '../../domain/account';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
@@ -14,28 +14,29 @@ const formattedNetworks = availableNetworks.map((n) => formatNetwork(n));
 
 export interface SettingsNetworksProps {
   restorationLoading: boolean;
+  allAccountsIDs: AccountID[];
+  network: NetworkString;
   error?: string;
 }
 
-const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoading, error }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const network = useSelector((state: RootReducerState) => state.app.network);
+const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
+  restorationLoading,
+  error,
+  allAccountsIDs,
+  network,
+}) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
-
-  const selectedNetwork = formatNetwork(network);
+  const [isLoading, setIsLoading] = useState(false);
 
   const setSelectedValue = async (net: string) => {
     setIsLoading(true);
     const newNetwork = net.toLowerCase();
     if (newNetwork !== network) {
       // switch the selected network
-
       await dispatch(changeNetwork(newNetwork as NetworkString));
 
       // start deep restorer for all the accounts (done in background)
-      await dispatch(setDeepRestorerGapLimit(20));
-      await dispatch(startDeepRestorer());
+      await Promise.all(allAccountsIDs.map(restoreTaskAction).map(dispatch));
     }
     setIsLoading(false);
   };
@@ -51,7 +52,7 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({ restorationLoad
       <Select
         disabled={isLoading || restorationLoading}
         list={formattedNetworks}
-        selected={selectedNetwork}
+        selected={formatNetwork(network)}
         onSelect={setSelectedValue}
       />
 

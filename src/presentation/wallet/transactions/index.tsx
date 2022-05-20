@@ -24,7 +24,7 @@ import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import moment from 'moment';
-import { updateTaskAction } from '../../../application/redux/actions/updater';
+import { updateTaskAction } from '../../../application/redux/actions/task';
 import { MainAccountID } from '../../../domain/account';
 import type { NetworkString } from 'ldk';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';

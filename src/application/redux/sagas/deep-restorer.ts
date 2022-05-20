@@ -6,22 +6,26 @@ import type {
   Restorer,
   StateRestorerOpts,
 } from 'ldk';
-import { call, put, takeLeading } from 'redux-saga/effects';
+import type { Channel } from 'redux-saga';
+import { call, fork, put, take } from 'redux-saga/effects';
 import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../../presentation/utils/error';
 import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
-import { START_DEEP_RESTORATION } from '../actions/action-types';
-import { updateTaskAction } from '../actions/updater';
-import { setDeepRestorerError, setDeepRestorerIsLoading, setRestorerOpts } from '../actions/wallet';
+import { RESTORE_TASK } from '../actions/action-types';
+import type { RestoreTaskAction } from '../actions/task';
+import { updateTaskAction } from '../actions/task';
 import {
-  selectDeepRestorerGapLimit,
-  selectDeepRestorerIsLoading,
-} from '../selectors/wallet.selector';
+  popRestorerLoader,
+  pushRestorerLoader,
+  setDeepRestorerError,
+  setRestorerOpts,
+} from '../actions/wallet';
+import { selectDeepRestorerGapLimit } from '../selectors/wallet.selector';
 import type { SagaGenerator } from './utils';
 import {
+  createChannel,
   newSagaSelector,
   selectAccountSaga,
-  selectAllAccountsIDsSaga,
   selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
@@ -58,38 +62,49 @@ function* deepRestore(
   return stateRestorerOpts;
 }
 
-const selectDeepRestorerIsLoadingSaga = newSagaSelector(selectDeepRestorerIsLoading);
 const selectDeepRestorerGapLimitSaga = newSagaSelector(selectDeepRestorerGapLimit);
 
-// restoreAllAccounts will launch a deep restore for each account in the redux state
-// it will restore the account for the current selected network (the one set in redux state)
-// then it will update the restorerOpts in the state after restoration
-function* restoreAllAccounts(): SagaGenerator {
-  const isRunning = yield* selectDeepRestorerIsLoadingSaga();
-  if (isRunning) return;
+type RestoreChanData = RestoreTaskAction['payload'] & {
+  gapLimit: number;
+  network: NetworkString;
+  esploraURL: string;
+};
 
-  yield put(setDeepRestorerIsLoading(true));
+type RestoreChan = Channel<RestoreChanData>;
 
-  try {
-    const gapLimit = yield* selectDeepRestorerGapLimitSaga();
-    const esploraURL = yield* selectExplorerSaga();
-    const accountsIDs = yield* selectAllAccountsIDsSaga();
-    for (const ID of accountsIDs) {
-      const network = yield* selectNetworkSaga();
-      const stateRestorerOpts = yield* deepRestore(ID, gapLimit, esploraURL, network);
-      yield put(setRestorerOpts(ID, stateRestorerOpts, network)); // update state with new restorerOpts
-      yield put(updateTaskAction(ID, network)); // update utxos and transactions according to the restored addresses (on network)
+function* restorerWorker(inChan: RestoreChan): SagaGenerator<void, RestoreChanData> {
+  while (true) {
+    try {
+      const { accountID, gapLimit, network, esploraURL } = yield take(inChan);
+      yield put(pushRestorerLoader());
+      const restoredIndexes = yield* deepRestore(accountID, gapLimit, esploraURL, network);
+      yield put(setRestorerOpts(accountID, restoredIndexes, network)); // update state with new restorerOpts
+      yield put(updateTaskAction(accountID, network)); // update utxos and transactions according to the restored addresses (on network)
+    } catch (error) {
+      yield put(
+        setDeepRestorerError(new Error(`deep restore error: ${extractErrorMessage(error)}`))
+      );
+    } finally {
+      yield put(popRestorerLoader());
     }
-    yield put(setDeepRestorerError(undefined));
-  } catch (e) {
-    yield put(setDeepRestorerError(new Error(extractErrorMessage(e))));
-  } finally {
-    yield put(setDeepRestorerIsLoading(false));
   }
 }
 
-// watch for each START_DEEP_RESTORATION action
-// if a restoration is not running: start restore all accounts
-export function* watchStartDeepRestorer(): SagaGenerator {
-  yield takeLeading(START_DEEP_RESTORATION, restoreAllAccounts);
+const MAX_RESTORER_WORKERS = 3; // how many tasks can be processed at the same time
+
+// watch for each RESTORE_TASK action
+export function* watchRestoreTask(): SagaGenerator<void, RestoreTaskAction> {
+  const restoreTaskChan = yield* createChannel<RestoreChanData>();
+  for (let i = 0; i < MAX_RESTORER_WORKERS; i++) {
+    yield fork(restorerWorker, restoreTaskChan);
+  }
+
+  // listen for RESTORE_TASK action, and send it to the restoreTaskChan (workers will handle it)
+  while (true) {
+    const { payload } = yield take<RestoreTaskAction>(RESTORE_TASK);
+    const gapLimit = yield* selectDeepRestorerGapLimitSaga();
+    const network = yield* selectNetworkSaga();
+    const esploraURL = yield* selectExplorerSaga();
+    yield put(restoreTaskChan, { ...payload, gapLimit, network, esploraURL });
+  }
 }
