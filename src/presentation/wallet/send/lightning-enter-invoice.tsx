@@ -13,7 +13,7 @@ import {
   incrementChangeAddressIndex,
 } from '../../../application/redux/actions/wallet';
 import { isSet } from '../../../application/utils/common';
-import { DEFAULT_LIGHTNING_LIMITS, getInvoiceValue } from '../../utils/boltz';
+import { DEFAULT_LIGHTNING_LIMITS, getInvoiceValue, isValidSubmarineSwap } from '../../utils/boltz';
 import Boltz, { SubmarineSwapResponse } from '../../../application/utils/boltz';
 import { createAddress } from '../../../domain/address';
 import {
@@ -108,6 +108,13 @@ const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ explorerURL, ne
       // create submarine swap
       const { address, expectedAmount, redeemScript }: SubmarineSwapResponse =
         await boltz.createSubmarineSwap({ invoice, refundPublicKey });
+
+      // validate submarine swap
+      if (!isValidSubmarineSwap(redeemScript, refundPublicKey)) {
+        setError('Invalid submarine swap, please try again');
+        setIsSubmitting(false);
+        return;
+      }
 
       // push to store payment to be made
       await dispatch(setAddressesAndAmount(expectedAmount, [changeAddress], { value: address }));

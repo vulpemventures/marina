@@ -8,24 +8,61 @@ import { fromSatoshi } from './format';
 
 export const DEFAULT_LIGHTNING_LIMITS = { maximal: 0.04294967, minimal: 0.0005 };
 
+// Submarine swaps
+
 // validates if invoice has correct payment hash tag
-const correctPaymentHash = (invoice: string, preimage: Buffer) => {
+const correctPaymentHashInInvoice = (invoice: string, preimage: Buffer) => {
   const paymentHash = getInvoiceTag(invoice, 'payment_hash');
   const preimageHash = crypto.sha256(preimage).toString('hex');
   return paymentHash === preimageHash;
 };
 
-// validates if address derives from a given redeem script
-const addressDerivesFromScript = (lockupAddress: string, redeemScript: string) => {
+const validSwapReedemScript = (redeemScript: string, refundPublicKey: string) => {
+  const scriptAssembly = script
+    .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
+    .split(' ');
+  const xxx = scriptAssembly[4];
+  const cltv = scriptAssembly[6];
+  const preimageHash = scriptAssembly[1];
+  const expectedScript = [
+    'OP_HASH160',
+    preimageHash,
+    'OP_EQUAL',
+    'OP_IF',
+    xxx,
+    'OP_ELSE',
+    cltv,
+    'OP_NOP2',
+    'OP_DROP',
+    refundPublicKey,
+    'OP_ENDIF',
+    'OP_CHECKSIG',
+  ];
+  return scriptAssembly.join() === expectedScript.join();
+};
+
+export const isValidSubmarineSwap = (
+  redeemScript: string,
+  refundPublicKey: string
+): boolean => validSwapReedemScript(redeemScript, refundPublicKey);
+
+// Reverse submarine swaps
+
+// validates if reverse swap address derives from redeem script
+const reverseSwapAddressDerivesFromScript = (lockupAddress: string, redeemScript: string) => {
   const addressScript = address.toOutputScript(lockupAddress);
   const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
-  const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
-  const expectedAddressScriptASM = `OP_0 ${sha256}`;
+  const sha256 = crypto.hash160(Buffer.from(redeemScript, 'hex')).toString('hex');
+  const expectedAddressScriptASM = `OP_0 ${sha256}`; // P2SH
   return addressScriptASM === expectedAddressScriptASM;
 };
 
-// validates if we can redeem this redeem script
-const validReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
+// validates if we can redeem with this redeem script
+const validReverseSwapReedemScript = (
+  preimage: Buffer,
+  pubKey: string,
+  redeemScript: string
+) => {
   const scriptAssembly = script
     .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
     .split(' ');
@@ -52,6 +89,20 @@ const validReedemScript = (preimage: Buffer, pubKey: string, redeemScript: strin
   return scriptAssembly.join() === expectedScript.join();
 };
 
+export const isValidReverseSubmarineSwap = (
+  invoice: string,
+  lockupAddress: string,
+  preimage: Buffer,
+  pubKey: string,
+  redeemScript: string
+): boolean => {
+  return (
+    correctPaymentHashInInvoice(invoice, preimage) &&
+    reverseSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
+    validReverseSwapReedemScript(preimage, pubKey, redeemScript)
+  );
+};
+
 export const getInvoiceTag = (invoice: string, tag: string): TagData => {
   const decodedInvoice = bolt11.decode(invoice);
   for (const { tagName, data } of decodedInvoice.tags) {
@@ -65,20 +116,6 @@ export const getInvoiceValue = (invoice: string): number => {
   if (satoshis) return fromSatoshi(satoshis);
   if (millisatoshis) return fromSatoshi(Number(millisatoshis) / 1000);
   return 0;
-};
-
-export const isValidInvoice = (
-  invoice: string,
-  lockupAddress: string,
-  preimage: Buffer,
-  pubKey: string,
-  redeemScript: string
-): boolean => {
-  return (
-    correctPaymentHash(invoice, preimage) &&
-    addressDerivesFromScript(lockupAddress, redeemScript) &&
-    validReedemScript(preimage, pubKey, redeemScript)
-  );
 };
 
 export const getClaimTransaction = async (
