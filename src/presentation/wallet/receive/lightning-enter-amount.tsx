@@ -21,7 +21,7 @@ import {
   DEFAULT_LIGHTNING_LIMITS,
   getClaimTransaction,
   getInvoiceTag,
-  isValidInvoice,
+  isValidReverseSubmarineSwap,
 } from '../../utils/boltz';
 
 export interface LightningAmountProps {
@@ -131,7 +131,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
         });
 
       // check if invoice is valid
-      if (!isValidInvoice(invoice, lockupAddress, preimage, pubKey, redeemScript)) {
+      if (!isValidReverseSubmarineSwap(invoice, lockupAddress, preimage, pubKey, redeemScript)) {
         setErrors({ submit: 'Invalid invoice received, please try again', amount: '' });
         setIsSubmitting(false);
         setIsLookingForPayment(false);
