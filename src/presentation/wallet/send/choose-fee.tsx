@@ -198,11 +198,11 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           I pay fee in:
         </p>
         <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-          {[lbtcAssetHash, ...taxiAssets].map((assetHash) => (
+          {[lbtcAssetHash, ...taxiAssets].map((assetHash, index) => (
             <Button
               className="flex-1"
               isOutline={feeAsset !== assetHash}
-              key={assetHash}
+              key={index}
               onClick={() => handlePayFees(assetHash)}
               roundedMd={true}
               textBase={true}

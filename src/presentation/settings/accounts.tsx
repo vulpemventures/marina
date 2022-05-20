@@ -54,9 +54,9 @@ const SettingsAccountsView: React.FC<SettingsAccountsProps> = ({
         >
           {accounts
             .filter((a) => a.getAccountID().toLowerCase().includes(searchTerm))
-            .map((account) => (
+            .map((account, index) => (
               <div
-                key={account.getAccountID()}
+                key={index}
                 className={classNames('p-3 rounded-md shadow-md', {
                   'border border-primary': account.getAccountID() === selectedChangeAccount,
                 })}
