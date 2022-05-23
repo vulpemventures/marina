@@ -4,6 +4,8 @@ import browser from 'webextension-polyfill';
 import {
   BACKUP_UNLOCK_ROUTE,
   DEFAULT_ROUTE,
+  LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_ENTER_INVOICE_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
 } from '../../routes/constants';
@@ -62,6 +64,7 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
   // submarine swap bottom sheet modal
   const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [action, setAction] = useState('');
 
   // Save mnemonic modal
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
@@ -69,25 +72,37 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   const handleSaveMnemonicConfirm = async () => {
     await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
   };
+
   const handleReceive = () => {
     if (!isWalletVerified) {
       showSaveMnemonicModal(true);
+      return;
     }
+    setAction('receive');
     if (state.canSubmarineSwap) {
       setShowBottomSheet(true);
     } else {
       history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`);
     }
   };
-
   const handleSend = async () => {
+    setAction('send');
+    await dispatch(setAsset(state.assetHash));
     if (state.canSubmarineSwap) {
       setShowBottomSheet(true);
     } else {
-      await dispatch(setAsset(state.assetHash));
       history.push(SEND_ADDRESS_AMOUNT_ROUTE);
     }
   };
+  const handleLightningSelection = (lightning: boolean) => {
+    if (lightning) {
+      if (action === 'send') history.push(LIGHTNING_ENTER_INVOICE_ROUTE)
+      if (action === 'receive') history.push(LIGHTNING_ENTER_AMOUNT_ROUTE)
+    } else {
+      if (action === 'send') history.push(SEND_ADDRESS_AMOUNT_ROUTE)
+      if (action === 'receive') history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`)
+    }
+  }
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
   const handleOpenExplorer = async () => {
@@ -160,8 +175,8 @@ const TransactionsView: React.FC<TransactionsProps> = ({
       <ModalSelectNetwork
         isOpen={showBottomSheet}
         onClose={() => setShowBottomSheet(false)}
-        onLightning={console.log}
-        onLiquid={console.log}
+        onLightning={() => handleLightningSelection(true)}
+        onLiquid={() => handleLightningSelection(false)}
       ></ModalSelectNetwork>
 
       <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
