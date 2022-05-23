@@ -14,10 +14,10 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
   const history = useHistory();
 
   const handleReceive = async (asset: string, isSubmarineSwap: boolean) => {
-    if (isSubmarineSwap) {
-      return Promise.resolve(history.push(`${LIGHTNING_ENTER_AMOUNT_ROUTE}`));
-    }
-    return Promise.resolve(history.push(`${RECEIVE_ADDRESS_ROUTE}/${asset}`));
+    const route = isSubmarineSwap
+      ? LIGHTNING_ENTER_AMOUNT_ROUTE
+      : `${RECEIVE_ADDRESS_ROUTE}/${asset}`;
+    return Promise.resolve(history.push(route));
   };
 
   return (
