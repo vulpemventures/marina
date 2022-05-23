@@ -12,6 +12,7 @@ import { NetworkString } from 'ldk';
 import { TransactionState } from '../../../application/redux/reducers/transaction-reducer';
 import { Asset } from '../../../domain/assets';
 import { Account } from '../../../domain/account';
+import { DEFAULT_ROUTE } from '../../routes/constants';
 
 export interface AddressAmountProps {
   account: Account;
@@ -33,7 +34,7 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
 
   const handleBackBtn = async () => {
     await dispatch(flushPendingTx()).catch(console.error);
-    history.goBack();
+    history.push(DEFAULT_ROUTE);
   };
 
   return (
