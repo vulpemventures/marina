@@ -101,11 +101,7 @@ export const getInvoiceExpireDate = (invoice: string): number => {
 }
 
 // validates if we can redeem with this redeem script
-const validReverseSwapReedemScript = (
-  preimage: Buffer,
-  pubKey: string,
-  redeemScript: string
-) => {
+const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
   const scriptAssembly = script
     .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
     .split(' ');
