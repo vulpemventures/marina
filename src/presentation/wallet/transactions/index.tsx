@@ -96,13 +96,13 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   };
   const handleLightningSelection = (lightning: boolean) => {
     if (lightning) {
-      if (action === 'send') history.push(LIGHTNING_ENTER_INVOICE_ROUTE)
-      if (action === 'receive') history.push(LIGHTNING_ENTER_AMOUNT_ROUTE)
+      if (action === 'send') history.push(LIGHTNING_ENTER_INVOICE_ROUTE);
+      if (action === 'receive') history.push(LIGHTNING_ENTER_AMOUNT_ROUTE);
     } else {
-      if (action === 'send') history.push(SEND_ADDRESS_AMOUNT_ROUTE)
-      if (action === 'receive') history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`)
+      if (action === 'send') history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+      if (action === 'receive') history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`);
     }
-  }
+  };
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
   const handleOpenExplorer = async () => {
