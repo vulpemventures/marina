@@ -1,8 +1,17 @@
 import bolt11, { TagData } from 'bolt11';
-import { constructClaimTransaction, OutputType } from 'boltz-core-liquid';
 import { fetchTxHex, Outpoint, AddressInterface, NetworkString } from 'ldk';
 import { MnemonicAccount } from '../../domain/account';
-import { address, crypto, script, Transaction } from 'liquidjs-lib';
+import {
+  address,
+  AssetHash,
+  confidential,
+  crypto,
+  script,
+  Transaction,
+  networks,
+  Psbt,
+  witnessStackToScriptWitness,
+} from 'liquidjs-lib';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
 import { fromSatoshi } from './format';
 
@@ -35,10 +44,8 @@ const validSwapReedemScript = (redeemScript: string, refundPublicKey: string) =>
   return scriptAssembly.join() === expectedScript.join();
 };
 
-export const isValidSubmarineSwap = (
-  redeemScript: string,
-  refundPublicKey: string
-): boolean => validSwapReedemScript(redeemScript, refundPublicKey);
+export const isValidSubmarineSwap = (redeemScript: string, refundPublicKey: string): boolean =>
+  validSwapReedemScript(redeemScript, refundPublicKey);
 
 // Reverse submarine swaps
 
@@ -59,11 +66,7 @@ const reverseSwapAddressDerivesFromScript = (lockupAddress: string, redeemScript
 };
 
 // validates if we can redeem with this redeem script
-const validReverseSwapReedemScript = (
-  preimage: Buffer,
-  pubKey: string,
-  redeemScript: string
-) => {
+const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
   const scriptAssembly = script
     .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
     .split(' ');
@@ -132,29 +135,58 @@ export const getClaimTransaction = async (
   // utxo has arrived, prepare claim transaction
   const [utxo] = utxos;
   const hex = await fetchTxHex(utxo.txid, explorerURL);
-  const transaction = Transaction.fromHex(hex);
-  const { script, value, asset, nonce } = transaction.outs[utxo.vout];
+  const prevout = Transaction.fromHex(hex).outs[utxo.vout];
 
-  // very unsafe, migrate to Psbt approach to claim the funds soon
+  const tx = new Psbt({ network: (networks as any)[network] });
+
+  // add the lockup utxo of Boltz
+  tx.addInput({
+    hash: utxo.txid,
+    index: utxo.vout,
+    witnessUtxo: prevout,
+    witnessScript: Buffer.from(redeemScript, 'hex'),
+  });
+
+  const LBTC = AssetHash.fromHex(lbtcAssetByNetwork(network), false).bytes;
+  const EMPTY_BUFFER = Buffer.alloc(0);
+
+  const feeAmount = 300;
+  const claimValue = confidential.confidentialValueToSatoshi(prevout.value) - feeAmount;
+
+  // add our destination script
+  tx.addOutput({
+    script: address.toOutputScript(addr.confidentialAddress),
+    value: confidential.satoshiToConfidentialValue(claimValue),
+    asset: LBTC,
+    nonce: EMPTY_BUFFER,
+  });
+  tx.addOutput({
+    script: EMPTY_BUFFER,
+    value: confidential.satoshiToConfidentialValue(feeAmount),
+    asset: LBTC,
+    nonce: EMPTY_BUFFER,
+  });
+
   const keyPairUnsafe = account.getSigningKeyUnsafe(password, addr.derivationPath!, network);
-  return constructClaimTransaction(
-    [
-      {
-        keys: keyPairUnsafe,
-        redeemScript: Buffer.from(redeemScript, 'hex'),
+  const stx = tx.signInput(0, keyPairUnsafe);
+
+  // TODO don't use account.getSigningKeyUnsafe
+  // const identity = await account.getSigningIdentity(password, network);
+  // const signedTxBase64 = await identity.signPset(tx.toBase64());
+  // const stx = Psbt.fromBase64(signedTxBase64);
+
+  //stx.validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc));
+  stx.finalizeInput(0, (_, input) => {
+    return {
+      finalScriptSig: undefined,
+      finalScriptWitness: witnessStackToScriptWitness([
+        input.partialSig![0].signature,
         preimage,
-        type: OutputType.Bech32,
-        txHash: transaction.getHash(),
-        vout: utxo.vout,
-        script,
-        value,
-        asset,
-        nonce,
-      },
-    ],
-    address.toOutputScript(addr.confidentialAddress),
-    1,
-    true,
-    lbtcAssetByNetwork(network)
-  );
+        Buffer.from(redeemScript, 'hex'),
+      ]),
+    };
+  });
+
+  const txHex = stx.extractTransaction().toHex();
+  return Transaction.fromHex(txHex);
 };
