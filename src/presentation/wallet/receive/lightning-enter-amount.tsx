@@ -11,7 +11,10 @@ import { fromSatoshi, toSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
+import {
+  incrementAddressIndex,
+  incrementChangeAddressIndex,
+} from '../../../application/redux/actions/wallet';
 import { broadcastTx } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
 import LightningResultView from './lightning-result';
@@ -118,8 +121,8 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
 
       // claim pub key
       const identity = await account.getWatchIdentity(network);
-      const addr = await identity.getNextAddress();
-      const pubKey = addr.publicKey!;
+      const nextAddress = await identity.getNextAddress();
+      const pubKey = nextAddress.publicKey!;
       await dispatch(incrementAddressIndex(account.getAccountID(), network));
 
       // create reverse submarine swap
@@ -148,6 +151,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       let maxNumOfCycles = expireTime / waitPerCycle;
 
       // wait for utxo to arrive
+      // we assume the utxo is unconfidential
       let utxos: Outpoint[] = [];
       while (utxos.length === 0 && maxNumOfCycles > 0) {
         await sleep(waitPerCycle * 1000);
@@ -166,7 +170,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       // get claim transaction
       const claimTransaction = await getClaimTransaction(
         account,
-        addr,
+        nextAddress,
         explorerURL,
         network,
         password,
