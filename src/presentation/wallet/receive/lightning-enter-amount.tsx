@@ -11,10 +11,7 @@ import { fromSatoshi, toSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
 import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import {
-  incrementAddressIndex,
-  incrementChangeAddressIndex,
-} from '../../../application/redux/actions/wallet';
+import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { broadcastTx } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
 import LightningResultView from './lightning-result';
