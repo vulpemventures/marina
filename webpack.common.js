@@ -6,6 +6,7 @@ const { ProvidePlugin } = require('webpack');
 module.exports = {
   experiments: {
     topLevelAwait: true,
+    asyncWebAssembly: true,
   },
   entry: {
     'index': './src/presentation/index.tsx',
@@ -22,10 +23,10 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      "crypto": require.resolve("crypto-browserify"), 
-      "stream": require.resolve("stream-browserify"), 
-      "path": require.resolve("path-browserify"), 
-      "fs": false,
+      "crypto": require.resolve("crypto-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "path": require.resolve("path-browserify"),
+      "fs": false
     },
     alias: {
       "./wasm_loader.js": path.resolve(__dirname, 'src/ecclib.ts'),
@@ -42,12 +43,13 @@ module.exports = {
     new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: './public' }, 
+        { from: './public' },
       ],
     }),
   ],
-  output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
-  experiments: {
-    asyncWebAssembly: true
-  }
+  output: {
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: '',
+  },
 };
