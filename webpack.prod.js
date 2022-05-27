@@ -9,11 +9,10 @@ module.exports = merge(common, {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        parallel: true,
         terserOptions: {
           ecma: 6,
-          output: { 
-             ascii_only: true 
+          mangle: {
+            reserved: ['Buffer']
           },
         },
       }),

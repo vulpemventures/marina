@@ -1,3 +1,5 @@
+/// <reference types="cypress" />
+
 import { testAppURL } from './../../src/application/constants/cypress';
 
 describe('My First Test', () => {
