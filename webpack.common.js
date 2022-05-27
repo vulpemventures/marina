@@ -4,6 +4,10 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { ProvidePlugin } = require('webpack');
 
 module.exports = {
+  experiments: {
+    topLevelAwait: true,
+    asyncWebAssembly: true,
+  },
   entry: {
     'index': './src/presentation/index.tsx',
     'background-script': './src/background/background-script.ts',
@@ -12,16 +16,22 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: 'ts-loader', options: { allowTsInNodeModules: true } },
+      { test: /\.wasm$/, type: 'asset/inline' },
+      { test: /\.tsx?$/, loader: 'ts-loader', options: { configFile: 'tsconfig.json', allowTsInNodeModules: true } },
       { test: /\.css$/i, include: path.resolve(__dirname, 'src'), use: ['style-loader', 'css-loader', 'postcss-loader'] },
     ],
   },
   resolve: {
-    fallback: { 
-      "crypto": require.resolve("crypto-browserify"), 
-      "stream": require.resolve("stream-browserify"), 
-      "path": require.resolve("path-browserify"), 
-      "fs": false 
+    fallback: {
+      "crypto": require.resolve("crypto-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "path": require.resolve("path-browserify"),
+      "fs": false
+    },
+    alias: {
+      "./wasm_loader.js": path.resolve(__dirname, 'src/ecclib.ts'),
+      "./wasm_loader.browser.js": path.resolve(__dirname, 'src/ecclib.ts'),
+      "tiny-secp256k1-lib": path.resolve(__dirname, 'node_modules/tiny-secp256k1/lib'),
     },
     extensions: ['.tsx', '.ts', '.js'],
   },
@@ -33,12 +43,13 @@ module.exports = {
     new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: './public' }, 
+        { from: './public' },
       ],
     }),
   ],
-  output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
-  experiments: {
-    asyncWebAssembly: true
-  }
+  output: {
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: '',
+  },
 };
