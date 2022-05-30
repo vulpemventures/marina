@@ -16,7 +16,7 @@ const ModalSelectNetwork: React.FC<Props> = ({ isOpen, onClose, onLightning, onL
 
   return (
     <div className="fixed bottom-0 z-50 flex">
-      <div className="min-h-60 p-8 m-auto bg-white rounded-t-lg" ref={ref}>
+      <div className="min-h-60 p-8 m-auto bg-white rounded-t-lg shadow-md" ref={ref}>
         <div className="flex flex-col justify-between flex-1">
           <h1 className="mb-4 text-lg">Select network</h1>
           <div className="flex justify-center">
