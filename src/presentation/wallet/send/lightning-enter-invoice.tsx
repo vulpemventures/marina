@@ -21,13 +21,15 @@ import {
   setPendingTxStep,
 } from '../../../application/redux/actions/transaction';
 import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
+import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import { lbtcAssetByNetwork } from '../../../application/utils/network';
 
 export interface LightningInvoiceProps {
+  balances: BalancesByAsset;
   network: NetworkString;
-  explorerURL: string;
 }
 
-const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ explorerURL, network }) => {
+const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ balances, network }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const history = useHistory();
@@ -39,6 +41,9 @@ const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ explorerURL, ne
   const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
   const [touched, setTouched] = useState(false);
   const [value, setValue] = useState(0);
+
+  const lbtcAssetHash = lbtcAssetByNetwork(network);
+  const lbtcBalance = balances[lbtcAssetHash];
 
   const boltz = new Boltz(network);
 
@@ -82,6 +87,7 @@ const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ explorerURL, ne
       if (value <= 0) setError('Value must be positive');
       if (value < limits.minimal) setError(`Value must be higher then ${limits.minimal}`);
       if (value > limits.maximal) setError(`Value must be lower then ${limits.maximal}`);
+      if (value > fromSatoshi(lbtcBalance)) setError('Insufficient funds');
       if (error) return;
 
       setInvoice(invoice);
