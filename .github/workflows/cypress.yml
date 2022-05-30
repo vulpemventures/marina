@@ -32,6 +32,3 @@ jobs:
 
       - name: Build the app for Cypress
         run: yarn run cypress:build
-
-      # - name: Cypress test
-      #   run: yarn cypress:run
