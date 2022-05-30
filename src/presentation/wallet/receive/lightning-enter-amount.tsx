@@ -89,7 +89,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       return;
     }
 
-    if (Number(value) <= limits.minimal) {
+    if (Number(value) < limits.minimal) {
       setErrors({ amount: `Number must be higher then ${limits.minimal}`, submit: '' });
       setValues({ amount: value });
       return;
