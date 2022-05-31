@@ -4,14 +4,14 @@ import { DEFAULT_ROUTE } from '../routes/constants';
 import ButtonAsset from './button-asset';
 import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
-import type { BalancesByAsset } from '../../application/redux/selectors/balance.selector';
-import type { Asset } from '../../domain/assets';
+import { BalancesByAsset } from '../../application/redux/selectors/balance.selector';
+import { AssetSwap } from '../../domain/assets';
 import ButtonList from './button-list';
 import { sortAssets } from '../utils/sort';
 import ModalSelectNetwork from './modal-select-network';
 
 export interface AssetListProps {
-  assets: Array<Asset & { assetHash: string; canSubmarineSwap: boolean }>; // the assets to display
+  assets: AssetSwap[]; // the assets to display
   onClick: (assetHash: string, isSubmarineSwap: boolean) => Promise<void>;
   balances?: BalancesByAsset;
   title: string;

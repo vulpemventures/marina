@@ -7,6 +7,11 @@ export type Asset = {
   ticker: string;
 };
 
+export type AssetSwap = Asset & {
+  assetHash: string;
+  canSubmarineSwap: boolean;
+};
+
 export type AssetGetter = (assetHash: string) => Asset & { assetHash: string };
 
 export function assetGetterFromIAssets(assets: IAssets): AssetGetter {
