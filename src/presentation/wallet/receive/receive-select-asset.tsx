@@ -1,13 +1,13 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_ROUTE } from '../../routes/constants';
-import { Asset } from '../../../domain/assets';
+import { AssetSwap } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
 import { NetworkString } from 'ldk';
 
 export interface ReceiveSelectAssetProps {
   network: NetworkString;
-  assets: Array<Asset & { assetHash: string; canSubmarineSwap: boolean }>;
+  assets: AssetSwap[];
 }
 
 const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, assets }) => {
@@ -29,7 +29,7 @@ const ReceiveSelectAssetView: React.FC<ReceiveSelectAssetProps> = ({ network, as
   );
 };
 
-const UnknowAsset: Asset & { assetHash: string; canSubmarineSwap: boolean } = {
+const UnknowAsset: AssetSwap = {
   ticker: 'Any',
   name: 'New asset',
   precision: 8,

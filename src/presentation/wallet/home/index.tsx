@@ -17,21 +17,21 @@ import { fromSatoshiStr } from '../../utils';
 import { getAssetImage } from '../../../application/utils/constants';
 import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { Asset, AssetGetter } from '../../../domain/assets';
+import { AssetSwap } from '../../../domain/assets';
 import { sortAssets } from '../../utils/sort';
 
 export interface HomeProps {
   lbtcAssetHash: string;
-  getAsset: AssetGetter;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
+  assets: AssetSwap[];
 }
 
 const HomeView: React.FC<HomeProps> = ({
   lbtcAssetHash,
-  getAsset,
   transactionStep,
   assetsBalance,
+  assets,
 }) => {
   const history = useHistory();
 
@@ -55,22 +55,11 @@ const HomeView: React.FC<HomeProps> = ({
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
-  // return assets based on balances by asset
-  const assets = (balances: BalancesByAsset) => {
-    return Object.keys(balances).map((assetHash: string) => {
-      const canSubmarineSwap = [lbtcAssetHash].includes(assetHash);
-      return {
-        ...getAsset(assetHash),
-        canSubmarineSwap,
-      };
-    });
-  };
-
   // sorted assets
-  const [sortedAssets, setSortedAssets] = useState(sortAssets(assets(assetsBalance)));
+  const [sortedAssets, setSortedAssets] = useState(sortAssets(assets));
 
   useEffect(() => {
-    setSortedAssets(sortAssets(assets(assetsBalance)));
+    setSortedAssets(sortAssets(assets));
   }, [assetsBalance]);
 
   useEffect(() => {
@@ -113,13 +102,7 @@ const HomeView: React.FC<HomeProps> = ({
           <ButtonList title="Assets" emptyText="You don't own any asset...">
             {sortedAssets.map(
               (
-                {
-                  assetHash,
-                  name,
-                  ticker,
-                  precision,
-                  canSubmarineSwap,
-                }: Asset & { assetHash: string; canSubmarineSwap: boolean },
+                { assetHash, name, ticker, precision, canSubmarineSwap }: AssetSwap,
                 index: React.Key
               ) => {
                 return (

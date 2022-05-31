@@ -6,13 +6,13 @@ import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
 import { getAssetImage } from '../../application/utils/constants';
 import { BalancesByAsset } from '../../application/redux/selectors/balance.selector';
-import { Asset } from '../../domain/assets';
+import { AssetSwap } from '../../domain/assets';
 import ButtonList from './button-list';
 import { sortAssets } from '../utils/sort';
 import ModalSelectNetwork from './modal-select-network';
 
 export interface AssetListProps {
-  assets: Array<Asset & { assetHash: string; canSubmarineSwap: boolean }>; // the assets to display
+  assets: AssetSwap[]; // the assets to display
   onClick: (assetHash: string, isSubmarineSwap: boolean) => Promise<void>;
   balances?: BalancesByAsset;
   title: string;
