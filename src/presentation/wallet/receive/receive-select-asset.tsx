@@ -34,7 +34,7 @@ const UnknowAsset: AssetSwap = {
   ticker: 'Any',
   name: 'New asset',
   precision: 8,
-  assetHash: 'new_asset',
+  assetHash: '',
   canSubmarineSwap: false,
 };
 
