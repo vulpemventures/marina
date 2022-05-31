@@ -5,6 +5,7 @@ import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_ROUTE } from '../../route
 import { AssetSwap } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
 import type { NetworkString } from 'ldk';
+import { UNKNOWN_ASSET_HASH } from '../../../application/utils/constants';
 
 export interface ReceiveSelectAssetProps {
   network: NetworkString;
@@ -34,7 +35,7 @@ const UnknowAsset: AssetSwap = {
   ticker: 'Any',
   name: 'New asset',
   precision: 8,
-  assetHash: '',
+  assetHash: UNKNOWN_ASSET_HASH,
   canSubmarineSwap: false,
 };
 
