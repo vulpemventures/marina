@@ -61,7 +61,7 @@ export default class Boltz {
       orderSide: 'sell',
     };
     const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };
-    return await this.callCreateSwap(params);
+    return this.callCreateSwap(params);
   };
 
   createReverseSubmarineSwap = async (
@@ -73,7 +73,7 @@ export default class Boltz {
       orderSide: 'buy',
     };
     const params: CreateSwapCommonRequest & ReverseSubmarineSwapRequest = { ...base, ...req };
-    return await this.callCreateSwap(params);
+    return this.callCreateSwap(params);
   };
 
   getPair = async (pair: string) => {
