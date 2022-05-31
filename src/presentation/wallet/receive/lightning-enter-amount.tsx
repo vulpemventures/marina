@@ -25,7 +25,6 @@ import {
   getInvoiceExpireDate,
   isValidReverseSubmarineSwap,
 } from '../../utils/boltz';
-
 export interface LightningAmountProps {
   network: NetworkString;
   explorerURL: string;
