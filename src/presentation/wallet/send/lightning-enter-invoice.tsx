@@ -86,7 +86,7 @@ const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ lbtcBalance, ne
       if (error) return;
 
       setInvoice(invoice);
-    } catch (err: any) {
+    } catch (_) {
       setError('Invalid invoice');
     }
   };
