@@ -20,10 +20,9 @@ import { debounce } from 'lodash';
 import {
   DEFAULT_LIGHTNING_LIMITS,
   getClaimTransaction,
-  getInvoiceTag,
+  getInvoiceExpireDate,
   isValidReverseSubmarineSwap,
 } from '../../utils/boltz';
-
 export interface LightningAmountProps {
   network: NetworkString;
   explorerURL: string;
@@ -143,21 +142,18 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       setIsLookingForPayment(true);
 
       // check invoice expiration
-      const expireTime = Number(getInvoiceTag(invoice, 'expire_time')); // 3600 seconds
-      const waitPerCycle = 5; // 5 seconds
-      let maxNumOfCycles = expireTime / waitPerCycle;
+      const invoiceExpireDate = Number(getInvoiceExpireDate(invoice));
 
       // wait for utxo to arrive
       // we assume the utxo is unconfidential
       let utxos: Outpoint[] = [];
-      while (utxos.length === 0 && maxNumOfCycles > 0) {
-        await sleep(waitPerCycle * 1000);
+      while (utxos.length === 0 && Date.now() <= invoiceExpireDate) {
         utxos = await fetchUtxos(lockupAddress, explorerURL);
-        maxNumOfCycles -= 1;
+        await sleep(5000);
       }
 
       // payment was never made, and the invoice expired
-      if (maxNumOfCycles === 0) {
+      if (utxos.length === 0) {
         setErrors({ submit: 'Invoice has expired', amount: '' });
         setIsSubmitting(false);
         setIsLookingForPayment(false);
@@ -181,8 +177,8 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
 
       // update states
       setTxID(txid);
-      setIsLookingForPayment(false);
       setIsSubmitting(false);
+      setIsLookingForPayment(false);
     } catch (err: any) {
       setErrors({ submit: err.message, amount: '' });
       setIsSubmitting(false);
