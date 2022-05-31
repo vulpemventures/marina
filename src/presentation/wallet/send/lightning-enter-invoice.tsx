@@ -21,15 +21,13 @@ import {
   setPendingTxStep,
 } from '../../../application/redux/actions/transaction';
 import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
-import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { lbtcAssetByNetwork } from '../../../application/utils/network';
 
 export interface LightningInvoiceProps {
-  balances: BalancesByAsset;
+  lbtcBalance: number;
   network: NetworkString;
 }
 
-const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ balances, network }) => {
+const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ lbtcBalance, network }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const history = useHistory();
@@ -41,9 +39,6 @@ const LightningInvoiceView: React.FC<LightningInvoiceProps> = ({ balances, netwo
   const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
   const [touched, setTouched] = useState(false);
   const [value, setValue] = useState(0);
-
-  const lbtcAssetHash = lbtcAssetByNetwork(network);
-  const lbtcBalance = balances[lbtcAssetHash];
 
   const boltz = new Boltz(network);
 
