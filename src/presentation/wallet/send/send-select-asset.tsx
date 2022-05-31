@@ -5,14 +5,14 @@ import { useDispatch } from 'react-redux';
 import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import type { Asset } from '../../../domain/assets';
+import { AssetSwap } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
 import { NetworkString } from 'ldk';
 
 export interface SendSelectAssetProps {
   network: NetworkString;
   balances: BalancesByAsset;
-  balanceAssets: Array<Asset & { assetHash: string; canSubmarineSwap: boolean }>;
+  balanceAssets: AssetSwap[];
 }
 
 const SendSelectAssetView: React.FC<SendSelectAssetProps> = ({

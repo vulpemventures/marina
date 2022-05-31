@@ -1,4 +1,4 @@
-import type { Asset } from '../../domain/assets';
+import { AssetSwap } from '../../domain/assets';
 
 /**
  * Takes a list of assets, and sort it by the following criteria:
@@ -7,13 +7,11 @@ import type { Asset } from '../../domain/assets';
  * @param assets list of assets in no particular order
  * @returns assets sorted by criteria defined above
  */
-export function sortAssets(
-  assets: (Asset & { assetHash: string; canSubmarineSwap: boolean })[]
-): (Asset & { assetHash: string; canSubmarineSwap: boolean })[] {
+export function sortAssets(assets: AssetSwap[]): AssetSwap[] {
   let newAsset;
   const newAssetTicker = 'Any';
   const sortedFeaturedTickers = ['L-BTC', 'USDT', 'LCAD'];
-  const featuredAssets: (Asset & { assetHash: string; canSubmarineSwap: boolean })[] = [];
+  const featuredAssets: AssetSwap[] = [];
   // push featured assets in order
   for (const ticker of sortedFeaturedTickers) {
     for (const asset of assets) {
