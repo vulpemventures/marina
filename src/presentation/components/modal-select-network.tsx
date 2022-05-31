@@ -23,7 +23,7 @@ const ModalSelectNetwork: React.FC<Props> = ({ isOpen, onClose, onLightning, onL
             <div className="h-15 p-2" onClick={onLiquid}>
               <img
                 className="h-10 mt-0.5 block mx-auto mb-2"
-                src={'assets/images/networks/liquid.svg'}
+                src="assets/images/networks/liquid.svg"
                 alt="liquid network logo"
               />
               <p className="text-xs">Liquid Network</p>
@@ -31,7 +31,7 @@ const ModalSelectNetwork: React.FC<Props> = ({ isOpen, onClose, onLightning, onL
             <div className="h-15 p-2" onClick={onLightning}>
               <img
                 className="h-10 mt-0.5 block mx-auto mb-2"
-                src={'assets/images/networks/lightning.svg'}
+                src="assets/images/networks/lightning.svg"
                 alt="lightning network logo"
               />
               <p className="text-xs">Lightning Network</p>
