@@ -12,6 +12,8 @@ export const feeLevelToSatsPerByte: { [key: string]: number } = {
 
 const getLocalImagePath = (asset: string) => `/assets/images/liquid-assets/${asset}`;
 
+export const UNKNOWN_ASSET_HASH = 'new_asset';
+
 // featured assets
 const featuredAssets = {
   lbtc: {
@@ -46,6 +48,7 @@ const getRemoteImagePath = (hash: string) => `https://liquid.network/api/v1/asse
 // and return the correct asset icon path (with asset hash from mainnet)
 export function getAssetImagePath(assetHash: string): string {
   if (!assetHash) return getLocalImagePath('unknown.svg');
+  if (!assetHash || assetHash === UNKNOWN_ASSET_HASH) return getLocalImagePath('unknown.svg');
   const localImagePath = featuredAssetsMap.get(assetHash);
   if (localImagePath) return localImagePath;
   return getRemoteImagePath(assetHash);
