@@ -122,6 +122,11 @@ export const getInvoiceValue = (invoice: string): number => {
   return 0;
 };
 
+export const getInvoiceExpireDate = (invoice: string): number => {
+  const { timeExpireDate } = bolt11.decode(invoice);
+  return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
+};
+
 export const getClaimTransaction = async (
   account: MnemonicAccount,
   addr: AddressInterface,
