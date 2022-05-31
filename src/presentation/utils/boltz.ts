@@ -1,5 +1,5 @@
 import bolt11, { TagData } from 'bolt11';
-import { fetchTxHex, Outpoint, AddressInterface, NetworkString } from 'ldk';
+import { fetchTxHex, Outpoint, AddressInterface, NetworkString, getNetwork } from 'ldk';
 import { MnemonicAccount } from '../../domain/account';
 import {
   address,
@@ -8,7 +8,6 @@ import {
   crypto,
   script,
   Transaction,
-  networks,
   Psbt,
   witnessStackToScriptWitness,
 } from 'liquidjs-lib';
@@ -142,7 +141,7 @@ export const getClaimTransaction = async (
   const hex = await fetchTxHex(utxo.txid, explorerURL);
   const prevout = Transaction.fromHex(hex).outs[utxo.vout];
 
-  const tx = new Psbt({ network: (networks as any)[network] });
+  const tx = new Psbt({ network: getNetwork(network) });
 
   // add the lockup utxo of Boltz
   tx.addInput({
