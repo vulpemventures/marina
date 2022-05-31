@@ -32,7 +32,7 @@ const LightningResultView = ({
     lookingForPayment && !isSet(txID) ? (
       <p className="mb-4 text-xs font-medium whitespace-pre">⏳ Waiting for payment...</p>
     ) : !lookingForPayment && isSet(txID) ? (
-      <p className="my-auto text-xs font-medium whitespace-pre">✅ Invoice paid!</p>
+      <p className="my-auto text-xs font-medium whitespace-pre">✅  Invoice paid!</p>
     ) : null;
 
   const AuxiliarButton = ({ children }: { children: React.ReactNode }) => (
