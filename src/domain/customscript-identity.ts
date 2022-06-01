@@ -58,6 +58,7 @@ function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32I
 interface ExtendedTaprootAddressInterface extends AddressInterface {
   result: TemplateResult;
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
+  publicKey: string;
 }
 
 export type TaprootAddressInterface = AddressInterface &
@@ -75,6 +76,7 @@ function asTaprootAddressInterface(
     derivationPath: extended.derivationPath,
     taprootHashTree: extended.result.taprootHashTree,
     taprootInternalKey: extended.result.taprootInternalKey,
+    publicKey: extended.publicKey,
   };
 }
 
@@ -305,6 +307,14 @@ export class CustomScriptIdentity
     return Buffer.from(this.ecclib.signSchnorr(msg, signer.privateKey!, Buffer.alloc(32)));
   }
 
+  /**
+   * 1. marina don't know the leaf to use
+   *    1.a marina try to find an auto-spendable leaf (= leaf with only marina signature needed)
+   *    1.b go to 2.a
+   * 2. marina knwows the leaf to use (via psbt taproot field tapLeafScript)
+   *    2.a if the leaf contains marina signature -> sign and add tapLeafSig to input
+   *    2.b if the leaf doesn't contain marina signature -> skip
+   */
   signPset(psetBase64: string): Promise<string> {
     const pset = Psbt.fromBase64(psetBase64); // we'll mutate the pset to sign with signature if needed
 
@@ -373,7 +383,7 @@ export class CustomScriptIdentity
             pset.updateInput(index, {
               tapLeafScript: [
                 {
-                  leafVersion: 0xc4,
+                  leafVersion: 0xc4, // elements tapscript version
                   script: Buffer.from(leafScript, 'hex'),
                   controlBlock: taprootSignScriptStack[1],
                 },
