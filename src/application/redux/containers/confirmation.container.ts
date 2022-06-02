@@ -7,7 +7,6 @@ import ConfirmationView, {
 
 const mapStateToProps = (state: RootReducerState): ConfirmationProps => ({
   transaction: state.transaction,
-  network: state.app.network,
   getAsset: assetGetterFromIAssets(state.assets),
 });
 

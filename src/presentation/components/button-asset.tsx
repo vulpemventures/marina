@@ -1,12 +1,11 @@
 import React from 'react';
-import { onErrorImg } from '../../application/utils/constants';
 import { formatAssetName, formatDecimalAmount, fromSatoshi } from '../utils';
+import AssetIcon from './assetIcon';
 
 interface Props {
   assetHash: string;
   assetName: string;
   assetTicker: string;
-  assetImgPath: string;
   assetPrecision: number;
   canSubmarineSwap: boolean;
   disabled?: boolean;
@@ -27,7 +26,6 @@ const ButtonAsset: React.FC<Props> = ({
   assetHash,
   assetName,
   assetTicker,
-  assetImgPath,
   assetPrecision,
   canSubmarineSwap,
   disabled = false,
@@ -45,12 +43,7 @@ const ButtonAsset: React.FC<Props> = ({
       type={type}
     >
       <div className="flex flex-row items-center">
-        <img
-          className="w-8 mr-1.5"
-          src={assetImgPath}
-          alt="liquid asset icon"
-          onError={onErrorImg}
-        />
+        <AssetIcon assetHash={assetHash} className="w-8 mr-1.5" />
         <div className="flex flex-col text-left">
           <span className="text-grayDark text-sm font-medium">{formatAssetName(assetName)}</span>
           <span className="text-grayLight text-xs font-medium">{assetTicker}</span>

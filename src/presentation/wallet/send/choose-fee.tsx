@@ -33,8 +33,7 @@ import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
 import { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
-import { AnyAction } from 'redux';
-import { getAssetImage } from '../../../application/utils/constants';
+import type { AnyAction } from 'redux';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
 
@@ -173,10 +172,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     }
   };
 
-  const getFeeCurrencyImgPath = (): string => {
-    return getAssetImage(feeAsset || '');
-  };
-
   return (
     <ShellPopUp
       backBtnCb={handleBackBtn}
@@ -186,7 +181,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     >
       <Balance
         assetBalance={formatDecimalAmount(fromSatoshi(balances[feeAsset || lbtcAssetHash] ?? 0))}
-        assetImgPath={getFeeCurrencyImgPath()}
         assetHash={sendAsset}
         assetTicker={assets[feeAsset || '']?.ticker ?? ''}
         className="mt-4"
