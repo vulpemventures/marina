@@ -8,6 +8,7 @@ import { DEFAULT_ROUTE } from '../../routes/constants';
 
 interface LocationState {
   txid: string;
+  text?: string;
 }
 
 export interface PaymentSuccessProps {
@@ -30,6 +31,8 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
 
   const handleBackToHome = () => history.push(DEFAULT_ROUTE);
 
+  const text = state.text || 'Payment successful !';
+
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -37,7 +40,7 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
       currentPage="Success"
       hasBackBtn={false}
     >
-      <h1 className="mt-8 text-lg font-medium">Payment successful !</h1>
+      <h1 className="mt-8 text-lg font-medium">{text}</h1>
       <div className="flex items-center justify-center px-20 mt-8" ref={checkmarkLoaderRef} />
       <Button className="w-44 container mx-auto mt-10" onClick={handleOpenExplorer} textBase={true}>
         See in Explorer
