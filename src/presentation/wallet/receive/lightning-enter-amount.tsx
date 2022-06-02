@@ -14,7 +14,7 @@ import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { broadcastTx } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
-import LightningResultView from './lightning-result';
+import LightningShowInvoiceView from './lightning-show-invoice';
 import ModalUnlock from '../../components/modal-unlock';
 import { debounce } from 'lodash';
 import {
@@ -23,6 +23,7 @@ import {
   getInvoiceExpireDate,
   isValidReverseSubmarineSwap,
 } from '../../utils/boltz';
+import { SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 export interface LightningAmountProps {
   network: NetworkString;
   explorerURL: string;
@@ -41,7 +42,6 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
   const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [txID, setTxID] = useState('');
   const [values, setValues] = useState({ amount: '' });
 
   const boltz = new Boltz(network);
@@ -175,10 +175,11 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       // broadcast claim transaction
       const txid = await broadcastTx(explorerURL, claimTransaction.toHex());
 
-      // update states
-      setTxID(txid);
-      setIsSubmitting(false);
-      setIsLookingForPayment(false);
+      // push to success page
+      history.push({
+        pathname: SEND_PAYMENT_SUCCESS_ROUTE,
+        state: { txid },
+      });
     } catch (err: any) {
       setErrors({ submit: err.message, amount: '' });
       setIsSubmitting(false);
@@ -192,18 +193,13 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
 
   return (
     <ShellPopUp
-      backBtnCb={isSubmitting || lookingForPayment || isSet(txID) ? handleBackBtn : undefined}
+      backBtnCb={isSubmitting || lookingForPayment ? handleBackBtn : undefined}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent bg-primary flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Receive⚡️"
     >
       {invoice && isSet(invoice) ? (
-        <LightningResultView
-          errors={errors}
-          invoice={invoice}
-          lookingForPayment={lookingForPayment}
-          txID={txID}
-        />
+        <LightningShowInvoiceView errors={errors} invoice={invoice} />
       ) : (
         <div className="w-full h-full p-10 bg-white">
           <form className="mt-10">
