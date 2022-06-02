@@ -118,16 +118,16 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     return this.store.getState();
   }
 
-  private async reloadCoins(store: BrokerProxyStore) {
+  private async reloadCoins(ids: AccountID[]) {
     const network = selectNetwork(this.state);
-    const allAccountsIds = selectAllAccountsIDs(this.state);
     const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
-    allAccountsIds.map(makeUpdateTaskForId).map((x: any) => store.dispatch(x));
+    if (ids.length === 0) return;
+    await Promise.all(ids.map(makeUpdateTaskForId).map((x: any) => this.store?.dispatchAsync(x)));
     // wait for updates to finish, give it 1 second to start the update
     // we need to sleep to free the event loop to take care of the update tasks
     do {
       await sleep(1000);
-    } while (store.getState().wallet.updaterLoaders !== 0);
+    } while (this.store?.getState().wallet.updaterLoaders !== 0);
   }
 
   private accountExists(name: string): boolean {
@@ -158,6 +158,12 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         await addUnconfirmedUtxos(signedTxHex, changeUtxos, MainAccountID, selectNetwork(state))
       );
     }
+  }
+
+  private handleIdsParam(ids?: AccountID[]): AccountID[] {
+    if (!ids) return selectAllAccountsIDs(this.state);
+    if (ids.length === 0) return [];
+    return ids;
   }
 
   private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
@@ -191,9 +197,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getAddresses': {
           this.checkHostnameAuthorization();
+          const accountIds = this.handleIdsParam(params ? params[0] : undefined);
           const net = selectNetwork(this.state);
-          const watchOnlyIdentity = await this.accountSelector(this.state).getWatchIdentity(net);
-          return successMsg(await watchOnlyIdentity.getAddresses());
+
+          const identities = await Promise.all(accountIds.map(selectAccount).map(f => f(this.state).getWatchIdentity(net)));
+          const addresses = await Promise.all(identities.map(identity => identity.getAddresses()));
+
+          return successMsg(addresses);
         }
 
         case 'getNextAddress': {
@@ -297,13 +307,15 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getTransactions': {
           this.checkHostnameAuthorization();
-          const transactions = selectTransactions(this.selectedAccount)(this.state);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+          const transactions = selectTransactions(...accountsIDs)(this.state);
           return successMsg(transactions);
         }
 
         case 'getCoins': {
           this.checkHostnameAuthorization();
-          const coins = selectUtxos(this.selectedAccount)(this.state);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+          const coins = selectUtxos(...accountsIDs)(this.state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
@@ -317,7 +329,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getBalances': {
           this.checkHostnameAuthorization();
-          const balances = selectBalances(this.selectedAccount)(this.state);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+          const balances = selectBalances(...accountsIDs)(this.state);
           const assetGetter = assetGetterFromIAssets(this.state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
@@ -345,7 +358,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'reloadCoins': {
           this.checkHostnameAuthorization();
-          await this.reloadCoins(this.store);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+
+          await this.reloadCoins(accountsIDs);
           return successMsg();
         }
 
