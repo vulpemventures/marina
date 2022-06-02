@@ -374,11 +374,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
           const [covenant, changeCovenant] = params as [DescriptorTemplate, DescriptorTemplate?];
           if (!validate(covenant.template)) {
-            throw new Error('Invalid template');
+            throw new Error(`Invalid template ${covenant.template}`);
           }
 
           if (changeCovenant && !validate(changeCovenant.template)) {
-            throw new Error('Invalid change template');
+            throw new Error(`Invalid change template ${changeCovenant.template}`);
           }
 
           await this.store.dispatchAsync(
