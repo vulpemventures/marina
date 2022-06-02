@@ -203,7 +203,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const identities = await Promise.all(accountIds.map(selectAccount).map(f => f(this.state).getWatchIdentity(net)));
           const addresses = await Promise.all(identities.map(identity => identity.getAddresses()));
 
-          return successMsg(addresses);
+          return successMsg(addresses.flat());
         }
 
         case 'getNextAddress': {
