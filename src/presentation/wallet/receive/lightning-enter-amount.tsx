@@ -178,7 +178,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       // push to success page
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txid },
+        state: { txid, text: 'Invoice paid !' },
       });
     } catch (err: any) {
       setErrors({ submit: err.message, amount: '' });
