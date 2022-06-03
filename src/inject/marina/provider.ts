@@ -1,7 +1,8 @@
 import type {
+  AccountID,
   AddressInterface,
   Balance,
-  DescriptorTemplate,
+  Template,
   MarinaEventType,
   MarinaProvider,
   PsetBase64,
@@ -10,6 +11,7 @@ import type {
   SignedMessage,
   Transaction,
   Utxo,
+  AccountInfo,
 } from 'marina-provider';
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
@@ -24,6 +26,14 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     this.eventHandler = new MarinaEventHandler();
   }
 
+  getAccountsIDs(): Promise<string[]> {
+    return this.proxy('getAccountsIDs', []);
+  }
+
+  getAccountInfo(accountID: AccountID): Promise<AccountInfo> {
+    return this.proxy('getAccountInfo', [accountID]);
+  }
+
   getSelectedAccount(): Promise<string> {
     return this.proxy('getSelectedAccount', []);
   }
@@ -32,7 +42,7 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('createAccount', [accountName]);
   }
 
-  importTemplate(template: DescriptorTemplate, changeTemplate?: DescriptorTemplate) {
+  importTemplate(template: Template, changeTemplate?: Template) {
     return this.proxy('importTemplate', [template, changeTemplate]);
   }
 
@@ -52,8 +62,8 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getNetwork', []);
   }
 
-  getAddresses(): Promise<AddressInterface[]> {
-    return this.proxy('getAddresses', []);
+  getAddresses(ids?: AccountID[]): Promise<AddressInterface[]> {
+    return this.proxy('getAddresses', [ids]);
   }
 
   getNextAddress(): Promise<AddressInterface> {
@@ -64,7 +74,7 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getNextChangeAddress', []);
   }
 
-  useAccount(account: string): Promise<boolean> {
+  useAccount(account: AccountID): Promise<boolean> {
     return this.proxy('useAccount', [account]);
   }
 
@@ -99,16 +109,16 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('signMessage', [message]);
   }
 
-  getCoins(): Promise<Utxo[]> {
-    return this.proxy('getCoins', []);
+  getCoins(ids?: AccountID[]): Promise<Utxo[]> {
+    return this.proxy('getCoins', [ids]);
   }
 
-  getTransactions(): Promise<Transaction[]> {
-    return this.proxy('getTransactions', []);
+  getTransactions(ids?: AccountID[]): Promise<Transaction[]> {
+    return this.proxy('getTransactions', [ids]);
   }
 
-  getBalances(): Promise<Balance[]> {
-    return this.proxy('getBalances', []);
+  getBalances(ids?: AccountID[]): Promise<Balance[]> {
+    return this.proxy('getBalances', [ids]);
   }
 
   on(type: MarinaEventType, callback: (payload: any) => void) {
@@ -129,8 +139,8 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getFeeAssets', []);
   }
 
-  reloadCoins(): Promise<void> {
-    return this.proxy('reloadCoins', []);
+  reloadCoins(ids?: AccountID[]): Promise<void> {
+    return this.proxy('reloadCoins', [ids]);
   }
 
   broadcastTransaction(signedTxHex: string): Promise<SentTransaction> {

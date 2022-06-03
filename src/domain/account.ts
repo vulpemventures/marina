@@ -25,6 +25,7 @@ import {
 import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
+import type { AccountInfo } from 'marina-provider';
 
 export const MainAccountID = 'mainAccount';
 export type AccountID = string;
@@ -44,14 +45,14 @@ export enum AccountType {
  */
 export interface Account<
   SignID extends IdentityInterface = IdentityInterface,
-  WatchID extends IdentityInterface = IdentityInterface
+  WatchID extends IdentityInterface = IdentityInterface,
+  AccountInfoType extends AccountInfo = AccountInfo // can be overriden to add custom infos
 > {
   type: AccountType;
-  getAccountID(): AccountID;
-  isReady(): boolean;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
   getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
+  getInfo(): AccountInfoType;
 }
 
 // AccountData is the base interface of all accounts data
@@ -75,7 +76,11 @@ export interface MnemonicAccountData extends AccountData {
 // custom script account is decribed with
 // - an eltr output descriptor template
 // - a namespace (used to derive the mnemonic)
-export type CustomScriptAccount = Account<CustomScriptIdentity, CustomScriptIdentityWatchOnly>;
+export type CustomScriptAccount = Account<
+  CustomScriptIdentity, 
+  CustomScriptIdentityWatchOnly,
+  Pick<CovenantDescriptors, 'changeTemplate' | 'template' | 'isSpendableByMarina'> & AccountInfo
+  >;
 
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
@@ -92,8 +97,6 @@ function createMainAccount(
 ): MnemonicAccount {
   return {
     type: AccountType.MainAccount,
-    isReady: () => true,
-    getAccountID: () => MainAccountID,
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredMnemonic(decrypt(encryptedMnemonic, password), data.restorerOpts[network], network),
     getWatchIdentity: (network: NetworkString) =>
@@ -107,6 +110,11 @@ function createMainAccount(
       masterPubKeyRestorerFromEsplora(
         newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
       ),
+    getInfo: () => ({
+      accountID: MainAccountID, // main account is unique
+      masterXPub: data.masterXPub,
+      isReady: true, // always true for main account
+    }),
   };
 }
 
@@ -117,8 +125,6 @@ function createCustomScriptAccount(
 ): CustomScriptAccount {
   return {
     type: AccountType.CustomScriptAccount,
-    isReady: () => data.covenantDescriptors.template !== undefined,
-    getAccountID: () => data.covenantDescriptors.namespace,
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredCustomScriptIdentity(
         data.covenantDescriptors,
@@ -147,6 +153,14 @@ function createCustomScriptAccount(
           },
         })
       ),
+    getInfo: () => ({
+      accountID: data.covenantDescriptors.namespace,
+      masterXPub: data.masterXPub,
+      isReady: data.covenantDescriptors.template !== undefined,
+      changeTemplate: data.covenantDescriptors.changeTemplate,
+      template: data.covenantDescriptors.template,
+      isSpendableByMarina: data.covenantDescriptors.isSpendableByMarina,
+    }),
   };
 }
 

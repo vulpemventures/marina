@@ -228,7 +228,7 @@ async function changeAddressGetter(
     getter: (asset: string) => {
       if (!assets.has(asset)) throw new Error('missing change address');
       if (!persisted[asset]) {
-        dispatch(incrementChangeAddressIndex(account.getAccountID(), net)).catch(console.error);
+        dispatch(incrementChangeAddressIndex(account.getInfo().accountID, net)).catch(console.error);
         persisted[asset] = true;
       }
       return changeAddresses[asset].confidentialAddress;

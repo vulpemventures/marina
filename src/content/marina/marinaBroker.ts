@@ -33,7 +33,7 @@ import {
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import type { Balance, DescriptorTemplate, RawHex, Recipient, Utxo } from 'marina-provider';
+import type { Balance, Template, RawHex, Recipient, Utxo } from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
@@ -53,6 +53,8 @@ import type { TaprootAddressInterface } from '../../domain/customscript-identity
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
+
+type DescriptorTemplate = Template<string>
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -118,16 +120,16 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     return this.store.getState();
   }
 
-  private async reloadCoins(store: BrokerProxyStore) {
+  private async reloadCoins(ids: AccountID[]) {
     const network = selectNetwork(this.state);
-    const allAccountsIds = selectAllAccountsIDs(this.state);
     const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
-    allAccountsIds.map(makeUpdateTaskForId).map((x: any) => store.dispatch(x));
+    if (ids.length === 0) return;
+    await Promise.all(ids.map(makeUpdateTaskForId).map((x: any) => this.store?.dispatchAsync(x)));
     // wait for updates to finish, give it 1 second to start the update
     // we need to sleep to free the event loop to take care of the update tasks
     do {
       await sleep(1000);
-    } while (store.getState().wallet.updaterLoaders !== 0);
+    } while (this.store?.getState().wallet.updaterLoaders !== 0);
   }
 
   private accountExists(name: string): boolean {
@@ -158,6 +160,12 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         await addUnconfirmedUtxos(signedTxHex, changeUtxos, MainAccountID, selectNetwork(state))
       );
     }
+  }
+
+  private handleIdsParam(ids?: AccountID[]): AccountID[] {
+    if (!ids) return selectAllAccountsIDs(this.state);
+    if (ids.length === 0) return [];
+    return ids;
   }
 
   private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
@@ -191,9 +199,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getAddresses': {
           this.checkHostnameAuthorization();
+          const accountIds = this.handleIdsParam(params ? params[0] : undefined);
           const net = selectNetwork(this.state);
-          const watchOnlyIdentity = await this.accountSelector(this.state).getWatchIdentity(net);
-          return successMsg(await watchOnlyIdentity.getAddresses());
+
+          const identities = await Promise.all(accountIds.map(selectAccount).map(f => f(this.state).getWatchIdentity(net)));
+          const addresses = await Promise.all(identities.map(identity => identity.getAddresses()));
+
+          return successMsg(addresses.flat());
         }
 
         case 'getNextAddress': {
@@ -202,7 +214,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const net = selectNetwork(this.state);
           const watchOnlyIdentity = await account.getWatchIdentity(net);
           const nextAddress = await watchOnlyIdentity.getNextAddress();
-          await this.store.dispatchAsync(incrementAddressIndex(account.getAccountID(), net));
+          await this.store.dispatchAsync(incrementAddressIndex(account.getInfo().accountID, net));
           return successMsg(nextAddress);
         }
 
@@ -212,7 +224,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const net = selectNetwork(this.state);
           const xpub = await account.getWatchIdentity(net);
           const nextChangeAddress = await xpub.getNextChangeAddress();
-          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getAccountID(), net));
+          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getInfo().accountID, net));
           return successMsg(nextChangeAddress);
         }
 
@@ -297,13 +309,15 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getTransactions': {
           this.checkHostnameAuthorization();
-          const transactions = selectTransactions(this.selectedAccount)(this.state);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+          const transactions = selectTransactions(...accountsIDs)(this.state);
           return successMsg(transactions);
         }
 
         case 'getCoins': {
           this.checkHostnameAuthorization();
-          const coins = selectUtxos(this.selectedAccount)(this.state);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+          const coins = selectUtxos(...accountsIDs)(this.state);
           const results: Utxo[] = coins.map((unblindedOutput) => ({
             txid: unblindedOutput.txid,
             vout: unblindedOutput.vout,
@@ -317,7 +331,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getBalances': {
           this.checkHostnameAuthorization();
-          const balances = selectBalances(this.selectedAccount)(this.state);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+          const balances = selectBalances(...accountsIDs)(this.state);
           const assetGetter = assetGetterFromIAssets(this.state.assets);
           const balancesResult: Balance[] = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
@@ -345,7 +360,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'reloadCoins': {
           this.checkHostnameAuthorization();
-          await this.reloadCoins(this.store);
+          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
+
+          await this.reloadCoins(accountsIDs);
           return successMsg();
         }
 
@@ -439,7 +456,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg(accepted);
         }
 
-        case Marina.prototype.broadcastTransaction.name: {
+        case 'broadcastTransaction': {
           this.checkHostnameAuthorization();
           const [signedTxHex] = params as [string];
           const network = selectNetwork(this.state);
@@ -463,6 +480,21 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, changeUtxos, this.store);
 
           return successMsg({ txid, hex: signedTxHex });
+        }
+
+        case 'getAccountInfo': {
+          this.checkHostnameAuthorization();
+          if (!params || params.length !== 1) {
+            throw new Error('Expected 1 parameter');
+          }
+
+          const [accountName] = params as [string];
+          if (!this.accountExists(accountName)) {
+            throw new Error(`Account ${accountName} not found`);
+          }
+
+          const info = selectAccount(accountName)(this.state).getInfo();
+          return successMsg(info);
         }
 
         default:

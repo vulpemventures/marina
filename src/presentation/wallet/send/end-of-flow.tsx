@@ -83,14 +83,14 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       // credit change utxos to balance
       if (changeUtxos && changeAccount && changeUtxos.length > 0) {
         await dispatch(
-          await addUnconfirmedUtxos(tx, changeUtxos, changeAccount.getAccountID(), network)
+          await addUnconfirmedUtxos(tx, changeUtxos, changeAccount.getInfo().accountID, network)
         );
       }
 
       // start updater
       await Promise.all(
         signerAccounts
-          .map((a) => a.getAccountID())
+          .map((a) => a.getInfo().accountID)
           .map((id) => updateTaskAction(id, network))
           .map(dispatch)
       );
