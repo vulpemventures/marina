@@ -3,11 +3,10 @@ import cx from 'classnames';
 import browser from 'webextension-polyfill';
 import { useSelector } from 'react-redux';
 import { selectElectrsURL } from '../../application/redux/selectors/app.selector';
-import { onErrorImg } from '../../application/utils/constants';
+import AssetIcon from './assetIcon';
 
 interface Props {
   assetBalance: string | number;
-  assetImgPath: string;
   assetTicker: string;
   assetHash: string;
   bigBalanceText?: boolean;
@@ -18,7 +17,6 @@ const Balance: React.FC<Props> = ({
   bigBalanceText = false,
   className,
   assetBalance,
-  assetImgPath,
   assetTicker,
   assetHash,
 }) => {
@@ -32,12 +30,10 @@ const Balance: React.FC<Props> = ({
 
   return (
     <div className={className}>
-      <img
-        onClick={handleOpenExplorer}
+      <AssetIcon
+        assetHash={assetHash}
         className="w-11 mt-0.5 block mx-auto mb-2"
-        src={assetImgPath}
-        alt="liquid bitcoin logo"
-        onError={onErrorImg}
+        onClick={handleOpenExplorer}
       />
       <div>
         <p
@@ -53,4 +49,4 @@ const Balance: React.FC<Props> = ({
   );
 };
 
-export default Balance;
+export default React.memo(Balance);
