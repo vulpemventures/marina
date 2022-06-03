@@ -21,10 +21,8 @@ const SettingsAccountsView: React.FC<SettingsAccountsProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleClick = async (accountID: AccountID) => {
-    if (accounts.map((a) => a.getAccountID()).includes(accountID)) {
-      await dispatch(setChangeAccount(accountID));
-    }
+  const handleClick = async (account: Account) => {
+    await dispatch(setChangeAccount(account.getInfo().accountID));
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,19 +51,19 @@ const SettingsAccountsView: React.FC<SettingsAccountsProps> = ({
           titleColor="grayDark"
         >
           {accounts
-            .filter((a) => a.getAccountID().toLowerCase().includes(searchTerm))
+            .filter(filterAccountsBySearchTerm(searchTerm))
             .map((account, index) => (
               <div
                 key={index}
                 className={classNames('p-3 rounded-md shadow-md', {
-                  'border border-primary': account.getAccountID() === selectedChangeAccount,
+                  'border border-primary': account.getInfo().accountID === selectedChangeAccount,
                 })}
-                onClick={() => handleClick(account.getAccountID())}
+                onClick={() => handleClick(account)}
               >
                 <div className="flex-center flex align-middle">
                   <AccountIcon type={account.type} />
                   <span className="text-grayDark mt-1 align-text-bottom">
-                    {account.getAccountID()} {account.isReady() ? '' : '(not ready)'} <br />
+                    {account.getInfo().accountID} {account.getInfo().isReady ? '' : '(not ready)'} <br />
                   </span>
                 </div>
               </div>
@@ -75,5 +73,10 @@ const SettingsAccountsView: React.FC<SettingsAccountsProps> = ({
     </ShellPopUp>
   );
 };
+
+function filterAccountsBySearchTerm(term: string) {
+  return (account: Account) =>
+    account.getInfo().accountID.toLowerCase().includes(term)
+}
 
 export default SettingsAccountsView;

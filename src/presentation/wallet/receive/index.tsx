@@ -36,10 +36,10 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
     (async () => {
       const identity = await account.getWatchIdentity(network);
       const addr = await identity.getNextAddress();
-      await dispatch(incrementAddressIndex(account.getAccountID(), network)); // persist address
+      await dispatch(incrementAddressIndex(account.getInfo().accountID, network)); // persist address
       setConfidentialAddress(addr.confidentialAddress);
       setTimeout(() => {
-        dispatch(updateTaskAction(account.getAccountID(), network)).catch(console.error);
+        dispatch(updateTaskAction(account.getInfo().accountID, network)).catch(console.error);
       }, 2000);
     })().catch(console.error);
   }, []);

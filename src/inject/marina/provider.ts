@@ -2,7 +2,7 @@ import type {
   AccountID,
   AddressInterface,
   Balance,
-  DescriptorTemplate,
+  Template,
   MarinaEventType,
   MarinaProvider,
   PsetBase64,
@@ -11,6 +11,7 @@ import type {
   SignedMessage,
   Transaction,
   Utxo,
+  AccountInfo,
 } from 'marina-provider';
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
@@ -29,6 +30,10 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getAccountsIDs', []);
   }
 
+  getAccountInfo(accountID: AccountID): Promise<AccountInfo> {
+    return this.proxy('getAccountInfo', [accountID]);
+  }
+
   getSelectedAccount(): Promise<string> {
     return this.proxy('getSelectedAccount', []);
   }
@@ -37,7 +42,7 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('createAccount', [accountName]);
   }
 
-  importTemplate(template: DescriptorTemplate, changeTemplate?: DescriptorTemplate) {
+  importTemplate(template: Template, changeTemplate?: Template) {
     return this.proxy('importTemplate', [template, changeTemplate]);
   }
 
