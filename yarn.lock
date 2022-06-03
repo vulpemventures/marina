@@ -6843,10 +6843,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marina-provider@1.5.0:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.5.0.tgz#76487563dd60f7f498c4c4fd42ffd9fb5412cebc"
-  integrity sha512-JpvFaSFg8O4U3pWHufX57iZyiitJZDv3vc7XdmcVDHoCmDqYG6o/d2qvJ9pRvF1SDG2WsBA7+jNihy5NHjDsTA==
+marina-provider@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.7.0.tgz#3d68e222787480dd2dd56214d5109814467700b9"
+  integrity sha512-l27EulJyh4ZiX+TUlgFiAQYRYZldQeTGTLihzfPSxAkQ1ssgxL+EgRIjwiD6U+1JdRE5BZn5+NSIpYWdPiJ7UQ==
 
 marky@^1.2.2:
   version "1.2.4"

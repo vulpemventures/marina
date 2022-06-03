@@ -150,7 +150,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (!feeAsset) throw new Error('fee asset not selected');
       setLoading(true);
       await Promise.all(
-        actionsFromState(state, feeAsset, changeAccount.getAccountID(), network).map(dispatch)
+        actionsFromState(state, feeAsset, changeAccount.getInfo().accountID, network).map(dispatch)
       );
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,
