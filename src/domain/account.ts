@@ -77,10 +77,10 @@ export interface MnemonicAccountData extends AccountData {
 // - an eltr output descriptor template
 // - a namespace (used to derive the mnemonic)
 export type CustomScriptAccount = Account<
-  CustomScriptIdentity, 
+  CustomScriptIdentity,
   CustomScriptIdentityWatchOnly,
   Pick<CovenantDescriptors, 'changeTemplate' | 'template' | 'isSpendableByMarina'> & AccountInfo
-  >;
+>;
 
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;

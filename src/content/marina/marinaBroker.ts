@@ -54,7 +54,7 @@ import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/u
 import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 
-type DescriptorTemplate = Template<string>
+type DescriptorTemplate = Template<string>;
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -202,8 +202,12 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const accountIds = this.handleIdsParam(params ? params[0] : undefined);
           const net = selectNetwork(this.state);
 
-          const identities = await Promise.all(accountIds.map(selectAccount).map(f => f(this.state).getWatchIdentity(net)));
-          const addresses = await Promise.all(identities.map(identity => identity.getAddresses()));
+          const identities = await Promise.all(
+            accountIds.map(selectAccount).map((f) => f(this.state).getWatchIdentity(net))
+          );
+          const addresses = await Promise.all(
+            identities.map((identity) => identity.getAddresses())
+          );
 
           return successMsg(addresses.flat());
         }
@@ -224,7 +228,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const net = selectNetwork(this.state);
           const xpub = await account.getWatchIdentity(net);
           const nextChangeAddress = await xpub.getNextChangeAddress();
-          await this.store.dispatchAsync(incrementChangeAddressIndex(account.getInfo().accountID, net));
+          await this.store.dispatchAsync(
+            incrementChangeAddressIndex(account.getInfo().accountID, net)
+          );
           return successMsg(nextChangeAddress);
         }
 
