@@ -14,7 +14,6 @@ import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utils';
-import { getAssetImage } from '../../../application/utils/constants';
 import type { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
 import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import type { Asset, AssetGetter } from '../../../domain/assets';
@@ -91,7 +90,6 @@ const HomeView: React.FC<HomeProps> = ({
           <Balance
             assetHash={lbtcAssetHash}
             assetBalance={fromSatoshiStr(assetsBalance[lbtcAssetHash] ?? 0)}
-            assetImgPath={getAssetImage(lbtcAssetHash)}
             assetTicker="L-BTC"
             bigBalanceText={true}
           />
@@ -111,7 +109,6 @@ const HomeView: React.FC<HomeProps> = ({
               ) => {
                 return (
                   <ButtonAsset
-                    assetImgPath={getAssetImage(assetHash)}
                     assetHash={assetHash}
                     assetName={name || 'unknown'}
                     assetTicker={ticker}

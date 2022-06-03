@@ -1,3 +1,4 @@
+import React from 'react';
 import { TxType } from '../../domain/transaction';
 
 function getImgFilename(txType: TxType): string {
@@ -23,4 +24,4 @@ const TxIcon: React.FC<{ txType: TxType }> = ({ txType }) => {
   );
 };
 
-export default TxIcon;
+export default React.memo(TxIcon);
