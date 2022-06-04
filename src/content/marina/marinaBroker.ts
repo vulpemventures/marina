@@ -503,6 +503,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg(info);
         }
 
+        case 'getAccountsIDs': {
+          this.checkHostnameAuthorization();
+          return successMsg(selectAllAccountsIDs(this.state));
+        }
+
         default:
           return newErrorResponseMessage(id, new Error('Method not implemented.'));
       }
