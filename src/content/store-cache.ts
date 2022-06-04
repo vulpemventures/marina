@@ -1,14 +1,14 @@
-import { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { MarinaEvent } from '../application/utils/marina-event';
 import {
-  MarinaEvent,
   compareEnabledWebsites,
   compareTxsHistoryState,
   compareUtxoState,
   networkChange,
 } from '../application/utils/marina-event';
 import { MainAccountID } from '../domain/account';
-import { RootReducerState } from '../domain/common';
-import { TxsHistory } from '../domain/transaction';
+import type { RootReducerState } from '../domain/common';
+import type { TxsHistory } from '../domain/transaction';
 
 export interface StoreCache {
   utxoState: Record<string, UnblindedOutput>;

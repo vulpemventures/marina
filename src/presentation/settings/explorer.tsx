@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import ShellPopUp from '../components/shell-popup';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import { RootReducerState } from '../../domain/common';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { RootReducerState } from '../../domain/common';
 import { setExplorer } from '../../application/redux/actions/app';
 import Select from '../components/select';
+import type { ExplorerType } from '../../domain/app';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
-  ExplorerType,
   MempoolExplorerURLs,
   MempoolTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/app';
 import SettingsCustomExplorerForm from '../components/explorer-custom-form';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import { appInitState } from '../../application/redux/reducers/app-reducer';
 
 function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {

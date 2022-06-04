@@ -1,6 +1,8 @@
+import type { RouteComponentProps } from 'react-router-dom';
 import React from 'react';
-import { RouteComponentProps, useHistory } from 'react-router-dom';
-import { FormikProps, withFormik } from 'formik';
+import { useHistory } from 'react-router-dom';
+import type { FormikProps } from 'formik';
+import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
@@ -8,10 +10,10 @@ import Input from '../../components/input';
 import { useDispatch, useSelector } from 'react-redux';
 import { logIn } from '../../../application/redux/actions/app';
 import { AUTHENTICATION_SUCCESS } from '../../../application/redux/actions/action-types';
-import { PasswordHash } from '../../../domain/password-hash';
+import type { PasswordHash } from '../../../domain/password-hash';
 import { createPassword } from '../../../domain/password';
-import { RootReducerState } from '../../../domain/common';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { RootReducerState } from '../../../domain/common';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import browser from 'webextension-polyfill';
 
 interface LogInFormValues {
@@ -24,7 +26,7 @@ interface LogInFormProps {
   passwordHash: PasswordHash;
 }
 
-const LogInForm = (props: FormikProps<LogInFormValues>) => {
+const LogInForm: React.FC<FormikProps<LogInFormValues>> = (props) => {
   const { isSubmitting, handleSubmit } = props;
 
   const openOnboardingTab = async () => {
@@ -33,8 +35,8 @@ const LogInForm = (props: FormikProps<LogInFormValues>) => {
   };
 
   return (
-    <div className="flex flex-col">
-      <form onSubmit={handleSubmit} className="mt-10">
+    <form onSubmit={handleSubmit} className="mt-10">
+      <div className="flex flex-col">
         <Input
           name="password"
           type="password"
@@ -45,13 +47,13 @@ const LogInForm = (props: FormikProps<LogInFormValues>) => {
         <Button className="w-full mb-8 text-base" disabled={isSubmitting} type="submit">
           Log in
         </Button>
-      </form>
-      <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
-        <span className="cursor-pointer" onClick={openOnboardingTab}>
-          Restore account
-        </span>
+        <div className="hover:underline text-primary self-start justify-start font-bold align-bottom">
+          <span className="cursor-pointer" onClick={openOnboardingTab}>
+            Restore account
+          </span>
+        </div>
       </div>
-    </div>
+    </form>
   );
 };
 

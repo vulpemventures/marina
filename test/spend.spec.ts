@@ -1,8 +1,9 @@
-import { decodePset, fetchAndUnblindUtxos, Mnemonic, networks, UnblindedOutput } from 'ldk';
+import type { Mnemonic, UnblindedOutput } from 'ldk';
+import { decodePset, fetchAndUnblindUtxos, networks, payments, Transaction } from 'ldk';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import { payments, Transaction } from 'liquidjs-lib';
+import * as ecc from 'tiny-secp256k1';
 
 jest.setTimeout(15000);
 
@@ -18,7 +19,7 @@ describe('create send pset (build, blind & sign)', () => {
   const makeUnspents = async () => {
     const addr = await mnemonic.getNextAddress();
     await faucet(addr.confidentialAddress, 10000);
-    const u = await fetchAndUnblindUtxos([addr], APIURL);
+    const u = await fetchAndUnblindUtxos(ecc, [addr], APIURL);
     unspents.push(...u);
     return u;
   };

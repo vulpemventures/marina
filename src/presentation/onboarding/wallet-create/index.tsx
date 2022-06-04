@@ -3,7 +3,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 import { setPasswordAndOnboardingMnemonic } from '../../../application/redux/actions/onboarding';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import Shell from '../../components/shell';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import OnboardingForm from '../onboarding-form';

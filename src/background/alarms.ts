@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 import { updateTaxiAssets } from '../application/redux/actions/taxi';
-import { updateTaskAction } from '../application/redux/actions/updater';
+import { updateTaskAction } from '../application/redux/actions/task';
 import { selectNetwork } from '../application/redux/selectors/app.selector';
 import {
   selectAllAccountsIDs,

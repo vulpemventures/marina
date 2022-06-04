@@ -1,5 +1,5 @@
 import React from 'react';
-import { TxDisplayInterface } from '../../domain/transaction';
+import type { TxDisplayInterface } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi } from '../utils';
 import TxIcon from './txIcon';
 import moment from 'moment';

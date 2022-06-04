@@ -1,15 +1,8 @@
-import {
-  AddressInterface,
-  getNetwork,
-  IdentityInterface,
-  NetworkString,
-  UnblindedOutput,
-  unblindOutput,
-} from 'ldk';
-import { address, networks, Transaction } from 'liquidjs-lib';
-import { RawHex } from 'marina-provider';
-import { Account } from '../../domain/account';
-import { UnconfirmedOutput } from '../../domain/unconfirmed';
+import type { AddressInterface, IdentityInterface, NetworkString, UnblindedOutput } from 'ldk';
+import { getNetwork, unblindOutput, address, networks, Transaction } from 'ldk';
+import type { RawHex } from 'marina-provider';
+import type { Account } from '../../domain/account';
+import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export const toStringOutpoint = (outpoint: { txid: string; vout: number }): string => {
   return `${outpoint.txid}:${outpoint.vout}`;

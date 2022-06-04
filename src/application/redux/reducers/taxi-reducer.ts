@@ -1,5 +1,5 @@
-import { NetworkString } from 'ldk';
-import { AnyAction } from 'redux';
+import type { NetworkString } from 'ldk';
+import type { AnyAction } from 'redux';
 import { RESET_TAXI, SET_TAXI_ASSETS } from '../actions/action-types';
 
 export interface TaxiState {

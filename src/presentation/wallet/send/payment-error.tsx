@@ -9,10 +9,9 @@ import {
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
-
 import { broadcastTx } from '../../../application/utils/network';
-import { UnblindedOutput } from 'ldk';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { UnblindedOutput } from 'ldk';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { lockUtxo } from '../../../application/redux/actions/utxos';
 
 interface LocationState {

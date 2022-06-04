@@ -1,17 +1,21 @@
 import { assetInitState, assetReducer } from './asset-reducer';
 import { onboardingReducer } from './onboarding-reducer';
-import { transactionReducer, TransactionState, transactionInitState } from './transaction-reducer';
-import { AnyAction, combineReducers, Reducer } from 'redux';
-import { PersistMigrate, Storage } from 'redux-persist';
+import type { TransactionState } from './transaction-reducer';
+import { transactionReducer, transactionInitState } from './transaction-reducer';
+import type { AnyAction, Reducer } from 'redux';
+import { combineReducers } from 'redux';
+import type { PersistMigrate, Storage } from 'redux-persist';
 import { parse, stringify } from '../../utils/browser-storage-converters';
 import browser from 'webextension-polyfill';
-import persistReducer, { PersistPartial } from 'redux-persist/es/persistReducer';
-import { IApp } from '../../../domain/app';
-import { WalletState } from '../../../domain/wallet';
-import { taxiReducer, TaxiState, taxiInitState } from './taxi-reducer';
-import { ConnectData } from '../../../domain/connect';
-import { IAssets } from '../../../domain/assets';
-import { PersistConfig } from 'redux-persist/lib/types';
+import type { PersistPartial } from 'redux-persist/es/persistReducer';
+import persistReducer from 'redux-persist/es/persistReducer';
+import type { IApp } from '../../../domain/app';
+import type { WalletState } from '../../../domain/wallet';
+import type { TaxiState } from './taxi-reducer';
+import { taxiReducer, taxiInitState } from './taxi-reducer';
+import type { ConnectData } from '../../../domain/connect';
+import type { IAssets } from '../../../domain/assets';
+import type { PersistConfig } from 'redux-persist/lib/types';
 import { appReducer, appInitState } from './app-reducer';
 import { walletReducer } from './wallet-reducer';
 import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
@@ -83,7 +87,7 @@ const marinaReducer = combineReducers({
   app: persist<IApp>({
     reducer: appReducer,
     key: 'app',
-    version: 1,
+    version: 2,
     migrate: migrateAfter(appInitState),
   }),
   assets: persist<IAssets>({
@@ -103,7 +107,7 @@ const marinaReducer = combineReducers({
     reducer: walletReducer,
     key: 'wallet',
     blacklist: ['deepRestorer', 'updaterLoaders'],
-    version: 2,
+    version: 3,
     migrate: walletMigrate,
   }),
   taxi: persist<TaxiState>({

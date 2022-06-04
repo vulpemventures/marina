@@ -7,7 +7,7 @@ import {
   setPasswordAndOnboardingMnemonic,
 } from '../../../application/redux/actions/onboarding';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
 

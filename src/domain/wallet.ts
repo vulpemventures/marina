@@ -1,14 +1,18 @@
-import { AccountID, MainAccountID, MnemonicAccountData } from './account';
-import { PasswordHash } from './password-hash';
-import { UtxosAndTxsByNetwork } from './transaction';
+import type { AccountData, AccountID } from './account';
+import type { EncryptedMnemonic } from './encrypted-mnemonic';
+import type { PasswordHash } from './password-hash';
+import type { UtxosAndTxsByNetwork } from './transaction';
 
 export interface WalletState {
-  [MainAccountID]: MnemonicAccountData;
+  encryptedMnemonic: EncryptedMnemonic;
+  accounts: {
+    [id: AccountID]: AccountData;
+  };
   unspentsAndTransactions: Record<AccountID, UtxosAndTxsByNetwork>;
   passwordHash: PasswordHash;
   deepRestorer: {
     gapLimit: number;
-    isLoading: boolean;
+    restorerLoaders: number;
     error?: string;
   };
   updaterLoaders: number;

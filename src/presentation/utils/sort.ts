@@ -1,4 +1,4 @@
-import { Asset } from '../../domain/assets';
+import type { Asset } from '../../domain/assets';
 
 /**
  * Takes a list of assets, and sort it by the following criteria:

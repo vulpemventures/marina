@@ -1,24 +1,33 @@
-import { IdentityType, Mnemonic, mnemonicRestorerFromEsplora, NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
+import { IdentityType, Mnemonic, mnemonicRestorerFromEsplora } from 'ldk';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
-import { setVerified, setWalletData } from '../../../application/redux/actions/wallet';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import {
+  setEncryptedMnemonic,
+  setVerified,
+  setAccount,
+} from '../../../application/redux/actions/wallet';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { walletInitState } from '../../../application/redux/reducers/wallet-reducer';
 import { encrypt, hashPassword } from '../../../application/utils/crypto';
 import { setUpPopup } from '../../../application/utils/popup';
 import { getStateRestorerOptsFromAddresses } from '../../../application/utils/restorer';
-import { MnemonicAccountData } from '../../../domain/account';
+import type { MnemonicAccountData } from '../../../domain/account';
+import { AccountType, MainAccountID } from '../../../domain/account';
 import { createMasterBlindingKey } from '../../../domain/master-blinding-key';
 import { createMasterXPub } from '../../../domain/master-extended-pub';
 import { createMnemonic } from '../../../domain/mnemonic';
-import { createPassword, Password } from '../../../domain/password';
-import { PasswordHash } from '../../../domain/password-hash';
+import type { Password } from '../../../domain/password';
+import { createPassword } from '../../../domain/password';
+import type { PasswordHash } from '../../../domain/password-hash';
 import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
+import * as ecc from 'tiny-secp256k1';
+import { restoreTaskAction } from '../../../application/redux/actions/task';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -28,6 +37,7 @@ export interface EndOfFlowProps {
   explorerURL: string;
   hasMnemonicRegistered: boolean;
   walletVerified: boolean;
+  restorerIsLoading: boolean;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
@@ -38,6 +48,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   explorerURL,
   hasMnemonicRegistered,
   walletVerified,
+  restorerIsLoading,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
@@ -60,10 +71,12 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
           await dispatch(reset());
         }
 
-        await dispatch(setWalletData(accountData, passwordHash));
+        await dispatch(setEncryptedMnemonic(accountData.encryptedMnemonic, passwordHash));
+        await dispatch(setAccount<MnemonicAccountData>(MainAccountID, accountData));
         // set the popup
         await setUpPopup();
         await dispatch(onboardingCompleted());
+        await dispatch(restoreTaskAction(MainAccountID));
       }
 
       if (walletVerified) {
@@ -83,7 +96,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
     tryToRestoreWallet().catch(console.error);
   }, []);
 
-  if (isLoading) {
+  if (isLoading || restorerIsLoading) {
     return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
   }
 
@@ -119,6 +132,7 @@ export async function createWalletFromMnemonic(
   esploraURL: string
 ): Promise<{ accountData: MnemonicAccountData; passwordHash: PasswordHash }> {
   const toRestore = new Mnemonic({
+    ecclib: ecc,
     chain,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
@@ -134,9 +148,10 @@ export async function createWalletFromMnemonic(
   const passwordHash = hashPassword(password);
   const addresses = await mnemonicIdentity.getAddresses();
 
-  const accountData = {
+  const accountData: MnemonicAccountData = {
+    type: AccountType.MainAccount,
     restorerOpts: {
-      ...walletInitState.mainAccount.restorerOpts,
+      ...walletInitState.accounts[MainAccountID].restorerOpts,
       [chain]: getStateRestorerOptsFromAddresses(addresses),
     },
     encryptedMnemonic,

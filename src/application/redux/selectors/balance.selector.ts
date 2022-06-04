@@ -1,6 +1,6 @@
 import { balances } from 'ldk';
-import { AccountID } from '../../../domain/account';
-import { RootReducerState } from '../../../domain/common';
+import type { AccountID } from '../../../domain/account';
+import type { RootReducerState } from '../../../domain/common';
 import { sumBalances } from '../../utils/balances';
 import { lbtcAssetByNetwork } from '../../utils/network';
 import { selectTransactions, selectUtxos } from './wallet.selector';

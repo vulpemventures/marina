@@ -1,22 +1,27 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
-import { WalletState } from '../../../domain/wallet';
-import { AnyAction } from 'redux';
-import { AccountID, initialRestorerOpts, MainAccountID } from '../../../domain/account';
-import { newEmptyUtxosAndTxsHistory, TxDisplayInterface } from '../../../domain/transaction';
-import { NetworkString, UnblindedOutput } from 'ldk';
+import type { WalletState } from '../../../domain/wallet';
+import type { AnyAction } from 'redux';
+import type { AccountData, AccountID, CustomScriptAccountData } from '../../../domain/account';
+import { AccountType, initialRestorerOpts, MainAccountID } from '../../../domain/account';
+import type { TxDisplayInterface } from '../../../domain/transaction';
+import { newEmptyUtxosAndTxsHistory } from '../../../domain/transaction';
+import type { NetworkString, UnblindedOutput } from 'ldk';
 import { lockedUtxoMinimunTime } from '../../utils/constants';
 
 export const walletInitState: WalletState = {
-  [MainAccountID]: {
-    encryptedMnemonic: '',
-    masterBlindingKey: '',
-    masterXPub: '',
-    restorerOpts: {
-      liquid: initialRestorerOpts,
-      testnet: initialRestorerOpts,
-      regtest: initialRestorerOpts,
+  encryptedMnemonic: '',
+  accounts: {
+    [MainAccountID]: {
+      type: AccountType.MainAccount,
+      masterBlindingKey: '',
+      masterXPub: '',
+      restorerOpts: {
+        liquid: initialRestorerOpts,
+        testnet: initialRestorerOpts,
+        regtest: initialRestorerOpts,
+      },
     },
   },
   unspentsAndTransactions: {
@@ -25,7 +30,7 @@ export const walletInitState: WalletState = {
   passwordHash: '',
   deepRestorer: {
     gapLimit: 20,
-    isLoading: false,
+    restorerLoaders: 0,
   },
   updaterLoaders: 0,
   isVerified: false,
@@ -128,21 +133,78 @@ export function walletReducer(
       const network = payload.network as NetworkString;
       return {
         ...state,
-        [accountID]: {
-          ...state[accountID],
-          restorerOpts: {
-            ...state[accountID].restorerOpts,
-            [network]: payload.restorerOpts,
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID].restorerOpts,
+              [network]: payload.restorerOpts,
+            },
           },
         },
       };
     }
 
-    case ACTION_TYPES.WALLET_SET_DATA: {
+    case ACTION_TYPES.SET_MNEMONIC: {
       return {
         ...state,
+        encryptedMnemonic: payload.encryptedMnemonic,
         passwordHash: payload.passwordHash,
-        mainAccount: { ...payload.walletData },
+      };
+    }
+
+    case ACTION_TYPES.SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA: {
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [payload.accountID as AccountID]: {
+            ...state.accounts[payload.accountID],
+            covenantDescriptors: {
+              ...state.accounts[payload.accountID].covenantDescriptors,
+              isSpendableByMarina: payload.isSpendableByMarina,
+            },
+          },
+        },
+      };
+    }
+
+    case ACTION_TYPES.SET_CS_ACCOUNT_TEMPLATE: {
+      const accountID = payload.accountID as AccountID;
+      if (state.accounts[accountID]?.type !== AccountType.CustomScriptAccount) return state;
+
+      const accountWithTemplate: CustomScriptAccountData = {
+        ...(state.accounts[accountID] as CustomScriptAccountData),
+        covenantDescriptors: {
+          namespace: payload.accountID,
+          template: payload.template,
+          changeTemplate: payload.changeTemplate,
+        },
+      };
+
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [accountID]: accountWithTemplate,
+        },
+      };
+    }
+
+    case ACTION_TYPES.SET_ACCOUNT_DATA: {
+      const data = payload.accountData as AccountData;
+      const accountID = payload.accountID as AccountID;
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [accountID]: data,
+        },
+        unspentsAndTransactions: {
+          ...state.unspentsAndTransactions,
+          [accountID]: newEmptyUtxosAndTxsHistory(),
+        },
       };
     }
 
@@ -151,15 +213,18 @@ export function walletReducer(
       const network = payload.network as NetworkString;
       return {
         ...state,
-        [accountID]: {
-          ...state[accountID],
-          restorerOpts: {
-            ...state[accountID]?.restorerOpts,
-            [network]: {
-              ...state[accountID]?.restorerOpts[network],
-              lastUsedInternalIndex: increment(
-                state[accountID]?.restorerOpts[network]?.lastUsedInternalIndex
-              ),
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID]?.restorerOpts,
+              [network]: {
+                ...state.accounts[accountID]?.restorerOpts[network],
+                lastUsedInternalIndex: increment(
+                  state.accounts[accountID]?.restorerOpts[network]?.lastUsedInternalIndex
+                ),
+              },
             },
           },
         },
@@ -171,15 +236,18 @@ export function walletReducer(
       const network = payload.network as NetworkString;
       return {
         ...state,
-        [accountID]: {
-          ...state[accountID],
-          restorerOpts: {
-            ...state[accountID]?.restorerOpts,
-            [network]: {
-              ...state[accountID]?.restorerOpts[network],
-              lastUsedExternalIndex: increment(
-                state[accountID]?.restorerOpts[network]?.lastUsedExternalIndex
-              ),
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID]?.restorerOpts,
+              [network]: {
+                ...state.accounts[accountID]?.restorerOpts[network],
+                lastUsedExternalIndex: increment(
+                  state.accounts[accountID]?.restorerOpts[network]?.lastUsedExternalIndex
+                ),
+              },
             },
           },
         },
@@ -253,13 +321,6 @@ export function walletReducer(
       };
     }
 
-    case ACTION_TYPES.SET_DEEP_RESTORER_IS_LOADING: {
-      return {
-        ...state,
-        deepRestorer: { ...state.deepRestorer, isLoading: payload.isLoading },
-      };
-    }
-
     case ACTION_TYPES.SET_DEEP_RESTORER_ERROR: {
       return {
         ...state,
@@ -303,6 +364,26 @@ export function walletReducer(
       return {
         ...state,
         updaterLoaders: neverNegative(state.updaterLoaders - 1),
+      };
+    }
+
+    case ACTION_TYPES.PUSH_RESTORER_LOADER: {
+      return {
+        ...state,
+        deepRestorer: {
+          ...state.deepRestorer,
+          restorerLoaders: neverNegative(state.deepRestorer.restorerLoaders + 1),
+        },
+      };
+    }
+
+    case ACTION_TYPES.POP_RESTORER_LOADER: {
+      return {
+        ...state,
+        deepRestorer: {
+          ...state.deepRestorer,
+          restorerLoaders: neverNegative(state.deepRestorer.restorerLoaders - 1),
+        },
       };
     }
 

@@ -1,6 +1,7 @@
-import { FormikProps, withFormik } from 'formik';
-import { RouteComponentProps } from 'react-router';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import type { FormikProps } from 'formik';
+import { withFormik } from 'formik';
+import type { RouteComponentProps } from 'react-router';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import cx from 'classnames';
 import Button from './button';
 import {
@@ -10,11 +11,11 @@ import {
 import { createAddress } from '../../domain/address';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
 import * as Yup from 'yup';
-import { TransactionState } from '../../application/redux/reducers/transaction-reducer';
-import { Asset } from '../../domain/assets';
+import type { TransactionState } from '../../application/redux/reducers/transaction-reducer';
+import type { Asset } from '../../domain/assets';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
-import { Account } from '../../domain/account';
-import { NetworkString } from 'ldk';
+import type { Account } from '../../domain/account';
+import type { NetworkString } from 'ldk';
 import { isValidAddressForNetwork } from '../../application/utils/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 
@@ -185,7 +186,9 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(incrementChangeAddressIndex(props.account.getAccountID(), props.network)); // persist address in wallet
+    await props.dispatch(
+      incrementChangeAddressIndex(props.account.getInfo().accountID, props.network)
+    ); // persist address in wallet
 
     await props
       .dispatch(

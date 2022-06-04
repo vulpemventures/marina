@@ -1,5 +1,5 @@
-import { NetworkString, RecipientInterface } from 'ldk';
-import { DataRecipient } from 'marina-provider';
+import type { NetworkString, RecipientInterface } from 'ldk';
+import type { DataRecipient } from 'marina-provider';
 
 export interface AssetAmount {
   asset: string;
@@ -19,6 +19,10 @@ export type ConnectData = {
   msg?: {
     hostname?: string;
     message?: string;
+  };
+  createAccount?: {
+    namespace?: string;
+    hostname?: string;
   };
 };
 

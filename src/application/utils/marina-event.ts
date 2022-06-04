@@ -1,6 +1,6 @@
-import { NetworkString, Outpoint, toOutpoint, UnblindedOutput } from 'ldk';
-import { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
-import { MarinaEventType } from 'marina-provider';
+import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
+import type { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
+import type { MarinaEventType } from 'marina-provider';
 
 export interface MarinaEvent<P extends any> {
   type: MarinaEventType;
@@ -51,7 +51,7 @@ export function compareUtxoState(
 
   for (const [outpointStr, utxo] of Object.entries(oldState)) {
     if (!newOutpointStrings.includes(outpointStr)) {
-      events.push({ type: 'SPENT_UTXO', payload: toOutpoint(utxo) });
+      events.push({ type: 'SPENT_UTXO', payload: utxo });
     }
   }
 

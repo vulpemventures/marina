@@ -1,4 +1,4 @@
-import { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, UnblindedOutput } from 'ldk';
 
 export type UtxosAndTxsByNetwork = Record<NetworkString, UtxosAndTxs>;
 

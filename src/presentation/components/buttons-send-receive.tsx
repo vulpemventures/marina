@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import browser from 'webextension-polyfill';
-import { RootReducerState } from '../../domain/common';
+import type { RootReducerState } from '../../domain/common';
 import { BACKUP_UNLOCK_ROUTE } from '../routes/constants';
 import Button from './button';
 import SaveMnemonicModal from './modal-save-mnemonic';

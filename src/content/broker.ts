@@ -1,18 +1,13 @@
 import browser from 'webextension-polyfill';
 import { serializerAndDeserializer } from '../application/redux/store';
 import { stringify } from '../application/utils/browser-storage-converters';
-import {
-  isResponseMessage,
-  MessageHandler,
-  PopupName,
-  RequestMessage,
-  ResponseMessage,
-} from '../domain/message';
+import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
+import { isResponseMessage } from '../domain/message';
 import { BrokerProxyStore } from './brokerProxyStore';
 
 export type BrokerOption = (broker: Broker) => void;
 
-export default class Broker {
+export default class Broker<T extends string = string> {
   protected store?: BrokerProxyStore = undefined;
   protected backgroundScriptPort: browser.Runtime.Port;
   protected providerName: string;
@@ -26,15 +21,15 @@ export default class Broker {
     this.providerName = name;
   }
 
-  start(handler: MessageHandler) {
+  protected start(handler: MessageHandler<T>) {
     // start listening for messages from the injected script in page
     window.addEventListener(
       'message',
       (event: MessageEvent<any>) => {
-        if (!isMessageEvent(event)) return;
-        if (event.data.provider !== this.providerName) return;
+        if (!isMessageEvent<T>(event)) return; // ignore bad format messages
+        if (event.data.provider !== this.providerName) return; // ignore messages from other providers
 
-        // handler should reject and resolve ResponseMessage.
+        // handler should reject and resolve ResponseMessage
         handler(event.data)
           .then((responseMessage: ResponseMessage) => this.sendMessage(responseMessage))
           .catch((error: any) => {
@@ -79,7 +74,9 @@ export default class Broker {
 }
 
 // custom type guard for MessageEvent
-function isMessageEvent(event: MessageEvent<any>): event is MessageEvent<RequestMessage> {
+function isMessageEvent<T extends string>(
+  event: MessageEvent<any>
+): event is MessageEvent<RequestMessage<T>> {
   return (
     event.source === window && event.data && event.data.id && event.data.name && event.data.provider
   );

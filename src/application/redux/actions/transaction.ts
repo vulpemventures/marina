@@ -8,13 +8,13 @@ import {
   PENDING_TX_SET_STEP,
   ADD_TX,
 } from './action-types';
-import { AnyAction } from 'redux';
-import { Address } from '../../../domain/address';
-import { TxDisplayInterface } from '../../../domain/transaction';
-import { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
-import { AccountID } from '../../../domain/account';
-import { ActionWithPayload } from '../../../domain/common';
-import { PendingTxStep } from '../reducers/transaction-reducer';
+import type { AnyAction } from 'redux';
+import type { Address } from '../../../domain/address';
+import type { TxDisplayInterface } from '../../../domain/transaction';
+import type { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
+import type { AccountID } from '../../../domain/account';
+import type { ActionWithPayload } from '../../../domain/common';
+import type { PendingTxStep } from '../reducers/transaction-reducer';
 
 export type AddTxAction = ActionWithPayload<{
   tx: TxInterface;

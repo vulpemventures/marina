@@ -1,7 +1,7 @@
-import { NetworkString, RecipientInterface } from 'ldk';
-import { DataRecipient } from 'marina-provider';
-import { AnyAction } from 'redux';
-import { ConnectData } from '../../../domain/connect';
+import type { NetworkString, RecipientInterface } from 'ldk';
+import type { DataRecipient } from 'marina-provider';
+import type { AnyAction } from 'redux';
+import type { ConnectData } from '../../../domain/connect';
 import {
   DISABLE_WEBSITE,
   ENABLE_WEBSITE,
@@ -9,6 +9,7 @@ import {
   FLUSH_SELECTED_HOSTNAME,
   FLUSH_TX,
   SELECT_HOSTNAME,
+  SET_CREATE_ACCOUNT_DATA,
   SET_MSG,
   SET_TX_DATA,
 } from './action-types';
@@ -50,6 +51,13 @@ export function setTx(hostname: string, pset: string): AnyAction {
   return {
     type: SET_TX_DATA,
     payload: { hostname, pset } as ConnectData['tx'],
+  };
+}
+
+export function setCreateAccountData(connectData: ConnectData['createAccount']): AnyAction {
+  return {
+    type: SET_CREATE_ACCOUNT_DATA,
+    payload: { connectData },
   };
 }
 

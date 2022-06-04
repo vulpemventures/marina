@@ -7,6 +7,7 @@ import {
   SETTINGS_EXPLORER_ROUTE,
   SETTINGS_NETWORKS_ROUTE,
   DEFAULT_ROUTE,
+  SETTINGS_ACCOUNTS_ROUTE,
 } from '../routes/constants';
 
 const SettingsMenuSettings: React.FC = () => {
@@ -16,6 +17,7 @@ const SettingsMenuSettings: React.FC = () => {
   const handleExplorer = () => history.push(SETTINGS_EXPLORER_ROUTE);
   const handleNetworks = () => history.push(SETTINGS_NETWORKS_ROUTE);
   const handleDeepRestorer = () => history.push(SETTINGS_DEEP_RESTORER_ROUTE);
+  const handleAccounts = () => history.push(SETTINGS_ACCOUNTS_ROUTE);
 
   return (
     <ShellPopUp
@@ -48,6 +50,13 @@ const SettingsMenuSettings: React.FC = () => {
         <button onClick={handleDeepRestorer}>
           <li className="settings-list-item">
             <span className="font-regular text-base">Deep Restorer</span>
+            <img className="w-5 h-5" src="assets/images/chevron-right.svg" alt="chevron" />
+          </li>
+        </button>
+
+        <button onClick={handleAccounts}>
+          <li className="settings-list-item">
+            <span className="font-regular text-base">Accounts</span>
             <img className="w-5 h-5" src="assets/images/chevron-right.svg" alt="chevron" />
           </li>
         </button>

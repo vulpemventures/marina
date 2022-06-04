@@ -1,5 +1,4 @@
 import browser from 'webextension-polyfill';
-
 import MarinaBroker from './marina/marinaBroker';
 
 // start the broker + inject the inject-script.js script

@@ -1,5 +1,6 @@
 import { useHistory } from 'react-router-dom';
-import { FormikProps, withFormik } from 'formik';
+import type { FormikProps } from 'formik';
+import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import cx from 'classnames';
 import React from 'react';

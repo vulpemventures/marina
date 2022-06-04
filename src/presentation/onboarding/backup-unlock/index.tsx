@@ -1,16 +1,18 @@
 import React from 'react';
-import { RouteComponentProps, useHistory } from 'react-router-dom';
-import { FormikProps, withFormik } from 'formik';
+import type { RouteComponentProps } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
+import type { FormikProps } from 'formik';
+import { withFormik } from 'formik';
 import * as Yup from 'yup';
 import Shell from '../../components/shell';
 import Input from '../../components/input';
 import Button from '../../components/button';
 import { decrypt } from '../../../application/utils/crypto';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { EncryptedMnemonic } from '../../../domain/encrypted-mnemonic';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
+import type { RootReducerState } from '../../../domain/common';
 import { createPassword } from '../../../domain/password';
 import { setBackup } from '../../../application/redux/actions/onboarding';
 
@@ -69,9 +71,7 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
 const BackUpUnlock: React.FC = () => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-  const encryptedMnemonic = useSelector(
-    (s: RootReducerState) => s.wallet.mainAccount.encryptedMnemonic
-  );
+  const encryptedMnemonic = useSelector((s: RootReducerState) => s.wallet.encryptedMnemonic);
 
   return (
     <Shell hasBackBtn={false}>

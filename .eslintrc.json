@@ -50,6 +50,7 @@
     "@typescript-eslint/no-unsafe-return": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/consistent-type-imports": "error",
     "react-hooks/exhaustive-deps": "off",
     "cypress/no-assigning-return-values": "error",
     "cypress/no-unnecessary-waiting": "error",

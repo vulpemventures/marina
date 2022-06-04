@@ -1,10 +1,11 @@
-import { FormikProps, withFormik } from 'formik';
-import React from 'react';
+import type { FormikProps } from 'formik';
+import { withFormik } from 'formik';
+import React, { useRef } from 'react';
 import * as Yup from 'yup';
 import Button from './button';
 import Input from './input';
 import Modal from './modal';
-import { DebouncedFunc } from 'lodash';
+import { debounce } from 'lodash';
 
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
@@ -13,7 +14,7 @@ interface ModalUnlockFormValues {
 
 interface ModalUnlockFormProps {
   handleModalUnlockClose(): void;
-  handleUnlock: DebouncedFunc<(password: string) => Promise<void>>;
+  handleUnlock: (password: string) => Promise<void>;
   isModalUnlockOpen: boolean;
 }
 
@@ -70,16 +71,17 @@ const ModalUnlock: React.FC<ModalUnlockFormProps> = ({
   handleUnlock,
   isModalUnlockOpen,
 }) => {
-  if (!isModalUnlockOpen) {
-    return <></>;
-  }
+  const deboundedHandleUnlock = useRef(
+    debounce(handleUnlock, 2000, { leading: true, trailing: false })
+  );
 
+  if (!isModalUnlockOpen) return <></>;
   return (
     <Modal isOpen={isModalUnlockOpen} onClose={handleModalUnlockClose}>
       <ModalUnlockEnhancedForm
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={handleUnlock}
+        handleUnlock={deboundedHandleUnlock.current}
       />
     </Modal>
   );

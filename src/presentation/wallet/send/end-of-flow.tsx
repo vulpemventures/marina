@@ -1,17 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
-import { debounce } from 'lodash';
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
-import { Account } from '../../../domain/account';
-import { NetworkString, UnblindedOutput } from 'ldk';
-import { updateTaskAction } from '../../../application/redux/actions/updater';
+import type { Account } from '../../../domain/account';
+import type { NetworkString, UnblindedOutput } from 'ldk';
+import { updateTaskAction } from '../../../application/redux/actions/task';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { broadcastTx } from '../../../application/utils/network';
 import { blindAndSignPset } from '../../../application/utils/transaction';
@@ -19,7 +18,8 @@ import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/action
 import { getUtxosFromChangeAddresses } from '../../../application/utils/utxos';
 
 export interface EndOfFlowProps {
-  accounts: Account[];
+  signerAccounts: Account[];
+  changeAccount?: Account;
   pset?: string;
   selectedUtxos: UnblindedOutput[];
   explorerURL: string;
@@ -29,7 +29,8 @@ export interface EndOfFlowProps {
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
-  accounts,
+  signerAccounts,
+  changeAccount,
   pset,
   explorerURL,
   recipientAddress,
@@ -51,14 +52,15 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       if (!pset || !recipientAddress) throw new Error('no pset to sign');
       const pass = createPassword(password);
       const identities = await Promise.all(
-        accounts.map((a) => a.getSigningIdentity(pass, network))
+        signerAccounts.map((a) => a.getSigningIdentity(pass, network))
       );
       const tx = await blindAndSignPset(
         pset,
         selectedUtxos,
         identities,
         [recipientAddress],
-        changeAddresses
+        changeAddresses,
+        true
       );
       setSignedTx(tx);
 
@@ -79,16 +81,16 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       );
 
       // credit change utxos to balance
-      if (changeUtxos && changeUtxos.length > 0) {
+      if (changeUtxos && changeAccount && changeUtxos.length > 0) {
         await dispatch(
-          await addUnconfirmedUtxos(tx, changeUtxos, accounts[0].getAccountID(), network)
+          await addUnconfirmedUtxos(tx, changeUtxos, changeAccount.getInfo().accountID, network)
         );
       }
 
       // start updater
       await Promise.all(
-        accounts
-          .map((a) => a.getAccountID())
+        signerAccounts
+          .map((a) => a.getInfo().accountID)
           .map((id) => updateTaskAction(id, network))
           .map(dispatch)
       );
@@ -114,10 +116,6 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
     handleModalUnlockClose();
   };
 
-  const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  ).current;
-
   return (
     <ShellPopUp
       backgroundImagePath="/assets/images/popup/bg-sm.png"
@@ -137,7 +135,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       )}
       <ModalUnlock
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={handleUnlock}
         isModalUnlockOpen={isModalUnlockOpen}
       />
     </ShellPopUp>
