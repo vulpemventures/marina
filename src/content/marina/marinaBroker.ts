@@ -53,8 +53,7 @@ import type { TaprootAddressInterface } from '../../domain/customscript-identity
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
-
-type DescriptorTemplate = Template<string>;
+import { toDescriptor } from '@ionio-lang/ionio';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -395,7 +394,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Only custom script accounts can import templates');
           }
 
-          const [covenant, changeCovenant] = params as [DescriptorTemplate, DescriptorTemplate?];
+          const [covenant, changeCovenant] = params?.map(castTemplate) as [Template, Template?];
           if (!validate(covenant.template)) {
             throw new Error(`Invalid template ${covenant.template}`);
           }
@@ -516,4 +515,17 @@ export default class MarinaBroker extends Broker<keyof Marina> {
       else throw err;
     }
   };
+}
+
+function castTemplate(template?: Template): Template<string> | undefined {
+  if (!template) return undefined;
+  if (template.type === 'marina-descriptors') return template;
+  if (template.type === 'ionio-artifact') {
+    const descriptor = toDescriptor(template.template);
+    return {
+      type: 'marina-descriptors',
+      template: descriptor,
+    };
+  }
+  throw new Error(`Invalid template, unsupported type ${template.type}`);
 }

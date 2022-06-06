@@ -23,6 +23,7 @@
     "liquidjs-lib": "git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support"
   },
   "dependencies": {
+    "@ionio-lang/ionio": "^0.1.5",
     "@metamask/safe-event-emitter": "^2.0.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",
     "autoprefixer": "^9.8.6",
