@@ -12,7 +12,7 @@ export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
   const validSeed = (seed = ''): boolean => {
     const length = seed.trim().split(' ').length;
     return length === 12 || length === 24;
-  }
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!validSeed(event.target.value)) {
