@@ -114,6 +114,7 @@ function createMainAccount(
       accountID: MainAccountID, // main account is unique
       masterXPub: data.masterXPub,
       isReady: true, // always true for main account
+      template: `p2wpkh($${MainAccountID})`,
     }),
   };
 }

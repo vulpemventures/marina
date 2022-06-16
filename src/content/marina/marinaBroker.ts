@@ -494,7 +494,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Expected 1 parameter');
           }
 
-          const [accountName] = params as [string];
+          let [accountName] = params as [string];
+          if (!accountName) accountName = MainAccountID;
+
           if (!this.accountExists(accountName)) {
             throw new Error(`Account ${accountName} not found`);
           }
