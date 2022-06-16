@@ -439,10 +439,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.1.5.tgz#486c2eaaf3b71c59757c7372c3ae2187f3aee094"
-  integrity sha512-O0k/+FBX3tOMbTyFVkP1FeAx8OTEIpGy5jkAyo/jnFrUHXyRkxLcPkcnALoqUJEquOGOEgp3UOoCR1M2EgaK1Q==
+"@ionio-lang/ionio@^0.1.7":
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.1.7.tgz#0a666b58e74997da22558f43135d3efceff066c9"
+  integrity sha512-ArjxmBkbVABhCvSSRVFCtwwrl2mRybd4sOqGV73EeLd6kOyJh1ZmLoYuuW/DbOcb9tru46KQ9RPy9D/uwDj/WQ==
   dependencies:
     ldk "^0.5.1"
     liquidjs-lib "git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support"
