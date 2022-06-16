@@ -203,6 +203,7 @@ function* updaterWorker(
     const { accountID, network } = yield take(chanToListen);
     try {
       yield put(pushUpdaterLoader());
+      console.debug(`${new Date()} updating ${accountID} on ${network}`);
       yield* updateTxsAndUtxos(accountID, network);
     } finally {
       yield put(popUpdaterLoader());

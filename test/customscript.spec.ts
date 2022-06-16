@@ -104,14 +104,14 @@ describe('CustomScriptIdentity', () => {
       ]);
 
     const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG ${inspectOutputIsLbtc(2)}`;
-    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
+    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}) })`;
     const id = makeRandomCustomScriptIdentity(template);
     const addr = await id.getNextAddress();
     expect(addr.taprootHashTree).toBeDefined();
     expect(addr.taprootInternalKey).toStrictEqual(
       'c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'
     );
-    const leafToSpendScript = addr.taprootHashTree?.left?.scriptHex;
+    const leafToSpendScript = addr.taprootHashTree?.scriptHex;
     expect(leafToSpendScript).toBeDefined();
 
     await faucet(addr.confidentialAddress, 10000);
