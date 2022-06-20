@@ -15,12 +15,13 @@ export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!validSeed(event.target.value)) {
+    setError(undefined);
+    onChange(event.target.value);
+  };
+
+  const handleBlur = () => {
+    if (!validSeed(value)) {
       setError('Mnemonic is not valid - should be 12 or 24 words separated by spaces');
-      onChange('');
-    } else {
-      setError(undefined);
-      onChange(event.target.value);
     }
   };
 
@@ -38,6 +39,7 @@ export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
           }
         )}
         onChange={handleChange}
+        onBlur={handleBlur}
         placeholder="Enter your mnemonic phrase"
         value={value}
       />
