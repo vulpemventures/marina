@@ -1,8 +1,8 @@
 import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
-import type { Outpoint, AddressInterface, NetworkString} from 'ldk';
+import type { Outpoint, AddressInterface, NetworkString, IdentityInterface} from 'ldk';
 import { fetchTxHex, getNetwork } from 'ldk';
-import type { MnemonicAccount } from '../../domain/account';
+import type { Account } from '../../domain/account';
 import {
   address,
   AssetHash,
@@ -15,6 +15,7 @@ import {
 } from 'liquidjs-lib';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
 import { fromSatoshi } from './format';
+import type { AccountInfo } from 'marina-provider';
 
 export const DEFAULT_LIGHTNING_LIMITS = { maximal: 0.04294967, minimal: 0.0005 };
 
@@ -143,7 +144,7 @@ export const isValidInvoice = (
 };
 
 export const getClaimTransaction = async (
-  account: MnemonicAccount,
+  account: Account<IdentityInterface, IdentityInterface, AccountInfo>,
   addr: AddressInterface,
   explorerURL: string,
   network: NetworkString,

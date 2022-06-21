@@ -149,6 +149,19 @@ function createCustomScriptAccount(
 ): CustomScriptAccount {
   return {
     type: AccountType.CustomScriptAccount,
+    getAccountID: () => MainAccountID,
+    getSigningKeyUnsafe: (password: string, derivationPath: string, network: NetworkString) => {
+      const mnemonic = decrypt(data.encryptedMnemonic, password);
+      // retreive the wallet's seed from mnemonic
+      const walletSeed = bip39.mnemonicToSeedSync(mnemonic);
+      // generate the master private key from the wallet seed
+      const networkObj = (networks as Record<string, any>)[network];
+      const bip32 = BIP32Factory(ecc);
+      const masterPrivateKeyNode = bip32.fromSeed(walletSeed, networkObj);
+
+      const { privateKey } = masterPrivateKeyNode.derivePath(derivationPath);
+      return ECPairFactory(ecc).fromPrivateKey(privateKey!, { network: networkObj });
+    },
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredCustomScriptIdentity(
         data.covenantDescriptors,

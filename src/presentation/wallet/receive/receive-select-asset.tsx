@@ -1,9 +1,10 @@
 import React from 'react';
 import { useHistory } from 'react-router';
-import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_ROUTE, UNKNOWN_ASSET_HASH } from '../../routes/constants';
+import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_ROUTE } from '../../routes/constants';
 import type { AssetSwap } from '../../../domain/assets';
 import type { NetworkString } from 'ldk';
 import AssetListScreen from '../../components/asset-list-screen';
+import { UNKNOWN_ASSET_HASH } from '../../../application/utils/constants';
 
 export interface ReceiveSelectAssetProps {
   network: NetworkString;
