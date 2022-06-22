@@ -47,7 +47,7 @@ const getRemoteImagePath = (hash: string) => `https://liquid.network/api/v1/asse
 // getter function using to look for assets on testnet and regtest
 // and return the correct asset icon path (with asset hash from mainnet)
   export function getAssetImagePath(assetHash: string): string {
-  if (!assetHash || assetHash === UNKNOWN_ASSET_HASH) return getLocalImagePath('unknown.svg');
+  if (!assetHash || assetHash === UNKNOWN_ASSET_HASH) return getLocalImagePath('unknown.png');
   const localImagePath = featuredAssetsMap.get(assetHash);
   if (localImagePath) return localImagePath;
   return getRemoteImagePath(assetHash);
