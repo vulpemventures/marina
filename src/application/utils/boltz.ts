@@ -47,9 +47,9 @@ export const boltzUrl: Record<NetworkString, string> = {
 };
 
 interface CreateSwapCommonRequest {
-  type: 'submarine' | 'reversesubmarine',
-  pairId: 'L-BTC/BTC',
-  orderSide: 'buy' | 'sell',
+  type: 'submarine' | 'reversesubmarine';
+  pairId: 'L-BTC/BTC';
+  orderSide: 'buy' | 'sell';
 }
 interface CreateSwapCommonRequest {
   type: 'submarine' | 'reversesubmarine';
@@ -130,4 +130,3 @@ export default class Boltz {
     }
   };
 }
-

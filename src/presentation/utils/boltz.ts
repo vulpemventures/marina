@@ -1,6 +1,6 @@
 import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
-import type { Outpoint, AddressInterface, NetworkString, IdentityInterface} from 'ldk';
+import type { Outpoint, AddressInterface, NetworkString, IdentityInterface } from 'ldk';
 import { fetchTxHex, getNetwork } from 'ldk';
 import type { Account } from '../../domain/account';
 import {
@@ -99,7 +99,7 @@ export const getInvoiceValue = (invoice: string): number => {
 export const getInvoiceExpireDate = (invoice: string): number => {
   const { timeExpireDate } = bolt11.decode(invoice);
   return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
-}
+};
 
 // validates if we can redeem with this redeem script
 const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
