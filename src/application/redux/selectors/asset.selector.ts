@@ -1,6 +1,7 @@
 import { MainAccountID } from '../../../domain/account';
-import { Asset, assetGetterFromIAssets } from '../../../domain/assets';
-import { RootReducerState } from '../../../domain/common';
+import type { Asset } from '../../../domain/assets';
+import type { RootReducerState } from '../../../domain/common';
+import { assetGetterFromIAssets } from '../../../domain/assets';
 import { lbtcAssetByNetwork } from '../../utils/network';
 import { selectNetwork } from './app.selector';
 import { selectBalances } from './balance.selector';
