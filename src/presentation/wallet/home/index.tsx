@@ -14,9 +14,9 @@ import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utils';
-import { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
-import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
-import { AssetSwap } from '../../../domain/assets';
+import type { PendingTxStep } from '../../../application/redux/reducers/transaction-reducer';
+import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import type { AssetSwap } from '../../../domain/assets';
 import { sortAssets } from '../../utils/sort';
 
 export interface HomeProps {

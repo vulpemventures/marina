@@ -1,22 +1,23 @@
 import { randomBytes } from 'crypto';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
 import { crypto } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
-import { fetchUtxos, NetworkString, Outpoint } from 'ldk';
+import type { NetworkString, Outpoint } from 'ldk';
+import { fetchUtxos } from 'ldk';
 import Button from '../../components/button';
-import Boltz, { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
+import type { ReverseSubmarineSwapResponse } from '../../../application/utils/boltz';
+import Boltz from '../../../application/utils/boltz';
 import { fromSatoshi, toSatoshi } from '../../utils/format';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { useDispatch, useSelector } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
 import { broadcastTx } from '../../../application/utils/network';
 import { isSet, sleep } from '../../../application/utils/common';
 import LightningShowInvoiceView from './lightning-show-invoice';
 import ModalUnlock from '../../components/modal-unlock';
-import { debounce } from 'lodash';
 import {
   DEFAULT_LIGHTNING_LIMITS,
   getClaimTransaction,
@@ -42,7 +43,8 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
   const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [values, setValues] = useState({ amount: '' });
+
+  const swapValue = useRef('');
 
   const boltz = new Boltz(network);
 
@@ -72,36 +74,36 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
     if (!isSet(value)) {
       setTouched(false);
       setErrors({ amount: '', submit: '' });
-      setValues({ amount: value });
+      swapValue.current = '';
       return;
     }
 
     if (Number.isNaN(value)) {
       setErrors({ amount: 'Not valid number', submit: '' });
-      setValues({ amount: value });
+      swapValue.current = '';
       return;
     }
 
     if (Number(value) <= 0) {
       setErrors({ amount: 'Number must be positive', submit: '' });
-      setValues({ amount: value });
+      swapValue.current = '';
       return;
     }
 
     if (Number(value) < limits.minimal) {
       setErrors({ amount: `Number must be higher then ${limits.minimal}`, submit: '' });
-      setValues({ amount: value });
+      swapValue.current = '';
       return;
     }
 
     if (Number(value) > limits.maximal) {
       setErrors({ amount: `Number must be lower then ${limits.maximal}`, submit: '' });
-      setValues({ amount: value });
+      swapValue.current = '';
       return;
     }
 
     setErrors({ amount: '', submit: '' });
-    setValues({ amount: value });
+    swapValue.current = value;
   };
 
   const handleUnlock = async (password: string) => {
@@ -124,7 +126,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       // create reverse submarine swap
       const { redeemScript, lockupAddress, invoice }: ReverseSubmarineSwapResponse =
         await boltz.createReverseSubmarineSwap({
-          invoiceAmount: toSatoshi(Number(values.amount)),
+          invoiceAmount: toSatoshi(Number(swapValue.current)),
           preimageHash: preimageHash,
           claimPublicKey: pubKey,
         });
@@ -189,7 +191,6 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
-  const debouncedHandleUnlock = debounce(handleUnlock, 2000, { leading: true, trailing: false });
 
   return (
     <ShellPopUp
@@ -248,7 +249,7 @@ const LightningAmountView: React.FC<LightningAmountProps> = ({ explorerURL, netw
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={handleUnlock}
       />
     </ShellPopUp>
   );

@@ -1,7 +1,8 @@
-import { AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
-import { ConnectData, newEmptyConnectData } from '../../../domain/connect';
-import { NetworkString } from 'ldk';
+import type { ConnectData } from '../../../domain/connect';
+import { newEmptyConnectData } from '../../../domain/connect';
+import type { NetworkString } from 'ldk';
 
 export const connectDataInitState: ConnectData = newEmptyConnectData();
 
@@ -57,6 +58,13 @@ export function connectDataReducer(
       return {
         ...state,
         tx: payload,
+      };
+    }
+
+    case ACTION_TYPES.SET_CREATE_ACCOUNT_DATA: {
+      return {
+        ...state,
+        createAccount: payload.connectData,
       };
     }
 

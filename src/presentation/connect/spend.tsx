@@ -1,38 +1,35 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { formatAddress, fromSatoshi } from '../utils';
 import ModalUnlock from '../components/modal-unlock';
-import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  connectWithConnectData,
-  WithConnectDataProps,
-} from '../../application/redux/containers/with-connect-data.container';
-import { RootReducerState } from '../../domain/common';
-import {
-  address,
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
+import type { RootReducerState } from '../../domain/common';
+import type {
   AddressInterface,
   ChangeAddressFromAssetGetter,
-  getNetwork,
   IdentityInterface,
   NetworkString,
   RecipientInterface,
   UnblindedOutput,
 } from 'ldk';
-import { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import { address, getNetwork } from 'ldk';
+import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
-import { ConnectData } from '../../domain/connect';
+import type { ConnectData } from '../../domain/connect';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
 import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
 import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { Account, MainAccountID } from '../../domain/account';
+import type { Account } from '../../domain/account';
+import { MainAccountID } from '../../domain/account';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
 import { Transaction } from 'liquidjs-lib';
-import { UnconfirmedOutput } from '../../domain/unconfirmed';
+import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -143,10 +140,6 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
     handleModalUnlockClose();
   };
 
-  const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  ).current;
-
   // send response message false when user closes the window without answering
   window.addEventListener('beforeunload', () => sendResponseMessage(false));
 
@@ -204,7 +197,7 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={handleUnlock}
       />
     </ShellConnectPopup>
   );
@@ -235,7 +228,9 @@ async function changeAddressGetter(
     getter: (asset: string) => {
       if (!assets.has(asset)) throw new Error('missing change address');
       if (!persisted[asset]) {
-        dispatch(incrementChangeAddressIndex(account.getAccountID(), net)).catch(console.error);
+        dispatch(incrementChangeAddressIndex(account.getInfo().accountID, net)).catch(
+          console.error
+        );
         persisted[asset] = true;
       }
       return changeAddresses[asset].confidentialAddress;

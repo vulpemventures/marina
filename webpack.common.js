@@ -32,7 +32,7 @@ module.exports = {
       "./wasm_loader.browser.js": path.resolve(__dirname, 'src/ecclib.ts'),
       "tiny-secp256k1-lib": path.resolve(__dirname, 'node_modules/tiny-secp256k1/lib'),
     },
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js', '.wasm'],
   },
   plugins: [
     new ProvidePlugin({

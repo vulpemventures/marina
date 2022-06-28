@@ -1,9 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
-import { networks, NetworkString } from 'ldk';
-import { IAssets } from '../../domain/assets';
+import type { NetworkString } from 'ldk';
+import { networks } from 'ldk';
+import type { IAssets } from '../../domain/assets';
 import { extractErrorMessage } from '../../presentation/utils/error';
-import { TransactionID } from 'marina-provider';
+import type { TransactionID } from 'marina-provider';
 
 export const broadcastTx = async (baseUrl: string, txHex: string): Promise<TransactionID> => {
   try {

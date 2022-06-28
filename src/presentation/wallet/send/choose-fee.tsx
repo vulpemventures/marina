@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import {
+import type {
   ChangeAddressFromAssetGetter,
   CoinSelectionResult,
   CoinSelector,
   CoinSelectorErrorFn,
-  greedyCoinSelector,
   NetworkString,
   RecipientInterface,
   UnblindedOutput,
-  walletFromCoins,
 } from 'ldk';
+import { getNetwork, greedyCoinSelector, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utils';
 import useLottieLoader from '../../hooks/use-lottie-loader';
-import { IAssets } from '../../../domain/assets';
+import type { IAssets } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
-import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import {
   flushPendingTx,
   setFeeAssetAndAmount,
@@ -27,11 +26,12 @@ import {
   setPendingTxStep,
   setPset,
 } from '../../../application/redux/actions/transaction';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { Address, createAddress } from '../../../domain/address';
-import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { Address } from '../../../domain/address';
+import { createAddress } from '../../../domain/address';
+import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
-import { Account, AccountID } from '../../../domain/account';
+import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
@@ -47,7 +47,7 @@ export interface ChooseFeeProps {
   balances: BalancesByAsset;
   taxiAssets: string[];
   lbtcAssetHash: string;
-  account: Account;
+  changeAccount: Account;
   utxos: UnblindedOutput[];
 }
 
@@ -70,7 +70,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
   balances,
   taxiAssets,
   lbtcAssetHash,
-  account,
+  changeAccount,
   utxos,
 }) => {
   const history = useHistory();
@@ -126,7 +126,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const newStatePromise = isTaxi()
       ? stateForTaxiPSET(
-          account,
+          changeAccount,
           feeAsset,
           getRecipient(),
           changeAddress,
@@ -134,7 +134,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           network,
           state.topup
         )
-      : stateForRegularPSET(getRecipient(), changeAddress, utxos, network);
+      : stateForRegularPSET(getRecipient(), changeAddress.value, utxos, network, changeAccount);
 
     newStatePromise().then(setState).catch(handleError).finally(done);
 
@@ -150,7 +150,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
       if (!feeAsset) throw new Error('fee asset not selected');
       setLoading(true);
       await Promise.all(
-        actionsFromState(state, feeAsset, account.getAccountID(), network).map(dispatch)
+        actionsFromState(state, feeAsset, changeAccount.getInfo().accountID, network).map(dispatch)
       );
       history.push({
         pathname: SEND_CONFIRMATION_ROUTE,
@@ -192,11 +192,11 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
           I pay fee in:
         </p>
         <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-          {[lbtcAssetHash, ...taxiAssets].map((assetHash) => (
+          {[lbtcAssetHash, ...taxiAssets].map((assetHash, index) => (
             <Button
               className="flex-1"
               isOutline={feeAsset !== assetHash}
-              key={assetHash}
+              key={index}
               onClick={() => handlePayFees(assetHash)}
               roundedMd={true}
               textBase={true}
@@ -259,26 +259,41 @@ const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelect
 
 function stateForRegularPSET(
   recipient: RecipientInterface,
-  change: Address,
+  changeAddress: string,
   utxos: UnblindedOutput[],
-  network: NetworkString
+  network: NetworkString,
+  lbtcChangeAccount: Account
 ): () => Promise<State> {
-  return function () {
+  return async function () {
     const result: State = {};
-    result.unsignedPset = undefined;
-    result.feeChange = undefined;
     result.utxos = [];
     const w = walletFromCoins(utxos, network);
+
+    if (recipient.asset !== getNetwork(network).assetHash) {
+      const watchID = await lbtcChangeAccount.getWatchIdentity(network);
+      const nextChangeAddress = await watchID.getNextChangeAddress();
+      result.feeChange = createAddress(
+        nextChangeAddress.confidentialAddress,
+        nextChangeAddress.derivationPath
+      );
+    }
 
     result.unsignedPset = w.sendTx(
       recipient,
       greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-      change.value,
+      (asset: string) => {
+        if (asset === recipient.asset) {
+          return changeAddress;
+        } else {
+          if (!result.feeChange) throw new Error('no fee change address');
+          return result.feeChange.value;
+        }
+      },
       true
     );
 
     result.topup = undefined;
-    return Promise.resolve(result);
+    return result;
   };
 }
 

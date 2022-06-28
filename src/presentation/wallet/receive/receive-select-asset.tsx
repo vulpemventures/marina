@@ -1,9 +1,9 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 import { RECEIVE_ADDRESS_ROUTE, LIGHTNING_ENTER_AMOUNT_ROUTE } from '../../routes/constants';
-import { AssetSwap } from '../../../domain/assets';
+import type { AssetSwap } from '../../../domain/assets';
+import type { NetworkString } from 'ldk';
 import AssetListScreen from '../../components/asset-list-screen';
-import { NetworkString } from 'ldk';
 import { UNKNOWN_ASSET_HASH } from '../../../application/utils/constants';
 
 export interface ReceiveSelectAssetProps {

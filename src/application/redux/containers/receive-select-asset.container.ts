@@ -1,8 +1,7 @@
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import ReceiveSelectAssetView, {
-  ReceiveSelectAssetProps,
-} from '../../../presentation/wallet/receive/receive-select-asset';
+import type { RootReducerState } from '../../../domain/common';
+import type { ReceiveSelectAssetProps } from '../../../presentation/wallet/receive/receive-select-asset';
+import ReceiveSelectAssetView from '../../../presentation/wallet/receive/receive-select-asset';
 import { selectAssets } from '../selectors/asset.selector';
 
 const mapStateToProps = (state: RootReducerState): ReceiveSelectAssetProps => {

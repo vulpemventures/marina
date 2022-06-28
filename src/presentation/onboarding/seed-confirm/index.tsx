@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import { useDispatch } from 'react-redux';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { setOnboardingVerified } from '../../../application/redux/actions/onboarding';
 import { INVALID_MNEMONIC_ERROR } from '../../../application/utils/constants';
 

@@ -2,12 +2,12 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import { LIGHTNING_ENTER_INVOICE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import { useDispatch } from 'react-redux';
-import { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
+import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import { setAsset } from '../../../application/redux/actions/transaction';
-import { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { AssetSwap } from '../../../domain/assets';
+import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
+import type { AssetSwap } from '../../../domain/assets';
 import AssetListScreen from '../../components/asset-list-screen';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 
 export interface SendSelectAssetProps {
   network: NetworkString;

@@ -1,4 +1,5 @@
-import { address, networks, NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
+import { address, networks } from 'ldk';
 
 export const isConfidentialAddress = (addr: string): boolean => {
   try {

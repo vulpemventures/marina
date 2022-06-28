@@ -1,19 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import { debounce } from 'lodash';
-import {
-  connectWithConnectData,
-  WithConnectDataProps,
-} from '../../application/redux/containers/with-connect-data.container';
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import { signMessageWithMnemonic } from '../../application/utils/message';
-import { networks } from 'liquidjs-lib';
 import { useSelector } from 'react-redux';
-import { RootReducerState } from '../../domain/common';
+import type { RootReducerState } from '../../domain/common';
 import PopupWindowProxy from './popupWindowProxy';
-import { SignedMessage } from 'marina-provider';
-import { NetworkString } from 'ldk';
+import type { SignedMessage } from 'marina-provider';
+import type { NetworkString } from 'ldk';
+import { networks } from 'ldk';
 import {
   INVALID_PASSWORD_ERROR,
   SOMETHING_WENT_WRONG_ERROR,
@@ -44,7 +41,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
   const [error, setError] = useState<string>('');
   const network = useSelector((state: RootReducerState) => state.app.network);
   const encryptedMnemonic = useSelector(
-    (state: RootReducerState) => state.wallet.mainAccount.encryptedMnemonic
+    (state: RootReducerState) => state.wallet.encryptedMnemonic
   );
 
   const popupWindowProxy = new PopupWindowProxy<SignMessagePopupResponse>();
@@ -88,10 +85,6 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
     handleModalUnlockClose();
   };
 
-  const debouncedHandleUnlock = useRef(
-    debounce(handleUnlock, 2000, { leading: true, trailing: false })
-  ).current;
-
   // send response message false when user closes the window without answering
   window.addEventListener('beforeunload', () => sendResponseMessage(false));
 
@@ -134,7 +127,7 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={handleUnlock}
       />
     </ShellConnectPopup>
   );

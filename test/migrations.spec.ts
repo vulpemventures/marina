@@ -1,10 +1,11 @@
 import { assert } from 'chai';
-import { walletMigrations, WalletPersistedStateV1 } from '../src/domain/migrations';
+import type { WalletPersistedStateV1 } from '../src/domain/migrations';
+import { walletMigrations } from '../src/domain/migrations';
 
 describe('migration from v1 to v2', () => {
   it('should be able to compute v2 from v1', () => {
     const walletStateV1: WalletPersistedStateV1 = {
-      deepRestorer: { gapLimit: 20, isLoading: false },
+      deepRestorer: { gapLimit: 20, restorerLoaders: 0 },
       encryptedMnemonic: '08e53a2e9e3ed3ba34dd5ce7f94e1e62abc3549e2d8796d8cd01102a23af1a',
       isVerified: true,
       masterBlindingKey: 'master blinding key',

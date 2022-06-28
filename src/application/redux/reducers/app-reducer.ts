@@ -1,13 +1,14 @@
+import type { IApp } from '../../../domain/app';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
-  IApp,
   NigiriDefaultExplorerURLs,
 } from '../../../domain/app';
-import { IError } from '../../../domain/common';
-import { AnyAction } from 'redux';
+import type { IError } from '../../../domain/common';
+import type { AnyAction } from 'redux';
 import * as ACTION_TYPES from '../actions/action-types';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
+import { MainAccountID } from '../../../domain/account';
 
 export const appInitState: IApp = {
   isOnboardingCompleted: false,
@@ -18,6 +19,7 @@ export const appInitState: IApp = {
     liquid: BlockstreamExplorerURLs,
     testnet: BlockstreamTestnetExplorerURLs,
   },
+  changeAccount: MainAccountID,
 };
 
 export function appReducer(state: IApp = appInitState, { type, payload }: AnyAction): IApp {
@@ -64,6 +66,13 @@ export function appReducer(state: IApp = appInitState, { type, payload }: AnyAct
       return {
         ...state,
         explorerByNetwork: { ...state.explorerByNetwork, [payload.network]: payload.explorer },
+      };
+    }
+
+    case ACTION_TYPES.SET_CHANGE_ACCOUNT: {
+      return {
+        ...state,
+        changeAccount: payload.accountID,
       };
     }
 

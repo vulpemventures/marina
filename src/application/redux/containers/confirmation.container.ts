@@ -1,9 +1,8 @@
 import { connect } from 'react-redux';
 import { assetGetterFromIAssets } from '../../../domain/assets';
-import { RootReducerState } from '../../../domain/common';
-import ConfirmationView, {
-  ConfirmationProps,
-} from '../../../presentation/wallet/send/confirmation';
+import type { RootReducerState } from '../../../domain/common';
+import type { ConfirmationProps } from '../../../presentation/wallet/send/confirmation';
+import ConfirmationView from '../../../presentation/wallet/send/confirmation';
 
 const mapStateToProps = (state: RootReducerState): ConfirmationProps => ({
   transaction: state.transaction,

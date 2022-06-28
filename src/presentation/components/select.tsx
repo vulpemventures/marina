@@ -37,10 +37,10 @@ const Select: React.FC<Props> = ({ list, selected, onSelect, disabled, onClick }
                 className="focus:outline-none px-3 py-2 text-left rounded-md shadow-lg"
                 static
               >
-                {list.map((item) => (
+                {list.map((item, index) => (
                   <Listbox.Option
                     className="focus:outline-none py-3 cursor-pointer"
-                    key={item}
+                    key={index}
                     value={item}
                   >
                     {item}

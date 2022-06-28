@@ -1,12 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import { debounce } from 'lodash';
-import {
-  connectWithConnectData,
-  WithConnectDataProps,
-} from '../../application/redux/containers/with-connect-data.container';
+import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
+import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
 import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
@@ -66,10 +63,6 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
     handleModalUnlockClose();
   };
 
-  const debouncedHandleUnlock = useRef(
-    debounce(signTx, 2000, { leading: true, trailing: false })
-  ).current;
-
   // send response message false when user closes the window without answering
   window.addEventListener('beforeunload', () => sendResponseMessage(false));
 
@@ -115,7 +108,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       <ModalUnlock
         isModalUnlockOpen={isModalUnlockOpen}
         handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={debouncedHandleUnlock}
+        handleUnlock={signTx}
       />
     </ShellConnectPopup>
   );

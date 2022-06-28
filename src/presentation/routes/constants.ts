@@ -1,4 +1,4 @@
-import { PopupName } from '../../domain/message';
+import type { PopupName } from '../../domain/message';
 
 // Connect
 const makeConnectRoute = (popupName: PopupName) => `/connect/${popupName}`;
@@ -7,6 +7,7 @@ const CONNECT_ENABLE_ROUTE = makeConnectRoute('enable');
 const CONNECT_SPEND_ROUTE = makeConnectRoute('spend');
 const CONNECT_SIGN_PSET_ROUTE = makeConnectRoute('sign-pset');
 const CONNECT_SIGN_MSG_ROUTE = makeConnectRoute('sign-msg');
+const CONNECT_CREATE_ACCOUNT = makeConnectRoute('create-account');
 
 // Onboarding
 const INITIALIZE_WELCOME_ROUTE = '/initialize/welcome';
@@ -42,16 +43,17 @@ const LIGHTNING_ENTER_INVOICE_ROUTE = '/lightning/invoice';
 const SETTINGS_MENU_SECURITY_ROUTE = '/settings/security';
 const SETTINGS_SHOW_MNEMONIC_ROUTE = '/settings/security/show-mnemonic';
 const SETTINGS_CHANGE_PASSWORD_ROUTE = '/settings/security/change-password';
-//
+
 const SETTINGS_MENU_SETTINGS_ROUTE = '/settings/settings';
 const SETTINGS_CURRENCY_ROUTE = '/settings/settings/currency';
 const SETTINGS_EXPLORER_ROUTE = '/settings/settings/explorer';
 const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
-//
+
 const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
+const SETTINGS_ACCOUNTS_ROUTE = '/settings/accounts';
 
 export {
   //Connect
@@ -95,4 +97,6 @@ export {
   SETTINGS_CREDITS_ROUTE,
   SETTINGS_TERMS_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
+  SETTINGS_ACCOUNTS_ROUTE,
+  CONNECT_CREATE_ACCOUNT,
 };

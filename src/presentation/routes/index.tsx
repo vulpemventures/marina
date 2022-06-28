@@ -37,6 +37,8 @@ import {
   BACKUP_UNLOCK_ROUTE,
   SETTINGS_DEEP_RESTORER_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
+  SETTINGS_ACCOUNTS_ROUTE,
+  CONNECT_CREATE_ACCOUNT,
   LIGHTNING_ENTER_AMOUNT_ROUTE,
   LIGHTNING_ENTER_INVOICE_ROUTE,
 } from './constants';
@@ -46,6 +48,7 @@ import ConnectEnableView from '../connect/enable';
 import ConnectSpend from '../connect/spend';
 import ConnectSignTransaction from '../connect/sign-pset';
 import ConnectSignMsg from '../connect/sign-msg';
+import ConnectCreateAccount from '../connect/create-account';
 
 // Onboarding
 import Welcome from '../onboarding/welcome';
@@ -85,6 +88,7 @@ import SettingsNetworks from '../../application/redux/containers/settings-networ
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 import ReceiveView from '../wallet/receive';
+import SettingsAccounts from '../../application/redux/containers/settings-accounts.container';
 
 const Routes: React.FC = () => {
   return (
@@ -114,6 +118,11 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={LIGHTNING_ENTER_AMOUNT_ROUTE} component={LightningAmount} />
       <ProtectedRoute
         exact
+        path={LIGHTNING_ENTER_AMOUNT_ROUTE}
+        component={LightningAmount}
+      />
+      <ProtectedRoute
+        exact
         path={LIGHTNING_ENTER_INVOICE_ROUTE}
         component={LightningInvoice} // TODO
       />
@@ -133,6 +142,7 @@ const Routes: React.FC = () => {
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} component={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />
+      <ProtectedRoute exact path={SETTINGS_ACCOUNTS_ROUTE} component={SettingsAccounts} />
       <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />
@@ -141,6 +151,7 @@ const Routes: React.FC = () => {
       <Route exact path={CONNECT_SPEND_ROUTE} component={ConnectSpend} />
       <Route exact path={CONNECT_SIGN_PSET_ROUTE} component={ConnectSignTransaction} />
       <Route exact path={CONNECT_SIGN_MSG_ROUTE} component={ConnectSignMsg} />
+      <Route exact path={CONNECT_CREATE_ACCOUNT} component={ConnectCreateAccount} />
     </Switch>
   );
 };

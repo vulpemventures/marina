@@ -1,8 +1,8 @@
-import { decodePset, fetchAndUnblindUtxos, Mnemonic, networks, UnblindedOutput } from 'ldk';
+import type { Mnemonic, UnblindedOutput } from 'ldk';
+import { decodePset, fetchAndUnblindUtxos, networks, payments, Transaction } from 'ldk';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
-import { payments, Transaction } from 'liquidjs-lib';
 import * as ecc from 'tiny-secp256k1';
 
 jest.setTimeout(15000);

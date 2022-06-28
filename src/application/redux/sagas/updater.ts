@@ -1,28 +1,32 @@
-import {
+import * as ecc from 'tiny-secp256k1';
+
+import type {
   Outpoint,
-  fetchAndUnblindUtxosGenerator,
   AddressInterface,
   TxInterface,
-  address,
-  networks,
   BlindingKeyGetter,
-  fetchAndUnblindTxsGenerator,
   UnblindedOutput,
   NetworkString,
-  getAsset,
   Output,
 } from 'ldk';
-import * as ecc from 'tiny-secp256k1';
-import { Account, AccountID } from '../../../domain/account';
-import { UtxosAndTxs } from '../../../domain/transaction';
+import {
+  fetchAndUnblindUtxosGenerator,
+  address,
+  networks,
+  fetchAndUnblindTxsGenerator,
+  getAsset,
+} from 'ldk';
+import type { Account, AccountID } from '../../../domain/account';
+import type { UtxosAndTxs } from '../../../domain/transaction';
 import { addTx } from '../actions/transaction';
-import { addUtxo, AddUtxoAction, deleteUtxo, unlockUtxos } from '../actions/utxos';
+import type { AddUtxoAction } from '../actions/utxos';
+import { unlockUtxos, addUtxo, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
+import type { SagaGenerator } from './utils';
 import {
   createChannel,
   newSagaSelector,
   processAsyncGenerator,
-  SagaGenerator,
   selectAccountSaga,
   selectAllAccountsIDsSaga,
   selectAllUnspentsSaga,
@@ -30,14 +34,16 @@ import {
   selectNetworkSaga,
 } from './utils';
 import { ADD_UTXO, UPDATE_TASK, AUTHENTICATION_SUCCESS } from '../actions/action-types';
-import { Asset } from '../../../domain/assets';
+import type { Asset } from '../../../domain/assets';
 import axios from 'axios';
-import { RootReducerState } from '../../../domain/common';
+import type { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
-import { updateTaskAction, UpdateTaskAction } from '../actions/updater';
+import type { UpdateTaskAction } from '../actions/task';
+import { updateTaskAction } from '../actions/task';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
-import { Channel } from 'redux-saga';
-import { put, AllEffect, all, take, fork, call, takeLatest } from 'redux-saga/effects';
+import type { Channel } from 'redux-saga';
+import type { AllEffect } from 'redux-saga/effects';
+import { put, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
@@ -119,8 +125,8 @@ const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScri
     );
   };
 
-// UtxosUpdater lets to update the utxos state for a given AccountID
-// it fetches and unblinds the unspents comming from the explorer
+// txsUpdater lets to update the transaction state for a given AccountID
+// it fetches and unblinds the output and the prevouts of the new transactions comming from the explorer
 function* txsUpdater(
   accountID: AccountID,
   network: NetworkString
@@ -153,7 +159,8 @@ function* txsUpdater(
     identityBlindKeyGetter,
     explorerURL,
     // Check if tx exists in React state, if yes: skip unblinding and fetching
-    (tx) => txsHistory[tx.txid] !== undefined
+    // however prevent fetching if no transfers has been computed (avoid sync errors)
+    (tx) => txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0
   );
 
   const walletScripts = addresses.map((a) =>
@@ -196,6 +203,7 @@ function* updaterWorker(
     const { accountID, network } = yield take(chanToListen);
     try {
       yield put(pushUpdaterLoader());
+      console.debug(`${new Date()} updating ${accountID} on ${network}`);
       yield* updateTxsAndUtxos(accountID, network);
     } finally {
       yield put(popUpdaterLoader());

@@ -1,20 +1,22 @@
-import {
+import type {
   StateRestorerOpts,
+  CosignerMultisig,
+  XPub,
+  AddressInterface,
+  NetworkString,
+} from 'ldk';
+import {
   Mnemonic,
   IdentityType,
   mnemonicRestorerFromState,
   MasterPublicKey,
   masterPubKeyRestorerFromState,
-  CosignerMultisig,
   MultisigWatchOnly,
-  XPub,
   restorerFromState,
-  AddressInterface,
-  NetworkString,
 } from 'ldk';
+import type { MasterBlindingKey } from '../../domain/master-blinding-key';
+import type { MasterXPub } from '../../domain/master-extended-pub';
 import * as ecc from 'tiny-secp256k1';
-import { MasterBlindingKey } from '../../domain/master-blinding-key';
-import { MasterXPub } from '../../domain/master-extended-pub';
 
 export function getStateRestorerOptsFromAddresses(
   addresses: AddressInterface[]
@@ -53,9 +55,9 @@ export function restoredMnemonic(
 ): Promise<Mnemonic> {
   const mnemonicID = new Mnemonic({
     chain,
+    ecclib: ecc,
     type: IdentityType.Mnemonic,
     opts: { mnemonic },
-    ecclib: ecc,
   });
 
   return mnemonicRestorerFromState(mnemonicID)(restorerOpts);
@@ -81,11 +83,11 @@ export function newMasterPublicKey(
   return new MasterPublicKey({
     chain: network,
     type: IdentityType.MasterPublicKey,
+    ecclib: ecc,
     opts: {
       masterPublicKey: masterXPub,
       masterBlindingKey: masterBlindingKey,
     },
-    ecclib: ecc,
   });
 }
 
@@ -111,10 +113,10 @@ export function newMultisigWatchOnly(
   return new MultisigWatchOnly({
     chain: network,
     type: IdentityType.MultisigWatchOnly,
+    ecclib: ecc,
     opts: {
       requiredSignatures,
       cosigners: cosigners.concat([signerXPub]),
     },
-    ecclib: ecc,
   });
 }

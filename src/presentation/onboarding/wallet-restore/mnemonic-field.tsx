@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import cx from 'classnames';
 
-import * as Yup from 'yup';
-import { extractErrorMessage } from '../../utils/error';
-
 interface Props {
   value: string;
   onChange: (mnemonic: string) => void;
@@ -12,23 +9,19 @@ interface Props {
 export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
   const [error, setError] = useState<string>();
 
-  const testFunc = Yup.string()
-    .required()
-    .test(
-      'valid-mnemonic',
-      'mnemonic is not valid - should be 12 or 24 words separated by spaces',
-      (value) => value?.trim().split(' ').length === 12 || value?.trim().split(' ').length === 24
-    );
+  const validSeed = (seed = ''): boolean => {
+    const length = seed.trim().split(' ').length;
+    return length === 12 || length === 24;
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    try {
-      if (testFunc.isValidSync(event.target.value)) {
-        setError(undefined);
-        onChange(event.target.value);
-      }
-    } catch (e) {
-      setError(extractErrorMessage(e));
-      onChange('');
+    setError(undefined);
+    onChange(event.target.value);
+  };
+
+  const handleBlur = () => {
+    if (!validSeed(value)) {
+      setError('Mnemonic is not valid - should be 12 or 24 words separated by spaces');
     }
   };
 
@@ -46,6 +39,7 @@ export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
           }
         )}
         onChange={handleChange}
+        onBlur={handleBlur}
         placeholder="Enter your mnemonic phrase"
         value={value}
       />

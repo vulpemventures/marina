@@ -1,4 +1,5 @@
-import { createStore, applyMiddleware, Store } from 'redux';
+import type { Store } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { wrapStore } from 'webext-redux';
 import marinaReducer from './reducers';
 import persistStore from 'redux-persist/es/persistStore';

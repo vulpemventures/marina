@@ -1,6 +1,8 @@
-import bolt11, { TagData } from 'bolt11';
-import { fetchTxHex, Outpoint, AddressInterface, NetworkString, getNetwork } from 'ldk';
-import { MnemonicAccount } from '../../domain/account';
+import type { TagData } from 'bolt11';
+import bolt11 from 'bolt11';
+import type { Outpoint, AddressInterface, NetworkString, IdentityInterface} from 'ldk';
+import { fetchTxHex, getNetwork } from 'ldk';
+import type { Account } from '../../domain/account';
 import {
   address,
   AssetHash,
@@ -13,6 +15,7 @@ import {
 } from 'liquidjs-lib';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
 import { fromSatoshi } from './format';
+import type { AccountInfo } from 'marina-provider';
 
 export const DEFAULT_LIGHTNING_LIMITS = { maximal: 0.04294967, minimal: 0.0005 };
 
@@ -64,34 +67,6 @@ const reverseSwapAddressDerivesFromScript = (lockupAddress: string, redeemScript
   return addressScriptASM === expectedAddressScriptASM;
 };
 
-// validates if we can redeem with this redeem script
-const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
-  const scriptAssembly = script
-    .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
-    .split(' ');
-  const cltv = scriptAssembly[10];
-  const refundPubKey = scriptAssembly[13];
-  const expectedScript = [
-    'OP_SIZE',
-    '20',
-    'OP_EQUAL',
-    'OP_IF',
-    'OP_HASH160',
-    crypto.hash160(preimage).toString('hex'),
-    'OP_EQUALVERIFY',
-    pubKey,
-    'OP_ELSE',
-    'OP_DROP',
-    cltv,
-    'OP_NOP2',
-    'OP_DROP',
-    refundPubKey,
-    'OP_ENDIF',
-    'OP_CHECKSIG',
-  ];
-  return scriptAssembly.join() === expectedScript.join();
-};
-
 export const isValidReverseSubmarineSwap = (
   invoice: string,
   lockupAddress: string,
@@ -124,10 +99,52 @@ export const getInvoiceValue = (invoice: string): number => {
 export const getInvoiceExpireDate = (invoice: string): number => {
   const { timeExpireDate } = bolt11.decode(invoice);
   return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
+}
+
+// validates if we can redeem with this redeem script
+const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemScript: string) => {
+  const scriptAssembly = script
+    .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
+    .split(' ');
+  const cltv = scriptAssembly[10];
+  const refundPubKey = scriptAssembly[13];
+  const expectedScript = [
+    'OP_SIZE',
+    '20',
+    'OP_EQUAL',
+    'OP_IF',
+    'OP_HASH160',
+    crypto.hash160(preimage).toString('hex'),
+    'OP_EQUALVERIFY',
+    pubKey,
+    'OP_ELSE',
+    'OP_DROP',
+    cltv,
+    'OP_NOP2',
+    'OP_DROP',
+    refundPubKey,
+    'OP_ENDIF',
+    'OP_CHECKSIG',
+  ];
+  return scriptAssembly.join() === expectedScript.join();
+};
+
+export const isValidInvoice = (
+  invoice: string,
+  lockupAddress: string,
+  preimage: Buffer,
+  pubKey: string,
+  redeemScript: string
+): boolean => {
+  return (
+    correctPaymentHashInInvoice(invoice, preimage) &&
+    reverseSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
+    validReverseSwapReedemScript(preimage, pubKey, redeemScript)
+  );
 };
 
 export const getClaimTransaction = async (
-  account: MnemonicAccount,
+  account: Account<IdentityInterface, IdentityInterface, AccountInfo>,
   addr: AddressInterface,
   explorerURL: string,
   network: NetworkString,

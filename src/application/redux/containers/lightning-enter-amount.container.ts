@@ -1,8 +1,9 @@
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import LightningAmountView, {
+import type { RootReducerState } from '../../../domain/common';
+import type {
   LightningAmountProps,
 } from '../../../presentation/wallet/receive/lightning-enter-amount';
+import LightningAmountView from '../../../presentation/wallet/receive/lightning-enter-amount';
 import { selectEsploraURL } from '../selectors/app.selector';
 
 const mapStateToProps = (state: RootReducerState): LightningAmountProps => {

@@ -1,8 +1,8 @@
 // send from inject script to content script
 // request = a call of a provider's method
-export interface RequestMessage {
+export interface RequestMessage<T extends string> {
   id: string;
-  name: string;
+  name: T;
   params?: Array<any>;
   provider: string;
 }
@@ -15,10 +15,16 @@ export interface ResponseMessage {
 }
 
 // basically the name of the connect/* files
-export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend';
+export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend' | 'create-account';
 
 export function isPopupName(name: any): name is PopupName {
-  return name === 'enable' || name === 'sign-msg' || name === 'sign-pset' || name === 'spend';
+  return (
+    name === 'enable' ||
+    name === 'sign-msg' ||
+    name === 'sign-pset' ||
+    name === 'spend' ||
+    name === 'create-account'
+  );
 }
 
 export function isResponseMessage(message: unknown): message is ResponseMessage {
@@ -39,7 +45,9 @@ export function newErrorResponseMessage(id: string, error: Error): ResponseMessa
 // MessageHandler get request, apply some logic on it and return a responseMessage.
 // for async logic the MessageHandler returns a Promise.
 // thus, handlers should resolve Success ResponseMessage and Error ResponseMessage
-export type MessageHandler = (request: RequestMessage) => Promise<ResponseMessage>;
+export type MessageHandler<T extends string> = (
+  request: RequestMessage<T>
+) => Promise<ResponseMessage>;
 
 // this message sends to background script in order to open a connected popup.
 export interface OpenPopupMessage {

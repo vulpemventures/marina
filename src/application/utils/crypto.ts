@@ -1,8 +1,11 @@
 import * as crypto from 'crypto';
-import { createEncryptedMnemonic, EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
-import { createMnemonic, Mnemonic } from '../../domain/mnemonic';
-import { Password } from '../../domain/password';
-import { createPasswordHash, PasswordHash } from '../../domain/password-hash';
+import type { EncryptedMnemonic } from '../../domain/encrypted-mnemonic';
+import { createEncryptedMnemonic } from '../../domain/encrypted-mnemonic';
+import type { Mnemonic } from '../../domain/mnemonic';
+import { createMnemonic } from '../../domain/mnemonic';
+import type { Password } from '../../domain/password';
+import type { PasswordHash } from '../../domain/password-hash';
+import { createPasswordHash } from '../../domain/password-hash';
 import { INVALID_PASSWORD_ERROR } from './constants';
 
 const iv = Buffer.alloc(16, 0);
@@ -28,7 +31,7 @@ export function decrypt(encrypted: EncryptedMnemonic, password: Password): Mnemo
   }
 }
 
-export function sha256Hash(str: string): string {
+export function sha256Hash(str: crypto.BinaryLike): string {
   return crypto.createHash('sha256').update(str).digest('hex');
 }
 

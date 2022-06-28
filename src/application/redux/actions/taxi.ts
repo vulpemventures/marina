@@ -1,5 +1,5 @@
-import { NetworkString } from 'ldk';
-import { AnyAction } from 'redux';
+import type { NetworkString } from 'ldk';
+import type { AnyAction } from 'redux';
 import { SET_TAXI_ASSETS, UPDATE_TAXI_ASSETS } from './action-types';
 
 export function setTaxiAssets(network: NetworkString, newAssets: string[]): AnyAction {

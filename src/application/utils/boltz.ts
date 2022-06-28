@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import { extractErrorMessage } from '../../presentation/utils/error';
 
 interface CreateSwapCommonRequest {
@@ -45,6 +45,22 @@ export const boltzUrl: Record<NetworkString, string> = {
   testnet: 'https://testnet.boltz.exchange/api',
   liquid: 'https://boltz.exchange/api',
 };
+
+interface CreateSwapCommonRequest {
+  type: 'submarine' | 'reversesubmarine',
+  pairId: 'L-BTC/BTC',
+  orderSide: 'buy' | 'sell',
+}
+interface CreateSwapCommonRequest {
+  type: 'submarine' | 'reversesubmarine';
+  pairId: 'L-BTC/BTC';
+  orderSide: 'buy' | 'sell';
+}
+
+interface CreateSwapCommonResponse {
+  id: string;
+  timeoutBlockHeight: number;
+}
 
 export default class Boltz {
   url: string;

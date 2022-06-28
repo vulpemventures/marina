@@ -1,4 +1,5 @@
-import { call, put, takeLeading, fork, all, AllEffect } from 'redux-saga/effects';
+import type { AllEffect } from 'redux-saga/effects';
+import { call, put, takeLeading, fork, all } from 'redux-saga/effects';
 import { fetchAssetsFromTaxi, taxiURL } from '../../utils/taxi';
 import {
   RESET,
@@ -9,15 +10,28 @@ import {
   UPDATE_TAXI_ASSETS,
 } from '../actions/action-types';
 import { setTaxiAssets } from '../actions/taxi';
-import { newSagaSelector, SagaGenerator } from './utils';
+import type { SagaGenerator } from './utils';
+import { selectNetworkSaga, newSagaSelector } from './utils';
 import { updateAfterEachLoginAction, watchUpdateTask } from './updater';
-import { watchStartDeepRestorer } from './deep-restorer';
-import { NetworkString } from 'ldk';
+import { watchRestoreTask } from './deep-restorer';
+import type { NetworkString } from 'ldk';
 import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
 
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
   yield* fetchTaxiAssetsForNetwork('liquid');
   yield* fetchTaxiAssetsForNetwork('testnet');
+
+  const network = yield* selectNetworkSaga();
+
+  if (network === 'regtest') {
+    try {
+      yield* fetchTaxiAssetsForNetwork('regtest');
+    } catch {
+      console.warn(
+        'fail to update your taxi assets for regtest network, please check if taxi is running locally on localhost:8000'
+      );
+    }
+  }
 }
 
 function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void, string[]> {
@@ -56,7 +70,7 @@ function* mainSaga(): SagaGenerator<void, void> {
   yield fork(watchUpdateTaxi);
   yield fork(watchUpdateTask);
   yield fork(updateAfterEachLoginAction);
-  yield fork(watchStartDeepRestorer);
+  yield fork(watchRestoreTask);
 }
 
 export default mainSaga;

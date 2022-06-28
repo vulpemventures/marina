@@ -1,6 +1,6 @@
 import { networks } from 'ldk';
-import { AnyAction } from 'redux';
-import { Asset, IAssets } from '../../../domain/assets';
+import type { AnyAction } from 'redux';
+import type { Asset, IAssets } from '../../../domain/assets';
 import * as ACTION_TYPES from '../actions/action-types';
 
 const USDt: Asset = {

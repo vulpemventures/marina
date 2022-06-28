@@ -1,7 +1,7 @@
-import { NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
 import { connect } from 'react-redux';
-import { RootReducerState } from '../../../domain/common';
-import { ConnectData } from '../../../domain/connect';
+import type { RootReducerState } from '../../../domain/common';
+import type { ConnectData } from '../../../domain/connect';
 
 export interface WithConnectDataProps {
   connectData: ConnectData;

@@ -1,4 +1,4 @@
-import { MarinaEventType } from 'marina-provider';
+import type { MarinaEventType } from 'marina-provider';
 import { parse } from '../../application/utils/browser-storage-converters';
 import { makeid } from '../proxy';
 

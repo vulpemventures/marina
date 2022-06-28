@@ -1,9 +1,8 @@
 import { connect } from 'react-redux';
 import { MainAccountID } from '../../../domain/account';
-import { RootReducerState } from '../../../domain/common';
-import LightningInvoiceView, {
-  LightningInvoiceProps,
-} from '../../../presentation/wallet/send/lightning-enter-invoice';
+import type { RootReducerState } from '../../../domain/common';
+import LightningInvoiceView from '../../../presentation/wallet/send/lightning-enter-invoice';
+import type { LightningInvoiceProps } from '../../../presentation/wallet/send/lightning-enter-invoice';
 import { lbtcAssetByNetwork } from '../../utils/network';
 import { selectBalances } from '../selectors/balance.selector';
 

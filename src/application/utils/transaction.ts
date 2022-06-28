@@ -1,34 +1,41 @@
-import {
-  address,
-  address as addrLDK,
-  addToTx,
+import type {
   ChangeAddressFromAssetGetter,
   CoinSelector,
+  RecipientInterface,
+  TxInterface,
+  UnblindedOutput,
+  CoinSelectorErrorFn,
+  NetworkString,
+  IdentityInterface,
+} from 'ldk';
+import {
+  witnessStackToScriptWitness,
+  address,
+  addToTx,
   createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
   greedyCoinSelector,
   psetToUnsignedTx,
-  RecipientInterface,
-  TxInterface,
-  UnblindedOutput,
-  CoinSelectorErrorFn,
   isUnblindedOutput,
   getSats,
   getAsset,
-  NetworkString,
-  IdentityInterface,
   isConfidentialOutput,
+  networks,
+  AssetHash,
+  payments,
+  confidential,
+  Psbt,
 } from 'ldk';
-import * as ecc from 'tiny-secp256k1';
-
-import { AssetHash, confidential, networks, payments, Psbt } from 'liquidjs-lib';
 import { isConfidentialAddress } from './address';
-import { Transfer, TxDisplayInterface, TxStatusEnum, TxType } from '../../domain/transaction';
-import { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
+import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
+import { TxStatusEnum, TxType } from '../../domain/transaction';
+import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
 import { fetchTopupFromTaxi, taxiURL } from './taxi';
-import { DataRecipient, isAddressRecipient, isDataRecipient, Recipient } from 'marina-provider';
+import type { DataRecipient, Recipient } from 'marina-provider';
+import { isAddressRecipient, isDataRecipient } from 'marina-provider';
+import * as ecc from 'tiny-secp256k1';
 
 const blindingKeyFromAddress = (addr: string): Buffer => {
   return address.fromConfidential(addr).blindingKey;
@@ -92,7 +99,7 @@ async function blindPset(psetBase64: string, utxos: UnblindedOutput[], outputAdd
 }
 
 function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
-  const excludeScripts = excludeAddresses.map((a) => addrLDK.toOutputScript(a));
+  const excludeScripts = excludeAddresses.map((a) => address.toOutputScript(a));
   const tx = psetToUnsignedTx(psetBase64);
   for (const out of tx.outs) {
     if (out.script.length > 0 && !excludeScripts.includes(out.script)) {
@@ -105,6 +112,25 @@ function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
   return true;
 }
 
+const functionOR =
+  (...fns: any[]) =>
+  (errorMsg: string) =>
+  (...args: any[]) => {
+    for (const fn of fns) {
+      try {
+        return fn(...args);
+      } catch (e) {
+        // do nothing
+      }
+    }
+
+    throw new Error(errorMsg);
+  };
+const sigValidator = functionOR(
+  Psbt.ECDSASigValidator(ecc),
+  Psbt.SchnorrSigValidator(ecc)
+)('invalid signature');
+
 /**
  * Take an unsigned pset, blind it according to recipientAddresses and sign the pset using the mnemonic.
  * @param signerIdentity Identity using to sign the tx. should be restored.
@@ -116,7 +142,8 @@ export async function blindAndSignPset(
   selectedUtxos: UnblindedOutput[],
   identities: IdentityInterface[],
   recipientAddresses: string[],
-  changeAddresses: string[]
+  changeAddresses: string[],
+  skipSigValidation = false
 ): Promise<string> {
   const outputAddresses = recipientAddresses.concat(changeAddresses);
 
@@ -125,15 +152,38 @@ export async function blindAndSignPset(
     throw new Error('blindPSET error: not fully blinded');
   }
 
-  const signedPset = await signPset(blindedPset, identities);
+  const signedPsetBase64 = await signPset(blindedPset, identities);
 
-  const decodedPset = decodePset(signedPset);
-  if (!decodedPset.validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc))) {
-    throw new Error('PSET is not fully signed');
+  const pset = Psbt.fromBase64(signedPsetBase64);
+  if (!skipSigValidation) {
+    if (!pset.validateSignaturesOfAllInputs(sigValidator)) {
+      throw new Error('PSET is not fully signed');
+    }
   }
 
-  return decodedPset.finalizeAllInputs().extractTransaction().toHex();
+  for (let i = 0; i < pset.txInputs.length; i++) {
+    const input = pset.data.inputs[i];
+    // we need to use special finalizer in case of tapscript
+    if (atLeastOne(input.tapLeafScript) && atLeastOne(input.tapScriptSig)) {
+      pset.finalizeInput(i, (_, input) => {
+        return {
+          finalScriptSig: undefined,
+          finalScriptWitness: witnessStackToScriptWitness([
+            ...input.tapScriptSig!.map((s) => s.signature),
+            input.tapLeafScript![0].script,
+            input.tapLeafScript![0].controlBlock,
+          ]),
+        };
+      });
+    } else {
+      pset.finalizeInput(i); // default finalizer handles taproot key path and non taproot sigs
+    }
+  }
+
+  return pset.extractTransaction().toHex();
 }
+
+const atLeastOne = (arr: any[] | undefined) => arr && arr.length > 0;
 
 export async function signPset(
   psetBase64: string,
@@ -143,7 +193,7 @@ export async function signPset(
   for (const id of identities) {
     pset = await id.signPset(pset);
     try {
-      if (decodePset(pset).validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc))) break;
+      if (decodePset(pset).validateSignaturesOfAllInputs(sigValidator)) break;
     } catch {
       continue;
     }
@@ -154,7 +204,7 @@ export async function signPset(
 
 function outputIndexFromAddress(tx: string, addressToFind: string): number {
   const utx = psetToUnsignedTx(tx);
-  const recipientScript = addrLDK.toOutputScript(addressToFind);
+  const recipientScript = address.toOutputScript(addressToFind);
   return utx.outs.findIndex((out) => out.script.equals(recipientScript));
 }
 
@@ -438,7 +488,7 @@ function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
       script: opReturnPayment.output!,
       asset: AssetHash.fromHex(recipient.asset, false).bytes,
       value: confidential.satoshiToConfidentialValue(recipient.value),
-      nonce: Buffer.alloc(0),
+      nonce: Buffer.alloc(1),
     });
   }
 

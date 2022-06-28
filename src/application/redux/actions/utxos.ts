@@ -1,15 +1,15 @@
-import { NetworkString, UnblindedOutput } from 'ldk';
-import { AnyAction } from 'redux';
-import { AccountID } from '../../../domain/account';
-import { ActionWithPayload } from '../../../domain/common';
-import { UnconfirmedOutput } from '../../../domain/unconfirmed';
+import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { AnyAction } from 'redux';
+import type { AccountID } from '../../../domain/account';
+import type { ActionWithPayload } from '../../../domain/common';
+import type { UnconfirmedOutput } from '../../../domain/unconfirmed';
 import { makeUnconfirmedUtxos } from '../../utils/utxos';
 import {
+  ADD_UNCONFIRMED_UTXOS,
   ADD_UTXO,
   DELETE_UTXO,
   FLUSH_UTXOS,
   LOCK_UTXO,
-  ADD_UNCONFIRMED_UTXOS,
   UNLOCK_UTXOS,
 } from './action-types';
 
