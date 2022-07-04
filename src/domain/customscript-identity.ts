@@ -111,7 +111,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CustomScriptIdentityOpts['namespace'];
-  readonly covenant: ContractTemplate;
+  readonly contract: ContractTemplate;
   readonly ecclib: IdentityOpts<any>['ecclib'] & bip341.TinySecp256k1Interface;
 
   constructor(args: IdentityOptsWithSchnorr<TemplateIdentityWatchOnlyOpts>) {
@@ -123,7 +123,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     if (args.opts.template && !validateTemplate(args.opts.template))
       throw new Error('invalid template');
 
-    this.covenant = {
+    this.contract = {
       namespace: args.opts.namespace,
       template: args.opts.template,
     };
@@ -167,10 +167,10 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     index: number,
     constructorParams?: Record<string, string | number>
   ): ExtendedTaprootAddressInterface {
-    if (!this.covenant.template) {
+    if (!this.contract.template) {
       throw new Error('missing template');
     }
-    const template = this.covenant.template;
+    const template = this.contract.template;
     const artifact = JSON.parse(template) as Artifact;
     const publicKey = this.deriveMasterXPub(isChange, index, true);
 
