@@ -13,8 +13,6 @@ import {
   checkMnemonic,
   networks,
   fromXpub,
-  validate,
-  makeEvaluateDescriptor,
   analyzeTapscriptTree,
 } from 'ldk';
 import type {
@@ -27,7 +25,6 @@ import type {
   StateRestorerOpts,
   Mnemonic,
   TemplateResult,
-  Context,
   ScriptInputsNeeds,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
@@ -36,8 +33,13 @@ import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
-
-const evaluate = makeEvaluateDescriptor(ecc);
+import type { Argument, Artifact } from '@ionio-lang/ionio';
+import {
+  Contract,
+  PrimitiveType,
+  replaceArtifactConstructorWithArguments,
+  toDescriptor,
+} from '@ionio-lang/ionio';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
@@ -59,12 +61,14 @@ interface ExtendedTaprootAddressInterface extends AddressInterface {
   result: TemplateResult;
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
   publicKey: string;
+  descriptor: string;
 }
 
 export type TaprootAddressInterface = AddressInterface &
   Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
     taprootHashTree?: bip341.HashTree;
     taprootInternalKey?: string;
+    descriptor?: string;
   };
 
 function asTaprootAddressInterface(
@@ -77,21 +81,21 @@ function asTaprootAddressInterface(
     taprootHashTree: extended.result.taprootHashTree,
     taprootInternalKey: extended.result.taprootInternalKey,
     publicKey: extended.publicKey,
+    descriptor: extended.descriptor,
   };
 }
 
-export interface CovenantDescriptors {
+export interface ContractTemplate {
   namespace: string;
   template?: string;
-  changeTemplate?: string;
   isSpendableByMarina?: boolean;
 }
 
-export type CustomScriptIdentityOpts = CovenantDescriptors & {
+export type CustomScriptIdentityOpts = ContractTemplate & {
   mnemonic: string;
 };
 
-export type TemplateIdentityWatchOnlyOpts = CovenantDescriptors & {
+export type TemplateIdentityWatchOnlyOpts = ContractTemplate & {
   masterBlindingKey: string;
   masterPublicKey: string;
 };
@@ -107,7 +111,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CustomScriptIdentityOpts['namespace'];
-  readonly covenant: CovenantDescriptors;
+  readonly covenant: ContractTemplate;
   readonly ecclib: IdentityOpts<any>['ecclib'] & bip341.TinySecp256k1Interface;
 
   constructor(args: IdentityOptsWithSchnorr<TemplateIdentityWatchOnlyOpts>) {
@@ -116,17 +120,12 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     if (args.opts.namespace.length === 0) throw new Error('namespace is required');
     this.namespace = args.opts.namespace;
 
-    if (args.opts.changeTemplate) {
-      if (!validate(args.opts.changeTemplate)) throw new Error('invalid changeTemplate');
-      if (!args.opts.template) throw new Error('template is required if u setup change template');
-    }
-
-    if (args.opts.template && !validate(args.opts.template)) throw new Error('invalid template');
+    if (args.opts.template && !validateTemplate(args.opts.template))
+      throw new Error('invalid template');
 
     this.covenant = {
       namespace: args.opts.namespace,
       template: args.opts.template,
-      changeTemplate: args.opts.changeTemplate,
     };
     this.ecclib = args.ecclib;
     this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
@@ -140,14 +139,6 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       .derivePath(makePath(isChange, index))
       .publicKey.slice(forSchnorr ? 1 : 0)
       .toString('hex');
-  }
-
-  private getContext(isChange: boolean, index: number): Context {
-    return {
-      namespaces: new Map().set(this.namespace, {
-        pubkey: this.deriveMasterXPub(isChange, index, true),
-      }),
-    };
   }
 
   protected getBlindingKeyPair(
@@ -171,35 +162,76 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     }
   }
 
-  private getTemplate(isChange: boolean): string {
-    if (isChange && this.covenant.changeTemplate) return this.covenant.changeTemplate;
-    if (!this.covenant.template) throw new Error('template is missing');
-    return this.covenant.template;
-  }
+  getAddress(
+    isChange: boolean,
+    index: number,
+    constructorParams?: Record<string, string | number>
+  ): ExtendedTaprootAddressInterface {
+    if (!this.covenant.template) {
+      throw new Error('missing template');
+    }
+    const template = this.covenant.template;
+    const artifact = JSON.parse(template) as Artifact;
+    const publicKey = this.deriveMasterXPub(isChange, index, true);
 
-  getAddress(isChange: boolean, index: number): ExtendedTaprootAddressInterface {
-    const template = this.getTemplate(isChange);
-    const descriptorResult = evaluate(this.getContext(isChange, index), template);
-    const outputScript = descriptorResult.scriptPubKey().toString('hex');
-    if (!descriptorResult.taprootHashTree) throw new Error('taprootHashTree is missing');
+    if (!constructorParams) {
+      constructorParams = {} as Record<string, string | number>;
+    }
+    constructorParams[this.namespace] = publicKey;
+    const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name, type }) => {
+      const param = constructorParams![name];
+      if (!param) {
+        throw new Error(`missing contructor arg ${name}`);
+      }
+      switch (type) {
+        case PrimitiveType.Bytes:
+        case PrimitiveType.Signature:
+        case PrimitiveType.DataSignature:
+        case PrimitiveType.PublicKey:
+        case PrimitiveType.XOnlyPublicKey: {
+          if (typeof param === 'string') {
+            return Buffer.from(param, 'hex');
+          }
+          const buf = Buffer.alloc(8);
+          buf.writeBigUInt64LE(BigInt(param));
+          return buf;
+        }
+        default: {
+          return param;
+        }
+      }
+    });
+
+    const contract = new Contract(artifact, constructorArgs, this.network, ecc);
+    const outputScript = contract.scriptPubKey;
+    const result = {
+      scriptPubKey: (): Buffer => outputScript,
+      taprootHashTree: contract.getTaprootTree(),
+      taprootInternalKey: Buffer.alloc(32).toString('hex'),
+    };
     return {
-      ...this.outputScriptToAddressInterface(outputScript),
-      result: descriptorResult,
+      ...this.outputScriptToAddressInterface(outputScript.toString('hex')),
+      publicKey,
+      result,
       derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
-      publicKey: this.deriveMasterXPub(isChange, index, true), // = $test (eltr(c64....., { $test OPCHECKSIG }))
-      tapscriptNeeds: analyzeTapscriptTree(descriptorResult.taprootHashTree),
+      tapscriptNeeds: analyzeTapscriptTree(contract.getTaprootTree()),
+      descriptor: toDescriptor(replaceArtifactConstructorWithArguments(artifact, constructorArgs)),
     };
   }
 
-  getNextAddress(): Promise<TaprootAddressInterface> {
-    const addr = this.getAddress(false, this.index);
+  getNextAddress(
+    constructorParams?: Record<string, string | number>
+  ): Promise<TaprootAddressInterface> {
+    const addr = this.getAddress(false, this.index, constructorParams);
     this.cacheAddress(addr);
     this.index++;
     return Promise.resolve(asTaprootAddressInterface(addr));
   }
 
-  getNextChangeAddress(): Promise<TaprootAddressInterface> {
-    const addr = this.getAddress(true, this.changeIndex);
+  getNextChangeAddress(
+    constructorParams?: Record<string, string | number>
+  ): Promise<TaprootAddressInterface> {
+    const addr = this.getAddress(true, this.changeIndex, constructorParams);
     this.cacheAddress(addr);
     this.changeIndex++;
     return Promise.resolve(asTaprootAddressInterface(addr));
@@ -287,7 +319,6 @@ export class CustomScriptIdentity
       opts: {
         namespace: args.opts.namespace,
         template: args.opts.template,
-        changeTemplate: args.opts.changeTemplate,
         masterPublicKey: masterPublicKey,
         masterBlindingKey: masterBlindingKeyNode.masterKey.toString('hex'),
       },
@@ -464,7 +495,7 @@ export function customScriptRestorerFromEsplora<T extends CustomScriptIdentityWa
 }
 
 export function restoredCustomScriptIdentity(
-  covenantDescriptors: CovenantDescriptors,
+  contractTemplate: ContractTemplate,
   mnemonic: string,
   network: NetworkString,
   restorerOpts: StateRestorerOpts
@@ -475,7 +506,7 @@ export function restoredCustomScriptIdentity(
       chain: network,
       ecclib: ecc,
       opts: {
-        ...covenantDescriptors,
+        ...contractTemplate,
         mnemonic,
       },
     })
@@ -483,7 +514,7 @@ export function restoredCustomScriptIdentity(
 }
 
 export function restoredCustomScriptWatchOnlyIdentity(
-  covenantDescriptors: CovenantDescriptors,
+  contractTemplate: ContractTemplate,
   masterPublicKey: string,
   masterBlindingKey: string,
   network: NetworkString,
@@ -495,7 +526,7 @@ export function restoredCustomScriptWatchOnlyIdentity(
       chain: network,
       ecclib: ecc,
       opts: {
-        ...covenantDescriptors,
+        ...contractTemplate,
         masterPublicKey,
         masterBlindingKey,
       },
@@ -505,4 +536,10 @@ export function restoredCustomScriptWatchOnlyIdentity(
 
 function makePath(isChange: boolean, index: number): string {
   return `${isChange ? 1 : 0}/${index}`;
+}
+
+function validateTemplate(template: string): boolean {
+  const artifact = JSON.parse(template) as Artifact;
+  const expectedProperties = ['contractName', 'functions', 'constructorInputs'];
+  return expectedProperties.every((property) => property in artifact);
 }

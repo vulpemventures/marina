@@ -15,7 +15,7 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type { CovenantDescriptors, CustomScriptIdentity } from './customscript-identity';
+import type { ContractTemplate, CustomScriptIdentity } from './customscript-identity';
 import {
   CustomScriptIdentityWatchOnly,
   customScriptRestorerFromEsplora,
@@ -79,12 +79,12 @@ export interface MnemonicAccountData extends AccountData {
 export type CustomScriptAccount = Account<
   CustomScriptIdentity,
   CustomScriptIdentityWatchOnly,
-  Pick<CovenantDescriptors, 'changeTemplate' | 'template' | 'isSpendableByMarina'> & AccountInfo
+  Pick<ContractTemplate, 'template' | 'isSpendableByMarina'> & AccountInfo
 >;
 
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
-  covenantDescriptors: CovenantDescriptors;
+  contractTemplate: ContractTemplate;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;

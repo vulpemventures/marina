@@ -1,11 +1,9 @@
-import type { AddressInterface } from 'ldk';
-import { fetchAndUnblindUtxos, IdentityType, networks, Psbt, script } from 'ldk';
+import { IdentityType } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
-import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
 import type { CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
 import { CustomScriptIdentity } from '../src/domain/customscript-identity';
 import { makeRandomMnemonic } from './test.utils';
-import { APIURL, broadcastTx, faucet } from './_regtest';
+import * as artifact from './fixtures/customscript/contract.ionio.json';
 
 const TEST_NAMESPACE = 'test';
 
@@ -34,42 +32,22 @@ const failingArgs: { name: string; opts: CustomScriptIdentityOpts }[] = [
       template: 'this is a bad template',
     },
   },
-  {
-    name: 'bad change template',
-    opts: {
-      mnemonic: makeRandomMnemonic().mnemonic,
-      namespace: TEST_NAMESPACE,
-      template: 'raw(00)', // good one
-      changeTemplate: 'this is a bad template',
-    },
-  },
-  {
-    name: 'change template without template',
-    opts: {
-      mnemonic: makeRandomMnemonic().mnemonic,
-      namespace: TEST_NAMESPACE,
-      changeTemplate: 'raw(00)', // good one
-    },
-  },
 ];
 
-function makeRandomCustomScriptIdentity(
-  template?: string,
-  changeTemplate?: string
-): CustomScriptIdentity {
+function makeRandomCustomScriptIdentity(template?: string): CustomScriptIdentity {
   const mnemo = makeRandomMnemonic();
   return new CustomScriptIdentity({
     type: IdentityType.Mnemonic,
     chain: 'regtest',
-    opts: { mnemonic: mnemo.mnemonic, namespace: TEST_NAMESPACE, template, changeTemplate },
+    opts: { mnemonic: mnemo.mnemonic, namespace: TEST_NAMESPACE, template },
     ecclib: ecc,
   });
 }
 
 describe('CustomScriptIdentity', () => {
-  const getUnspents = async (addr: AddressInterface) => {
-    return await fetchAndUnblindUtxos(ecc, [addr], APIURL);
-  };
+  // const getUnspents = async (addr: AddressInterface) => {
+  //   return await fetchAndUnblindUtxos(ecc, [addr], APIURL);
+  // };
 
   for (const failingArg of failingArgs) {
     test(`fails with ${failingArg.name}`, () => {
@@ -89,106 +67,35 @@ describe('CustomScriptIdentity', () => {
     const random = makeRandomCustomScriptIdentity();
     expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
     expect(random.covenant.template).toBeUndefined();
-    expect(random.covenant.changeTemplate).toBeUndefined();
   });
 
-  test('should be able to send and receive coin with new elements tapscript opcodes', async () => {
-    const inspectOutputIsLbtc = (index: number) =>
-      script.toASM([
-        script.number.encode(index),
-        script.OPS.OP_INSPECTOUTPUTASSET,
-        script.number.encode(1), // 1 = UNCONFIDENTIAL
-        script.OPS.OP_EQUALVERIFY,
-        Buffer.from(networks.regtest.assetHash, 'hex').reverse(),
-        script.OPS.OP_EQUALVERIFY,
-      ]);
+  test('should be able to instatiate a covenant identity with template as Ionio artifact', async () => {
+    const template = JSON.stringify(artifact);
+    const random = makeRandomCustomScriptIdentity(template);
+    expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
+    expect(random.covenant.template).toBeDefined();
 
-    const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG ${inspectOutputIsLbtc(2)}`;
-    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}) })`;
-    const id = makeRandomCustomScriptIdentity(template);
-    const addr = await id.getNextAddress();
+    const addr = await random.getNextAddress({
+      borrowAsset: '2c5dfb37a33fe2acf5c5412b1ddbd58f6f3353578904f3ede0173b2867362463',
+      borrowAmount: 1000_00000000,
+      collateralAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+      collateralAmount: 1_50000000,
+      payoutAmount: 1500000,
+      oraclePk: '0000000000000000000000000000000000000000000000000000000000000000',
+      issuerPk: '0000000000000000000000000000000000000000000000000000000000000000',
+      issuerScriptProgram: '0000000000000000000000000000000000000000000000000000000000000000',
+      priceLevel: 20000,
+      setupTimestamp: 1656686483,
+    });
+    // TODO: remove log
+    console.log(addr);
+    expect(addr.confidentialAddress).toBeDefined();
+    expect(addr.blindingPrivateKey).toBeDefined();
+    expect(addr.derivationPath).toBeDefined();
     expect(addr.taprootHashTree).toBeDefined();
-    expect(addr.taprootInternalKey).toStrictEqual(
-      'c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'
+    expect(addr.taprootInternalKey).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000000'
     );
-    const leafToSpendScript = addr.taprootHashTree?.scriptHex;
-    expect(leafToSpendScript).toBeDefined();
-
-    await faucet(addr.confidentialAddress, 10000);
-    const utxos = await getUnspents(addr);
-    expect(utxos.length).toBeGreaterThanOrEqual(1);
-
-    let { pset } = await createSendPset(
-      [
-        {
-          address: addr.confidentialAddress,
-          asset: networks.regtest.assetHash,
-          value: 1000,
-        },
-      ],
-      utxos,
-      networks.regtest.assetHash,
-      () => addr.confidentialAddress,
-      'regtest'
-    );
-
-    pset = Psbt.fromBase64(pset)
-      .updateInput(0, {
-        tapLeafScript: [
-          {
-            leafVersion: 0,
-            script: Buffer.from(leafToSpendScript!, 'hex'),
-            controlBlock: Buffer.alloc(33),
-          },
-        ],
-      })
-      .toBase64();
-
-    const signed = await blindAndSignPset(
-      pset,
-      utxos,
-      [id],
-      [addr.confidentialAddress],
-      [addr.confidentialAddress],
-      true
-    );
-    const txid = await broadcastTx(signed);
-    expect(txid).toBeDefined();
-  });
-
-  test('should be able to auto-sign CHECKSIG tapscript owned by marina', async () => {
-    const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG`;
-    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
-    const id = makeRandomCustomScriptIdentity(template);
-    const addr = await id.getNextAddress();
-
-    await faucet(addr.confidentialAddress, 10000);
-    const utxos = await getUnspents(addr);
-    expect(utxos.length).toBeGreaterThanOrEqual(1);
-
-    const { pset } = await createSendPset(
-      [
-        {
-          address: addr.confidentialAddress,
-          asset: networks.regtest.assetHash,
-          value: 1000,
-        },
-      ],
-      utxos,
-      networks.regtest.assetHash,
-      () => addr.confidentialAddress,
-      'regtest'
-    );
-
-    const signed = await blindAndSignPset(
-      pset,
-      utxos,
-      [id],
-      [addr.confidentialAddress],
-      [addr.confidentialAddress],
-      true
-    );
-    const txid = await broadcastTx(signed);
-    expect(txid).toBeDefined();
+    expect(addr.publicKey).toBeDefined();
   });
 });
