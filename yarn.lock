@@ -6551,10 +6551,24 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.5.1, ldk@^0.5.2:
+ldk@^0.5.1:
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.5.2.tgz#99231d86d6179f0f515946d8ddff9ef9e5cb5973"
   integrity sha512-lqUqACdbAvyzmA4SUtnyMuFG14PpInD3Ymxuyhi9wwKRnxRmIJDQ4wxwoC1gw/qYiNR8Qqc7XvcfAPyDgcY8cw==
+  dependencies:
+    axios "^0.21.1"
+    bip32 "^3.0.1"
+    bip39 "^3.0.3"
+    bs58check "^2.1.2"
+    ecpair "^2.0.1"
+    liquidjs-lib "^6.0.2-liquid.7"
+    slip77 "^0.2.0"
+    tslib "^2.3.1"
+
+ldk@^0.5.3:
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.5.3.tgz#a319f3863a73f2152aa8c5d7624f4c0d3af4f1bb"
+  integrity sha512-Atds+9NRjaIccwm0lW4t3StmwhzxMBAR8k1LosUTyJ32z3Zvt6CxUozeySUEiibGyY9Ea6asYMm3guaabzbrwA==
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
