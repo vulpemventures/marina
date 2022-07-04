@@ -29,6 +29,7 @@ import {
   incrementAddressIndex,
   incrementChangeAddressIndex,
   setCustomScriptTemplate,
+  setIsSpendableByMarina,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
@@ -38,7 +39,7 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import type { AddressInterface, UnblindedOutput } from 'ldk';
+import { AddressInterface, analyzeTapscriptTree, ScriptInputsNeeds, UnblindedOutput } from 'ldk';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
@@ -211,6 +212,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'getNextAddress': {
           this.checkHostnameAuthorization();
           const account = this.accountSelector(this.state);
+          if (params && account.type !== AccountType.CustomScriptAccount) {
+            throw new Error('Only custom script accounts can expect construct parameters');
+          }
           const net = selectNetwork(this.state);
           const watchOnlyIdentity = await account.getWatchIdentity(net);
           let nextAddress: AddressInterface;
@@ -218,12 +222,26 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             nextAddress = await watchOnlyIdentity.getNextAddress();
           } else {
             let constructorParams: Record<string, string | number> | undefined;
-            if (params) {
+            if (params && params.length > 0) {
               constructorParams = params[0];
             }
             nextAddress = await watchOnlyIdentity.getNextAddress(constructorParams);
           }
           await this.store.dispatchAsync(incrementAddressIndex(account.getInfo().accountID, net));
+
+          if (account.type === AccountType.CustomScriptAccount) {
+            const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
+              needsOfLeaf.sigs.length === 1 &&
+              !needsOfLeaf.needParameters &&
+              !needsOfLeaf.hasIntrospection;
+            let isSpendableByMarina = Object.values(
+              analyzeTapscriptTree(nextAddress.taprootHashTree)
+            ).some(autoSpendableLeaf);
+
+            await this.store.dispatchAsync(
+              setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
+            );
+          }
           return successMsg(nextAddress);
         }
 
@@ -240,7 +258,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             nextChangeAddress = await xpub.getNextChangeAddress();
           } else {
             let constructorParams: Record<string, string | number> | undefined;
-            if (params) {
+            if (params && params.length > 0) {
               constructorParams = params[0];
             }
             nextChangeAddress = await xpub.getNextChangeAddress(constructorParams);
@@ -248,6 +266,20 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           await this.store.dispatchAsync(
             incrementChangeAddressIndex(account.getInfo().accountID, net)
           );
+
+          if (account.type === AccountType.CustomScriptAccount) {
+            const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
+              needsOfLeaf.sigs.length === 1 &&
+              !needsOfLeaf.needParameters &&
+              !needsOfLeaf.hasIntrospection;
+            let isSpendableByMarina = Object.values(
+              analyzeTapscriptTree(nextChangeAddress.taprootHashTree)
+            ).some(autoSpendableLeaf);
+  
+            await this.store.dispatchAsync(
+              setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
+            );
+          }
           return successMsg(nextChangeAddress);
         }
 
@@ -433,32 +465,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               changeCovenant?.template
             )
           );
-          // TODO: clarifiy the usage of isSpendableByMarina and understand
-          // how to set that value in case it's needed.
-
-          // const selectedAccount = selectAccount(this.selectedAccount)(this.state);
-          // const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(this.state));
-
-          // const nextAddress = (await watchIdentity.getNextAddress()) as TaprootAddressInterface;
-          // const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
-          //   needsOfLeaf.sigs.length === 1 &&
-          //   !needsOfLeaf.needParameters &&
-          //   !needsOfLeaf.hasIntrospection;
-          // let isSpendableByMarina = Object.values(
-          //   analyzeTapscriptTree(nextAddress.taprootHashTree)
-          // ).some(autoSpendableLeaf);
-
-          // if (changeCovenant) {
-          //   const nextChangeAddress =
-          //     (await watchIdentity.getNextChangeAddress()) as TaprootAddressInterface;
-          //   isSpendableByMarina ||= Object.values(
-          //     analyzeTapscriptTree(nextChangeAddress.TaprootAddressInterface)
-          //   ).some(autoSpendableLeaf);
-          // }
-
-          // await this.store.dispatchAsync(
-          //   setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
-          // );
 
           return successMsg(true);
         }
