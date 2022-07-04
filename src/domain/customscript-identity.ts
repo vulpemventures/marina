@@ -177,29 +177,13 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     if (!constructorParams) {
       constructorParams = {} as Record<string, string | number>;
     }
-    constructorParams[this.namespace] = publicKey;
-    const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name, type }) => {
+    constructorParams[this.namespace] = '0x'.concat(publicKey);
+    const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name }) => {
       const param = constructorParams![name];
       if (!param) {
         throw new Error(`missing contructor arg ${name}`);
       }
-      switch (type) {
-        case PrimitiveType.Bytes:
-        case PrimitiveType.Signature:
-        case PrimitiveType.DataSignature:
-        case PrimitiveType.PublicKey:
-        case PrimitiveType.XOnlyPublicKey: {
-          if (typeof param === 'string') {
-            return Buffer.from(param, 'hex');
-          }
-          const buf = Buffer.alloc(8);
-          buf.writeBigUInt64LE(BigInt(param));
-          return buf;
-        }
-        default: {
-          return param;
-        }
-      }
+      return param
     });
 
     const contract = new Contract(artifact, constructorArgs, this.network, ecc);

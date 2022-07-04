@@ -81,11 +81,11 @@ describe('CustomScriptIdentity', () => {
       collateralAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
       collateralAmount: 1_50000000,
       payoutAmount: 1500000,
-      oraclePk: '0000000000000000000000000000000000000000000000000000000000000000',
-      issuerPk: '0000000000000000000000000000000000000000000000000000000000000000',
-      issuerScriptProgram: '0000000000000000000000000000000000000000000000000000000000000000',
-      priceLevel: 20000,
-      setupTimestamp: 1656686483,
+      oraclePk: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      issuerPk: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      issuerScriptProgram: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      priceLevel: numberToString(20000),
+      setupTimestamp: numberToString(1656686483),
     });
     
     expect(addr.confidentialAddress).toBeDefined();
@@ -100,3 +100,9 @@ describe('CustomScriptIdentity', () => {
   
   // TODO: test demonstrating how to spend a simple transfer with captcha contract
 });
+
+function numberToString(n: number): string {
+  const buf = Buffer.alloc(8);
+  buf.writeBigUInt64LE(BigInt(n));
+  return '0x'.concat(buf.toString('hex'));
+}
