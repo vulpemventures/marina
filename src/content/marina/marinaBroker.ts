@@ -39,8 +39,8 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import type { AddressInterface, ScriptInputsNeeds, UnblindedOutput } from 'ldk';
-import { getAsset, getSats, analyzeTapscriptTree } from 'ldk';
+import type { AddressInterface, UnblindedOutput } from 'ldk';
+import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -52,6 +52,8 @@ import type { CreateAccountPopupResponse } from '../../presentation/connect/crea
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
+import type { Artifact } from '@ionio-lang/ionio';
+import { PrimitiveType } from '@ionio-lang/ionio';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -229,19 +231,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           }
           await this.store.dispatchAsync(incrementAddressIndex(account.getInfo().accountID, net));
 
-          if (account.type === AccountType.CustomScriptAccount) {
-            const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
-              needsOfLeaf.sigs.length === 1 &&
-              !needsOfLeaf.needParameters &&
-              !needsOfLeaf.hasIntrospection;
-            const isSpendableByMarina = Object.values(
-              analyzeTapscriptTree(nextAddress.taprootHashTree)
-            ).some(autoSpendableLeaf);
-
-            await this.store.dispatchAsync(
-              setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
-            );
-          }
           return successMsg(nextAddress);
         }
 
@@ -267,19 +256,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             incrementChangeAddressIndex(account.getInfo().accountID, net)
           );
 
-          if (account.type === AccountType.CustomScriptAccount) {
-            const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
-              needsOfLeaf.sigs.length === 1 &&
-              !needsOfLeaf.needParameters &&
-              !needsOfLeaf.hasIntrospection;
-            const isSpendableByMarina = Object.values(
-              analyzeTapscriptTree(nextChangeAddress.taprootHashTree)
-            ).some(autoSpendableLeaf);
-
-            await this.store.dispatchAsync(
-              setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
-            );
-          }
           return successMsg(nextChangeAddress);
         }
 
@@ -444,26 +420,29 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Only custom script accounts can import templates');
           }
 
-          let covenant, changeCovenant: Template | undefined;
+          let contract: Template | undefined;
           if (params && params.length > 0) {
             if (!validateTemplate(params[0])) {
               throw new Error('Invalid template');
             }
-            covenant = params[0];
-            if (params.length > 1) {
-              if (!validateTemplate(params[1])) {
-                throw new Error('Invalid template for change addresses');
-              }
-              changeCovenant = params[1];
-            }
+            contract = params[0];
           }
 
           await this.store.dispatchAsync(
-            setCustomScriptTemplate(
-              this.selectedAccount,
-              covenant.template,
-              changeCovenant?.template
-            )
+            setCustomScriptTemplate(this.selectedAccount, contract!.template)
+          );
+
+          const artifact: Artifact = JSON.parse(contract!.template);
+          const isSpendableByMarina = artifact.functions.every(({ functionInputs, require }) => {
+            return (
+              functionInputs.length === 1 &&
+              functionInputs[0].type === PrimitiveType.Signature &&
+              (!require || require.length === 0)
+            );
+          });
+
+          await this.store.dispatchAsync(
+            setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
           );
 
           return successMsg(true);
