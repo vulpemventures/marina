@@ -28,13 +28,7 @@
         }
       ],
       "require": [],
-      "asm": [
-        "OP_ADD",
-        "$sum",
-        "OP_EQUALVERIFY",
-        "$test",
-        "OP_CHECKSIG"
-      ]
+      "asm": ["OP_ADD", "$sum", "OP_EQUALVERIFY", "$test", "OP_CHECKSIG"]
     }
   ]
 }

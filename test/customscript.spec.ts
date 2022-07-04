@@ -1,4 +1,5 @@
-import { AddressInterface, fetchAndUnblindUtxos, IdentityType, networks, Psbt } from 'ldk';
+import type { AddressInterface } from 'ldk';
+import { fetchAndUnblindUtxos, IdentityType, networks, Psbt } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import type { CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
 import { CustomScriptIdentity } from '../src/domain/customscript-identity';
@@ -6,7 +7,7 @@ import { makeRandomMnemonic } from './test.utils';
 import * as synthAssetArtifact from './fixtures/customscript/synthetic_asset.ionio.json';
 import * as transferWithCaptchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
 import { APIURL, broadcastTx, faucet } from './_regtest';
-import { Signer } from '@ionio-lang/ionio';
+import type { Signer } from '@ionio-lang/ionio';
 
 const TEST_NAMESPACE = 'test';
 
@@ -101,48 +102,49 @@ describe('CustomScriptIdentity', () => {
     expect(addr.publicKey).toBeDefined();
     expect(addr.contract).toBeDefined();
   });
-  
+
   test('should be able to instatiate a contract identity, fund the contract and spend those funds', async () => {
     const template = JSON.stringify(transferWithCaptchaArtifact);
     const random = makeRandomCustomScriptIdentity(template);
     expect(random.contract.namespace).toBe(TEST_NAMESPACE);
     expect(random.contract.template).toBeDefined();
-    
+
     const addr = await random.getNextAddress({ sum: 7 });
-    
+
     expect(addr.confidentialAddress).toBeDefined();
     expect(addr.blindingPrivateKey).toBeDefined();
     expect(addr.derivationPath).toBeDefined();
     expect(addr.taprootHashTree).toBeDefined();
     expect(addr.taprootInternalKey).toBe(
       '0000000000000000000000000000000000000000000000000000000000000000'
-      );
+    );
     expect(addr.publicKey).toBeDefined();
     expect(addr.contract).toBeDefined();
 
     await faucet(addr.confidentialAddress, 1000000);
 
-    const [ utxo ] = await getUnspents(addr)
-    
+    const [utxo] = await getUnspents(addr);
+
     const instance = addr.contract.from(utxo.txid, utxo.vout, utxo.prevout);
     const signer: Signer = {
       signTransaction: async (psetBase64: string): Promise<string> => {
         return random.signPset(psetBase64);
-      }
-    }
-    const recipient = 'el1qq20mpyk7ya3939tm0keheapgaympvcv2m4zr6dcnp6uqxjs7q4t2324gru07umsz8ymmetutvj2sfhusx4fl6gjgsk9l8e2rm';
+      },
+    };
+    const recipient =
+      'el1qq20mpyk7ya3939tm0keheapgaympvcv2m4zr6dcnp6uqxjs7q4t2324gru07umsz8ymmetutvj2sfhusx4fl6gjgsk9l8e2rm';
     const feeAmount = 100;
     const amount = 1000000 - feeAmount;
-    const tx = await instance.functions.
-      transferWithSum(3, 4, signer)
+    const tx = instance.functions
+      .transferWithSum(3, 4, signer)
       .withRecipient(recipient, amount, networks.regtest.assetHash)
-      .withFeeOutput(feeAmount)
+      .withFeeOutput(feeAmount);
 
     const blindedPset = await random.blindPset(
       tx.psbt.toBase64(),
       [0],
       new Map([[0, '029fb092de276258957b7db37cf428e93616618add443d37130eb8034a1e0556a8']]),
-      new Map([[0, utxo.unblindData]]),
+      new Map([[0, utxo.unblindData]])
     );
 
     tx.psbt = Psbt.fromBase64(blindedPset);
