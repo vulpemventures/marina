@@ -1,5 +1,5 @@
 import type { AddressInterface } from 'ldk';
-import { fetchAndUnblindUtxos, IdentityType, networks, Psbt } from 'ldk';
+import { fetchAndUnblindUtxos, IdentityType, networks } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import type { CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
 import { CustomScriptIdentity } from '../src/domain/customscript-identity';
@@ -125,7 +125,7 @@ describe('CustomScriptIdentity', () => {
 
     const [utxo] = await getUnspents(addr);
 
-    const instance = addr.contract.from(utxo.txid, utxo.vout, utxo.prevout);
+    const instance = addr.contract.from(utxo.txid, utxo.vout, utxo.prevout, utxo.unblindData);
     const signer: Signer = {
       signTransaction: async (psetBase64: string): Promise<string> => {
         return random.signPset(psetBase64);
@@ -139,15 +139,6 @@ describe('CustomScriptIdentity', () => {
       .transferWithSum(3, 4, signer)
       .withRecipient(recipient, amount, networks.regtest.assetHash)
       .withFeeOutput(feeAmount);
-
-    const blindedPset = await random.blindPset(
-      tx.psbt.toBase64(),
-      [0],
-      new Map([[0, '029fb092de276258957b7db37cf428e93616618add443d37130eb8034a1e0556a8']]),
-      new Map([[0, utxo.unblindData]])
-    );
-
-    tx.psbt = Psbt.fromBase64(blindedPset);
 
     const signedTx = await tx.unlock();
     const hex = signedTx.psbt.extractTransaction().toHex();

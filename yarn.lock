@@ -439,10 +439,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.1.8.tgz#327bab8bf9eb009d6f2f62229bc213f946f474e6"
-  integrity sha512-HupWpeuxnHnVBudLav8oinpE1iBTwcpjQgqx187Mog9bwe+eN6UGhsw7eHZhWL/3Q3x1fNiEACPTPCVJZoVSFQ==
+"@ionio-lang/ionio@^0.1.9":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.1.9.tgz#836b9387c4436eaf9b6271eba0941d24e451e3db"
+  integrity sha512-HAB4HUtbmPVeF8nLqRUMtk3liHjFo1A7wpb7/9eBpMkPbJDu5DGXjEu/lFG8wsWx7t4WNg0soGjUT4EjPy7piQ==
   dependencies:
     ldk "^0.5.2"
     liquidjs-lib "git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support"
@@ -3675,9 +3675,9 @@ ecpair@^2.0.1:
     wif "^2.0.6"
 
 electron-to-chromium@^1.4.172:
-  version "1.4.177"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.177.tgz#b6a4436eb788ca732556cd69f384b8a3c82118c5"
-  integrity sha512-FYPir3NSBEGexSZUEeht81oVhHfLFl6mhUKSkjHN/iB/TwEIt/WHQrqVGfTLN5gQxwJCQkIJBe05eOXjI7omgg==
+  version "1.4.178"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.178.tgz#3dae6fda486007bb54bbfed420ebd40881a3de45"
+  integrity sha512-aWuhJXkwIdoQzGR8p2QvR3N0OzdUKZSP8+P/hzuMzNQIPZoEa8HiCGM75bQBHjyz+eKT5PB9dVCzkK/tyQ4B5Q==
 
 elliptic@^6.4.0, elliptic@^6.5.2, elliptic@^6.5.3:
   version "6.5.4"
@@ -4781,9 +4781,9 @@ globals@^11.1.0, globals@^11.12.0:
   integrity sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==
 
 globals@^13.15.0, globals@^13.6.0, globals@^13.9.0:
-  version "13.15.0"
-  resolved "https://registry.yarnpkg.com/globals/-/globals-13.15.0.tgz#38113218c907d2f7e98658af246cef8b77e90bac"
-  integrity sha512-bpzcOlgDhMG070Av0Vy5Owklpv1I6+j96GhUI7Rh7IzDCKLzboflLrrfqMu8NquDbiR4EOQk7XzJwqVJxicxog==
+  version "13.16.0"
+  resolved "https://registry.yarnpkg.com/globals/-/globals-13.16.0.tgz#9be4aca28f311aaeb974ea54978ebbb5e35ce46a"
+  integrity sha512-A1lrQfpNF+McdPOnnFqY3kSN0AFTy485bTi1bkLk4mVPODIUEcSfhHgRqA+QdXPksrSTTztYXx37NFV+GpGk3Q==
   dependencies:
     type-fest "^0.20.2"
 
