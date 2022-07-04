@@ -121,7 +121,7 @@ describe('CustomScriptIdentity', () => {
     expect(addr.publicKey).toBeDefined();
     expect(addr.contract).toBeDefined();
 
-    await faucet(addr.confidentialAddress, 1000000);
+    await faucet(addr.confidentialAddress, 0.01);
 
     const [utxo] = await getUnspents(addr);
 
