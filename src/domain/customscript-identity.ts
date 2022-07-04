@@ -34,12 +34,7 @@ import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
 import type { Argument, Artifact } from '@ionio-lang/ionio';
-import {
-  Contract,
-  PrimitiveType,
-  replaceArtifactConstructorWithArguments,
-  toDescriptor,
-} from '@ionio-lang/ionio';
+import { Contract, replaceArtifactConstructorWithArguments, toDescriptor } from '@ionio-lang/ionio';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
@@ -183,7 +178,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       if (!param) {
         throw new Error(`missing contructor arg ${name}`);
       }
-      return param
+      return param;
     });
 
     const contract = new Contract(artifact, constructorArgs, this.network, ecc);

@@ -87,7 +87,7 @@ describe('CustomScriptIdentity', () => {
       priceLevel: numberToString(20000),
       setupTimestamp: numberToString(1656686483),
     });
-    
+
     expect(addr.confidentialAddress).toBeDefined();
     expect(addr.blindingPrivateKey).toBeDefined();
     expect(addr.derivationPath).toBeDefined();
@@ -97,7 +97,7 @@ describe('CustomScriptIdentity', () => {
     );
     expect(addr.publicKey).toBeDefined();
   });
-  
+
   // TODO: test demonstrating how to spend a simple transfer with captcha contract
 });
 
