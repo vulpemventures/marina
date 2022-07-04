@@ -57,13 +57,15 @@ interface ExtendedTaprootAddressInterface extends AddressInterface {
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
   publicKey: string;
   descriptor: string;
+  contract: Contract;
 }
 
 export type TaprootAddressInterface = AddressInterface &
   Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
     taprootHashTree?: bip341.HashTree;
     taprootInternalKey?: string;
-    descriptor?: string;
+    descriptor: string;
+    contract: Contract;
   };
 
 function asTaprootAddressInterface(
@@ -77,6 +79,7 @@ function asTaprootAddressInterface(
     taprootInternalKey: extended.result.taprootInternalKey,
     publicKey: extended.publicKey,
     descriptor: extended.descriptor,
+    contract: extended.contract,
   };
 }
 
@@ -192,6 +195,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       ...this.outputScriptToAddressInterface(outputScript.toString('hex')),
       publicKey,
       result,
+      contract,
       derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
       tapscriptNeeds: analyzeTapscriptTree(contract.getTaprootTree()),
       descriptor: toDescriptor(replaceArtifactConstructorWithArguments(artifact, constructorArgs)),
