@@ -39,8 +39,8 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import { AddressInterface, analyzeTapscriptTree, ScriptInputsNeeds, UnblindedOutput } from 'ldk';
-import { getAsset, getSats } from 'ldk';
+import type { AddressInterface, ScriptInputsNeeds, UnblindedOutput } from 'ldk';
+import { getAsset, getSats, analyzeTapscriptTree } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
@@ -234,7 +234,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               needsOfLeaf.sigs.length === 1 &&
               !needsOfLeaf.needParameters &&
               !needsOfLeaf.hasIntrospection;
-            let isSpendableByMarina = Object.values(
+            const isSpendableByMarina = Object.values(
               analyzeTapscriptTree(nextAddress.taprootHashTree)
             ).some(autoSpendableLeaf);
 
@@ -272,10 +272,10 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               needsOfLeaf.sigs.length === 1 &&
               !needsOfLeaf.needParameters &&
               !needsOfLeaf.hasIntrospection;
-            let isSpendableByMarina = Object.values(
+            const isSpendableByMarina = Object.values(
               analyzeTapscriptTree(nextChangeAddress.taprootHashTree)
             ).some(autoSpendableLeaf);
-  
+
             await this.store.dispatchAsync(
               setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
             );
