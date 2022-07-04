@@ -63,17 +63,17 @@ describe('CustomScriptIdentity', () => {
     });
   }
 
-  test('should be able to instantiate a covenant identity without template set up', () => {
+  test('should be able to instantiate a custom script identity without template', () => {
     const random = makeRandomCustomScriptIdentity();
-    expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
-    expect(random.covenant.template).toBeUndefined();
+    expect(random.contract.namespace).toBe(TEST_NAMESPACE);
+    expect(random.contract.template).toBeUndefined();
   });
 
-  test('should be able to instatiate a covenant identity with template as Ionio artifact', async () => {
+  test('should be able to instatiate a contract identity and import template as Ionio artifact', async () => {
     const template = JSON.stringify(artifact);
     const random = makeRandomCustomScriptIdentity(template);
-    expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
-    expect(random.covenant.template).toBeDefined();
+    expect(random.contract.namespace).toBe(TEST_NAMESPACE);
+    expect(random.contract.template).toBeDefined();
 
     const addr = await random.getNextAddress({
       borrowAsset: '2c5dfb37a33fe2acf5c5412b1ddbd58f6f3353578904f3ede0173b2867362463',
@@ -87,8 +87,7 @@ describe('CustomScriptIdentity', () => {
       priceLevel: 20000,
       setupTimestamp: 1656686483,
     });
-    // TODO: remove log
-    console.log(addr);
+    
     expect(addr.confidentialAddress).toBeDefined();
     expect(addr.blindingPrivateKey).toBeDefined();
     expect(addr.derivationPath).toBeDefined();
@@ -98,4 +97,6 @@ describe('CustomScriptIdentity', () => {
     );
     expect(addr.publicKey).toBeDefined();
   });
+  
+  // TODO: test demonstrating how to spend a simple transfer with captcha contract
 });
