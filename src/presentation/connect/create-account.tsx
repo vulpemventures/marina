@@ -64,7 +64,7 @@ const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) =
       await dispatch(
         setAccount<CustomScriptAccountData>(createAccount.namespace, {
           type: AccountType.CustomScriptAccount,
-          covenantDescriptors: identity.covenant,
+          contractTemplate: identity.covenant,
           restorerOpts: {
             liquid: initialRestorerOpts,
             regtest: initialRestorerOpts,
