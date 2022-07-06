@@ -34,7 +34,12 @@ import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
 import type { Argument, Artifact } from '@ionio-lang/ionio';
-import { Contract, replaceArtifactConstructorWithArguments, toDescriptor } from '@ionio-lang/ionio';
+import {
+  H_POINT,
+  Contract,
+  replaceArtifactConstructorWithArguments,
+  toDescriptor,
+} from '@ionio-lang/ionio';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
@@ -189,7 +194,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     const result = {
       scriptPubKey: (): Buffer => outputScript,
       taprootHashTree: contract.getTaprootTree(),
-      taprootInternalKey: Buffer.alloc(32).toString('hex'),
+      taprootInternalKey: H_POINT.toString('hex'),
     };
     return {
       ...this.outputScriptToAddressInterface(outputScript.toString('hex')),
@@ -346,7 +351,7 @@ export class CustomScriptIdentity
         const script = input.witnessUtxo.script.toString('hex');
         const cachedAddrInfos = this.cache.get(script);
         // check if we own the input
-        if (cachedAddrInfos && cachedAddrInfos.result.witnesses) {
+        if (cachedAddrInfos) {
           try {
             // check if the pset signals how to spend the input
             const isKeyPath = input.tapKeySig !== undefined || input.tapMerkleRoot !== undefined;
@@ -387,11 +392,26 @@ export class CustomScriptIdentity
               throw new Error('marina fails to sign input (no auto spendable tapscript)');
             }
 
+            const leaf = { scriptHex: leafScript, version: 0xc4 };
+            const leafHash = bip341.tapLeafHash(leaf);
+
+            if (!cachedAddrInfos.result.taprootHashTree) {
+              throw new Error('marina fails to sign input (no taproot tree)');
+            }
+
+            if (!cachedAddrInfos.result.taprootInternalKey) {
+              throw new Error('marina fails to sign input (no taproot internal key)');
+            }
+
             // witnesses func will throw if the leaf is not a valid leaf
-            const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
-            const leafHash = bip341.tapLeafHash({
-              scriptHex: leafScript,
-            });
+            const taprootSignScriptStack = bip341
+              .BIP341Factory(this.ecclib)
+              .taprootSignScriptStack(
+                Buffer.from(cachedAddrInfos.result.taprootInternalKey, 'hex'),
+                leaf,
+                cachedAddrInfos.result.taprootHashTree?.hash,
+                bip341.findScriptPath(cachedAddrInfos.result.taprootHashTree, leafHash)
+              );
 
             pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
             pset.updateInput(index, {

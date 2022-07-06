@@ -8,6 +8,7 @@ import * as synthAssetArtifact from './fixtures/customscript/synthetic_asset.ion
 import * as transferWithCaptchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import type { Signer } from '@ionio-lang/ionio';
+import { H_POINT } from '@ionio-lang/ionio';
 
 const TEST_NAMESPACE = 'test';
 
@@ -96,9 +97,7 @@ describe('CustomScriptIdentity', () => {
     expect(addr.blindingPrivateKey).toBeDefined();
     expect(addr.derivationPath).toBeDefined();
     expect(addr.taprootHashTree).toBeDefined();
-    expect(addr.taprootInternalKey).toBe(
-      '0000000000000000000000000000000000000000000000000000000000000000'
-    );
+    expect(addr.taprootInternalKey).toBe(H_POINT.toString('hex'));
     expect(addr.publicKey).toBeDefined();
     expect(addr.contract).toBeDefined();
   });
@@ -115,9 +114,7 @@ describe('CustomScriptIdentity', () => {
     expect(addr.blindingPrivateKey).toBeDefined();
     expect(addr.derivationPath).toBeDefined();
     expect(addr.taprootHashTree).toBeDefined();
-    expect(addr.taprootInternalKey).toBe(
-      '0000000000000000000000000000000000000000000000000000000000000000'
-    );
+    expect(addr.taprootInternalKey).toBe(H_POINT.toString('hex'));
     expect(addr.publicKey).toBeDefined();
     expect(addr.contract).toBeDefined();
 
@@ -133,7 +130,7 @@ describe('CustomScriptIdentity', () => {
     };
     const recipient =
       'el1qq20mpyk7ya3939tm0keheapgaympvcv2m4zr6dcnp6uqxjs7q4t2324gru07umsz8ymmetutvj2sfhusx4fl6gjgsk9l8e2rm';
-    const feeAmount = 100;
+    const feeAmount = 5000;
     const amount = 1000000 - feeAmount;
     const tx = instance.functions
       .transferWithSum(3, 4, signer)
