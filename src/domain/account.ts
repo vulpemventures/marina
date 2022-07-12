@@ -112,7 +112,7 @@ function createMainAccount(
       ),
     getInfo: () => ({
       accountID: MainAccountID, // main account is unique
-      masterXPub: data.masterXPub,
+      masterXPub: toXpub(data.masterXPub),
       isReady: true, // always true for main account
       template: `elwpkh($${MainAccountID})`,
     }),
