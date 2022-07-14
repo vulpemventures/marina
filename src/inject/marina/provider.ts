@@ -66,11 +66,17 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getAddresses', [ids]);
   }
 
-  getNextAddress(): Promise<AddressInterface> {
+  getNextAddress(params?: any): Promise<AddressInterface> {
+    if (params) {
+      return this.proxy('getNextAddress', [params]);
+    }
     return this.proxy('getNextAddress', []);
   }
 
-  getNextChangeAddress(): Promise<AddressInterface> {
+  getNextChangeAddress(params?: any): Promise<AddressInterface> {
+    if (params) {
+      return this.proxy('getNextChangeAddress', [params]);
+    }
     return this.proxy('getNextChangeAddress', []);
   }
 
