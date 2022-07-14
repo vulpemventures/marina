@@ -214,7 +214,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'getNextAddress': {
           this.checkHostnameAuthorization();
           const account = this.accountSelector(this.state);
-          if (params && account.type !== AccountType.CustomScriptAccount) {
+          if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
             throw new Error('Only custom script accounts can expect construct parameters');
           }
           const net = selectNetwork(this.state);
@@ -237,7 +237,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'getNextChangeAddress': {
           this.checkHostnameAuthorization();
           const account = this.accountSelector(this.state);
-          if (params && account.type !== AccountType.CustomScriptAccount) {
+          if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
             throw new Error('Only custom script accounts can expect construct parameters');
           }
           const net = selectNetwork(this.state);
