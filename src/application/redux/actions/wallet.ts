@@ -11,6 +11,8 @@ import {
   SET_MNEMONIC,
   SET_CS_ACCOUNT_TEMPLATE,
   SET_CS_ACCOUNT_IS_SPENDABLE_BY_MARINA,
+  SET_CUSTOM_CONSTRUCTOR_PARAMS,
+  SET_CUSTOM_CHANGE_CONSTRUCTOR_PARAMS,
   POP_RESTORER_LOADER,
   PUSH_RESTORER_LOADER,
 } from './action-types';
@@ -70,15 +72,54 @@ export function setRestorerOpts(
   };
 }
 
-export function incrementAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
+function incrementAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
   return { type: INCREMENT_EXTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
-export function incrementChangeAddressIndex(
-  accountID: AccountID,
-  network: NetworkString
-): AnyAction {
+function incrementChangeAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
   return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
+}
+
+export function setCustomConstructorParams<T extends Record<string, string | number>>(
+  accountID: AccountID,
+  network: NetworkString,
+  constructorsParams: T
+): AnyAction {
+  return {
+    type: SET_CUSTOM_CONSTRUCTOR_PARAMS,
+    payload: { accountID, network, constructorsParams },
+  };
+}
+
+export function setCustomChangeConstructorParams<T extends Record<string, string | number>>(
+  accountID: AccountID,
+  network: NetworkString,
+  constructorsParams: T
+): AnyAction {
+  return {
+    type: SET_CUSTOM_CHANGE_CONSTRUCTOR_PARAMS,
+    payload: { accountID, network, constructorsParams },
+  };
+}
+
+export function updateToNextAddress(
+  accountID: AccountID,
+  network: NetworkString,
+  args?: Record<string, string | number>
+): AnyAction[] {
+  const actions = [incrementAddressIndex(accountID, network)];
+  if (args) actions.push(setCustomConstructorParams(accountID, network, args));
+  return actions;
+}
+
+export function updateToNextChangeAddress(
+  accountID: AccountID,
+  network: NetworkString,
+  args?: Record<string, string | number>
+): AnyAction[] {
+  const actions = [incrementChangeAddressIndex(accountID, network)];
+  if (args) actions.push(setCustomChangeConstructorParams(accountID, network, args));
+  return actions;
 }
 
 export function setDeepRestorerGapLimit(gapLimit: number): AnyAction {

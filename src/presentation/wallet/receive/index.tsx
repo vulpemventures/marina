@@ -7,7 +7,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utils';
 import { useDispatch, useSelector } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { incrementAddressIndex } from '../../../application/redux/actions/wallet';
+import { updateToNextAddress } from '../../../application/redux/actions/wallet';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
 import { updateTaskAction } from '../../../application/redux/actions/task';
 import { selectNetwork } from '../../../application/redux/selectors/app.selector';
@@ -36,7 +36,7 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
     (async () => {
       const identity = await account.getWatchIdentity(network);
       const addr = await identity.getNextAddress();
-      await dispatch(incrementAddressIndex(account.getInfo().accountID, network)); // persist address
+      await Promise.all(updateToNextAddress(account.getInfo().accountID, network).map(dispatch));
       setConfidentialAddress(addr.confidentialAddress);
       setTimeout(() => {
         dispatch(updateTaskAction(account.getInfo().accountID, network)).catch(console.error);

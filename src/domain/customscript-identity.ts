@@ -5,7 +5,6 @@ import {
   Psbt,
   restorerFromEsplora,
   IdentityType,
-  restorerFromState,
   Transaction,
   bip341,
   toXpub,
@@ -22,7 +21,6 @@ import type {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
-  StateRestorerOpts,
   Mnemonic,
   TemplateResult,
   ScriptInputsNeeds,
@@ -63,6 +61,7 @@ interface ExtendedTaprootAddressInterface extends AddressInterface {
   publicKey: string;
   descriptor: string;
   contract: Contract;
+  constructorParams?: Record<string, string | number>;
 }
 
 export type TaprootAddressInterface = AddressInterface &
@@ -204,6 +203,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
       tapscriptNeeds: analyzeTapscriptTree(contract.getTaprootTree()),
       descriptor: toDescriptor(replaceArtifactConstructorWithArguments(artifact, constructorArgs)),
+      constructorParams,
     };
   }
 
@@ -501,9 +501,9 @@ export function restoredCustomScriptIdentity(
   contractTemplate: ContractTemplate,
   mnemonic: string,
   network: NetworkString,
-  restorerOpts: StateRestorerOpts
+  restorerOpts: CustomRestorerOpts
 ): Promise<CustomScriptIdentity> {
-  return restorerFromState<CustomScriptIdentity>(
+  return customRestorerFromState<CustomScriptIdentity>(
     new CustomScriptIdentity({
       type: IdentityType.Mnemonic,
       chain: network,
@@ -521,9 +521,9 @@ export function restoredCustomScriptWatchOnlyIdentity(
   masterPublicKey: string,
   masterBlindingKey: string,
   network: NetworkString,
-  restorerOpts: StateRestorerOpts
+  restorerOpts: CustomRestorerOpts
 ): Promise<CustomScriptIdentityWatchOnly> {
-  return restorerFromState<CustomScriptIdentityWatchOnly>(
+  return customRestorerFromState<CustomScriptIdentityWatchOnly>(
     new CustomScriptIdentityWatchOnly({
       type: IdentityType.MasterPublicKey,
       chain: network,
@@ -545,4 +545,44 @@ function validateTemplate(template: string): boolean {
   const artifact = JSON.parse(template) as Artifact;
   const expectedProperties = ['contractName', 'functions', 'constructorInputs'];
   return expectedProperties.every((property) => property in artifact);
+}
+
+export interface CustomRestorerOpts {
+  lastUsedExternalIndex: number;
+  lastUsedInternalIndex: number;
+  customParamsByIndex: Record<number, Record<string, string | number>>;
+  customParamsByChangeIndex: Record<number, Record<string, string | number>>;
+}
+
+function customRestorerFromState<R extends CustomScriptIdentityWatchOnly>(
+  identity: R
+): Restorer<CustomRestorerOpts, R> {
+  return async ({
+    lastUsedExternalIndex,
+    lastUsedInternalIndex,
+    customParamsByIndex,
+    customParamsByChangeIndex,
+  }) => {
+    const promises = [];
+
+    if (lastUsedExternalIndex !== undefined) {
+      for (let i = 0; i <= lastUsedExternalIndex; i++) {
+        const params = customParamsByIndex[lastUsedExternalIndex];
+        const promise = identity.getNextAddress(params);
+        promises.push(promise);
+      }
+    }
+
+    if (lastUsedInternalIndex !== undefined) {
+      for (let i = 0; i <= lastUsedInternalIndex; i++) {
+        const params = customParamsByChangeIndex[lastUsedExternalIndex];
+        const promise = identity.getNextChangeAddress(params);
+        promises.push(promise);
+      }
+    }
+
+    await Promise.all(promises);
+
+    return identity;
+  };
 }

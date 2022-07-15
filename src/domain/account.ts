@@ -15,7 +15,11 @@ import {
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type { ContractTemplate, CustomScriptIdentity } from './customscript-identity';
+import type {
+  ContractTemplate,
+  CustomScriptIdentity,
+  CustomRestorerOpts,
+} from './customscript-identity';
 import {
   CustomScriptIdentityWatchOnly,
   customScriptRestorerFromEsplora,
@@ -85,7 +89,7 @@ export type CustomScriptAccount = Account<
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
   contractTemplate: ContractTemplate;
-  restorerOpts: Record<NetworkString, StateRestorerOpts>;
+  restorerOpts: Record<NetworkString, CustomRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
 }

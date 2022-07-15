@@ -26,8 +26,8 @@ import {
   selectUtxos,
 } from '../../application/redux/selectors/wallet.selector';
 import {
-  incrementAddressIndex,
-  incrementChangeAddressIndex,
+  updateToNextAddress,
+  updateToNextChangeAddress,
   setCustomScriptTemplate,
   setIsSpendableByMarina,
 } from '../../application/redux/actions/wallet';
@@ -54,6 +54,7 @@ import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 import type { Artifact } from '@ionio-lang/ionio';
 import { PrimitiveType } from '@ionio-lang/ionio';
+import type { AnyAction } from 'redux';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -220,17 +221,20 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const net = selectNetwork(this.state);
           const watchOnlyIdentity = await account.getWatchIdentity(net);
           let nextAddress: AddressInterface;
+          let constructorParams: Record<string, string | number> | undefined;
           if (account.type === AccountType.MainAccount) {
             nextAddress = await watchOnlyIdentity.getNextAddress();
           } else {
-            let constructorParams: Record<string, string | number> | undefined;
             if (params && params.length > 0) {
               constructorParams = params[0];
             }
             nextAddress = await watchOnlyIdentity.getNextAddress(constructorParams);
           }
-          await this.store.dispatchAsync(incrementAddressIndex(account.getInfo().accountID, net));
-
+          await Promise.all(
+            updateToNextAddress(account.getInfo().accountID, net, constructorParams).map(
+              (action: AnyAction) => this.store?.dispatchAsync(action)
+            )
+          );
           return successMsg(nextAddress);
         }
 
@@ -243,17 +247,19 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const net = selectNetwork(this.state);
           const xpub = await account.getWatchIdentity(net);
           let nextChangeAddress: AddressInterface;
+          let constructorParams: Record<string, string | number> | undefined;
           if (account.type === AccountType.MainAccount) {
             nextChangeAddress = await xpub.getNextChangeAddress();
           } else {
-            let constructorParams: Record<string, string | number> | undefined;
             if (params && params.length > 0) {
               constructorParams = params[0];
             }
             nextChangeAddress = await xpub.getNextChangeAddress(constructorParams);
           }
-          await this.store.dispatchAsync(
-            incrementChangeAddressIndex(account.getInfo().accountID, net)
+          await Promise.all(
+            updateToNextChangeAddress(account.getInfo().accountID, net, constructorParams).map(
+              (action: AnyAction) => this.store?.dispatchAsync(action)
+            )
           );
 
           return successMsg(nextChangeAddress);
