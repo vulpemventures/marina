@@ -190,3 +190,10 @@ export const initialRestorerOpts: StateRestorerOpts = {
   lastUsedExternalIndex: -1,
   lastUsedInternalIndex: -1,
 };
+
+export const initialCustomRestorerOpts: CustomRestorerOpts = {
+  lastUsedExternalIndex: -1,
+  lastUsedInternalIndex: -1,
+  customParamsByIndex: {},
+  customParamsByChangeIndex: {},
+};

@@ -9,7 +9,7 @@ import { selectEncryptedMnemonic } from '../../application/redux/selectors/walle
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { decrypt } from '../../application/utils/crypto';
 import type { CustomScriptAccountData } from '../../domain/account';
-import { AccountType, initialRestorerOpts } from '../../domain/account';
+import { initialCustomRestorerOpts, AccountType } from '../../domain/account';
 import { CustomScriptIdentity } from '../../domain/customscript-identity';
 import Button from '../components/button';
 import ModalUnlock from '../components/modal-unlock';
@@ -66,9 +66,9 @@ const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) =
           type: AccountType.CustomScriptAccount,
           contractTemplate: identity.contract,
           restorerOpts: {
-            liquid: initialRestorerOpts,
-            regtest: initialRestorerOpts,
-            testnet: initialRestorerOpts,
+            liquid: initialCustomRestorerOpts,
+            regtest: initialCustomRestorerOpts,
+            testnet: initialCustomRestorerOpts,
           },
           masterBlindingKey: identity.masterBlindingKeyNode.masterKey.toString('hex'),
           masterXPub: identity.xpub,
