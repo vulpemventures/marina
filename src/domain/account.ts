@@ -1,4 +1,3 @@
-import * as ecc from 'tiny-secp256k1';
 import type {
   IdentityInterface,
   MasterPublicKey,
@@ -8,7 +7,7 @@ import type {
   EsploraRestorerOpts,
   NetworkString,
 } from 'ldk';
-import { IdentityType, masterPubKeyRestorerFromEsplora } from 'ldk';
+import { masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
@@ -19,10 +18,9 @@ import type {
   ContractTemplate,
   CustomScriptIdentity,
   CustomRestorerOpts,
+  CustomScriptIdentityWatchOnly,
 } from './customscript-identity';
 import {
-  CustomScriptIdentityWatchOnly,
-  customScriptRestorerFromEsplora,
   restoredCustomScriptIdentity,
   restoredCustomScriptWatchOnlyIdentity,
 } from './customscript-identity';

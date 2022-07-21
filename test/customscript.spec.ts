@@ -8,7 +8,6 @@ import * as synthAssetArtifact from './fixtures/customscript/synthetic_asset.ion
 import * as transferWithCaptchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
 import { APIURL, broadcastTx, faucet } from './_regtest';
 import type { Signer } from '@ionio-lang/ionio';
-import { H_POINT } from '@ionio-lang/ionio';
 
 const TEST_NAMESPACE = 'test';
 

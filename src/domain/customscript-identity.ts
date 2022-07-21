@@ -3,7 +3,6 @@ import {
   crypto,
   address,
   Psbt,
-  restorerFromEsplora,
   IdentityType,
   Transaction,
   bip341,
@@ -19,7 +18,6 @@ import type {
   IdentityInterface,
   IdentityOpts,
   Restorer,
-  EsploraRestorerOpts,
   NetworkString,
   Mnemonic,
   TemplateResult,
@@ -481,17 +479,6 @@ export class CustomScriptIdentity
 }
 
 // restorers
-
-export function customScriptRestorerFromEsplora<T extends CustomScriptIdentityWatchOnly>(
-  toRestore: T,
-  args: CustomRestorerOpts['customParamsByIndex'],
-  changeArgs: CustomRestorerOpts['customParamsByChangeIndex']
-): Restorer<EsploraRestorerOpts, T> {
-  return restorerFromEsplora(toRestore, function (isChange: boolean, index: number): string {
-    const params = isChange ? changeArgs[index] : args[index];
-    return toRestore.getAddress(isChange, index, params).confidentialAddress;
-  });
-}
 
 export function restoredCustomScriptIdentity(
   contractTemplate: ContractTemplate,

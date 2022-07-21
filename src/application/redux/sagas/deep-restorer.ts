@@ -8,7 +8,8 @@ import type {
 } from 'ldk';
 import type { Channel } from 'redux-saga';
 import { call, fork, put, take } from 'redux-saga/effects';
-import { AccountType, MnemonicAccount } from '../../../domain/account';
+import type { MnemonicAccount } from '../../../domain/account';
+import { AccountType } from '../../../domain/account';
 import { extractErrorMessage } from '../../../presentation/utils/error';
 import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { RESTORE_TASK } from '../actions/action-types';
@@ -77,7 +78,12 @@ function* restorerWorker(inChan: RestoreChan): SagaGenerator<void, RestoreChanDa
       const account = yield* selectAccountSaga(accountID);
       if (!account) throw new Error('Account not found');
       if (account.type === AccountType.MainAccount) {
-        const restoredIndexes = yield* deepRestore(account as MnemonicAccount, gapLimit, esploraURL, network);
+        const restoredIndexes = yield* deepRestore(
+          account as MnemonicAccount,
+          gapLimit,
+          esploraURL,
+          network
+        );
         yield put(setRestorerOpts(accountID, restoredIndexes, network)); // update state with new restorerOpts
         yield put(updateTaskAction(accountID, network)); // update utxos and transactions according to the restored addresses (on network)
       }
