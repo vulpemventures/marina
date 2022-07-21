@@ -439,11 +439,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           );
 
           const artifact: Artifact = JSON.parse(contract!.template);
-          const isSpendableByMarina = artifact.functions.every(({ functionInputs, require }) => {
+          const isSpendableByMarina = artifact.functions.every((fn) => {
             return (
-              functionInputs.length === 1 &&
-              functionInputs[0].type === PrimitiveType.Signature &&
-              (!require || require.length === 0)
+              fn.functionInputs.length === 1 &&
+              fn.functionInputs[0].type === PrimitiveType.Signature &&
+              (!fn.require || fn.require.length === 0)
             );
           });
 
