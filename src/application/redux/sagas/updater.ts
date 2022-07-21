@@ -205,6 +205,8 @@ function* updaterWorker(
       yield put(pushUpdaterLoader());
       console.debug(`${new Date()} updating ${accountID} on ${network}`);
       yield* updateTxsAndUtxos(accountID, network);
+    } catch (err) {
+      console.error(err);
     } finally {
       yield put(popUpdaterLoader());
     }

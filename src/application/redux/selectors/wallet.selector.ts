@@ -5,6 +5,7 @@ import type {
   CustomScriptAccountData,
 } from '../../../domain/account';
 import { AccountType, accountFromMnemonicAndData, MainAccountID } from '../../../domain/account';
+import { decodePset } from 'ldk';
 import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
@@ -87,6 +88,21 @@ export const selectAccountsFromCoins =
     );
     return Array.from(accountsIDs).map((id) => selectAccount(id as AccountID)(state));
   };
+
+export const selectAllAccountForSigningTxState = (state: RootReducerState): Account[] => {
+  if (state.connect.tx?.pset === undefined) return [];
+  const decoded = decodePset(state.connect.tx.pset);
+  const inputsOutpoints = decoded.TX.ins.map((input) =>
+    toStringOutpoint({ txid: Buffer.from(input.hash).reverse().toString('hex'), vout: input.index })
+  );
+  return selectAllAccounts(state).filter((account) => {
+    const accountUtxos = selectUtxosForAccount(
+      account.getInfo().accountID,
+      state.app.network
+    )(state);
+    return accountUtxos.some((utxo) => inputsOutpoints.includes(toStringOutpoint(utxo)));
+  });
+};
 
 export const selectAllAccounts = (state: RootReducerState): Account[] => {
   return selectAllAccountsIDs(state)

@@ -1,4 +1,4 @@
-import type { Store } from 'redux';
+import type { Middleware, Store } from 'redux';
 import { createStore, applyMiddleware } from 'redux';
 import { wrapStore } from 'webext-redux';
 import marinaReducer from './reducers';
@@ -12,9 +12,26 @@ export const serializerAndDeserializer = {
   deserializer: (payload: any) => parse(payload),
 };
 
+// loggerMiddleware is a middleware that logs actions and state after they are dispatched.
+// This middleware is not included in production builds. debug purpose only.
+const loggerMiddleware: Middleware = (store) => (next) => (action) => {
+  console.group(action.type);
+  console.info('dispatching', action);
+  const result = next(action);
+  console.log('next state', store.getState());
+  console.groupEnd();
+  return result;
+};
+
 const create = () => {
   const sagaMiddleware = createSagaMiddleware();
-  const store = createStore(marinaReducer, applyMiddleware(sagaMiddleware));
+  const middlewares: Middleware[] = [sagaMiddleware];
+  if (process.env.NODE_ENV !== 'production') {
+    middlewares.push(loggerMiddleware);
+  }
+
+  // TODO createStore deprecated?
+  const store = createStore(marinaReducer, applyMiddleware(...middlewares));
   sagaMiddleware.run(mainSaga);
   return store;
 };

@@ -42,7 +42,7 @@ import {
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
   const hash = crypto.sha256(Buffer.from(namespace));
-  const hash128 = hash.slice(0, 16);
+  const hash128 = hash.subarray(0, 16);
   const A = hash128.readUInt32LE(0) || 0x80000000;
   const B = hash128.readUint32LE(4) || 0x80000000;
   const C = hash128.readUint32LE(8) || 0x80000000;
@@ -490,10 +490,13 @@ export class CustomScriptIdentity
 // restorers
 
 export function customScriptRestorerFromEsplora<T extends CustomScriptIdentityWatchOnly>(
-  toRestore: T
+  toRestore: T,
+  args: CustomRestorerOpts['customParamsByIndex'],
+  changeArgs: CustomRestorerOpts['customParamsByChangeIndex']
 ): Restorer<EsploraRestorerOpts, T> {
   return restorerFromEsplora(toRestore, function (isChange: boolean, index: number): string {
-    return toRestore.getAddress(isChange, index).confidentialAddress;
+    const params = isChange ? changeArgs[index] : args[index];
+    return toRestore.getAddress(isChange, index, params).confidentialAddress;
   });
 }
 

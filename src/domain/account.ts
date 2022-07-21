@@ -155,7 +155,9 @@ function createCustomScriptAccount(
             masterBlindingKey: data.masterBlindingKey,
             masterPublicKey: data.masterXPub,
           },
-        })
+        }),
+        data.restorerOpts[network].customParamsByIndex,
+        data.restorerOpts[network].customParamsByChangeIndex
       ),
     getInfo: () => ({
       accountID: data.covenantDescriptors.namespace,

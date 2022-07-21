@@ -80,7 +80,7 @@ function incrementChangeAddressIndex(accountID: AccountID, network: NetworkStrin
   return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
-export function setCustomConstructorParams<T extends Record<string, string | number>>(
+function setCustomConstructorParams<T extends Record<string, string | number>>(
   accountID: AccountID,
   network: NetworkString,
   constructorsParams: T
@@ -91,7 +91,7 @@ export function setCustomConstructorParams<T extends Record<string, string | num
   };
 }
 
-export function setCustomChangeConstructorParams<T extends Record<string, string | number>>(
+function setCustomChangeConstructorParams<T extends Record<string, string | number>>(
   accountID: AccountID,
   network: NetworkString,
   constructorsParams: T
