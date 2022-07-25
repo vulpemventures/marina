@@ -270,8 +270,7 @@ function withoutUndefined<T>(arr: Array<T | undefined>): Array<T> {
 
 export class CustomScriptIdentity
   extends CustomScriptIdentityWatchOnly
-  implements IdentityInterface
-{
+  implements IdentityInterface {
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly xpub: string;
@@ -374,53 +373,59 @@ export class CustomScriptIdentity
               }
             }
 
-            const leafScript =
-              input.tapLeafScript && input.tapLeafScript.length > 0
-                ? input.tapLeafScript[0].script.toString('hex')
-                : this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
+            let leafScript = undefined;
+            if (input.tapLeafScript && input.tapLeafScript.length > 0) {
+              leafScript = input.tapLeafScript[0].script.toString('hex');
+            } else {
+              leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
+              cachedAddrInfos.contract.getTaprootTree()
+              // if we use the auto-spendable leaf we need to add the tapLeafScript to the input
+              if (leafScript) {
+                if (!cachedAddrInfos.result.taprootInternalKey) {
+                  throw new Error('marina fails to sign input (no taproot internal key)');
+                }
+
+                const tree = cachedAddrInfos.contract.getTaprootTree()
+                const leaf = { scriptHex: leafScript }
+                const leafHash = bip341.tapLeafHash(leaf)
+
+                // witnesses func will throw if the leaf is not a valid leaf
+                const taprootSignScriptStack = bip341
+                  .BIP341Factory(this.ecclib)
+                  .taprootSignScriptStack(
+                    Buffer.from(cachedAddrInfos.result.taprootInternalKey, 'hex'),
+                    { scriptHex: leafScript },
+                    tree.hash,
+                    bip341.findScriptPath(tree, leafHash)
+                  );
+
+                pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
+                pset.updateInput(index, {
+                  tapLeafScript: [
+                    {
+                      leafVersion: 0xc4, // elements tapscript version
+                      script: Buffer.from(leafScript, 'hex'),
+                      controlBlock: taprootSignScriptStack[1],
+                    },
+                  ],
+                });
+              }
+            }
 
             if (!leafScript) {
               throw new Error('marina fails to sign input (no auto spendable tapscript)');
             }
 
-            const leaf = { scriptHex: leafScript, version: 0xc4 };
+            const leaf = { scriptHex: leafScript };
             const leafHash = bip341.tapLeafHash(leaf);
 
-            if (!cachedAddrInfos.result.taprootHashTree) {
-              throw new Error('marina fails to sign input (no taproot tree)');
-            }
+            const sighash = pset.data.inputs[index].sighashType || Transaction.SIGHASH_DEFAULT;
 
-            if (!cachedAddrInfos.result.taprootInternalKey) {
-              throw new Error('marina fails to sign input (no taproot internal key)');
-            }
-
-            // witnesses func will throw if the leaf is not a valid leaf
-            const taprootSignScriptStack = bip341
-              .BIP341Factory(this.ecclib)
-              .taprootSignScriptStack(
-                Buffer.from(cachedAddrInfos.result.taprootInternalKey, 'hex'),
-                leaf,
-                cachedAddrInfos.result.taprootHashTree?.hash,
-                bip341.findScriptPath(cachedAddrInfos.result.taprootHashTree, leafHash)
-              );
-
-            pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
-            pset.updateInput(index, {
-              tapLeafScript: [
-                {
-                  leafVersion: 0xc4, // elements tapscript version
-                  script: Buffer.from(leafScript, 'hex'),
-                  controlBlock: taprootSignScriptStack[1],
-                },
-              ],
-            });
-
-            // TODO check for witness v0 (not eltr template)
             const sighashForSig = pset.TX.hashForWitnessV1(
               index,
               inputsUtxos.map((u) => u.script),
               inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
-              Transaction.SIGHASH_DEFAULT,
+              sighash,
               this.network.genesisBlockHash,
               leafHash
             );
@@ -432,7 +437,7 @@ export class CustomScriptIdentity
               const addr = this.getAddressByPublicKey(need.pubkey);
               if (addr && addr.derivationPath) {
                 const pathToPrivKey = addr.derivationPath.slice(
-                  namespaceToDerivationPath(this.namespace).length + 1
+                  namespaceToDerivationPath(this.namespace).length + 1 // remove base derivation path
                 );
                 const sig = this.signSchnorr(pathToPrivKey, sighashForSig);
                 pset.updateInput(index, {

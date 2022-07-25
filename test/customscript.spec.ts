@@ -73,7 +73,7 @@ describe('CustomScriptIdentity', () => {
     expect(random.contract.template).toBeUndefined();
   });
 
-  test('should be able to instatiate a contract identity and import template as Ionio artifact', async () => {
+  test('should be able to instantiate a contract identity and import template as Ionio artifact', async () => {
     const template = JSON.stringify(synthAssetArtifact);
     const random = makeRandomCustomScriptIdentity(template);
     expect(random.contract.namespace).toBe(TEST_NAMESPACE);
@@ -101,7 +101,7 @@ describe('CustomScriptIdentity', () => {
     expect(addr.constructorParams).toBeDefined();
   });
 
-  test('should be able to instatiate a contract identity, fund the contract and spend those funds', async () => {
+  test('should be able to instantiate a contract identity, fund the contract and spend those funds', async () => {
     const template = JSON.stringify(transferWithCaptchaArtifact);
     const random = makeRandomCustomScriptIdentity(template);
     expect(random.contract.namespace).toBe(TEST_NAMESPACE);
