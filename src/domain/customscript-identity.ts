@@ -270,7 +270,8 @@ function withoutUndefined<T>(arr: Array<T | undefined>): Array<T> {
 
 export class CustomScriptIdentity
   extends CustomScriptIdentityWatchOnly
-  implements IdentityInterface {
+  implements IdentityInterface
+{
   readonly masterPrivateKeyNode: Mnemonic['masterPrivateKeyNode'];
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly xpub: string;
@@ -378,16 +379,16 @@ export class CustomScriptIdentity
               leafScript = input.tapLeafScript[0].script.toString('hex');
             } else {
               leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
-              cachedAddrInfos.contract.getTaprootTree()
+              cachedAddrInfos.contract.getTaprootTree();
               // if we use the auto-spendable leaf we need to add the tapLeafScript to the input
               if (leafScript) {
                 if (!cachedAddrInfos.result.taprootInternalKey) {
                   throw new Error('marina fails to sign input (no taproot internal key)');
                 }
 
-                const tree = cachedAddrInfos.contract.getTaprootTree()
-                const leaf = { scriptHex: leafScript }
-                const leafHash = bip341.tapLeafHash(leaf)
+                const tree = cachedAddrInfos.contract.getTaprootTree();
+                const leaf = { scriptHex: leafScript };
+                const leafHash = bip341.tapLeafHash(leaf);
 
                 // witnesses func will throw if the leaf is not a valid leaf
                 const taprootSignScriptStack = bip341
@@ -399,7 +400,8 @@ export class CustomScriptIdentity
                     bip341.findScriptPath(tree, leafHash)
                   );
 
-                pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
+                pset.data.inputs[index].tapLeafScript =
+                  pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
                 pset.updateInput(index, {
                   tapLeafScript: [
                     {
