@@ -28,7 +28,7 @@ const featuredAssets = {
     testnet: 'f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958',
   },
   fusd: {
-    testnet: '15cfc15dc574aa3758d15228acbb919e279a3dd4bf417bd59568790f97883080',
+    testnet: '0d86b2f6a8c3b02a8c7c8836b83a081e68b7e2b4bcdfc58981fc5486f59f7518',
   },
 };
 
