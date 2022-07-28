@@ -33,7 +33,14 @@ import {
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import type { Balance, Template, RawHex, Recipient, Utxo } from 'marina-provider';
+import type {
+  Balance,
+  Template,
+  RawHex,
+  Recipient,
+  Utxo,
+  AddressInterface as ProviderAddressInterface,
+} from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
@@ -55,6 +62,7 @@ import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 import type { Artifact } from '@ionio-lang/ionio';
 import { PrimitiveType } from '@ionio-lang/ionio';
 import type { AnyAction } from 'redux';
+import { isTaprootAddressInterface } from '../../domain/customscript-identity';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -209,7 +217,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             identities.map((identity) => identity.getAddresses())
           );
 
-          return successMsg(addresses.flat());
+          return successMsg(addresses.flat().map(toProviderAddress));
         }
 
         case 'getNextAddress': {
@@ -235,7 +243,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               (action: AnyAction) => this.store?.dispatchAsync(action)
             )
           );
-          return successMsg(nextAddress);
+          return successMsg(toProviderAddress(nextAddress));
         }
 
         case 'getNextChangeAddress': {
@@ -262,7 +270,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             )
           );
 
-          return successMsg(nextChangeAddress);
+          return successMsg(toProviderAddress(nextChangeAddress));
         }
 
         case 'signTransaction': {
@@ -546,4 +554,24 @@ function validateTemplate(template: Template): Template<string> | undefined {
       throw new Error(`Unknown template type ${template.type}`);
     }
   }
+}
+
+// converts an addressInterface to the marina-provider format
+function toProviderAddress(addr: AddressInterface): ProviderAddressInterface {
+  const result = {
+    blindingPrivateKey: addr.blindingPrivateKey,
+    confidentialAddress: addr.confidentialAddress,
+    derivationPath: addr.derivationPath,
+    publicKey: addr.publicKey,
+  };
+
+  if (isTaprootAddressInterface(addr)) {
+    return {
+      ...result,
+      constructorParams: addr.constructorParams,
+      descriptor: addr.descriptor,
+    };
+  }
+
+  return result;
 }

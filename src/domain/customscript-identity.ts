@@ -20,7 +20,6 @@ import type {
   Restorer,
   NetworkString,
   Mnemonic,
-  TemplateResult,
   ScriptInputsNeeds,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
@@ -53,16 +52,24 @@ function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32I
   return m.derivePath(path);
 }
 
+// ExtendedTaprootAddressInterface is not the exported interface of the identity
+// TaprootAddressInterface is the "public" version of address objects
 interface ExtendedTaprootAddressInterface extends AddressInterface {
-  result: TemplateResult;
-  tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
   descriptor: string;
-  contract: Contract;
   constructorParams?: Record<string, string | number>;
+  // below are only used internaly
+  contract: Contract;
+  tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
 }
 
 export type TaprootAddressInterface = AddressInterface &
-  Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'>;
+  Omit<ExtendedTaprootAddressInterface, 'contract' | 'tapscriptNeeds'>;
+
+export function isTaprootAddressInterface(
+  address: AddressInterface
+): address is TaprootAddressInterface {
+  return 'descriptor' in address;
+}
 
 function asTaprootAddressInterface(
   extended: ExtendedTaprootAddressInterface
@@ -181,15 +188,9 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
 
     const contract = new Contract(artifact, constructorArgs, this.network, ecc);
     const outputScript = contract.scriptPubKey;
-    const result = {
-      scriptPubKey: (): Buffer => outputScript,
-      taprootHashTree: contract.getTaprootTree(),
-      taprootInternalKey: H_POINT.toString('hex'),
-    };
     return {
       ...this.outputScriptToAddressInterface(outputScript.toString('hex')),
       publicKey,
-      result,
       contract,
       derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
       tapscriptNeeds: analyzeTapscriptTree(contract.getTaprootTree()),
@@ -355,15 +356,16 @@ export class CustomScriptIdentity
             if (isKeyPath) {
               if (input.tapKeySig !== undefined) continue; // already signed
 
-              if (!this.hasPrivateKey(cachedAddrInfos.result.taprootInternalKey!)) {
+              // ionio contracts always use H_POINT as internal key
+              const internalPubKey = H_POINT.toString('hex');
+
+              if (!this.hasPrivateKey(internalPubKey)) {
                 throw new Error(
                   'marina fails to sign input (internal key not owned by the account)'
                 );
               }
 
-              const toSignAddress = this.getAddressByPublicKey(
-                cachedAddrInfos.result.taprootInternalKey!
-              );
+              const toSignAddress = this.getAddressByPublicKey(internalPubKey);
               if (toSignAddress && toSignAddress.derivationPath) {
                 const pathToPrivKey = toSignAddress.derivationPath.slice(
                   namespaceToDerivationPath(this.namespace).length + 1
@@ -382,10 +384,6 @@ export class CustomScriptIdentity
               cachedAddrInfos.contract.getTaprootTree();
               // if we use the auto-spendable leaf we need to add the tapLeafScript to the input
               if (leafScript) {
-                if (!cachedAddrInfos.result.taprootInternalKey) {
-                  throw new Error('marina fails to sign input (no taproot internal key)');
-                }
-
                 const tree = cachedAddrInfos.contract.getTaprootTree();
                 const leaf = { scriptHex: leafScript };
                 const leafHash = bip341.tapLeafHash(leaf);
@@ -394,14 +392,12 @@ export class CustomScriptIdentity
                 const taprootSignScriptStack = bip341
                   .BIP341Factory(this.ecclib)
                   .taprootSignScriptStack(
-                    Buffer.from(cachedAddrInfos.result.taprootInternalKey, 'hex'),
+                    H_POINT,
                     { scriptHex: leafScript },
                     tree.hash,
                     bip341.findScriptPath(tree, leafHash)
                   );
 
-                pset.data.inputs[index].tapLeafScript =
-                  pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
                 pset.updateInput(index, {
                   tapLeafScript: [
                     {
