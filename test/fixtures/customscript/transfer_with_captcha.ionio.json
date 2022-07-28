@@ -1,0 +1,34 @@
+{
+  "contractName": "Transfer with captcha",
+  "constructorInputs": [
+    {
+      "name": "sum",
+      "type": "number"
+    },
+    {
+      "name": "test",
+      "type": "xonlypubkey"
+    }
+  ],
+  "functions": [
+    {
+      "name": "transferWithSum",
+      "functionInputs": [
+        {
+          "name": "a",
+          "type": "number"
+        },
+        {
+          "name": "b",
+          "type": "number"
+        },
+        {
+          "name": "signature",
+          "type": "sig"
+        }
+      ],
+      "require": [],
+      "asm": ["OP_ADD", "$sum", "OP_EQUALVERIFY", "$test", "OP_CHECKSIG"]
+    }
+  ]
+}

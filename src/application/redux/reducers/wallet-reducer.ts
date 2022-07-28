@@ -254,6 +254,58 @@ export function walletReducer(
       };
     }
 
+    case ACTION_TYPES.SET_CUSTOM_CONSTRUCTOR_PARAMS: {
+      const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
+      const customParams = payload.constructorsParams as Record<string, string | number>;
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID]?.restorerOpts,
+              [network]: {
+                ...state.accounts[accountID]?.restorerOpts[network],
+                customParamsByIndex: {
+                  ...state.accounts[accountID]?.restorerOpts[network].customParamsByIndex,
+                  [state.accounts[accountID]?.restorerOpts[network].lastUsedExternalIndex]:
+                    customParams,
+                },
+              },
+            },
+          },
+        },
+      };
+    }
+
+    case ACTION_TYPES.SET_CUSTOM_CHANGE_CONSTRUCTOR_PARAMS: {
+      const accountID = payload.accountID as AccountID;
+      const network = payload.network as NetworkString;
+      const customParams = payload.constructorsParams as Record<string, string | number>;
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [accountID]: {
+            ...state.accounts[accountID],
+            restorerOpts: {
+              ...state.accounts[accountID]?.restorerOpts,
+              [network]: {
+                ...state.accounts[accountID]?.restorerOpts[network],
+                customChangeParamsByIndex: {
+                  ...state.accounts[accountID]?.restorerOpts[network].customParamsByIndex,
+                  [state.accounts[accountID]?.restorerOpts[network].lastUsedInternalIndex]:
+                    customParams,
+                },
+              },
+            },
+          },
+        },
+      };
+    }
+
     case ACTION_TYPES.ADD_UTXO: {
       return addUnspent(state)(payload.accountID, payload.utxo, payload.network);
     }
@@ -399,7 +451,7 @@ const neverNegative = (n: number) => {
 };
 
 const increment = (n: number | undefined): number => {
-  if (n === undefined || n === null) return 0;
+  if (n === undefined || n === null || n === -1) return 0;
   if (n < 0) return 1; // -Infinity = 0, return 0+1=1
   return n + 1;
 };

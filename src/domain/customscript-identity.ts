@@ -3,9 +3,7 @@ import {
   crypto,
   address,
   Psbt,
-  restorerFromEsplora,
   IdentityType,
-  restorerFromState,
   Transaction,
   bip341,
   toXpub,
@@ -13,8 +11,6 @@ import {
   checkMnemonic,
   networks,
   fromXpub,
-  validate,
-  makeEvaluateDescriptor,
   analyzeTapscriptTree,
 } from 'ldk';
 import type {
@@ -22,12 +18,8 @@ import type {
   IdentityInterface,
   IdentityOpts,
   Restorer,
-  EsploraRestorerOpts,
   NetworkString,
-  StateRestorerOpts,
   Mnemonic,
-  TemplateResult,
-  Context,
   ScriptInputsNeeds,
 } from 'ldk';
 import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
@@ -36,13 +28,18 @@ import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
-
-const evaluate = makeEvaluateDescriptor(ecc);
+import type { Argument, Artifact } from '@ionio-lang/ionio';
+import {
+  H_POINT,
+  Contract,
+  replaceArtifactConstructorWithArguments,
+  toDescriptor,
+} from '@ionio-lang/ionio';
 
 // slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
 function namespaceToDerivationPath(namespace: string): string {
   const hash = crypto.sha256(Buffer.from(namespace));
-  const hash128 = hash.slice(0, 16);
+  const hash128 = hash.subarray(0, 16);
   const A = hash128.readUInt32LE(0) || 0x80000000;
   const B = hash128.readUint32LE(4) || 0x80000000;
   const C = hash128.readUint32LE(8) || 0x80000000;
@@ -55,17 +52,24 @@ function makeBaseNodeFromNamespace(m: BIP32Interface, namespace: string): BIP32I
   return m.derivePath(path);
 }
 
+// ExtendedTaprootAddressInterface is not the exported interface of the identity
+// TaprootAddressInterface is the "public" version of address objects
 interface ExtendedTaprootAddressInterface extends AddressInterface {
-  result: TemplateResult;
+  descriptor: string;
+  constructorParams?: Record<string, string | number>;
+  // below are only used internaly
+  contract: Contract;
   tapscriptNeeds: Record<string, ScriptInputsNeeds>; // scripthex -> needs
-  publicKey: string;
 }
 
 export type TaprootAddressInterface = AddressInterface &
-  Omit<ExtendedTaprootAddressInterface, 'result' | 'tapscriptNeeds'> & {
-    taprootHashTree?: bip341.HashTree;
-    taprootInternalKey?: string;
-  };
+  Omit<ExtendedTaprootAddressInterface, 'contract' | 'tapscriptNeeds'>;
+
+export function isTaprootAddressInterface(
+  address: AddressInterface
+): address is TaprootAddressInterface {
+  return 'descriptor' in address;
+}
 
 function asTaprootAddressInterface(
   extended: ExtendedTaprootAddressInterface
@@ -74,24 +78,24 @@ function asTaprootAddressInterface(
     confidentialAddress: extended.confidentialAddress,
     blindingPrivateKey: extended.blindingPrivateKey,
     derivationPath: extended.derivationPath,
-    taprootHashTree: extended.result.taprootHashTree,
-    taprootInternalKey: extended.result.taprootInternalKey,
     publicKey: extended.publicKey,
+    descriptor: extended.descriptor,
+    contract: extended.contract,
+    constructorParams: extended.constructorParams,
   };
 }
 
-export interface CovenantDescriptors {
+export interface ContractTemplate {
   namespace: string;
   template?: string;
-  changeTemplate?: string;
   isSpendableByMarina?: boolean;
 }
 
-export type CustomScriptIdentityOpts = CovenantDescriptors & {
+export type CustomScriptIdentityOpts = ContractTemplate & {
   mnemonic: string;
 };
 
-export type TemplateIdentityWatchOnlyOpts = CovenantDescriptors & {
+export type TemplateIdentityWatchOnlyOpts = ContractTemplate & {
   masterBlindingKey: string;
   masterPublicKey: string;
 };
@@ -107,7 +111,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
   readonly masterBlindingKeyNode: Mnemonic['masterBlindingKeyNode'];
   readonly masterPubKeyNode: Mnemonic['masterPublicKeyNode'];
   readonly namespace: CustomScriptIdentityOpts['namespace'];
-  readonly covenant: CovenantDescriptors;
+  readonly contract: ContractTemplate;
   readonly ecclib: IdentityOpts<any>['ecclib'] & bip341.TinySecp256k1Interface;
 
   constructor(args: IdentityOptsWithSchnorr<TemplateIdentityWatchOnlyOpts>) {
@@ -116,17 +120,12 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     if (args.opts.namespace.length === 0) throw new Error('namespace is required');
     this.namespace = args.opts.namespace;
 
-    if (args.opts.changeTemplate) {
-      if (!validate(args.opts.changeTemplate)) throw new Error('invalid changeTemplate');
-      if (!args.opts.template) throw new Error('template is required if u setup change template');
-    }
+    if (args.opts.template && !validateTemplate(args.opts.template))
+      throw new Error('invalid template');
 
-    if (args.opts.template && !validate(args.opts.template)) throw new Error('invalid template');
-
-    this.covenant = {
+    this.contract = {
       namespace: args.opts.namespace,
       template: args.opts.template,
-      changeTemplate: args.opts.changeTemplate,
     };
     this.ecclib = args.ecclib;
     this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
@@ -140,14 +139,6 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       .derivePath(makePath(isChange, index))
       .publicKey.slice(forSchnorr ? 1 : 0)
       .toString('hex');
-  }
-
-  private getContext(isChange: boolean, index: number): Context {
-    return {
-      namespaces: new Map().set(this.namespace, {
-        pubkey: this.deriveMasterXPub(isChange, index, true),
-      }),
-    };
   }
 
   protected getBlindingKeyPair(
@@ -171,35 +162,56 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     }
   }
 
-  private getTemplate(isChange: boolean): string {
-    if (isChange && this.covenant.changeTemplate) return this.covenant.changeTemplate;
-    if (!this.covenant.template) throw new Error('template is missing');
-    return this.covenant.template;
-  }
+  getAddress(
+    isChange: boolean,
+    index: number,
+    constructorParams?: Record<string, string | number>
+  ): ExtendedTaprootAddressInterface {
+    if (!this.contract.template) {
+      throw new Error('missing template');
+    }
+    const template = this.contract.template;
+    const artifact = JSON.parse(template) as Artifact;
+    const publicKey = this.deriveMasterXPub(isChange, index, true);
 
-  getAddress(isChange: boolean, index: number): ExtendedTaprootAddressInterface {
-    const template = this.getTemplate(isChange);
-    const descriptorResult = evaluate(this.getContext(isChange, index), template);
-    const outputScript = descriptorResult.scriptPubKey().toString('hex');
-    if (!descriptorResult.taprootHashTree) throw new Error('taprootHashTree is missing');
+    if (!constructorParams) {
+      constructorParams = {} as Record<string, string | number>;
+    }
+    constructorParams[this.namespace] = '0x'.concat(publicKey);
+    const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name }) => {
+      const param = constructorParams![name];
+      if (!param) {
+        throw new Error(`missing contructor arg ${name}`);
+      }
+      return param;
+    });
+
+    const contract = new Contract(artifact, constructorArgs, this.network, ecc);
+    const outputScript = contract.scriptPubKey;
     return {
-      ...this.outputScriptToAddressInterface(outputScript),
-      result: descriptorResult,
+      ...this.outputScriptToAddressInterface(outputScript.toString('hex')),
+      publicKey,
+      contract,
       derivationPath: namespaceToDerivationPath(this.namespace) + '/' + makePath(isChange, index),
-      publicKey: this.deriveMasterXPub(isChange, index, true), // = $test (eltr(c64....., { $test OPCHECKSIG }))
-      tapscriptNeeds: analyzeTapscriptTree(descriptorResult.taprootHashTree),
+      tapscriptNeeds: analyzeTapscriptTree(contract.getTaprootTree()),
+      descriptor: toDescriptor(replaceArtifactConstructorWithArguments(artifact, constructorArgs)),
+      constructorParams,
     };
   }
 
-  getNextAddress(): Promise<TaprootAddressInterface> {
-    const addr = this.getAddress(false, this.index);
+  getNextAddress(
+    constructorParams?: Record<string, string | number>
+  ): Promise<TaprootAddressInterface> {
+    const addr = this.getAddress(false, this.index, constructorParams);
     this.cacheAddress(addr);
     this.index++;
     return Promise.resolve(asTaprootAddressInterface(addr));
   }
 
-  getNextChangeAddress(): Promise<TaprootAddressInterface> {
-    const addr = this.getAddress(true, this.changeIndex);
+  getNextChangeAddress(
+    constructorParams?: Record<string, string | number>
+  ): Promise<TaprootAddressInterface> {
+    const addr = this.getAddress(true, this.changeIndex, constructorParams);
     this.cacheAddress(addr);
     this.changeIndex++;
     return Promise.resolve(asTaprootAddressInterface(addr));
@@ -287,7 +299,6 @@ export class CustomScriptIdentity
       opts: {
         namespace: args.opts.namespace,
         template: args.opts.template,
-        changeTemplate: args.opts.changeTemplate,
         masterPublicKey: masterPublicKey,
         masterBlindingKey: masterBlindingKeyNode.masterKey.toString('hex'),
       },
@@ -332,7 +343,7 @@ export class CustomScriptIdentity
         const script = input.witnessUtxo.script.toString('hex');
         const cachedAddrInfos = this.cache.get(script);
         // check if we own the input
-        if (cachedAddrInfos && cachedAddrInfos.result.witnesses) {
+        if (cachedAddrInfos) {
           try {
             // check if the pset signals how to spend the input
             const isKeyPath = input.tapKeySig !== undefined || input.tapMerkleRoot !== undefined;
@@ -345,15 +356,16 @@ export class CustomScriptIdentity
             if (isKeyPath) {
               if (input.tapKeySig !== undefined) continue; // already signed
 
-              if (!this.hasPrivateKey(cachedAddrInfos.result.taprootInternalKey!)) {
+              // ionio contracts always use H_POINT as internal key
+              const internalPubKey = H_POINT.toString('hex');
+
+              if (!this.hasPrivateKey(internalPubKey)) {
                 throw new Error(
                   'marina fails to sign input (internal key not owned by the account)'
                 );
               }
 
-              const toSignAddress = this.getAddressByPublicKey(
-                cachedAddrInfos.result.taprootInternalKey!
-              );
+              const toSignAddress = this.getAddressByPublicKey(internalPubKey);
               if (toSignAddress && toSignAddress.derivationPath) {
                 const pathToPrivKey = toSignAddress.derivationPath.slice(
                   namespaceToDerivationPath(this.namespace).length + 1
@@ -364,38 +376,54 @@ export class CustomScriptIdentity
               }
             }
 
-            const leafScript =
-              input.tapLeafScript && input.tapLeafScript.length > 0
-                ? input.tapLeafScript[0].script.toString('hex')
-                : this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
+            let leafScript = undefined;
+            if (input.tapLeafScript && input.tapLeafScript.length > 0) {
+              leafScript = input.tapLeafScript[0].script.toString('hex');
+            } else {
+              leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
+              cachedAddrInfos.contract.getTaprootTree();
+              // if we use the auto-spendable leaf we need to add the tapLeafScript to the input
+              if (leafScript) {
+                const tree = cachedAddrInfos.contract.getTaprootTree();
+                const leaf = { scriptHex: leafScript };
+                const leafHash = bip341.tapLeafHash(leaf);
+
+                // witnesses func will throw if the leaf is not a valid leaf
+                const taprootSignScriptStack = bip341
+                  .BIP341Factory(this.ecclib)
+                  .taprootSignScriptStack(
+                    H_POINT,
+                    { scriptHex: leafScript },
+                    tree.hash,
+                    bip341.findScriptPath(tree, leafHash)
+                  );
+
+                pset.updateInput(index, {
+                  tapLeafScript: [
+                    {
+                      leafVersion: 0xc4, // elements tapscript version
+                      script: Buffer.from(leafScript, 'hex'),
+                      controlBlock: taprootSignScriptStack[1],
+                    },
+                  ],
+                });
+              }
+            }
 
             if (!leafScript) {
               throw new Error('marina fails to sign input (no auto spendable tapscript)');
             }
 
-            // witnesses func will throw if the leaf is not a valid leaf
-            const taprootSignScriptStack = cachedAddrInfos.result.witnesses(leafScript);
-            const leafHash = bip341.tapLeafHash({
-              scriptHex: leafScript,
-            });
+            const leaf = { scriptHex: leafScript };
+            const leafHash = bip341.tapLeafHash(leaf);
 
-            pset.data.inputs[index].tapLeafScript = pset.data.inputs[index].tapLeafScript?.slice(1); // clear tapLeafScript first (we'll overwrite it)
-            pset.updateInput(index, {
-              tapLeafScript: [
-                {
-                  leafVersion: 0xc4, // elements tapscript version
-                  script: Buffer.from(leafScript, 'hex'),
-                  controlBlock: taprootSignScriptStack[1],
-                },
-              ],
-            });
+            const sighash = pset.data.inputs[index].sighashType || Transaction.SIGHASH_DEFAULT;
 
-            // TODO check for witness v0 (not eltr template)
             const sighashForSig = pset.TX.hashForWitnessV1(
               index,
               inputsUtxos.map((u) => u.script),
               inputsUtxos.map((u) => ({ value: u.value, asset: u.asset })),
-              Transaction.SIGHASH_DEFAULT,
+              sighash,
               this.network.genesisBlockHash,
               leafHash
             );
@@ -407,7 +435,7 @@ export class CustomScriptIdentity
               const addr = this.getAddressByPublicKey(need.pubkey);
               if (addr && addr.derivationPath) {
                 const pathToPrivKey = addr.derivationPath.slice(
-                  namespaceToDerivationPath(this.namespace).length + 1
+                  namespaceToDerivationPath(this.namespace).length + 1 // remove base derivation path
                 );
                 const sig = this.signSchnorr(pathToPrivKey, sighashForSig);
                 pset.updateInput(index, {
@@ -455,27 +483,19 @@ export class CustomScriptIdentity
 
 // restorers
 
-export function customScriptRestorerFromEsplora<T extends CustomScriptIdentityWatchOnly>(
-  toRestore: T
-): Restorer<EsploraRestorerOpts, T> {
-  return restorerFromEsplora(toRestore, function (isChange: boolean, index: number): string {
-    return toRestore.getAddress(isChange, index).confidentialAddress;
-  });
-}
-
 export function restoredCustomScriptIdentity(
-  covenantDescriptors: CovenantDescriptors,
+  contractTemplate: ContractTemplate,
   mnemonic: string,
   network: NetworkString,
-  restorerOpts: StateRestorerOpts
+  restorerOpts: CustomRestorerOpts
 ): Promise<CustomScriptIdentity> {
-  return restorerFromState<CustomScriptIdentity>(
+  return customRestorerFromState<CustomScriptIdentity>(
     new CustomScriptIdentity({
       type: IdentityType.Mnemonic,
       chain: network,
       ecclib: ecc,
       opts: {
-        ...covenantDescriptors,
+        ...contractTemplate,
         mnemonic,
       },
     })
@@ -483,19 +503,19 @@ export function restoredCustomScriptIdentity(
 }
 
 export function restoredCustomScriptWatchOnlyIdentity(
-  covenantDescriptors: CovenantDescriptors,
+  contractTemplate: ContractTemplate,
   masterPublicKey: string,
   masterBlindingKey: string,
   network: NetworkString,
-  restorerOpts: StateRestorerOpts
+  restorerOpts: CustomRestorerOpts
 ): Promise<CustomScriptIdentityWatchOnly> {
-  return restorerFromState<CustomScriptIdentityWatchOnly>(
+  return customRestorerFromState<CustomScriptIdentityWatchOnly>(
     new CustomScriptIdentityWatchOnly({
       type: IdentityType.MasterPublicKey,
       chain: network,
       ecclib: ecc,
       opts: {
-        ...covenantDescriptors,
+        ...contractTemplate,
         masterPublicKey,
         masterBlindingKey,
       },
@@ -505,4 +525,50 @@ export function restoredCustomScriptWatchOnlyIdentity(
 
 function makePath(isChange: boolean, index: number): string {
   return `${isChange ? 1 : 0}/${index}`;
+}
+
+function validateTemplate(template: string): boolean {
+  const artifact = JSON.parse(template) as Artifact;
+  const expectedProperties = ['contractName', 'functions', 'constructorInputs'];
+  return expectedProperties.every((property) => property in artifact);
+}
+
+export interface CustomRestorerOpts {
+  lastUsedExternalIndex: number;
+  lastUsedInternalIndex: number;
+  customParamsByIndex: Record<number, Record<string, string | number>>;
+  customParamsByChangeIndex: Record<number, Record<string, string | number>>;
+}
+
+function customRestorerFromState<R extends CustomScriptIdentityWatchOnly>(
+  identity: R
+): Restorer<CustomRestorerOpts, R> {
+  return async ({
+    lastUsedExternalIndex,
+    lastUsedInternalIndex,
+    customParamsByIndex,
+    customParamsByChangeIndex,
+  }) => {
+    const promises = [];
+
+    if (lastUsedExternalIndex !== undefined) {
+      for (let i = 0; i <= lastUsedExternalIndex; i++) {
+        const params = customParamsByIndex[i];
+        const promise = identity.getNextAddress(params);
+        promises.push(promise);
+      }
+    }
+
+    if (lastUsedInternalIndex !== undefined) {
+      for (let i = 0; i <= lastUsedInternalIndex; i++) {
+        const params = customParamsByChangeIndex[i];
+        const promise = identity.getNextChangeAddress(params);
+        promises.push(promise);
+      }
+    }
+
+    await Promise.all(promises);
+
+    return identity;
+  };
 }

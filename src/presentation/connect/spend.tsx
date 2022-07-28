@@ -20,7 +20,7 @@ import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import type { ConnectData } from '../../domain/connect';
 import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
-import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
+import { updateToNextChangeAddress } from '../../application/redux/actions/wallet';
 import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
 import type { Account } from '../../domain/account';
@@ -228,9 +228,10 @@ async function changeAddressGetter(
     getter: (asset: string) => {
       if (!assets.has(asset)) throw new Error('missing change address');
       if (!persisted[asset]) {
-        dispatch(incrementChangeAddressIndex(account.getInfo().accountID, net)).catch(
-          console.error
-        );
+        // TODO handle constructor params
+        Promise.all(
+          updateToNextChangeAddress(account.getInfo().accountID, net).map(dispatch)
+        ).catch(console.error);
         persisted[asset] = true;
       }
       return changeAddresses[asset].confidentialAddress;

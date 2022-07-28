@@ -26,34 +26,43 @@ import {
   selectUtxos,
 } from '../../application/redux/selectors/wallet.selector';
 import {
-  incrementAddressIndex,
-  incrementChangeAddressIndex,
+  updateToNextAddress,
+  updateToNextChangeAddress,
   setCustomScriptTemplate,
   setIsSpendableByMarina,
 } from '../../application/redux/actions/wallet';
 import { selectBalances } from '../../application/redux/selectors/balance.selector';
 import { assetGetterFromIAssets } from '../../domain/assets';
-import type { Balance, Template, RawHex, Recipient, Utxo } from 'marina-provider';
+import type {
+  Balance,
+  Template,
+  RawHex,
+  Recipient,
+  Utxo,
+  AddressInterface as ProviderAddressInterface,
+} from 'marina-provider';
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import type { ScriptInputsNeeds, UnblindedOutput } from 'ldk';
-import { validate, analyzeTapscriptTree, getAsset, getSats } from 'ldk';
+import type { AddressInterface, UnblindedOutput } from 'ldk';
+import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
 import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
-import { restoreTaskAction, updateTaskAction } from '../../application/redux/actions/task';
+import { updateTaskAction } from '../../application/redux/actions/task';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
-import type { TaprootAddressInterface } from '../../domain/customscript-identity';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
-import { toDescriptor } from '@ionio-lang/ionio';
+import type { Artifact } from '@ionio-lang/ionio';
+import { PrimitiveType } from '@ionio-lang/ionio';
+import type { AnyAction } from 'redux';
+import { isTaprootAddressInterface } from '../../domain/customscript-identity';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -208,29 +217,60 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             identities.map((identity) => identity.getAddresses())
           );
 
-          return successMsg(addresses.flat());
+          return successMsg(addresses.flat().map(toProviderAddress));
         }
 
         case 'getNextAddress': {
           this.checkHostnameAuthorization();
           const account = this.accountSelector(this.state);
+          if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
+            throw new Error('Only custom script accounts can expect construct parameters');
+          }
           const net = selectNetwork(this.state);
           const watchOnlyIdentity = await account.getWatchIdentity(net);
-          const nextAddress = await watchOnlyIdentity.getNextAddress();
-          await this.store.dispatchAsync(incrementAddressIndex(account.getInfo().accountID, net));
-          return successMsg(nextAddress);
+          let nextAddress: AddressInterface;
+          let constructorParams: Record<string, string | number> | undefined;
+          if (account.type === AccountType.MainAccount) {
+            nextAddress = await watchOnlyIdentity.getNextAddress();
+          } else {
+            if (params && params.length > 0) {
+              constructorParams = params[0];
+            }
+            nextAddress = await watchOnlyIdentity.getNextAddress(constructorParams);
+          }
+          await Promise.all(
+            updateToNextAddress(account.getInfo().accountID, net, constructorParams).map(
+              (action: AnyAction) => this.store?.dispatchAsync(action)
+            )
+          );
+          return successMsg(toProviderAddress(nextAddress));
         }
 
         case 'getNextChangeAddress': {
           this.checkHostnameAuthorization();
           const account = this.accountSelector(this.state);
+          if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
+            throw new Error('Only custom script accounts can expect construct parameters');
+          }
           const net = selectNetwork(this.state);
           const xpub = await account.getWatchIdentity(net);
-          const nextChangeAddress = await xpub.getNextChangeAddress();
-          await this.store.dispatchAsync(
-            incrementChangeAddressIndex(account.getInfo().accountID, net)
+          let nextChangeAddress: AddressInterface;
+          let constructorParams: Record<string, string | number> | undefined;
+          if (account.type === AccountType.MainAccount) {
+            nextChangeAddress = await xpub.getNextChangeAddress();
+          } else {
+            if (params && params.length > 0) {
+              constructorParams = params[0];
+            }
+            nextChangeAddress = await xpub.getNextChangeAddress(constructorParams);
+          }
+          await Promise.all(
+            updateToNextChangeAddress(account.getInfo().accountID, net, constructorParams).map(
+              (action: AnyAction) => this.store?.dispatchAsync(action)
+            )
           );
-          return successMsg(nextChangeAddress);
+
+          return successMsg(toProviderAddress(nextChangeAddress));
         }
 
         case 'signTransaction': {
@@ -394,48 +434,31 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Only custom script accounts can import templates');
           }
 
-          const [covenant, changeCovenant] = params?.map(castTemplate) as [Template, Template?];
-          if (!validate(covenant.template)) {
-            throw new Error(`Invalid template ${covenant.template}`);
-          }
-
-          if (changeCovenant && !validate(changeCovenant.template)) {
-            throw new Error(`Invalid change template ${changeCovenant.template}`);
+          let contract: Template | undefined;
+          if (params && params.length > 0) {
+            if (!validateTemplate(params[0])) {
+              throw new Error('Invalid template');
+            }
+            contract = params[0];
           }
 
           await this.store.dispatchAsync(
-            setCustomScriptTemplate(
-              this.selectedAccount,
-              covenant.template,
-              changeCovenant?.template
-            )
+            setCustomScriptTemplate(this.selectedAccount, contract!.template)
           );
 
-          const selectedAccount = selectAccount(this.selectedAccount)(this.state);
-          const watchIdentity = await selectedAccount.getWatchIdentity(selectNetwork(this.state));
-
-          const nextAddress = (await watchIdentity.getNextAddress()) as TaprootAddressInterface;
-          const autoSpendableLeaf = (needsOfLeaf: ScriptInputsNeeds) =>
-            needsOfLeaf.sigs.length === 1 &&
-            !needsOfLeaf.needParameters &&
-            !needsOfLeaf.hasIntrospection;
-          let isSpendableByMarina = Object.values(
-            analyzeTapscriptTree(nextAddress.taprootHashTree)
-          ).some(autoSpendableLeaf);
-
-          if (changeCovenant) {
-            const nextChangeAddress =
-              (await watchIdentity.getNextChangeAddress()) as TaprootAddressInterface;
-            isSpendableByMarina ||= Object.values(
-              analyzeTapscriptTree(nextChangeAddress.TaprootAddressInterface)
-            ).some(autoSpendableLeaf);
-          }
+          const artifact: Artifact = JSON.parse(contract!.template);
+          const isSpendableByMarina = artifact.functions.every((fn) => {
+            return (
+              fn.functionInputs.length === 1 &&
+              fn.functionInputs[0].type === PrimitiveType.Signature &&
+              (!fn.require || fn.require.length === 0)
+            );
+          });
 
           await this.store.dispatchAsync(
             setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
           );
 
-          await this.store.dispatchAsync(restoreTaskAction(this.selectedAccount));
           return successMsg(true);
         }
 
@@ -517,15 +540,38 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   };
 }
 
-function castTemplate(template?: Template): Template<string> | undefined {
-  if (!template) return undefined;
-  if (template.type === 'marina-descriptors') return template;
-  if (template.type === 'ionio-artifact') {
-    const descriptor = toDescriptor(template.template);
+function validateTemplate(template: Template): Template<string> | undefined {
+  switch (template.type as string) {
+    case 'ionio-artifact': {
+      const artifact = JSON.parse(template.template);
+      const expectedProperties = ['contractName', 'functions', 'constructorInputs'];
+      if (!expectedProperties.every((property) => property in artifact)) {
+        throw new Error('Invalid template: incomplete artifact');
+      }
+      return template;
+    }
+    default: {
+      throw new Error(`Unknown template type ${template.type}`);
+    }
+  }
+}
+
+// converts an addressInterface to the marina-provider format
+function toProviderAddress(addr: AddressInterface): ProviderAddressInterface {
+  const result = {
+    blindingPrivateKey: addr.blindingPrivateKey,
+    confidentialAddress: addr.confidentialAddress,
+    derivationPath: addr.derivationPath,
+    publicKey: addr.publicKey,
+  };
+
+  if (isTaprootAddressInterface(addr)) {
     return {
-      type: 'marina-descriptors',
-      template: descriptor,
+      ...result,
+      constructorParams: addr.constructorParams,
+      descriptor: addr.descriptor,
     };
   }
-  throw new Error(`Invalid template, unsupported type ${template.type}`);
+
+  return result;
 }
