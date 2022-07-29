@@ -118,6 +118,7 @@ function createMainAccount(
       masterXPub: toXpub(data.masterXPub),
       isReady: true, // always true for main account
       descriptor: `elwpkh(${toXpub(data.masterXPub)})`,
+      template: `elwpkh($${MainAccountID})`
     }),
   };
 }
