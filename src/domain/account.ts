@@ -1,4 +1,3 @@
-import * as ecc from 'tiny-secp256k1';
 import type {
   IdentityInterface,
   MasterPublicKey,
@@ -8,17 +7,20 @@ import type {
   EsploraRestorerOpts,
   NetworkString,
 } from 'ldk';
-import { IdentityType, masterPubKeyRestorerFromEsplora } from 'ldk';
+import { masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type { CovenantDescriptors, CustomScriptIdentity } from './customscript-identity';
-import {
+import type {
+  ContractTemplate,
+  CustomScriptIdentity,
+  CustomRestorerOpts,
   CustomScriptIdentityWatchOnly,
-  customScriptRestorerFromEsplora,
+} from './customscript-identity';
+import {
   restoredCustomScriptIdentity,
   restoredCustomScriptWatchOnlyIdentity,
 } from './customscript-identity';
@@ -51,7 +53,6 @@ export interface Account<
   type: AccountType;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
-  getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
   getInfo(): AccountInfoType;
 }
 
@@ -64,7 +65,9 @@ export interface AccountData {
 
 // Main Account uses the default Mnemonic derivation path
 // single-sig account used to send/receive regular assets
-export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
+export type MnemonicAccount = Account<Mnemonic, MasterPublicKey> & {
+  getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, MasterPublicKey>;
+};
 
 export interface MnemonicAccountData extends AccountData {
   type: AccountType.MainAccount;
@@ -79,13 +82,13 @@ export interface MnemonicAccountData extends AccountData {
 export type CustomScriptAccount = Account<
   CustomScriptIdentity,
   CustomScriptIdentityWatchOnly,
-  Pick<CovenantDescriptors, 'changeTemplate' | 'template' | 'isSpendableByMarina'> & AccountInfo
+  Pick<ContractTemplate, 'template' | 'isSpendableByMarina'> & AccountInfo
 >;
 
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
-  covenantDescriptors: CovenantDescriptors;
-  restorerOpts: Record<NetworkString, StateRestorerOpts>;
+  contractTemplate: ContractTemplate;
+  restorerOpts: Record<NetworkString, CustomRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
 }
@@ -142,19 +145,6 @@ function createCustomScriptAccount(
         network,
         data.restorerOpts[network]
       ),
-    getDeepRestorer: (network: NetworkString) =>
-      customScriptRestorerFromEsplora(
-        new CustomScriptIdentityWatchOnly({
-          type: IdentityType.MasterPublicKey,
-          chain: network,
-          ecclib: ecc,
-          opts: {
-            ...data.covenantDescriptors,
-            masterBlindingKey: data.masterBlindingKey,
-            masterPublicKey: data.masterXPub,
-          },
-        })
-      ),
     getInfo: () => ({
       accountID: data.covenantDescriptors.namespace,
       masterXPub: data.masterXPub,
@@ -187,4 +177,11 @@ export const accountFromMnemonicAndData = (
 export const initialRestorerOpts: StateRestorerOpts = {
   lastUsedExternalIndex: -1,
   lastUsedInternalIndex: -1,
+};
+
+export const initialCustomRestorerOpts: CustomRestorerOpts = {
+  lastUsedExternalIndex: -1,
+  lastUsedInternalIndex: -1,
+  customParamsByIndex: {},
+  customParamsByChangeIndex: {},
 };

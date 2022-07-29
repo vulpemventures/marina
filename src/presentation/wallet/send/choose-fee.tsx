@@ -30,7 +30,7 @@ import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import type { Address } from '../../../domain/address';
 import { createAddress } from '../../../domain/address';
 import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
-import { incrementChangeAddressIndex } from '../../../application/redux/actions/wallet';
+import { updateToNextChangeAddress } from '../../../application/redux/actions/wallet';
 import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
@@ -362,7 +362,7 @@ function actionsFromState(
 
   if (state.feeChange) {
     actions.push(setFeeChangeAddress(state.feeChange));
-    actions.push(incrementChangeAddressIndex(accountID, network));
+    actions.concat(updateToNextChangeAddress(accountID, network));
   }
 
   return actions;

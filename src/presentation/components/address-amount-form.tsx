@@ -13,7 +13,7 @@ import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
 import * as Yup from 'yup';
 import type { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import type { Asset } from '../../domain/assets';
-import { incrementChangeAddressIndex } from '../../application/redux/actions/wallet';
+import { updateToNextChangeAddress } from '../../application/redux/actions/wallet';
 import type { Account } from '../../domain/account';
 import type { NetworkString } from 'ldk';
 import { isValidAddressForNetwork } from '../../application/utils/address';
@@ -186,8 +186,10 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
       changeAddressGenerated.derivationPath
     );
 
-    await props.dispatch(
-      incrementChangeAddressIndex(props.account.getInfo().accountID, props.network)
+    await Promise.all(
+      updateToNextChangeAddress(props.account.getInfo().accountID, props.network).map(
+        props.dispatch
+      )
     ); // persist address in wallet
 
     await props

@@ -5,7 +5,7 @@ import ModalUnlock from '../components/modal-unlock';
 import type { WithConnectDataProps } from '../../application/redux/containers/with-connect-data.container';
 import { connectWithConnectData } from '../../application/redux/containers/with-connect-data.container';
 import { useSelector } from 'react-redux';
-import { selectAllAccounts } from '../../application/redux/selectors/wallet.selector';
+import { selectAllAccountForSigningTxState } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
 import { signPset } from '../../application/utils/transaction';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
@@ -22,7 +22,7 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const accounts = useSelector(selectAllAccounts);
+  const accounts = useSelector(selectAllAccountForSigningTxState);
   const network = useSelector(selectNetwork);
 
   const handleModalUnlockClose = () => showUnlockModal(false);

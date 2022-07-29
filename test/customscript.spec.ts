@@ -1,11 +1,13 @@
 import type { AddressInterface } from 'ldk';
-import { fetchAndUnblindUtxos, IdentityType, networks, Psbt, script } from 'ldk';
+import { fetchAndUnblindUtxos, IdentityType, networks } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
-import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
 import type { CustomScriptIdentityOpts } from '../src/domain/customscript-identity';
 import { CustomScriptIdentity } from '../src/domain/customscript-identity';
 import { makeRandomMnemonic } from './test.utils';
+import * as synthAssetArtifact from './fixtures/customscript/synthetic_asset.ionio.json';
+import * as transferWithCaptchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
 import { APIURL, broadcastTx, faucet } from './_regtest';
+import type { Signer } from '@ionio-lang/ionio';
 
 const TEST_NAMESPACE = 'test';
 
@@ -34,34 +36,14 @@ const failingArgs: { name: string; opts: CustomScriptIdentityOpts }[] = [
       template: 'this is a bad template',
     },
   },
-  {
-    name: 'bad change template',
-    opts: {
-      mnemonic: makeRandomMnemonic().mnemonic,
-      namespace: TEST_NAMESPACE,
-      template: 'raw(00)', // good one
-      changeTemplate: 'this is a bad template',
-    },
-  },
-  {
-    name: 'change template without template',
-    opts: {
-      mnemonic: makeRandomMnemonic().mnemonic,
-      namespace: TEST_NAMESPACE,
-      changeTemplate: 'raw(00)', // good one
-    },
-  },
 ];
 
-function makeRandomCustomScriptIdentity(
-  template?: string,
-  changeTemplate?: string
-): CustomScriptIdentity {
+function makeRandomCustomScriptIdentity(template?: string): CustomScriptIdentity {
   const mnemo = makeRandomMnemonic();
   return new CustomScriptIdentity({
     type: IdentityType.Mnemonic,
     chain: 'regtest',
-    opts: { mnemonic: mnemo.mnemonic, namespace: TEST_NAMESPACE, template, changeTemplate },
+    opts: { mnemonic: mnemo.mnemonic, namespace: TEST_NAMESPACE, template },
     ecclib: ecc,
   });
 }
@@ -85,110 +67,84 @@ describe('CustomScriptIdentity', () => {
     });
   }
 
-  test('should be able to instantiate a covenant identity without template set up', () => {
+  test('should be able to instantiate a custom script identity without template', () => {
     const random = makeRandomCustomScriptIdentity();
-    expect(random.covenant.namespace).toBe(TEST_NAMESPACE);
-    expect(random.covenant.template).toBeUndefined();
-    expect(random.covenant.changeTemplate).toBeUndefined();
+    expect(random.contract.namespace).toBe(TEST_NAMESPACE);
+    expect(random.contract.template).toBeUndefined();
   });
 
-  test('should be able to send and receive coin with new elements tapscript opcodes', async () => {
-    const inspectOutputIsLbtc = (index: number) =>
-      script.toASM([
-        script.number.encode(index),
-        script.OPS.OP_INSPECTOUTPUTASSET,
-        script.number.encode(1), // 1 = UNCONFIDENTIAL
-        script.OPS.OP_EQUALVERIFY,
-        Buffer.from(networks.regtest.assetHash, 'hex').reverse(),
-        script.OPS.OP_EQUALVERIFY,
-      ]);
+  test('should be able to instantiate a contract identity and import template as Ionio artifact', async () => {
+    const template = JSON.stringify(synthAssetArtifact);
+    const random = makeRandomCustomScriptIdentity(template);
+    expect(random.contract.namespace).toBe(TEST_NAMESPACE);
+    expect(random.contract.template).toBeDefined();
 
-    const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG ${inspectOutputIsLbtc(2)}`;
-    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}) })`;
-    const id = makeRandomCustomScriptIdentity(template);
-    const addr = await id.getNextAddress();
-    expect(addr.taprootHashTree).toBeDefined();
-    expect(addr.taprootInternalKey).toStrictEqual(
-      'c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5'
-    );
-    const leafToSpendScript = addr.taprootHashTree?.scriptHex;
-    expect(leafToSpendScript).toBeDefined();
+    const addr = await random.getNextAddress({
+      borrowAsset: '2c5dfb37a33fe2acf5c5412b1ddbd58f6f3353578904f3ede0173b2867362463',
+      borrowAmount: 1000_00000000,
+      collateralAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+      collateralAmount: 1_50000000,
+      payoutAmount: 1500000,
+      oraclePk: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      issuerPk: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      issuerScriptProgram: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      priceLevel: numberToString(20000),
+      setupTimestamp: numberToString(1656686483),
+    });
 
-    await faucet(addr.confidentialAddress, 10000);
-    const utxos = await getUnspents(addr);
-    expect(utxos.length).toBeGreaterThanOrEqual(1);
-
-    let { pset } = await createSendPset(
-      [
-        {
-          address: addr.confidentialAddress,
-          asset: networks.regtest.assetHash,
-          value: 1000,
-        },
-      ],
-      utxos,
-      networks.regtest.assetHash,
-      () => addr.confidentialAddress,
-      'regtest'
-    );
-
-    pset = Psbt.fromBase64(pset)
-      .updateInput(0, {
-        tapLeafScript: [
-          {
-            leafVersion: 0,
-            script: Buffer.from(leafToSpendScript!, 'hex'),
-            controlBlock: Buffer.alloc(33),
-          },
-        ],
-      })
-      .toBase64();
-
-    const signed = await blindAndSignPset(
-      pset,
-      utxos,
-      [id],
-      [addr.confidentialAddress],
-      [addr.confidentialAddress],
-      true
-    );
-    const txid = await broadcastTx(signed);
-    expect(txid).toBeDefined();
+    expect(addr.confidentialAddress).toBeDefined();
+    expect(addr.blindingPrivateKey).toBeDefined();
+    expect(addr.derivationPath).toBeDefined();
+    expect(addr.publicKey).toBeDefined();
+    expect(addr.descriptor).toBeDefined();
+    expect(addr.contract).toBeDefined();
+    expect(addr.constructorParams).toBeDefined();
   });
 
-  test('should be able to auto-sign CHECKSIG tapscript owned by marina', async () => {
-    const covenantLeaf = `$${TEST_NAMESPACE} OP_CHECKSIG`;
-    const template = `eltr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5, { asm(${covenantLeaf}), asm(OP_FALSE) })`;
-    const id = makeRandomCustomScriptIdentity(template);
-    const addr = await id.getNextAddress();
+  test('should be able to instantiate a contract identity, fund the contract and spend those funds', async () => {
+    const template = JSON.stringify(transferWithCaptchaArtifact);
+    const random = makeRandomCustomScriptIdentity(template);
+    expect(random.contract.namespace).toBe(TEST_NAMESPACE);
+    expect(random.contract.template).toBeDefined();
 
-    await faucet(addr.confidentialAddress, 10000);
-    const utxos = await getUnspents(addr);
-    expect(utxos.length).toBeGreaterThanOrEqual(1);
+    const addr = await random.getNextAddress({ sum: 7 });
 
-    const { pset } = await createSendPset(
-      [
-        {
-          address: addr.confidentialAddress,
-          asset: networks.regtest.assetHash,
-          value: 1000,
-        },
-      ],
-      utxos,
-      networks.regtest.assetHash,
-      () => addr.confidentialAddress,
-      'regtest'
-    );
+    expect(addr.confidentialAddress).toBeDefined();
+    expect(addr.blindingPrivateKey).toBeDefined();
+    expect(addr.derivationPath).toBeDefined();
+    expect(addr.publicKey).toBeDefined();
+    expect(addr.descriptor).toBeDefined();
+    expect(addr.contract).toBeDefined();
+    expect(addr.constructorParams).toBeDefined();
 
-    const signed = await blindAndSignPset(
-      pset,
-      utxos,
-      [id],
-      [addr.confidentialAddress],
-      [addr.confidentialAddress],
-      true
-    );
-    const txid = await broadcastTx(signed);
+    await faucet(addr.confidentialAddress, 0.01);
+
+    const [utxo] = await getUnspents(addr);
+
+    const instance = addr.contract.from(utxo.txid, utxo.vout, utxo.prevout, utxo.unblindData);
+    const signer: Signer = {
+      signTransaction: async (psetBase64: string): Promise<string> => {
+        return random.signPset(psetBase64);
+      },
+    };
+    const recipient =
+      'el1qq20mpyk7ya3939tm0keheapgaympvcv2m4zr6dcnp6uqxjs7q4t2324gru07umsz8ymmetutvj2sfhusx4fl6gjgsk9l8e2rm';
+    const feeAmount = 5000;
+    const amount = 1000000 - feeAmount;
+    const tx = instance.functions
+      .transferWithSum(3, 4, signer)
+      .withRecipient(recipient, amount, networks.regtest.assetHash)
+      .withFeeOutput(feeAmount);
+
+    const signedTx = await tx.unlock();
+    const hex = signedTx.psbt.extractTransaction().toHex();
+    const txid = await broadcastTx(hex);
     expect(txid).toBeDefined();
   });
 });
+
+function numberToString(n: number): string {
+  const buf = Buffer.alloc(8);
+  buf.writeBigUInt64LE(BigInt(n));
+  return '0x'.concat(buf.toString('hex'));
+}

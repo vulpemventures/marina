@@ -1,0 +1,285 @@
+{
+  "contractName": "SyntheticAssetSmartContract",
+  "constructorInputs": [
+    {
+      "name": "borrowAsset",
+      "type": "asset"
+    },
+    {
+      "name": "collateralAsset",
+      "type": "asset"
+    },
+    {
+      "name": "borrowAmount",
+      "type": "value"
+    },
+    {
+      "name": "payoutAmount",
+      "type": "value"
+    },
+    {
+      "name": "test",
+      "type": "xonlypubkey"
+    },
+    {
+      "name": "oraclePk",
+      "type": "xonlypubkey"
+    },
+    {
+      "name": "issuerPk",
+      "type": "xonlypubkey"
+    },
+    {
+      "name": "issuerScriptProgram",
+      "type": "bytes"
+    },
+    {
+      "name": "priceLevel",
+      "type": "bytes"
+    },
+    {
+      "name": "setupTimestamp",
+      "type": "bytes"
+    }
+  ],
+  "functions": [
+    {
+      "name": "redeem",
+      "functionInputs": [
+        {
+          "name": "borrowerSig",
+          "type": "sig"
+        }
+      ],
+      "require": [
+        {
+          "type": "output",
+          "atIndex": 0,
+          "expected": {
+            "script": {
+              "version": -1,
+              "program": "0x6a"
+            },
+            "value": "$borrowAmount",
+            "asset": "$borrowAsset",
+            "nonce": ""
+          }
+        },
+        {
+          "type": "output",
+          "atIndex": 1,
+          "expected": {
+            "script": {
+              "version": 0,
+              "program": "$issuerScriptProgram"
+            },
+            "value": "$payoutAmount",
+            "asset": "$collateralAsset",
+            "nonce": ""
+          }
+        }
+      ],
+      "asm": [
+        "OP_0",
+        "OP_INSPECTOUTPUTASSET",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$borrowAsset",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTVALUE",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$borrowAmount",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTSCRIPTPUBKEY",
+        "OP_1NEGATE",
+        "OP_EQUALVERIFY",
+        "0x6a",
+        "OP_SHA256",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTNONCE",
+        "OP_0",
+        "OP_EQUALVERIFY",
+
+        "OP_1",
+        "OP_INSPECTOUTPUTASSET",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$collateralAsset",
+        "OP_EQUALVERIFY",
+
+        "OP_1",
+        "OP_INSPECTOUTPUTVALUE",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$payoutAmount",
+        "OP_EQUALVERIFY",
+
+        "OP_1",
+        "OP_INSPECTOUTPUTSCRIPTPUBKEY",
+        "OP_0",
+        "OP_EQUALVERIFY",
+        "$issuerScriptProgram",
+        "OP_EQUALVERIFY",
+
+        "OP_1",
+        "OP_INSPECTOUTPUTNONCE",
+        "OP_0",
+        "OP_EQUALVERIFY",
+
+        "$test",
+        "OP_CHECKSIG"
+      ]
+    },
+    {
+      "name": "liquidate",
+      "functionInputs": [
+        {
+          "name": "currentPrice",
+          "type": "bytes"
+        },
+        {
+          "name": "timestamp",
+          "type": "bytes"
+        },
+        {
+          "name": "oracleSig",
+          "type": "datasig"
+        },
+        {
+          "name": "issuerSig",
+          "type": "sig"
+        }
+      ],
+      "require": [
+        {
+          "type": "output",
+          "atIndex": 0,
+          "expected": {
+            "script": {
+              "version": -1,
+              "program": "0x6a"
+            },
+            "value": "$borrowAmount",
+            "asset": "$borrowAsset",
+            "nonce": ""
+          }
+        }
+      ],
+      "asm": [
+        "OP_DUP",
+        "$priceLevel",
+        "OP_LESSTHAN64",
+        "OP_VERIFY",
+
+        "OP_OVER",
+        "$setupTimestamp",
+        "OP_GREATERTHANOREQUAL64",
+        "OP_VERIFY",
+
+        "OP_CAT",
+        "OP_SHA256",
+        "$oraclePk",
+        "OP_CHECKSIGFROMSTACKVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTASSET",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$borrowAsset",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTVALUE",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$borrowAmount",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTSCRIPTPUBKEY",
+        "OP_1NEGATE",
+        "OP_EQUALVERIFY",
+        "0x6a",
+        "OP_SHA256",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTNONCE",
+        "OP_0",
+        "OP_EQUALVERIFY",
+
+        "$issuerPk",
+        "OP_CHECKSIG"
+      ]
+    },
+    {
+      "name": "topup",
+      "functionInputs": [
+        {
+          "name": "issuerSig",
+          "type": "sig"
+        },
+        {
+          "name": "borrowerSig",
+          "type": "sig"
+        }
+      ],
+      "require": [
+        {
+          "type": "output",
+          "atIndex": 0,
+          "expected": {
+            "script": {
+              "version": -1,
+              "program": "0x6a"
+            },
+            "value": "$borrowAmount",
+            "asset": "$borrowAsset",
+            "nonce": ""
+          }
+        }
+      ],
+      "asm": [
+        "OP_0",
+        "OP_INSPECTOUTPUTASSET",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$borrowAsset",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTVALUE",
+        "OP_1",
+        "OP_EQUALVERIFY",
+        "$borrowAmount",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTSCRIPTPUBKEY",
+        "OP_1NEGATE",
+        "OP_EQUALVERIFY",
+        "0x6a",
+        "OP_SHA256",
+        "OP_EQUALVERIFY",
+
+        "OP_0",
+        "OP_INSPECTOUTPUTNONCE",
+        "OP_0",
+        "OP_EQUALVERIFY",
+
+        "$issuerPk",
+        "OP_CHECKSIGVERIFY",
+
+        "$test",
+        "OP_CHECKSIG"
+      ]
+    }
+  ]
+}
