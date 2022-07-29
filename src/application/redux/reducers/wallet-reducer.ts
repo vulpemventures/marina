@@ -161,8 +161,8 @@ export function walletReducer(
           ...state.accounts,
           [payload.accountID as AccountID]: {
             ...state.accounts[payload.accountID],
-            covenantDescriptors: {
-              ...state.accounts[payload.accountID].covenantDescriptors,
+            contractTemplate: {
+              ...state.accounts[payload.accountID].contractTemplate,
               isSpendableByMarina: payload.isSpendableByMarina,
             },
           },
@@ -176,10 +176,9 @@ export function walletReducer(
 
       const accountWithTemplate: CustomScriptAccountData = {
         ...(state.accounts[accountID] as CustomScriptAccountData),
-        covenantDescriptors: {
+        contractTemplate: {
           namespace: payload.accountID,
           template: payload.template,
-          changeTemplate: payload.changeTemplate,
         },
       };
 

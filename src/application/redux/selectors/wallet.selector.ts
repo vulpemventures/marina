@@ -119,7 +119,7 @@ export const selectAllAccountsIDsSpendableViaUI = (state: RootReducerState): Acc
   return selectAllAccountsIDs(state).filter(
     (id) =>
       state.wallet.accounts[id].type !== AccountType.CustomScriptAccount ||
-      (state.wallet.accounts[id] as CustomScriptAccountData).covenantDescriptors.isSpendableByMarina
+      (state.wallet.accounts[id] as CustomScriptAccountData).contractTemplate.isSpendableByMarina
   );
 };
 

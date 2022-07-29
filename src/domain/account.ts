@@ -132,26 +132,25 @@ function createCustomScriptAccount(
     type: AccountType.CustomScriptAccount,
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredCustomScriptIdentity(
-        data.covenantDescriptors,
+        data.contractTemplate,
         decrypt(encryptedMnemonic, password),
         network,
         data.restorerOpts[network]
       ),
     getWatchIdentity: (network: NetworkString) =>
       restoredCustomScriptWatchOnlyIdentity(
-        data.covenantDescriptors,
+        data.contractTemplate,
         data.masterXPub,
         data.masterBlindingKey,
         network,
         data.restorerOpts[network]
       ),
     getInfo: () => ({
-      accountID: data.covenantDescriptors.namespace,
-      masterXPub: data.masterXPub,
-      isReady: data.covenantDescriptors.template !== undefined,
-      changeTemplate: data.covenantDescriptors.changeTemplate,
-      template: data.covenantDescriptors.template,
-      isSpendableByMarina: data.covenantDescriptors.isSpendableByMarina,
+      accountID: data.contractTemplate.namespace,
+      masterXPub: toXpub(data.masterXPub),
+      isReady: data.contractTemplate.template !== undefined,
+      template: data.contractTemplate.template,
+      isSpendableByMarina: data.contractTemplate.isSpendableByMarina,
     }),
   };
 }
