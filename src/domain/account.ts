@@ -1,4 +1,4 @@
-import {
+import type {
   IdentityInterface,
   MasterPublicKey,
   Mnemonic,
@@ -6,9 +6,8 @@ import {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
-  toXpub,
 } from 'ldk';
-import { masterPubKeyRestorerFromEsplora } from 'ldk';
+import { toXpub, masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
