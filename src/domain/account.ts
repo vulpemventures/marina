@@ -1,4 +1,4 @@
-import type {
+import {
   IdentityInterface,
   MasterPublicKey,
   Mnemonic,
@@ -6,6 +6,7 @@ import type {
   Restorer,
   EsploraRestorerOpts,
   NetworkString,
+  toXpub,
 } from 'ldk';
 import { masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
@@ -114,10 +115,9 @@ function createMainAccount(
         newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
       ),
     getInfo: () => ({
-      accountID: MainAccountID, // main account is unique
+      accountID: MainAccountID, // main account ID is unique
       masterXPub: toXpub(data.masterXPub),
       isReady: true, // always true for main account
-      template: `elwpkh($${MainAccountID})`,
       descriptor: `elwpkh(${toXpub(data.masterXPub)})`,
     }),
   };
