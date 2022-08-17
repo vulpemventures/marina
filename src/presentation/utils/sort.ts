@@ -1,4 +1,4 @@
-import { FEATURES_ASSETS } from '../../application/utils/constants';
+import { FEATURED_ASSETS } from '../../application/utils/constants';
 import type { Asset } from '../../domain/assets';
 
 /**
@@ -16,7 +16,7 @@ export function sortAssets(
   const featuredAssets: (Asset & { assetHash: string })[] = [];
   const remainingAssets = [];
   for (const asset of assets) {
-    if (FEATURES_ASSETS.includes(asset.assetHash)) {
+    if (FEATURED_ASSETS.includes(asset.assetHash)) {
       featuredAssets.push(asset);
       continue;
     }

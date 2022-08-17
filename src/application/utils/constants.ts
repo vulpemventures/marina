@@ -43,7 +43,7 @@ featuredAssetsMap.set(featuredAssets.lcad.mainnet, getLocalImagePath('lcad.png')
 featuredAssetsMap.set(featuredAssets.lcad.testnet, getLocalImagePath('lcad.png'));
 featuredAssetsMap.set(featuredAssets.fusd.testnet, getLocalImagePath('fusd.png'));
 
-export const FEATURES_ASSETS = Array.from(featuredAssetsMap.keys());
+export const FEATURED_ASSETS = Array.from(featuredAssetsMap.keys());
 
 // given an asset hash, return url for image path from mempool
 const getRemoteImagePath = (hash: string) => `https://liquid.network/api/v1/asset/${hash}/icon`;
