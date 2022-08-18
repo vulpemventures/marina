@@ -94,8 +94,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     this.store.subscribe(() => {
       if (!this.store) throw MarinaBroker.NotSetUpError;
       const state = this.store.getState();
-      const newCache = newCacheFromState(state);
-      const events = compareCacheForEvents(newCache, this.cache, this.hostname);
+      const allAccountsIDs = selectAllAccountsIDs(state)
+      const newCache = newCacheFromState(state, allAccountsIDs);
+      const events = compareCacheForEvents(newCache, this.cache, this.hostname, allAccountsIDs);
 
       this.cache = newCache; // update the cache state
 

@@ -7,9 +7,9 @@ export interface MarinaEvent<P extends any> {
   payload: P;
 }
 
-export type NewUtxoMarinaEvent = MarinaEvent<UnblindedOutput>;
-export type SpentUtxoMarinaEvent = MarinaEvent<Outpoint>;
-export type NewTxMarinaEvent = MarinaEvent<TxDisplayInterface>;
+export type NewUtxoMarinaEvent = MarinaEvent<{ utxo: UnblindedOutput; accountID: string }>;
+export type SpentUtxoMarinaEvent = MarinaEvent<{ utxo: Outpoint; accountID: string }>;
+export type NewTxMarinaEvent = MarinaEvent<{ tx: TxDisplayInterface; accountID: string }>;
 export type EnabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
 export type DisabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
 export type NetworkMarinaEvent = MarinaEvent<NetworkString>;
@@ -17,7 +17,8 @@ export type NetworkMarinaEvent = MarinaEvent<NetworkString>;
 // compare tx history states and return marina events
 export function compareTxsHistoryState(
   oldState: TxsHistory,
-  newState: TxsHistory
+  newState: TxsHistory,
+  accountID: string
 ): NewTxMarinaEvent[] {
   const events: NewTxMarinaEvent[] = [];
   const newEntries = Object.entries(newState);
@@ -25,7 +26,7 @@ export function compareTxsHistoryState(
 
   for (const [txID, tx] of newEntries) {
     if (oldTxIDs.includes(txID)) continue;
-    events.push({ type: 'NEW_TX', payload: tx });
+    events.push({ type: 'NEW_TX', payload: { tx, accountID } });
   }
 
   return events;
@@ -34,7 +35,8 @@ export function compareTxsHistoryState(
 // compare two utxo state and return marina events
 export function compareUtxoState(
   oldState: Record<string, UnblindedOutput>,
-  newState: Record<string, UnblindedOutput>
+  newState: Record<string, UnblindedOutput>,
+  accountID: string
 ): (NewUtxoMarinaEvent | SpentUtxoMarinaEvent)[] {
   const events: (NewUtxoMarinaEvent | SpentUtxoMarinaEvent)[] = [];
   const newEntries = Object.entries(newState);
@@ -43,7 +45,7 @@ export function compareUtxoState(
   for (const [outpointStr, utxo] of newEntries) {
     const oldStateHasUtxo = oldOutpointStrings.includes(outpointStr);
     if (!oldStateHasUtxo) {
-      events.push({ type: 'NEW_UTXO', payload: utxo });
+      events.push({ type: 'NEW_UTXO', payload: { utxo, accountID } });
     }
   }
 
@@ -51,7 +53,7 @@ export function compareUtxoState(
 
   for (const [outpointStr, utxo] of Object.entries(oldState)) {
     if (!newOutpointStrings.includes(outpointStr)) {
-      events.push({ type: 'SPENT_UTXO', payload: utxo });
+      events.push({ type: 'SPENT_UTXO', payload: { utxo, accountID } });
     }
   }
 
