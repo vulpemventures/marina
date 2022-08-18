@@ -114,8 +114,7 @@ function* utxosUpdater(
   if (Object.keys(receivedUtxos).length > 0) {
     yield put(unlockUtxos());
   }
-
-  console.debug(`${new Date()} utxos received`, receivedUtxos);
+  console.debug(`${new Date()} utxos received for ${accountID}`, receivedUtxos);
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
