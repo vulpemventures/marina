@@ -1,5 +1,10 @@
 import type { NetworkString, UnblindedOutput } from 'ldk';
-import type { MarinaEvent } from '../application/utils/marina-event';
+import type {
+  MarinaEvent,
+  NewTxMarinaEvent,
+  NewUtxoMarinaEvent,
+  SpentUtxoMarinaEvent,
+} from '../application/utils/marina-event';
 import {
   compareEnabledWebsites,
   compareTxsHistoryState,
@@ -10,17 +15,25 @@ import { MainAccountID } from '../domain/account';
 import type { RootReducerState } from '../domain/common';
 import type { TxsHistory } from '../domain/transaction';
 
-export interface StoreCache {
+export interface StoreCacheAccount {
   utxoState: Record<string, UnblindedOutput>;
   txsHistoryState: TxsHistory;
+}
+
+export interface StoreCache {
+  accounts: Record<string, StoreCacheAccount>;
   enabledWebsitesState: Record<NetworkString, string[]>;
   network: NetworkString;
 }
 
 export function newStoreCache(): StoreCache {
-  return {
+  const accounts: Record<string, StoreCacheAccount> = {};
+  accounts[MainAccountID] = {
     utxoState: {},
     txsHistoryState: {},
+  };
+  return {
+    accounts,
     enabledWebsitesState: { regtest: [], liquid: [], testnet: [] },
     network: 'liquid',
   };
@@ -31,10 +44,23 @@ export function newStoreCache(): StoreCache {
 export function compareCacheForEvents(
   newCache: StoreCache,
   oldCache: StoreCache,
-  hostname: string // for ENABLED and DISABLED events
+  hostname: string, // for ENABLED and DISABLED events
+  allAccountsIDs: string[] // for UTXO and TX events
 ): MarinaEvent<any>[] {
-  const utxosEvents = compareUtxoState(oldCache.utxoState, newCache.utxoState);
-  const txsEvents = compareTxsHistoryState(oldCache.txsHistoryState, newCache.txsHistoryState);
+  const txsEvents: NewTxMarinaEvent[] = [];
+  const utxosEvents: (NewUtxoMarinaEvent | SpentUtxoMarinaEvent)[] = [];
+  for (const accountID of allAccountsIDs) {
+    compareUtxoState(
+      oldCache.accounts[accountID]?.utxoState || {},
+      newCache.accounts[accountID]?.utxoState || {},
+      accountID
+    ).map((ev) => utxosEvents.push(ev));
+    compareTxsHistoryState(
+      oldCache.accounts[accountID]?.txsHistoryState || {},
+      newCache.accounts[accountID]?.txsHistoryState || {},
+      accountID
+    ).map((ev) => txsEvents.push(ev));
+  }
   const enabledAndDisabledEvents = compareEnabledWebsites(
     oldCache.enabledWebsitesState,
     newCache.enabledWebsitesState,
@@ -46,11 +72,17 @@ export function compareCacheForEvents(
 }
 
 // create cache from State.
-export function newCacheFromState(state: RootReducerState): StoreCache {
+export function newCacheFromState(state: RootReducerState, allAccountsIDs: string[]): StoreCache {
+  const accounts: Record<string, StoreCacheAccount> = {};
+  for (const accountID of allAccountsIDs) {
+    const root = state.wallet.unspentsAndTransactions[accountID][state.app.network];
+    accounts[accountID] = {
+      utxoState: root.utxosMap,
+      txsHistoryState: root.transactions,
+    };
+  }
   return {
-    utxoState: state.wallet.unspentsAndTransactions[MainAccountID][state.app.network].utxosMap,
-    txsHistoryState:
-      state.wallet.unspentsAndTransactions[MainAccountID][state.app.network].transactions,
+    accounts,
     enabledWebsitesState: state.connect.enabledSites,
     network: state.app.network,
   };
