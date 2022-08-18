@@ -1,4 +1,4 @@
-import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
+import type { NetworkString, UnblindedOutput } from 'ldk';
 import type { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
 import type { MarinaEventType } from 'marina-provider';
 
@@ -7,12 +7,16 @@ export interface MarinaEvent<P extends any> {
   payload: P;
 }
 
-export type NewUtxoMarinaEvent = MarinaEvent<{ utxo: UnblindedOutput; accountID: string }>;
-export type SpentUtxoMarinaEvent = MarinaEvent<{ utxo: Outpoint; accountID: string }>;
-export type NewTxMarinaEvent = MarinaEvent<{ tx: TxDisplayInterface; accountID: string }>;
-export type EnabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
-export type DisabledMarinaEvent = MarinaEvent<{ network: NetworkString; hostname: string }>;
-export type NetworkMarinaEvent = MarinaEvent<NetworkString>;
+export type NewUtxoMarinaEvent = MarinaEvent<{ accountID: string; data: UnblindedOutput }>;
+export type SpentUtxoMarinaEvent = MarinaEvent<{ accountID: string; data: UnblindedOutput }>;
+export type NewTxMarinaEvent = MarinaEvent<{ accountID: string; data: TxDisplayInterface }>;
+export type EnabledMarinaEvent = MarinaEvent<{
+  data: { hostname: string; network: NetworkString };
+}>;
+export type DisabledMarinaEvent = MarinaEvent<{
+  data: { hostname: string; network: NetworkString };
+}>;
+export type NetworkMarinaEvent = MarinaEvent<{ data: NetworkString }>;
 
 // compare tx history states and return marina events
 export function compareTxsHistoryState(
@@ -26,7 +30,7 @@ export function compareTxsHistoryState(
 
   for (const [txID, tx] of newEntries) {
     if (oldTxIDs.includes(txID)) continue;
-    events.push({ type: 'NEW_TX', payload: { tx, accountID } });
+    events.push({ type: 'NEW_TX', payload: { accountID, data: tx } });
   }
 
   return events;
@@ -45,7 +49,7 @@ export function compareUtxoState(
   for (const [outpointStr, utxo] of newEntries) {
     const oldStateHasUtxo = oldOutpointStrings.includes(outpointStr);
     if (!oldStateHasUtxo) {
-      events.push({ type: 'NEW_UTXO', payload: { utxo, accountID } });
+      events.push({ type: 'NEW_UTXO', payload: { accountID, data: utxo } });
     }
   }
 
@@ -53,7 +57,7 @@ export function compareUtxoState(
 
   for (const [outpointStr, utxo] of Object.entries(oldState)) {
     if (!newOutpointStrings.includes(outpointStr)) {
-      events.push({ type: 'SPENT_UTXO', payload: { utxo, accountID } });
+      events.push({ type: 'SPENT_UTXO', payload: { accountID, data: utxo } });
     }
   }
 
@@ -73,24 +77,24 @@ export function compareEnabledWebsites(
 
     for (const hostname of newHostnames) {
       if (!oldHostnames.includes(hostname)) {
-        events.push({ type: 'ENABLED', payload: { network, hostname } });
+        events.push({ type: 'ENABLED', payload: { data: { hostname, network } } });
       }
     }
 
     for (const hostname of oldHostnames) {
       if (!newHostnames.includes(hostname)) {
-        events.push({ type: 'DISABLED', payload: { network, hostname } });
+        events.push({ type: 'DISABLED', payload: { data: { hostname, network } } });
       }
     }
   }
 
-  return events.filter((ev) => ev.payload.hostname === currentHostname);
+  return events.filter((ev) => ev.payload.data.hostname === currentHostname);
 }
 
 export function networkChange(
   oldNetwork: NetworkString,
   newNetwork: NetworkString
 ): NetworkMarinaEvent[] {
-  if (oldNetwork !== newNetwork) return [{ type: 'NETWORK', payload: newNetwork }];
+  if (oldNetwork !== newNetwork) return [{ type: 'NETWORK', payload: { data: newNetwork } }];
   else return [];
 }
