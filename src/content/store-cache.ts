@@ -27,11 +27,11 @@ export interface StoreCache {
 }
 
 export function newStoreCache(): StoreCache {
-  const accounts: Record<string, StoreCacheAccount> = {}
+  const accounts: Record<string, StoreCacheAccount> = {};
   accounts[MainAccountID] = {
     utxoState: {},
     txsHistoryState: {},
-  }
+  };
   return {
     accounts,
     enabledWebsitesState: { regtest: [], liquid: [], testnet: [] },
