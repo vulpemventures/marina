@@ -9,7 +9,10 @@ import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
 import type { WalletState } from './wallet';
 
-export type WalletPersistedStateV3 = WalletState & Partial<PersistedState>;
+// v4 is a fixed version of v3 about covenantTemplate field in CustomAccountData
+export type WalletPersistedStateV4 = WalletState & Partial<PersistedState>;
+
+export type WalletPersistedStateV3 = WalletPersistedStateV4;
 type keysAddedInV3 = 'encryptedMnemonic' | 'accounts';
 type deletedInV3 = {
   [MainAccountID]: MnemonicAccountData;
@@ -27,6 +30,10 @@ type deletedInV2 = {
 export type WalletPersistedStateV1 = Omit<WalletPersistedStateV2, keysAddedInV2> & deletedInV2;
 
 export const walletMigrations = {
+  4: (state: WalletPersistedStateV3) => ({
+    ...state,
+    accounts: accountsFieldRenameV4(state.accounts),
+  }),
   3: (state: WalletPersistedStateV2): WalletPersistedStateV3 => ({
     ...state,
     encryptedMnemonic: state[MainAccountID].encryptedMnemonic,
@@ -59,5 +66,15 @@ export const walletMigrations = {
   },
 };
 
+function accountsFieldRenameV4(accounts: WalletPersistedStateV3['accounts']): WalletPersistedStateV4['accounts'] {
+  const renamed: WalletPersistedStateV4['accounts'] = {};
+  for (const [id, account] of Object.entries(accounts)) {
+    renamed[id] = {
+      ...account,
+      contractTemplate: account.covenantDescriptors || undefined,
+    };
+  }
+  return renamed;
+}
 // `as any` is needed (redux-persist doesn't support generic types in createMigrate func)
 export const walletMigrate = createMigrate(walletMigrations as any);
