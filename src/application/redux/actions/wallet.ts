@@ -68,11 +68,11 @@ export function setRestorerOpts(
   };
 }
 
-function incrementAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
+export function incrementAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
   return { type: INCREMENT_EXTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
-function incrementChangeAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
+export function incrementChangeAddressIndex(accountID: AccountID, network: NetworkString): AnyAction {
   return { type: INCREMENT_INTERNAL_ADDRESS_INDEX, payload: { accountID, network } };
 }
 
