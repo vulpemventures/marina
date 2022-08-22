@@ -1,4 +1,5 @@
 import type { AssetSwap } from '../../domain/assets';
+import { FEATURED_ASSETS } from '../../application/utils/constants';
 
 /**
  * Takes a list of assets, and sort it by the following criteria:
@@ -10,22 +11,19 @@ import type { AssetSwap } from '../../domain/assets';
 export function sortAssets(assets: AssetSwap[]): AssetSwap[] {
   let newAsset;
   const newAssetTicker = 'Any';
-  const sortedFeaturedTickers = ['L-BTC', 'USDT', 'LCAD'];
-  const featuredAssets: AssetSwap[] = [];
-  // push featured assets in order
-  for (const ticker of sortedFeaturedTickers) {
-    for (const asset of assets) {
-      if (ticker === asset.ticker) {
-        featuredAssets.push(asset);
-      }
-      if (asset.ticker === newAssetTicker) {
-        newAsset = asset;
-      }
+  const featuredAssets: (AssetSwap & { assetHash: string })[] = [];
+  const remainingAssets = [];
+  for (const asset of assets) {
+    if (FEATURED_ASSETS.includes(asset.assetHash)) {
+      featuredAssets.push(asset);
+      continue;
+    }
+    if (asset.ticker === newAssetTicker) {
+      newAsset = asset;
+    } else {
+      remainingAssets.push(asset);
     }
   }
-  // get remaining assets - also includes new asset (has ticker 'Any')
-  const forbiddenTickers = [...sortedFeaturedTickers, newAssetTicker];
-  const remainingAssets = assets.filter((asset) => !forbiddenTickers.includes(asset.ticker));
   // join the two sets of assets and add 'Any' at the end of the list if it exists
   const sortedAssets = [...featuredAssets, ...remainingAssets];
   if (newAsset) sortedAssets.push(newAsset);

@@ -4,15 +4,15 @@ import type { HomeProps } from '../../../presentation/wallet/home';
 import HomeView from '../../../presentation/wallet/home';
 import { selectBalances } from '../selectors/balance.selector';
 import { lbtcAssetByNetwork } from '../../utils/network';
-import { selectAllAccountsIDs } from '../selectors/wallet.selector';
-import { selectAssets } from '../selectors/asset.selector';
+import { selectAllAccountsIDsSpendableViaUI } from '../selectors/wallet.selector';
+import { assetGetterFromIAssets } from '../../../domain/assets';
 
 const mapStateToProps = (state: RootReducerState): HomeProps => {
   return {
     lbtcAssetHash: lbtcAssetByNetwork(state.app.network),
     transactionStep: state.transaction.step,
-    assetsBalance: selectBalances(...selectAllAccountsIDs(state))(state),
-    assets: selectAssets(state),
+    assetsBalance: selectBalances(...selectAllAccountsIDsSpendableViaUI(state))(state),
+    getAsset: assetGetterFromIAssets(state.assets),
   };
 };
 

@@ -8,7 +8,8 @@ import type {
 } from 'ldk';
 import type { Channel } from 'redux-saga';
 import { call, fork, put, take } from 'redux-saga/effects';
-import type { Account, AccountID } from '../../../domain/account';
+import type { MnemonicAccount } from '../../../domain/account';
+import { AccountType } from '../../../domain/account';
 import { extractErrorMessage } from '../../../presentation/utils/error';
 import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { RESTORE_TASK } from '../actions/action-types';
@@ -31,7 +32,7 @@ import {
 } from './utils';
 
 function* getDeepRestorerSaga(
-  account: Account,
+  account: MnemonicAccount,
   network: NetworkString
 ): SagaGenerator<Restorer<EsploraRestorerOpts, IdentityInterface>> {
   return yield call(() => account.getDeepRestorer(network));
@@ -48,14 +49,11 @@ function* restoreSaga(
 // deep restore an account, i.e recompute addresses and try to see if they have received any transaction
 // return the new StateRestorerOpts after this restoration
 function* deepRestore(
-  accountID: AccountID,
+  account: MnemonicAccount,
   gapLimit: number,
   esploraURL: string,
   net: NetworkString
 ): SagaGenerator<StateRestorerOpts> {
-  const account = yield* selectAccountSaga(accountID);
-  if (!account) throw new Error('Account not found');
-
   const restorer = yield* getDeepRestorerSaga(account, net);
   const restoredAddresses = yield* restoreSaga(restorer, { gapLimit, esploraURL });
   const stateRestorerOpts = getStateRestorerOptsFromAddresses(restoredAddresses);
@@ -77,9 +75,18 @@ function* restorerWorker(inChan: RestoreChan): SagaGenerator<void, RestoreChanDa
     try {
       const { accountID, gapLimit, network, esploraURL } = yield take(inChan);
       yield put(pushRestorerLoader());
-      const restoredIndexes = yield* deepRestore(accountID, gapLimit, esploraURL, network);
-      yield put(setRestorerOpts(accountID, restoredIndexes, network)); // update state with new restorerOpts
-      yield put(updateTaskAction(accountID, network)); // update utxos and transactions according to the restored addresses (on network)
+      const account = yield* selectAccountSaga(accountID);
+      if (!account) throw new Error('Account not found');
+      if (account.type === AccountType.MainAccount) {
+        const restoredIndexes = yield* deepRestore(
+          account as MnemonicAccount,
+          gapLimit,
+          esploraURL,
+          network
+        );
+        yield put(setRestorerOpts(accountID, restoredIndexes, network)); // update state with new restorerOpts
+        yield put(updateTaskAction(accountID, network)); // update utxos and transactions according to the restored addresses (on network)
+      }
     } catch (error) {
       yield put(
         setDeepRestorerError(new Error(`deep restore error: ${extractErrorMessage(error)}`))

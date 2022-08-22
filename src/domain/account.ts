@@ -8,22 +8,25 @@ import type {
   EsploraRestorerOpts,
   NetworkString,
 } from 'ldk';
-import { IdentityType, masterPubKeyRestorerFromEsplora } from 'ldk';
 import ECPairFactory from 'ecpair';
 import type { ECPairInterface } from 'ecpair';
 import BIP32Factory from 'bip32';
 import * as bip39 from 'bip39';
 import { networks } from 'liquidjs-lib';
+import { masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
   restoredMasterPublicKey,
   restoredMnemonic,
 } from '../application/utils/restorer';
-import type { CovenantDescriptors, CustomScriptIdentity } from './customscript-identity';
-import {
+import type {
+  ContractTemplate,
+  CustomScriptIdentity,
+  CustomRestorerOpts,
   CustomScriptIdentityWatchOnly,
-  customScriptRestorerFromEsplora,
+} from './customscript-identity';
+import {
   restoredCustomScriptIdentity,
   restoredCustomScriptWatchOnlyIdentity,
 } from './customscript-identity';
@@ -62,7 +65,6 @@ export interface Account<
   ): ECPairInterface;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
-  getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, WatchID>;
   getInfo(): AccountInfoType;
 }
 
@@ -75,7 +77,9 @@ export interface AccountData {
 
 // Main Account uses the default Mnemonic derivation path
 // single-sig account used to send/receive regular assets
-export type MnemonicAccount = Account<Mnemonic, MasterPublicKey>;
+export type MnemonicAccount = Account<Mnemonic, MasterPublicKey> & {
+  getDeepRestorer(network: NetworkString): Restorer<EsploraRestorerOpts, MasterPublicKey>;
+};
 
 export interface MnemonicAccountData extends AccountData {
   type: AccountType.MainAccount;
@@ -90,13 +94,13 @@ export interface MnemonicAccountData extends AccountData {
 export type CustomScriptAccount = Account<
   CustomScriptIdentity,
   CustomScriptIdentityWatchOnly,
-  Pick<CovenantDescriptors, 'changeTemplate' | 'template' | 'isSpendableByMarina'> & AccountInfo
+  Pick<ContractTemplate, 'template' | 'isSpendableByMarina'> & AccountInfo
 >;
 
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
-  covenantDescriptors: CovenantDescriptors;
-  restorerOpts: Record<NetworkString, StateRestorerOpts>;
+  contractTemplate: ContractTemplate;
+  restorerOpts: Record<NetworkString, CustomRestorerOpts>;
   masterXPub: MasterXPub;
   masterBlindingKey: MasterBlindingKey;
 }
@@ -164,39 +168,25 @@ function createCustomScriptAccount(
     },
     getSigningIdentity: (password: string, network: NetworkString) =>
       restoredCustomScriptIdentity(
-        data.covenantDescriptors,
+        data.contractTemplate,
         decrypt(encryptedMnemonic, password),
         network,
         data.restorerOpts[network]
       ),
     getWatchIdentity: (network: NetworkString) =>
       restoredCustomScriptWatchOnlyIdentity(
-        data.covenantDescriptors,
+        data.contractTemplate,
         data.masterXPub,
         data.masterBlindingKey,
         network,
         data.restorerOpts[network]
       ),
-    getDeepRestorer: (network: NetworkString) =>
-      customScriptRestorerFromEsplora(
-        new CustomScriptIdentityWatchOnly({
-          type: IdentityType.MasterPublicKey,
-          chain: network,
-          ecclib: ecc,
-          opts: {
-            ...data.covenantDescriptors,
-            masterBlindingKey: data.masterBlindingKey,
-            masterPublicKey: data.masterXPub,
-          },
-        })
-      ),
     getInfo: () => ({
-      accountID: data.covenantDescriptors.namespace,
+      accountID: data.contractTemplate.namespace,
       masterXPub: data.masterXPub,
-      isReady: data.covenantDescriptors.template !== undefined,
-      changeTemplate: data.covenantDescriptors.changeTemplate,
-      template: data.covenantDescriptors.template,
-      isSpendableByMarina: data.covenantDescriptors.isSpendableByMarina,
+      isReady: data.contractTemplate.template !== undefined,
+      template: data.contractTemplate.template,
+      isSpendableByMarina: data.contractTemplate.isSpendableByMarina,
     }),
   };
 }
@@ -222,4 +212,11 @@ export const accountFromMnemonicAndData = (
 export const initialRestorerOpts: StateRestorerOpts = {
   lastUsedExternalIndex: -1,
   lastUsedInternalIndex: -1,
+};
+
+export const initialCustomRestorerOpts: CustomRestorerOpts = {
+  lastUsedExternalIndex: -1,
+  lastUsedInternalIndex: -1,
+  customParamsByIndex: {},
+  customParamsByChangeIndex: {},
 };

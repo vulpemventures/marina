@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import {
   RECEIVE_SELECT_ASSET_ROUTE,
@@ -23,14 +23,14 @@ export interface HomeProps {
   lbtcAssetHash: string;
   transactionStep: PendingTxStep;
   assetsBalance: BalancesByAsset;
-  assets: AssetSwap[];
+  getAsset: any;
 }
 
 const HomeView: React.FC<HomeProps> = ({
   lbtcAssetHash,
   transactionStep,
   assetsBalance,
-  assets,
+  getAsset,
 }) => {
   const history = useHistory();
 
@@ -54,12 +54,10 @@ const HomeView: React.FC<HomeProps> = ({
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
-  // sorted assets
-  const [sortedAssets, setSortedAssets] = useState(sortAssets(assets));
-
-  useEffect(() => {
-    setSortedAssets(sortAssets(assets));
-  }, [assetsBalance]);
+  // return assets based on balances by asset
+  const assets = (balances: BalancesByAsset) => {
+    return Object.keys(balances).map((hash) => getAsset(hash));
+  };
 
   useEffect(() => {
     switch (transactionStep) {
@@ -98,7 +96,7 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {sortedAssets.map(
+            {sortAssets(assets(assetsBalance)).map(
               (
                 { assetHash, name, ticker, precision, canSubmarineSwap }: AssetSwap,
                 index: React.Key
