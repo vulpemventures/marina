@@ -1,6 +1,10 @@
 import { assert } from 'chai';
 import { AccountType, initialRestorerOpts, MainAccountID } from '../src/domain/account';
-import type { WalletPersistedStateV1, WalletPersistedStateV2, WalletPersistedStateV3 } from '../src/domain/migrations';
+import type {
+  WalletPersistedStateV1,
+  WalletPersistedStateV2,
+  WalletPersistedStateV3,
+} from '../src/domain/migrations';
 import { walletMigrations } from '../src/domain/migrations';
 
 describe('WalletState migrations', () => {
@@ -27,16 +31,20 @@ describe('WalletState migrations', () => {
           covenantDescriptors: {
             namespace: 'custom-account',
             template: 'raw(00010203)',
-          }
-        }
+          },
+        },
       },
       updaterLoaders: 0,
       lockedUtxos: {},
-    }
+    };
     const walletStateV4 = walletMigrations[4](walletStateV3);
-    expect(walletStateV4.accounts['customAccount'].contractTemplate.template).toEqual(walletStateV3.accounts['customAccount'].covenantDescriptors.template);
-    expect(walletStateV4.accounts['customAccount'].contractTemplate.namespace).toEqual(walletStateV3.accounts['customAccount'].covenantDescriptors.namespace);
-  })
+    expect(walletStateV4.accounts['customAccount'].contractTemplate.template).toEqual(
+      walletStateV3.accounts['customAccount'].covenantDescriptors.template
+    );
+    expect(walletStateV4.accounts['customAccount'].contractTemplate.namespace).toEqual(
+      walletStateV3.accounts['customAccount'].covenantDescriptors.namespace
+    );
+  });
 
   it('should be able to migrate from v2 to v3', () => {
     const walletStateV2: WalletPersistedStateV2 = {
@@ -57,16 +65,22 @@ describe('WalletState migrations', () => {
       },
       updaterLoaders: 0,
       lockedUtxos: {},
-    }
+    };
 
     const walletStateV3 = walletMigrations[3](walletStateV2);
     expect(walletStateV3.encryptedMnemonic).toEqual(walletStateV2.mainAccount.encryptedMnemonic);
     expect(walletStateV3.accounts[MainAccountID].type).toEqual(AccountType.MainAccount);
-    expect(walletStateV3.accounts[MainAccountID].masterBlindingKey).toEqual(walletStateV2.mainAccount.masterBlindingKey);
-    expect(walletStateV3.accounts[MainAccountID].masterXPub).toEqual(walletStateV2.mainAccount.masterXPub);
-    expect(walletStateV3.accounts[MainAccountID].restorerOpts).toEqual(walletStateV2.mainAccount.restorerOpts);
+    expect(walletStateV3.accounts[MainAccountID].masterBlindingKey).toEqual(
+      walletStateV2.mainAccount.masterBlindingKey
+    );
+    expect(walletStateV3.accounts[MainAccountID].masterXPub).toEqual(
+      walletStateV2.mainAccount.masterXPub
+    );
+    expect(walletStateV3.accounts[MainAccountID].restorerOpts).toEqual(
+      walletStateV2.mainAccount.restorerOpts
+    );
     expect(walletStateV3.passwordHash).toEqual(walletStateV2.passwordHash);
-  })
+  });
 
   it('should be able to migrate from v1 to v2', () => {
     const walletStateV1: WalletPersistedStateV1 = {

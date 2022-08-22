@@ -66,7 +66,9 @@ export const walletMigrations = {
   },
 };
 
-function accountsFieldRenameV4(accounts: WalletPersistedStateV3['accounts']): WalletPersistedStateV4['accounts'] {
+function accountsFieldRenameV4(
+  accounts: WalletPersistedStateV3['accounts']
+): WalletPersistedStateV4['accounts'] {
   const renamed: WalletPersistedStateV4['accounts'] = {};
   for (const [id, account] of Object.entries(accounts)) {
     renamed[id] = {
