@@ -46,5 +46,5 @@ export const MempoolExplorerURLs: ExplorerURLs = {
 export const MempoolTestnetExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
   electrsURL: 'https://liquid.network/testnet',
-  esploraURL: 'https://liquid.network/testnet/api',
+  esploraURL: 'https://liquid.network/liquidtestnet/api',
 };
