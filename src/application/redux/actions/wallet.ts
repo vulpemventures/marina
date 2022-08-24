@@ -50,14 +50,10 @@ export function setIsSpendableByMarina(accountID: AccountID, isSpendableByMarina
   };
 }
 
-export function setCustomScriptTemplate(
-  accountID: AccountID,
-  template: string,
-  changeTemplate?: string
-): AnyAction {
+export function setCustomScriptTemplate(accountID: AccountID, template: string): AnyAction {
   return {
     type: SET_CS_ACCOUNT_TEMPLATE,
-    payload: { accountID, template, changeTemplate },
+    payload: { accountID, template },
   };
 }
 

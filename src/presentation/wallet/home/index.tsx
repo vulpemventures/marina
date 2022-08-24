@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import {
   RECEIVE_SELECT_ASSET_ROUTE,
@@ -58,13 +58,6 @@ const HomeView: React.FC<HomeProps> = ({
     return Object.keys(balances).map((hash) => getAsset(hash));
   };
 
-  // sorted assets
-  const [sortedAssets, setSortedAssets] = useState(sortAssets(assets(assetsBalance)));
-
-  useEffect(() => {
-    setSortedAssets(sortAssets(assets(assetsBalance)));
-  }, [assetsBalance]);
-
   useEffect(() => {
     switch (transactionStep) {
       case 'address-amount':
@@ -102,7 +95,7 @@ const HomeView: React.FC<HomeProps> = ({
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {sortedAssets.map(
+            {sortAssets(assets(assetsBalance)).map(
               (
                 { assetHash, name, ticker, precision }: Asset & { assetHash: string },
                 index: React.Key

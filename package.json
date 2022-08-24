@@ -1,6 +1,6 @@
 {
   "name": "marina",
-  "version": "0.4.9",
+  "version": "0.4.12",
   "private": true,
   "scripts": {
     "start": "NETWORK=regtest webpack --config webpack.dev.js",
@@ -40,7 +40,7 @@
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
     "marina-provider": "^1.7.2",
-    "moment": "^2.29.1",
+    "moment": "^2.29.4",
     "path-browserify": "^1.0.1",
     "postcss": "^7.0.35",
     "qrcode.react": "^1.0.1",
