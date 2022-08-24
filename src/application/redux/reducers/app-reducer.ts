@@ -1,7 +1,7 @@
 import type { IApp } from '../../../domain/app';
 import {
-  BlockstreamExplorerURLs,
-  BlockstreamTestnetExplorerURLs,
+  MempoolExplorerURLs,
+  MempoolTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../../domain/app';
 import type { IError } from '../../../domain/common';
@@ -16,8 +16,8 @@ export const appInitState: IApp = {
   network: (process.env.NETWORK as NetworkString) || 'liquid',
   explorerByNetwork: {
     regtest: NigiriDefaultExplorerURLs,
-    liquid: BlockstreamExplorerURLs,
-    testnet: BlockstreamTestnetExplorerURLs,
+    liquid: MempoolExplorerURLs,
+    testnet: MempoolTestnetExplorerURLs,
   },
   changeAccount: MainAccountID,
 };

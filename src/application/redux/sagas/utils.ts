@@ -16,9 +16,10 @@ import {
   selectUtxos,
 } from '../selectors/wallet.selector';
 import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
-import type { NetworkString } from 'ldk';
+import type { ChainAPI, NetworkString } from 'ldk';
 import type { Channel } from 'redux-saga';
 import { channel, buffers } from 'redux-saga';
+import { explorerURLsToChainAPI } from '../../../domain/app';
 
 export type SagaGenerator<ReturnType = void, YieldType = any> = Generator<
   StrictEffect,
@@ -80,7 +81,8 @@ export function* createChannel<T>(): SagaGenerator<Channel<T>> {
 export const selectNetworkSaga = newSagaSelector(selectNetwork);
 export const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
 export const selectExplorerSaga = newSagaSelector(selectEsploraURL);
-export const selectExplorerURLsSaga = newSagaSelector(selectExplorerURLs);
+export const selectExplorerURLsSaga = (net?: NetworkString) =>
+  newSagaSelector(selectExplorerURLs(net));
 export const selectUpdaterIsLoadingSaga = newSagaSelector(selectUpdaterIsLoading);
 export const selectAllUnspentsSaga = newSagaSelector(selectUtxos(MainAccountID));
 
@@ -90,4 +92,9 @@ export function selectAccountSaga(accountID: AccountID): SagaGenerator<Account |
 
 export function selectExplorerSagaForNet(net: NetworkString): SagaGenerator<string> {
   return newSagaSelector(selectEsploraForNetwork(net))();
+}
+
+export function* selectChainAPI(net?: NetworkString): SagaGenerator<ChainAPI> {
+  const explorerURLs = yield* selectExplorerURLsSaga(net)();
+  return explorerURLsToChainAPI(explorerURLs);
 }

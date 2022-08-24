@@ -1,13 +1,14 @@
-import {
+import type {
   Outpoint,
   AddressInterface,
   TxInterface,
   UnblindedOutput,
   NetworkString,
   Output,
-  privateBlindKeyGetter,
   BlindingKeyGetterAsync,
-  ChainAPI,
+} from 'ldk';
+import {
+  privateBlindKeyGetter,
   txsFetchGenerator,
   utxosFetchGenerator,
   address,
@@ -20,8 +21,9 @@ import { addTx } from '../actions/transaction';
 import type { AddUtxoAction } from '../actions/utxos';
 import { unlockUtxos, addUtxo, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
-import { SagaGenerator, selectExplorerURLsSaga } from './utils';
+import type { SagaGenerator } from './utils';
 import {
+  selectChainAPI,
   createChannel,
   newSagaSelector,
   processAsyncGenerator,
@@ -39,7 +41,7 @@ import { addAsset } from '../actions/asset';
 import type { UpdateTaskAction } from '../actions/task';
 import { updateTaskAction } from '../actions/task';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
-import type { Channel, Saga } from 'redux-saga';
+import type { Channel } from 'redux-saga';
 import type { AllEffect } from 'redux-saga/effects';
 import { put, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
@@ -47,7 +49,9 @@ import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
 import { periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
-import { explorerURLsToChainAPI } from '../../../domain/app';
+
+const MAX_ADDRESSES_TX_GENERATOR = 15;
+const MAX_ADDRESSES_UTXO_GENERATOR = 50;
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -66,48 +70,77 @@ const putDeleteUtxoAction = (accountID: AccountID, net: NetworkString) =>
     yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout, net));
   };
 
-function* getPrivateBlindKeyGetter(account: Account, network: NetworkString): SagaGenerator<BlindingKeyGetterAsync> {
+function* getPrivateBlindKeyGetter(
+  account: Account,
+  network: NetworkString
+): SagaGenerator<BlindingKeyGetterAsync> {
   const getPrivateBlindKey = async () => {
     const identity = await account.getWatchIdentity(network);
     return privateBlindKeyGetter(identity);
-  }
+  };
 
   return yield call(getPrivateBlindKey);
 }
 
-function* getChainAPI(): SagaGenerator<ChainAPI> {
-  const explorerURLs = yield* selectExplorerURLsSaga();
-  return explorerURLsToChainAPI(explorerURLs);
+function splitArray<T>(arr: Array<T>, maxElementsInArray: number): Array<Array<T>> {
+  const result: Array<Array<T>> = [];
+  while (arr.length > 0) {
+    result.push(arr.splice(0, maxElementsInArray));
+  }
+  return result;
 }
 
-function* getUtxosGenerator(account: Account, network: NetworkString, skip: ((utxo: Output) => boolean) | undefined): SagaGenerator<AsyncGenerator<UnblindedOutput, {
-    numberOfUtxos: number;
-    errors: Error[];
-}, undefined>> {
+type UtxosGeneratorList = AsyncGenerator<
+  UnblindedOutput,
+  { numberOfUtxos: number; errors: Error[] },
+  undefined
+>[];
+
+function* getUtxosGenerators(
+  account: Account,
+  network: NetworkString,
+  skip: ((utxo: Output) => boolean) | undefined
+): SagaGenerator<UtxosGeneratorList> {
   const addresses = yield* getAddressesFromAccount(account, network);
-  return utxosFetchGenerator(
+  const splittedAddresses = splitArray(
     addresses.map((a) => a.confidentialAddress),
-    yield* getPrivateBlindKeyGetter(account, network),
-    yield* getChainAPI(),
-    skip
-  )
+    MAX_ADDRESSES_UTXO_GENERATOR
+  );
+  const blindKeyGetter = yield* getPrivateBlindKeyGetter(account, network);
+  const chainAPI = yield* selectChainAPI(network);
+  return splittedAddresses
+    .reverse()
+    .map((addresses) => utxosFetchGenerator(addresses, blindKeyGetter, chainAPI, skip));
 }
 
-function* getTxsGenerator(account: Account, network: NetworkString): SagaGenerator<AsyncGenerator<TxInterface, {
-    txIDs: string[];
-    errors: Error[];
-}, undefined>> {
+type TxsGeneratorList = AsyncGenerator<
+  TxInterface,
+  { txIDs: string[]; errors: Error[] },
+  undefined
+>[];
+
+function* getTxsGenerators(
+  account: Account,
+  network: NetworkString
+): SagaGenerator<TxsGeneratorList> {
   const addresses = yield* getAddressesFromAccount(account, network);
-  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(account.getInfo().accountID, network);
+  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(
+    account.getInfo().accountID,
+    network
+  );
   const identityBlindKeyGetter = yield* getPrivateBlindKeyGetter(account, network);
   const txsHistory = utxosTransactionsState?.transactions ?? {};
-  const skip = (tx: TxInterface) => txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0
-  return txsFetchGenerator(
+  const skip = (tx: TxInterface) =>
+    txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0;
+  const chainAPI = yield* selectChainAPI(network);
+
+  const splittedAddresses = splitArray(
     addresses.map((a) => a.confidentialAddress),
-    identityBlindKeyGetter,
-    yield* getChainAPI(),
-    skip
+    MAX_ADDRESSES_TX_GENERATOR
   );
+  return splittedAddresses
+    .reverse()
+    .map((addresses) => txsFetchGenerator(addresses, identityBlindKeyGetter, chainAPI, skip));
 }
 
 function* getAddressesFromAccount(
@@ -130,23 +163,27 @@ function* utxosUpdater(
   const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID, network);
   const utxosMap = utxosTransactionsState?.utxosMap ?? {};
   const skippedOutpoints: string[] = []; // for deleting
-  
+
   const skipFn = (utxo: Output) => {
     const outpoint = toStringOutpoint(utxo);
     const skip = utxosMap[outpoint] !== undefined;
     if (skip) skippedOutpoints.push(outpoint);
     return skip;
-  }
+  };
 
-  let atLeastOneUtxoReceived = false
-  const addUtxoSaga = putAddUtxoAction(accountID, network)
-  yield* processAsyncGenerator<UnblindedOutput>(
-    yield* getUtxosGenerator(account, network, skipFn),
-    function* (utxo: UnblindedOutput) {
+  const generators = yield* getUtxosGenerators(account, network, skipFn);
+
+  for (const generator of generators) {
+    let atLeastOneUtxoReceived = false;
+    yield* processAsyncGenerator<UnblindedOutput>(generator, function* (utxo: UnblindedOutput) {
       if (!atLeastOneUtxoReceived) atLeastOneUtxoReceived = true;
-      yield* addUtxoSaga(utxo);
-    } 
-  );
+      yield* putAddUtxoAction(accountID, network)(utxo);
+    });
+
+    if (atLeastOneUtxoReceived) {
+      yield put(unlockUtxos());
+    }
+  }
 
   const toDelete = Object.values(utxosMap).filter(
     (utxo) => !skippedOutpoints.includes(toStringOutpoint(utxo))
@@ -154,10 +191,6 @@ function* utxosUpdater(
 
   for (const utxo of toDelete) {
     yield* putDeleteUtxoAction(accountID, network)(utxo);
-  }
-
-  if (atLeastOneUtxoReceived) {
-    yield put(unlockUtxos());
   }
 }
 
@@ -177,15 +210,17 @@ function* txsUpdater(
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
   const addresses = yield* getAddressesFromAccount(account, network);
-  const txsGenenerator = yield* getTxsGenerator(account, network);
+  const generators = yield* getTxsGenerators(account, network);
   const walletScripts = addresses.map((a) =>
     address.toOutputScript(a.confidentialAddress).toString('hex')
   );
 
-  yield* processAsyncGenerator<TxInterface>(
-    txsGenenerator,
-    putAddTxAction(accountID, network, walletScripts)
-  );
+  for (const txsGenerator of generators) {
+    yield* processAsyncGenerator<TxInterface>(
+      txsGenerator,
+      putAddTxAction(accountID, network, walletScripts)
+    );
+  }
 }
 
 function* updateTxsAndUtxos(
