@@ -1,19 +1,17 @@
-import * as ecc from 'tiny-secp256k1';
-
-import type {
+import {
   Outpoint,
   AddressInterface,
   TxInterface,
-  BlindingKeyGetter,
   UnblindedOutput,
   NetworkString,
   Output,
-} from 'ldk';
-import {
-  fetchAndUnblindUtxosGenerator,
+  privateBlindKeyGetter,
+  BlindingKeyGetterAsync,
+  ChainAPI,
+  txsFetchGenerator,
+  utxosFetchGenerator,
   address,
   networks,
-  fetchAndUnblindTxsGenerator,
   getAsset,
 } from 'ldk';
 import type { Account, AccountID } from '../../../domain/account';
@@ -22,7 +20,7 @@ import { addTx } from '../actions/transaction';
 import type { AddUtxoAction } from '../actions/utxos';
 import { unlockUtxos, addUtxo, deleteUtxo } from '../actions/utxos';
 import { selectUnspentsAndTransactions } from '../selectors/wallet.selector';
-import type { SagaGenerator } from './utils';
+import { SagaGenerator, selectExplorerURLsSaga } from './utils';
 import {
   createChannel,
   newSagaSelector,
@@ -41,7 +39,7 @@ import { addAsset } from '../actions/asset';
 import type { UpdateTaskAction } from '../actions/task';
 import { updateTaskAction } from '../actions/task';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
-import type { Channel } from 'redux-saga';
+import type { Channel, Saga } from 'redux-saga';
 import type { AllEffect } from 'redux-saga/effects';
 import { put, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
@@ -49,6 +47,7 @@ import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
 import { periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
+import { explorerURLsToChainAPI } from '../../../domain/app';
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -67,6 +66,50 @@ const putDeleteUtxoAction = (accountID: AccountID, net: NetworkString) =>
     yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout, net));
   };
 
+function* getPrivateBlindKeyGetter(account: Account, network: NetworkString): SagaGenerator<BlindingKeyGetterAsync> {
+  const getPrivateBlindKey = async () => {
+    const identity = await account.getWatchIdentity(network);
+    return privateBlindKeyGetter(identity);
+  }
+
+  return yield call(getPrivateBlindKey);
+}
+
+function* getChainAPI(): SagaGenerator<ChainAPI> {
+  const explorerURLs = yield* selectExplorerURLsSaga();
+  return explorerURLsToChainAPI(explorerURLs);
+}
+
+function* getUtxosGenerator(account: Account, network: NetworkString, skip: ((utxo: Output) => boolean) | undefined): SagaGenerator<AsyncGenerator<UnblindedOutput, {
+    numberOfUtxos: number;
+    errors: Error[];
+}, undefined>> {
+  const addresses = yield* getAddressesFromAccount(account, network);
+  return utxosFetchGenerator(
+    addresses.map((a) => a.confidentialAddress),
+    yield* getPrivateBlindKeyGetter(account, network),
+    yield* getChainAPI(),
+    skip
+  )
+}
+
+function* getTxsGenerator(account: Account, network: NetworkString): SagaGenerator<AsyncGenerator<TxInterface, {
+    txIDs: string[];
+    errors: Error[];
+}, undefined>> {
+  const addresses = yield* getAddressesFromAccount(account, network);
+  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(account.getInfo().accountID, network);
+  const identityBlindKeyGetter = yield* getPrivateBlindKeyGetter(account, network);
+  const txsHistory = utxosTransactionsState?.transactions ?? {};
+  const skip = (tx: TxInterface) => txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0
+  return txsFetchGenerator(
+    addresses.map((a) => a.confidentialAddress),
+    identityBlindKeyGetter,
+    yield* getChainAPI(),
+    skip
+  );
+}
+
 function* getAddressesFromAccount(
   account: Account,
   network: NetworkString
@@ -84,22 +127,25 @@ function* utxosUpdater(
 ): SagaGenerator<void, IteratorYieldResult<UnblindedOutput>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
-  const explorerURL = yield* selectExplorerSaga();
   const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID, network);
   const utxosMap = utxosTransactionsState?.utxosMap ?? {};
-  const addresses = yield* getAddressesFromAccount(account, network);
   const skippedOutpoints: string[] = []; // for deleting
-  const receivedUtxos: Record<string, Output> = {};
-  const utxosGenerator = fetchAndUnblindUtxosGenerator(ecc, addresses, explorerURL, (utxo) => {
+  
+  const skipFn = (utxo: Output) => {
     const outpoint = toStringOutpoint(utxo);
-    receivedUtxos[outpoint] = utxo;
     const skip = utxosMap[outpoint] !== undefined;
-    if (skip) skippedOutpoints.push(toStringOutpoint(utxo));
+    if (skip) skippedOutpoints.push(outpoint);
     return skip;
-  });
+  }
+
+  let atLeastOneUtxoReceived = false
+  const addUtxoSaga = putAddUtxoAction(accountID, network)
   yield* processAsyncGenerator<UnblindedOutput>(
-    utxosGenerator,
-    putAddUtxoAction(accountID, network)
+    yield* getUtxosGenerator(account, network, skipFn),
+    function* (utxo: UnblindedOutput) {
+      if (!atLeastOneUtxoReceived) atLeastOneUtxoReceived = true;
+      yield* addUtxoSaga(utxo);
+    } 
   );
 
   const toDelete = Object.values(utxosMap).filter(
@@ -110,11 +156,9 @@ function* utxosUpdater(
     yield* putDeleteUtxoAction(accountID, network)(utxo);
   }
 
-  // only run on successful update
-  if (Object.keys(receivedUtxos).length > 0) {
+  if (atLeastOneUtxoReceived) {
     yield put(unlockUtxos());
   }
-  console.debug(`${new Date()} utxos received for ${accountID}`, receivedUtxos);
 }
 
 const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
@@ -132,36 +176,8 @@ function* txsUpdater(
 ): SagaGenerator<void, IteratorYieldResult<TxInterface>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
-  const explorerURL = yield* selectExplorerSaga();
-  const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(accountID, network);
-  const txsHistory = utxosTransactionsState?.transactions ?? {};
   const addresses = yield* getAddressesFromAccount(account, network);
-
-  const identityBlindKeyGetter: BlindingKeyGetter = (script: string) => {
-    try {
-      const addressFromScript = address.fromOutputScript(
-        Buffer.from(script, 'hex'),
-        networks[network]
-      );
-      return addresses.find(
-        (addr) =>
-          address.fromConfidential(addr.confidentialAddress).unconfidentialAddress ===
-          addressFromScript
-      )?.blindingPrivateKey;
-    } catch (_) {
-      return undefined;
-    }
-  };
-
-  const txsGenenerator = fetchAndUnblindTxsGenerator(
-    addresses.map((a) => a.confidentialAddress),
-    identityBlindKeyGetter,
-    explorerURL,
-    // Check if tx exists in React state, if yes: skip unblinding and fetching
-    // however prevent fetching if no transfers has been computed (avoid sync errors)
-    (tx) => txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0
-  );
-
+  const txsGenenerator = yield* getTxsGenerator(account, network);
   const walletScripts = addresses.map((a) =>
     address.toOutputScript(a.confidentialAddress).toString('hex')
   );

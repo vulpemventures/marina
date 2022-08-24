@@ -6,6 +6,7 @@ import type { RootReducerState } from '../../../domain/common';
 import {
   selectEsploraForNetwork,
   selectEsploraURL,
+  selectExplorerURLs,
   selectNetwork,
 } from '../selectors/app.selector';
 import {
@@ -79,6 +80,7 @@ export function* createChannel<T>(): SagaGenerator<Channel<T>> {
 export const selectNetworkSaga = newSagaSelector(selectNetwork);
 export const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
 export const selectExplorerSaga = newSagaSelector(selectEsploraURL);
+export const selectExplorerURLsSaga = newSagaSelector(selectExplorerURLs);
 export const selectUpdaterIsLoadingSaga = newSagaSelector(selectUpdaterIsLoading);
 export const selectAllUnspentsSaga = newSagaSelector(selectUtxos(MainAccountID));
 

@@ -1,4 +1,4 @@
-import type { NetworkString } from 'ldk';
+import { ChainAPI, Electrs, ElectrsBatchServer, NetworkString } from 'ldk';
 import type { AccountID } from './account';
 import type { IError } from './common';
 
@@ -17,18 +17,24 @@ export interface ExplorerURLs {
   type: ExplorerType;
   electrsURL: string;
   esploraURL: string;
+  batchServerURL?: string;
 }
+
+const VULPEM_ELECTRS_BATCH_LIQUID = 'https://electrs-batch.vulpem.com'
+const VULPEM_ELECTRS_BATCH_TESTNET = 'https://electrs-batch-testnet.vulpem.com'
 
 export const BlockstreamExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
   electrsURL: 'https://blockstream.info/liquid',
   esploraURL: 'https://blockstream.info/liquid/api',
+  batchServerURL: VULPEM_ELECTRS_BATCH_LIQUID
 };
 
 export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
   electrsURL: 'https://blockstream.info/liquidtestnet',
   esploraURL: 'https://blockstream.info/liquidtestnet/api',
+  batchServerURL: VULPEM_ELECTRS_BATCH_TESTNET
 };
 
 export const NigiriDefaultExplorerURLs: ExplorerURLs = {
@@ -41,10 +47,24 @@ export const MempoolExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
   electrsURL: 'https://liquid.network',
   esploraURL: 'https://liquid.network/api',
+  batchServerURL: VULPEM_ELECTRS_BATCH_LIQUID
 };
 
 export const MempoolTestnetExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
   electrsURL: 'https://liquid.network/testnet',
   esploraURL: 'https://liquid.network/liquidtestnet/api',
+  batchServerURL: VULPEM_ELECTRS_BATCH_TESTNET
 };
+
+/**
+ * @param URLs a set of URLs describing the explorer to use
+ * @returns batch server ChainAPI if batchServerURL is defined, otherwise Electrs
+ */
+export function explorerURLsToChainAPI(URLs: ExplorerURLs): ChainAPI {
+  if (URLs.batchServerURL) {
+    return ElectrsBatchServer.fromURLs(URLs.batchServerURL, URLs.electrsURL);
+  }
+
+  return Electrs.fromURL(URLs.electrsURL);
+}
