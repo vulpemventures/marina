@@ -1,14 +1,14 @@
-import {
+import type {
   IdentityInterface,
   MasterPublicKey,
   Mnemonic,
   StateRestorerOpts,
   Restorer,
   NetworkString,
-  ChainAPI,
+  ChainAPI} from 'ldk';
+import {
   restorerFromState,
-} from 'ldk';
-import { toXpub } from 'ldk';
+ toXpub } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
