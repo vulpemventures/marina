@@ -513,11 +513,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getAccountInfo': {
           this.checkHostnameAuthorization();
-          if (!params || params.length !== 1) {
-            throw new Error('Expected 1 parameter');
-          }
+          let [accountName] = params as [string];
+          if (!accountName) accountName = MainAccountID;
 
-          const [accountName] = params as [string];
           if (!this.accountExists(accountName)) {
             throw new Error(`Account ${accountName} not found`);
           }

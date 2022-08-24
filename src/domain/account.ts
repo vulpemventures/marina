@@ -7,7 +7,7 @@ import type {
   EsploraRestorerOpts,
   NetworkString,
 } from 'ldk';
-import { masterPubKeyRestorerFromEsplora } from 'ldk';
+import { toXpub, masterPubKeyRestorerFromEsplora } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
@@ -114,9 +114,11 @@ function createMainAccount(
         newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network)
       ),
     getInfo: () => ({
-      accountID: MainAccountID, // main account is unique
-      masterXPub: data.masterXPub,
+      accountID: MainAccountID, // main account ID is unique
+      masterXPub: toXpub(data.masterXPub),
       isReady: true, // always true for main account
+      descriptor: `elwpkh(${toXpub(data.masterXPub)})`,
+      template: `elwpkh($${MainAccountID})`,
     }),
   };
 }
@@ -145,7 +147,7 @@ function createCustomScriptAccount(
       ),
     getInfo: () => ({
       accountID: data.contractTemplate.namespace,
-      masterXPub: data.masterXPub,
+      masterXPub: toXpub(data.masterXPub),
       isReady: data.contractTemplate.template !== undefined,
       template: data.contractTemplate.template,
       isSpendableByMarina: data.contractTemplate.isSpendableByMarina,
