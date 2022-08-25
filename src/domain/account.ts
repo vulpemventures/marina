@@ -5,10 +5,9 @@ import type {
   StateRestorerOpts,
   Restorer,
   NetworkString,
-  ChainAPI} from 'ldk';
-import {
-  restorerFromState,
- toXpub } from 'ldk';
+  ChainAPI,
+} from 'ldk';
+import { restorerFromState, toXpub } from 'ldk';
 import { decrypt } from '../application/utils/crypto';
 import {
   newMasterPublicKey,
