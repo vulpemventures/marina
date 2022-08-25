@@ -4,8 +4,9 @@ import type {
   TxInterface,
   UnblindedOutput,
   NetworkString,
-  Output,
   BlindingKeyGetterAsync,
+  EsploraUtxo,
+  EsploraTx,
 } from 'ldk';
 import {
   privateBlindKeyGetter,
@@ -50,8 +51,8 @@ import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
 import { periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
 
-const MAX_ADDRESSES_TX_GENERATOR = 15;
-const MAX_ADDRESSES_UTXO_GENERATOR = 50;
+const MAX_ADDRESSES_TX_GENERATOR = 50;
+const MAX_ADDRESSES_UTXO_GENERATOR = 100;
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
@@ -99,7 +100,7 @@ type UtxosGeneratorList = AsyncGenerator<
 function* getUtxosGenerators(
   account: Account,
   network: NetworkString,
-  skip: ((utxo: Output) => boolean) | undefined
+  skip: ((utxo: EsploraUtxo) => boolean) | undefined
 ): SagaGenerator<UtxosGeneratorList> {
   const addresses = yield* getAddressesFromAccount(account, network);
   const splittedAddresses = splitArray(
@@ -130,7 +131,7 @@ function* getTxsGenerators(
   );
   const identityBlindKeyGetter = yield* getPrivateBlindKeyGetter(account, network);
   const txsHistory = utxosTransactionsState?.transactions ?? {};
-  const skip = (tx: TxInterface) =>
+  const skip = (tx: EsploraTx) =>
     txsHistory[tx.txid] !== undefined && txsHistory[tx.txid].transfers.length > 0;
   const chainAPI = yield* selectChainAPI(network);
 
@@ -164,7 +165,7 @@ function* utxosUpdater(
   const utxosMap = utxosTransactionsState?.utxosMap ?? {};
   const skippedOutpoints: string[] = []; // for deleting
 
-  const skipFn = (utxo: Output) => {
+  const skipFn = (utxo: EsploraUtxo) => {
     const outpoint = toStringOutpoint(utxo);
     const skip = utxosMap[outpoint] !== undefined;
     if (skip) skippedOutpoints.push(outpoint);
