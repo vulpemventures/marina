@@ -21,14 +21,13 @@ export interface ExplorerURLs {
   batchServerURL?: string;
 }
 
-const VULPEM_ELECTRS_BATCH_LIQUID = 'https://electrs-batch.vulpem.com';
 const VULPEM_ELECTRS_BATCH_TESTNET = 'https://electrs-batch-testnet.vulpem.com';
 
 export const BlockstreamExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
   electrsURL: 'https://blockstream.info/liquid',
   esploraURL: 'https://blockstream.info/liquid/api',
-  batchServerURL: VULPEM_ELECTRS_BATCH_LIQUID,
+  batchServerURL: 'https://electrs-batch-blockstream.vulpem.com',
 };
 
 export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {
@@ -48,7 +47,7 @@ export const MempoolExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
   electrsURL: 'https://liquid.network',
   esploraURL: 'https://liquid.network/api',
-  batchServerURL: VULPEM_ELECTRS_BATCH_LIQUID,
+  batchServerURL: 'https://electrs-batch-mempool.vulpem.com',
 };
 
 export const MempoolTestnetExplorerURLs: ExplorerURLs = {

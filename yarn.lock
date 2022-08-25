@@ -6553,9 +6553,10 @@ ldk@^0.5.2:
     slip77 "^0.2.0"
     tslib "^2.3.1"
 
-"ldk@git+https://github.com/louisinger/ldk.git#hex-batch":
-  version "0.5.6"
-  resolved "git+https://github.com/louisinger/ldk.git#4853697bad3929d82f655df0a4f04219fc4847d3"
+ldk@^0.5.7:
+  version "0.5.7"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.5.7.tgz#a1794b880aa7c215ac2cc16c069e043321f6a203"
+  integrity sha512-vuQ1tAfJaTwo8T8OP0fLgZ/nIUEeBk2RHeKE8uUFN0cGJNA81h/yZGMes6IofBqVyV6jXuuuzckK7KV3WdbxMg==
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
