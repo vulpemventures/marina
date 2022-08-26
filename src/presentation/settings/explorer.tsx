@@ -13,7 +13,6 @@ import {
   NigiriDefaultExplorerURLs,
 } from '../../domain/app';
 import type { NetworkString } from 'ldk';
-import { appInitState } from '../../application/redux/reducers/app-reducer';
 import { useHistory } from 'react-router';
 import { SETTINGS_EXPLORER_CUSTOM_ROUTE } from '../routes/constants';
 import Button from '../components/button';
@@ -43,6 +42,8 @@ const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const history = useHistory();
 
+  const [selected, setSelected] = React.useState<ExplorerType>(currentExplorerURLs.type);
+
   const handleChange = async (explorer: ExplorerType) => {
     let urls;
     if (explorerTypesForNetwork(network).includes(explorer)) {
@@ -68,20 +69,14 @@ const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
 
   const onSelect = (newValue: string) => {
     switch (newValue) {
-      case 'Blockstream':
-        handleChange('Blockstream').catch(console.error);
-        break;
-      case 'Mempool':
-        handleChange('Mempool').catch(console.error);
-        break;
-      case 'Nigiri':
-        handleChange('Nigiri').catch(console.error);
-        break;
       case 'Custom':
         pushToCustomForm();
         break;
-      default:
-        console.error('Invalid explorer type');
+      case 'Nigiri':
+      case 'Blockstream':
+      case 'Mempool':
+        setSelected(newValue);
+        break;
     }
   };
 
@@ -94,19 +89,15 @@ const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
       <p className="font-regular my-8 text-base text-left">Select the explorer</p>
       <Select
         list={explorerTypesForNetwork(network)}
-        selected={
-          currentExplorerURLs
-            ? currentExplorerURLs.type
-            : appInitState.explorerByNetwork[network].type
-        }
+        selected={selected}
         onSelect={onSelect}
         disabled={false}
       />
 
       <div className="flex justify-end mt-1">
         <div>
-          <Button type="button" onClick={() => pushToCustomForm()}>
-            Use Custom
+          <Button type="button" onClick={() => handleChange(selected).catch(console.error)}>
+            Update
           </Button>
         </div>
       </div>
