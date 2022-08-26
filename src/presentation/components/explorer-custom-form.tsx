@@ -7,12 +7,11 @@ import Button from './button';
 import Input from './input';
 import * as Yup from 'yup';
 import type { NetworkString } from 'ldk';
+import type { ExplorerURLs } from '../../domain/app';
 
-interface SettingsExplorerFormValues {
-  esploraURL: string;
-  electrsURL: string;
+type SettingsExplorerFormValues = ExplorerURLs & {
   network: NetworkString;
-}
+};
 
 interface SettingsExplorerFormProps {
   dispatch: ProxyStoreDispatch;
@@ -25,17 +24,25 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="font-sm mt-8 mb-1">Custom explorer</p>
+      <p className="font-sm mt-2 mb-1">Custom explorer</p>
 
-      <p className="font-sm mt-5 mb-1 text-left">Esplora URL</p>
+      <p className="font-sm text-left">Esplora URL</p>
       <Input name="esploraURL" placeholder="Esplora valid endpoint" type="text" {...props} />
 
-      <p className="font-sm mt-5 mb-1 text-left">Electrs URL</p>
+      <p className="font-sm text-left">Electrs URL</p>
       <Input name="electrsURL" placeholder="Electrs valid endpoint" type="text" {...props} />
 
-      <div className="bottom-10 right-8 absolute flex justify-end">
+      <p className="font-sm text-left">Batch Electrs URL</p>
+      <Input name="batchServerURL" placeholder="Electrs batch server" type="text" {...props} />
+
+      <div className="bottom-15 right-8 absolute flex justify-end">
         <div>
-          <Button disabled={!!errors.esploraURL || isSubmitting} type="submit">
+          <Button
+            disabled={
+              !!errors.esploraURL || !!errors.electrsURL || !!errors.batchServerURL || isSubmitting
+            }
+            type="submit"
+          >
             Update
           </Button>
         </div>
@@ -49,9 +56,11 @@ const SettingsCustomExplorerForm = withFormik<
   SettingsExplorerFormValues
 >({
   mapPropsToValues: (props): SettingsExplorerFormValues => ({
+    type: 'Custom',
     network: props.network,
     esploraURL: '',
     electrsURL: '',
+    batchServerURL: '',
   }),
 
   validationSchema: Yup.object().shape({
@@ -61,16 +70,13 @@ const SettingsCustomExplorerForm = withFormik<
 
   handleSubmit: async (values, { props }) => {
     await props.dispatch(
-      setExplorer(
-        { type: 'Custom', esploraURL: values.esploraURL, electrsURL: values.electrsURL },
-        props.network
-      )
+      setExplorer({ ...values, batchServerURL: values.batchServerURL || undefined }, props.network)
     );
 
     props.onDone();
   },
 
-  displayName: 'SettingsExplorerForm',
+  displayName: 'SettingsExplorerCustomForm',
 })(SettingsExplorerForm);
 
 export default SettingsCustomExplorerForm;
