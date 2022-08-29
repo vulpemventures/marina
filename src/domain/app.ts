@@ -66,5 +66,5 @@ export function explorerURLsToChainAPI(URLs: ExplorerURLs): ChainAPI {
     return ElectrsBatchServer.fromURLs(URLs.batchServerURL, URLs.esploraURL);
   }
 
-  return Electrs.fromURL(URLs.electrsURL);
+  return Electrs.fromURL(URLs.esploraURL);
 }
