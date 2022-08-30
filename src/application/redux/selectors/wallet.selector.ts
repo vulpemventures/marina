@@ -118,7 +118,6 @@ export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
 };
 
 export const selectAllAccountsIDsSpendableViaUI = (state: RootReducerState): AccountID[] => {
-  console.log(state.wallet.accounts);
   return selectAllAccountsIDs(state)
     .filter((id) => selectAccount(id)(state).getInfo().isReady)
     .filter(

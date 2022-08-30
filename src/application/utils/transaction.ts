@@ -415,13 +415,16 @@ function getTransfers(
   };
 
   for (const input of vin) {
-    if (
-      input.prevout &&
-      isUnblindedOutput(input.prevout) &&
-      walletScripts.includes(input.prevout.prevout.script.toString('hex'))
-    ) {
-      addToTransfers(-1 * getSats(input.prevout), getAsset(input.prevout));
+    if (!input.prevout) throw new Error('malformed tx interface (missing prevout)');
+
+    if (!walletScripts.includes(input.prevout.prevout.script.toString('hex'))) continue;
+    if (isConfidentialOutput(input.prevout.prevout) && !isUnblindedOutput(input.prevout)) {
+      console.warn(
+        `prevout ${input.prevout.txid}:${input.prevout.vout} is not unblinded but is a confidential output, amount displayed may be wrong`
+      );
+      continue;
     }
+    addToTransfers(-1 * getSats(input.prevout), getAsset(input.prevout));
   }
 
   let feeAmount = 0;
@@ -435,12 +438,12 @@ function getTransfers(
       continue;
     }
 
-    if (
-      isUnblindedOutput(output) &&
-      walletScripts.includes(output.prevout.script.toString('hex'))
-    ) {
-      addToTransfers(getSats(output), getAsset(output));
-    }
+    if (!walletScripts.includes(output.prevout.script.toString('hex'))) continue;
+    if (isConfidentialOutput(output.prevout) && !isUnblindedOutput(output))
+      throw new Error(
+        `prevout ${output.txid}:${output.vout} is not unblinded but is a confidential output`
+      );
+    addToTransfers(getSats(output), getAsset(output));
   }
 
   return transfers.filter((t, index, rest) => {

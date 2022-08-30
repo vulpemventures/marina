@@ -210,8 +210,8 @@ function* txsUpdater(
 ): SagaGenerator<void, IteratorYieldResult<TxInterface>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
-  const addresses = yield* getAddressesFromAccount(account, network);
   const generators = yield* getTxsGenerators(account, network);
+  const addresses = yield* getAddressesFromAccount(account, network);
   const walletScripts = addresses.map((a) =>
     address.toOutputScript(a.confidentialAddress).toString('hex')
   );
