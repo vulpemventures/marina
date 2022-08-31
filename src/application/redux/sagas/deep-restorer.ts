@@ -1,6 +1,5 @@
 import type {
   AddressInterface,
-  EsploraRestorerOpts,
   IdentityInterface,
   NetworkString,
   Restorer,
@@ -8,7 +7,7 @@ import type {
 } from 'ldk';
 import type { Channel } from 'redux-saga';
 import { call, fork, put, take } from 'redux-saga/effects';
-import type { MnemonicAccount } from '../../../domain/account';
+import type { ChainAPIRestorerOpts, MnemonicAccount } from '../../../domain/account';
 import { AccountType } from '../../../domain/account';
 import { extractErrorMessage } from '../../../presentation/utils/error';
 import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
@@ -24,25 +23,27 @@ import {
 import { selectDeepRestorerGapLimit } from '../selectors/wallet.selector';
 import type { SagaGenerator } from './utils';
 import {
+  selectChainAPI,
   createChannel,
   newSagaSelector,
   selectAccountSaga,
-  selectExplorerSaga,
   selectNetworkSaga,
 } from './utils';
 
 function* getDeepRestorerSaga(
   account: MnemonicAccount,
   network: NetworkString
-): SagaGenerator<Restorer<EsploraRestorerOpts, IdentityInterface>> {
+): SagaGenerator<Restorer<ChainAPIRestorerOpts, IdentityInterface>> {
   return yield call(() => account.getDeepRestorer(network));
 }
 
 function* restoreSaga(
-  restorer: Restorer<EsploraRestorerOpts, IdentityInterface>,
-  arg: EsploraRestorerOpts
+  restorer: Restorer<ChainAPIRestorerOpts, IdentityInterface>,
+  gapLimit: number,
+  network: NetworkString
 ): SagaGenerator<AddressInterface[]> {
-  const restoreAddresses = () => restorer(arg).then((id) => id.getAddresses());
+  const api = yield* selectChainAPI(network);
+  const restoreAddresses = () => restorer({ api, gapLimit }).then((id) => id.getAddresses());
   return yield call(restoreAddresses);
 }
 
@@ -51,11 +52,10 @@ function* restoreSaga(
 function* deepRestore(
   account: MnemonicAccount,
   gapLimit: number,
-  esploraURL: string,
   net: NetworkString
 ): SagaGenerator<StateRestorerOpts> {
   const restorer = yield* getDeepRestorerSaga(account, net);
-  const restoredAddresses = yield* restoreSaga(restorer, { gapLimit, esploraURL });
+  const restoredAddresses = yield* restoreSaga(restorer, gapLimit, net);
   const stateRestorerOpts = getStateRestorerOptsFromAddresses(restoredAddresses);
   return stateRestorerOpts;
 }
@@ -65,7 +65,6 @@ const selectDeepRestorerGapLimitSaga = newSagaSelector(selectDeepRestorerGapLimi
 type RestoreChanData = RestoreTaskAction['payload'] & {
   gapLimit: number;
   network: NetworkString;
-  esploraURL: string;
 };
 
 type RestoreChan = Channel<RestoreChanData>;
@@ -73,17 +72,12 @@ type RestoreChan = Channel<RestoreChanData>;
 function* restorerWorker(inChan: RestoreChan): SagaGenerator<void, RestoreChanData> {
   while (true) {
     try {
-      const { accountID, gapLimit, network, esploraURL } = yield take(inChan);
+      const { accountID, gapLimit, network } = yield take(inChan);
       yield put(pushRestorerLoader());
       const account = yield* selectAccountSaga(accountID);
       if (!account) throw new Error('Account not found');
       if (account.type === AccountType.MainAccount) {
-        const restoredIndexes = yield* deepRestore(
-          account as MnemonicAccount,
-          gapLimit,
-          esploraURL,
-          network
-        );
+        const restoredIndexes = yield* deepRestore(account as MnemonicAccount, gapLimit, network);
         yield put(setRestorerOpts(accountID, restoredIndexes, network)); // update state with new restorerOpts
         yield put(updateTaskAction(accountID, network)); // update utxos and transactions according to the restored addresses (on network)
       }
@@ -111,7 +105,6 @@ export function* watchRestoreTask(): SagaGenerator<void, RestoreTaskAction> {
     const { payload } = yield take<RestoreTaskAction>(RESTORE_TASK);
     const gapLimit = yield* selectDeepRestorerGapLimitSaga();
     const network = yield* selectNetworkSaga();
-    const esploraURL = yield* selectExplorerSaga();
-    yield put(restoreTaskChan, { ...payload, gapLimit, network, esploraURL });
+    yield put(restoreTaskChan, { ...payload, gapLimit, network });
   }
 }

@@ -104,11 +104,13 @@ export const selectAllAccountForSigningTxState = (state: RootReducerState): Acco
   });
 };
 
-export const selectAllAccounts = (state: RootReducerState): Account[] => {
+export const selectAllAccounts = (state: RootReducerState, expectReady = true): Account[] => {
   return selectAllAccountsIDs(state)
     .map((id) => selectInjectedAccountData(id)(state))
     .map((data) => (data ? accountFromMnemonicAndData(state.wallet.encryptedMnemonic, data) : null))
-    .filter((account): account is Account => account !== null);
+    .filter(
+      (account): account is Account => account !== null && account.getInfo().isReady === expectReady
+    );
 };
 
 export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
@@ -116,11 +118,13 @@ export const selectAllAccountsIDs = (state: RootReducerState): AccountID[] => {
 };
 
 export const selectAllAccountsIDsSpendableViaUI = (state: RootReducerState): AccountID[] => {
-  return selectAllAccountsIDs(state).filter(
-    (id) =>
-      state.wallet.accounts[id].type !== AccountType.CustomScriptAccount ||
-      (state.wallet.accounts[id] as CustomScriptAccountData).contractTemplate.isSpendableByMarina
-  );
+  return selectAllAccountsIDs(state)
+    .filter((id) => selectAccount(id)(state).getInfo().isReady)
+    .filter(
+      (id) =>
+        state.wallet.accounts[id].type !== AccountType.CustomScriptAccount ||
+        (state.wallet.accounts[id] as CustomScriptAccountData).contractTemplate.isSpendableByMarina
+    );
 };
 
 export function selectAccount(accountID: AccountID) {

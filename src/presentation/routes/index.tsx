@@ -39,6 +39,7 @@ import {
   RECEIVE_ADDRESS_ROUTE,
   SETTINGS_ACCOUNTS_ROUTE,
   CONNECT_CREATE_ACCOUNT,
+  SETTINGS_EXPLORER_CUSTOM_ROUTE,
 } from './constants';
 
 // Connect
@@ -77,12 +78,13 @@ import SettingsShowMnemonic from '../../application/redux/containers/settings-sh
 import SettingsDeepRestorer from '../../application/redux/containers/deep-restorer.container';
 import SettingsChangePassword from '../settings/change-password';
 import SettingsCurrency from '../settings/currency';
-import SettingsExplorer from '../settings/explorer';
 import SettingsNetworks from '../../application/redux/containers/settings-networks.container';
 import SettingsCredits from '../settings/credits';
 import SettingsTerms from '../settings/terms';
 import ReceiveView from '../wallet/receive';
 import SettingsAccounts from '../../application/redux/containers/settings-accounts.container';
+import SettingsExplorer from '../../application/redux/containers/settings-explorer.container';
+import SettingsExplorerCustom from '../../application/redux/containers/settings-explorer-custom.container';
 
 const Routes: React.FC = () => {
   return (
@@ -120,6 +122,11 @@ const Routes: React.FC = () => {
       />
       <ProtectedRoute exact path={SETTINGS_CURRENCY_ROUTE} component={SettingsCurrency} />
       <ProtectedRoute exact path={SETTINGS_EXPLORER_ROUTE} component={SettingsExplorer} />
+      <ProtectedRoute
+        exact
+        path={SETTINGS_EXPLORER_CUSTOM_ROUTE}
+        component={SettingsExplorerCustom}
+      />
       <ProtectedRoute exact path={SETTINGS_NETWORKS_ROUTE} component={SettingsNetworks} />
       <ProtectedRoute exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
       <ProtectedRoute exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />

@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ShellPopUp from '../components/shell-popup';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import type { RootReducerState } from '../../domain/common';
 import { setExplorer } from '../../application/redux/actions/app';
 import Select from '../components/select';
-import type { ExplorerType } from '../../domain/app';
+import type { ExplorerType, ExplorerURLs } from '../../domain/app';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
@@ -13,9 +12,15 @@ import {
   MempoolTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/app';
-import SettingsCustomExplorerForm from '../components/explorer-custom-form';
 import type { NetworkString } from 'ldk';
-import { appInitState } from '../../application/redux/reducers/app-reducer';
+import { useHistory } from 'react-router';
+import { SETTINGS_EXPLORER_CUSTOM_ROUTE } from '../routes/constants';
+import Button from '../components/button';
+
+export interface SettingsExplorerProps {
+  currentExplorerURLs: ExplorerURLs;
+  network: NetworkString;
+}
 
 function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
   switch (network) {
@@ -30,13 +35,14 @@ function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
   }
 }
 
-const SettingsExplorer: React.FC = () => {
+const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
+  currentExplorerURLs,
+  network,
+}) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
+  const history = useHistory();
 
-  const [custom, setCustom] = useState(false);
-
-  const app = useSelector((state: RootReducerState) => state.app);
-  const network = app.network;
+  const [selected, setSelected] = React.useState<ExplorerType>(currentExplorerURLs.type);
 
   const handleChange = async (explorer: ExplorerType) => {
     let urls;
@@ -59,22 +65,18 @@ const SettingsExplorer: React.FC = () => {
     }
   };
 
+  const pushToCustomForm = () => history.push(SETTINGS_EXPLORER_CUSTOM_ROUTE);
+
   const onSelect = (newValue: string) => {
     switch (newValue) {
-      case 'Blockstream':
-        handleChange('Blockstream').catch(console.error);
-        break;
-      case 'Mempool':
-        handleChange('Mempool').catch(console.error);
+      case 'Custom':
+        pushToCustomForm();
         break;
       case 'Nigiri':
-        handleChange('Nigiri').catch(console.error);
+      case 'Blockstream':
+      case 'Mempool':
+        setSelected(newValue);
         break;
-      case 'Custom':
-        setCustom(true);
-        break;
-      default:
-        console.error('Invalid explorer type');
     }
   };
 
@@ -86,26 +88,21 @@ const SettingsExplorer: React.FC = () => {
     >
       <p className="font-regular my-8 text-base text-left">Select the explorer</p>
       <Select
-        onClick={() => setCustom(false)}
         list={explorerTypesForNetwork(network)}
-        selected={
-          app.explorerByNetwork[network]
-            ? app.explorerByNetwork[network].type
-            : appInitState.explorerByNetwork[network].type
-        }
+        selected={selected}
         onSelect={onSelect}
         disabled={false}
       />
 
-      {custom && (
-        <SettingsCustomExplorerForm
-          onDone={() => setCustom(false)}
-          dispatch={dispatch}
-          network={network}
-        />
-      )}
+      <div className="flex justify-end mt-1">
+        <div>
+          <Button type="button" onClick={() => handleChange(selected).catch(console.error)}>
+            Update
+          </Button>
+        </div>
+      </div>
     </ShellPopUp>
   );
 };
 
-export default SettingsExplorer;
+export default SettingsExplorerView;

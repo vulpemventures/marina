@@ -3,24 +3,26 @@ import type { ExplorerURLs } from '../../../domain/app';
 import { appInitState } from '../reducers/app-reducer';
 import type { RootReducerState } from './../../../domain/common';
 
-function getExplorerURLSelector(state: RootReducerState, net?: NetworkString): ExplorerURLs {
-  return (
-    state.app.explorerByNetwork[net ?? state.app.network] ??
-    appInitState.explorerByNetwork[net ?? state.app.network]
-  );
+export function selectExplorerURLs(net?: NetworkString) {
+  return (state: RootReducerState): ExplorerURLs => {
+    return (
+      state.app.explorerByNetwork[net ?? state.app.network] ??
+      appInitState.explorerByNetwork[net ?? state.app.network]
+    );
+  };
 }
 
 export const selectEsploraForNetwork = (network: NetworkString) =>
   function (state: RootReducerState): string {
-    return getExplorerURLSelector(state, network).esploraURL;
+    return selectExplorerURLs(network)(state).esploraURL;
   };
 
 export function selectEsploraURL(state: RootReducerState): string {
-  return getExplorerURLSelector(state).esploraURL;
+  return selectExplorerURLs()(state).esploraURL;
 }
 
 export function selectElectrsURL(state: RootReducerState): string {
-  return getExplorerURLSelector(state).electrsURL;
+  return selectExplorerURLs()(state).electrsURL;
 }
 
 export function selectNetwork(state: RootReducerState) {
