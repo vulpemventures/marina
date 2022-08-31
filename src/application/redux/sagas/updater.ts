@@ -51,8 +51,8 @@ import { defaultPrecision } from '../../utils/constants';
 import { updateTaxiAssets } from '../actions/taxi';
 import { periodicTaxiUpdater, periodicUpdater } from '../../../background/alarms';
 
-const MAX_ADDRESSES_TX_GENERATOR = 50;
-const MAX_ADDRESSES_UTXO_GENERATOR = 100;
+const MAX_ADDRESSES_TX_GENERATOR = 15;
+const MAX_ADDRESSES_UTXO_GENERATOR = 50;
 
 function selectUnspentsAndTransactionsSaga(
   accountID: AccountID,
