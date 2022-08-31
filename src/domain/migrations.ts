@@ -9,8 +9,11 @@ import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
 import type { WalletState } from './wallet';
 
+// v5 only erases the current transactions state for all accounts during migration
+export type WalletPersistedStateV5 = WalletState & Partial<PersistedState>;
+
 // v4 is a fixed version of v3 about covenantTemplate field in CustomAccountData
-export type WalletPersistedStateV4 = WalletState & Partial<PersistedState>;
+export type WalletPersistedStateV4 = WalletPersistedStateV5;
 
 export type WalletPersistedStateV3 = WalletPersistedStateV4;
 type keysAddedInV3 = 'encryptedMnemonic' | 'accounts';
@@ -30,6 +33,10 @@ type deletedInV2 = {
 export type WalletPersistedStateV1 = Omit<WalletPersistedStateV2, keysAddedInV2> & deletedInV2;
 
 export const walletMigrations = {
+  5: (state: WalletPersistedStateV4): WalletPersistedStateV5 => ({
+    ...state,
+    unspentsAndTransactions: removeTransactions(state.unspentsAndTransactions),
+  }),
   4: (state: WalletPersistedStateV3) => ({
     ...state,
     accounts: accountsFieldRenameV4(state.accounts),
@@ -78,5 +85,20 @@ function accountsFieldRenameV4(
   }
   return renamed;
 }
+
+function removeTransactions(
+  utxosAndTxs: WalletPersistedStateV4['unspentsAndTransactions']
+): WalletPersistedStateV5['unspentsAndTransactions'] {
+  const result: WalletPersistedStateV5['unspentsAndTransactions'] = {};
+  for (const [accountID, utxosTxsByNetwork] of Object.entries(utxosAndTxs)) {
+    result[accountID] = {
+      liquid: { ...utxosTxsByNetwork.liquid, transactions: {} },
+      testnet: { ...utxosTxsByNetwork.testnet, transactions: {} },
+      regtest: { ...utxosTxsByNetwork.regtest, transactions: {} },
+    };
+  }
+  return result;
+}
+
 // `as any` is needed (redux-persist doesn't support generic types in createMigrate func)
 export const walletMigrate = createMigrate(walletMigrations as any);
