@@ -6553,10 +6553,10 @@ ldk@^0.5.2:
     slip77 "^0.2.0"
     tslib "^2.3.1"
 
-ldk@^0.5.7:
-  version "0.5.7"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.5.7.tgz#a1794b880aa7c215ac2cc16c069e043321f6a203"
-  integrity sha512-vuQ1tAfJaTwo8T8OP0fLgZ/nIUEeBk2RHeKE8uUFN0cGJNA81h/yZGMes6IofBqVyV6jXuuuzckK7KV3WdbxMg==
+ldk@^0.5.8:
+  version "0.5.8"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.5.8.tgz#c9ee3af9397843cb166689789e39d4e9c0d25f67"
+  integrity sha512-IMsMKRxFNFhgM1SaqaCI84ABVTV9nd3AzXMP1zeX5ByD/R5lnWhzy9xrz8xxPsf1kSCEBs/N0uA1twSXQznuVw==
   dependencies:
     axios "^0.21.1"
     bip32 "^3.0.1"
