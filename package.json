@@ -19,10 +19,8 @@
     "cypress:chrome": "yarn run cypress run --browser chrome --config video=false",
     "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
   },
-  "resolutions": {
-    "liquidjs-lib": "git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support"
-  },
   "dependencies": {
+    "liquidjs-lib": "git+https://github.com/altafan/liquidjs-lib.git#psetv2",
     "@ionio-lang/ionio": "^0.1.9",
     "@metamask/safe-event-emitter": "^2.0.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",

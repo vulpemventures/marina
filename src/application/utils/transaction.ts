@@ -1,4 +1,4 @@
-import type {
+import {
   ChangeAddressFromAssetGetter,
   CoinSelector,
   RecipientInterface,
@@ -7,9 +7,10 @@ import type {
   CoinSelectorErrorFn,
   NetworkString,
   IdentityInterface,
+  ElementsValue,
+  Pset,
 } from 'ldk';
 import {
-  witnessStackToScriptWitness,
   address,
   addToTx,
   createFeeOutput,
@@ -27,6 +28,9 @@ import {
   confidential,
   Psbt,
 } from 'ldk';
+import {
+  Input, Output, PsetInput, Updater
+} from 'liquidjs-lib'
 import { isConfidentialAddress } from './address';
 import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
 import { TxStatusEnum, TxType } from '../../domain/transaction';
@@ -164,20 +168,20 @@ export async function blindAndSignPset(
   for (let i = 0; i < pset.txInputs.length; i++) {
     const input = pset.data.inputs[i];
     // we need to use special finalizer in case of tapscript
-    if (atLeastOne(input.tapLeafScript) && atLeastOne(input.tapScriptSig)) {
-      pset.finalizeInput(i, (_, input) => {
-        return {
-          finalScriptSig: undefined,
-          finalScriptWitness: witnessStackToScriptWitness([
-            ...input.tapScriptSig!.map((s) => s.signature),
-            input.tapLeafScript![0].script,
-            input.tapLeafScript![0].controlBlock,
-          ]),
-        };
-      });
-    } else {
+    // if (atLeastOne(input.tapLeafScript) && atLeastOne(input.tapScriptSig)) {
+    //   pset.finalizeInput(i, (_, input) => {
+    //     return {
+    //       finalScriptSig: undefined,
+    //       finalScriptWitness: witnessStackToScriptWitness([
+    //         ...input.tapScriptSig!.map((s) => s.signature),
+    //         input.tapLeafScript![0].script,
+    //         input.tapLeafScript![0].controlBlock,
+    //       ]),
+    //     };
+    //   });
+    // } else {
       pset.finalizeInput(i); // default finalizer handles taproot key path and non taproot sigs
-    }
+    // }
   }
 
   return pset.extractTransaction().toHex();
@@ -240,8 +244,13 @@ export function createTaxiTxFromTopup(
     }),
     changeAddressGetter
   );
-  const pset = addToTx(taxiTopup.partial, selectedUtxos, recipients.concat(changeOutputs));
-  return { pset, selectedUtxos };
+
+  const pset = Pset.fromBase64(taxiTopup.partial);
+  const updater = new Updater(pset);
+  updater.addInputs(selectedUtxos.map(u => new Input(u.txid, u.vout)));
+  updater.addOutputs(recipients.concat(changeOutputs).map(r => new Output(r.asset, r.value, r.address)));
+
+  return { pset: updater.pset.toBase64(), selectedUtxos };
 }
 
 /**
@@ -323,7 +332,7 @@ export const feeAmountFromTx = (tx: string): number => {
   const utx = psetToUnsignedTx(tx);
   const feeOutIndex = utx.outs.findIndex((out) => out.script.length === 0);
   const feeOut = utx.outs[feeOutIndex];
-  return confidential.confidentialValueToSatoshi(feeOut.value);
+  return ElementsValue.fromBytes(feeOut.value).number;
 };
 
 /**
@@ -489,8 +498,8 @@ function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
     const opReturnPayment = payments.embed({ data: [Buffer.from(recipient.data, 'hex')] });
     pset.addOutput({
       script: opReturnPayment.output!,
-      asset: AssetHash.fromHex(recipient.asset, false).bytes,
-      value: confidential.satoshiToConfidentialValue(recipient.value),
+      asset: AssetHash.fromHex(recipient.asset).bytes,
+      value: ElementsValue.fromNumber(recipient.value).bytes,
       nonce: Buffer.alloc(1),
     });
   }
