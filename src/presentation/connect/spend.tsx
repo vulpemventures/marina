@@ -15,7 +15,7 @@ import type {
   RecipientInterface,
   UnblindedOutput,
 } from 'ldk';
-import { address, getNetwork } from 'ldk';
+import { Transaction, address, getNetwork } from 'ldk';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import type { ConnectData } from '../../domain/connect';
@@ -28,7 +28,6 @@ import { MainAccountID } from '../../domain/account';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
-import { Transaction } from 'liquidjs-lib';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 
 export interface SpendPopupResponse {

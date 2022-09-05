@@ -1,4 +1,5 @@
 import type { StrictEffect } from 'redux-saga/effects';
+import type { NotUndefined } from '@redux-saga/types';
 import { select, call } from 'redux-saga/effects';
 import type { Account, AccountID } from '../../../domain/account';
 import { MainAccountID } from '../../../domain/account';
@@ -74,7 +75,7 @@ export function* processAsyncGenerator<NextType>(
   }
 }
 
-export function* createChannel<T>(): SagaGenerator<Channel<T>> {
+export function* createChannel<T extends NotUndefined>(): SagaGenerator<Channel<T>> {
   return yield call(channel, buffers.sliding(10));
 }
 

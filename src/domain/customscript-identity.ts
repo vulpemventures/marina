@@ -4,7 +4,6 @@ import {
   address,
   Psbt,
   IdentityType,
-  Transaction,
   bip341,
   toXpub,
   checkIdentityType,
@@ -12,6 +11,7 @@ import {
   networks,
   fromXpub,
   analyzeTapscriptTree,
+  OwnedInput,
 } from 'ldk';
 import type {
   AddressInterface,
@@ -21,8 +21,8 @@ import type {
   NetworkString,
   Mnemonic,
   ScriptInputsNeeds,
+  BlindingDataLike
 } from 'ldk';
-import type { BlindingDataLike } from 'liquidjs-lib/src/psbt';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
@@ -258,6 +258,14 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
       outputsPubKeysByIndex,
       inputsBlindingDataLike
     );
+  }
+
+  blindPsetV2(psetBase64: string, lastBlinder: boolean, unblindedInputs?: OwnedInput[] | undefined): Promise<string> {
+    throw new Error('not implemented') 
+  }
+
+  signPsetV2(psetBase64: string): Promise<string> {
+    throw new Error('not implemented')
   }
 
   isAbleToSign(): boolean {

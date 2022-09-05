@@ -9,8 +9,9 @@ import {
   IdentityInterface,
   ElementsValue,
   Pset,
-} from 'ldk';
-import {
+  CreatorOutput,
+  Finalizer,
+  Extractor,
   address,
   addToTx,
   createFeeOutput,
@@ -27,10 +28,9 @@ import {
   payments,
   confidential,
   Psbt,
+  Updater,
+  CreatorInput
 } from 'ldk';
-import {
-  Input, Output, PsetInput, Updater
-} from 'liquidjs-lib'
 import { isConfidentialAddress } from './address';
 import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
 import { TxStatusEnum, TxType } from '../../domain/transaction';
@@ -186,8 +186,30 @@ export async function blindAndSignPset(
 
   return pset.extractTransaction().toHex();
 }
+// const atLeastOne = (arr: any[] | undefined) => arr && arr.length > 0;
 
-const atLeastOne = (arr: any[] | undefined) => arr && arr.length > 0;
+export async function blindAndSignPsetV2(
+  psetBase64: string,
+  identities: IdentityInterface[],
+  recipientAddresses: string[],
+  changeAddresses: string[],
+): Promise<string> {
+  let psetStr = psetBase64;
+  for (let i=0; i<identities.length; i++) {
+    const id = identities[i];
+    psetStr = await id.blindPsetV2(psetBase64, i===identities.length-1)
+  }
+
+  for (let i=0; i<identities.length; i++) {
+    const id = identities[i];
+    psetStr = await id.signPsetV2(psetStr)
+  }
+
+  const pset = Pset.fromBase64(psetStr);
+  (new Finalizer(pset)).finalize()
+
+  return Extractor.extract(pset).toHex();
+}
 
 export async function signPset(
   psetBase64: string,
@@ -247,8 +269,11 @@ export function createTaxiTxFromTopup(
 
   const pset = Pset.fromBase64(taxiTopup.partial);
   const updater = new Updater(pset);
-  updater.addInputs(selectedUtxos.map(u => new Input(u.txid, u.vout)));
-  updater.addOutputs(recipients.concat(changeOutputs).map(r => new Output(r.asset, r.value, r.address)));
+  updater.addInputs(selectedUtxos.map(u => new CreatorInput(u.txid, u.vout)));
+  for (let i = 0; i < recipients.length; i++) {
+    updater.addInWitnessUtxo(i, selectedUtxos[i].prevout);
+  }
+  updater.addOutputs(recipients.concat(changeOutputs).map(r => new CreatorOutput(r.asset, r.value, r.address, pset.inputs.length- 1)));
 
   return { pset: updater.pset.toBase64(), selectedUtxos };
 }
@@ -315,13 +340,15 @@ export async function createSendPset(
   const topup = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash)).topup;
   if (!topup) throw new Error('something went wrong with taxi');
 
-  return createTaxiTxFromTopup(
+  const res = createTaxiTxFromTopup(
     topup,
     unspents,
     recipients,
     greedyCoinSelector(),
     changeAddressGetter
   );
+  console.log(res)
+  return res;
 }
 
 /**

@@ -20,7 +20,6 @@
     "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
   },
   "dependencies": {
-    "liquidjs-lib": "git+https://github.com/altafan/liquidjs-lib.git#psetv2",
     "@ionio-lang/ionio": "^0.1.9",
     "@metamask/safe-event-emitter": "^2.0.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",
@@ -34,7 +33,7 @@
     "decimal.js": "^10.2.1",
     "formik": "^2.2.9",
     "google-protobuf": "^3.15.8",
-    "ldk": "^0.5.8",
+    "ldk": "git+https://github.com/altafan/ldk.git#psetv2",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
     "marina-provider": "^1.7.2",
