@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { broadcastTx } from '../../../application/utils/network';
-import { blindAndSignPset } from '../../../application/utils/transaction';
+import { blindAndSignPset, blindAndSignPsetV2 } from '../../../application/utils/transaction';
 import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/actions/utxos';
 import { getUtxosFromChangeAddresses } from '../../../application/utils/utxos';
 
@@ -54,13 +54,9 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       const identities = await Promise.all(
         signerAccounts.map((a) => a.getSigningIdentity(pass, network))
       );
-      const tx = await blindAndSignPset(
+      const tx = await blindAndSignPsetV2(
         pset,
-        selectedUtxos,
         identities,
-        [recipientAddress],
-        changeAddresses,
-        true
       );
       setSignedTx(tx);
 
@@ -103,6 +99,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         state: { txid },
       });
     } catch (error: unknown) {
+      console.error(error)
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {

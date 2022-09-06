@@ -29,12 +29,11 @@ import {
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import type { Address } from '../../../domain/address';
 import { createAddress } from '../../../domain/address';
-import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { updateToNextChangeAddress } from '../../../application/redux/actions/wallet';
 import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
-import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
+import { fetchTopupFromTaxi, taxiURL, TopupWithAssetReply } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
 
 export interface ChooseFeeProps {
@@ -55,7 +54,7 @@ interface State {
   unsignedPset?: string;
   utxos?: UnblindedOutput[];
   feeChange?: Address;
-  topup?: Topup.AsObject;
+  topup?: TopupWithAssetReply;
 }
 
 const initialState: State = {};
@@ -191,7 +190,7 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         <p key={0} className="text-sm font-medium">
           I pay fee in:
         </p>
-        <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
+        <div key={1} className="flex flex-wrap flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
           {[lbtcAssetHash, ...taxiAssets].map((assetHash, index) => (
             <Button
               className="flex-1"
@@ -304,7 +303,7 @@ function stateForTaxiPSET(
   change: Address,
   utxos: UnblindedOutput[],
   network: NetworkString,
-  lastTopup?: Topup.AsObject
+  lastTopup?: TopupWithAssetReply
 ): () => Promise<State> {
   return async function () {
     const result: State = {};
@@ -314,7 +313,7 @@ function stateForTaxiPSET(
 
     if (!lastTopup || feeAsset !== lastTopup.assetHash) {
       result.topup = undefined;
-      result.topup = (await fetchTopupFromTaxi(taxiURL[network], feeAsset)).topup;
+      result.topup = (await fetchTopupFromTaxi(taxiURL[network], feeAsset));
     }
 
     if (!result.topup) {

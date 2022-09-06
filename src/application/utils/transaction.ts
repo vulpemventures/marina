@@ -36,7 +36,7 @@ import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
 import { TxStatusEnum, TxType } from '../../domain/transaction';
 import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { fetchTopupFromTaxi, taxiURL } from './taxi';
+import { fetchTopupFromTaxi, taxiURL, TopupWithAssetReply } from './taxi';
 import type { DataRecipient, Recipient } from 'marina-provider';
 import { isAddressRecipient, isDataRecipient } from 'marina-provider';
 import * as ecc from 'tiny-secp256k1';
@@ -191,8 +191,6 @@ export async function blindAndSignPset(
 export async function blindAndSignPsetV2(
   psetBase64: string,
   identities: IdentityInterface[],
-  recipientAddresses: string[],
-  changeAddresses: string[],
 ): Promise<string> {
   let psetStr = psetBase64;
   for (let i=0; i<identities.length; i++) {
@@ -244,14 +242,14 @@ const throwErrorCoinSelector: CoinSelectorErrorFn = (
 
 /**
  * Create tx from a Topup object.
- * @param taxiTopup the topup describing the taxi response.
+ * @param taxiReply the topup describing the taxi response.
  * @param unspents a list of utxos used to fund the tx.
  * @param recipients a list of output to send.
  * @param coinSelector the way used to coin select the unspents.
  * @param changeAddressGetter define the way we get change addresses (if needed).
  */
 export function createTaxiTxFromTopup(
-  taxiTopup: Topup.AsObject,
+  taxiReply: TopupWithAssetReply,
   unspents: UnblindedOutput[],
   recipients: RecipientInterface[],
   coinSelector: CoinSelector,
@@ -260,18 +258,18 @@ export function createTaxiTxFromTopup(
   const { selectedUtxos, changeOutputs } = coinSelector(throwErrorCoinSelector)(
     unspents,
     recipients.concat({
-      value: taxiTopup.assetAmount,
-      asset: taxiTopup.assetHash,
+      value: taxiReply.assetAmount,
+      asset: taxiReply.assetHash,
       address: '', // address is not useful for coinSelector
     }),
     changeAddressGetter
   );
 
-  const pset = Pset.fromBase64(taxiTopup.partial);
+  const pset = Pset.fromBase64(taxiReply.topup.partial);
   const updater = new Updater(pset);
   updater.addInputs(selectedUtxos.map(u => new CreatorInput(u.txid, u.vout)));
-  for (let i = 0; i < recipients.length; i++) {
-    updater.addInWitnessUtxo(i, selectedUtxos[i].prevout);
+  for (let i = 0; i < selectedUtxos.length; i++) {
+    updater.addInWitnessUtxo(i+1, selectedUtxos[i].prevout);
   }
   updater.addOutputs(recipients.concat(changeOutputs).map(r => new CreatorOutput(r.asset, r.value, r.address, pset.inputs.length- 1)));
 
@@ -337,17 +335,16 @@ export async function createSendPset(
     return { pset, selectedUtxos: selection.selectedUtxos };
   }
 
-  const topup = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash)).topup;
-  if (!topup) throw new Error('something went wrong with taxi');
+  const reply = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash));
+  if (!reply) throw new Error('something went wrong with taxi');
 
   const res = createTaxiTxFromTopup(
-    topup,
+    reply,
     unspents,
     recipients,
     greedyCoinSelector(),
     changeAddressGetter
   );
-  console.log(res)
   return res;
 }
 

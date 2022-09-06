@@ -2138,12 +2138,7 @@ bindings@^1.3.0, bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-bip174-liquid@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/bip174-liquid/-/bip174-liquid-1.0.3.tgz#5009444091da80277c45ee90c255d7919646f907"
-  integrity sha512-e69sC0Cq2tBJuhG2+wieXv40DN13YBR/wbIjZp4Mqwpar5vQm8Ldqijdd6N33XG7LtfvQi/zKm5fSzdPY/9mgw==
-
-"bip174-liquid@https://github.com/louisinger/bip174.git#bip370":
+bip174-liquid@^1.0.3, "bip174-liquid@https://github.com/louisinger/bip174.git#bip370":
   version "1.0.3"
   resolved "https://github.com/louisinger/bip174.git#994d06eee3dda6690ed9feda0af96b42a3eec1c5"
 
@@ -6643,28 +6638,7 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-liquidjs-lib@^6.0.2-liquid.7:
-  version "6.0.2-liquid.8"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.8.tgz#93c4f31b53f8f28824a085fd76faf49c9d3d0fcc"
-  integrity sha512-KCtO/lXfKyZUJeZ1Mok3FQ5/viNLmKEEhGEC3iySnBakIII2rd1ijn3np16/3LzBiQhQ+tFm4Q1NYEG3YhWBTg==
-  dependencies:
-    "@types/randombytes" "^2.0.0"
-    "@types/wif" "^2.0.2"
-    "@vulpemventures/secp256k1-zkp" "^2.0.0"
-    axios "^0.21.1"
-    bech32 "^2.0.0"
-    bip174-liquid "^1.0.3"
-    bip66 "^1.1.0"
-    bitcoin-ops "^1.4.0"
-    blech32 "^1.1.2"
-    bs58check "^2.0.0"
-    create-hash "^1.2.0"
-    ecpair "^2.0.1"
-    typeforce "^1.11.3"
-    varuint-bitcoin "^1.1.2"
-    wif "^2.0.1"
-
-"liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support":
+liquidjs-lib@^6.0.2-liquid.7, "liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support":
   version "6.0.2-liquid.8"
   resolved "git+https://github.com/louisinger/liquidjs-lib.git#680f5d94d27aa85935fe4a3caa444bf217e3739b"
   dependencies:
