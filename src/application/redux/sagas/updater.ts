@@ -122,7 +122,7 @@ type TxsGeneratorList = AsyncGenerator<
 
 function* getTxsGenerators(
   account: Account,
-  network: NetworkString,
+  network: NetworkString
 ): SagaGenerator<TxsGeneratorList> {
   const addresses = yield* getAddressesFromAccount(account, network);
   const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(
@@ -161,7 +161,9 @@ function* getAllWalletScripts(network: NetworkString) {
     const account = yield* selectAccountSaga(accountID);
     if (!account) continue;
     const addresses = yield* getAddressesFromAccount(account, network);
-    scripts.push(...addresses.map((a) => address.toOutputScript(a.confidentialAddress).toString('hex')));
+    scripts.push(
+      ...addresses.map((a) => address.toOutputScript(a.confidentialAddress).toString('hex'))
+    );
   }
   return scripts;
 }
@@ -213,17 +215,16 @@ function* utxosUpdater(
 function* txsUpdater(
   accountID: AccountID,
   network: NetworkString,
-  sendChannel: Channel<{tx: TxInterface, network: NetworkString, accountID: AccountID}>
+  sendChannel: Channel<{ tx: TxInterface; network: NetworkString; accountID: AccountID }>
 ): SagaGenerator<void, IteratorYieldResult<TxInterface>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
   const generators = yield* getTxsGenerators(account, network);
 
   for (const txsGenerator of generators) {
-    yield* processAsyncGenerator<TxInterface>(
-      txsGenerator,
-      function*(tx) { yield put(sendChannel, { tx, network, accountID }) }
-    );
+    yield* processAsyncGenerator<TxInterface>(txsGenerator, function* (tx) {
+      yield put(sendChannel, { tx, network, accountID });
+    });
   }
 }
 
@@ -232,7 +233,7 @@ function* updateTxsAndUtxos(
   network: NetworkString
 ): Generator<any, void, any> {
   const chan = yield call(channel);
-  yield fork(txsTransformerWorker, chan); 
+  yield fork(txsTransformerWorker, chan);
   yield all([txsUpdater(accountID, network, chan), utxosUpdater(accountID, network)]);
   yield put(chan, END); // will delete the txsTransformerWorker fork
 }
@@ -303,13 +304,13 @@ function* assetsWorker(
 }
 
 function* txsTransformerWorker(
-  chanToListen: Channel<{tx: TxInterface, network: NetworkString, accountID: AccountID }>
-): SagaGenerator<void, {tx: TxInterface, network: NetworkString, accountID: AccountID }> {
-    while (true) {
-      const { tx , network, accountID } = yield take(chanToListen);
-      const scripts = yield* getAllWalletScripts(network);
-      yield put(addTx(accountID, toDisplayTransaction(tx, scripts, networks[network]), network));
-    }
+  chanToListen: Channel<{ tx: TxInterface; network: NetworkString; accountID: AccountID }>
+): SagaGenerator<void, { tx: TxInterface; network: NetworkString; accountID: AccountID }> {
+  while (true) {
+    const { tx, network, accountID } = yield take(chanToListen);
+    const scripts = yield* getAllWalletScripts(network);
+    yield put(addTx(accountID, toDisplayTransaction(tx, scripts, networks[network]), network));
+  }
 }
 
 function updateUtxoAssets(assetsChan: Channel<{ assetHash: string; network: NetworkString }>) {
