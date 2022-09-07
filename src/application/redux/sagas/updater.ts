@@ -42,7 +42,7 @@ import { addAsset } from '../actions/asset';
 import type { UpdateTaskAction } from '../actions/task';
 import { updateTaskAction } from '../actions/task';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
-import type { Channel } from 'redux-saga';
+import { channel, Channel, END } from 'redux-saga';
 import type { AllEffect } from 'redux-saga/effects';
 import { put, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
@@ -122,7 +122,7 @@ type TxsGeneratorList = AsyncGenerator<
 
 function* getTxsGenerators(
   account: Account,
-  network: NetworkString
+  network: NetworkString,
 ): SagaGenerator<TxsGeneratorList> {
   const addresses = yield* getAddressesFromAccount(account, network);
   const utxosTransactionsState = yield* selectUnspentsAndTransactionsSaga(
@@ -151,6 +151,19 @@ function* getAddressesFromAccount(
   const getAddresses = () =>
     account.getWatchIdentity(network).then((identity) => identity.getAddresses());
   return yield call(getAddresses);
+}
+
+// returns all the scripts from accounts addresses
+function* getAllWalletScripts(network: NetworkString) {
+  const accounts = yield* selectAllAccountsIDsSaga();
+  const scripts = [];
+  for (const accountID of accounts) {
+    const account = yield* selectAccountSaga(accountID);
+    if (!account) continue;
+    const addresses = yield* getAddressesFromAccount(account, network);
+    scripts.push(...addresses.map((a) => address.toOutputScript(a.confidentialAddress).toString('hex')));
+  }
+  return scripts;
 }
 
 // UtxosUpdater lets to update the utxos state for a given AccountID
@@ -195,31 +208,21 @@ function* utxosUpdater(
   }
 }
 
-const putAddTxAction = (accountID: AccountID, network: NetworkString, walletScripts: string[]) =>
-  function* (tx: TxInterface) {
-    yield put(
-      addTx(accountID, toDisplayTransaction(tx, walletScripts, networks[network]), network)
-    );
-  };
-
 // txsUpdater lets to update the transaction state for a given AccountID
 // it fetches and unblinds the output and the prevouts of the new transactions comming from the explorer
 function* txsUpdater(
   accountID: AccountID,
-  network: NetworkString
+  network: NetworkString,
+  sendChannel: Channel<{tx: TxInterface, network: NetworkString, accountID: AccountID}>
 ): SagaGenerator<void, IteratorYieldResult<TxInterface>> {
   const account = yield* selectAccountSaga(accountID);
   if (!account) return;
   const generators = yield* getTxsGenerators(account, network);
-  const addresses = yield* getAddressesFromAccount(account, network);
-  const walletScripts = addresses.map((a) =>
-    address.toOutputScript(a.confidentialAddress).toString('hex')
-  );
 
   for (const txsGenerator of generators) {
     yield* processAsyncGenerator<TxInterface>(
       txsGenerator,
-      putAddTxAction(accountID, network, walletScripts)
+      function*(tx) { yield put(sendChannel, { tx, network, accountID }) }
     );
   }
 }
@@ -227,8 +230,11 @@ function* txsUpdater(
 function* updateTxsAndUtxos(
   accountID: AccountID,
   network: NetworkString
-): Generator<AllEffect<any>, void, any> {
-  yield all([txsUpdater(accountID, network), utxosUpdater(accountID, network)]);
+): Generator<any, void, any> {
+  const chan = yield call(channel);
+  yield fork(txsTransformerWorker, chan); 
+  yield all([txsUpdater(accountID, network, chan), utxosUpdater(accountID, network)]);
+  yield put(chan, END); // will delete the txsTransformerWorker fork
 }
 
 function* requestAssetInfoFromEsplora(
@@ -294,6 +300,16 @@ function* assetsWorker(
       }
     }
   }
+}
+
+function* txsTransformerWorker(
+  chanToListen: Channel<{tx: TxInterface, network: NetworkString, accountID: AccountID }>
+): SagaGenerator<void, {tx: TxInterface, network: NetworkString, accountID: AccountID }> {
+    while (true) {
+      const { tx , network, accountID } = yield take(chanToListen);
+      const scripts = yield* getAllWalletScripts(network);
+      yield put(addTx(accountID, toDisplayTransaction(tx, scripts, networks[network]), network));
+    }
 }
 
 function updateUtxoAssets(assetsChan: Channel<{ assetHash: string; network: NetworkString }>) {
