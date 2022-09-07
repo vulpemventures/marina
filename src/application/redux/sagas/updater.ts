@@ -42,7 +42,7 @@ import { addAsset } from '../actions/asset';
 import type { UpdateTaskAction } from '../actions/task';
 import { updateTaskAction } from '../actions/task';
 import { popUpdaterLoader, pushUpdaterLoader } from '../actions/wallet';
-import type { Channel} from 'redux-saga';
+import type { Channel } from 'redux-saga';
 import { channel, END } from 'redux-saga';
 import { put, all, take, fork, call, takeLatest } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
