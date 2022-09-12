@@ -7,15 +7,17 @@ import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../rout
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import type { Account } from '../../../domain/account';
-import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, OwnedInput, UnblindedOutput } from 'ldk';
+import { AssetHash, decodePset, Pset } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/task';
 import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
 import { broadcastTx } from '../../../application/utils/network';
-import { blindAndSignPset, blindAndSignPsetV2 } from '../../../application/utils/transaction';
+import { blindAndSignPsetV2 } from '../../../application/utils/transaction';
 import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/actions/utxos';
 import { getUtxosFromChangeAddresses } from '../../../application/utils/utxos';
+import type { TopupWithAssetReply } from '../../../application/utils/taxi';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
@@ -26,6 +28,7 @@ export interface EndOfFlowProps {
   recipientAddress?: string;
   changeAddresses: string[];
   network: NetworkString;
+  topup?: TopupWithAssetReply;
 }
 
 const EndOfFlow: React.FC<EndOfFlowProps> = ({
@@ -37,6 +40,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   selectedUtxos,
   changeAddresses,
   network,
+  topup,
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
@@ -54,10 +58,41 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       const identities = await Promise.all(
         signerAccounts.map((a) => a.getSigningIdentity(pass, network))
       );
-      const tx = await blindAndSignPsetV2(
-        pset,
-        identities,
-      );
+
+      const ownedInputs: OwnedInput[] = [];
+      let index = 0;
+      if (topup) {
+        for (const blindingData of topup.inBlindingData) {
+          ownedInputs.push({
+            index,
+            value: blindingData.value,
+            valueBlinder: Buffer.from(blindingData.valueBlinder, 'base64'),
+            assetBlinder: Buffer.from(blindingData.assetBlinder, 'base64'),
+            asset: Buffer.from(blindingData.asset, 'hex').reverse(),
+          });
+          index++;
+        }
+      }
+
+      const inputs = Pset.fromBase64(pset).inputs;
+      for (let i = index; i < inputs.length; i++) {
+        const utxo = selectedUtxos.find(
+          (u) =>
+            u.txid === Buffer.from(inputs[i].previousTxid).reverse().toString('hex') &&
+            u.vout === inputs[i].previousTxIndex
+        );
+        if (!utxo) throw new Error(`missing utxo for input #${i}`);
+        ownedInputs.push({
+          index: i,
+          ...utxo.unblindData,
+          valueBlinder: utxo.unblindData.valueBlindingFactor,
+          assetBlinder: utxo.unblindData.assetBlindingFactor,
+        });
+      }
+
+      const tx = await blindAndSignPsetV2(pset, identities, ownedInputs);
+
+      console.log(tx);
       setSignedTx(tx);
 
       const txid = await broadcastTx(explorerURL, tx);
@@ -99,7 +134,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         state: { txid },
       });
     } catch (error: unknown) {
-      console.error(error)
+      console.error(error);
       return history.push({
         pathname: SEND_PAYMENT_ERROR_ROUTE,
         state: {

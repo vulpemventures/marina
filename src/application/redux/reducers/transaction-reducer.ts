@@ -2,6 +2,7 @@ import * as ACTION_TYPES from '../actions/action-types';
 import type { AnyAction } from 'redux';
 import type { Address } from '../../../domain/address';
 import type { UnblindedOutput } from 'ldk';
+import type { TopupWithAssetReply } from '../../utils/taxi';
 
 export type PendingTxStep = 'empty' | 'address-amount' | 'choose-fee' | 'confirmation';
 
@@ -15,6 +16,7 @@ export interface TransactionState {
   sendAddress?: Address;
   changeAddresses: Address[];
   selectedUtxos?: UnblindedOutput[];
+  topup?: TopupWithAssetReply;
 }
 
 export const transactionInitState: TransactionState = {
@@ -75,6 +77,13 @@ export function transactionReducer(
         ...state,
         pset: payload.pset,
         selectedUtxos: payload.utxos,
+      };
+    }
+
+    case ACTION_TYPES.PENDING_TX_SET_TAXI_TOPUP: {
+      return {
+        ...state,
+        topup: payload.topup,
       };
     }
 

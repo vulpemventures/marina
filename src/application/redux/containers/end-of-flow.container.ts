@@ -14,6 +14,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => ({
   selectedUtxos: state.transaction.selectedUtxos ?? [],
   changeAddresses: state.transaction.changeAddresses.map((changeAddress) => changeAddress.value),
   network: selectNetwork(state),
+  topup: state.transaction.topup,
 });
 
 const SendEndOfFlow = connect(mapStateToProps)(EndOfFlow);

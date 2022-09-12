@@ -7,6 +7,7 @@ import {
   PENDING_TX_SET_PSET,
   PENDING_TX_SET_STEP,
   ADD_TX,
+  PENDING_TX_SET_TAXI_TOPUP,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { Address } from '../../../domain/address';
@@ -15,6 +16,7 @@ import type { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
 import type { AccountID } from '../../../domain/account';
 import type { ActionWithPayload } from '../../../domain/common';
 import type { PendingTxStep } from '../reducers/transaction-reducer';
+import type { TopupWithAssetReply } from '../../utils/taxi';
 
 export type AddTxAction = ActionWithPayload<{
   tx: TxInterface;
@@ -43,6 +45,10 @@ export function setAddressesAndAmount(
 
 export function setFeeChangeAddress(feeChangeAddress: Address): AnyAction {
   return { type: PENDING_TX_SET_FEE_CHANGE_ADDRESS, payload: { feeChangeAddress } };
+}
+
+export function setTopup(topup: TopupWithAssetReply): AnyAction {
+  return { type: PENDING_TX_SET_TAXI_TOPUP, payload: { topup } };
 }
 
 export function setFeeAssetAndAmount(feeAsset: string, feeAmountInSatoshi: number): AnyAction {

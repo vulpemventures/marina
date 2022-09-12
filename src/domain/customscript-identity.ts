@@ -4,14 +4,12 @@ import {
   address,
   Psbt,
   IdentityType,
-  bip341,
   toXpub,
   checkIdentityType,
   checkMnemonic,
   networks,
   fromXpub,
-  analyzeTapscriptTree,
-  OwnedInput,
+  analyzeTapscriptTree
 } from 'ldk';
 import type {
   AddressInterface,
@@ -21,8 +19,10 @@ import type {
   NetworkString,
   Mnemonic,
   ScriptInputsNeeds,
-  BlindingDataLike
-} from 'ldk';
+  BlindingDataLike,
+
+  bip341,
+  OwnedInput} from 'ldk';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
@@ -260,12 +260,16 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     );
   }
 
-  blindPsetV2(psetBase64: string, lastBlinder: boolean, unblindedInputs?: OwnedInput[] | undefined): Promise<string> {
-    throw new Error('not implemented') 
+  blindPsetV2(
+    psetBase64: string,
+    lastBlinder: boolean,
+    unblindedInputs?: OwnedInput[] | undefined
+  ): Promise<string> {
+    throw new Error('not implemented');
   }
 
   signPsetV2(psetBase64: string): Promise<string> {
-    throw new Error('not implemented')
+    throw new Error('not implemented');
   }
 
   isAbleToSign(): boolean {
@@ -350,73 +354,73 @@ export class CustomScriptIdentity
     //   if (input.witnessUtxo) {
     //     const script = input.witnessUtxo.script.toString('hex');
     //     const cachedAddrInfos = this.cache.get(script);
-        // check if we own the input
-        // if (cachedAddrInfos) {
-        //   try {
-            // // check if the pset signals how to spend the input
-            // const isKeyPath = input.tapKeySig !== undefined || input.tapMerkleRoot !== undefined;
-            // const isScriptPath =
-            //   input.tapLeafScript !== undefined && input.tapLeafScript.length > 0;
+    // check if we own the input
+    // if (cachedAddrInfos) {
+    //   try {
+    // // check if the pset signals how to spend the input
+    // const isKeyPath = input.tapKeySig !== undefined || input.tapMerkleRoot !== undefined;
+    // const isScriptPath =
+    //   input.tapLeafScript !== undefined && input.tapLeafScript.length > 0;
 
-            // if (isKeyPath && isScriptPath)
-            //   throw new Error('cannot spend input with both tapKeySig and tapScriptSig');
+    // if (isKeyPath && isScriptPath)
+    //   throw new Error('cannot spend input with both tapKeySig and tapScriptSig');
 
-            // if (isKeyPath) {
-            //   if (input.tapKeySig !== undefined) continue; // already signed
+    // if (isKeyPath) {
+    //   if (input.tapKeySig !== undefined) continue; // already signed
 
-            //   // ionio contracts always use H_POINT as internal key
-            //   const internalPubKey = H_POINT.toString('hex');
+    //   // ionio contracts always use H_POINT as internal key
+    //   const internalPubKey = H_POINT.toString('hex');
 
-            //   if (!this.hasPrivateKey(internalPubKey)) {
-            //     throw new Error(
-            //       'marina fails to sign input (internal key not owned by the account)'
-            //     );
-            //   }
+    //   if (!this.hasPrivateKey(internalPubKey)) {
+    //     throw new Error(
+    //       'marina fails to sign input (internal key not owned by the account)'
+    //     );
+    //   }
 
-            //   const toSignAddress = this.getAddressByPublicKey(internalPubKey);
-            //   if (toSignAddress && toSignAddress.derivationPath) {
-            //     const pathToPrivKey = toSignAddress.derivationPath.slice(
-            //       namespaceToDerivationPath(this.namespace).length + 1
-            //     );
-            //     const signer = this.masterPrivateKeyNode.derivePath(pathToPrivKey);
-            //     pset.signInput(index, signer).toBase64();
-            //     continue;
-            //   }
-            // }
+    //   const toSignAddress = this.getAddressByPublicKey(internalPubKey);
+    //   if (toSignAddress && toSignAddress.derivationPath) {
+    //     const pathToPrivKey = toSignAddress.derivationPath.slice(
+    //       namespaceToDerivationPath(this.namespace).length + 1
+    //     );
+    //     const signer = this.masterPrivateKeyNode.derivePath(pathToPrivKey);
+    //     pset.signInput(index, signer).toBase64();
+    //     continue;
+    //   }
+    // }
 
-            // let leafScript = undefined;
-            // if (input.tapLeafScript && input.tapLeafScript.length > 0) {
-            //   leafScript = input.tapLeafScript[0].script.toString('hex');
-            // } else {
-            //   leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
-            //   cachedAddrInfos.contract.getTaprootTree();
-            //   // if we use the auto-spendable leaf we need to add the tapLeafScript to the input
-            //   if (leafScript) {
-            //     const tree = cachedAddrInfos.contract.getTaprootTree();
-            //     const leaf = { scriptHex: leafScript };
-            //     const leafHash = bip341.tapLeafHash(leaf);
+    // let leafScript = undefined;
+    // if (input.tapLeafScript && input.tapLeafScript.length > 0) {
+    //   leafScript = input.tapLeafScript[0].script.toString('hex');
+    // } else {
+    //   leafScript = this.getFirstAutoSpendableTapscriptPath(cachedAddrInfos);
+    //   cachedAddrInfos.contract.getTaprootTree();
+    //   // if we use the auto-spendable leaf we need to add the tapLeafScript to the input
+    //   if (leafScript) {
+    //     const tree = cachedAddrInfos.contract.getTaprootTree();
+    //     const leaf = { scriptHex: leafScript };
+    //     const leafHash = bip341.tapLeafHash(leaf);
 
-            //     // witnesses func will throw if the leaf is not a valid leaf
-            //     const taprootSignScriptStack = bip341
-            //       .BIP341Factory(this.ecclib)
-            //       .taprootSignScriptStack(
-            //         H_POINT,
-            //         { scriptHex: leafScript },
-            //         tree.hash,
-            //         bip341.findScriptPath(tree, leafHash)
-            //       );
+    //     // witnesses func will throw if the leaf is not a valid leaf
+    //     const taprootSignScriptStack = bip341
+    //       .BIP341Factory(this.ecclib)
+    //       .taprootSignScriptStack(
+    //         H_POINT,
+    //         { scriptHex: leafScript },
+    //         tree.hash,
+    //         bip341.findScriptPath(tree, leafHash)
+    //       );
 
-            //     pset.updateInput(index, {
-            //       tapLeafScript: [
-            //         {
-            //           leafVersion: 0xc4, // elements tapscript version
-            //           script: Buffer.from(leafScript, 'hex'),
-            //           controlBlock: taprootSignScriptStack[1],
-            //         },
-            //       ],
-            //     });
-            //   }
-            // }
+    //     pset.updateInput(index, {
+    //       tapLeafScript: [
+    //         {
+    //           leafVersion: 0xc4, // elements tapscript version
+    //           script: Buffer.from(leafScript, 'hex'),
+    //           controlBlock: taprootSignScriptStack[1],
+    //         },
+    //       ],
+    //     });
+    //   }
+    // }
 
     //         if (!leafScript) {
     //           throw new Error('marina fails to sign input (no auto spendable tapscript)');

@@ -39,7 +39,7 @@ class WasmModule {
   }
 }
 const secp256k1 = await WasmModule.fromBase64(b64wasm, secp256k1imports);
-console.log('secp', secp256k1)
+console.log('secp', secp256k1);
 const ecc = secp256k1.exports;
 
 export default ecc;

@@ -1,4 +1,4 @@
-import {
+import type {
   ChangeAddressFromAssetGetter,
   CoinSelector,
   RecipientInterface,
@@ -7,6 +7,9 @@ import {
   CoinSelectorErrorFn,
   NetworkString,
   IdentityInterface,
+  confidential,
+  OwnedInput} from 'ldk';
+import {
   ElementsValue,
   Pset,
   CreatorOutput,
@@ -26,17 +29,17 @@ import {
   networks,
   AssetHash,
   payments,
-  confidential,
   Psbt,
   Updater,
-  CreatorInput
+  CreatorInput,
+  Transaction,
 } from 'ldk';
 import { isConfidentialAddress } from './address';
 import type { Transfer, TxDisplayInterface } from '../../domain/transaction';
 import { TxStatusEnum, TxType } from '../../domain/transaction';
-import type { Topup } from 'taxi-protobuf/generated/js/taxi_pb';
 import { lbtcAssetByNetwork } from './network';
-import { fetchTopupFromTaxi, taxiURL, TopupWithAssetReply } from './taxi';
+import type { TopupWithAssetReply } from './taxi';
+import { fetchTopupFromTaxi, taxiURL } from './taxi';
 import type { DataRecipient, Recipient } from 'marina-provider';
 import { isAddressRecipient, isDataRecipient } from 'marina-provider';
 import * as ecc from 'tiny-secp256k1';
@@ -180,7 +183,7 @@ export async function blindAndSignPset(
     //     };
     //   });
     // } else {
-      pset.finalizeInput(i); // default finalizer handles taproot key path and non taproot sigs
+    pset.finalizeInput(i); // default finalizer handles taproot key path and non taproot sigs
     // }
   }
 
@@ -191,20 +194,25 @@ export async function blindAndSignPset(
 export async function blindAndSignPsetV2(
   psetBase64: string,
   identities: IdentityInterface[],
+  selectedUtxos: OwnedInput[]
 ): Promise<string> {
   let psetStr = psetBase64;
-  for (let i=0; i<identities.length; i++) {
-    const id = identities[i];
-    psetStr = await id.blindPsetV2(psetBase64, i===identities.length-1)
-  }
 
-  for (let i=0; i<identities.length; i++) {
+  console.log('ins', selectedUtxos);
+  console.log('before blinding', psetStr);
+  for (let i = 0; i < identities.length; i++) {
     const id = identities[i];
-    psetStr = await id.signPsetV2(psetStr)
+    psetStr = await id.blindPsetV2(psetStr, i === identities.length - 1, selectedUtxos);
+  }
+  console.log('after blinding', psetStr);
+
+  for (let i = 0; i < identities.length; i++) {
+    const id = identities[i];
+    psetStr = await id.signPsetV2(psetStr);
   }
 
   const pset = Pset.fromBase64(psetStr);
-  (new Finalizer(pset)).finalize()
+  new Finalizer(pset).finalize();
 
   return Extractor.extract(pset).toHex();
 }
@@ -266,12 +274,16 @@ export function createTaxiTxFromTopup(
   );
 
   const pset = Pset.fromBase64(taxiReply.topup.partial);
+  const initialNumberOfInputs = pset.inputs.length;
   const updater = new Updater(pset);
-  updater.addInputs(selectedUtxos.map(u => new CreatorInput(u.txid, u.vout)));
+  updater.addInputs(selectedUtxos.map((u) => new CreatorInput(u.txid, u.vout)));
   for (let i = 0; i < selectedUtxos.length; i++) {
-    updater.addInWitnessUtxo(i+1, selectedUtxos[i].prevout);
+    updater.addInWitnessUtxo(i + initialNumberOfInputs, selectedUtxos[i].prevout);
+    updater.addInSighashType(i + initialNumberOfInputs, Transaction.SIGHASH_ALL);
   }
-  updater.addOutputs(recipients.concat(changeOutputs).map(r => new CreatorOutput(r.asset, r.value, r.address, pset.inputs.length- 1)));
+  updater.addOutputs(
+    recipients.concat(changeOutputs).map((r) => new CreatorOutput(r.asset, r.value, r.address, 0))
+  );
 
   return { pset: updater.pset.toBase64(), selectedUtxos };
 }
@@ -335,7 +347,7 @@ export async function createSendPset(
     return { pset, selectedUtxos: selection.selectedUtxos };
   }
 
-  const reply = (await fetchTopupFromTaxi(taxiURL[network], feeAssetHash));
+  const reply = await fetchTopupFromTaxi(taxiURL[network], feeAssetHash);
   if (!reply) throw new Error('something went wrong with taxi');
 
   const res = createTaxiTxFromTopup(

@@ -25,6 +25,7 @@ import {
   setFeeChangeAddress,
   setPendingTxStep,
   setPset,
+  setTopup,
 } from '../../../application/redux/actions/transaction';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import type { Address } from '../../../domain/address';
@@ -33,7 +34,8 @@ import { updateToNextChangeAddress } from '../../../application/redux/actions/wa
 import type { Account, AccountID } from '../../../domain/account';
 import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
-import { fetchTopupFromTaxi, taxiURL, TopupWithAssetReply } from '../../../application/utils/taxi';
+import type { TopupWithAssetReply } from '../../../application/utils/taxi';
+import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
 
 export interface ChooseFeeProps {
@@ -190,7 +192,10 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
         <p key={0} className="text-sm font-medium">
           I pay fee in:
         </p>
-        <div key={1} className="flex flex-wrap flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
+        <div
+          key={1}
+          className="flex flex-wrap flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2"
+        >
           {[lbtcAssetHash, ...taxiAssets].map((assetHash, index) => (
             <Button
               className="flex-1"
@@ -215,7 +220,9 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
             <span className="font-regular mr-6 text-base">
               {!isTaxi()
                 ? `${fromSatoshiStr(feeAmountFromTx(state.unsignedPset))} L-BTC`
-                : `${fromSatoshiStr(state.topup?.assetAmount || 0)} USDt *`}
+                : `${fromSatoshiStr(state.topup?.assetAmount || 0)} ${
+                    assets[feeAsset]?.ticker || feeAsset.slice(0, 4).toUpperCase()
+                  } *`}
             </span>
           </div>
           {taxiAssets.includes(feeAsset) && (
@@ -313,7 +320,7 @@ function stateForTaxiPSET(
 
     if (!lastTopup || feeAsset !== lastTopup.assetHash) {
       result.topup = undefined;
-      result.topup = (await fetchTopupFromTaxi(taxiURL[network], feeAsset));
+      result.topup = await fetchTopupFromTaxi(taxiURL[network], feeAsset);
     }
 
     if (!result.topup) {
@@ -362,6 +369,10 @@ function actionsFromState(
   if (state.feeChange) {
     actions.push(setFeeChangeAddress(state.feeChange));
     actions.concat(updateToNextChangeAddress(accountID, network));
+  }
+
+  if (state.topup) {
+    actions.push(setTopup(state.topup));
   }
 
   return actions;
