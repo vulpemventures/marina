@@ -419,10 +419,9 @@ function getTransfers(
 
     if (!walletScripts.includes(input.prevout.prevout.script.toString('hex'))) continue;
     if (isConfidentialOutput(input.prevout.prevout) && !isUnblindedOutput(input.prevout)) {
-      console.warn(
+      throw new Error(
         `prevout ${input.prevout.txid}:${input.prevout.vout} is not unblinded but is a confidential output, amount displayed may be wrong`
       );
-      continue;
     }
     addToTransfers(-1 * getSats(input.prevout), getAsset(input.prevout));
   }
