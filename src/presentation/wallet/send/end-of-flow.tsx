@@ -8,7 +8,7 @@ import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import type { Account } from '../../../domain/account';
 import type { NetworkString, OwnedInput, UnblindedOutput } from 'ldk';
-import { AssetHash, decodePset, Pset } from 'ldk';
+import { Pset } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/task';
 import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';

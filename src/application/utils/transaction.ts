@@ -169,7 +169,7 @@ export async function blindAndSignPset(
   }
 
   for (let i = 0; i < pset.txInputs.length; i++) {
-    const input = pset.data.inputs[i];
+    // const input = pset.data.inputs[i];
     // we need to use special finalizer in case of tapscript
     // if (atLeastOne(input.tapLeafScript) && atLeastOne(input.tapScriptSig)) {
     //   pset.finalizeInput(i, (_, input) => {
