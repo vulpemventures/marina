@@ -7,6 +7,7 @@ interface InputProps<FormValues> extends FormikProps<FormValues> {
   title?: string;
   type: 'text' | 'number' | 'password';
   inputSuffix?: string;
+  step?: string;
 }
 
 /**
@@ -14,16 +15,15 @@ interface InputProps<FormValues> extends FormikProps<FormValues> {
  */
 export default function Input<FormValues>({
   errors,
-  status,
   name,
   placeholder = '',
   title,
   touched,
   type = 'text',
-  values,
   handleChange,
   handleBlur,
   inputSuffix,
+  step,
 }: InputProps<FormValues>) {
   return (
     <div>
@@ -44,8 +44,8 @@ export default function Input<FormValues>({
             onBlur={handleBlur}
             placeholder={placeholder}
             type={type}
-            value={String(values[name])}
             lang="en"
+            {...(type === 'number' && { min: 0, step: step ?? 'any', inputmode: 'decimal' })}
           />
           {inputSuffix && (
             <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-base font-medium">

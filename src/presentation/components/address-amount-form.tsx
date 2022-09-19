@@ -70,6 +70,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
         type="number"
         inputSuffix={values.assetTicker}
         validateOnChange={true}
+        step={getMinAmountFromPrecision(values.assetPrecision).toString()}
         {...props}
       />
 
@@ -96,7 +97,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
       props.transaction.sendAmount > 0
-        ? fromSatoshi(props.transaction.sendAmount ?? 0, props.asset.precision)
+        ? (props.transaction.sendAmount ?? 0) * (10 ** props.asset.precision)
         : ('' as unknown as number),
     assetTicker: props.asset.ticker ?? '??',
     assetPrecision: props.asset.precision,
