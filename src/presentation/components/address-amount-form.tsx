@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import type { RouteComponentProps } from 'react-router';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
-import cx from 'classnames';
 import Button from './button';
 import {
   setAddressesAndAmount,
@@ -18,6 +17,7 @@ import type { Account } from '../../domain/account';
 import type { NetworkString } from 'ldk';
 import { isValidAddressForNetwork } from '../../application/utils/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
+import Input from './input';
 
 interface AddressAmountFormValues {
   address: string;
@@ -38,17 +38,8 @@ interface AddressAmountFormProps {
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
-  const {
-    errors,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-    isSubmitting,
-    touched,
-    values,
-    setFieldValue,
-    setFieldTouched,
-  } = props;
+  const { errors, handleSubmit, isSubmitting, touched, values, setFieldValue, setFieldTouched } =
+    props;
 
   const setMaxAmount = () => {
     const maxAmount = values.balance;
@@ -57,63 +48,13 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-10">
-      <div className={cx({ 'mb-12': !errors.address || !touched.address })}>
-        <label className="block">
-          <p className="mb-2 text-base font-medium text-left">Address</p>
-          <input
-            className={cx(
-              'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
-              {
-                'border-red': errors.address && touched.address,
-                'border-grayLight': !errors.address || !touched.address,
-              }
-            )}
-            id="address"
-            name="address"
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder=""
-            type="text"
-            value={values.address}
-          />
-        </label>
-        {errors.address && touched.address && (
-          <p className="text-red h-10 mt-2 text-xs font-medium text-left">{errors.address}</p>
-        )}
-      </div>
+    <form onSubmit={handleSubmit} className="mt-8">
+      <p className="mb-2 text-base font-medium text-left">Address</p>
+      <Input name="address" placeholder="" type="text" {...props} />
 
-      <div className={cx({ 'mb-12': !errors.amount || !touched.amount })}>
-        <label className="block">
-          <p className="mb-2 text-base font-medium text-left">Amount</p>
-          <div
-            className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
-              'text-grayDark': touched.amount,
-            })}
-          >
-            <input
-              className={cx(
-                'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
-                {
-                  'border-red': errors.amount && touched.amount,
-                  'border-grayLight': !errors.amount || !touched.amount,
-                }
-              )}
-              id="amount"
-              name="amount"
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="0"
-              type="number"
-              lang="en"
-              value={values.amount}
-            />
-            <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-base font-medium">
-              {values.assetTicker}
-            </span>
-          </div>
-        </label>
-        <p className="text-primary text-right">
+      <div className="flex content-center justify-between mb-2">
+        <p className="text-base font-medium text-left">Amount</p>
+        <div className="text-primary text-right">
           <button
             onClick={setMaxAmount}
             className="background-transparent focus:outline-none px-3 py-1 mt-1 mb-1 mr-1 text-xs font-bold uppercase transition-all duration-150 ease-linear outline-none"
@@ -121,11 +62,16 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
           >
             SEND ALL
           </button>
-        </p>
-        {errors.amount && touched.amount && (
-          <p className="text-red h-10 mt-1 text-xs font-medium text-left">{errors.amount}</p>
-        )}
+        </div>
       </div>
+      <Input
+        name="amount"
+        placeholder="0"
+        type="number"
+        inputSuffix={values.assetTicker}
+        validateOnChange={true}
+        {...props}
+      />
 
       <div className="text-right">
         <Button
@@ -160,7 +106,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
   validationSchema: (props: AddressAmountFormProps): any =>
     Yup.object().shape({
       address: Yup.string()
-        .required('Please enter a valid address')
+        .required('Address is required')
         .test(
           'valid-address',
           'Address is not valid',
@@ -168,10 +114,19 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
         ),
 
       amount: Yup.number()
-        .required('Please enter a valid amount')
+        .required('Amount is required')
         .min(
           getMinAmountFromPrecision(props.asset.precision),
           'Amount should be at least 1 satoshi'
+        )
+        .test(
+          'too-many-decimals',
+          `Too many decimals (precision: ${props.asset.precision})`,
+          (value) => {
+            const splitted = value?.toString(10).replace(',', '.').split('.');
+            if (splitted && splitted.length < 2) return true;
+            return splitted !== undefined && splitted[1].length <= props.asset.precision;
+          }
         )
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return value !== undefined && value <= fromSatoshi(props.balance, props.asset.precision);
