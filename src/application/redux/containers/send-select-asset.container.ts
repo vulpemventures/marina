@@ -10,7 +10,9 @@ const mapStateToProps = (state: RootReducerState): SendSelectAssetProps => {
   const balances = selectBalances(...selectAllAccountsIDsSpendableViaUI(state))(state);
   const getAsset = assetGetterFromIAssets(state.assets);
   return {
-    balanceAssets: Object.keys(balances).filter(asset => balances[asset] > 0).map(getAsset),
+    balanceAssets: Object.keys(balances)
+      .filter((asset) => balances[asset] > 0)
+      .map(getAsset),
     balances,
   };
 };
