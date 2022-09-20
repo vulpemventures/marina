@@ -1,4 +1,4 @@
-import type { StateRestorerOpts} from 'ldk';
+import type { StateRestorerOpts } from 'ldk';
 import { toXpub } from 'ldk';
 import { createMigrate } from 'redux-persist';
 import type { PersistedState } from 'redux-persist/es/types';
