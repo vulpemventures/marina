@@ -1,4 +1,5 @@
-import type { StateRestorerOpts } from 'ldk';
+import type { StateRestorerOpts} from 'ldk';
+import { toXpub } from 'ldk';
 import { createMigrate } from 'redux-persist';
 import type { PersistedState } from 'redux-persist/es/types';
 import { walletInitState } from '../application/redux/reducers/wallet-reducer';
@@ -8,6 +9,9 @@ import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
 import type { WalletState } from './wallet';
+
+// v6 ensures the reducer only have xpub (and not zpub etc..)
+export type WalletPersistedStateV6 = WalletState & Partial<PersistedState>;
 
 // v5 only erases the current transactions state for all accounts during migration
 export type WalletPersistedStateV5 = WalletState & Partial<PersistedState>;
@@ -33,6 +37,10 @@ type deletedInV2 = {
 export type WalletPersistedStateV1 = Omit<WalletPersistedStateV2, keysAddedInV2> & deletedInV2;
 
 export const walletMigrations = {
+  6: (state: WalletPersistedStateV5): WalletPersistedStateV6 => ({
+    ...state,
+    accounts: accountsFieldXPub(state.accounts),
+  }),
   5: (state: WalletPersistedStateV4): WalletPersistedStateV5 => ({
     ...state,
     unspentsAndTransactions: removeTransactions(state.unspentsAndTransactions),
@@ -72,6 +80,21 @@ export const walletMigrations = {
     };
   },
 };
+
+function accountsFieldXPub(
+  accounts: WalletPersistedStateV5['accounts']
+): WalletPersistedStateV6['accounts'] {
+  const withxpub: WalletPersistedStateV6['accounts'] = {};
+  for (const [id, account] of Object.entries(accounts)) {
+    withxpub[id] = {
+      ...account,
+      masterXPub: account.masterXPub.startsWith('xpub')
+        ? account.masterXPub
+        : toXpub(account.masterXPub),
+    };
+  }
+  return withxpub;
+}
 
 function accountsFieldRenameV4(
   accounts: WalletPersistedStateV3['accounts']

@@ -60,6 +60,8 @@ export interface Account<
 // it is used to discriminate account by their type
 export interface AccountData {
   type: AccountType;
+  masterXPub: MasterXPub;
+  masterBlindingKey: MasterBlindingKey;
   [key: string]: any;
 }
 
@@ -77,8 +79,6 @@ export type MnemonicAccount = Account<Mnemonic, MasterPublicKey> & {
 export interface MnemonicAccountData extends AccountData {
   type: AccountType.MainAccount;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
-  masterXPub: MasterXPub;
-  masterBlindingKey: MasterBlindingKey;
 }
 
 // custom script account is decribed with
@@ -94,8 +94,6 @@ export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
   contractTemplate: ContractTemplate;
   restorerOpts: Record<NetworkString, CustomRestorerOpts>;
-  masterXPub: MasterXPub;
-  masterBlindingKey: MasterBlindingKey;
 }
 
 // Factory for mainAccount
