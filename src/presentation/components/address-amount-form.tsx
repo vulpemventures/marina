@@ -18,6 +18,7 @@ import type { NetworkString } from 'ldk';
 import { isValidAddressForNetwork } from '../../application/utils/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 import Input from './input';
+import React from 'react';
 
 interface AddressAmountFormValues {
   address: string;
@@ -35,6 +36,12 @@ interface AddressAmountFormProps {
   transaction: TransactionState;
   network: NetworkString;
   account: Account;
+}
+
+function isValidAmountString(precision: number, amount?: string) {
+  const splitted = amount?.replace(',', '.').split('.');
+  if (splitted && splitted.length < 2) return true;
+  return splitted !== undefined && splitted[1].length <= precision;
 }
 
 const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
@@ -65,13 +72,22 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
         </div>
       </div>
       <Input
+        {...props}
+        handleChange={(e: React.ChangeEvent<any>) => {
+          const amount = e.target.value as string;
+          if (isValidAmountString(values.assetPrecision, amount)) {
+            props.handleChange(e);
+          } else {
+            setFieldValue('amount', values.amount);
+          }
+        }}
+        value={values.amount}
         name="amount"
         placeholder="0"
         type="number"
         inputSuffix={values.assetTicker}
         validateOnChange={true}
         step={getMinAmountFromPrecision(values.assetPrecision).toString()}
-        {...props}
       />
 
       <div className="text-right">
@@ -120,14 +136,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
           getMinAmountFromPrecision(props.asset.precision),
           'Amount should be at least 1 satoshi'
         )
-        .test(
-          'too-many-decimals',
-          `Too many decimals (precision: ${props.asset.precision})`,
-          (value) => {
-            const splitted = value?.toString(10).replace(',', '.').split('.');
-            if (splitted && splitted.length < 2) return true;
-            return splitted !== undefined && splitted[1].length <= props.asset.precision;
-          }
+        .test('invalid-amount', 'Invalid amount', (value) =>
+          isValidAmountString(props.asset.precision, value?.toString())
         )
         .test('insufficient-funds', 'Insufficient funds', (value) => {
           return value !== undefined && value <= fromSatoshi(props.balance, props.asset.precision);
