@@ -22,7 +22,7 @@ import React from 'react';
 
 interface AddressAmountFormValues {
   address: string;
-  amount: number;
+  amount: string;
   assetTicker: string;
   assetPrecision: number;
   balance: number;
@@ -38,6 +38,32 @@ interface AddressAmountFormProps {
   account: Account;
 }
 
+/**
+ * Sanitize input amount
+ * @param eventDetailValue string
+ * @returns sanitizedValue string
+ */
+function sanitizeInputAmount(eventDetailValue: string, precision: number): string {
+  // Sanitize value
+  let sanitizedValue = eventDetailValue
+    // Replace comma by dot
+    .replace(',', '.')
+    // Remove non-numeric chars or period
+    .replace(/[^0-9.]/g, '');
+  // Prefix single dot
+  if (sanitizedValue === '.') sanitizedValue = '0.';
+  // Remove last dot. Remove all if consecutive
+  if ((sanitizedValue.match(/\./g) || []).length > 1) {
+    sanitizedValue = sanitizedValue.replace(/\.$/, '');
+  }
+  // No more than max decimal digits for respective unit
+  if (eventDetailValue.split(/[,.]/, 2)[1]?.length > precision) {
+    sanitizedValue = Number(eventDetailValue).toFixed(precision);
+  }
+
+  return sanitizedValue;
+}
+
 function isValidAmountString(precision: number, amount?: string) {
   const splitted = amount?.replace(',', '.').split('.');
   if (splitted && splitted.length < 2) return true;
@@ -50,7 +76,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
   const setMaxAmount = () => {
     const maxAmount = values.balance;
-    setFieldValue('amount', maxAmount);
+    setFieldValue('amount', maxAmount, true);
     setFieldTouched('amount', true, false);
   };
 
@@ -75,19 +101,14 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
         {...props}
         handleChange={(e: React.ChangeEvent<any>) => {
           const amount = e.target.value as string;
-          if (isValidAmountString(values.assetPrecision, amount)) {
-            props.handleChange(e);
-          } else {
-            setFieldValue('amount', values.amount);
-          }
+          setFieldValue('amount', sanitizeInputAmount(amount, values.assetPrecision), true);
         }}
         value={values.amount}
         name="amount"
         placeholder="0"
-        type="number"
+        type="text"
         inputSuffix={values.assetTicker}
         validateOnChange={true}
-        step={getMinAmountFromPrecision(values.assetPrecision).toString()}
       />
 
       <div className="text-right">
@@ -113,8 +134,8 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
       props.transaction.sendAmount > 0
-        ? (props.transaction.sendAmount ?? 0) * 10 ** props.asset.precision
-        : ('' as unknown as number),
+        ? sanitizeInputAmount((props.transaction.sendAmount ?? 0).toString(), props.asset.precision)
+        : '',
     assetTicker: props.asset.ticker ?? '??',
     assetPrecision: props.asset.precision,
     balance: fromSatoshi(props.balance ?? 0, props.asset.precision),
@@ -161,7 +182,7 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
     await props
       .dispatch(
         setAddressesAndAmount(
-          toSatoshi(values.amount, values.assetPrecision),
+          toSatoshi(Number(values.amount), values.assetPrecision),
           [changeAddress],
           createAddress(values.address)
         )
