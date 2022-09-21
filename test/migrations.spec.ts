@@ -32,6 +32,8 @@ describe('WalletState migrations', () => {
             namespace: 'custom-account',
             template: 'raw(00010203)',
           },
+          masterBlindingKey: 'master blinding key',
+          masterXPub: 'master extended pub',
         },
       },
       updaterLoaders: 0,
