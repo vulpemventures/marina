@@ -172,7 +172,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   }
 
   private handleIdsParam(ids?: AccountID[]): AccountID[] {
-    if (!ids) return selectAllAccountsIDs(this.state);
+    if (!ids) return [MainAccountID];
     if (ids.length === 0) return [];
     return ids;
   }
