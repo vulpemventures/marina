@@ -87,7 +87,7 @@ export interface MnemonicAccountData extends AccountData {
 export type CustomScriptAccount = Account<
   CustomScriptIdentity,
   CustomScriptIdentityWatchOnly,
-  Pick<ContractTemplate, 'template' | 'isSpendableByMarina'> & AccountInfo
+  Pick<ContractTemplate, 'template' | 'changeTemplate' | 'isSpendableByMarina'> & AccountInfo
 >;
 
 export interface CustomScriptAccountData extends AccountData {
@@ -156,6 +156,7 @@ function createCustomScriptAccount(
       masterXPub: toXpub(data.masterXPub),
       isReady: data.contractTemplate?.template !== undefined,
       template: data.contractTemplate?.template,
+      changeTemplate: data.contractTemplate?.changeTemplate,
       isSpendableByMarina: data.contractTemplate?.isSpendableByMarina,
     }),
   };

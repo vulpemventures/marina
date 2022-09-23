@@ -88,6 +88,7 @@ function asTaprootAddressInterface(
 export interface ContractTemplate {
   namespace: string;
   template?: string;
+  changeTemplate?: string;
   isSpendableByMarina?: boolean;
 }
 
@@ -123,9 +124,13 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     if (args.opts.template && !validateTemplate(args.opts.template))
       throw new Error('invalid template');
 
+    if (args.opts.changeTemplate && !validateTemplate(args.opts.changeTemplate))
+      throw new Error('invalid changeTemplate');
+
     this.contract = {
       namespace: args.opts.namespace,
       template: args.opts.template,
+      changeTemplate: args.opts.changeTemplate,
     };
     this.ecclib = args.ecclib;
     this.masterBlindingKeyNode = SLIP77Factory(this.ecclib).fromMasterBlindingKey(
@@ -137,7 +142,7 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
   private deriveMasterXPub(isChange: boolean, index: number, forSchnorr: boolean): string {
     return this.masterPubKeyNode
       .derivePath(makePath(isChange, index))
-      .publicKey.slice(forSchnorr ? 1 : 0)
+      .publicKey.subarray(forSchnorr ? 1 : 0)
       .toString('hex');
   }
 
@@ -170,7 +175,13 @@ export class CustomScriptIdentityWatchOnly extends Identity implements IdentityI
     if (!this.contract.template) {
       throw new Error('missing template');
     }
-    const template = this.contract.template;
+
+    let template = this.contract.template;
+
+    if (this.contract.changeTemplate && isChange) {
+      template = this.contract.changeTemplate;
+    }
+
     const artifact = JSON.parse(template) as Artifact;
     const publicKey = this.deriveMasterXPub(isChange, index, true);
 
@@ -299,6 +310,7 @@ export class CustomScriptIdentity
       opts: {
         namespace: args.opts.namespace,
         template: args.opts.template,
+        changeTemplate: args.opts.changeTemplate,
         masterPublicKey: masterPublicKey,
         masterBlindingKey: masterBlindingKeyNode.masterKey.toString('hex'),
       },

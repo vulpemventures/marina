@@ -179,6 +179,7 @@ export function walletReducer(
         contractTemplate: {
           namespace: payload.accountID,
           template: payload.template,
+          changeTemplate: payload.changeTemplate,
         },
       };
 
