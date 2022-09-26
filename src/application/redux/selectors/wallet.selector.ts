@@ -6,10 +6,11 @@ import type {
 } from '../../../domain/account';
 import { AccountType, accountFromMnemonicAndData, MainAccountID } from '../../../domain/account';
 import { decodePset } from 'ldk';
-import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
+import type { NetworkString, Outpoint, UnblindedOutput, StateRestorerOpts } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
 import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
 import { toStringOutpoint } from '../../utils/utxos';
+import { selectNetwork } from './app.selector';
 
 export const selectUtxos =
   (...accounts: AccountID[]) =>
@@ -164,3 +165,10 @@ export const selectEncryptedMnemonic = (state: RootReducerState) => {
 export const selectChangeAccount = (state: RootReducerState) => {
   return selectAccount(state.app.changeAccount)(state);
 };
+
+export function selectRestorerOpts<T extends StateRestorerOpts>(account: AccountID) {
+  return (state: RootReducerState): T => {
+    const net = selectNetwork(state);
+    return state.wallet.accounts[account].restorerOpts[net];
+  };
+}

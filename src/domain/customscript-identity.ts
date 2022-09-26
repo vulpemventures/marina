@@ -502,6 +502,24 @@ export function restoredCustomScriptIdentity(
   )(restorerOpts);
 }
 
+export function newCustomScriptWatchOnlyIdentity(
+  masterPublicKey: string,
+  masterBlindingKey: string,
+  contractTemplate: ContractTemplate,
+  network: NetworkString
+): CustomScriptIdentityWatchOnly {
+  return new CustomScriptIdentityWatchOnly({
+    type: IdentityType.MasterPublicKey,
+    chain: network,
+    ecclib: ecc,
+    opts: {
+      ...contractTemplate,
+      masterPublicKey,
+      masterBlindingKey,
+    },
+  });
+}
+
 export function restoredCustomScriptWatchOnlyIdentity(
   contractTemplate: ContractTemplate,
   masterPublicKey: string,
@@ -510,16 +528,7 @@ export function restoredCustomScriptWatchOnlyIdentity(
   restorerOpts: CustomRestorerOpts
 ): Promise<CustomScriptIdentityWatchOnly> {
   return customRestorerFromState<CustomScriptIdentityWatchOnly>(
-    new CustomScriptIdentityWatchOnly({
-      type: IdentityType.MasterPublicKey,
-      chain: network,
-      ecclib: ecc,
-      opts: {
-        ...contractTemplate,
-        masterPublicKey,
-        masterBlindingKey,
-      },
-    })
+    newCustomScriptWatchOnlyIdentity(masterPublicKey, masterBlindingKey, contractTemplate, network)
   )(restorerOpts);
 }
 

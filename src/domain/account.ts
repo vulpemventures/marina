@@ -21,6 +21,7 @@ import type {
   CustomScriptIdentityWatchOnly,
 } from './customscript-identity';
 import {
+  newCustomScriptWatchOnlyIdentity,
   restoredCustomScriptIdentity,
   restoredCustomScriptWatchOnlyIdentity,
 } from './customscript-identity';
@@ -53,6 +54,7 @@ export interface Account<
   type: AccountType;
   getSigningIdentity(password: string, network: NetworkString): Promise<SignID>;
   getWatchIdentity(network: NetworkString): Promise<WatchID>;
+  getNotRestoredWatchIdentity(network: NetworkString): WatchID;
   getInfo(): AccountInfoType;
 }
 
@@ -112,6 +114,8 @@ function createMainAccount(
         data.restorerOpts[network],
         network
       ),
+    getNotRestoredWatchIdentity: (network: NetworkString) =>
+      newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network),
     getDeepRestorer: (network: NetworkString) => {
       const pubkey = newMasterPublicKey(data.masterXPub, data.masterBlindingKey, network);
       return makeRestorerFromChainAPI<MasterPublicKey>(
@@ -150,6 +154,13 @@ function createCustomScriptAccount(
         data.masterBlindingKey,
         network,
         data.restorerOpts[network]
+      ),
+    getNotRestoredWatchIdentity: (network: NetworkString) =>
+      newCustomScriptWatchOnlyIdentity(
+        data.masterXPub,
+        data.masterBlindingKey,
+        data.contractTemplate,
+        network
       ),
     getInfo: () => ({
       accountID: data.contractTemplate?.namespace ?? '',
