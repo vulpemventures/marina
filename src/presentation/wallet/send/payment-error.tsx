@@ -28,7 +28,7 @@ const PaymentError: React.FC = () => {
     if (!txid) throw new Error('something went wrong with the tx broadcasting');
     // lock utxos used in successful broadcast
     for (const utxo of state.selectedUtxos) {
-      void dispatch(lockUtxo(utxo));
+      await dispatch(lockUtxo(utxo));
     }
     // navigate to payment success page
     history.push({

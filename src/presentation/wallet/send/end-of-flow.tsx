@@ -16,6 +16,7 @@ import { broadcastTx } from '../../../application/utils/network';
 import { blindAndSignPset } from '../../../application/utils/transaction';
 import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/actions/utxos';
 import { getUtxosFromChangeAddresses } from '../../../application/utils/utxos';
+import { INVALID_PASSWORD_ERROR } from '../../../application/utils/constants';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
@@ -42,9 +43,13 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
   const [signedTx, setSignedTx] = useState<string>();
+  const [invalidPasswordError, setInvalidPasswordError] = useState<boolean>(false);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleUnlockModalOpen = () => showUnlockModal(true);
+  const handleUnlockModalOpen = () => {
+    setInvalidPasswordError(false);
+    showUnlockModal(true);
+  };
 
   const handleUnlock = async (password: string) => {
     try {
@@ -103,14 +108,20 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         state: { txid },
       });
     } catch (error: unknown) {
-      return history.push({
-        pathname: SEND_PAYMENT_ERROR_ROUTE,
-        state: {
-          tx: signedTx,
-          error: extractErrorMessage(error),
-          selectedUtxos,
-        },
-      });
+      const errorMessage = extractErrorMessage(error);
+      if (errorMessage === INVALID_PASSWORD_ERROR) {
+        // does not use payment error view in case of invalid password
+        setInvalidPasswordError(true);
+      } else {
+        return history.push({
+          pathname: SEND_PAYMENT_ERROR_ROUTE,
+          state: {
+            tx: signedTx,
+            error: errorMessage,
+            selectedUtxos,
+          },
+        });
+      }
     }
 
     handleModalUnlockClose();
@@ -131,6 +142,11 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
           <Button className="mt-28" onClick={handleUnlockModalOpen}>
             Unlock
           </Button>
+        </div>
+      )}
+      {!isModalUnlockOpen && invalidPasswordError && (
+        <div className="text-center">
+          <p className="font-small text-red mt-4 text-sm break-all">{`${INVALID_PASSWORD_ERROR}, please retry`}</p>
         </div>
       )}
       <ModalUnlock
