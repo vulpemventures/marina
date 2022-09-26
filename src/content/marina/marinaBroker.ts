@@ -238,7 +238,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               ).getNotRestoredWatchIdentity(net);
               nextAddress = watchOnlyIdentity.getAddress(
                 false,
-                restorerOpts.lastUsedExternalIndex ?? 0,
+                increment(restorerOpts.lastUsedExternalIndex),
                 params?.[0]
               );
               break;
@@ -250,7 +250,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               );
               nextAddress = watchOnlyIdentity.getAddress(
                 false,
-                restorerOpts.lastUsedExternalIndex ?? 0
+                increment(restorerOpts.lastUsedExternalIndex)
               ).address;
               break;
             }
@@ -288,7 +288,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               ).getNotRestoredWatchIdentity(net);
               nextChangeAddress = watchOnlyIdentity.getAddress(
                 true,
-                restorerOpts.lastUsedInternalIndex ?? 0,
+                increment(restorerOpts.lastUsedInternalIndex),
                 params?.[0]
               );
               break;
@@ -300,7 +300,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               );
               nextChangeAddress = watchOnlyIdentity.getAddress(
                 true,
-                restorerOpts.lastUsedInternalIndex ?? 0
+                increment(restorerOpts.lastUsedInternalIndex)
               ).address;
               break;
             }
@@ -621,3 +621,8 @@ function toProviderAddress(addr: AddressInterface): ProviderAddressInterface {
 
   return result;
 }
+const increment = (n: number | undefined): number => {
+  if (n === undefined || n === null || n === -1) return 0;
+  if (n < 0) return 1; // -Infinity = 0, return 0+1=1
+  return n + 1;
+};
