@@ -181,8 +181,8 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
     >
       <Balance
         assetBalance={formatDecimalAmount(fromSatoshi(balances[feeAsset || lbtcAssetHash] ?? 0))}
-        assetHash={sendAsset}
-        assetTicker={assets[feeAsset || '']?.ticker ?? ''}
+        assetHash={feeAsset || lbtcAssetHash}
+        assetTicker={assets[feeAsset || lbtcAssetHash]?.ticker ?? ''}
         className="mt-4"
       />
       <div className="w-48 mx-auto border-b-0.5 border-graySuperLight pt-2 mb-6" />
