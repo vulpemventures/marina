@@ -16,7 +16,10 @@ import { broadcastTx } from '../../../application/utils/network';
 import { blindAndSignPset } from '../../../application/utils/transaction';
 import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/actions/utxos';
 import { getUtxosFromChangeAddresses } from '../../../application/utils/utxos';
-import { INVALID_PASSWORD_ERROR } from '../../../application/utils/constants';
+import {
+  INVALID_PASSWORD_ERROR,
+  SOMETHING_WENT_WRONG_ERROR,
+} from '../../../application/utils/constants';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
@@ -134,7 +137,7 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       currentPage="Unlock"
       hasBackBtn={!isModalUnlockOpen || false}
     >
-      {!isModalUnlockOpen && (
+      {!isModalUnlockOpen && !invalidPasswordError && (
         <div className="text-center">
           <h1 className="mx-1 mt-16 text-lg font-medium text-left">
             You must unlock your wallet to proceed with the transaction
@@ -146,7 +149,16 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       )}
       {!isModalUnlockOpen && invalidPasswordError && (
         <div className="text-center">
-          <p className="font-small text-red mt-4 text-sm break-all">{`${INVALID_PASSWORD_ERROR}, please retry`}</p>
+          <h1 className="mt-8 text-lg font-medium">{SOMETHING_WENT_WRONG_ERROR}</h1>
+          <p className="font-small mt-4 text-sm">{INVALID_PASSWORD_ERROR}</p>
+          <img className="mx-auto my-10" src="/assets/images/cross.svg" alt="error" />
+          <Button
+            className="w-36 container mx-auto mt-10"
+            onClick={handleUnlockModalOpen}
+            textBase={true}
+          >
+            Unlock
+          </Button>
         </div>
       )}
       <ModalUnlock
