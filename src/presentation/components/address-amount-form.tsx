@@ -10,7 +10,6 @@ import {
 import { createAddress } from '../../domain/address';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
 import * as Yup from 'yup';
-import type { TransactionState } from '../../application/redux/reducers/transaction-reducer';
 import type { Asset } from '../../domain/assets';
 import { updateToNextChangeAddress } from '../../application/redux/actions/wallet';
 import type { Account } from '../../domain/account';
@@ -33,7 +32,8 @@ interface AddressAmountFormProps {
   dispatch: ProxyStoreDispatch;
   asset: Asset;
   history: RouteComponentProps['history'];
-  transaction: TransactionState;
+  address: string;
+  amount: number;
   network: NetworkString;
   account: Account;
 }
@@ -83,7 +83,7 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
   return (
     <form onSubmit={handleSubmit} className="mt-8">
       <p className="mb-2 text-base font-medium text-left">Address</p>
-      <Input name="address" placeholder="" type="text" {...props} />
+      <Input {...props} name="address" placeholder="" type="text" value={values.address} />
 
       <div className="flex content-center justify-between mb-2">
         <p className="text-base font-medium text-left">Amount</p>
@@ -129,13 +129,16 @@ const AddressAmountForm = (props: FormikProps<AddressAmountFormValues>) => {
 
 const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmountFormValues>({
   mapPropsToValues: (props: AddressAmountFormProps): AddressAmountFormValues => ({
-    address: props.transaction.sendAddress?.value ?? '',
+    address: props.address,
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
     amount:
-      props.transaction.sendAmount > 0
-        ? sanitizeInputAmount((props.transaction.sendAmount ?? 0).toString(), props.asset.precision)
-        : '',
+      props.amount <= 0
+        ? ''
+        : sanitizeInputAmount(
+            fromSatoshi(props.amount ?? 0, props.asset.precision).toString(),
+            props.asset.precision
+          ),
     assetTicker: props.asset.ticker ?? '??',
     assetPrecision: props.asset.precision,
     balance: fromSatoshi(props.balance ?? 0, props.asset.precision),

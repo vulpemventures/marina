@@ -1,6 +1,6 @@
 import React from 'react';
-import { Switch, Route } from 'react-router-dom';
-import { ProtectedRoute } from './guards';
+import { Switch, Route } from 'react-router';
+import { ProtectedRedirectRoute, ProtectedRoute } from './guards';
 import {
   CONNECT_ENABLE_ROUTE,
   CONNECT_SPEND_ROUTE,
@@ -98,8 +98,9 @@ const Routes: React.FC = () => {
       <Route exact path={INITIALIZE_END_OF_FLOW_ROUTE} component={EndOfFlow} />
       <Route exact path={RESTORE_VAULT_ROUTE} component={WalletRestore} />
       <Route exact path={BACKUP_UNLOCK_ROUTE} component={BackUpUnlock} />
+
       {/*Wallet*/}
-      <ProtectedRoute exact path={DEFAULT_ROUTE} component={Home} />
+      <ProtectedRedirectRoute exact path={DEFAULT_ROUTE} component={Home} />
       <ProtectedRoute exact path={TRANSACTIONS_ROUTE} component={Transactions} />
       <ProtectedRoute exact path={RECEIVE_SELECT_ASSET_ROUTE} component={ReceiveSelectAsset} />
       <ProtectedRoute exact path={`${RECEIVE_ADDRESS_ROUTE}/:asset`} component={ReceiveView} />

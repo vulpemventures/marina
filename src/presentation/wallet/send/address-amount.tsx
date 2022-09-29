@@ -55,8 +55,9 @@ const AddressAmountView: React.FC<AddressAmountProps> = ({
         dispatch={dispatch}
         history={history}
         balance={balances[transaction.sendAsset] ?? 0}
-        transaction={transaction}
         network={network}
+        amount={transaction.sendAmount || 0}
+        address={transaction.sendAddress?.value || ''}
         asset={transactionAsset}
         account={changeAccount}
       />
