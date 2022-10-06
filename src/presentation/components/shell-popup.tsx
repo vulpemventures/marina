@@ -53,9 +53,9 @@ const ShellPopUp: React.FC<Props> = ({
       const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
       await Promise.all(allAccountsIds.map(makeUpdateTaskForId).map(dispatch));
     } else {
+      await dispatch(flushPendingTx());
       history.push(DEFAULT_ROUTE);
     }
-    await dispatch(flushPendingTx());
   };
   const handleBackBtn = () => {
     if (backBtnCb) {

@@ -20,7 +20,6 @@ import type { IAssets } from '../../../domain/assets';
 import { useDispatch } from 'react-redux';
 import type { BalancesByAsset } from '../../../application/redux/selectors/balance.selector';
 import {
-  flushPendingTx,
   setFeeAssetAndAmount,
   setFeeChangeAddress,
   setPendingTxStep,
@@ -75,18 +74,6 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 }) => {
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
-
-  useEffect(() => {
-    if (!changeAddress?.value || !sendAddress?.value || !sendAsset) {
-      dispatch(flushPendingTx()).catch(console.error);
-      history.goBack();
-    } else {
-      dispatch(setPendingTxStep('choose-fee')).catch(console.error);
-    }
-    return () => {
-      setFeeAsset(lbtcAssetHash);
-    };
-  }, []);
 
   const [state, setState] = useState(initialState);
   const [feeAsset, setFeeAsset] = useState<string | undefined>(undefined);
@@ -357,7 +344,7 @@ function actionsFromState(
   const actions: AnyAction[] = [];
   const feeAmount = state.topup ? state.topup.assetAmount : feeAmountFromTx(state.unsignedPset);
   actions.push(setPset(state.unsignedPset, state.utxos));
-  actions.push(setPendingTxStep('confirmation'));
+  actions.push(setPendingTxStep('choose-fee'));
   actions.push(setFeeAssetAndAmount(feeCurrency, feeAmount));
 
   if (state.feeChange) {
