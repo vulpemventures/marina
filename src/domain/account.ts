@@ -60,6 +60,8 @@ export interface Account<
 // it is used to discriminate account by their type
 export interface AccountData {
   type: AccountType;
+  masterXPub: MasterXPub;
+  masterBlindingKey: MasterBlindingKey;
   [key: string]: any;
 }
 
@@ -77,8 +79,6 @@ export type MnemonicAccount = Account<Mnemonic, MasterPublicKey> & {
 export interface MnemonicAccountData extends AccountData {
   type: AccountType.MainAccount;
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
-  masterXPub: MasterXPub;
-  masterBlindingKey: MasterBlindingKey;
 }
 
 // custom script account is decribed with
@@ -87,15 +87,13 @@ export interface MnemonicAccountData extends AccountData {
 export type CustomScriptAccount = Account<
   CustomScriptIdentity,
   CustomScriptIdentityWatchOnly,
-  Pick<ContractTemplate, 'template' | 'isSpendableByMarina'> & AccountInfo
+  Pick<ContractTemplate, 'template' | 'changeTemplate' | 'isSpendableByMarina'> & AccountInfo
 >;
 
 export interface CustomScriptAccountData extends AccountData {
   type: AccountType.CustomScriptAccount;
   contractTemplate: ContractTemplate;
   restorerOpts: Record<NetworkString, CustomRestorerOpts>;
-  masterXPub: MasterXPub;
-  masterBlindingKey: MasterBlindingKey;
 }
 
 // Factory for mainAccount
@@ -158,6 +156,7 @@ function createCustomScriptAccount(
       masterXPub: toXpub(data.masterXPub),
       isReady: data.contractTemplate?.template !== undefined,
       template: data.contractTemplate?.template,
+      changeTemplate: data.contractTemplate?.changeTemplate,
       isSpendableByMarina: data.contractTemplate?.isSpendableByMarina,
     }),
   };

@@ -59,7 +59,7 @@ import type { CreateAccountPopupResponse } from '../../presentation/connect/crea
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
-import type { Artifact } from '@ionio-lang/ionio';
+import type { Artifact, ArtifactFunction } from '@ionio-lang/ionio';
 import { PrimitiveType } from '@ionio-lang/ionio';
 import type { AnyAction } from 'redux';
 import { isTaprootAddressInterface } from '../../domain/customscript-identity';
@@ -172,7 +172,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   }
 
   private handleIdsParam(ids?: AccountID[]): AccountID[] {
-    if (!ids) return selectAllAccountsIDs(this.state);
+    if (!ids) return [MainAccountID];
     if (ids.length === 0) return [];
     return ids;
   }
@@ -436,25 +436,44 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           }
 
           let contract: Template | undefined;
+          let changeContract: Template | undefined;
           if (params && params.length > 0) {
             if (!validateTemplate(params[0])) {
               throw new Error('Invalid template');
             }
             contract = params[0];
+
+            if (params.length > 1) {
+              if (!validateTemplate(params[1])) {
+                throw new Error('Invalid change template');
+              }
+              changeContract = params[1];
+            }
           }
 
           await this.store.dispatchAsync(
-            setCustomScriptTemplate(this.selectedAccount, contract!.template)
+            setCustomScriptTemplate(
+              this.selectedAccount,
+              contract!.template,
+              changeContract?.template
+            )
           );
 
-          const artifact: Artifact = JSON.parse(contract!.template);
-          const isSpendableByMarina = artifact.functions.every((fn) => {
+          const isFuncSpendable = (fn: ArtifactFunction) => {
             return (
               fn.functionInputs.length === 1 &&
               fn.functionInputs[0].type === PrimitiveType.Signature &&
               (!fn.require || fn.require.length === 0)
             );
-          });
+          };
+
+          const artifact: Artifact = JSON.parse(contract!.template);
+          let isSpendableByMarina = artifact.functions.every(isFuncSpendable);
+
+          if (isSpendableByMarina && changeContract) {
+            const changeArtifact = JSON.parse(changeContract.template);
+            isSpendableByMarina = changeArtifact.functions.every(isFuncSpendable);
+          }
 
           await this.store.dispatchAsync(
             setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)

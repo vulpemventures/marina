@@ -18,6 +18,10 @@ import { blindAndSignPsetV2 } from '../../../application/utils/transaction';
 import { addUnconfirmedUtxos, lockUtxo } from '../../../application/redux/actions/utxos';
 import { getUtxosFromChangeAddresses } from '../../../application/utils/utxos';
 import type { TopupWithAssetReply } from '../../../application/utils/taxi';
+import {
+  INVALID_PASSWORD_ERROR,
+  SOMETHING_WENT_WRONG_ERROR,
+} from '../../../application/utils/constants';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
@@ -46,9 +50,13 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(true);
   const [signedTx, setSignedTx] = useState<string>();
+  const [invalidPasswordError, setInvalidPasswordError] = useState<boolean>(false);
 
   const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleUnlockModalOpen = () => showUnlockModal(true);
+  const handleUnlockModalOpen = () => {
+    setInvalidPasswordError(false);
+    showUnlockModal(true);
+  };
 
   const handleUnlock = async (password: string) => {
     try {
@@ -134,15 +142,20 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         state: { txid },
       });
     } catch (error: unknown) {
-      console.error(error);
-      return history.push({
-        pathname: SEND_PAYMENT_ERROR_ROUTE,
-        state: {
-          tx: signedTx,
-          error: extractErrorMessage(error),
-          selectedUtxos,
-        },
-      });
+      const errorMessage = extractErrorMessage(error);
+      if (errorMessage === INVALID_PASSWORD_ERROR) {
+        // does not use payment error view in case of invalid password
+        setInvalidPasswordError(true);
+      } else {
+        return history.push({
+          pathname: SEND_PAYMENT_ERROR_ROUTE,
+          state: {
+            tx: signedTx,
+            error: errorMessage,
+            selectedUtxos,
+          },
+        });
+      }
     }
 
     handleModalUnlockClose();
@@ -155,12 +168,26 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
       currentPage="Unlock"
       hasBackBtn={!isModalUnlockOpen || false}
     >
-      {!isModalUnlockOpen && (
+      {!isModalUnlockOpen && !invalidPasswordError && (
         <div className="text-center">
           <h1 className="mx-1 mt-16 text-lg font-medium text-left">
             You must unlock your wallet to proceed with the transaction
           </h1>
           <Button className="mt-28" onClick={handleUnlockModalOpen}>
+            Unlock
+          </Button>
+        </div>
+      )}
+      {!isModalUnlockOpen && invalidPasswordError && (
+        <div className="text-center">
+          <h1 className="mt-8 text-lg font-medium">{SOMETHING_WENT_WRONG_ERROR}</h1>
+          <p className="font-small mt-4 text-sm">{INVALID_PASSWORD_ERROR}</p>
+          <img className="mx-auto my-10" src="/assets/images/cross.svg" alt="error" />
+          <Button
+            className="w-36 container mx-auto mt-10"
+            onClick={handleUnlockModalOpen}
+            textBase={true}
+          >
             Unlock
           </Button>
         </div>
