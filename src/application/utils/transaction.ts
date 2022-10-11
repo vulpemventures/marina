@@ -8,15 +8,14 @@ import type {
   NetworkString,
   IdentityInterface,
   confidential,
-  OwnedInput} from 'ldk';
+  OwnedInput,
+  networks} from 'ldk';
 import {
-  ElementsValue,
+  Creator,
   Pset,
-  CreatorOutput,
   Finalizer,
   Extractor,
   address,
-  addToTx,
   createFeeOutput,
   decodePset,
   getUnblindURLFromTx,
@@ -26,8 +25,6 @@ import {
   getSats,
   getAsset,
   isConfidentialOutput,
-  networks,
-  AssetHash,
   payments,
   Psbt,
   Updater,
@@ -133,7 +130,8 @@ const functionOR =
 
     throw new Error(errorMsg);
   };
-const sigValidator = functionOR(
+
+const bothSigValidator = functionOR(
   Psbt.ECDSASigValidator(ecc),
   Psbt.SchnorrSigValidator(ecc)
 )('invalid signature');
@@ -144,7 +142,7 @@ const sigValidator = functionOR(
  * @param psetBase64 the unsign tx.
  * @param recipientAddresses a list of known recipients addresses (non wallet output addresses).
  */
-export async function blindAndSignPset(
+export async function blindAndSignPsetV0(
   psetBase64: string,
   selectedUtxos: UnblindedOutput[],
   identities: IdentityInterface[],
@@ -159,11 +157,11 @@ export async function blindAndSignPset(
     throw new Error('blindPSET error: not fully blinded');
   }
 
-  const signedPsetBase64 = await signPset(blindedPset, identities);
+  const signedPsetBase64 = await signPsetV0(blindedPset, identities);
 
   const pset = Psbt.fromBase64(signedPsetBase64);
   if (!skipSigValidation) {
-    if (!pset.validateSignaturesOfAllInputs(sigValidator)) {
+    if (!pset.validateSignaturesOfAllInputs(bothSigValidator)) {
       throw new Error('PSET is not fully signed');
     }
   }
@@ -198,26 +196,35 @@ export async function blindAndSignPsetV2(
 ): Promise<string> {
   let psetStr = psetBase64;
 
-  console.log('ins', selectedUtxos);
-  console.log('before blinding', psetStr);
   for (let i = 0; i < identities.length; i++) {
     const id = identities[i];
     psetStr = await id.blindPsetV2(psetStr, i === identities.length - 1, selectedUtxos);
   }
-  console.log('after blinding', psetStr);
-
-  for (let i = 0; i < identities.length; i++) {
-    const id = identities[i];
-    psetStr = await id.signPsetV2(psetStr);
-  }
-
+  
+  psetStr = await signPsetV2(psetStr, identities);
   const pset = Pset.fromBase64(psetStr);
   new Finalizer(pset).finalize();
 
   return Extractor.extract(pset).toHex();
 }
 
-export async function signPset(
+export async function signPsetV2(
+  psetBase64: string,
+  identities: IdentityInterface[]
+): Promise<string> {
+  let psetStr = psetBase64;
+  for (const id of identities) {
+    psetStr = await id.signPsetV2(psetStr);
+    try {
+      if (Pset.fromBase64(psetStr).validateAllSignatures(bothSigValidator)) return psetStr;
+    } catch {
+      continue
+    }
+  }
+  return psetStr;
+}
+
+export async function signPsetV0(
   psetBase64: string,
   identities: IdentityInterface[]
 ): Promise<string> {
@@ -225,7 +232,7 @@ export async function signPset(
   for (const id of identities) {
     pset = await id.signPset(pset);
     try {
-      if (decodePset(pset).validateSignaturesOfAllInputs(sigValidator)) break;
+      if (decodePset(pset).validateSignaturesOfAllInputs(bothSigValidator)) break;
     } catch {
       continue;
     }
@@ -274,16 +281,20 @@ export function createTaxiTxFromTopup(
   );
 
   const pset = Pset.fromBase64(taxiReply.topup.partial);
-  const initialNumberOfInputs = pset.inputs.length;
+  const initialNumberOfInputs = pset.globals.inputCount;
   const updater = new Updater(pset);
   updater.addInputs(selectedUtxos.map((u) => new CreatorInput(u.txid, u.vout)));
   for (let i = 0; i < selectedUtxos.length; i++) {
     updater.addInWitnessUtxo(i + initialNumberOfInputs, selectedUtxos[i].prevout);
     updater.addInSighashType(i + initialNumberOfInputs, Transaction.SIGHASH_ALL);
-  }
-  updater.addOutputs(
-    recipients.concat(changeOutputs).map((r) => new CreatorOutput(r.asset, r.value, r.address, 0))
-  );
+  } 
+  updater.addOutputs(recipients.concat(changeOutputs).map((r) => ({ 
+    amount: r.value, 
+    asset: r.asset, 
+    script: address.toOutputScript(r.address), 
+    blindingPublicKey: isConfidentialAddress(r.address) ? address.fromConfidential(r.address).blindingKey : undefined,
+    blinderIndex: isConfidentialAddress(r.address) ? 1 : undefined,
+  })));
 
   return { pset: updater.pset.toBase64(), selectedUtxos };
 }
@@ -301,13 +312,12 @@ export async function createSendPset(
   feeAssetHash: string,
   changeAddressGetter: ChangeAddressFromAssetGetter,
   network: NetworkString,
-  data?: DataRecipient[]
+  data?: DataRecipient[],
+  coinSelector: CoinSelector = greedyCoinSelector()
 ): Promise<{
   pset: string;
   selectedUtxos: UnblindedOutput[];
 }> {
-  const coinSelector = greedyCoinSelector();
-
   if (feeAssetHash === lbtcAssetByNetwork(network)) {
     const targetRecipients = recipients.concat(
       data ? data.map((d) => ({ ...d, address: '' })) : []
@@ -322,7 +332,9 @@ export async function createSendPset(
     // compute the amount according to tx size
     const feeOutput = createFeeOutput(
       selectedUtxos.length,
-      changeOutputs.length + recipients.length + (data ? data.length : 0) + 1,
+      changeOutputs.length + recipients.filter(r => isConfidentialAddress(r.address)).length + (data ? data.length : 0) + 1,
+      recipients.filter(r => !isConfidentialAddress(r.address)).length,
+      [...recipients.map(r => address.toOutputScript(r.address).length), ...changeOutputs.map(c => address.toOutputScript(c.address).length)],
       0.1,
       feeAssetHash
     );
@@ -333,18 +345,26 @@ export async function createSendPset(
       changeAddressGetter
     );
 
-    const emptyTx = new Psbt({ network: networks[network] }).toBase64();
-    let pset = addToTx(
-      emptyTx,
-      selection.selectedUtxos,
-      recipients.concat(selection.changeOutputs).concat([feeOutput])
-    );
+    const pset = Creator.newPset();
+    const updater = new Updater(pset);
+    updater
+      .addInputs(selection.selectedUtxos.map(u => ({ txid: u.txid, txIndex: u.vout, witnessUtxo: u.prevout, sighashType: Transaction.SIGHASH_ALL })))
+      .addOutputs(
+        [...recipients, ...selection.changeOutputs].map(r => ({ 
+          amount: r.value, 
+          asset: r.asset, 
+          script: address.toOutputScript(r.address), 
+          blindingPublicKey: isConfidentialAddress(r.address) ? address.fromConfidential(r.address).blindingKey : undefined,
+          blinderIndex: isConfidentialAddress(r.address) ? 0 : undefined,
+        })))
+      .addOutputs([{ amount: feeOutput.value, asset: feeOutput.asset }]);
 
+    // add OP_RETURN outputs if needed
     if (data && data.length > 0) {
-      pset = withDataOutputs(pset, data);
+      updater.addOutputs(data.map(d => ({ amount: d.value, asset: d.asset, script: payments.embed({ data: [Buffer.from(d.data, 'hex')] }).output! })));
     }
 
-    return { pset, selectedUtxos: selection.selectedUtxos };
+    return { pset: updater.pset.toBase64(), selectedUtxos: selection.selectedUtxos };
   }
 
   const reply = await fetchTopupFromTaxi(taxiURL[network], feeAssetHash);
@@ -360,16 +380,23 @@ export async function createSendPset(
   return res;
 }
 
-/**
- * extract the fee amount (in satoshi) from an unsigned transaction.
- * @param tx base64 encoded string.
- */
-export const feeAmountFromTx = (tx: string): number => {
-  const utx = psetToUnsignedTx(tx);
-  const feeOutIndex = utx.outs.findIndex((out) => out.script.length === 0);
-  const feeOut = utx.outs[feeOutIndex];
-  return ElementsValue.fromBytes(feeOut.value).number;
-};
+export function isPsetV0(pset: string) {
+    try {
+      Psbt.fromBase64(pset);
+      return true;
+    } catch (e) {
+      return false;
+    }
+}
+
+export function isPsetV2(pset: string) {
+    try {
+      Pset.fromBase64(pset);
+      return true;
+    } catch (e) {
+      return false;
+    }
+}
 
 /**
  * Convert a TxInterface to DisplayInterface
@@ -523,21 +550,4 @@ export function sortRecipients(recipients: Recipient[]): {
   }
 
   return { data, addressRecipients };
-}
-
-// Add OP_RETURN outputs to psetBase64 (unsigned)
-function withDataOutputs(psetBase64: string, dataOutputs: DataRecipient[]) {
-  const pset = decodePset(psetBase64);
-
-  for (const recipient of dataOutputs) {
-    const opReturnPayment = payments.embed({ data: [Buffer.from(recipient.data, 'hex')] });
-    pset.addOutput({
-      script: opReturnPayment.output!,
-      asset: AssetHash.fromHex(recipient.asset).bytes,
-      value: ElementsValue.fromNumber(recipient.value).bytes,
-      nonce: Buffer.alloc(1),
-    });
-  }
-
-  return pset.toBase64();
 }

@@ -7,9 +7,9 @@ import { connectWithConnectData } from '../../application/redux/containers/with-
 import { useSelector } from 'react-redux';
 import { selectAllAccountForSigningTxState } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
-import { signPset } from '../../application/utils/transaction';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
+import { isPsetV0, isPsetV2, signPsetV0, signPsetV2 } from '../../application/utils/transaction';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -50,8 +50,10 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
       const identities = await Promise.all(
         accounts.map((a) => a.getSigningIdentity(password, network))
       );
-      const signedPset = await signPset(tx.pset, identities);
 
+      const signFunction = isPsetV0(tx.pset) ? signPsetV0 : isPsetV2(tx.pset) ? signPsetV2 : undefined;
+      if (!signFunction) throw new Error('Unsupported pset version');
+      const signedPset = await signFunction(tx.pset, identities);
       await sendResponseMessage(true, signedPset);
 
       window.close();

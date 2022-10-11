@@ -329,6 +329,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
+          console.log(signedTxHex)
           const txid = await broadcastTx(selectEsploraURL(this.state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 

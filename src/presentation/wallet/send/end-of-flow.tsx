@@ -7,7 +7,7 @@ import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../rout
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import type { Account } from '../../../domain/account';
-import type { NetworkString, OwnedInput, UnblindedOutput } from 'ldk';
+import type { NetworkString, OwnedInput, PsetInput, UnblindedOutput } from 'ldk';
 import { Pset } from 'ldk';
 import { updateTaskAction } from '../../../application/redux/actions/task';
 import { useDispatch } from 'react-redux';
@@ -74,33 +74,29 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
           ownedInputs.push({
             index,
             value: blindingData.value,
-            valueBlinder: Buffer.from(blindingData.valueBlinder, 'base64'),
-            assetBlinder: Buffer.from(blindingData.assetBlinder, 'base64'),
+            valueBlindingFactor: Buffer.from(blindingData.valueBlinder, 'base64'),
+            assetBlindingFactor: Buffer.from(blindingData.assetBlinder, 'base64'),
             asset: Buffer.from(blindingData.asset, 'hex').reverse(),
           });
           index++;
         }
       }
 
+      const findFunc = (input: PsetInput) => (u: UnblindedOutput) =>
+        u.txid === Buffer.from(input.previousTxid).reverse().toString('hex') &&
+        u.vout === input.previousTxIndex
+
       const inputs = Pset.fromBase64(pset).inputs;
       for (let i = index; i < inputs.length; i++) {
-        const utxo = selectedUtxos.find(
-          (u) =>
-            u.txid === Buffer.from(inputs[i].previousTxid).reverse().toString('hex') &&
-            u.vout === inputs[i].previousTxIndex
-        );
+        const utxo = selectedUtxos.find(findFunc(inputs[i]));
         if (!utxo) throw new Error(`missing utxo for input #${i}`);
         ownedInputs.push({
           index: i,
           ...utxo.unblindData,
-          valueBlinder: utxo.unblindData.valueBlindingFactor,
-          assetBlinder: utxo.unblindData.assetBlindingFactor,
         });
       }
 
       const tx = await blindAndSignPsetV2(pset, identities, ownedInputs);
-
-      console.log(tx);
       setSignedTx(tx);
 
       const txid = await broadcastTx(explorerURL, tx);

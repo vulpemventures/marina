@@ -7,9 +7,11 @@ import type {
   CoinSelectorErrorFn,
   NetworkString,
   RecipientInterface,
-  UnblindedOutput,
+  UnblindedOutput
 } from 'ldk';
-import { getNetwork, greedyCoinSelector, walletFromCoins } from 'ldk';
+import {
+  Pset, getNetwork, greedyCoinSelector
+} from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -35,7 +37,7 @@ import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
 import type { TopupWithAssetReply } from '../../../application/utils/taxi';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
-import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
+import { createTaxiTxFromTopup, createSendPset } from '../../../application/utils/transaction';
 
 export interface ChooseFeeProps {
   network: NetworkString;
@@ -114,14 +116,14 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
     const newStatePromise = isTaxi()
       ? stateForTaxiPSET(
-          changeAccount,
-          feeAsset,
-          getRecipient(),
-          changeAddress,
-          utxos,
-          network,
-          state.topup
-        )
+        changeAccount,
+        feeAsset,
+        getRecipient(),
+        changeAddress,
+        utxos,
+        network,
+        state.topup
+      )
       : stateForRegularPSET(getRecipient(), changeAddress.value, utxos, network, changeAccount);
 
     newStatePromise().then(setState).catch(handleError).finally(done);
@@ -207,9 +209,8 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
             <span className="font-regular mr-6 text-base">
               {!isTaxi()
                 ? `${fromSatoshiStr(feeAmountFromTx(state.unsignedPset))} L-BTC`
-                : `${fromSatoshiStr(state.topup?.assetAmount || 0)} ${
-                    assets[feeAsset]?.ticker || feeAsset.slice(0, 4).toUpperCase()
-                  } *`}
+                : `${fromSatoshiStr(state.topup?.assetAmount || 0)} ${assets[feeAsset]?.ticker || feeAsset.slice(0, 4).toUpperCase()
+                } *`}
             </span>
           </div>
           {taxiAssets.includes(feeAsset) && (
@@ -235,18 +236,18 @@ const ChooseFeeView: React.FC<ChooseFeeProps> = ({
 
 const sideEffectCoinSelector =
   (coinSelector: CoinSelector) =>
-  (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
-    return (errorHandler: CoinSelectorErrorFn) =>
-      (
-        unspents: UnblindedOutput[],
-        outputs: RecipientInterface[],
-        changeGetter: ChangeAddressFromAssetGetter
-      ) => {
-        const result = coinSelector(errorHandler)(unspents, outputs, changeGetter);
-        sideEffect(result);
-        return result;
-      };
-  };
+    (sideEffect: (r: CoinSelectionResult) => void): CoinSelector => {
+      return (errorHandler: CoinSelectorErrorFn) =>
+        (
+          unspents: UnblindedOutput[],
+          outputs: RecipientInterface[],
+          changeGetter: ChangeAddressFromAssetGetter
+        ) => {
+          const result = coinSelector(errorHandler)(unspents, outputs, changeGetter);
+          sideEffect(result);
+          return result;
+        };
+    };
 
 const greedyCoinSelectorWithSideEffect = sideEffectCoinSelector(greedyCoinSelector());
 
@@ -260,7 +261,6 @@ function stateForRegularPSET(
   return async function () {
     const result: State = {};
     result.utxos = [];
-    const w = walletFromCoins(utxos, network);
 
     if (recipient.asset !== getNetwork(network).assetHash) {
       const watchID = await lbtcChangeAccount.getWatchIdentity(network);
@@ -271,20 +271,26 @@ function stateForRegularPSET(
       );
     }
 
-    result.unsignedPset = w.sendTx(
-      recipient,
+    const changeAddressGetter = (asset: string) => {
+      if (asset === recipient.asset) {
+        return changeAddress;
+      } else {
+        if (!result.feeChange) throw new Error('no fee change address');
+        return result.feeChange.value;
+      }
+    }
+
+    const { pset } = await createSendPset(
+      [recipient],
+      utxos,
+      getNetwork(network).assetHash,
+      changeAddressGetter,
+      network,
+      undefined,
       greedyCoinSelectorWithSideEffect(({ selectedUtxos }) => result.utxos?.push(...selectedUtxos)),
-      (asset: string) => {
-        if (asset === recipient.asset) {
-          return changeAddress;
-        } else {
-          if (!result.feeChange) throw new Error('no fee change address');
-          return result.feeChange.value;
-        }
-      },
-      true
     );
 
+    result.unsignedPset = pset;
     result.topup = undefined;
     return result;
   };
@@ -364,5 +370,11 @@ function actionsFromState(
 
   return actions;
 }
+
+function feeAmountFromTx(pset: string): number {
+  const p = Pset.fromBase64(pset);
+  const feeOutput = p.outputs.find((o) => o.script === undefined || o.script.length === 0);
+  return feeOutput ? feeOutput.value : 0;
+};
 
 export default ChooseFeeView;

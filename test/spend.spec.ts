@@ -1,8 +1,8 @@
-import type { Mnemonic, UnblindedOutput } from 'ldk';
-import { decodePset, fetchAndUnblindUtxos, networks, payments, Transaction } from 'ldk';
+import type { Mnemonic, OwnedInput, PsetInput, UnblindedOutput } from 'ldk';
+import { Pset , fetchAndUnblindUtxos, networks, payments, Transaction } from 'ldk';
 import { makeRandomMnemonic } from './test.utils';
 import { APIURL, broadcastTx, faucet } from './_regtest';
-import { blindAndSignPset, createSendPset } from '../src/application/utils/transaction';
+import { blindAndSignPsetV2, createSendPset } from '../src/application/utils/transaction';
 import * as ecc from 'tiny-secp256k1';
 
 jest.setTimeout(15000);
@@ -36,8 +36,22 @@ describe('create send pset (build, blind & sign)', () => {
       value,
     }));
 
-  const blindAndSign = (pset: string, changeAddress: string) =>
-    blindAndSignPset(pset, unspents, [mnemonic], [RECEIVER], [changeAddress]);
+  const blindAndSign = (pset: string, changeAddress: string) => {
+    const ownedInputs: OwnedInput[] = []
+    const psetv2 = Pset.fromBase64(pset);
+    const findFn = (input: PsetInput) => (u: UnblindedOutput) => Buffer.from(u.txid, 'hex').reverse().equals(input.previousTxid)
+    for (let i=0; i < psetv2.inputs.length; i++) {
+      const coin = unspents.find(findFn(psetv2.inputs[i]));
+      if (!coin) {
+        throw new Error('Coin not found');
+      }
+      ownedInputs.push({
+        index: i,
+        ...coin.unblindData
+      });
+    }
+    return blindAndSignPsetV2(pset, [mnemonic], ownedInputs);
+  }
 
   test('address should have a public key', async () => {
     const addr = await mnemonic.getNextAddress();
@@ -71,9 +85,9 @@ describe('create send pset (build, blind & sign)', () => {
       'regtest'
     );
 
-    const decoded = decodePset(pset);
-    expect(decoded.data.outputs).toHaveLength(4); // recipients outputs (2) + fee output + change output
-    expect(decoded.data.inputs).toHaveLength(1); // should select the faucet unspent
+    const decoded = Pset.fromBase64(pset);
+    expect(decoded.outputs).toHaveLength(4); // recipients outputs (2) + fee output + change output
+    expect(decoded.inputs).toHaveLength(1); // should select the faucet unspent
 
     const signed = await blindAndSign(pset, changeAddress);
     await broadcastTx(signed);
@@ -93,9 +107,9 @@ describe('create send pset (build, blind & sign)', () => {
       [{ data: OP_RETURN_DATA, value: 120, asset: network.assetHash }]
     );
 
-    const decoded = decodePset(pset);
-    expect(decoded.data.outputs).toHaveLength(4); // recipient output + fee output + change output + OP_RETURN output
-    expect(decoded.data.inputs).toHaveLength(1); // should select the faucet unspent
+    const decoded = Pset.fromBase64(pset);
+    expect(decoded.outputs).toHaveLength(4); // recipient output + fee output + change output + OP_RETURN output
+    expect(decoded.inputs).toHaveLength(1); // should select the faucet unspent
 
     const signed = await blindAndSign(pset, changeAddress);
     const signedTx = Transaction.fromHex(signed);

@@ -20,9 +20,9 @@ import type {
   Mnemonic,
   ScriptInputsNeeds,
   BlindingDataLike,
-
   bip341,
-  OwnedInput} from 'ldk';
+  OwnedInput
+} from 'ldk';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
 import type { BIP32Interface } from 'bip32';
@@ -30,7 +30,6 @@ import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
 import type { Argument, Artifact } from '@ionio-lang/ionio';
 import {
-  H_POINT,
   Contract,
   replaceArtifactConstructorWithArguments,
   toDescriptor,

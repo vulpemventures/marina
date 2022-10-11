@@ -12,14 +12,15 @@ import type {
   ChangeAddressFromAssetGetter,
   IdentityInterface,
   NetworkString,
+  OwnedInput,
+  PsetInput,
   RecipientInterface,
-  UnblindedOutput,
-} from 'ldk';
-import { Transaction, address, getNetwork } from 'ldk';
+  UnblindedOutput} from 'ldk';
+import { Pset, Transaction, address, getNetwork } from 'ldk';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushTx } from '../../application/redux/actions/connect';
 import type { ConnectData } from '../../domain/connect';
-import { blindAndSignPset, createSendPset } from '../../application/utils/transaction';
+import { blindAndSignPsetV2, createSendPset } from '../../application/utils/transaction';
 import { updateToNextChangeAddress } from '../../application/redux/actions/wallet';
 import { selectMainAccount, selectUtxos } from '../../application/redux/selectors/wallet.selector';
 import PopupWindowProxy from './popupWindowProxy';
@@ -106,7 +107,6 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
         connectData.tx,
         network,
         getter,
-        changeAddresses
       );
 
       // find unconfirmed utxos from change addresses
@@ -245,7 +245,6 @@ async function makeTransaction(
   connectDataTx: ConnectData['tx'],
   network: NetworkString,
   changeAddressGetter: ChangeAddressFromAssetGetter,
-  changeAddresses: string[]
 ) {
   if (!connectDataTx || !connectDataTx.recipients || !connectDataTx.feeAssetHash)
     throw new Error('transaction data are missing');
@@ -261,13 +260,24 @@ async function makeTransaction(
     data
   );
 
-  const txHex = await blindAndSignPset(
-    pset,
-    coins,
-    identities,
-    recipients.map(({ address }) => address),
-    changeAddresses
-  );
+  const ownedInputs: OwnedInput[] = [];
+  const psetv2 = Pset.fromBase64(pset);
+  const findFunc = (input: PsetInput) => (c: UnblindedOutput) => Buffer.from(c.txid, 'hex').reverse().equals(input.previousTxid)
+  for (let i = 0; i < psetv2.inputs.length; i++) {
+    const input = psetv2.inputs[i];
+    const coin = coins.find(findFunc(input));
+    if (!coin) throw new Error('missing coin');
+    ownedInputs.push({
+      index: i,
+      ...coin.unblindData,
+    });
+  }
 
+  const txHex = await blindAndSignPsetV2(
+    pset,
+    identities,
+    ownedInputs,
+  )
+ 
   return { txHex, selectedUtxos };
 }
