@@ -448,13 +448,13 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.1.9":
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.1.11.tgz#ce84ef85bc75262c3ca938b09a344e6aa282e1b0"
-  integrity sha512-t0frsvRLUbxNwQho6Ju0UlhNB4qhb6H1+EOfUyuh8cSuYZs+SyI58E/AFvyVUh4WQGR654oLYONEEWnkeFS5nw==
+"@ionio-lang/ionio@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.2.0.tgz#d69f02517ff92cc43c9d5ed0fca479f042d288ba"
+  integrity sha512-QVGHZI5+FiZt6YpgXasbBVJIC91/ibAAI/6O2iXXbGsFCRxv4efyShnk9G85LjvYoQ+Wv39LWm7D2FKK30uoxw==
   dependencies:
-    ldk "^0.5.2"
-    liquidjs-lib "git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support"
+    ldk "^0.5.8"
+    liquidjs-lib "^6.0.2-liquid.15"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -1131,11 +1131,6 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.8.4.tgz#54be907698f40de8a45770b48486aa3cbd3adff7"
   integrity sha512-WdlVphvfR/GJCLEMbNA8lJ0lhFNBj4SW3O+O5/cEGw9oYrv0al9zTwuQsq+myDUXgNx2jgBynoVgZ2MMJ6pbow==
 
-"@types/node@10.12.18":
-  version "10.12.18"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.18.tgz#1d3ca764718915584fcd9f6344621b7672665c67"
-  integrity sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==
-
 "@types/node@11.11.6":
   version "11.11.6"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-11.11.6.tgz#df929d1bb2eee5afdda598a41930fe50b43eaa6a"
@@ -1397,7 +1392,7 @@
     "@typescript-eslint/types" "4.33.0"
     eslint-visitor-keys "^2.0.0"
 
-"@vulpemventures/secp256k1-zkp@^2.0.0", "@vulpemventures/secp256k1-zkp@vulpemventures/secp256k1-zkp":
+"@vulpemventures/secp256k1-zkp@vulpemventures/secp256k1-zkp":
   version "2.1.0"
   resolved "https://codeload.github.com/vulpemventures/secp256k1-zkp/tar.gz/a515ce1d910a8bc4785a0b20d9e0630d3e808751"
   dependencies:
@@ -2151,7 +2146,7 @@ binary-extensions@^2.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-bindings@^1.3.0, bindings@^1.5.0:
+bindings@^1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.5.0.tgz#10353c9e945334bc0511a6d90b38fbc7c9c504df"
   integrity sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==
@@ -2163,27 +2158,10 @@ bip174-liquid@^1.0.3:
   resolved "https://registry.yarnpkg.com/bip174-liquid/-/bip174-liquid-1.0.3.tgz#5009444091da80277c45ee90c255d7919646f907"
   integrity sha512-e69sC0Cq2tBJuhG2+wieXv40DN13YBR/wbIjZp4Mqwpar5vQm8Ldqijdd6N33XG7LtfvQi/zKm5fSzdPY/9mgw==
 
-"bip174-liquid@https://github.com/louisinger/bip174.git#bip370":
-  version "1.0.3"
-  resolved "https://github.com/louisinger/bip174.git#994d06eee3dda6690ed9feda0af96b42a3eec1c5"
-
 bip174@^2.0.1:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/bip174/-/bip174-2.1.0.tgz#cd3402581feaa5116f0f00a0eaee87a5843a2d30"
   integrity sha512-lkc0XyiX9E9KiVAS1ZiOqK1xfiwvf4FXDDdkDq5crcDzOq+xGytY+14qCsqz7kCiy8rpN1CRNfacRhf9G3JNSA==
-
-bip32@^2.0.4:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/bip32/-/bip32-2.0.6.tgz#6a81d9f98c4cd57d05150c60d8f9e75121635134"
-  integrity sha512-HpV5OMLLGTjSVblmrtYRfFFKuQB+GArM0+XP8HGWfJ5vxYBqo+DesvJwOdC2WJ3bCkZShGf0QIfoIpeomVzVdA==
-  dependencies:
-    "@types/node" "10.12.18"
-    bs58check "^2.1.1"
-    create-hash "^1.2.0"
-    create-hmac "^1.1.7"
-    tiny-secp256k1 "^1.1.3"
-    typeforce "^1.11.5"
-    wif "^2.0.6"
 
 bip32@^3.0.1:
   version "3.1.0"
@@ -2250,7 +2228,7 @@ bitset@^5.1.1:
   resolved "https://registry.yarnpkg.com/bitset/-/bitset-5.1.1.tgz#b1908bd48db92b2c00ca136ec0188827e84d9b58"
   integrity sha512-oKaRp6mzXedJ1Npo86PKhWfDelI6HxxJo+it9nAcBB0HLVvYVp+5i6yj6DT5hfFgo+TS5T57MRWtw8zhwdTs3g==
 
-blech32@^1.0.1, blech32@^1.1.2:
+blech32@^1.0.1:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/blech32/-/blech32-1.1.2.tgz#545459680555e229603241be3b9bf0979f6fbb3a"
   integrity sha512-C5qxzoF9KyX88X8Zz18cZ6BOeL0n5/Eg/cDot1frntkArRMwg1djNim5wA6QFWwu0lJ1LN8iiRMN4Lp2kZzdfA==
@@ -3756,7 +3734,7 @@ electron-to-chromium@^1.4.251:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.277.tgz#6dc3d9724a0a19b7ab155bf8e37967357a081dc5"
   integrity sha512-Ej4VyUfGdVY5D2J5WHAVNqrEFBKgeNcX7p/bBQU4x/VKwvnyEvGd62NEkIK3lykLEe9Cg4MCcoWAa+u97o0u/A==
 
-elliptic@^6.4.0, elliptic@^6.5.2, elliptic@^6.5.3:
+elliptic@^6.5.2, elliptic@^6.5.3:
   version "6.5.4"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.4.tgz#da37cebd31e79a1367e941b592ed1fbebd58abbb"
   integrity sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==
@@ -6632,21 +6610,7 @@ lcid@^3.0.0:
   dependencies:
     invert-kv "^3.0.0"
 
-ldk@^0.5.2:
-  version "0.5.8"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.5.8.tgz#c9ee3af9397843cb166689789e39d4e9c0d25f67"
-  integrity sha512-IMsMKRxFNFhgM1SaqaCI84ABVTV9nd3AzXMP1zeX5ByD/R5lnWhzy9xrz8xxPsf1kSCEBs/N0uA1twSXQznuVw==
-  dependencies:
-    axios "^0.21.1"
-    bip32 "^3.0.1"
-    bip39 "^3.0.3"
-    bs58check "^2.1.2"
-    ecpair "^2.0.1"
-    liquidjs-lib "^6.0.2-liquid.7"
-    slip77 "^0.2.0"
-    tslib "^2.3.1"
-
-"ldk@git+https://github.com/louisinger/ldk.git#bumppsetv2":
+ldk@^0.5.8, "ldk@git+https://github.com/louisinger/ldk.git#bumppsetv2":
   version "0.5.8"
   resolved "git+https://github.com/louisinger/ldk.git#7a135582893e5c26bb722adde894c9caf3f15d1c"
   dependencies:
@@ -6710,7 +6674,7 @@ lines-and-columns@^2.0.2:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-2.0.3.tgz#b2f0badedb556b747020ab8ea7f0373e22efac1b"
   integrity sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==
 
-liquidjs-lib@^6.0.2-liquid.15, liquidjs-lib@^6.0.2-liquid.7:
+liquidjs-lib@^6.0.2-liquid.15:
   version "6.0.2-liquid.15"
   resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.15.tgz#54f377ceb79a4b46161dc665128ba9698c35c5f4"
   integrity sha512-bbVUO911C0VTilzrUSsQ2trXYrHu3SaB3hX3DW4HjakxnWEKsnBQ2Lk7XGP0As3Ae6L1PUQC4lqT85drrHbVYQ==
@@ -6730,27 +6694,6 @@ liquidjs-lib@^6.0.2-liquid.15, liquidjs-lib@^6.0.2-liquid.7:
     create-hash "^1.2.0"
     ecpair "^2.0.1"
     slip77 "^0.2.0"
-    typeforce "^1.11.3"
-    varuint-bitcoin "^1.1.2"
-    wif "^2.0.1"
-
-"liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support":
-  version "6.0.2-liquid.8"
-  resolved "git+https://github.com/louisinger/liquidjs-lib.git#680f5d94d27aa85935fe4a3caa444bf217e3739b"
-  dependencies:
-    "@types/randombytes" "^2.0.0"
-    "@types/wif" "^2.0.2"
-    "@vulpemventures/secp256k1-zkp" "^2.0.0"
-    axios "^0.21.1"
-    bech32 "^2.0.0"
-    bip174-liquid "https://github.com/louisinger/bip174.git#bip370"
-    bip32 "^2.0.4"
-    bip66 "^1.1.0"
-    bitcoin-ops "^1.4.0"
-    blech32 "^1.1.2"
-    bs58check "^2.0.0"
-    create-hash "^1.2.0"
-    ecpair "^2.0.1"
     typeforce "^1.11.3"
     varuint-bitcoin "^1.1.2"
     wif "^2.0.1"
@@ -7211,7 +7154,7 @@ mz@2.7.0:
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
 
-nan@^2.12.1, nan@^2.13.2, nan@^2.14.0:
+nan@^2.12.1, nan@^2.14.0:
   version "2.17.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.17.0.tgz#c0150a2368a182f033e9aa5195ec76ea41a199cb"
   integrity sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==
@@ -9609,17 +9552,6 @@ tiny-invariant@^1.0.2:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.1.tgz#8560808c916ef02ecfd55e66090df23a4b7aa642"
   integrity sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==
-
-tiny-secp256k1@^1.1.3:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/tiny-secp256k1/-/tiny-secp256k1-1.1.6.tgz#7e224d2bee8ab8283f284e40e6b4acb74ffe047c"
-  integrity sha512-FmqJZGduTyvsr2cF3375fqGHUovSwDi/QytexX1Se4BPuPZpTE5Ftp5fg+EFSuEf3lhZqgCRjEG3ydUQ/aNiwA==
-  dependencies:
-    bindings "^1.3.0"
-    bn.js "^4.11.8"
-    create-hmac "^1.1.7"
-    elliptic "^6.4.0"
-    nan "^2.13.2"
 
 tiny-secp256k1@^2.2.1:
   version "2.2.1"

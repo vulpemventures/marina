@@ -9,7 +9,8 @@ import type {
   IdentityInterface,
   confidential,
   OwnedInput,
-  networks} from 'ldk';
+  networks
+} from 'ldk';
 import {
   Creator,
   Pset,

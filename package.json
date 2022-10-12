@@ -20,7 +20,7 @@
     "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
   },
   "dependencies": {
-    "@ionio-lang/ionio": "^0.1.9",
+    "@ionio-lang/ionio": "^0.2.0",
     "@metamask/safe-event-emitter": "^2.0.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",
     "autoprefixer": "^9.8.6",
