@@ -15,7 +15,6 @@ import {
 import type { NetworkString } from 'ldk';
 import { useHistory } from 'react-router';
 import { SETTINGS_EXPLORER_CUSTOM_ROUTE } from '../routes/constants';
-import Button from '../components/button';
 
 export interface SettingsExplorerProps {
   currentExplorerURLs: ExplorerURLs;
@@ -67,7 +66,7 @@ const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
 
   const pushToCustomForm = () => history.push(SETTINGS_EXPLORER_CUSTOM_ROUTE);
 
-  const onSelect = (newValue: string) => {
+  const onSelect = async (newValue: string) => {
     switch (newValue) {
       case 'Custom':
         pushToCustomForm();
@@ -76,6 +75,7 @@ const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
       case 'Blockstream':
       case 'Mempool':
         setSelected(newValue);
+        await handleChange(newValue);
         break;
     }
   };
@@ -93,14 +93,6 @@ const SettingsExplorerView: React.FC<SettingsExplorerProps> = ({
         onSelect={onSelect}
         disabled={false}
       />
-
-      <div className="flex justify-end mt-1">
-        <div>
-          <Button type="button" onClick={() => handleChange(selected).catch(console.error)}>
-            Update
-          </Button>
-        </div>
-      </div>
     </ShellPopUp>
   );
 };
