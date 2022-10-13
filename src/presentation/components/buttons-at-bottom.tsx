@@ -5,7 +5,9 @@ interface Props {
 }
 
 const ButtonsAtBottom: React.FC<Props> = ({ children }: Props) => {
-  return <div className="bottom-14 right-8 absolute flex justify-end gap-1">{children}</div>;
+  let cN = 'bottom-14 right-0 container absolute flex ';
+  cN += React.Children.count(children) > 1 ? 'justify-between' : 'justify-end';
+  return <div className={cN}>{children}</div>;
 };
 
 export default ButtonsAtBottom;
