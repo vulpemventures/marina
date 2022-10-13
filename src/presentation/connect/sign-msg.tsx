@@ -16,6 +16,7 @@ import {
   SOMETHING_WENT_WRONG_ERROR,
 } from '../../application/utils/constants';
 import { decrypt } from '../../application/utils/crypto';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 function signMsgWithPassword(
   message: string,
@@ -101,14 +102,14 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
 
           <p className="text-small mt-2 font-medium"> {connectData.msg?.message}</p>
 
-          <div className="bottom-24 container absolute right-0 flex justify-between">
+          <ButtonsAtBottom>
             <Button isOutline={true} onClick={handleReject} textBase={true}>
               Reject
             </Button>
             <Button onClick={handleUnlockModalOpen} textBase={true}>
               Accept
             </Button>
-          </div>
+          </ButtonsAtBottom>
         </>
       ) : (
         <>

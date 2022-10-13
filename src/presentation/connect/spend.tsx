@@ -30,6 +30,7 @@ import { selectNetwork } from '../../application/redux/selectors/app.selector';
 import { lbtcAssetByNetwork } from '../../application/utils/network';
 import { Transaction } from 'liquidjs-lib';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -171,14 +172,14 @@ const ConnectSpend: React.FC<WithConnectDataProps> = ({ connectData }) => {
             ))}
           </div>
 
-          <div className="bottom-12 container absolute right-0 flex justify-between">
+          <ButtonsAtBottom>
             <Button isOutline={true} onClick={handleReject} textBase={true}>
               Reject
             </Button>
             <Button onClick={handleUnlockModalOpen} textBase={true}>
               Accept
             </Button>
-          </div>
+          </ButtonsAtBottom>
         </>
       ) : (
         <div className="flex flex-col justify-center p-2 align-middle">

@@ -9,6 +9,7 @@ import { enableWebsite, flushSelectedHostname } from '../../application/redux/ac
 import type { RootReducerState } from '../../domain/common';
 import { debounce } from 'lodash';
 import PopupWindowProxy from './popupWindowProxy';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
@@ -61,14 +62,14 @@ const ConnectEnableView: React.FC<WithConnectDataProps> = ({ connectData }) => {
         </div>
       ))}
 
-      <div className="bottom-12 container absolute right-0 flex justify-between">
+      <ButtonsAtBottom>
         <Button isOutline={true} onClick={handleReject} textBase={true}>
           Reject
         </Button>
         <Button onClick={debouncedHandleConnect} textBase={true}>
           Connect
         </Button>
-      </div>
+      </ButtonsAtBottom>
     </ShellConnectPopup>
   );
 };
