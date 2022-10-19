@@ -22,6 +22,7 @@ import {
   selectAllAccounts,
   selectAllAccountsIDs,
   selectMainAccount,
+  selectRestorerOpts,
   selectTransactions,
   selectUtxos,
 } from '../../application/redux/selectors/wallet.selector';
@@ -44,7 +45,7 @@ import type {
 import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
 import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import type { AccountID } from '../../domain/account';
+import type { AccountID, CustomScriptAccount, MnemonicAccount } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
 import type { AddressInterface, UnblindedOutput } from 'ldk';
 import { getAsset, getSats } from 'ldk';
@@ -228,19 +229,41 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             throw new Error('Only custom script accounts can expect construct parameters');
           }
           const net = selectNetwork(this.state);
-          const watchOnlyIdentity = await account.getWatchIdentity(net);
           let nextAddress: AddressInterface;
-          let constructorParams: Record<string, string | number> | undefined;
-          if (account.type === AccountType.MainAccount) {
-            nextAddress = await watchOnlyIdentity.getNextAddress();
-          } else {
-            if (params && params.length > 0) {
-              constructorParams = params[0];
+          const restorerOpts = selectRestorerOpts(this.selectedAccount)(this.state);
+          switch (account.type) {
+            case AccountType.CustomScriptAccount: {
+              const watchOnlyIdentity = (
+                account as CustomScriptAccount
+              ).getNotRestoredWatchIdentity(net);
+              nextAddress = watchOnlyIdentity.getAddress(
+                false,
+                increment(restorerOpts.lastUsedExternalIndex),
+                params?.[0]
+              );
+              break;
             }
-            nextAddress = await watchOnlyIdentity.getNextAddress(constructorParams);
+
+            case AccountType.MainAccount: {
+              const watchOnlyIdentity = (account as MnemonicAccount).getNotRestoredWatchIdentity(
+                net
+              );
+              nextAddress = watchOnlyIdentity.getAddress(
+                false,
+                increment(restorerOpts.lastUsedExternalIndex)
+              ).address;
+              break;
+            }
+
+            default: {
+              const watchOnlyIdentity = await account.getWatchIdentity(net);
+              nextAddress = await watchOnlyIdentity.getNextAddress(params?.[0]);
+              break;
+            }
           }
+
           await Promise.all(
-            updateToNextAddress(account.getInfo().accountID, net, constructorParams).map(
+            updateToNextAddress(account.getInfo().accountID, net, params?.[0]).map(
               (action: AnyAction) => this.store?.dispatchAsync(action)
             )
           );
@@ -253,20 +276,44 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
             throw new Error('Only custom script accounts can expect construct parameters');
           }
+
           const net = selectNetwork(this.state);
-          const xpub = await account.getWatchIdentity(net);
+          const restorerOpts = selectRestorerOpts(this.selectedAccount)(this.state);
           let nextChangeAddress: AddressInterface;
-          let constructorParams: Record<string, string | number> | undefined;
-          if (account.type === AccountType.MainAccount) {
-            nextChangeAddress = await xpub.getNextChangeAddress();
-          } else {
-            if (params && params.length > 0) {
-              constructorParams = params[0];
+
+          switch (account.type) {
+            case AccountType.CustomScriptAccount: {
+              const watchOnlyIdentity = (
+                account as CustomScriptAccount
+              ).getNotRestoredWatchIdentity(net);
+              nextChangeAddress = watchOnlyIdentity.getAddress(
+                true,
+                increment(restorerOpts.lastUsedInternalIndex),
+                params?.[0]
+              );
+              break;
             }
-            nextChangeAddress = await xpub.getNextChangeAddress(constructorParams);
+
+            case AccountType.MainAccount: {
+              const watchOnlyIdentity = (account as MnemonicAccount).getNotRestoredWatchIdentity(
+                net
+              );
+              nextChangeAddress = watchOnlyIdentity.getAddress(
+                true,
+                increment(restorerOpts.lastUsedInternalIndex)
+              ).address;
+              break;
+            }
+
+            default: {
+              const watchOnlyIdentity = await account.getWatchIdentity(net);
+              nextChangeAddress = await watchOnlyIdentity.getNextChangeAddress(params?.[0]);
+              break;
+            }
           }
+
           await Promise.all(
-            updateToNextChangeAddress(account.getInfo().accountID, net, constructorParams).map(
+            updateToNextChangeAddress(account.getInfo().accountID, net, params?.[0]).map(
               (action: AnyAction) => this.store?.dispatchAsync(action)
             )
           );
@@ -593,3 +640,8 @@ function toProviderAddress(addr: AddressInterface): ProviderAddressInterface {
 
   return result;
 }
+const increment = (n: number | undefined): number => {
+  if (n === undefined || n === null || n === -1) return 0;
+  if (n < 0) return 1; // -Infinity = 0, return 0+1=1
+  return n + 1;
+};
