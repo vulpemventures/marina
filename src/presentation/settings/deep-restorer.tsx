@@ -7,6 +7,7 @@ import { setDeepRestorerGapLimit } from '../../application/redux/actions/wallet'
 import Button from '../components/button';
 import type { AccountID } from '../../domain/account';
 import { restoreTaskAction } from '../../application/redux/actions/task';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 export interface DeepRestorerProps {
   restorationLoading: boolean;
@@ -48,18 +49,13 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
           );
         }}
       />
-
-      <Button
-        className={'m-2'}
-        disabled={restorationLoading || isLoading}
-        onClick={onClickRestore}
-        type="submit"
-      >
-        Restore
-      </Button>
-
       {restorationLoading && <p className="m-2">{'restoration loading'}...</p>}
       {error && <p className="m-2">{error}</p>}
+      <ButtonsAtBottom>
+        <Button disabled={restorationLoading || isLoading} onClick={onClickRestore} type="submit">
+          Restore
+        </Button>
+      </ButtonsAtBottom>
     </ShellPopUp>
   );
 };

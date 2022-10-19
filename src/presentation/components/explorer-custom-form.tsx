@@ -1,6 +1,5 @@
 import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
-import React from 'react';
 import { setExplorer } from '../../application/redux/actions/app';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import Button from './button';
@@ -8,6 +7,7 @@ import Input from './input';
 import * as Yup from 'yup';
 import type { NetworkString } from 'ldk';
 import type { ExplorerURLs } from '../../domain/app';
+import ButtonsAtBottom from './buttons-at-bottom';
 
 type SettingsExplorerFormValues = ExplorerURLs & {
   network: NetworkString;
@@ -35,18 +35,16 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       <p className="font-sm text-left">Batch Electrs URL</p>
       <Input name="batchServerURL" placeholder="Electrs batch server" type="text" {...props} />
 
-      <div className="bottom-15 right-8 absolute flex justify-end">
-        <div>
-          <Button
-            disabled={
-              !!errors.esploraURL || !!errors.electrsURL || !!errors.batchServerURL || isSubmitting
-            }
-            type="submit"
-          >
-            Update
-          </Button>
-        </div>
-      </div>
+      <ButtonsAtBottom>
+        <Button
+          disabled={
+            !!errors.esploraURL || !!errors.electrsURL || !!errors.batchServerURL || isSubmitting
+          }
+          type="submit"
+        >
+          Update
+        </Button>
+      </ButtonsAtBottom>
     </form>
   );
 };

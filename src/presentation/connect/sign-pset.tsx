@@ -10,6 +10,7 @@ import PopupWindowProxy from './popupWindowProxy';
 import { signPset } from '../../application/utils/transaction';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../application/utils/constants';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -82,14 +83,14 @@ const ConnectSignTransaction: React.FC<WithConnectDataProps> = ({ connectData })
             <b>WARNING</b> This transaction could potentially spend all of your funds.
           </p>
 
-          <div className="bottom-24 container absolute right-0 flex justify-between">
+          <ButtonsAtBottom>
             <Button isOutline={true} onClick={rejectSignRequest} textBase={true}>
               Reject
             </Button>
             <Button onClick={handleUnlockModalOpen} textBase={true}>
               Accept
             </Button>
-          </div>
+          </ButtonsAtBottom>
         </>
       ) : (
         <>

@@ -16,6 +16,7 @@ import ModalUnlock from '../components/modal-unlock';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import PopupWindowProxy from './popupWindowProxy';
 import * as ecc from 'tiny-secp256k1';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 export interface CreateAccountPopupResponse {
   accepted: boolean;
@@ -106,14 +107,14 @@ const ConnectCreateAccount: React.FC<WithConnectDataProps> = ({ connectData }) =
             <b>namespace:</b> {connectData.createAccount?.namespace}. <br />
           </p>
 
-          <div className="bottom-24 container absolute right-0 flex justify-between">
+          <ButtonsAtBottom>
             <Button isOutline={true} onClick={rejectSignRequest} textBase={true}>
               Reject
             </Button>
             <Button onClick={handleUnlockModalOpen} textBase={true}>
               Accept
             </Button>
-          </div>
+          </ButtonsAtBottom>
         </>
       ) : (
         <>

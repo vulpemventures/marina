@@ -10,6 +10,7 @@ import Input from '../components/input';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
 
 interface SettingsChangePasswordFormValues {
   currentPassword: string;
@@ -50,33 +51,28 @@ const SettingsChangePasswordForm = (props: FormikProps<SettingsChangePasswordFor
         type="password"
         {...props}
       />
-
-      <div className="flex justify-end">
-        <div className="pr-1">
-          <Button
-            isOutline={true}
-            onClick={handleCancel}
-            className="bg-secondary hover:bg-secondary-light"
-          >
-            Cancel
-          </Button>
-        </div>
-        <div>
-          <Button
-            disabled={
-              isSubmitting ||
-              !!(
-                (errors.currentPassword && touched.currentPassword) ||
-                (errors.newPassword && touched.newPassword) ||
-                (errors.confirmNewPassword && touched.confirmNewPassword)
-              )
-            }
-            type="submit"
-          >
-            Update
-          </Button>
-        </div>
-      </div>
+      <ButtonsAtBottom>
+        <Button
+          isOutline={true}
+          onClick={handleCancel}
+          className="bg-secondary hover:bg-secondary-light"
+        >
+          Cancel
+        </Button>
+        <Button
+          disabled={
+            isSubmitting ||
+            !!(
+              (errors.currentPassword && touched.currentPassword) ||
+              (errors.newPassword && touched.newPassword) ||
+              (errors.confirmNewPassword && touched.confirmNewPassword)
+            )
+          }
+          type="submit"
+        >
+          Update
+        </Button>
+      </ButtonsAtBottom>
     </form>
   );
 };
@@ -94,13 +90,13 @@ const SettingsChangePasswordEnhancedForm = withFormik<
   validationSchema: Yup.object().shape({
     currentPassword: Yup.string()
       .required('Please input password')
-      .min(8, 'Password is too short - should be 8 chars minimum.'),
+      .min(8, 'Password is too short, must be 8 chars or more'),
     newPassword: Yup.string()
       .required('Please input password')
-      .min(8, 'Password is too short - should be 8 chars minimum.'),
+      .min(8, 'Password is too short, must be 8 chars or more'),
     confirmNewPassword: Yup.string()
       .required('Please confirm password')
-      .min(8, 'Password is too short - should be 8 chars minimum.')
+      .min(8, 'Password is too short, must be 8 chars or more')
       .oneOf([Yup.ref('newPassword'), null], 'Passwords must match'),
   }),
 

@@ -6,6 +6,7 @@ import Button from './button';
 import Input from './input';
 import Modal from './modal';
 import { debounce } from 'lodash';
+import ButtonsAtBottom from './buttons-at-bottom';
 
 interface ModalUnlockFormValues {
   handleModalUnlockClose(): void;
@@ -27,22 +28,18 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
         <p className="mt-10 mb-5 text-base text-left">Enter your password to unlock your wallet</p>
         <Input name="password" placeholder="Password" type="password" {...props} />
       </div>
-      <div className="bottom-10 right-8 absolute flex justify-end">
-        <div className="pr-1">
-          <Button
-            isOutline={true}
-            onClick={() => values.handleModalUnlockClose()}
-            className="bg-secondary hover:bg-secondary-light"
-          >
-            Cancel
-          </Button>
-        </div>
-        <div>
-          <Button type="submit" disabled={isSubmitting}>
-            {!isSubmitting ? `Unlock` : `Please wait...`}
-          </Button>
-        </div>
-      </div>
+      <ButtonsAtBottom>
+        <Button
+          isOutline={true}
+          onClick={() => values.handleModalUnlockClose()}
+          className="bg-secondary hover:bg-secondary-light"
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {!isSubmitting ? `Unlock` : `Please wait...`}
+        </Button>
+      </ButtonsAtBottom>
     </form>
   );
 };
