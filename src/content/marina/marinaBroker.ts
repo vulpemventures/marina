@@ -490,7 +490,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             }
             contract = params[0];
 
-            if (params.length > 1) {
+            if (params[1]) {
               if (!validateTemplate(params[1])) {
                 throw new Error('Invalid change template');
               }
