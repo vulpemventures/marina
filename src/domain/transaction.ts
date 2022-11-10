@@ -1,57 +1,31 @@
-import type { NetworkString, UnblindedOutput } from 'ldk';
+export type UnblindingData = {
+    value: number;
+    asset: string;
+    assetBlindingFactor: string;
+    valueBlindingFactor: string;
+};
 
-export type UtxosAndTxsByNetwork = Record<NetworkString, UtxosAndTxs>;
-
-export interface UtxosAndTxs {
-  // outpoint string -> UnblindedOutput
-  utxosMap: Record<string, UnblindedOutput>;
-  transactions: TxsHistory;
-}
-
-export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 
 export enum TxType {
-  SelfTransfer = 0,
-  Deposit = 1,
-  Withdraw = 2,
-  Swap = 3,
-  Unknow = 4,
+  SelfTransfer = 'SelfTransfer',
+  Deposit = 'Deposit',
+  Withdraw = 'Withdraw',
+  Swap = 'Swap',
+  Unknow = 'Unknow',
 }
 
-export enum TxStatusEnum {
-  Confirmed = 1,
-  Pending = 0,
+export interface TxDetails {
+    height?: number;
+    hex?: string;
 }
 
-export interface Transfer {
-  asset: string;
-  // amount > 0 = received & amount < 0 = sent
-  amount: number;
+export interface UnblindedOutput {
+    txID: string;
+    vout: number;
+    blindingData?: UnblindingData;
 }
 
-export interface TxDisplayInterface {
-  type: TxType;
-  fee: number;
-  txId: string;
-  status: TxStatusEnum;
-  transfers: Transfer[];
-  webExplorersBlinders: string; // will be concat with webExplorerURL
-  blockTimeMs?: number;
-}
-
-export function newEmptyUtxosAndTxsHistory(): UtxosAndTxsByNetwork {
-  return {
-    liquid: {
-      utxosMap: {},
-      transactions: {},
-    },
-    testnet: {
-      utxosMap: {},
-      transactions: {},
-    },
-    regtest: {
-      utxosMap: {},
-      transactions: {},
-    },
-  };
+export interface CoinSelection {
+    utxos: UnblindedOutput[];
+    changeOutputs?: { asset: string, amount: number }[];
 }

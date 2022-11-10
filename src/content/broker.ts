@@ -1,14 +1,11 @@
 import browser from 'webextension-polyfill';
-import { serializerAndDeserializer } from '../application/redux/store';
-import { stringify } from '../application/utils/browser-storage-converters';
-import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
+import { stringify } from '../browser-storage-converters';
+import { isPopupResponseMessage, MessageHandler, openPopupMessage, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
 import { isResponseMessage } from '../domain/message';
-import { BrokerProxyStore } from './brokerProxyStore';
 
 export type BrokerOption = (broker: Broker) => void;
 
 export default class Broker<T extends string = string> {
-  protected store?: BrokerProxyStore = undefined;
   protected backgroundScriptPort: browser.Runtime.Port;
   protected providerName: string;
 
@@ -48,11 +45,16 @@ export default class Broker<T extends string = string> {
   }
 
   protected async openAndWaitPopup<T>(popupName: PopupName): Promise<T> {
-    this.backgroundScriptPort.postMessage({ name: popupName });
+    this.backgroundScriptPort.postMessage(openPopupMessage(popupName));
 
     return new Promise<T>((resolve) => {
       this.backgroundScriptPort.onMessage.addListener((message) => {
-        resolve(message.data as T);
+        if (isPopupResponseMessage(message)) {
+          if (message.data.error) {
+            throw new Error(message.data.error);
+          }
+          resolve(message.data.response as T);
+        }
       });
     });
   }
@@ -60,16 +62,6 @@ export default class Broker<T extends string = string> {
   // send Message to inject script
   sendMessage(message: ResponseMessage) {
     window.dispatchEvent(new CustomEvent(message.id, { detail: stringify(message.payload) }));
-  }
-
-  // Set up a webext-redux Proxy store
-  static async WithProxyStore(): Promise<BrokerOption> {
-    const proxyStore = new BrokerProxyStore(serializerAndDeserializer);
-    await proxyStore.ready();
-
-    return (b: Broker) => {
-      b.store = proxyStore;
-    };
   }
 }
 

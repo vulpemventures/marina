@@ -1,25 +1,64 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
+import Browser from 'webextension-polyfill';
 import browser from 'webextension-polyfill';
-import { testWalletData, testPasswordHash } from '../application/constants/cypress';
-import { logOut, onboardingCompleted } from '../application/redux/actions/app';
-import { enableWebsite } from '../application/redux/actions/connect';
-import { setAccount, setEncryptedMnemonic } from '../application/redux/actions/wallet';
-import { selectEncryptedMnemonic } from '../application/redux/selectors/wallet.selector';
-import { marinaStore, wrapMarinaStore } from '../application/redux/store';
-import { tabIsOpen } from '../application/utils/common';
-import { setUpPopup } from '../application/utils/popup';
-import { MainAccountID } from '../domain/account';
-import type { OpenPopupMessage, PopupName } from '../domain/message';
-import { isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
-import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
-import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { periodicTaxiUpdater, periodicUpdater } from './alarms';
+import { isLogInMessage, isLogOutMessage, OpenPopupMessage, PopupName } from '../domain/message';
+import {
+  isSubscribeMessage,
+  isOpenPopupMessage,
+  isPopupResponseMessage,
+} from '../domain/message';
+import { Subscriber } from '../domain/subscriber';
+import { POPUP_RESPONSE } from '../extension/popups/popupBroker';
+import { INITIALIZE_WELCOME_ROUTE } from '../extension/routes/constants';
+import { AppStorageAPI } from '../infrastructure/storage/app-repository';
+import { AssetStorageAPI } from '../infrastructure/storage/asset-repository';
+import { TaxiStorageAPI } from '../infrastructure/storage/taxi-repository';
+import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
+import { TaxiUpdater } from './taxi';
+import { Updater } from './updater';
+import { tabIsOpen } from './utils';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
-wrapMarinaStore(marinaStore); // wrap store to proxy store
+const walletRepository = new WalletStorageAPI();
+const appRepository = new AppStorageAPI();
+const assetRepository = new AssetStorageAPI(walletRepository);
+const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
+
+const updaterService = new Updater(walletRepository, appRepository, assetRepository);
+const subscriberService = new Subscriber(walletRepository, appRepository);
+const taxiService = new TaxiUpdater(taxiRepository, appRepository);
+
+// at startup, check if the user is logged in
+// if so, start the services
+appRepository.getStatus().then(({ isAuthenticated }) => {
+  if (isAuthenticated) {
+    startBackgroundServices();
+  }
+}).catch(console.error);
+
+async function startBackgroundServices() {
+  const { isOnboardingCompleted } = await appRepository.getStatus();
+  if (isOnboardingCompleted) {
+    console.warn('logInProcedure: starting services')
+    await Promise.allSettled([
+      updaterService.start(), 
+      subscriberService.start(),
+      taxiService.start(),
+    ]);
+  }
+}
+
+async function stopBackgroundServices() {
+  console.warn('logOutProcedure: stopping services')
+  await Promise.allSettled([
+    updaterService.stop(), 
+    subscriberService.stop(),
+    taxiService.stop(),
+  ]);
+}
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -31,31 +70,17 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     switch (reason) {
       //On first install, open new tab for onboarding
       case 'install': {
-        // /!\ skip onboarding in test env
-        if (process.env.NODE_ENV === 'test') {
-          marinaStore.dispatch(
-            setEncryptedMnemonic(testWalletData.encryptedMnemonic, testPasswordHash)
-          );
-          marinaStore.dispatch(setAccount(MainAccountID, testWalletData));
-          marinaStore.dispatch(enableWebsite('vulpemventures.github.io', 'regtest')); // skip the enable step too
-          await setUpPopup();
-          marinaStore.dispatch(onboardingCompleted());
-          break;
-        }
         // run onboarding flow on fullscreen
         welcomeTabID = await openInitializeWelcomeRoute();
         break;
       }
       case 'update': {
-        if (marinaStore?.getState()?.app?.isOnboardingCompleted) {
+        const { isOnboardingCompleted } = await appRepository.getStatus();
+        if (isOnboardingCompleted) {
           // After an update, and only if the user is already onboarded,
           // we need the setup the popup or the first click on the
           // extension icon will do nothing
-          await setUpPopup();
-          // After an update, all previous periodic updaters are lost.
-          // Re-enable them if the user is already onboarded
-          periodicUpdater();
-          periodicTaxiUpdater();
+          await browser.browserAction.setPopup({ popup: 'popup.html' });
         }
       }
     }
@@ -65,12 +90,10 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
+    const encryptedMnemonic = await walletRepository.getEncryptedMnemonic();
+    if (encryptedMnemonic) {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
-      // Set up the periodic updaters if user is onboarded
-      periodicUpdater();
-      periodicTaxiUpdater();
     }
   })().catch(console.error);
 });
@@ -87,7 +110,8 @@ browser.browserAction.onClicked.addListener(() => {
     // the wallet creation process, we let user re-open it
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
-    if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
+    const encryptedMnemonic = await walletRepository.getEncryptedMnemonic();
+    if (!encryptedMnemonic ) {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {
@@ -114,6 +138,27 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
     if (isPopupResponseMessage(message)) {
       // propagate popup response
       eventEmitter.emit(POPUP_RESPONSE, message.data);
+      return;
+    }
+
+    if (isSubscribeMessage(message)) {
+      subscriberService.subscribeAccount(message.data.account, true)
+        .then(() => port.postMessage({ data: true }))
+        .catch((error: any) => {
+          console.error(error);
+          port.postMessage({ data: false, error: error.message });
+        });
+      return;
+    }
+
+    if (isLogInMessage(message)) {
+      startBackgroundServices().catch(console.error);
+      return;
+    }
+
+    if (isLogOutMessage(message)) {
+      stopBackgroundServices().catch(console.error);
+      return;
     }
   });
 });
@@ -121,7 +166,7 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
 // Open the popup window and wait for a response
 // then forward the response to content-script
 async function handleOpenPopupMessage(message: OpenPopupMessage, port: browser.Runtime.Port) {
-  await createBrowserPopup(message.name);
+  await createBrowserPopup(message.data.name);
   eventEmitter.once(POPUP_RESPONSE, (data: any) => {
     port.postMessage(data);
   });
@@ -132,9 +177,11 @@ try {
   browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
   browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
-    if (newState !== 'active') {
-      // this will handle the logout when the extension is closed
-      marinaStore.dispatch(logOut());
+    console.debug('Idle state changed to ' + newState);
+    switch (newState) {
+      default:
+        stopBackgroundServices().catch(console.error);
+        break;
     }
   });
 } catch (error) {
@@ -178,3 +225,5 @@ async function createBrowserPopup(name?: PopupName) {
   };
   await browser.windows.create(options as any);
 }
+
+

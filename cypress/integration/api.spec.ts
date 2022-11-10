@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { testAppURL } from './../../src/application/constants/cypress';
+import { testAppURL } from './../../src/domain/constants/cypress';
 
 describe('My First Test', () => {
   it('Marina test app API should pass', async () => {

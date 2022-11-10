@@ -8,10 +8,10 @@ module.exports = {
     topLevelAwait: true,
   },
   entry: {
-    'index': './src/presentation/index.tsx',
+    'index': './src/extension/index.tsx',
     'background-script': './src/background/background-script.ts',
     'content-script': './src/content/content-script.ts',
-    'inject-script': './src/inject/inject-script',
+    'inject-script': './src/inject/inject-script.ts',
   },
   module: {
     rules: [
