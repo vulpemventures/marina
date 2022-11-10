@@ -349,7 +349,7 @@ export function* watchUpdateTask(): SagaGenerator<void, UpdateTaskAction> {
   // start the asset updater
   const assetsChan = yield* createChannel<{ assetHash: string; network: NetworkString }>();
   yield fork(assetsWorker, assetsChan);
-  yield fork(watchForAddUtxoAction, assetsChan); // this will fee the assets chan
+  yield fork(watchForAddUtxoAction, assetsChan); // this will feed the assets chan when ADD_UTXO is dispatched
 
   // listen for UPDATE_TASK
   while (true) {
