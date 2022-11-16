@@ -1,4 +1,5 @@
-import type {
+import {
+  address,
   AddressInterface,
   IdentityInterface,
   NetworkString,
@@ -13,7 +14,6 @@ import { extractErrorMessage } from '../../../presentation/utils/error';
 import { getStateRestorerOptsFromAddresses } from '../../utils/restorer';
 import { RESTORE_TASK } from '../actions/action-types';
 import type { RestoreTaskAction } from '../actions/task';
-import { updateTaskAction } from '../actions/task';
 import {
   popRestorerLoader,
   pushRestorerLoader,
@@ -79,7 +79,6 @@ function* restorerWorker(inChan: RestoreChan): SagaGenerator<void, RestoreChanDa
       if (account.type === AccountType.MainAccount) {
         const restoredIndexes = yield* deepRestore(account as MnemonicAccount, gapLimit, network);
         yield put(setRestorerOpts(accountID, restoredIndexes, network)); // update state with new restorerOpts
-        yield put(updateTaskAction(accountID, network)); // update utxos and transactions according to the restored addresses (on network)
       }
     } catch (error) {
       yield put(

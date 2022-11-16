@@ -55,7 +55,6 @@ import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
 import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
-import { updateTaskAction } from '../../application/redux/actions/task';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
 import { getUtxosFromTx } from '../../application/utils/utxos';
@@ -128,18 +127,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   get state() {
     if (!this.store) throw MarinaBroker.NotSetUpError;
     return this.store.getState();
-  }
-
-  private async reloadCoins(ids: AccountID[]) {
-    const network = selectNetwork(this.state);
-    const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
-    if (ids.length === 0) return;
-    await Promise.all(ids.map(makeUpdateTaskForId).map((x: any) => this.store?.dispatchAsync(x)));
-    // wait for updates to finish, give it 1 second to start the update
-    // we need to sleep to free the event loop to take care of the update tasks
-    do {
-      await sleep(1000);
-    } while (this.store?.getState().wallet.updaterLoaders !== 0);
   }
 
   private accountExists(name: string): boolean {
@@ -451,11 +438,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg([lbtcAsset, ...selectTaxiAssets(this.state)]);
         }
 
+        // TODO remove this method
         case 'reloadCoins': {
           this.checkHostnameAuthorization();
-          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
-
-          await this.reloadCoins(accountsIDs);
           return successMsg();
         }
 

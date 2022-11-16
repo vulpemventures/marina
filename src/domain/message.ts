@@ -1,4 +1,8 @@
 // send from inject script to content script
+
+import { NetworkString } from "ldk";
+import { AccountID } from "marina-provider";
+
 // request = a call of a provider's method
 export interface RequestMessage<T extends string> {
   id: string;
@@ -64,4 +68,18 @@ export interface PopupResponseMessage<T = any> {
 
 export function isPopupResponseMessage(message: unknown) {
   return message && ((message as any).data || (message as any).error);
+}
+
+export interface SubscribeScriptsMessage {
+  scripts: string[];
+  accountID: AccountID;
+  network: NetworkString;
+}
+
+export function subscribeScriptsMsg(scripts: string[], accountID: AccountID, network: NetworkString): SubscribeScriptsMessage {
+  return { scripts, network, accountID };
+}
+
+export function isSubscribeScriptsMessage(message: unknown): message is SubscribeScriptsMessage {
+  return message && (message as any).scripts && Array.isArray((message as any).scripts) && (message as any).network;
 }

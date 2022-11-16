@@ -10,10 +10,8 @@ import {
   selectDeepRestorerIsLoading,
   selectUpdaterIsLoading,
 } from '../../application/redux/selectors/wallet.selector';
-import { updateTaskAction } from '../../application/redux/actions/task';
 import { formatNetwork } from '../utils';
 import { selectNetwork } from '../../application/redux/selectors/app.selector';
-import type { AccountID } from '../../domain/account';
 
 interface Props {
   btnDisabled?: boolean;
@@ -46,13 +44,9 @@ const ShellPopUp: React.FC<Props> = ({
   const [isMenuModalOpen, showMenuModal] = useState(false);
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
-  //
+
   const goToHome = async () => {
-    // If already home, refresh state and return balances
-    if (history.location.pathname === '/') {
-      const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
-      await Promise.all(allAccountsIds.map(makeUpdateTaskForId).map(dispatch));
-    } else {
+    if (history.location.pathname !== DEFAULT_ROUTE) {
       await dispatch(flushPendingTx());
       history.push(DEFAULT_ROUTE);
     }

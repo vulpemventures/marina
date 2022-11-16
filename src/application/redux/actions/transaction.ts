@@ -7,6 +7,7 @@ import {
   PENDING_TX_SET_PSET,
   PENDING_TX_SET_STEP,
   ADD_TX,
+  ADD_SCRIPT_HASH,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { Address } from '../../../domain/address';
@@ -68,5 +69,16 @@ export function addTx(
   return {
     type: ADD_TX,
     payload: { tx, network, accountID },
+  };
+}
+
+export function addScriptHash(
+  accountID: AccountID,
+  scriptHash: string,
+  network: NetworkString
+): AnyAction {
+  return {
+    type: ADD_SCRIPT_HASH,
+    payload: { scriptHash, accountID, network },
   };
 }

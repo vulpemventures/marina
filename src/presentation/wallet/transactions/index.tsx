@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import moment from 'moment';
 import { useHistory, useLocation } from 'react-router-dom';
 import browser from 'webextension-polyfill';
 import {
@@ -22,8 +23,6 @@ import { setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import moment from 'moment';
-import { updateTaskAction } from '../../../application/redux/actions/task';
 import { MainAccountID } from '../../../domain/account';
 import type { NetworkString } from 'ldk';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
@@ -82,14 +81,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({
     const url = `${webExplorerURL}${modalTxDetails.webExplorersBlinders}`;
     await browser.tabs.create({ url, active: false });
   };
-
-  // update tx history for main account once at first render
-  useEffect(() => {
-    dispatch(updateTaskAction(MainAccountID, network)).catch(console.error);
-    return () => {
-      setModalTxDetails(undefined);
-    };
-  }, []);
 
   return (
     <ShellPopUp

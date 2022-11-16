@@ -10,11 +10,15 @@ import type { MasterBlindingKey } from './master-blinding-key';
 import type { MasterXPub } from './master-extended-pub';
 import type { WalletState } from './wallet';
 
+type deletedInV7 = {
+  unspentsAndTransactions: any;
+}
+
 // v6 ensures the reducer only have xpub (and not zpub etc..)
-export type WalletPersistedStateV6 = WalletState & Partial<PersistedState>;
+export type WalletPersistedStateV6 = WalletState & Partial<PersistedState> & deletedInV7;
 
 // v5 only erases the current transactions state for all accounts during migration
-export type WalletPersistedStateV5 = WalletState & Partial<PersistedState>;
+export type WalletPersistedStateV5 = WalletPersistedStateV6 & Partial<PersistedState>;
 
 // v4 is a fixed version of v3 about covenantTemplate field in CustomAccountData
 export type WalletPersistedStateV4 = WalletPersistedStateV5;
@@ -72,7 +76,7 @@ export const walletMigrations = {
       deepRestorer: state.deepRestorer,
       passwordHash: state.passwordHash,
       unspentsAndTransactions: {
-        mainAccount: walletInitState.unspentsAndTransactions.mainAccount,
+        mainAccount: { },
       },
       updaterLoaders: 0,
       isVerified: state.isVerified,
@@ -115,9 +119,9 @@ function removeTransactions(
   const result: WalletPersistedStateV5['unspentsAndTransactions'] = {};
   for (const [accountID, utxosTxsByNetwork] of Object.entries(utxosAndTxs)) {
     result[accountID] = {
-      liquid: { ...utxosTxsByNetwork.liquid, transactions: {} },
-      testnet: { ...utxosTxsByNetwork.testnet, transactions: {} },
-      regtest: { ...utxosTxsByNetwork.regtest, transactions: {} },
+      liquid: { ...(utxosTxsByNetwork as any).liquid, transactions: {} },
+      testnet: { ...(utxosTxsByNetwork as any).testnet, transactions: {} },
+      regtest: { ...(utxosTxsByNetwork as any).regtest, transactions: {} },
     };
   }
   return result;

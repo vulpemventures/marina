@@ -10,7 +10,7 @@ import browser from 'webextension-polyfill';
 import type { PersistPartial } from 'redux-persist/es/persistReducer';
 import persistReducer from 'redux-persist/es/persistReducer';
 import type { IApp } from '../../../domain/app';
-import type { WalletState } from '../../../domain/wallet';
+import { UtxosTransactionsState, WalletState } from '../../../domain/wallet';
 import type { TaxiState } from './taxi-reducer';
 import { taxiReducer, taxiInitState } from './taxi-reducer';
 import type { ConnectData } from '../../../domain/connect';
@@ -20,6 +20,7 @@ import { appReducer, appInitState } from './app-reducer';
 import { walletReducer } from './wallet-reducer';
 import { connectDataReducer, connectDataInitState } from './connect-data-reducer';
 import { walletMigrate } from '../../../domain/migrations';
+import { utxosAndTransactionsReducer, utxosTransactionsInitialState } from './utxos-unspents';
 
 const browserLocalStorage: Storage = {
   getItem: async (key: string) => {
@@ -123,6 +124,12 @@ const marinaReducer = combineReducers({
     version: 1,
     migrate: migrateAfter(connectDataInitState),
   }),
+  utxosTransactions: persist<UtxosTransactionsState>({
+    reducer: utxosAndTransactionsReducer,
+    key: 'utxosTransactions',
+    version: 1,
+    migrate: migrateAfter(utxosTransactionsInitialState),
+  })
 });
 
 export default marinaReducer;

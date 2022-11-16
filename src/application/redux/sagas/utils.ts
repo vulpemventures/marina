@@ -5,7 +5,6 @@ import { MainAccountID } from '../../../domain/account';
 import type { RootReducerState } from '../../../domain/common';
 import {
   selectEsploraForNetwork,
-  selectEsploraURL,
   selectExplorerURLs,
   selectNetwork,
 } from '../selectors/app.selector';
@@ -14,6 +13,7 @@ import {
   selectAllAccountsIDs,
   selectUpdaterIsLoading,
   selectUtxos,
+  selectUtxosMapByScriptHash,
 } from '../selectors/wallet.selector';
 import { isBufferLike, reviver } from '../../utils/browser-storage-converters';
 import type { ChainAPI, NetworkString } from 'ldk';
@@ -80,11 +80,11 @@ export function* createChannel<T>(): SagaGenerator<Channel<T>> {
 
 export const selectNetworkSaga = newSagaSelector(selectNetwork);
 export const selectAllAccountsIDsSaga = newSagaSelector(selectAllAccountsIDs);
-export const selectExplorerSaga = newSagaSelector(selectEsploraURL);
 export const selectExplorerURLsSaga = (net?: NetworkString) =>
   newSagaSelector(selectExplorerURLs(net));
 export const selectUpdaterIsLoadingSaga = newSagaSelector(selectUpdaterIsLoading);
 export const selectAllUnspentsSaga = newSagaSelector(selectUtxos(MainAccountID));
+export const selectUtxosMapByScriptHashSaga = (network: NetworkString, scripthash: string) => newSagaSelector(selectUtxosMapByScriptHash(network, scripthash));
 
 export function selectAccountSaga(accountID: AccountID): SagaGenerator<Account | undefined> {
   return newSagaSelector(selectAccount(accountID))();

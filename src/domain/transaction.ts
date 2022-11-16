@@ -1,13 +1,7 @@
 import type { NetworkString, UnblindedOutput } from 'ldk';
 
-export type UtxosAndTxsByNetwork = Record<NetworkString, UtxosAndTxs>;
-
-export interface UtxosAndTxs {
-  // outpoint string -> UnblindedOutput
-  utxosMap: Record<string, UnblindedOutput>;
-  transactions: TxsHistory;
-}
-
+export type MapByNetwork<T> = Record<NetworkString, T>;
+export type UtxosMap = Record<string, UnblindedOutput>;
 export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
 
 export enum TxType {
@@ -37,21 +31,4 @@ export interface TxDisplayInterface {
   transfers: Transfer[];
   webExplorersBlinders: string; // will be concat with webExplorerURL
   blockTimeMs?: number;
-}
-
-export function newEmptyUtxosAndTxsHistory(): UtxosAndTxsByNetwork {
-  return {
-    liquid: {
-      utxosMap: {},
-      transactions: {},
-    },
-    testnet: {
-      utxosMap: {},
-      transactions: {},
-    },
-    regtest: {
-      utxosMap: {},
-      transactions: {},
-    },
-  };
 }

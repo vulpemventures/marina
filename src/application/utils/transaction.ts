@@ -112,7 +112,7 @@ function isFullyBlinded(psetBase64: string, excludeAddresses: string[]) {
   return true;
 }
 
-const functionOR =
+export const functionOR =
   (...fns: any[]) =>
   (errorMsg: string) =>
   (...args: any[]) => {

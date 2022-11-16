@@ -1,4 +1,5 @@
 import type { NetworkString, UnblindedOutput } from 'ldk';
+import { selectTransactionState, selectUtxosState } from '../application/redux/selectors/wallet.selector';
 import type {
   MarinaEvent,
   NewTxMarinaEvent,
@@ -11,13 +12,30 @@ import {
   compareUtxoState,
   networkChange,
 } from '../application/utils/marina-event';
-import { MainAccountID } from '../domain/account';
+import { AccountID, MainAccountID } from '../domain/account';
 import type { RootReducerState } from '../domain/common';
 import type { TxsHistory } from '../domain/transaction';
 
 export interface StoreCacheAccount {
   utxoState: Record<string, UnblindedOutput>;
   txsHistoryState: TxsHistory;
+}
+
+function storeCacheAccountSelector(accountID: AccountID, net: NetworkString) {
+  return (state: RootReducerState): StoreCacheAccount | undefined => {
+    const utxos = {}
+    const utxoState = selectUtxosState(accountID, net)(state);
+    for (const utxoMap of Object.values(utxoState)) {
+      Object.assign(utxos, utxoMap);
+    }
+
+    const txsHistoryState = selectTransactionState(accountID, net)(state);
+
+    return {
+      utxoState: utxos,
+      txsHistoryState: txsHistoryState,
+    };
+  };
 }
 
 export interface StoreCache {
@@ -75,12 +93,11 @@ export function compareCacheForEvents(
 export function newCacheFromState(state: RootReducerState, allAccountsIDs: string[]): StoreCache {
   const accounts: Record<string, StoreCacheAccount> = {};
   for (const accountID of allAccountsIDs) {
-    const root = state.wallet.unspentsAndTransactions[accountID][state.app.network];
-    accounts[accountID] = {
-      utxoState: root.utxosMap,
-      txsHistoryState: root.transactions,
-    };
+    const cache = storeCacheAccountSelector(accountID, state.app.network)(state);
+    if (!cache) continue;
+    accounts[accountID] = cache;
   }
+  
   return {
     accounts,
     enabledWebsitesState: state.connect.enabledSites,

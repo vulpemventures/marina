@@ -1,5 +1,5 @@
 import type { ConnectData } from './connect';
-import type { WalletState } from './wallet';
+import type { UtxosTransactionsState, WalletState } from './wallet';
 import type { IApp } from './app';
 import type { OnboardingState } from '../application/redux/reducers/onboarding-reducer';
 import type { TransactionState } from '../application/redux/reducers/transaction-reducer';
@@ -15,6 +15,7 @@ export interface RootReducerState {
   wallet: WalletState;
   connect: ConnectData;
   taxi: TaxiState;
+  utxosTransactions: UtxosTransactionsState;
 }
 
 export interface IError {

@@ -1,14 +1,13 @@
 import type { AccountData, AccountID } from './account';
 import type { EncryptedMnemonic } from './encrypted-mnemonic';
 import type { PasswordHash } from './password-hash';
-import type { UtxosAndTxsByNetwork } from './transaction';
+import type { MapByNetwork, TxsHistory, UtxosMap } from './transaction';
 
 export interface WalletState {
   encryptedMnemonic: EncryptedMnemonic;
   accounts: {
     [id: AccountID]: AccountData;
   };
-  unspentsAndTransactions: Record<AccountID, UtxosAndTxsByNetwork>;
   passwordHash: PasswordHash;
   deepRestorer: {
     gapLimit: number;
@@ -18,4 +17,9 @@ export interface WalletState {
   updaterLoaders: number;
   isVerified: boolean;
   lockedUtxos: Record<string, number>;
+}
+
+export interface UtxosTransactionsState {
+  utxos: MapByNetwork<Record<AccountID, Record<string, UtxosMap>>>;
+  transactions: MapByNetwork<Record<AccountID, TxsHistory>>;
 }

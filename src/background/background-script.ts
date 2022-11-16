@@ -1,25 +1,70 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
+import { crypto, NetworkString } from 'ldk';
+import { AccountID } from 'marina-provider';
 import { testWalletData, testPasswordHash } from '../application/constants/cypress';
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
+import { updateScriptTaskAction } from '../application/redux/actions/task';
+import { addScriptHash } from '../application/redux/actions/transaction';
 import { setAccount, setEncryptedMnemonic } from '../application/redux/actions/wallet';
-import { selectEncryptedMnemonic } from '../application/redux/selectors/wallet.selector';
+import { selectEncryptedMnemonic, selectUtxosMapByScriptHash } from '../application/redux/selectors/wallet.selector';
 import { marinaStore, wrapMarinaStore } from '../application/redux/store';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
 import { MainAccountID } from '../domain/account';
-import type { OpenPopupMessage, PopupName } from '../domain/message';
+import { isSubscribeScriptsMessage, OpenPopupMessage, PopupName } from '../domain/message';
 import { isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
+import { ElectrumWS } from '../domain/ws/ws-electrs';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { periodicTaxiUpdater, periodicUpdater } from './alarms';
+import { periodicTaxiUpdater } from './alarms';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
 
-wrapMarinaStore(marinaStore); // wrap store to proxy store
+// wrap background store to proxy stores in popup and content scripts
+// MUST be called before any other store access
+wrapMarinaStore(marinaStore);
+
+const webSockets = {
+  liquid: undefined,
+  testnet: undefined,
+  regtest: new ElectrumWS('ws://127.0.0.1:1234'),
+};
+
+// utility function converting an output script hex to a scripthash (reversed sha256 of the script)
+// scripthash is used by electrum protocol to identify a script to watch
+export function reverseAndHash(script: string): string {
+  return crypto.sha256(Buffer.from(script, 'hex')).reverse().toString('hex');
+}
+
+// callback for websocket scripthash messages
+function callbackWebsocketElectrum(net: NetworkString) {
+  return (...params: (string | number)[]) => {
+    const scriptHash = params[0] as string;
+    const status = params[1] as string | null;
+    if (status !== null) { // if null, it means no new transaction for this scripthash, so we don't need to update it
+      handleUpdateScriptHash(webSockets[net]!, scriptHash).catch(console.error);
+    }
+  }
+}
+
+async function handleUpdateScriptHash(ws: ElectrumWS, scriptHash: string) {
+  const response = (await ws.request('blockchain.scripthash.listunspent', scriptHash)) as Array<{ height: number, tx_hash: string, tx_pos: number }>;
+  marinaStore.dispatch(updateScriptTaskAction(scriptHash, response, 'regtest'));
+}
+
+export function subscribeScript(network: NetworkString, accountID: AccountID, scriptHash: string) {
+  webSockets[network]?.subscribe('blockchain.scripthash', callbackWebsocketElectrum(network), scriptHash).catch(console.error);
+  try {
+    selectUtxosMapByScriptHash(network, scriptHash)(marinaStore.getState());
+  } catch {
+    // if we don't have utxos for this scriptHash, we need to init its state
+    marinaStore.dispatch(addScriptHash(accountID, scriptHash, network));
+  }
+}
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -54,7 +99,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           await setUpPopup();
           // After an update, all previous periodic updaters are lost.
           // Re-enable them if the user is already onboarded
-          periodicUpdater();
           periodicTaxiUpdater();
         }
       }
@@ -69,7 +113,6 @@ browser.runtime.onStartup.addListener(() => {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
       // Set up the periodic updaters if user is onboarded
-      periodicUpdater();
       periodicTaxiUpdater();
     }
   })().catch(console.error);
@@ -115,8 +158,17 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
       // propagate popup response
       eventEmitter.emit(POPUP_RESPONSE, message.data);
     }
+
+    if (isSubscribeScriptsMessage(message)) {
+      console.warn(message);
+      const reversedScriptsHash = message.scripts.map(reverseAndHash);
+      for (const scriptHash of reversedScriptsHash) {
+        subscribeScript(message.network, message.accountID, scriptHash);
+      }
+    }
   });
 });
+
 
 // Open the popup window and wait for a response
 // then forward the response to content-script

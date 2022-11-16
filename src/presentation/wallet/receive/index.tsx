@@ -9,9 +9,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { updateToNextAddress } from '../../../application/redux/actions/wallet';
 import { selectMainAccount } from '../../../application/redux/selectors/wallet.selector';
-import { updateTaskAction } from '../../../application/redux/actions/task';
 import { selectNetwork } from '../../../application/redux/selectors/app.selector';
 import { DEFAULT_ROUTE } from '../../routes/constants';
+import Browser from 'webextension-polyfill';
+import { subscribeScriptsMsg } from '../../../domain/message';
+import { address } from 'ldk';
 
 const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }) => {
   const history = useHistory();
@@ -38,9 +40,8 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
       const addr = await identity.getNextAddress();
       await Promise.all(updateToNextAddress(account.getInfo().accountID, network).map(dispatch));
       setConfidentialAddress(addr.confidentialAddress);
-      setTimeout(() => {
-        dispatch(updateTaskAction(account.getInfo().accountID, network)).catch(console.error);
-      }, 2000);
+      Browser.runtime.connect()
+        .postMessage(subscribeScriptsMsg([address.toOutputScript(addr.confidentialAddress).toString('hex')], account.getInfo().accountID, 'regtest'))
     })().catch(console.error);
   }, []);
 

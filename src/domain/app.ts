@@ -19,6 +19,7 @@ export interface ExplorerURLs {
   electrsURL: string;
   esploraURL: string;
   batchServerURL?: string;
+  wsURL?: string;
 }
 
 const VULPEM_ELECTRS_BATCH_TESTNET = 'https://electrs-batch-testnet.vulpem.com';
@@ -28,6 +29,7 @@ export const BlockstreamExplorerURLs: ExplorerURLs = {
   electrsURL: 'https://blockstream.info/liquid',
   esploraURL: 'https://blockstream.info/liquid/api',
   batchServerURL: 'https://electrs-batch-blockstream.vulpem.com',
+
 };
 
 export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {
@@ -41,6 +43,7 @@ export const NigiriDefaultExplorerURLs: ExplorerURLs = {
   type: 'Nigiri',
   electrsURL: 'http://localhost:5001',
   esploraURL: 'http://localhost:3001',
+  wsURL: 'ws://localhost:3001',
 };
 
 export const MempoolExplorerURLs: ExplorerURLs = {

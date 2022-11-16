@@ -8,48 +8,44 @@ import { AccountType, accountFromMnemonicAndData, MainAccountID } from '../../..
 import { decodePset } from 'ldk';
 import type { NetworkString, Outpoint, UnblindedOutput, StateRestorerOpts } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
-import type { TxDisplayInterface, UtxosAndTxs } from '../../../domain/transaction';
+import type { TxDisplayInterface, UtxosMap } from '../../../domain/transaction';
 import { toStringOutpoint } from '../../utils/utxos';
 import { selectNetwork } from './app.selector';
 
 export const selectUtxos =
   (...accounts: AccountID[]) =>
-  (state: RootReducerState): UnblindedOutput[] => {
-    const lockedOutpoints = Object.keys(state.wallet.lockedUtxos);
-    return accounts
-      .flatMap((ID) => selectUtxosForAccount(ID)(state))
-      .filter((utxo) => !lockedOutpoints.includes(toStringOutpoint(utxo)));
-  };
+    (state: RootReducerState): UnblindedOutput[] => {
+      const lockedOutpoints = Object.keys(state.wallet.lockedUtxos);
+      return accounts
+        .flatMap((ID) => selectUtxosForAccount(ID)(state))
+        .filter((utxo) => !lockedOutpoints.includes(toStringOutpoint(utxo)));
+    };
 
 const selectUtxosForAccount =
   (accountID: AccountID, net?: NetworkString) =>
-  (state: RootReducerState): UnblindedOutput[] => {
-    const utxos = selectUnspentsAndTransactions(
-      accountID,
-      net ?? state.app.network
-    )(state)?.utxosMap;
-    if (utxos) return Object.values(utxos);
-    return [];
-  };
+    (state: RootReducerState): UnblindedOutput[] => {
+      const utxosState = selectUtxosState(accountID, net ?? state.app.network)(state);
+      if (!utxosState) return [];
+      const utxos = [];
+      for (const utxoMap of Object.values(utxosState)) {
+        utxos.push(...Object.values(utxoMap));
+      }
+      return utxos;
+    };
 
 export const selectTransactions =
   (...accounts: AccountID[]) =>
-  (state: RootReducerState) => {
-    return accounts.flatMap((ID) => selectTransactionsForAccount(ID)(state));
-  };
+    (state: RootReducerState) => {
+      return accounts.flatMap((ID) => selectTransactionsForAccount(ID)(state));
+    };
 
 const selectTransactionsForAccount =
   (accountID: AccountID, net?: NetworkString) =>
-  (state: RootReducerState): TxDisplayInterface[] => {
-    const txs = selectUnspentsAndTransactions(
-      accountID,
-      net ?? state.app.network
-    )(state)?.transactions;
-    if (txs) {
-      return Object.values(txs);
-    }
-    return [];
-  };
+    (state: RootReducerState): TxDisplayInterface[] => {
+      const txs = selectTransactionState(accountID, net ?? state.app.network)(state);
+      if (txs) return Object.values(txs);
+      return [];
+    };
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {
   return state.wallet.encryptedMnemonic !== '' && state.wallet.encryptedMnemonic !== undefined;
@@ -67,28 +63,27 @@ function selectInjectedAccountData(id: AccountID) {
 
 const selectAccountIDFromCoin =
   (coin: Outpoint) =>
-  (state: RootReducerState): AccountID | undefined => {
-    const selectedNetwork = state.app.network;
-    const strOutpoint = toStringOutpoint(coin);
-    for (const [accountID, coinsAndTxs] of Object.entries(state.wallet.unspentsAndTransactions)) {
-      const utxos = coinsAndTxs[selectedNetwork].utxosMap;
-      if (utxos && utxos[strOutpoint]) {
-        return accountID;
+    (state: RootReducerState): AccountID | undefined => {
+      const strOutpoint = toStringOutpoint(coin);
+      for (const accountID of selectAllAccountsIDs(state)) {
+        const utxos = selectUtxos(accountID)(state);
+        if (utxos && utxos.length > 0 && utxos.some((utxo) => toStringOutpoint(utxo) === strOutpoint)) {
+          return accountID;
+        }
       }
-    }
-  };
+    };
 
 export const selectAccountsFromCoins =
   (coins: Outpoint[]) =>
-  (state: RootReducerState): Account[] => {
-    const accountsIDs = new Set(
-      coins
-        .map(selectAccountIDFromCoin)
-        .map((f) => f(state))
-        .filter((id) => id)
-    );
-    return Array.from(accountsIDs).map((id) => selectAccount(id as AccountID)(state));
-  };
+    (state: RootReducerState): Account[] => {
+      const accountsIDs = new Set(
+        coins
+          .map(selectAccountIDFromCoin)
+          .map((f) => f(state))
+          .filter((id) => id)
+      );
+      return Array.from(accountsIDs).map((id) => selectAccount(id as AccountID)(state));
+    };
 
 export const selectAllAccountForSigningTxState = (state: RootReducerState): Account[] => {
   if (state.connect.tx?.pset === undefined) return [];
@@ -140,11 +135,22 @@ export function selectAccount(accountID: AccountID) {
 
 export const selectMainAccount = selectAccount(MainAccountID);
 
-export const selectUnspentsAndTransactions =
-  (accountID: AccountID, network: NetworkString) =>
-  (state: RootReducerState): UtxosAndTxs | undefined => {
-    return state.wallet.unspentsAndTransactions[accountID][network];
-  };
+export const selectTransactionState = (accountID: AccountID, network: NetworkString) => (state: RootReducerState) => {
+  return state.utxosTransactions.transactions[network][accountID];
+};
+
+export const selectUtxosState = (accountID: AccountID, network: NetworkString) => (state: RootReducerState) => {
+  return state.utxosTransactions.utxos[network][accountID];
+};
+
+export const selectUtxosMapByScriptHash = (network: NetworkString, scriptHash: string) => (state: RootReducerState): [UtxosMap, AccountID] => {
+  const byNetwork = state.utxosTransactions.utxos[network];
+  for (const [accountID, utxosMap] of Object.entries(byNetwork)) {
+    const utxo = utxosMap[scriptHash];
+    if (utxo !== undefined) return [utxo, accountID as AccountID];
+  }
+  throw new Error('scripthash map not found in reducer');
+};
 
 export const selectDeepRestorerIsLoading = (state: RootReducerState): boolean => {
   return state.wallet.deepRestorer.restorerLoaders > 0;
