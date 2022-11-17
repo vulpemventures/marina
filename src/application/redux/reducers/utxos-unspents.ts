@@ -1,8 +1,9 @@
-import { crypto, NetworkString, UnblindedOutput } from 'ldk';
-import { AccountID } from 'marina-provider';
+import type { NetworkString, UnblindedOutput } from 'ldk';
+import { crypto } from 'ldk';
+import type { AccountID } from 'marina-provider';
 import { MainAccountID } from '../../../domain/account';
-import { TxDisplayInterface } from '../../../domain/transaction';
-import { UtxosTransactionsState } from '../../../domain/wallet';
+import type { TxDisplayInterface } from '../../../domain/transaction';
+import type { UtxosTransactionsState } from '../../../domain/wallet';
 import { toStringOutpoint } from '../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 

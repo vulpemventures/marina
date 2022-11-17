@@ -3,8 +3,12 @@ import type { StoreCache } from '../store-cache';
 import { compareCacheForEvents, newCacheFromState, newStoreCache } from '../store-cache';
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import { MessageHandler, subscribeScriptsMsg } from '../../domain/message';
-import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
+import type { MessageHandler } from '../../domain/message';
+import {
+  subscribeScriptsMsg,
+  newErrorResponseMessage,
+  newSuccessResponseMessage,
+} from '../../domain/message';
 import Marina from '../../inject/marina/provider';
 import type { RootReducerState } from '../../domain/common';
 import {
@@ -47,8 +51,8 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID, CustomScriptAccount, MnemonicAccount } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import { address, AddressInterface, UnblindedOutput } from 'ldk';
-import { getAsset, getSats } from 'ldk';
+import type { AddressInterface, UnblindedOutput } from 'ldk';
+import { address, getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';

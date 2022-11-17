@@ -15,7 +15,8 @@ import {
   compareUtxoState,
   networkChange,
 } from '../application/utils/marina-event';
-import { AccountID, MainAccountID } from '../domain/account';
+import type { AccountID } from '../domain/account';
+import { MainAccountID } from '../domain/account';
 import type { RootReducerState } from '../domain/common';
 import type { TxsHistory } from '../domain/transaction';
 

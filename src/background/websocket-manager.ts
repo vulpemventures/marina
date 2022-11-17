@@ -1,4 +1,5 @@
-import { address, crypto, NetworkString } from 'ldk';
+import type { NetworkString } from 'ldk';
+import { address, crypto } from 'ldk';
 import type { Store } from 'redux';
 import { updateScriptTaskAction } from '../application/redux/actions/task';
 import { addScriptHash } from '../application/redux/actions/transaction';

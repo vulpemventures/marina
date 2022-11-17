@@ -1,21 +1,28 @@
-import {
+import type {
   Outpoint,
   AddressInterface,
   TxInterface,
   UnblindedOutput,
   NetworkString,
   BlindingKeyGetterAsync,
+} from 'ldk';
+import {
   fetchTx,
   unblindTransaction,
   isUnblindedOutput,
+  privateBlindKeyGetter,
+  address,
+  networks,
+  getAsset,
 } from 'ldk';
-import { privateBlindKeyGetter, address, networks, getAsset } from 'ldk';
 import type { Account, AccountID } from '../../../domain/account';
 import { addTx } from '../actions/transaction';
-import { AddUtxoAction, unlockUtxos } from '../actions/utxos';
-import { addUtxo, deleteUtxo } from '../actions/utxos';
-import { SagaGenerator, selectExplorerURLsSaga, selectUtxosMapByScriptHashSaga } from './utils';
+import type { AddUtxoAction } from '../actions/utxos';
+import { unlockUtxos, addUtxo, deleteUtxo } from '../actions/utxos';
+import type { SagaGenerator } from './utils';
 import {
+  selectExplorerURLsSaga,
+  selectUtxosMapByScriptHashSaga,
   createChannel,
   newSagaSelector,
   selectAccountSaga,
@@ -40,8 +47,8 @@ import { toStringOutpoint } from '../../utils/utxos';
 import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { periodicTaxiUpdater } from '../../../background/alarms';
-import UnblindError from 'ldk/dist/error/unblind-error';
-import { TxDisplayInterface } from '../../../domain/transaction';
+import type UnblindError from 'ldk/dist/error/unblind-error';
+import type { TxDisplayInterface } from '../../../domain/transaction';
 
 const putAddUtxoAction = (accountID: AccountID, net: NetworkString) =>
   function* (utxo: UnblindedOutput): SagaGenerator {
@@ -341,7 +348,7 @@ export function* watchForFetchTxTaskAction(): SagaGenerator<void, FetchTxTaskAct
 // starts an update for all accounts after each AUTHENTICATION_SUCCESS action
 // only updates the accounts for the current network
 export function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
-  yield takeLatest(AUTHENTICATION_SUCCESS, function* () {
+  yield takeLatest(AUTHENTICATION_SUCCESS, function () {
     // enable periodic updaters
     periodicTaxiUpdater();
   });

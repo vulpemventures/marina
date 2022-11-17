@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import {
-  address,
+import type {
   ChangeAddressFromAssetGetter,
   CoinSelectionResult,
   CoinSelector,
@@ -10,7 +9,7 @@ import {
   RecipientInterface,
   UnblindedOutput,
 } from 'ldk';
-import { getNetwork, greedyCoinSelector, walletFromCoins } from 'ldk';
+import { address, getNetwork, greedyCoinSelector, walletFromCoins } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';

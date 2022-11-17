@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';
 import type { TransactionsProps } from '../../../presentation/wallet/transactions';
 import TransactionsView from '../../../presentation/wallet/transactions';
-import { selectElectrsURL, selectNetwork } from '../selectors/app.selector';
+import { selectElectrsURL } from '../selectors/app.selector';
 import {
   selectAllAccountsIDsSpendableViaUI,
   selectTransactions,

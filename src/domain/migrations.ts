@@ -2,7 +2,6 @@ import type { StateRestorerOpts } from 'ldk';
 import { toXpub } from 'ldk';
 import { createMigrate } from 'redux-persist';
 import type { PersistedState } from 'redux-persist/es/types';
-import { walletInitState } from '../application/redux/reducers/wallet-reducer';
 import type { MnemonicAccountData } from './account';
 import { AccountType, initialRestorerOpts, MainAccountID } from './account';
 import type { EncryptedMnemonic } from './encrypted-mnemonic';

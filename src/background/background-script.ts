@@ -9,13 +9,13 @@ import { marinaStore, rehydration, wrapMarinaStore } from '../application/redux/
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
 import { MainAccountID } from '../domain/account';
+import type { OpenPopupMessage, PopupName } from '../domain/message';
 import {
   isReloadAccountsSubscribtionsMessage,
   isSubscribeScriptsMessage,
-  OpenPopupMessage,
-  PopupName,
+  isOpenPopupMessage,
+  isPopupResponseMessage,
 } from '../domain/message';
-import { isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { periodicTaxiUpdater } from './alarms';

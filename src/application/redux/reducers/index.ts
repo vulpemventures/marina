@@ -10,7 +10,7 @@ import browser from 'webextension-polyfill';
 import type { PersistPartial } from 'redux-persist/es/persistReducer';
 import persistReducer from 'redux-persist/es/persistReducer';
 import type { IApp } from '../../../domain/app';
-import { UtxosTransactionsState, WalletState } from '../../../domain/wallet';
+import type { UtxosTransactionsState, WalletState } from '../../../domain/wallet';
 import type { TaxiState } from './taxi-reducer';
 import { taxiReducer, taxiInitState } from './taxi-reducer';
 import type { ConnectData } from '../../../domain/connect';

@@ -1,7 +1,7 @@
 // send from inject script to content script
 
-import { NetworkString } from 'ldk';
-import { AccountID } from 'marina-provider';
+import type { NetworkString } from 'ldk';
+import type { AccountID } from 'marina-provider';
 
 // request = a call of a provider's method
 export interface RequestMessage<T extends string> {

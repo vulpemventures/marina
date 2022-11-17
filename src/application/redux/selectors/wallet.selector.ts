@@ -155,7 +155,7 @@ export const selectUtxosMapByScriptHash =
     const byNetwork = state.utxosTransactions.utxos[network];
     for (const [accountID, utxosMap] of Object.entries(byNetwork)) {
       const utxo = utxosMap[scriptHash];
-      if (utxo !== undefined) return [utxo, accountID as AccountID];
+      if (utxo !== undefined) return [utxo, accountID];
     }
     throw new Error('scripthash map not found in reducer');
   };

@@ -39,11 +39,9 @@ const create = () => {
 export const marinaStore = create();
 
 let rehydrationComplete: (value?: unknown) => void;
-let rehydrationFailed: (reason?: any) => void;
 
-const rehydrationPromise = new Promise((resolve, reject) => {
+const rehydrationPromise = new Promise((resolve) => {
   rehydrationComplete = resolve;
-  rehydrationFailed = reject;
 });
 
 // export a promise that resolves when the store is fully rehydrated
