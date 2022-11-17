@@ -57,7 +57,6 @@ const TransactionsView: React.FC<TransactionsProps> = ({
       .filter(txHasAsset(state.assetHash))
       // Descending order
       .sort((a, b) => {
-        if (!a.blockTimeMs || !b.blockTimeMs) return 1;
         const momentB = moment(b.blockTimeMs);
         const momentA = moment(a.blockTimeMs);
         return momentB.diff(momentA);
