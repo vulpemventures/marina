@@ -37,7 +37,6 @@ describe('WalletState migrations', () => {
         },
       },
       updaterLoaders: 0,
-      lockedUtxos: {},
     };
     const walletStateV4 = walletMigrations[4](walletStateV3);
     expect(walletStateV4.accounts['customAccount'].contractTemplate.template).toEqual(
@@ -66,7 +65,6 @@ describe('WalletState migrations', () => {
         },
       },
       updaterLoaders: 0,
-      lockedUtxos: {},
     };
 
     const walletStateV3 = walletMigrations[3](walletStateV2);

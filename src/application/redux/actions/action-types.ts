@@ -80,4 +80,5 @@ export const RESET = 'RESET';
 
 // Background async task
 export const UPDATE_SCRIPT_TASK = 'UPDATE_SCRIPT_TASK';
+export const FETCH_TX_TASK = 'FETCH_TX_TASK';
 export const RESTORE_TASK = 'RESTORE_TASK';

@@ -7,7 +7,7 @@ import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../rout
 import { createPassword } from '../../../domain/password';
 import { extractErrorMessage } from '../../utils/error';
 import type { Account } from '../../../domain/account';
-import { address, NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, UnblindedOutput } from 'ldk';
 import { useDispatch } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import { flushPendingTx } from '../../../application/redux/actions/transaction';
@@ -19,8 +19,7 @@ import {
   INVALID_PASSWORD_ERROR,
   SOMETHING_WENT_WRONG_ERROR,
 } from '../../../application/utils/constants';
-import { subscribeScriptsMsg } from '../../../domain/message';
-import Browser from 'webextension-polyfill';
+import { fetchTxTaskAction } from '../../../application/redux/actions/task';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
@@ -96,13 +95,10 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
         );
       }
 
-      // subscribe the new generated addresses
-      const changeAddressesScripts = changeAddresses.map((a) => address.toOutputScript(a).toString('hex'));
-      const subscribeMessage = subscribeScriptsMsg(changeAddressesScripts, (changeAccount ?? signerAccounts[0]).getInfo().accountID, network);
-      Browser.runtime.connect().postMessage(subscribeMessage);
-
       // flush pending tx state
       await dispatch(flushPendingTx());
+      // fetch tx details
+      await dispatch(fetchTxTaskAction(txid, signerAccounts[0].getInfo().accountID, network));
 
       // push to success page
       history.push({

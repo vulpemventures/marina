@@ -12,7 +12,7 @@ import type { WalletState } from './wallet';
 
 type deletedInV7 = {
   unspentsAndTransactions: any;
-}
+};
 
 // v6 ensures the reducer only have xpub (and not zpub etc..)
 export type WalletPersistedStateV6 = WalletState & Partial<PersistedState> & deletedInV7;
@@ -76,11 +76,10 @@ export const walletMigrations = {
       deepRestorer: state.deepRestorer,
       passwordHash: state.passwordHash,
       unspentsAndTransactions: {
-        mainAccount: { },
+        mainAccount: {},
       },
       updaterLoaders: 0,
       isVerified: state.isVerified,
-      lockedUtxos: walletInitState.lockedUtxos,
     };
   },
 };

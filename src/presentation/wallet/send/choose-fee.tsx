@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import type {
+import {
+  address,
   ChangeAddressFromAssetGetter,
   CoinSelectionResult,
   CoinSelector,
@@ -35,6 +36,8 @@ import { extractErrorMessage } from '../../utils/error';
 import type { AnyAction } from 'redux';
 import { fetchTopupFromTaxi, taxiURL } from '../../../application/utils/taxi';
 import { feeAmountFromTx, createTaxiTxFromTopup } from '../../../application/utils/transaction';
+import Browser from 'webextension-polyfill';
+import { subscribeScriptsMsg } from '../../../domain/message';
 
 export interface ChooseFeeProps {
   network: NetworkString;
@@ -263,6 +266,15 @@ function stateForRegularPSET(
         nextChangeAddress.confidentialAddress,
         nextChangeAddress.derivationPath
       );
+      Browser.runtime
+        .connect()
+        .postMessage(
+          subscribeScriptsMsg(
+            [address.toOutputScript(nextChangeAddress.confidentialAddress).toString('hex')],
+            lbtcChangeAccount.getInfo().accountID,
+            network
+          )
+        );
     }
 
     result.unsignedPset = w.sendTx(
@@ -310,6 +322,15 @@ function stateForTaxiPSET(
 
     const restored = await account.getWatchIdentity(network);
     const next = await restored.getNextChangeAddress();
+    Browser.runtime
+      .connect()
+      .postMessage(
+        subscribeScriptsMsg(
+          [address.toOutputScript(next.confidentialAddress).toString('hex')],
+          account.getInfo().accountID,
+          network
+        )
+      );
     const feeChange = createAddress(next.confidentialAddress, next.derivationPath);
 
     const changeGetter = (asset: string) => {

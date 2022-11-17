@@ -84,7 +84,8 @@ export const selectExplorerURLsSaga = (net?: NetworkString) =>
   newSagaSelector(selectExplorerURLs(net));
 export const selectUpdaterIsLoadingSaga = newSagaSelector(selectUpdaterIsLoading);
 export const selectAllUnspentsSaga = newSagaSelector(selectUtxos(MainAccountID));
-export const selectUtxosMapByScriptHashSaga = (network: NetworkString, scripthash: string) => newSagaSelector(selectUtxosMapByScriptHash(network, scripthash));
+export const selectUtxosMapByScriptHashSaga = (network: NetworkString, scripthash: string) =>
+  newSagaSelector(selectUtxosMapByScriptHash(network, scripthash));
 
 export function selectAccountSaga(accountID: AccountID): SagaGenerator<Account | undefined> {
   return newSagaSelector(selectAccount(accountID))();

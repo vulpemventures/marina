@@ -23,8 +23,6 @@ import { setAsset } from '../../../application/redux/actions/transaction';
 import { useDispatch } from 'react-redux';
 import { txHasAsset } from '../../../application/redux/selectors/transaction.selector';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
-import { MainAccountID } from '../../../domain/account';
-import type { NetworkString } from 'ldk';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import AssetIcon from '../../components/assetIcon';
 
@@ -39,7 +37,6 @@ export interface TransactionsProps {
   assets: IAssets;
   transactions: TxDisplayInterface[];
   webExplorerURL: string;
-  network: NetworkString;
   isWalletVerified: boolean;
 }
 
@@ -47,12 +44,27 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
   webExplorerURL,
-  network,
   isWalletVerified,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
+
+  const [sortedTransactions, setSortedTransactions] = useState<TxDisplayInterface[]>([]);
+
+  useEffect(() => {
+    const sorted = transactions
+      .filter(txHasAsset(state.assetHash))
+      // Descending order
+      .sort((a, b) => {
+        if (!a.blockTimeMs || !b.blockTimeMs) return 1;
+        const momentB = moment(b.blockTimeMs);
+        const momentA = moment(a.blockTimeMs);
+        return momentB.diff(momentA);
+      });
+
+    setSortedTransactions(sorted);
+  }, [transactions]);
 
   // TxDetails Modal
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
@@ -107,29 +119,20 @@ const TransactionsView: React.FC<TransactionsProps> = ({
 
           <div className="h-60 rounded-xl mb-1">
             <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-              {transactions
-                .filter(txHasAsset(state.assetHash))
-                // Descending order
-                .sort((a, b) => {
-                  if (!a.blockTimeMs || !b.blockTimeMs) return 0;
-                  const momentB = moment(b.blockTimeMs);
-                  const momentA = moment(a.blockTimeMs);
-                  return momentB.diff(momentA);
-                })
-                .map((tx, index) => {
-                  return (
-                    <ButtonTransaction
-                      assetHash={state.assetHash}
-                      assetPrecision={state.assetPrecision}
-                      assetTicker={state.assetTicker}
-                      key={index}
-                      handleClick={() => {
-                        setModalTxDetails(tx);
-                      }}
-                      tx={tx}
-                    />
-                  );
-                })}
+              {sortedTransactions.map((tx, index) => {
+                return (
+                  <ButtonTransaction
+                    assetHash={state.assetHash}
+                    assetPrecision={state.assetPrecision}
+                    assetTicker={state.assetTicker}
+                    key={index}
+                    handleClick={() => {
+                      setModalTxDetails(tx);
+                    }}
+                    tx={tx}
+                  />
+                );
+              })}
             </ButtonList>
           </div>
         </>

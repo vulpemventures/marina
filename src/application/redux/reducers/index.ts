@@ -129,7 +129,7 @@ const marinaReducer = combineReducers({
     key: 'utxosTransactions',
     version: 1,
     migrate: migrateAfter(utxosTransactionsInitialState),
-  })
+  }),
 });
 
 export default marinaReducer;

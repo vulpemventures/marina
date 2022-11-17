@@ -55,7 +55,6 @@ export async function addUnconfirmedUtxos(
   network: NetworkString
 ): Promise<AnyAction> {
   const unconfirmedUtxos = await makeUnconfirmedUtxos(txHex, unconfirmedOutputs);
-  console.debug('add unconfirmedUtxos', unconfirmedUtxos);
   return {
     type: ADD_UNCONFIRMED_UTXOS,
     payload: { unconfirmedUtxos, accountID, network },

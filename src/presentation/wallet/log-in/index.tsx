@@ -15,6 +15,8 @@ import { createPassword } from '../../../domain/password';
 import type { RootReducerState } from '../../../domain/common';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import browser from 'webextension-polyfill';
+import Browser from 'webextension-polyfill';
+import { reloadAccountsSubscribtionsMsg } from '../../../domain/message';
 
 interface LogInFormValues {
   password: string;
@@ -73,6 +75,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .then(() => {
         if (logInAction.type === AUTHENTICATION_SUCCESS) {
           props.dispatch({ type: AUTHENTICATION_SUCCESS }).catch(console.error);
+          Browser.runtime.connect().postMessage(reloadAccountsSubscribtionsMsg());
           props.history.push(DEFAULT_ROUTE);
         } else {
           const err = logInAction.payload.error;

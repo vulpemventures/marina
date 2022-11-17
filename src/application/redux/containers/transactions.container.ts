@@ -12,7 +12,6 @@ const mapStateToProps = (state: RootReducerState): TransactionsProps => ({
   assets: state.assets,
   transactions: selectTransactions(...selectAllAccountsIDsSpendableViaUI(state))(state),
   webExplorerURL: selectElectrsURL(state),
-  network: selectNetwork(state),
   isWalletVerified: state.wallet.isVerified,
 });
 

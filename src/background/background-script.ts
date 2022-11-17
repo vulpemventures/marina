@@ -1,24 +1,25 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
-import { crypto, NetworkString } from 'ldk';
-import { AccountID } from 'marina-provider';
 import { testWalletData, testPasswordHash } from '../application/constants/cypress';
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
-import { updateScriptTaskAction } from '../application/redux/actions/task';
-import { addScriptHash } from '../application/redux/actions/transaction';
 import { setAccount, setEncryptedMnemonic } from '../application/redux/actions/wallet';
-import { selectEncryptedMnemonic, selectUtxosMapByScriptHash } from '../application/redux/selectors/wallet.selector';
-import { marinaStore, wrapMarinaStore } from '../application/redux/store';
+import { selectEncryptedMnemonic } from '../application/redux/selectors/wallet.selector';
+import { marinaStore, rehydration, wrapMarinaStore } from '../application/redux/store';
 import { tabIsOpen } from '../application/utils/common';
 import { setUpPopup } from '../application/utils/popup';
 import { MainAccountID } from '../domain/account';
-import { isSubscribeScriptsMessage, OpenPopupMessage, PopupName } from '../domain/message';
+import {
+  isReloadAccountsSubscribtionsMessage,
+  isSubscribeScriptsMessage,
+  OpenPopupMessage,
+  PopupName,
+} from '../domain/message';
 import { isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
-import { ElectrumWS } from '../domain/ws/ws-electrs';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
 import { periodicTaxiUpdater } from './alarms';
+import { WebsocketManager } from './websocket-manager';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -28,43 +29,21 @@ let welcomeTabID: number | undefined = undefined;
 // MUST be called before any other store access
 wrapMarinaStore(marinaStore);
 
-const webSockets = {
-  liquid: undefined,
-  testnet: undefined,
-  regtest: new ElectrumWS('ws://127.0.0.1:1234'),
-};
+const websocketsManager = new WebsocketManager(
+  {
+    regtest: 'ws://localhost:1234',
+    testnet: 'wss://esplora.blockstream.com/liquidtestnet/electrum-websocket/api',
+    liquid: 'wss://esplora.blockstream.com/liquid/electrum-websocket/api',
+  },
+  marinaStore
+);
 
-// utility function converting an output script hex to a scripthash (reversed sha256 of the script)
-// scripthash is used by electrum protocol to identify a script to watch
-export function reverseAndHash(script: string): string {
-  return crypto.sha256(Buffer.from(script, 'hex')).reverse().toString('hex');
+export async function reloadAccountsSubscriptions() {
+  await rehydration();
+  await websocketsManager.initScriptSubscriptions();
 }
 
-// callback for websocket scripthash messages
-function callbackWebsocketElectrum(net: NetworkString) {
-  return (...params: (string | number)[]) => {
-    const scriptHash = params[0] as string;
-    const status = params[1] as string | null;
-    if (status !== null) { // if null, it means no new transaction for this scripthash, so we don't need to update it
-      handleUpdateScriptHash(webSockets[net]!, scriptHash).catch(console.error);
-    }
-  }
-}
-
-async function handleUpdateScriptHash(ws: ElectrumWS, scriptHash: string) {
-  const response = (await ws.request('blockchain.scripthash.listunspent', scriptHash)) as Array<{ height: number, tx_hash: string, tx_pos: number }>;
-  marinaStore.dispatch(updateScriptTaskAction(scriptHash, response, 'regtest'));
-}
-
-export function subscribeScript(network: NetworkString, accountID: AccountID, scriptHash: string) {
-  webSockets[network]?.subscribe('blockchain.scripthash', callbackWebsocketElectrum(network), scriptHash).catch(console.error);
-  try {
-    selectUtxosMapByScriptHash(network, scriptHash)(marinaStore.getState());
-  } catch {
-    // if we don't have utxos for this scriptHash, we need to init its state
-    marinaStore.dispatch(addScriptHash(accountID, scriptHash, network));
-  }
-}
+reloadAccountsSubscriptions().catch(console.error);
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -109,6 +88,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
+    await reloadAccountsSubscriptions();
     if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
@@ -146,6 +126,7 @@ const eventEmitter = new SafeEventEmitter();
 
 browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
   port.onMessage.addListener((message: any) => {
+    console.log('background: message received', message);
     if (isOpenPopupMessage(message)) {
       handleOpenPopupMessage(message, port).catch((error: any) => {
         console.error(error);
@@ -160,15 +141,18 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
     }
 
     if (isSubscribeScriptsMessage(message)) {
-      console.warn(message);
-      const reversedScriptsHash = message.scripts.map(reverseAndHash);
-      for (const scriptHash of reversedScriptsHash) {
-        subscribeScript(message.network, message.accountID, scriptHash);
+      for (const script of message.scripts) {
+        websocketsManager
+          .subscribeScript(message.network, message.accountID, script)
+          .catch(console.error);
       }
+    }
+
+    if (isReloadAccountsSubscribtionsMessage(message)) {
+      reloadAccountsSubscriptions().catch(console.error);
     }
   });
 });
-
 
 // Open the popup window and wait for a response
 // then forward the response to content-script
@@ -184,9 +168,14 @@ try {
   browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
   browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
-    if (newState !== 'active') {
-      // this will handle the logout when the extension is closed
-      marinaStore.dispatch(logOut());
+    console.debug('Idle state changed to ' + newState);
+    switch (newState) {
+      case 'active':
+        reloadAccountsSubscriptions().catch(console.error);
+        break;
+      default:
+        marinaStore.dispatch(logOut());
+        break;
     }
   });
 } catch (error) {

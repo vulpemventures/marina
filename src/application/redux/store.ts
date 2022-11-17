@@ -37,7 +37,23 @@ const create = () => {
 };
 
 export const marinaStore = create();
-export const persistor = persistStore(marinaStore);
+
+let rehydrationComplete: (value?: unknown) => void;
+let rehydrationFailed: (reason?: any) => void;
+
+const rehydrationPromise = new Promise((resolve, reject) => {
+  rehydrationComplete = resolve;
+  rehydrationFailed = reject;
+});
+
+// export a promise that resolves when the store is fully rehydrated
+export function rehydration() {
+  return rehydrationPromise;
+}
+
+export const persistor = persistStore(marinaStore, null, () => {
+  rehydrationComplete();
+});
 
 export const wrapMarinaStore = (store: Store) => {
   wrapStore(store, serializerAndDeserializer);

@@ -1,5 +1,8 @@
 import type { NetworkString, UnblindedOutput } from 'ldk';
-import { selectTransactionState, selectUtxosState } from '../application/redux/selectors/wallet.selector';
+import {
+  selectTransactionState,
+  selectUtxosState,
+} from '../application/redux/selectors/wallet.selector';
 import type {
   MarinaEvent,
   NewTxMarinaEvent,
@@ -23,7 +26,7 @@ export interface StoreCacheAccount {
 
 function storeCacheAccountSelector(accountID: AccountID, net: NetworkString) {
   return (state: RootReducerState): StoreCacheAccount | undefined => {
-    const utxos = {}
+    const utxos = {};
     const utxoState = selectUtxosState(accountID, net)(state);
     for (const utxoMap of Object.values(utxoState)) {
       Object.assign(utxos, utxoMap);
@@ -97,7 +100,7 @@ export function newCacheFromState(state: RootReducerState, allAccountsIDs: strin
     if (!cache) continue;
     accounts[accountID] = cache;
   }
-  
+
   return {
     accounts,
     enabledWebsitesState: state.connect.enabledSites,

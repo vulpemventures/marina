@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import { flushPendingTx } from '../../application/redux/actions/transaction';
 import {
-  selectAllAccountsIDs,
   selectDeepRestorerIsLoading,
   selectUpdaterIsLoading,
 } from '../../application/redux/selectors/wallet.selector';
@@ -36,7 +35,6 @@ const ShellPopUp: React.FC<Props> = ({
   const history = useHistory();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const allAccountsIds = useSelector(selectAllAccountsIDs);
   const updaterIsLoading = useSelector(selectUpdaterIsLoading);
   const deepRestorerLoading = useSelector(selectDeepRestorerIsLoading);
   const network = useSelector(selectNetwork);

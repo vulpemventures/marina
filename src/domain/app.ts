@@ -29,7 +29,6 @@ export const BlockstreamExplorerURLs: ExplorerURLs = {
   electrsURL: 'https://blockstream.info/liquid',
   esploraURL: 'https://blockstream.info/liquid/api',
   batchServerURL: 'https://electrs-batch-blockstream.vulpem.com',
-
 };
 
 export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {

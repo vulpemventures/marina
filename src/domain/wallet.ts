@@ -16,10 +16,10 @@ export interface WalletState {
   };
   updaterLoaders: number;
   isVerified: boolean;
-  lockedUtxos: Record<string, number>;
 }
 
 export interface UtxosTransactionsState {
   utxos: MapByNetwork<Record<AccountID, Record<string, UtxosMap>>>;
   transactions: MapByNetwork<Record<AccountID, TxsHistory>>;
+  lockedUtxos: Record<string, number>;
 }

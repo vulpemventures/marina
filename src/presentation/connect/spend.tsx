@@ -31,6 +31,8 @@ import { lbtcAssetByNetwork } from '../../application/utils/network';
 import { Transaction } from 'liquidjs-lib';
 import type { UnconfirmedOutput } from '../../domain/unconfirmed';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
+import Browser from 'webextension-polyfill';
+import { subscribeScriptsMsg } from '../../domain/message';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -220,8 +222,16 @@ async function changeAddressGetter(
   const persisted: Record<string, boolean> = {};
 
   const id = await account.getWatchIdentity(net);
+  const port = Browser.runtime.connect();
   for (const asset of assets) {
     changeAddresses[asset] = await id.getNextChangeAddress();
+    port.postMessage(
+      subscribeScriptsMsg(
+        [address.toOutputScript(changeAddresses[asset].confidentialAddress).toString('hex')],
+        account.getInfo().accountID,
+        net
+      )
+    );
     persisted[asset] = false;
   }
 

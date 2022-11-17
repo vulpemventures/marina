@@ -3,7 +3,7 @@ import type { StoreCache } from '../store-cache';
 import { compareCacheForEvents, newCacheFromState, newStoreCache } from '../store-cache';
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import type { MessageHandler } from '../../domain/message';
+import { MessageHandler, subscribeScriptsMsg } from '../../domain/message';
 import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
 import type { RootReducerState } from '../../domain/common';
@@ -47,13 +47,12 @@ import type { SpendPopupResponse } from '../../presentation/connect/spend';
 import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
 import type { AccountID, CustomScriptAccount, MnemonicAccount } from '../../domain/account';
 import { AccountType, MainAccountID } from '../../domain/account';
-import type { AddressInterface, UnblindedOutput } from 'ldk';
+import { address, AddressInterface, UnblindedOutput } from 'ldk';
 import { getAsset, getSats } from 'ldk';
 import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
-import { sleep } from '../../application/utils/common';
 import type { BrokerProxyStore } from '../brokerProxyStore';
 import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
 import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
@@ -254,6 +253,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               (action: AnyAction) => this.store?.dispatchAsync(action)
             )
           );
+          this.backgroundScriptPort.postMessage(
+            subscribeScriptsMsg(
+              [address.toOutputScript(nextAddress.confidentialAddress).toString('hex')],
+              account.getInfo().accountID,
+              net
+            )
+          );
           return successMsg(toProviderAddress(nextAddress));
         }
 
@@ -295,6 +301,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             default: {
               const watchOnlyIdentity = await account.getWatchIdentity(net);
               nextChangeAddress = await watchOnlyIdentity.getNextChangeAddress(params?.[0]);
+              this.backgroundScriptPort.postMessage(
+                subscribeScriptsMsg(
+                  [address.toOutputScript(nextChangeAddress.confidentialAddress).toString('hex')],
+                  account.getInfo().accountID,
+                  net
+                )
+              );
               break;
             }
           }

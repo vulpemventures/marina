@@ -9,15 +9,10 @@ import {
   unblindTransaction,
   isUnblindedOutput,
 } from 'ldk';
-import {
-  privateBlindKeyGetter,
-  address,
-  networks,
-  getAsset,
-} from 'ldk';
+import { privateBlindKeyGetter, address, networks, getAsset } from 'ldk';
 import type { Account, AccountID } from '../../../domain/account';
 import { addTx } from '../actions/transaction';
-import type { AddUtxoAction } from '../actions/utxos';
+import { AddUtxoAction, unlockUtxos } from '../actions/utxos';
 import { addUtxo, deleteUtxo } from '../actions/utxos';
 import { SagaGenerator, selectExplorerURLsSaga, selectUtxosMapByScriptHashSaga } from './utils';
 import {
@@ -28,16 +23,21 @@ import {
   selectAllUnspentsSaga,
   selectNetworkSaga,
 } from './utils';
-import { ADD_UTXO, AUTHENTICATION_SUCCESS, UPDATE_SCRIPT_TASK } from '../actions/action-types';
+import {
+  ADD_UTXO,
+  AUTHENTICATION_SUCCESS,
+  FETCH_TX_TASK,
+  UPDATE_SCRIPT_TASK,
+} from '../actions/action-types';
 import type { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import type { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
-import type { UpdateScriptTaskAction } from '../actions/task';
+import type { FetchTxTaskAction, UpdateScriptTaskAction } from '../actions/task';
 import type { Channel } from 'redux-saga';
-import { put, take, fork, call, takeLatest } from 'redux-saga/effects';
+import { put, take, fork, call, takeLatest, delay } from 'redux-saga/effects';
 import { toStringOutpoint } from '../../utils/utxos';
-import { functionOR, toDisplayTransaction } from '../../utils/transaction';
+import { toDisplayTransaction } from '../../utils/transaction';
 import { defaultPrecision } from '../../utils/constants';
 import { periodicTaxiUpdater } from '../../../background/alarms';
 import UnblindError from 'ldk/dist/error/unblind-error';
@@ -58,9 +58,7 @@ const putDeleteUtxoAction = (accountID: AccountID, net: NetworkString) =>
     yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout, net));
   };
 
-function* getPrivateBlindKeyGetter(
-  network: NetworkString
-): SagaGenerator<BlindingKeyGetterAsync> {
+function* getPrivateBlindKeyGetter(network: NetworkString): SagaGenerator<BlindingKeyGetterAsync> {
   const allAccountsIDs = yield* selectAllAccountsIDsSaga();
   const makeGetPrivateBlindKey = (account: Account) => async () => {
     const identity = await account.getWatchIdentity(network);
@@ -85,7 +83,7 @@ function* getPrivateBlindKeyGetter(
           const key = await getter(script);
           return key;
         } catch (e) {
-          continue
+          continue;
         }
       }
       throw new Error('No key able to unblind the script: ' + script);
@@ -93,7 +91,7 @@ function* getPrivateBlindKeyGetter(
       console.error('getPrivateBlindKeyGetter', err);
       return undefined;
     }
-  }
+  };
 }
 
 function* fetchTxSaga(txid: string, network: NetworkString): SagaGenerator<TxInterface> {
@@ -102,20 +100,27 @@ function* fetchTxSaga(txid: string, network: NetworkString): SagaGenerator<TxInt
   return tx;
 }
 
-function* unblindTx(tx: TxInterface, network: NetworkString): SagaGenerator<{
+function* unblindTx(
+  tx: TxInterface,
+  network: NetworkString
+): SagaGenerator<{
   unblindedTx: TxInterface;
   errors: UnblindError[];
 }> {
   const blindKeyGetter = yield* getPrivateBlindKeyGetter(network);
-  const wrappedUnblindTx = (tx: TxInterface, blindKeyGetter: BlindingKeyGetterAsync) => async () => {
-    const res = await unblindTransaction(tx, blindKeyGetter);
-    return res;
-  }
+  const wrappedUnblindTx =
+    (tx: TxInterface, blindKeyGetter: BlindingKeyGetterAsync) => async () => {
+      const res = await unblindTransaction(tx, blindKeyGetter);
+      return res;
+    };
   const unblindResult = yield call(wrappedUnblindTx(tx, blindKeyGetter));
   return unblindResult;
 }
 
-function* fetchAndUnblindTransaction(network: NetworkString, txid: string): SagaGenerator<TxInterface> {
+function* fetchAndUnblindTransaction(
+  network: NetworkString,
+  txid: string
+): SagaGenerator<TxInterface> {
   const tx = yield* fetchTxSaga(txid, network);
   const unblindResult = yield* unblindTx(tx, network);
   return unblindResult.unblindedTx;
@@ -151,8 +156,7 @@ function* requestAssetInfoFromEsplora(
 ): SagaGenerator<Asset> {
   const explorerForNetwork = yield* selectExplorerURLsSaga(network)();
   const URL = explorerForNetwork.electrsURL;
-  const getRequest = () =>
-    axios.get(`${URL}/asset/${assetHash}`).then((r) => r.data);
+  const getRequest = () => axios.get(`${URL}/asset/${assetHash}`).then((r) => r.data);
   const result = yield call(getRequest);
 
   return {
@@ -168,10 +172,14 @@ function* updateScriptWorker(
   while (true) {
     try {
       const { network, scripthash, unspentState } = yield take(inChan);
-      const [currentUtxos, accountID] = yield* selectUtxosMapByScriptHashSaga(network, scripthash)();
+      const [currentUtxos, accountID] = yield* selectUtxosMapByScriptHashSaga(
+        network,
+        scripthash
+      )();
       // check if we have new outpoints
       const newOutpoints = unspentState.filter(
-        ({ tx_hash, tx_pos }) => currentUtxos[toStringOutpoint({ txid: tx_hash, vout: tx_pos })] === undefined
+        ({ tx_hash, tx_pos }) =>
+          currentUtxos[toStringOutpoint({ txid: tx_hash, vout: tx_pos })] === undefined
       );
       // check if we have to delete outpoints
       const toDelete = Object.values(currentUtxos).filter(
@@ -186,9 +194,16 @@ function* updateScriptWorker(
       // fetch and unblind new transactions and put ADD_TX actions and ADD_UTXO actions
       for (const newOutpoint of newOutpoints) {
         try {
-          const unblindedTransaction = yield* fetchAndUnblindTransaction(network, newOutpoint.tx_hash);
+          const unblindedTransaction = yield* fetchAndUnblindTransaction(
+            network,
+            newOutpoint.tx_hash
+          );
           const walletScripts = yield* getAllWalletScripts(network);
-          const formattedTransaction = toDisplayTransaction(unblindedTransaction, walletScripts, networks[network]);
+          const formattedTransaction = toDisplayTransaction(
+            unblindedTransaction,
+            walletScripts,
+            networks[network]
+          );
           yield* putAddTransactionAction(accountID, network)(formattedTransaction);
           const utxo = unblindedTransaction.vout[newOutpoint.tx_pos];
           if (isUnblindedOutput(utxo)) {
@@ -200,9 +215,9 @@ function* updateScriptWorker(
           continue;
         }
       }
-    } catch(err){ 
+    } catch (err) {
       console.error('updateScriptWorker error', err);
-      continue
+      continue;
     }
   }
 }
@@ -256,6 +271,7 @@ export function* watchForAddUtxoAction(
 ): SagaGenerator<void, AddUtxoAction> {
   while (true) {
     const action = yield take(ADD_UTXO);
+    yield put(unlockUtxos());
     const asset = getAsset(action.payload.utxo);
     if (asset) {
       yield put(chan, { assetHash: asset, network: action.payload.network });
@@ -263,8 +279,7 @@ export function* watchForAddUtxoAction(
   }
 }
 
-export function* watchForUpdateScriptTaskAction(
-): SagaGenerator<void, UpdateScriptTaskAction> {
+export function* watchForUpdateScriptTaskAction(): SagaGenerator<void, UpdateScriptTaskAction> {
   const chan = yield* createChannel<UpdateScriptTaskAction['payload']>();
 
   // start the asset worker
@@ -272,14 +287,54 @@ export function* watchForUpdateScriptTaskAction(
   yield fork(assetsWorker, assetsChan);
   yield fork(watchForAddUtxoAction, assetsChan); // this will feed the assets chan when ADD_UTXO is dispatched
 
-  const MAX_CONCURRENT_WORKERS = 1;
+  const MAX_CONCURRENT_WORKERS = 2;
   for (let i = 0; i < MAX_CONCURRENT_WORKERS; i++) {
     yield fork(updateScriptWorker, chan);
   }
 
   while (true) {
     const action = yield take(UPDATE_SCRIPT_TASK);
+    yield fork(updateUtxoAssets(assetsChan));
     yield put(chan, action.payload);
+  }
+}
+
+function* fetchTxWorker(
+  task: FetchTxTaskAction['payload']
+): SagaGenerator<void, FetchTxTaskAction['payload']> {
+  const { network, txid, startAt, accountID } = task;
+
+  // wait until startAt
+  const now = Date.now();
+  if (startAt > now) {
+    yield delay(startAt - now);
+  }
+
+  const MAX_RETRIES = 100;
+
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      const unblindedTransaction = yield* fetchAndUnblindTransaction(network, txid);
+      const walletScripts = yield* getAllWalletScripts(network);
+      const formattedTransaction = toDisplayTransaction(
+        unblindedTransaction,
+        walletScripts,
+        networks[network]
+      );
+      yield* putAddTransactionAction(accountID, network)(formattedTransaction);
+    } catch (err) {
+      console.error(err);
+      yield delay(10000);
+      continue;
+    }
+    break;
+  }
+}
+
+export function* watchForFetchTxTaskAction(): SagaGenerator<void, FetchTxTaskAction> {
+  while (true) {
+    const action = yield take(FETCH_TX_TASK);
+    yield fork(fetchTxWorker, action.payload);
   }
 }
 

@@ -1,7 +1,7 @@
 // send from inject script to content script
 
-import { NetworkString } from "ldk";
-import { AccountID } from "marina-provider";
+import { NetworkString } from 'ldk';
+import { AccountID } from 'marina-provider';
 
 // request = a call of a provider's method
 export interface RequestMessage<T extends string> {
@@ -76,10 +76,33 @@ export interface SubscribeScriptsMessage {
   network: NetworkString;
 }
 
-export function subscribeScriptsMsg(scripts: string[], accountID: AccountID, network: NetworkString): SubscribeScriptsMessage {
+export function subscribeScriptsMsg(
+  scripts: string[],
+  accountID: AccountID,
+  network: NetworkString
+): SubscribeScriptsMessage {
   return { scripts, network, accountID };
 }
 
 export function isSubscribeScriptsMessage(message: unknown): message is SubscribeScriptsMessage {
-  return message && (message as any).scripts && Array.isArray((message as any).scripts) && (message as any).network;
+  return (
+    message &&
+    (message as any).scripts &&
+    Array.isArray((message as any).scripts) &&
+    (message as any).network
+  );
+}
+
+export interface ReloadAccountsSubscribtionsMessage {
+  type: 'reload-accounts-subscribtions';
+}
+
+export function isReloadAccountsSubscribtionsMessage(
+  message: unknown
+): message is ReloadAccountsSubscribtionsMessage {
+  return message !== undefined && (message as any).type === 'reload-accounts-subscribtions';
+}
+
+export function reloadAccountsSubscribtionsMsg(): ReloadAccountsSubscribtionsMessage {
+  return { type: 'reload-accounts-subscribtions' };
 }

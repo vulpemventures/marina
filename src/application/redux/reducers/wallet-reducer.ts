@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
-import { toStringOutpoint } from './../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 import type { WalletState } from '../../../domain/wallet';
 import type { AnyAction } from 'redux';
 import type { AccountData, AccountID, CustomScriptAccountData } from '../../../domain/account';
 import { AccountType, initialRestorerOpts, MainAccountID } from '../../../domain/account';
-import type { NetworkString, UnblindedOutput } from 'ldk';
-import { lockedUtxoMinimunTime } from '../../utils/constants';
+import type { NetworkString } from 'ldk';
 
 export const walletInitState: WalletState = {
   encryptedMnemonic: '',
@@ -29,21 +27,7 @@ export const walletInitState: WalletState = {
   },
   updaterLoaders: 0,
   isVerified: false,
-  lockedUtxos: {},
 };
-
-// returns only utxos locked for less than 5 minutes
-const filterOnlyRecentLockedUtxos = (state: WalletState) => {
-  const expiredTime = Date.now() - lockedUtxoMinimunTime; // 5 minutes
-  const lockedUtxos: Record<string, number> = {};
-  for (const key of Object.keys(state.lockedUtxos)) {
-    const isRecent = state.lockedUtxos[key] > expiredTime;
-    if (isRecent) lockedUtxos[key] = state.lockedUtxos[key];
-  }
-  return lockedUtxos;
-};
-
-
 
 export function walletReducer(
   state: WalletState = walletInitState,
@@ -225,25 +209,6 @@ export function walletReducer(
             },
           },
         },
-      };
-    }
-
-    case ACTION_TYPES.LOCK_UTXO: {
-      const utxo = payload.utxo as UnblindedOutput;
-      return {
-        ...state,
-        lockedUtxos: {
-          ...state.lockedUtxos,
-          [toStringOutpoint(utxo)]: Date.now(),
-        },
-      };
-    }
-
-    case ACTION_TYPES.UNLOCK_UTXOS: {
-      const lockedUtxos = filterOnlyRecentLockedUtxos(state);
-      return {
-        ...state,
-        lockedUtxos,
       };
     }
 

@@ -13,11 +13,13 @@ import * as Yup from 'yup';
 import type { Asset } from '../../domain/assets';
 import { updateToNextChangeAddress } from '../../application/redux/actions/wallet';
 import type { Account } from '../../domain/account';
-import type { NetworkString } from 'ldk';
+import { address, NetworkString } from 'ldk';
 import { isValidAddressForNetwork } from '../../application/utils/address';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utils';
 import Input from './input';
 import React from 'react';
+import Browser from 'webextension-polyfill';
+import { subscribeScriptsMsg } from '../../domain/message';
 
 interface AddressAmountFormValues {
   address: string;
@@ -171,6 +173,15 @@ const AddressAmountEnhancedForm = withFormik<AddressAmountFormProps, AddressAmou
   handleSubmit: async (values, { props }) => {
     const masterPubKey = await props.account.getWatchIdentity(props.network);
     const changeAddressGenerated = await masterPubKey.getNextChangeAddress();
+    Browser.runtime
+      .connect()
+      .postMessage(
+        subscribeScriptsMsg(
+          [address.toOutputScript(changeAddressGenerated.confidentialAddress).toString('hex')],
+          props.account.getInfo().accountID,
+          props.network
+        )
+      );
     const changeAddress = createAddress(
       changeAddressGenerated.confidentialAddress,
       changeAddressGenerated.derivationPath

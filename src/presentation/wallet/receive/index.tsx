@@ -40,8 +40,15 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
       const addr = await identity.getNextAddress();
       await Promise.all(updateToNextAddress(account.getInfo().accountID, network).map(dispatch));
       setConfidentialAddress(addr.confidentialAddress);
-      Browser.runtime.connect()
-        .postMessage(subscribeScriptsMsg([address.toOutputScript(addr.confidentialAddress).toString('hex')], account.getInfo().accountID, 'regtest'))
+      Browser.runtime
+        .connect()
+        .postMessage(
+          subscribeScriptsMsg(
+            [address.toOutputScript(addr.confidentialAddress).toString('hex')],
+            account.getInfo().accountID,
+            'regtest'
+          )
+        );
     })().catch(console.error);
   }, []);
 
