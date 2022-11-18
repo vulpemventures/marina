@@ -1,68 +1,30 @@
-import type {
-  Outpoint,
-  AddressInterface,
-  TxInterface,
-  UnblindedOutput,
-  NetworkString,
-  BlindingKeyGetterAsync,
-} from 'ldk';
-import {
-  fetchTx,
-  unblindTransaction,
-  isUnblindedOutput,
-  privateBlindKeyGetter,
-  address,
-  networks,
-  getAsset,
-} from 'ldk';
+import type { AddressInterface, TxInterface, NetworkString, BlindingKeyGetterAsync } from 'ldk';
+import { fetchTx, unblindTransaction, privateBlindKeyGetter, address, getAsset } from 'ldk';
 import type { Account, AccountID } from '../../../domain/account';
 import { addTx } from '../actions/transaction';
 import type { AddUtxoAction } from '../actions/utxos';
-import { unlockUtxos, addUtxo, deleteUtxo } from '../actions/utxos';
-import type { SagaGenerator } from './utils';
+import { unlockUtxos } from '../actions/utxos';
+import { SagaGenerator } from './utils';
 import {
   selectExplorerURLsSaga,
-  selectUtxosMapByScriptHashSaga,
-  createChannel,
   newSagaSelector,
   selectAccountSaga,
   selectAllAccountsIDsSaga,
-  selectAllUnspentsSaga,
-  selectNetworkSaga,
 } from './utils';
-import {
-  ADD_UTXO,
-  AUTHENTICATION_SUCCESS,
-  FETCH_TX_TASK,
-  UPDATE_SCRIPT_TASK,
-} from '../actions/action-types';
+import { ADD_UTXO, AUTHENTICATION_SUCCESS } from '../actions/action-types';
 import type { Asset } from '../../../domain/assets';
 import axios from 'axios';
 import type { RootReducerState } from '../../../domain/common';
 import { addAsset } from '../actions/asset';
-import type { FetchTxTaskAction, UpdateScriptTaskAction } from '../actions/task';
-import type { Channel } from 'redux-saga';
-import { put, take, fork, call, takeLatest, delay } from 'redux-saga/effects';
-import { toStringOutpoint } from '../../utils/utxos';
-import { toDisplayTransaction } from '../../utils/transaction';
+import { put, take, call, takeLatest } from 'redux-saga/effects';
 import { defaultPrecision } from '../../utils/constants';
 import { periodicTaxiUpdater } from '../../../background/alarms';
 import type UnblindError from 'ldk/dist/error/unblind-error';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 
-const putAddUtxoAction = (accountID: AccountID, net: NetworkString) =>
-  function* (utxo: UnblindedOutput): SagaGenerator {
-    yield put(addUtxo(accountID, utxo, net));
-  };
-
 const putAddTransactionAction = (accountID: AccountID, net: NetworkString) =>
   function* (tx: TxDisplayInterface): SagaGenerator {
     yield put(addTx(accountID, tx, net));
-  };
-
-const putDeleteUtxoAction = (accountID: AccountID, net: NetworkString) =>
-  function* (outpoint: Outpoint): SagaGenerator {
-    yield put(deleteUtxo(accountID, outpoint.txid, outpoint.vout, net));
   };
 
 function* getPrivateBlindKeyGetter(network: NetworkString): SagaGenerator<BlindingKeyGetterAsync> {
@@ -173,62 +135,6 @@ function* requestAssetInfoFromEsplora(
   };
 }
 
-function* updateScriptWorker(
-  inChan: Channel<UpdateScriptTaskAction['payload']>
-): SagaGenerator<void, UpdateScriptTaskAction['payload']> {
-  while (true) {
-    try {
-      const { network, scripthash, unspentState } = yield take(inChan);
-      const [currentUtxos, accountID] = yield* selectUtxosMapByScriptHashSaga(
-        network,
-        scripthash
-      )();
-      // check if we have new outpoints
-      const newOutpoints = unspentState.filter(
-        ({ tx_hash, tx_pos }) =>
-          currentUtxos[toStringOutpoint({ txid: tx_hash, vout: tx_pos })] === undefined
-      );
-      // check if we have to delete outpoints
-      const toDelete = Object.values(currentUtxos).filter(
-        (utxo) => !unspentState.find((u) => u.tx_hash === utxo.txid && u.tx_pos === utxo.vout)
-      );
-
-      // put DELETE_UTXO actions for each outpoint to delete
-      for (const toDeleteUtxo of toDelete) {
-        yield* putDeleteUtxoAction(accountID, network)(toDeleteUtxo);
-      }
-
-      // fetch and unblind new transactions and put ADD_TX actions and ADD_UTXO actions
-      for (const newOutpoint of newOutpoints) {
-        try {
-          const unblindedTransaction = yield* fetchAndUnblindTransaction(
-            network,
-            newOutpoint.tx_hash
-          );
-          const walletScripts = yield* getAllWalletScripts(network);
-          const formattedTransaction = toDisplayTransaction(
-            unblindedTransaction,
-            walletScripts,
-            networks[network]
-          );
-          yield* putAddTransactionAction(accountID, network)(formattedTransaction);
-          const utxo = unblindedTransaction.vout[newOutpoint.tx_pos];
-          if (isUnblindedOutput(utxo)) {
-            yield* putAddUtxoAction(accountID, network)(utxo);
-          }
-        } catch (err) {
-          // just log and ignore the error (try to fetch and unblind the next outpoint)
-          console.error(err);
-          continue;
-        }
-      }
-    } catch (err) {
-      console.error('updateScriptWorker error', err);
-      continue;
-    }
-  }
-}
-
 const selectAssetSaga = (assetHash: string) =>
   newSagaSelector((state: RootReducerState) => state.assets[assetHash]);
 
@@ -245,103 +151,20 @@ function* needUpdate(assetHash: string): SagaGenerator<boolean> {
   return false;
 }
 
-function* assetsWorker(
-  assetsChan: Channel<{ assetHash: string; network: NetworkString }>
-): SagaGenerator<void, { assetHash: string; network: NetworkString }> {
-  while (true) {
-    const { assetHash, network } = yield take(assetsChan);
-    if (yield* needUpdate(assetHash)) {
-      try {
-        const asset = yield* requestAssetInfoFromEsplora(assetHash, network);
-        yield put(addAsset(assetHash, asset));
-      } catch (e) {
-        console.warn(`Error fetching asset ${assetHash}`, e);
-      }
-    }
-  }
-}
-
-function updateUtxoAssets(assetsChan: Channel<{ assetHash: string; network: NetworkString }>) {
-  return function* () {
-    const utxos = yield* selectAllUnspentsSaga();
-    const assets = new Set(utxos.map(getAsset));
-    const network = yield* selectNetworkSaga();
-
-    for (const assetHash of assets) {
-      yield put(assetsChan, { assetHash, network });
-    }
-  };
-}
-
-export function* watchForAddUtxoAction(
-  chan: Channel<{ assetHash: string; network: NetworkString }>
-): SagaGenerator<void, AddUtxoAction> {
+// watch for new utxo and fetch asset details if needed
+export function* watchForAddUtxoAction(): SagaGenerator<void, AddUtxoAction> {
   while (true) {
     const action = yield take(ADD_UTXO);
     yield put(unlockUtxos());
-    const asset = getAsset(action.payload.utxo);
-    if (asset) {
-      yield put(chan, { assetHash: asset, network: action.payload.network });
+    const assethash = getAsset(action.payload.utxo);
+    if (assethash && (yield* needUpdate(assethash))) {
+      try {
+        const asset = yield* requestAssetInfoFromEsplora(assethash, action.payload.network);
+        yield put(addAsset(assethash, asset));
+      } catch (e) {
+        console.warn(`Error fetching asset ${assethash}`, e);
+      }
     }
-  }
-}
-
-export function* watchForUpdateScriptTaskAction(): SagaGenerator<void, UpdateScriptTaskAction> {
-  const chan = yield* createChannel<UpdateScriptTaskAction['payload']>();
-
-  // start the asset worker
-  const assetsChan = yield* createChannel<{ assetHash: string; network: NetworkString }>();
-  yield fork(assetsWorker, assetsChan);
-  yield fork(watchForAddUtxoAction, assetsChan); // this will feed the assets chan when ADD_UTXO is dispatched
-
-  const MAX_CONCURRENT_WORKERS = 2;
-  for (let i = 0; i < MAX_CONCURRENT_WORKERS; i++) {
-    yield fork(updateScriptWorker, chan);
-  }
-
-  while (true) {
-    const action = yield take(UPDATE_SCRIPT_TASK);
-    yield fork(updateUtxoAssets(assetsChan));
-    yield put(chan, action.payload);
-  }
-}
-
-function* fetchTxWorker(
-  task: FetchTxTaskAction['payload']
-): SagaGenerator<void, FetchTxTaskAction['payload']> {
-  const { network, txid, startAt, accountID } = task;
-
-  // wait until startAt
-  const now = Date.now();
-  if (startAt > now) {
-    yield delay(startAt - now);
-  }
-
-  const MAX_RETRIES = 100;
-
-  for (let i = 0; i < MAX_RETRIES; i++) {
-    try {
-      const unblindedTransaction = yield* fetchAndUnblindTransaction(network, txid);
-      const walletScripts = yield* getAllWalletScripts(network);
-      const formattedTransaction = toDisplayTransaction(
-        unblindedTransaction,
-        walletScripts,
-        networks[network]
-      );
-      yield* putAddTransactionAction(accountID, network)(formattedTransaction);
-    } catch (err) {
-      console.error(err);
-      yield delay(10000);
-      continue;
-    }
-    break;
-  }
-}
-
-export function* watchForFetchTxTaskAction(): SagaGenerator<void, FetchTxTaskAction> {
-  while (true) {
-    const action = yield take(FETCH_TX_TASK);
-    yield fork(fetchTxWorker, action.payload);
   }
 }
 

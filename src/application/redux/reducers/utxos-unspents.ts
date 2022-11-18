@@ -2,7 +2,7 @@ import type { NetworkString, UnblindedOutput } from 'ldk';
 import { crypto } from 'ldk';
 import type { AccountID } from 'marina-provider';
 import { MainAccountID } from '../../../domain/account';
-import type { TxDisplayInterface } from '../../../domain/transaction';
+import { TxDisplayInterface, TxStatusEnum } from '../../../domain/transaction';
 import type { UtxosTransactionsState } from '../../../domain/wallet';
 import { toStringOutpoint } from '../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
@@ -89,6 +89,11 @@ export const utxosAndTransactionsReducer = (
       return addTx(state)(payload.accountID, payload.tx, payload.network);
     }
 
+    case ACTION_TYPES.CONFIRM_TX: {
+      const { txID, blocktime, network } = payload;
+      return confirmTx(state)(txID, blocktime, network);
+    }
+
     case ACTION_TYPES.FLUSH_UTXOS: {
       const accountID = payload.accountID as AccountID;
       const net = payload.network as NetworkString;
@@ -120,6 +125,10 @@ export const utxosAndTransactionsReducer = (
           },
         },
       };
+    }
+
+    case ACTION_TYPES.ONBOARDING_COMPLETETED: {
+      return utxosTransactionsInitialState;
     }
 
     default:
@@ -209,6 +218,35 @@ function addTx(state: UtxosTransactionsState) {
         },
       },
     };
+  };
+}
+
+function confirmTx(state: UtxosTransactionsState) {
+  return (txID: string, blocktime: number, network: NetworkString) => {
+    // find the tx in the state
+    const txState = state.transactions[network];
+    for (const [accountID, txHistory] of Object.entries(txState)) {
+      if (txHistory[txID] !== undefined) {
+        return {
+          ...state,
+          transactions: {
+            ...state.transactions,
+            [network]: {
+              ...state.transactions[network],
+              [accountID]: {
+                ...state.transactions[network][accountID],
+                [txID]: {
+                  ...state.transactions[network][accountID][txID],
+                  blocktimeMs: blocktime * 1000,
+                  status: TxStatusEnum.Confirmed,
+                },
+              },
+            },
+          },
+        };
+      }
+    }
+    return state;
   };
 }
 

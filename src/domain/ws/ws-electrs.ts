@@ -88,7 +88,7 @@ export class ElectrumWS extends Observable {
 
   public async request(
     method: string,
-    ...params: (string | number | (string | number)[])[]
+    ...params: (boolean | string | number | (string | number)[])[]
   ): Promise<any> {
     let id: number;
     do {

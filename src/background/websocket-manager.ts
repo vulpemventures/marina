@@ -1,17 +1,40 @@
-import type { NetworkString } from 'ldk';
-import { address, crypto } from 'ldk';
-import type { Store } from 'redux';
-import { updateScriptTaskAction } from '../application/redux/actions/task';
-import { addScriptHash } from '../application/redux/actions/transaction';
 import {
+  address,
+  crypto,
+  confidential,
+  isConfidentialOutput,
+  isUnblindedOutput,
+  networks,
+  NetworkString,
+  Output,
+  Transaction,
+  TxInterface,
+  UnblindedOutput,
+  unblindTransaction,
+} from 'ldk';
+import type { Store } from 'redux';
+import { addScriptHash, addTx, confirmTx } from '../application/redux/actions/transaction';
+import { addUtxo, deleteUtxo } from '../application/redux/actions/utxos';
+import {
+  History,
   selectAccount,
+  selectAccountIDByScriptHash,
   selectAllAccountsIDs,
+  selectHistoryDiff,
+  selectUtxoByOutpoint,
   selectUtxosMapByScriptHash,
 } from '../application/redux/selectors/wallet.selector';
+import { toDisplayTransaction } from '../application/utils/transaction';
 import type { AccountID } from '../domain/account';
 import type { RootReducerState } from '../domain/common';
 import type { MapByNetwork } from '../domain/transaction';
 import { ElectrumWS } from '../domain/ws/ws-electrs';
+import {
+  BlockHeader,
+  deserializeBlockHeader,
+  getAllWalletScripts,
+  getPrivateBlindKeyGetter,
+} from './utils';
 
 export class WebsocketManager {
   private socketByNetwork: MapByNetwork<ElectrumWS | undefined>;
@@ -80,7 +103,7 @@ export class WebsocketManager {
     }
     await websocket.subscribe(
       'blockchain.scripthash',
-      callbackWebsocketElectrum(websocket, network, this.marinaStore.dispatch),
+      callbackWebsocketElectrum(websocket, network, this.marinaStore),
       scriptHash
     );
   }
@@ -93,31 +116,136 @@ export function reverseAndHash(script: string): string {
 }
 
 // callback for websocket scripthash messages
-function callbackWebsocketElectrum(
-  websocket: ElectrumWS,
-  network: NetworkString,
-  dispatch: Store['dispatch']
-) {
+function callbackWebsocketElectrum(websocket: ElectrumWS, network: NetworkString, store: Store) {
   return (...params: (string | number)[]) => {
     const scriptHash = params[0] as string;
     const status = params[1] as string | null;
     if (status !== null) {
       // if null, it means no new transaction for this scripthash, so we don't need to update it
-      handleUpdateScriptHash(websocket, network, scriptHash, dispatch).catch(console.error);
+      handleUpdateScriptHash(websocket, network, scriptHash, store).catch(console.error);
     }
   };
 }
 
+// this function is triggered each time a new status is received for a scripthash
 async function handleUpdateScriptHash(
   ws: ElectrumWS,
   network: NetworkString,
   scriptHash: string,
-  dispatch: Store['dispatch']
+  store: Store
 ) {
-  const response = (await ws.request('blockchain.scripthash.listunspent', scriptHash)) as Array<{
-    height: number;
-    tx_hash: string;
-    tx_pos: number;
-  }>;
-  dispatch(updateScriptTaskAction(scriptHash, response, network));
+  const historyResp = (await ws.request(
+    'blockchain.scripthash.get_history',
+    scriptHash
+  )) as History;
+  const historyDiff = selectHistoryDiff(historyResp)(store.getState());
+
+  const accountID = selectAccountIDByScriptHash(scriptHash, network)(store.getState());
+  const blindKeyGetter = getPrivateBlindKeyGetter(store, network);
+  const walletScripts = await getAllWalletScripts(store, network);
+
+  for (const { txID, height } of historyDiff.newTxs) {
+    const txFromElectrum = await fetchTx(ws, txID, height > 0 ? height : undefined);
+    const { unblindedTx } = await unblindTransaction(txFromElectrum, blindKeyGetter);
+    const displayTx = toDisplayTransaction(unblindedTx, walletScripts, networks[network]);
+
+    // add the new tx to the store
+    store.dispatch(addTx(accountID, displayTx, network));
+
+    // check if any utxos were spent in this tx
+    for (const input of unblindedTx.vin) {
+      const [utxoInStore, accountID] = selectUtxoByOutpoint(input, network)(store.getState());
+      if (utxoInStore) store.dispatch(deleteUtxo(accountID, input.txid, input.vout, network));
+    }
+
+    // check if we have any new utxos
+    const walletOutputs = unblindedTx.vout.filter((o) => {
+      if (isConfidentialOutput(o)) {
+        return isUnblindedOutput(o);
+      }
+
+      return walletScripts.includes(o.prevout.script.toString('hex'));
+    });
+
+    // add the new utxos to the store
+    const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
+    actions.forEach(store.dispatch);
+  }
+
+  for (const { txID, height } of historyDiff.confirmedTxs) {
+    if (height <= 0) continue;
+    const blockHeaderHex = (await ws.request('blockchain.block.header', height)) as string;
+    const blockHeader = deserializeBlockHeader(blockHeaderHex);
+    const action = confirmTx(txID, blockHeader.timestamp, network);
+    store.dispatch(action);
+  }
+}
+
+// fetch a tx (and its prevouts) from websocket endpoint using the blockchain.transaction.get method
+async function fetchTx(ws: ElectrumWS, txID: string, blockheight?: number): Promise<TxInterface> {
+  const txHex = (await ws.request('blockchain.transaction.get', txID)) as string;
+  const transaction = Transaction.fromHex(txHex);
+
+  let blockHeader: BlockHeader | undefined;
+  if (blockheight) {
+    const blockHeaderHex = (await ws.request('blockchain.block.header', blockheight)) as string;
+    blockHeader = deserializeBlockHeader(blockHeaderHex);
+  }
+
+  const txInterface: TxInterface = {
+    txid: txID,
+    fee: 0,
+    status: {
+      confirmed: blockHeader !== undefined,
+      blockHeight: blockHeader?.height,
+      blockTime: blockHeader?.timestamp,
+    },
+    vin: [],
+    vout: [],
+  };
+
+  for (const input of transaction.ins) {
+    const prevoutTxID = Buffer.from(input.hash).reverse().toString('hex');
+    const vout = input.index;
+
+    if (!input.isPegin) {
+      // fetch prevout if not pegin input
+      const prevoutHex = (await ws.request('blockchain.transaction.get', prevoutTxID)) as string;
+      const prevout = Transaction.fromHex(prevoutHex);
+      const prevoutOutput: Output = {
+        txid: prevoutTxID,
+        vout,
+        prevout: prevout.outs[vout],
+      };
+
+      txInterface.vin.push({
+        txid: prevoutTxID,
+        vout,
+        prevout: prevoutOutput,
+        isPegin: false,
+      });
+    } else {
+      txInterface.vin.push({
+        txid: prevoutTxID,
+        vout,
+        isPegin: true,
+      });
+    }
+  }
+
+  for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
+    const output = transaction.outs[outIndex];
+    txInterface.vout.push({
+      txid: txID,
+      vout: outIndex,
+      prevout: output,
+    });
+
+    // if fee output, add the fee value
+    if (output.script.length === 0) {
+      txInterface.fee = confidential.confidentialValueToSatoshi(output.value);
+    }
+  }
+
+  return txInterface;
 }

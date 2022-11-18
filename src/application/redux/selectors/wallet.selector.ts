@@ -47,6 +47,13 @@ const selectTransactionsForAccount =
     return [];
   };
 
+const selectTransactionByID =
+  (txID: string) =>
+  (state: RootReducerState): TxDisplayInterface | undefined => {
+    const txs = selectTransactions(...selectAllAccountsIDs(state))(state);
+    return txs.find((tx) => tx.txId === txID);
+  };
+
 export function hasMnemonicSelector(state: RootReducerState): boolean {
   return state.wallet.encryptedMnemonic !== '' && state.wallet.encryptedMnemonic !== undefined;
 }
@@ -160,6 +167,13 @@ export const selectUtxosMapByScriptHash =
     throw new Error('scripthash map not found in reducer');
   };
 
+export const selectAccountIDByScriptHash =
+  (scriptHash: string, network: NetworkString) =>
+  (state: RootReducerState): AccountID => {
+    const [, accountID] = selectUtxosMapByScriptHash(network, scriptHash)(state);
+    return accountID;
+  };
+
 export const selectDeepRestorerIsLoading = (state: RootReducerState): boolean => {
   return state.wallet.deepRestorer.restorerLoaders > 0;
 };
@@ -184,5 +198,52 @@ export function selectRestorerOpts<T extends StateRestorerOpts>(account: Account
   return (state: RootReducerState): T => {
     const net = selectNetwork(state);
     return state.wallet.accounts[account].restorerOpts[net];
+  };
+}
+
+export type History = Array<{ height: number; tx_hash: string }>;
+
+// take an history as input and compare it to the transactions already in the state
+// returns the txids of the new transactions (not in the state) and the txids of the transactions that are confirmed (in the state but not in a block)
+export function selectHistoryDiff(history: History) {
+  return (
+    state: RootReducerState
+  ): {
+    newTxs: { txID: string; height: number }[];
+    confirmedTxs: { txID: string; height: number }[];
+  } => {
+    const newTxs: { txID: string; height: number }[] = [];
+    const confirmedTxs: { txID: string; height: number }[] = [];
+
+    for (const { tx_hash, height } of history) {
+      const txInState = selectTransactionByID(tx_hash)(state);
+      // if the tx is in the state, add it in the confirmedTxs array if it's confirmed according to the history
+      if (txInState && !txInState.blockTimeMs && height > 0) {
+        confirmedTxs.push({ txID: tx_hash, height });
+      }
+
+      // if the tx is not in the state, add it in the newTxs array
+      if (!txInState) {
+        newTxs.push({ txID: tx_hash, height });
+      }
+    }
+
+    // remove duplicates using Set
+    return { newTxs: [...new Set(newTxs)], confirmedTxs: [...new Set(confirmedTxs)] };
+  };
+}
+
+export function selectUtxoByOutpoint(outpoint: Outpoint, network: NetworkString) {
+  const stringOutpoint = toStringOutpoint(outpoint);
+
+  return (state: RootReducerState): [UnblindedOutput | undefined, AccountID] => {
+    const utxosState = state.utxosTransactions.utxos[network];
+    for (const [accountID, mappedByScriptHash] of Object.entries(utxosState)) {
+      for (const utxoMap of Object.values(mappedByScriptHash)) {
+        if (utxoMap[stringOutpoint]) return [utxoMap[stringOutpoint], accountID];
+      }
+    }
+
+    return [undefined, ''];
   };
 }

@@ -8,6 +8,7 @@ import {
   PENDING_TX_SET_STEP,
   ADD_TX,
   ADD_SCRIPT_HASH,
+  CONFIRM_TX,
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { Address } from '../../../domain/address';
@@ -80,5 +81,12 @@ export function addScriptHash(
   return {
     type: ADD_SCRIPT_HASH,
     payload: { scriptHash, accountID, network },
+  };
+}
+
+export function confirmTx(txID: string, blocktime: number, network: NetworkString): AnyAction {
+  return {
+    type: CONFIRM_TX,
+    payload: { txID, blocktime, network },
   };
 }

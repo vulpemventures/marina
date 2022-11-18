@@ -78,6 +78,10 @@ export function transactionReducer(
       };
     }
 
+    case ACTION_TYPES.ONBOARDING_COMPLETETED: {
+      return transactionInitState;
+    }
+
     default:
       return state;
   }

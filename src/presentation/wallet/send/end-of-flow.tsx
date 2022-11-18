@@ -19,7 +19,6 @@ import {
   INVALID_PASSWORD_ERROR,
   SOMETHING_WENT_WRONG_ERROR,
 } from '../../../application/utils/constants';
-import { fetchTxTaskAction } from '../../../application/redux/actions/task';
 
 export interface EndOfFlowProps {
   signerAccounts: Account[];
@@ -97,8 +96,6 @@ const EndOfFlow: React.FC<EndOfFlowProps> = ({
 
       // flush pending tx state
       await dispatch(flushPendingTx());
-      // fetch tx details
-      await dispatch(fetchTxTaskAction(txid, signerAccounts[0].getInfo().accountID, network));
 
       // push to success page
       history.push({
