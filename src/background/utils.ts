@@ -1,10 +1,8 @@
-import { address, BlindingKeyGetterAsync, NetworkString, privateBlindKeyGetter } from 'ldk';
-import { Store } from 'redux';
-import {
-  selectAllAccounts,
-  selectAllAccountsIDs,
-} from '../application/redux/selectors/wallet.selector';
-import { Account } from '../domain/account';
+import type { BlindingKeyGetterAsync, NetworkString } from 'ldk';
+import { address, privateBlindKeyGetter } from 'ldk';
+import type { Store } from 'redux';
+import { selectAllAccounts } from '../application/redux/selectors/wallet.selector';
+import type { Account } from '../domain/account';
 
 export interface BlockHeader {
   version: number;

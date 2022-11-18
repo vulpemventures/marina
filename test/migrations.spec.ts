@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { AccountType, initialRestorerOpts, MainAccountID } from '../src/domain/account';
 import type {
   WalletPersistedStateV1,
@@ -109,13 +108,5 @@ describe('WalletState migrations', () => {
     expect(walletStateV2.mainAccount.restorerOpts.testnet.lastUsedInternalIndex).toEqual(-1);
     expect(walletStateV2.mainAccount.restorerOpts.regtest.lastUsedExternalIndex).toEqual(-1);
     expect(walletStateV2.mainAccount.restorerOpts.regtest.lastUsedInternalIndex).toEqual(-1);
-    // check that the unspents and transactions are reinitialized (the next update will fetch them)
-    // we need this because the type of unspents and txs persisted has changed in V2
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.liquid.utxosMap);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.liquid.transactions);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.testnet.utxosMap);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.testnet.transactions);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.regtest.utxosMap);
-    assert.isEmpty(walletStateV2.unspentsAndTransactions.mainAccount.regtest.transactions);
   });
 });

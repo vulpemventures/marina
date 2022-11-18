@@ -1,3 +1,4 @@
+import type { NetworkString, Output, TxInterface, UnblindedOutput } from 'ldk';
 import {
   address,
   crypto,
@@ -5,18 +6,14 @@ import {
   isConfidentialOutput,
   isUnblindedOutput,
   networks,
-  NetworkString,
-  Output,
   Transaction,
-  TxInterface,
-  UnblindedOutput,
   unblindTransaction,
 } from 'ldk';
 import type { Store } from 'redux';
 import { addScriptHash, addTx, confirmTx } from '../application/redux/actions/transaction';
 import { addUtxo, deleteUtxo } from '../application/redux/actions/utxos';
+import type { History } from '../application/redux/selectors/wallet.selector';
 import {
-  History,
   selectAccount,
   selectAccountIDByScriptHash,
   selectAllAccountsIDs,
@@ -29,12 +26,8 @@ import type { AccountID } from '../domain/account';
 import type { RootReducerState } from '../domain/common';
 import type { MapByNetwork } from '../domain/transaction';
 import { ElectrumWS } from '../domain/ws/ws-electrs';
-import {
-  BlockHeader,
-  deserializeBlockHeader,
-  getAllWalletScripts,
-  getPrivateBlindKeyGetter,
-} from './utils';
+import type { BlockHeader } from './utils';
+import { deserializeBlockHeader, getAllWalletScripts, getPrivateBlindKeyGetter } from './utils';
 
 export class WebsocketManager {
   private socketByNetwork: MapByNetwork<ElectrumWS | undefined>;
