@@ -14,17 +14,27 @@ export function selectExplorerURLs(net?: NetworkString) {
 
 export const selectEsploraForNetwork = (network: NetworkString) =>
   function (state: RootReducerState): string {
-    return selectExplorerURLs(network)(state).esploraURL;
+    return selectExplorerURLs(network)(state).explorerURL;
   };
 
-export function selectEsploraURL(state: RootReducerState): string {
-  return selectExplorerURLs()(state).esploraURL;
+export function selectHTTPExplorerURL(net?: NetworkString) {
+  return function (state: RootReducerState): string {
+    return selectExplorerURLs(net)(state).explorerURL;
+  };
 }
 
-export function selectElectrsURL(state: RootReducerState): string {
-  return selectExplorerURLs()(state).electrsURL;
+export function selectWebExplorerURL(net?: NetworkString) {
+  return function (state: RootReducerState): string {
+    return selectExplorerURLs(net)(state).webExplorerURL;
+  };
 }
 
 export function selectNetwork(state: RootReducerState) {
   return state.app.network;
+}
+
+export function selectWSExplorerURL(network?: NetworkString) {
+  return function (state: RootReducerState): string {
+    return selectExplorerURLs(network)(state).websocketExplorerURL;
+  };
 }

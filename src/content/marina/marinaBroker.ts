@@ -53,7 +53,10 @@ import type { AccountID, CustomScriptAccount, MnemonicAccount } from '../../doma
 import { AccountType, MainAccountID } from '../../domain/account';
 import type { AddressInterface, UnblindedOutput } from 'ldk';
 import { address, getAsset, getSats } from 'ldk';
-import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
+import {
+  selectHTTPExplorerURL,
+  selectNetwork,
+} from '../../application/redux/selectors/app.selector';
 import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
 import { sortRecipients } from '../../application/utils/transaction';
 import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
@@ -380,7 +383,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
-          const txid = await broadcastTx(selectEsploraURL(this.state), signedTxHex);
+          const txid = await broadcastTx(selectHTTPExplorerURL()(this.state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
           // lock selected utxos and credit change utxos (aka unconfirmed outputs)
@@ -559,7 +562,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const network = selectNetwork(this.state);
 
           // broadcast tx
-          const txid = await broadcastTx(selectEsploraURL(this.state), signedTxHex);
+          const txid = await broadcastTx(selectHTTPExplorerURL()(this.state), signedTxHex);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
 
           // get selected and change utxos from transaction

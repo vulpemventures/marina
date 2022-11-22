@@ -5,7 +5,7 @@ import Button from '../../components/button';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../../application/utils/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectEsploraURL } from '../../../application/redux/selectors/app.selector';
+import { selectHTTPExplorerURL } from '../../../application/redux/selectors/app.selector';
 import { broadcastTx } from '../../../application/utils/network';
 import type { UnblindedOutput } from 'ldk';
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
@@ -20,7 +20,7 @@ interface LocationState {
 const PaymentError: React.FC = () => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
-  const explorer = useSelector(selectEsploraURL);
+  const explorer = useSelector(selectHTTPExplorerURL());
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
   const handleRetry = async () => {

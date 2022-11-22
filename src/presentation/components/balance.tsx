@@ -2,7 +2,7 @@ import React from 'react';
 import cx from 'classnames';
 import browser from 'webextension-polyfill';
 import { useSelector } from 'react-redux';
-import { selectElectrsURL } from '../../application/redux/selectors/app.selector';
+import { selectWebExplorerURL } from '../../application/redux/selectors/app.selector';
 import AssetIcon from './assetIcon';
 
 interface Props {
@@ -20,11 +20,11 @@ const Balance: React.FC<Props> = ({
   assetTicker,
   assetHash,
 }) => {
-  const electrsURL = useSelector(selectElectrsURL);
+  const webExplorerURL = useSelector(selectWebExplorerURL());
 
   const handleOpenExplorer = () =>
     browser.tabs.create({
-      url: `${electrsURL}/asset/${assetHash}`,
+      url: `${webExplorerURL}/asset/${assetHash}`,
       active: false,
     });
 

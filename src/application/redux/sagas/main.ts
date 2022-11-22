@@ -1,7 +1,8 @@
 import type { AllEffect } from 'redux-saga/effects';
-import { call, put, takeLeading, fork, all } from 'redux-saga/effects';
+import { takeLatest, call, put, takeLeading, fork, all } from 'redux-saga/effects';
 import { fetchAssetsFromTaxi, taxiURL } from '../../utils/taxi';
 import {
+  AUTHENTICATION_SUCCESS,
   RESET,
   RESET_APP,
   RESET_CONNECT,
@@ -12,10 +13,10 @@ import {
 import { setTaxiAssets } from '../actions/taxi';
 import type { SagaGenerator } from './utils';
 import { selectNetworkSaga, newSagaSelector } from './utils';
-import { updateAfterEachLoginAction, watchForAddUtxoAction } from './updater';
 import { watchRestoreTask } from './deep-restorer';
 import type { NetworkString } from 'ldk';
 import { selectTaxiAssetsForNetwork } from '../selectors/taxi.selector';
+import { periodicTaxiUpdater } from '../../../background/alarms';
 
 function* fetchAndSetTaxiAssets(): SagaGenerator<void, string[]> {
   yield* fetchTaxiAssetsForNetwork('liquid');
@@ -48,6 +49,15 @@ function* fetchTaxiAssetsForNetwork(network: NetworkString): SagaGenerator<void,
   }
 }
 
+// starts an update for all accounts after each AUTHENTICATION_SUCCESS action
+// only updates the accounts for the current network
+function* updateAfterEachLoginAction(): SagaGenerator<void, void> {
+  yield takeLatest(AUTHENTICATION_SUCCESS, function () {
+    // enable periodic updaters
+    periodicTaxiUpdater();
+  });
+}
+
 // watch for every UPDATE_TAXI_ASSETS actions
 // wait that previous update is done before begin the new one
 function* watchUpdateTaxi(): SagaGenerator<void, void> {
@@ -68,7 +78,6 @@ function* watchReset(): SagaGenerator<void, void> {
 function* mainSaga(): SagaGenerator<void, void> {
   yield fork(watchReset);
   yield fork(watchUpdateTaxi);
-  yield fork(watchForAddUtxoAction);
   yield fork(updateAfterEachLoginAction);
   yield fork(watchRestoreTask);
 }

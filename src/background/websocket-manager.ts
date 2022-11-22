@@ -1,5 +1,7 @@
+import axios from 'axios';
 import type { NetworkString, Output, TxInterface, UnblindedOutput } from 'ldk';
 import {
+  getAsset,
   address,
   crypto,
   confidential,
@@ -10,10 +12,18 @@ import {
   unblindTransaction,
 } from 'ldk';
 import type { Store } from 'redux';
+import { addAsset } from '../application/redux/actions/asset';
 import { addScriptHash, addTx, confirmTx } from '../application/redux/actions/transaction';
-import { addUtxo, deleteUtxo } from '../application/redux/actions/utxos';
+import { addUtxo, deleteUtxo, unlockUtxos } from '../application/redux/actions/utxos';
+import { popUpdaterLoader, pushUpdaterLoader } from '../application/redux/actions/wallet';
+import {
+  selectHTTPExplorerURL,
+  selectNetwork,
+  selectWSExplorerURL,
+} from '../application/redux/selectors/app.selector';
 import type { History } from '../application/redux/selectors/wallet.selector';
 import {
+  selectIsKnownTx,
   selectAccount,
   selectAccountIDByScriptHash,
   selectAllAccountsIDs,
@@ -21,40 +31,46 @@ import {
   selectUtxoByOutpoint,
   selectUtxosMapByScriptHash,
 } from '../application/redux/selectors/wallet.selector';
+import { sleep } from '../application/utils/common';
+import { defaultPrecision } from '../application/utils/constants';
 import { toDisplayTransaction } from '../application/utils/transaction';
 import type { AccountID } from '../domain/account';
+import type { Asset } from '../domain/assets';
 import type { RootReducerState } from '../domain/common';
 import type { MapByNetwork } from '../domain/transaction';
 import { ElectrumWS } from '../domain/ws/ws-electrs';
 import type { BlockHeader } from './utils';
 import { deserializeBlockHeader, getAllWalletScripts, getPrivateBlindKeyGetter } from './utils';
 
+type StatusWorkerJob = { scripthash: string; network: NetworkString; id: number };
+
 export class WebsocketManager {
+  static SUPPORTED_NETWORKS: NetworkString[] = ['liquid', 'regtest', 'testnet'];
+
   private socketByNetwork: MapByNetwork<ElectrumWS | undefined>;
-  private URLs: Record<string, string>;
   private marinaStore: Store<RootReducerState>;
 
-  constructor(urls: Record<string, string>, marinaStore: Store) {
-    this.URLs = urls;
+  private jobs: Array<StatusWorkerJob> = [];
+  private started = false;
+
+  constructor(marinaStore: Store) {
     this.socketByNetwork = {
       liquid: undefined,
       regtest: undefined,
       testnet: undefined,
     };
 
-    for (const [net, URL] of Object.entries(this.URLs)) {
-      this.socketByNetwork[net as NetworkString] = new ElectrumWS(URL);
-    }
     this.marinaStore = marinaStore;
+    for (const net of WebsocketManager.SUPPORTED_NETWORKS) {
+      this.socketByNetwork[net] = new ElectrumWS(selectWSExplorerURL(net)(marinaStore.getState()));
+    }
   }
 
-  get availableNetworks(): NetworkString[] {
-    return Object.keys(this.URLs) as NetworkString[];
-  }
-
-  async initScriptSubscriptions() {
+  // init the websockets subscriptions according to the accounts state
+  // 1 address = 1 scriptHash to subscribe
+  async subscribeGeneratedScripthashes() {
     const state = this.marinaStore.getState();
-    for (const network of this.availableNetworks) {
+    for (const network of WebsocketManager.SUPPORTED_NETWORKS) {
       for (const accountID of selectAllAccountsIDs(state)) {
         const account = selectAccount(accountID)(state);
         if (account) {
@@ -76,7 +92,7 @@ export class WebsocketManager {
       throw new Error('WebsocketManager not started');
     }
 
-    if (Object.keys(this.URLs).includes(net)) {
+    if (WebsocketManager.SUPPORTED_NETWORKS.includes(net)) {
       const socket = this.socketByNetwork[net];
       if (!socket) throw new Error('websocket is not initialized for network ' + net);
       return socket;
@@ -96,9 +112,61 @@ export class WebsocketManager {
     }
     await websocket.subscribe(
       'blockchain.scripthash',
-      callbackWebsocketElectrum(websocket, network, this.marinaStore),
+      this.callbackWebsocketElectrum(network, this.marinaStore),
       scriptHash
     );
+  }
+
+  private callbackWebsocketElectrum(network: NetworkString, store: Store) {
+    return (...params: (string | number)[]) => {
+      const scriptHash = params[0] as string;
+      const status = params[1] as string | null;
+      // if null, it means no new transaction for this scripthash, so we don't need to update it
+      if (status !== null) {
+        this.jobs.push({ scripthash: scriptHash, network, id: Math.floor(Math.random() * 1000) });
+      }
+    };
+  }
+
+  // select the job with network = current selected network first
+  private popMaxPriorityJob(): StatusWorkerJob | undefined {
+    const jobs = this.jobs;
+    if (jobs.length === 0) return undefined;
+    let selectedJob = jobs[0];
+    const currentNetwork = selectNetwork(this.marinaStore.getState());
+    // if we have a job for the current network, we take it first
+    const job = jobs.find((j) => j.network === currentNetwork);
+    if (job) selectedJob = job;
+    // remove the selected job
+    this.jobs = this.jobs.filter((j) => j.id !== selectedJob.id);
+    return selectedJob;
+  }
+
+  // start the status worker
+  async start(): Promise<void> {
+    this.started = true;
+    while (this.started) {
+      try {
+        const job = this.popMaxPriorityJob();
+        if (!job) {
+          await sleep(1000);
+          continue;
+        }
+        const { scripthash, network } = job;
+        const socket = this.socket(network);
+
+        this.marinaStore.dispatch(pushUpdaterLoader());
+        await updateScriptHash(socket, network, scripthash, this.marinaStore);
+        this.marinaStore.dispatch(popUpdaterLoader());
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  // stop the status worker
+  stop(): void {
+    this.started = false;
   }
 }
 
@@ -108,36 +176,34 @@ export function reverseAndHash(script: string): string {
   return crypto.sha256(Buffer.from(script, 'hex')).reverse().toString('hex');
 }
 
-// callback for websocket scripthash messages
-function callbackWebsocketElectrum(websocket: ElectrumWS, network: NetworkString, store: Store) {
-  return (...params: (string | number)[]) => {
-    const scriptHash = params[0] as string;
-    const status = params[1] as string | null;
-    if (status !== null) {
-      // if null, it means no new transaction for this scripthash, so we don't need to update it
-      handleUpdateScriptHash(websocket, network, scriptHash, store).catch(console.error);
-    }
-  };
-}
-
 // this function is triggered each time a new status is received for a scripthash
-async function handleUpdateScriptHash(
+// it fetches the new txs from history and updates the utxos and transactions state
+async function updateScriptHash(
   ws: ElectrumWS,
   network: NetworkString,
   scriptHash: string,
   store: Store
-) {
+): Promise<void> {
   const historyResp = (await ws.request(
     'blockchain.scripthash.get_history',
     scriptHash
   )) as History;
   const historyDiff = selectHistoryDiff(historyResp)(store.getState());
-
   const accountID = selectAccountIDByScriptHash(scriptHash, network)(store.getState());
   const blindKeyGetter = getPrivateBlindKeyGetter(store, network);
   const walletScripts = await getAllWalletScripts(store, network);
 
+  for (const { txID, height } of historyDiff.confirmedTxs) {
+    if (height <= 0) continue;
+    const blockHeaderHex = (await ws.request('blockchain.block.header', height)) as string;
+    const blockHeader = deserializeBlockHeader(blockHeaderHex);
+    const action = confirmTx(txID, blockHeader.timestamp, network);
+    store.dispatch(action);
+  }
+
+  // for each new tx which is not in the state, we fetch the transaction and unblind it
   for (const { txID, height } of historyDiff.newTxs) {
+    if (selectIsKnownTx(txID)(store.getState())) continue;
     const txFromElectrum = await fetchTx(ws, txID, height > 0 ? height : undefined);
     const { unblindedTx } = await unblindTransaction(txFromElectrum, blindKeyGetter);
     const displayTx = toDisplayTransaction(unblindedTx, walletScripts, networks[network]);
@@ -163,15 +229,25 @@ async function handleUpdateScriptHash(
     // add the new utxos to the store
     const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
     actions.forEach(store.dispatch);
+
+    const walletOutputsAssets = new Set(walletOutputs.map((o) => getAsset(o)));
+    const assetsNeedUpdate = Array.from(walletOutputsAssets).filter((a) =>
+      assetNeedUpdate(store, a)
+    );
+    const assetsInfos = await Promise.allSettled(
+      assetsNeedUpdate.map((a) => requestAssetInfoFromEsplora(store, a, network))
+    );
+    for (let i = 0; i < assetsNeedUpdate.length; i++) {
+      const asset = assetsNeedUpdate[i];
+      const assetInfo = assetsInfos[i];
+      if (assetInfo.status === 'fulfilled') {
+        store.dispatch(addAsset(asset, assetInfo.value));
+      }
+    }
   }
 
-  for (const { txID, height } of historyDiff.confirmedTxs) {
-    if (height <= 0) continue;
-    const blockHeaderHex = (await ws.request('blockchain.block.header', height)) as string;
-    const blockHeader = deserializeBlockHeader(blockHeaderHex);
-    const action = confirmTx(txID, blockHeader.timestamp, network);
-    store.dispatch(action);
-  }
+  // at the end of the update, free the locked utxos
+  store.dispatch(unlockUtxos());
 }
 
 // fetch a tx (and its prevouts) from websocket endpoint using the blockchain.transaction.get method
@@ -241,4 +317,30 @@ async function fetchTx(ws: ElectrumWS, txID: string, blockheight?: number): Prom
   }
 
   return txInterface;
+}
+
+function assetNeedUpdate(store: Store<RootReducerState>, assetHash: string): boolean {
+  const assets = new Set(Object.keys(store.getState().assets));
+  if (!assets.has(assetHash)) return true; // fetch if the asset is not in the state
+  const asset = store.getState().assets[assetHash];
+  console.log(asset, 'GOT ASSET');
+  if (!asset) return true;
+  if (asset.ticker === assetHash.slice(0, 4).toUpperCase()) return true; // fetch if the ticker is not in the state
+  return false;
+}
+
+async function requestAssetInfoFromEsplora(
+  store: Store<RootReducerState>,
+  assetHash: string,
+  network: NetworkString
+): Promise<Asset> {
+  const webExplorerURL = selectHTTPExplorerURL(network)(store.getState());
+  const result = await (() =>
+    axios.get(`${webExplorerURL}/asset/${assetHash}`).then((r) => r.data))();
+
+  return {
+    name: result?.name ?? 'Unknown',
+    ticker: result?.ticker ?? assetHash.slice(0, 4).toUpperCase(),
+    precision: result?.precision ?? defaultPrecision,
+  };
 }

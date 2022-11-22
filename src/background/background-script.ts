@@ -29,18 +29,15 @@ let welcomeTabID: number | undefined = undefined;
 // MUST be called before any other store access
 wrapMarinaStore(marinaStore);
 
-const websocketsManager = new WebsocketManager(
-  {
-    regtest: 'ws://localhost:1234',
-    testnet: 'wss://esplora.blockstream.com/liquidtestnet/electrum-websocket/api',
-    liquid: 'wss://esplora.blockstream.com/liquid/electrum-websocket/api',
-  },
-  marinaStore
-);
+const websocketsManager = new WebsocketManager(marinaStore);
+// start the background worker updating utxos and transactions state
+websocketsManager.start().catch(console.error);
 
 export async function reloadAccountsSubscriptions() {
   await rehydration();
-  await websocketsManager.initScriptSubscriptions();
+  if (marinaStore.getState().app.isOnboardingCompleted) {
+    await websocketsManager.subscribeGeneratedScripthashes();
+  }
 }
 
 reloadAccountsSubscriptions().catch(console.error);

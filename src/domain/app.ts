@@ -16,8 +16,9 @@ export type ExplorerType = 'Blockstream' | 'Testnet' | 'Mempool' | 'Nigiri' | 'C
 
 export interface ExplorerURLs {
   type: ExplorerType;
-  electrsURL: string;
-  esploraURL: string;
+  webExplorerURL: string;
+  explorerURL: string; // most of the time webExplorerURL + '/api'
+  websocketExplorerURL: string; // ws:// or wss:// endpoint
   batchServerURL?: string;
   wsURL?: string;
 }
@@ -26,37 +27,42 @@ const VULPEM_ELECTRS_BATCH_TESTNET = 'https://electrs-batch-testnet.vulpem.com';
 
 export const BlockstreamExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
-  electrsURL: 'https://blockstream.info/liquid',
-  esploraURL: 'https://blockstream.info/liquid/api',
+  webExplorerURL: 'https://blockstream.info/liquid',
+  explorerURL: 'https://blockstream.info/liquid/api',
   batchServerURL: 'https://electrs-batch-blockstream.vulpem.com',
+  websocketExplorerURL: 'wss://esplora.blockstream.com/liquid/electrum-websocket/api',
 };
 
 export const BlockstreamTestnetExplorerURLs: ExplorerURLs = {
   type: 'Blockstream',
-  electrsURL: 'https://blockstream.info/liquidtestnet',
-  esploraURL: 'https://blockstream.info/liquidtestnet/api',
+  webExplorerURL: 'https://blockstream.info/liquidtestnet',
+  explorerURL: 'https://blockstream.info/liquidtestnet/api',
   batchServerURL: VULPEM_ELECTRS_BATCH_TESTNET,
+  websocketExplorerURL: 'wss://esplora.blockstream.com/liquidtestnet/electrum-websocket/api',
 };
 
 export const NigiriDefaultExplorerURLs: ExplorerURLs = {
   type: 'Nigiri',
-  electrsURL: 'http://localhost:5001',
-  esploraURL: 'http://localhost:3001',
+  webExplorerURL: 'http://localhost:5001',
+  explorerURL: 'http://localhost:3001',
   wsURL: 'ws://localhost:3001',
+  websocketExplorerURL: 'ws://localhost:1234',
 };
 
 export const MempoolExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
-  electrsURL: 'https://liquid.network',
-  esploraURL: 'https://liquid.network/api',
+  webExplorerURL: 'https://liquid.network',
+  explorerURL: 'https://liquid.network/api',
   batchServerURL: 'https://electrs-batch-mempool.vulpem.com',
+  websocketExplorerURL: 'wss://esplora.blockstream.com/liquid/electrum-websocket/api',
 };
 
 export const MempoolTestnetExplorerURLs: ExplorerURLs = {
   type: 'Mempool',
-  electrsURL: 'https://liquid.network/testnet',
-  esploraURL: 'https://liquid.network/liquidtestnet/api',
+  webExplorerURL: 'https://liquid.network/testnet',
+  explorerURL: 'https://liquid.network/liquidtestnet/api',
   batchServerURL: VULPEM_ELECTRS_BATCH_TESTNET,
+  websocketExplorerURL: 'wss://esplora.blockstream.com/liquidtestnet/electrum-websocket/api',
 };
 
 /**
@@ -65,8 +71,8 @@ export const MempoolTestnetExplorerURLs: ExplorerURLs = {
  */
 export function explorerURLsToChainAPI(URLs: ExplorerURLs): ChainAPI {
   if (URLs.batchServerURL) {
-    return ElectrsBatchServer.fromURLs(URLs.batchServerURL, URLs.esploraURL);
+    return ElectrsBatchServer.fromURLs(URLs.batchServerURL, URLs.explorerURL);
   }
 
-  return Electrs.fromURL(URLs.esploraURL);
+  return Electrs.fromURL(URLs.explorerURL);
 }

@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';
 import type { EndOfFlowProps } from '../../../presentation/onboarding/end-of-flow';
 import EndOfFlowOnboardingView from '../../../presentation/onboarding/end-of-flow';
-import { selectEsploraURL } from '../selectors/app.selector';
+import { selectHTTPExplorerURL } from '../selectors/app.selector';
 import { hasMnemonicSelector, selectDeepRestorerIsLoading } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
@@ -12,7 +12,7 @@ const mapStateToProps = (state: RootReducerState): EndOfFlowProps => {
     isFromPopupFlow: state.onboarding.isFromPopupFlow,
     network: state.app.network,
     hasMnemonicRegistered: hasMnemonicSelector(state),
-    explorerURL: selectEsploraURL(state),
+    explorerURL: selectHTTPExplorerURL()(state),
     walletVerified: state.onboarding.verified,
     restorerIsLoading: selectDeepRestorerIsLoading(state),
   };

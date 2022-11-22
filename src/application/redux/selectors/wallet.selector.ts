@@ -247,3 +247,9 @@ export function selectUtxoByOutpoint(outpoint: Outpoint, network: NetworkString)
     return [undefined, ''];
   };
 }
+
+export function selectIsKnownTx(txID: string) {
+  return (state: RootReducerState): boolean => {
+    return !!selectTransactionByID(txID)(state);
+  };
+}

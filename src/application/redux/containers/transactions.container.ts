@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import type { RootReducerState } from '../../../domain/common';
 import type { TransactionsProps } from '../../../presentation/wallet/transactions';
 import TransactionsView from '../../../presentation/wallet/transactions';
-import { selectElectrsURL } from '../selectors/app.selector';
+import { selectWebExplorerURL } from '../selectors/app.selector';
 import {
   selectAllAccountsIDsSpendableViaUI,
   selectTransactions,
@@ -11,7 +11,7 @@ import {
 const mapStateToProps = (state: RootReducerState): TransactionsProps => ({
   assets: state.assets,
   transactions: selectTransactions(...selectAllAccountsIDsSpendableViaUI(state))(state),
-  webExplorerURL: selectElectrsURL(state),
+  webExplorerURL: selectWebExplorerURL()(state),
   isWalletVerified: state.wallet.isVerified,
 });
 

@@ -26,11 +26,24 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
     <form onSubmit={handleSubmit}>
       <p className="font-sm mt-2 mb-1">Custom explorer</p>
 
-      <p className="font-sm text-left">Esplora URL</p>
-      <Input name="esploraURL" placeholder="Esplora valid endpoint" type="text" {...props} />
+      <p className="font-sm text-left">Explorer API URL</p>
+      <Input name="explorerURL" placeholder="electrs-like api endpoint" type="text" {...props} />
 
-      <p className="font-sm text-left">Electrs URL</p>
-      <Input name="electrsURL" placeholder="Electrs valid endpoint" type="text" {...props} />
+      <p className="font-sm text-left">Web explorer</p>
+      <Input
+        name="webExplorerURL"
+        placeholder="a valid web version of explorer"
+        type="text"
+        {...props}
+      />
+
+      <p className="font-sm text-left">Web socket endpoint</p>
+      <Input
+        name="websocketExplorerURL"
+        placeholder="a valid web socket endpoint"
+        type="text"
+        {...props}
+      />
 
       <p className="font-sm text-left">Batch Electrs URL</p>
       <Input name="batchServerURL" placeholder="Electrs batch server" type="text" {...props} />
@@ -38,7 +51,11 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       <ButtonsAtBottom>
         <Button
           disabled={
-            !!errors.esploraURL || !!errors.electrsURL || !!errors.batchServerURL || isSubmitting
+            !!errors.explorerURL ||
+            !!errors.webExplorerURL ||
+            !!errors.websocketExplorerURL ||
+            !!errors.batchServerURL ||
+            isSubmitting
           }
           type="submit"
         >
@@ -56,14 +73,16 @@ const SettingsCustomExplorerForm = withFormik<
   mapPropsToValues: (props): SettingsExplorerFormValues => ({
     type: 'Custom',
     network: props.network,
-    esploraURL: '',
-    electrsURL: '',
+    explorerURL: '',
+    webExplorerURL: '',
     batchServerURL: '',
+    websocketExplorerURL: '',
   }),
 
   validationSchema: Yup.object().shape({
-    esploraURL: Yup.string().required('An explorer URL is required'),
-    electrsURL: Yup.string().required('A web explorer URL is required'),
+    explorerURL: Yup.string().required('an explorer URL is required'),
+    webExplorerURL: Yup.string().required('a web explorer URL is required'),
+    websocketExplorerURL: Yup.string().required('a websocket explorer URL is required'),
   }),
 
   handleSubmit: async (values, { props }) => {
