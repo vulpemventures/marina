@@ -46,6 +46,7 @@ const CONNECTED_TIMEOUT = 500;
 const REQUEST_TIMEOUT = 1000 * 10; // 10 seconds
 const CLOSE_CODE = 1000; // 1000 indicates a normal closure, meaning that the purpose for which the connection was established has been fulfilled
 
+// websocket electrum client from: https://github.com/nimiq/electrum-client
 export class ElectrumWS extends Observable {
   private options: ElectrumWSOptions;
   private endpoint: string;

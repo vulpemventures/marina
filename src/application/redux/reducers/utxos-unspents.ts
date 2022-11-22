@@ -9,7 +9,7 @@ import { toStringOutpoint } from '../../utils/utxos';
 import * as ACTION_TYPES from '../actions/action-types';
 
 // minimum time utxos are locked (5 minutes)
-const lockedUtxoMinimunTime = 300_000;
+const lockedUtxoMinimumTime = 300_000;
 
 export const utxosTransactionsInitialState: UtxosTransactionsState = {
   utxos: {
@@ -267,7 +267,7 @@ function addUnconfirmed(state: UtxosTransactionsState) {
 
 // returns only utxos locked for less than 5 minutes
 const filterOnlyRecentLockedUtxos = (state: UtxosTransactionsState) => {
-  const expiredTime = Date.now() - lockedUtxoMinimunTime; // 5 minutes
+  const expiredTime = Date.now() - lockedUtxoMinimumTime; // 5 minutes
   const lockedUtxos: Record<string, number> = {};
   for (const key of Object.keys(state.lockedUtxos)) {
     const isRecent = state.lockedUtxos[key] > expiredTime;
