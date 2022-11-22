@@ -277,29 +277,22 @@ async function fetchTx(ws: ElectrumWS, txID: string, blockheight?: number): Prom
     const prevoutTxID = Buffer.from(input.hash).reverse().toString('hex');
     const vout = input.index;
 
-    if (!input.isPegin) {
-      // fetch prevout if not pegin input
-      const prevoutHex = (await ws.request('blockchain.transaction.get', prevoutTxID)) as string;
-      const prevout = Transaction.fromHex(prevoutHex);
-      const prevoutOutput: Output = {
-        txid: prevoutTxID,
-        vout,
-        prevout: prevout.outs[vout],
-      };
+    // prevent fetching the prevout if it is a pegin prevout
+    const prevout: Output | undefined = input.isPegin
+      ? undefined
+      : {
+          txid: prevoutTxID,
+          vout,
+          prevout: Transaction.fromHex(await ws.request('blockchain.transaction.get', prevoutTxID))
+            .outs[vout],
+        };
 
-      txInterface.vin.push({
-        txid: prevoutTxID,
-        vout,
-        prevout: prevoutOutput,
-        isPegin: false,
-      });
-    } else {
-      txInterface.vin.push({
-        txid: prevoutTxID,
-        vout,
-        isPegin: true,
-      });
-    }
+    txInterface.vin.push({
+      txid: prevoutTxID,
+      vout,
+      isPegin: input.isPegin ?? false,
+      prevout,
+    });
   }
 
   for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
