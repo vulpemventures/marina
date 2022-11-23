@@ -2,7 +2,7 @@ import type { NetworkString } from 'ldk';
 import { IdentityType, Mnemonic, mnemonicRestorerFromEsplora } from 'ldk';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { onboardingCompleted, reset } from '../../../application/redux/actions/app';
+import { onboardingCompleted } from '../../../application/redux/actions/app';
 import { flushOnboarding } from '../../../application/redux/actions/onboarding';
 import {
   setEncryptedMnemonic,
@@ -27,7 +27,8 @@ import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
 import * as ecc from 'tiny-secp256k1';
-import { restoreTaskAction } from '../../../application/redux/actions/task';
+import Browser from 'webextension-polyfill';
+import { resetMessage, restoreTaskMessage } from '../../../domain/message';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -68,7 +69,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         );
 
         if (hasMnemonicRegistered) {
-          await dispatch(reset());
+          Browser.runtime.connect().postMessage(resetMessage());
         }
 
         await dispatch(setEncryptedMnemonic(accountData.encryptedMnemonic, passwordHash));
@@ -76,7 +77,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         // set the popup
         await setUpPopup();
         await dispatch(onboardingCompleted());
-        await dispatch(restoreTaskAction(MainAccountID));
+        Browser.runtime.connect().postMessage(restoreTaskMessage(MainAccountID));
       }
 
       if (walletVerified) {

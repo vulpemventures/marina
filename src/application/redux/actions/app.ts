@@ -5,7 +5,6 @@ import {
   LOGOUT_SUCCESS,
   CHANGE_NETWORK_SUCCESS,
   SET_EXPLORER,
-  RESET,
   SET_CHANGE_ACCOUNT,
 } from './action-types';
 import type { AnyAction } from 'redux';
@@ -47,10 +46,6 @@ export function logOut(): AnyAction {
 
 export function changeNetwork(network: NetworkString): AnyAction {
   return { type: CHANGE_NETWORK_SUCCESS, payload: { network } };
-}
-
-export function reset(): AnyAction {
-  return { type: RESET };
 }
 
 export function setChangeAccount(accountID: AccountID): AnyAction {

@@ -1,10 +1,11 @@
 import type { NetworkString } from 'ldk';
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { changeNetwork } from '../../application/redux/actions/app';
-import { restoreTaskAction } from '../../application/redux/actions/task';
 import type { ProxyStoreDispatch } from '../../application/redux/proxyStore';
 import type { AccountID } from '../../domain/account';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import Browser from 'webextension-polyfill';
+import { changeNetwork } from '../../application/redux/actions/app';
+import { restoreTaskMessage } from '../../domain/message';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
@@ -36,7 +37,10 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
       await dispatch(changeNetwork(newNetwork as NetworkString));
 
       // start deep restorer for all the accounts (done in background)
-      await Promise.all(allAccountsIDs.map(restoreTaskAction).map(dispatch));
+      const port = Browser.runtime.connect();
+      for (const ID of allAccountsIDs) {
+        port.postMessage(restoreTaskMessage(ID));
+      }
     }
     setIsLoading(false);
   };

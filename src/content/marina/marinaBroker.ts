@@ -308,13 +308,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             default: {
               const watchOnlyIdentity = await account.getWatchIdentity(net);
               nextChangeAddress = await watchOnlyIdentity.getNextChangeAddress(params?.[0]);
-              this.backgroundScriptPort.postMessage(
-                subscribeScriptsMsg(
-                  [address.toOutputScript(nextChangeAddress.confidentialAddress).toString('hex')],
-                  account.getInfo().accountID,
-                  net
-                )
-              );
               break;
             }
           }
@@ -324,7 +317,13 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               (action: AnyAction) => this.store?.dispatchAsync(action)
             )
           );
-
+          this.backgroundScriptPort.postMessage(
+            subscribeScriptsMsg(
+              [address.toOutputScript(nextChangeAddress.confidentialAddress).toString('hex')],
+              account.getInfo().accountID,
+              net
+            )
+          );
           return successMsg(toProviderAddress(nextChangeAddress));
         }
 

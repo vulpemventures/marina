@@ -83,6 +83,10 @@ export interface MnemonicAccountData extends AccountData {
   restorerOpts: Record<NetworkString, StateRestorerOpts>;
 }
 
+export function isMnemonicAccount(account: Account): account is MnemonicAccount {
+  return account.type === AccountType.MainAccount;
+}
+
 // custom script account is decribed with
 // - an eltr output descriptor template
 // - a namespace (used to derive the mnemonic)

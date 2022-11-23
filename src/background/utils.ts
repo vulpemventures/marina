@@ -1,5 +1,5 @@
-import type { BlindingKeyGetterAsync, NetworkString } from 'ldk';
 import { address, privateBlindKeyGetter } from 'ldk';
+import type { BlindingKeyGetterAsync, NetworkString } from 'ldk';
 import type { Store } from 'redux';
 import { selectAllAccounts } from '../application/redux/selectors/wallet.selector';
 import type { Account } from '../domain/account';

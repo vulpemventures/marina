@@ -4,8 +4,6 @@ import { wrapStore } from 'webext-redux';
 import marinaReducer from './reducers';
 import persistStore from 'redux-persist/es/persistStore';
 import { parse, stringify } from '../utils/browser-storage-converters';
-import createSagaMiddleware from 'redux-saga';
-import mainSaga from './sagas/main';
 
 export const serializerAndDeserializer = {
   serializer: (payload: any) => stringify(payload),
@@ -24,15 +22,13 @@ const loggerMiddleware: Middleware = (store) => (next) => (action) => {
 };
 
 const create = () => {
-  const sagaMiddleware = createSagaMiddleware();
-  const middlewares: Middleware[] = [sagaMiddleware];
+  const middlewares: Middleware[] = [];
   if (process.env.NODE_ENV !== 'production') {
     middlewares.push(loggerMiddleware);
   }
 
   // TODO createStore deprecated?
   const store = createStore(marinaReducer, applyMiddleware(...middlewares));
-  sagaMiddleware.run(mainSaga);
   return store;
 };
 

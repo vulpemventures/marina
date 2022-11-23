@@ -70,10 +70,10 @@ export class WebsocketManager {
   // 1 address = 1 scriptHash to subscribe
   async subscribeGeneratedScripthashes() {
     const state = this.marinaStore.getState();
-    for (const network of WebsocketManager.SUPPORTED_NETWORKS) {
-      for (const accountID of selectAllAccountsIDs(state)) {
-        const account = selectAccount(accountID)(state);
-        if (account) {
+    for (const accountID of selectAllAccountsIDs(state)) {
+      const account = selectAccount(accountID)(state);
+      if (account) {
+        for (const network of WebsocketManager.SUPPORTED_NETWORKS) {
           const id = await account.getWatchIdentity(network);
           const addresses = await id.getAddresses();
           const scripts = addresses.map((a) =>
@@ -154,10 +154,7 @@ export class WebsocketManager {
         }
         const { scripthash, network } = job;
         const socket = this.socket(network);
-
-        this.marinaStore.dispatch(pushUpdaterLoader());
         await updateScriptHash(socket, network, scripthash, this.marinaStore);
-        this.marinaStore.dispatch(popUpdaterLoader());
       } catch {
         continue;
       }
@@ -204,45 +201,50 @@ async function updateScriptHash(
   // for each new tx which is not in the state, we fetch the transaction and unblind it
   for (const { txID, height } of historyDiff.newTxs) {
     if (selectIsKnownTx(txID)(store.getState())) continue;
-    const txFromElectrum = await fetchTx(ws, txID, height > 0 ? height : undefined);
-    const { unblindedTx } = await unblindTransaction(txFromElectrum, blindKeyGetter);
-    const displayTx = toDisplayTransaction(unblindedTx, walletScripts, networks[network]);
+    try {
+      store.dispatch(pushUpdaterLoader());
+      const txFromElectrum = await fetchTx(ws, txID, height > 0 ? height : undefined);
+      const { unblindedTx } = await unblindTransaction(txFromElectrum, blindKeyGetter);
+      const displayTx = toDisplayTransaction(unblindedTx, walletScripts, networks[network]);
 
-    // add the new tx to the store
-    store.dispatch(addTx(accountID, displayTx, network));
+      // add the new tx to the store
+      store.dispatch(addTx(accountID, displayTx, network));
 
-    // check if any utxos were spent in this tx
-    for (const input of unblindedTx.vin) {
-      const [utxoInStore, accountID] = selectUtxoByOutpoint(input, network)(store.getState());
-      if (utxoInStore) store.dispatch(deleteUtxo(accountID, input.txid, input.vout, network));
-    }
-
-    // check if we have any new utxos
-    const walletOutputs = unblindedTx.vout.filter((o) => {
-      if (isConfidentialOutput(o)) {
-        return isUnblindedOutput(o);
+      // check if any utxos were spent in this tx
+      for (const input of unblindedTx.vin) {
+        const [utxoInStore, accountID] = selectUtxoByOutpoint(input, network)(store.getState());
+        if (utxoInStore) store.dispatch(deleteUtxo(accountID, input.txid, input.vout, network));
       }
 
-      return walletScripts.includes(o.prevout.script.toString('hex'));
-    });
+      // check if we have any new utxos
+      const walletOutputs = unblindedTx.vout.filter((o) => {
+        if (isConfidentialOutput(o)) {
+          return isUnblindedOutput(o);
+        }
 
-    // add the new utxos to the store
-    const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
-    actions.forEach(store.dispatch);
+        return walletScripts.includes(o.prevout.script.toString('hex'));
+      });
 
-    const walletOutputsAssets = new Set(walletOutputs.map((o) => getAsset(o)));
-    const assetsNeedUpdate = Array.from(walletOutputsAssets).filter((a) =>
-      assetNeedUpdate(store, a)
-    );
-    const assetsInfos = await Promise.allSettled(
-      assetsNeedUpdate.map((a) => requestAssetInfoFromEsplora(store, a, network))
-    );
-    for (let i = 0; i < assetsNeedUpdate.length; i++) {
-      const asset = assetsNeedUpdate[i];
-      const assetInfo = assetsInfos[i];
-      if (assetInfo.status === 'fulfilled') {
-        store.dispatch(addAsset(asset, assetInfo.value));
+      // add the new utxos to the store
+      const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
+      actions.forEach(store.dispatch);
+
+      const walletOutputsAssets = new Set(walletOutputs.map((o) => getAsset(o)));
+      const assetsNeedUpdate = Array.from(walletOutputsAssets).filter((a) =>
+        assetNeedUpdate(store, a)
+      );
+      const assetsInfos = await Promise.allSettled(
+        assetsNeedUpdate.map((a) => requestAssetInfoFromEsplora(store, a, network))
+      );
+      for (let i = 0; i < assetsNeedUpdate.length; i++) {
+        const asset = assetsNeedUpdate[i];
+        const assetInfo = assetsInfos[i];
+        if (assetInfo.status === 'fulfilled') {
+          store.dispatch(addAsset(asset, assetInfo.value));
+        }
       }
+    } finally {
+      store.dispatch(popUpdaterLoader());
     }
   }
 
@@ -316,7 +318,6 @@ function assetNeedUpdate(store: Store<RootReducerState>, assetHash: string): boo
   const assets = new Set(Object.keys(store.getState().assets));
   if (!assets.has(assetHash)) return true; // fetch if the asset is not in the state
   const asset = store.getState().assets[assetHash];
-  console.log(asset, 'GOT ASSET');
   if (!asset) return true;
   if (asset.ticker === assetHash.slice(0, 4).toUpperCase()) return true; // fetch if the ticker is not in the state
   return false;

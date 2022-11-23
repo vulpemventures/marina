@@ -6,8 +6,9 @@ import ShellPopUp from '../components/shell-popup';
 import { setDeepRestorerGapLimit } from '../../application/redux/actions/wallet';
 import Button from '../components/button';
 import type { AccountID } from '../../domain/account';
-import { restoreTaskAction } from '../../application/redux/actions/task';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
+import Browser from 'webextension-polyfill';
+import { restoreTaskMessage } from '../../domain/message';
 
 export interface DeepRestorerProps {
   restorationLoading: boolean;
@@ -25,8 +26,11 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(false);
 
-  const onClickRestore = async () => {
-    await Promise.all(allAccountsIDs.map(restoreTaskAction).map(dispatch));
+  const onClickRestore = () => {
+    const port = Browser.runtime.connect();
+    for (const ID of allAccountsIDs) {
+      port.postMessage(restoreTaskMessage(ID));
+    }
   };
 
   return (

@@ -73,11 +73,4 @@ export const RESET_CONNECT = 'RESET_CONNECT';
 
 // Taxi
 export const SET_TAXI_ASSETS = 'SET_TAXI_ASSETS';
-export const UPDATE_TAXI_ASSETS = 'UPDATE_TAXI_ASSETS';
 export const RESET_TAXI = 'RESET_TAXI';
-
-// Reset
-export const RESET = 'RESET';
-
-// Background async task
-export const RESTORE_TASK = 'RESTORE_TASK';

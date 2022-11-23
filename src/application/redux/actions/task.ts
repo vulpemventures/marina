@@ -1,7 +1,6 @@
 import type { NetworkString } from 'ldk';
 import type { AccountID } from '../../../domain/account';
 import type { ActionWithPayload } from '../../../domain/common';
-import { RESTORE_TASK } from './action-types';
 
 export type UpdateTaskAction = ActionWithPayload<{ accountID: AccountID; network: NetworkString }>;
 export type UpdateScriptTaskAction = ActionWithPayload<{
@@ -15,9 +14,3 @@ export type FetchTxTaskAction = ActionWithPayload<{
   accountID: AccountID;
   startAt: number;
 }>;
-export type RestoreTaskAction = ActionWithPayload<{ accountID: AccountID }>;
-
-export const restoreTaskAction = (accountID: AccountID): RestoreTaskAction => ({
-  type: RESTORE_TASK,
-  payload: { accountID },
-});

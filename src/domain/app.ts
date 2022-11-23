@@ -1,5 +1,4 @@
-import type { ChainAPI, NetworkString } from 'ldk';
-import { Electrs, ElectrsBatchServer } from 'ldk';
+import type { NetworkString } from 'ldk';
 import type { AccountID } from './account';
 import type { IError } from './common';
 
@@ -64,15 +63,3 @@ export const MempoolTestnetExplorerURLs: ExplorerURLs = {
   batchServerURL: VULPEM_ELECTRS_BATCH_TESTNET,
   websocketExplorerURL: 'wss://esplora.blockstream.com/liquidtestnet/electrum-websocket/api',
 };
-
-/**
- * @param URLs a set of URLs describing the explorer to use
- * @returns batch server ChainAPI if batchServerURL is defined, otherwise Electrs
- */
-export function explorerURLsToChainAPI(URLs: ExplorerURLs): ChainAPI {
-  if (URLs.batchServerURL) {
-    return ElectrsBatchServer.fromURLs(URLs.batchServerURL, URLs.explorerURL);
-  }
-
-  return Electrs.fromURL(URLs.explorerURL);
-}

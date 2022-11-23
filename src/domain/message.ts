@@ -71,6 +71,7 @@ export function isPopupResponseMessage(message: unknown) {
 }
 
 export interface SubscribeScriptsMessage {
+  type: 'subscribe-scripts';
   scripts: string[];
   accountID: AccountID;
   network: NetworkString;
@@ -81,12 +82,13 @@ export function subscribeScriptsMsg(
   accountID: AccountID,
   network: NetworkString
 ): SubscribeScriptsMessage {
-  return { scripts, network, accountID };
+  return { type: 'subscribe-scripts', scripts, network, accountID };
 }
 
 export function isSubscribeScriptsMessage(message: unknown): message is SubscribeScriptsMessage {
   return (
     message &&
+    (message as any).type === 'subscribe-scripts' &&
     (message as any).scripts &&
     Array.isArray((message as any).scripts) &&
     (message as any).network
@@ -105,4 +107,35 @@ export function isReloadAccountsSubscribtionsMessage(
 
 export function reloadAccountsSubscribtionsMsg(): ReloadAccountsSubscribtionsMessage {
   return { type: 'reload-accounts-subscribtions' };
+}
+
+export interface RestoreAccountTaskMessage {
+  type: 'restore-account-task';
+  accountID: AccountID;
+}
+
+export function isRestoreAccountTaskMessage(
+  message: unknown
+): message is RestoreAccountTaskMessage {
+  return (
+    message !== undefined &&
+    (message as any).type === 'restore-account-task' &&
+    (message as any).accountID
+  );
+}
+
+export function restoreTaskMessage(accountID: AccountID): RestoreAccountTaskMessage {
+  return { type: 'restore-account-task', accountID };
+}
+
+export interface ResetMessage {
+  type: 'reset';
+}
+
+export function isResetMessage(message: unknown): message is ResetMessage {
+  return message !== undefined && (message as any).type === 'reset';
+}
+
+export function resetMessage(): ResetMessage {
+  return { type: 'reset' };
 }

@@ -1,9 +1,16 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import { testWalletData, testPasswordHash } from '../application/constants/cypress';
+import {
+  RESET_APP,
+  RESET_CONNECT,
+  RESET_TAXI,
+  RESET_WALLET,
+} from '../application/redux/actions/action-types';
 import { logOut, onboardingCompleted } from '../application/redux/actions/app';
 import { enableWebsite } from '../application/redux/actions/connect';
 import { setAccount, setEncryptedMnemonic } from '../application/redux/actions/wallet';
+import { selectNetwork } from '../application/redux/selectors/app.selector';
 import { selectEncryptedMnemonic } from '../application/redux/selectors/wallet.selector';
 import { marinaStore, rehydration, wrapMarinaStore } from '../application/redux/store';
 import { tabIsOpen } from '../application/utils/common';
@@ -11,6 +18,8 @@ import { setUpPopup } from '../application/utils/popup';
 import { MainAccountID } from '../domain/account';
 import type { OpenPopupMessage, PopupName } from '../domain/message';
 import {
+  isResetMessage,
+  isRestoreAccountTaskMessage,
   isReloadAccountsSubscribtionsMessage,
   isSubscribeScriptsMessage,
   isOpenPopupMessage,
@@ -18,7 +27,9 @@ import {
 } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
-import { periodicTaxiUpdater } from './alarms';
+import { Alarm, setPeriodicTask } from './alarms';
+import { DeepRestorerService } from './deep-restorer';
+import { fetchTaxiAssetsForNetwork } from './taxi';
 import { WebsocketManager } from './websocket-manager';
 
 // MUST be > 15 seconds
@@ -40,7 +51,27 @@ export async function reloadAccountsSubscriptions() {
   }
 }
 
+// at startup, reload the websockets scripthashes subscriptions
 reloadAccountsSubscriptions().catch(console.error);
+
+// deep restorer service will be used each time background page receives a RestoreAccountMessage
+const deepRestorerService = new DeepRestorerService(marinaStore);
+
+// set up an alarm task to fetch and update new supported taxi assets every 1 minute
+setPeriodicTask(
+  Alarm.TaxiUpdate,
+  () => {
+    if (!marinaStore.getState().app.isOnboardingCompleted) return;
+    console.log('Alarm triggered: TaxiUpdate');
+    const network = selectNetwork(marinaStore.getState());
+    if (network === 'regtest') {
+      fetchTaxiAssetsForNetwork(marinaStore, network).catch(console.error);
+    }
+    fetchTaxiAssetsForNetwork(marinaStore, 'liquid').catch(console.error);
+    fetchTaxiAssetsForNetwork(marinaStore, 'testnet').catch(console.error);
+  },
+  1
+);
 
 /**
  * Fired when the extension is first installed, when the extension is updated to a new version,
@@ -73,9 +104,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           // we need the setup the popup or the first click on the
           // extension icon will do nothing
           await setUpPopup();
-          // After an update, all previous periodic updaters are lost.
-          // Re-enable them if the user is already onboarded
-          periodicTaxiUpdater();
         }
       }
     }
@@ -89,8 +117,6 @@ browser.runtime.onStartup.addListener(() => {
     if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
-      // Set up the periodic updaters if user is onboarded
-      periodicTaxiUpdater();
     }
   })().catch(console.error);
 });
@@ -123,7 +149,6 @@ const eventEmitter = new SafeEventEmitter();
 
 browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
   port.onMessage.addListener((message: any) => {
-    console.log('background: message received', message);
     if (isOpenPopupMessage(message)) {
       handleOpenPopupMessage(message, port).catch((error: any) => {
         console.error(error);
@@ -137,6 +162,11 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
       eventEmitter.emit(POPUP_RESPONSE, message.data);
     }
 
+    if (isResetMessage(message)) {
+      const actionsTypes = [RESET_APP, RESET_WALLET, RESET_CONNECT, RESET_TAXI];
+      actionsTypes.forEach((type) => marinaStore.dispatch({ type }));
+    }
+
     if (isSubscribeScriptsMessage(message)) {
       for (const script of message.scripts) {
         websocketsManager
@@ -147,6 +177,10 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
 
     if (isReloadAccountsSubscribtionsMessage(message)) {
       reloadAccountsSubscriptions().catch(console.error);
+    }
+
+    if (isRestoreAccountTaskMessage(message)) {
+      deepRestorerService.restore(message.accountID).catch(console.error);
     }
   });
 });
