@@ -28,7 +28,13 @@ import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utils/error';
 import * as ecc from 'tiny-secp256k1';
 import Browser from 'webextension-polyfill';
-import { resetMessage, restoreTaskMessage } from '../../../domain/message';
+import {
+  forceUpdateMessage,
+  isForceUpdateResponseMessage,
+  isRestoreAccountTaskResponseMessage,
+  resetMessage,
+  restoreTaskMessage,
+} from '../../../domain/message';
 
 export interface EndOfFlowProps {
   mnemonic: string;
@@ -38,7 +44,6 @@ export interface EndOfFlowProps {
   explorerURL: string;
   hasMnemonicRegistered: boolean;
   walletVerified: boolean;
-  restorerIsLoading: boolean;
 }
 
 const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
@@ -49,10 +54,10 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
   explorerURL,
   hasMnemonicRegistered,
   walletVerified,
-  restorerIsLoading,
 }) => {
   const dispatch = useDispatch<ProxyStoreDispatch>();
   const [isLoading, setIsLoading] = useState(true);
+
   const [errorMsg, setErrorMsg] = useState<string>();
 
   const tryToRestoreWallet = async () => {
@@ -77,7 +82,21 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
         // set the popup
         await setUpPopup();
         await dispatch(onboardingCompleted());
-        Browser.runtime.connect().postMessage(restoreTaskMessage(MainAccountID));
+
+        const port = Browser.runtime.connect();
+        port.onMessage.addListener((msg, port) => {
+          if (isRestoreAccountTaskResponseMessage(msg) && msg.network === network) {
+            if (!msg.success) console.error(msg.error);
+            port.postMessage(forceUpdateMessage(MainAccountID, network));
+          }
+
+          if (isForceUpdateResponseMessage(msg) && msg.network === network) {
+            if (!msg.success) console.error(msg.error);
+            setIsLoading(false);
+          }
+        });
+
+        port.postMessage(restoreTaskMessage(MainAccountID, network));
       }
 
       if (walletVerified) {
@@ -88,8 +107,6 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
     } catch (err: unknown) {
       console.error(err);
       setErrorMsg(extractErrorMessage(err));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -97,7 +114,7 @@ const EndOfFlowOnboardingView: React.FC<EndOfFlowProps> = ({
     tryToRestoreWallet().catch(console.error);
   }, []);
 
-  if (isLoading || restorerIsLoading) {
+  if (isLoading) {
     return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
   }
 

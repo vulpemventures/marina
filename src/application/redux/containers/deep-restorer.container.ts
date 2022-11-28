@@ -5,7 +5,6 @@ import type { RootReducerState } from '../../../domain/common';
 import { selectAllAccountsIDs } from '../selectors/wallet.selector';
 
 const mapStateToProps = (state: RootReducerState): DeepRestorerProps => ({
-  restorationLoading: state.wallet.deepRestorer.restorerLoaders > 0,
   gapLimit: state.wallet.deepRestorer.gapLimit,
   error: state.wallet.deepRestorer.error,
   allAccountsIDs: selectAllAccountsIDs(state),

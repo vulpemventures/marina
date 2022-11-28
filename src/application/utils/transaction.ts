@@ -345,6 +345,7 @@ export function toDisplayTransaction(
     transfers,
     type: txTypeFromTransfer(transfers),
     webExplorersBlinders: getUnblindURLFromTx(tx, ''),
+    spentOutpoints: tx.vin.map((vin) => ({ txid: vin.txid, vout: vin.vout })),
   };
 }
 

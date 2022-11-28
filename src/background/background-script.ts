@@ -18,15 +18,21 @@ import { setUpPopup } from '../application/utils/popup';
 import { MainAccountID } from '../domain/account';
 import type { OpenPopupMessage, PopupName } from '../domain/message';
 import {
+  forceUpdateResponseMessage,
+  isForceUpdateMessage,
+  isForceUpdateResponseMessage,
+  isRestoreAccountTaskResponseMessage,
+  isStartWebSocketMessage,
+  restoreAccountTaskResponseMessage,
   isResetMessage,
   isRestoreAccountTaskMessage,
-  isReloadAccountsSubscribtionsMessage,
   isSubscribeScriptsMessage,
   isOpenPopupMessage,
   isPopupResponseMessage,
 } from '../domain/message';
 import { POPUP_RESPONSE } from '../presentation/connect/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../presentation/routes/constants';
+import { extractErrorMessage } from '../presentation/utils/error';
 import { Alarm, setPeriodicTask } from './alarms';
 import { DeepRestorerService } from './deep-restorer';
 import { fetchTaxiAssetsForNetwork } from './taxi';
@@ -40,19 +46,26 @@ let welcomeTabID: number | undefined = undefined;
 // MUST be called before any other store access
 wrapMarinaStore(marinaStore);
 
-const websocketsManager = new WebsocketManager(marinaStore);
-// start the background worker updating utxos and transactions state
-websocketsManager.start().catch(console.error);
+let websocketsManager: WebsocketManager;
 
-export async function reloadAccountsSubscriptions() {
-  await rehydration();
-  if (marinaStore.getState().app.isOnboardingCompleted) {
-    await websocketsManager.subscribeGeneratedScripthashes();
-  }
-}
-
-// at startup, reload the websockets scripthashes subscriptions
-reloadAccountsSubscriptions().catch(console.error);
+rehydration()
+  .then(() => {
+    websocketsManager = new WebsocketManager(marinaStore);
+    const state = marinaStore.getState();
+    websocketsManager.start(selectNetwork(state)).catch(console.error);
+  })
+  .catch(() => {
+    // wait and try again
+    setTimeout(() => {
+      rehydration()
+        .then(() => {
+          websocketsManager = new WebsocketManager(marinaStore);
+          const state = marinaStore.getState();
+          websocketsManager.start(selectNetwork(state)).catch(console.error);
+        })
+        .catch(console.error);
+    }, 1000);
+  });
 
 // deep restorer service will be used each time background page receives a RestoreAccountMessage
 const deepRestorerService = new DeepRestorerService(marinaStore);
@@ -62,7 +75,6 @@ setPeriodicTask(
   Alarm.TaxiUpdate,
   () => {
     if (!marinaStore.getState().app.isOnboardingCompleted) return;
-    console.log('Alarm triggered: TaxiUpdate');
     const network = selectNetwork(marinaStore.getState());
     if (network === 'regtest') {
       fetchTaxiAssetsForNetwork(marinaStore, network).catch(console.error);
@@ -113,7 +125,6 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
 browser.runtime.onStartup.addListener(() => {
   (async () => {
-    await reloadAccountsSubscriptions();
     if (selectEncryptedMnemonic(marinaStore.getState()) === '') {
       // Everytime the browser starts up we need to set up the popup page
       await browser.browserAction.setPopup({ popup: 'popup.html' });
@@ -175,12 +186,49 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
       }
     }
 
-    if (isReloadAccountsSubscribtionsMessage(message)) {
-      reloadAccountsSubscriptions().catch(console.error);
+    if (isStartWebSocketMessage(message)) {
+      websocketsManager.start(message.network).catch(console.error);
     }
 
     if (isRestoreAccountTaskMessage(message)) {
-      deepRestorerService.restore(message.accountID).catch(console.error);
+      deepRestorerService
+        .restore(message.accountID, message.network)
+        .then(() => {
+          port.postMessage(
+            restoreAccountTaskResponseMessage(message.accountID, message.network, true)
+          );
+        })
+        .catch((error) =>
+          port.postMessage(
+            restoreAccountTaskResponseMessage(message.accountID, message.network, false, error)
+          )
+        );
+    }
+
+    if (isForceUpdateMessage(message)) {
+      websocketsManager
+        .forceUpdateAccount(message.accountID, message.network)
+        .then(() =>
+          port.postMessage(forceUpdateResponseMessage(message.accountID, message.network, true))
+        )
+        .catch((error) =>
+          port.postMessage(
+            forceUpdateResponseMessage(
+              message.accountID,
+              message.network,
+              false,
+              extractErrorMessage(error)
+            )
+          )
+        );
+    }
+
+    if (isForceUpdateResponseMessage(message)) {
+      console.warn('background page should not receive ForceUpdateResponseMessage');
+    }
+
+    if (isRestoreAccountTaskResponseMessage(message)) {
+      console.warn('background page should not receive RestoreAccountTaskResponseMessage');
     }
   });
 });
@@ -201,9 +249,6 @@ try {
   browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
     console.debug('Idle state changed to ' + newState);
     switch (newState) {
-      case 'active':
-        reloadAccountsSubscriptions().catch(console.error);
-        break;
       default:
         marinaStore.dispatch(logOut());
         break;

@@ -8,17 +8,21 @@ import Button from '../components/button';
 import type { AccountID } from '../../domain/account';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import Browser from 'webextension-polyfill';
-import { restoreTaskMessage } from '../../domain/message';
+import {
+  forceUpdateMessage,
+  isForceUpdateResponseMessage,
+  isRestoreAccountTaskResponseMessage,
+  restoreTaskMessage,
+} from '../../domain/message';
+import type { NetworkString } from 'ldk';
 
 export interface DeepRestorerProps {
-  restorationLoading: boolean;
   allAccountsIDs: AccountID[];
   gapLimit: number;
   error?: string;
 }
 
 const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
-  restorationLoading,
   allAccountsIDs,
   error,
   gapLimit,
@@ -27,36 +31,49 @@ const SettingsDeepRestorerView: React.FC<DeepRestorerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const onClickRestore = () => {
+    setIsLoading(true);
     const port = Browser.runtime.connect();
+
+    port.onMessage.addListener((msg, port) => {
+      if (isRestoreAccountTaskResponseMessage(msg)) {
+        if (!msg.success) console.error(msg.error);
+        port.postMessage(forceUpdateMessage(msg.accountID, msg.network));
+      }
+
+      if (isForceUpdateResponseMessage(msg)) {
+        if (!msg.success) console.error(msg.error);
+        setIsLoading(false);
+      }
+    });
+
     for (const ID of allAccountsIDs) {
-      port.postMessage(restoreTaskMessage(ID));
+      for (const net of ['liquid', 'testnet', 'regtest'] as NetworkString[]) {
+        port.postMessage(restoreTaskMessage(ID, net));
+      }
     }
   };
 
   return (
     <ShellPopUp
-      btnDisabled={restorationLoading}
+      btnDisabled={isLoading}
       backgroundImagePath="/assets/images/popup/bg-sm.png"
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Deep restorer"
     >
       <p className="font-regular my-8 text-base text-left">Select the restoration gap limit</p>
       <Select
-        disabled={restorationLoading || isLoading}
+        disabled={isLoading}
         list={['20', '40', '80', '160']}
         selected={gapLimit.toString(10)}
         onSelect={(selectedGapLimit: string) => {
           if (isLoading) return;
-          setIsLoading(true);
-          dispatch(setDeepRestorerGapLimit(parseInt(selectedGapLimit))).finally(() =>
-            setIsLoading(false)
-          );
+          dispatch(setDeepRestorerGapLimit(parseInt(selectedGapLimit))).catch(console.error);
         }}
       />
-      {restorationLoading && <p className="m-2">{'restoration loading'}...</p>}
+      {isLoading && <p className="m-2">{'restoration loading'}...</p>}
       {error && <p className="m-2">{error}</p>}
       <ButtonsAtBottom>
-        <Button disabled={restorationLoading || isLoading} onClick={onClickRestore} type="submit">
+        <Button disabled={isLoading} onClick={onClickRestore} type="submit">
           Restore
         </Button>
       </ButtonsAtBottom>

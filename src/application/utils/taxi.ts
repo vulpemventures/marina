@@ -49,6 +49,6 @@ export const fetchTopupFromTaxi = async (
 
 export const taxiURL: Record<NetworkString, string> = {
   regtest: 'http://localhost:8000',
-  testnet: 'https://grpc.liquid.taxi:18000/v1',
+  testnet: 'https://stage-api.liquid.taxi/v1',
   liquid: 'https://grpc.liquid.taxi/v1',
 };

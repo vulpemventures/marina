@@ -46,7 +46,7 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({ match }
           subscribeScriptsMsg(
             [address.toOutputScript(addr.confidentialAddress).toString('hex')],
             account.getInfo().accountID,
-            'regtest'
+            network
           )
         );
     })().catch(console.error);

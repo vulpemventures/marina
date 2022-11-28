@@ -18,11 +18,11 @@ import { addUtxo, deleteUtxo, unlockUtxos } from '../application/redux/actions/u
 import { popUpdaterLoader, pushUpdaterLoader } from '../application/redux/actions/wallet';
 import {
   selectHTTPExplorerURL,
-  selectNetwork,
   selectWSExplorerURL,
 } from '../application/redux/selectors/app.selector';
 import type { History } from '../application/redux/selectors/wallet.selector';
 import {
+  selectTransactions,
   selectIsKnownTx,
   selectAccount,
   selectAccountIDByScriptHash,
@@ -37,8 +37,8 @@ import { toDisplayTransaction } from '../application/utils/transaction';
 import type { AccountID } from '../domain/account';
 import type { Asset } from '../domain/assets';
 import type { RootReducerState } from '../domain/common';
-import type { MapByNetwork } from '../domain/transaction';
-import { ElectrumWS } from '../domain/ws/ws-electrs';
+import { txIsSpending } from '../domain/transaction';
+import { ElectrumWS } from './ws/ws-electrs';
 import type { BlockHeader } from './utils';
 import { deserializeBlockHeader, getAllWalletScripts, getPrivateBlindKeyGetter } from './utils';
 
@@ -47,77 +47,54 @@ type StatusWorkerJob = { scripthash: string; network: NetworkString; id: number 
 export class WebsocketManager {
   static SUPPORTED_NETWORKS: NetworkString[] = ['liquid', 'regtest', 'testnet'];
 
-  private socketByNetwork: MapByNetwork<ElectrumWS | undefined>;
   private marinaStore: Store<RootReducerState>;
+  private socket: ElectrumWS;
 
   private jobs: Array<StatusWorkerJob> = [];
   private started = false;
 
   constructor(marinaStore: Store) {
-    this.socketByNetwork = {
-      liquid: undefined,
-      regtest: undefined,
-      testnet: undefined,
-    };
-
     this.marinaStore = marinaStore;
-    for (const net of WebsocketManager.SUPPORTED_NETWORKS) {
-      this.socketByNetwork[net] = new ElectrumWS(selectWSExplorerURL(net)(marinaStore.getState()));
-    }
+    this.socket = new ElectrumWS(selectWSExplorerURL()(marinaStore.getState()));
   }
 
   // init the websockets subscriptions according to the accounts state
   // 1 address = 1 scriptHash to subscribe
-  async subscribeGeneratedScripthashes() {
+  private async subscribeGeneratedScripthashes(network: NetworkString): Promise<void> {
+    if (!WebsocketManager.SUPPORTED_NETWORKS.includes(network))
+      throw new Error('Network not supported by websocket manager');
     const state = this.marinaStore.getState();
     for (const accountID of selectAllAccountsIDs(state)) {
       const account = selectAccount(accountID)(state);
       if (account) {
-        for (const network of WebsocketManager.SUPPORTED_NETWORKS) {
-          const id = await account.getWatchIdentity(network);
-          const addresses = await id.getAddresses();
-          const scripts = addresses.map((a) =>
-            address.toOutputScript(a.confidentialAddress).toString('hex')
-          );
-          for (const script of scripts) {
-            await this.subscribeScript(network, accountID, script);
-          }
+        const id = await account.getWatchIdentity(network);
+        const addresses = await id.getAddresses();
+        const scripts = addresses.map((a) =>
+          address.toOutputScript(a.confidentialAddress).toString('hex')
+        );
+        for (const script of scripts) {
+          await this.subscribeScript(network, accountID, script);
         }
       }
     }
   }
 
-  private socket(net: NetworkString): ElectrumWS {
-    if (!this.socketByNetwork || Object.keys(this.socketByNetwork).length === 0) {
-      throw new Error('WebsocketManager not started');
-    }
-
-    if (WebsocketManager.SUPPORTED_NETWORKS.includes(net)) {
-      const socket = this.socketByNetwork[net];
-      if (!socket) throw new Error('websocket is not initialized for network ' + net);
-      return socket;
-    }
-
-    throw new Error('Network not supported');
-  }
-
   async subscribeScript(network: NetworkString, accountID: AccountID, scriptHex: string) {
     const scriptHash = reverseAndHash(scriptHex);
-    const websocket = this.socket(network);
     try {
       selectUtxosMapByScriptHash(network, scriptHash)(this.marinaStore.getState());
     } catch {
       // if we don't have utxos for this scriptHash, we need to init its state
       this.marinaStore.dispatch(addScriptHash(accountID, scriptHash, network));
     }
-    await websocket.subscribe(
+    await this.socket.subscribe(
       'blockchain.scripthash',
-      this.callbackWebsocketElectrum(network, this.marinaStore),
+      this.callbackWebsocketElectrum(network),
       scriptHash
     );
   }
 
-  private callbackWebsocketElectrum(network: NetworkString, store: Store) {
+  private callbackWebsocketElectrum(network: NetworkString) {
     return (...params: (string | number)[]) => {
       const scriptHash = params[0] as string;
       const status = params[1] as string | null;
@@ -130,21 +107,29 @@ export class WebsocketManager {
 
   // select the job with network = current selected network first
   private popMaxPriorityJob(): StatusWorkerJob | undefined {
-    const jobs = this.jobs;
-    if (jobs.length === 0) return undefined;
-    let selectedJob = jobs[0];
-    const currentNetwork = selectNetwork(this.marinaStore.getState());
-    // if we have a job for the current network, we take it first
-    const job = jobs.find((j) => j.network === currentNetwork);
-    if (job) selectedJob = job;
-    // remove the selected job
-    this.jobs = this.jobs.filter((j) => j.id !== selectedJob.id);
-    return selectedJob;
+    if (this.jobs.length === 0) return undefined;
+    const [selected, ...others] = this.jobs;
+    if (selected) {
+      this.jobs = others;
+      return selected;
+    }
+    return undefined;
+  }
+
+  async switchSocket(network: NetworkString): Promise<void> {
+    try {
+      await this.stop();
+    } finally {
+      this.socket = new ElectrumWS(selectWSExplorerURL(network)(this.marinaStore.getState()));
+      await this.subscribeGeneratedScripthashes(network);
+    }
   }
 
   // start the status worker
-  async start(): Promise<void> {
+  async start(network: NetworkString): Promise<void> {
+    await this.switchSocket(network);
     this.started = true;
+
     while (this.started) {
       try {
         const job = this.popMaxPriorityJob();
@@ -153,8 +138,7 @@ export class WebsocketManager {
           continue;
         }
         const { scripthash, network } = job;
-        const socket = this.socket(network);
-        await updateScriptHash(socket, network, scripthash, this.marinaStore);
+        await updateScriptHash(this.socket, network, scripthash, this.marinaStore);
       } catch {
         continue;
       }
@@ -162,8 +146,38 @@ export class WebsocketManager {
   }
 
   // stop the status worker
-  stop(): void {
+  async stop(): Promise<void> {
+    if (!this.started) return;
     this.started = false;
+    await this.socket.close('disconnection');
+  }
+
+  async forceUpdate(scripthash: string, network: NetworkString): Promise<void> {
+    await updateScriptHash(this.socket, network, scripthash, this.marinaStore);
+  }
+
+  async forceUpdateAccount(accountID: AccountID, network: NetworkString): Promise<void> {
+    const account = selectAccount(accountID)(this.marinaStore.getState());
+    if (!account) throw new Error(`Account ${accountID} not found`);
+    const id = await account.getWatchIdentity(network);
+    const addresses = await id.getAddresses();
+
+    const scriptsHashes = addresses
+      .map((a) => address.toOutputScript(a.confidentialAddress).toString('hex'))
+      .map(reverseAndHash);
+
+    // init the reducer state in order to link account to scripthash
+    for (const scripthash of scriptsHashes) {
+      try {
+        selectUtxosMapByScriptHash(network, scripthash)(this.marinaStore.getState());
+      } catch {
+        this.marinaStore.dispatch(addScriptHash(accountID, scripthash, network));
+      }
+    }
+
+    for (const scriptHash of scriptsHashes) {
+      await this.forceUpdate(scriptHash, network);
+    }
   }
 }
 
@@ -216,14 +230,21 @@ async function updateScriptHash(
         if (utxoInStore) store.dispatch(deleteUtxo(accountID, input.txid, input.vout, network));
       }
 
-      // check if we have any new utxos
-      const walletOutputs = unblindedTx.vout.filter((o) => {
-        if (isConfidentialOutput(o)) {
-          return isUnblindedOutput(o);
-        }
+      const state = store.getState();
+      const allTransactions = selectTransactions(...selectAllAccountsIDs(state))(state);
 
-        return walletScripts.includes(o.prevout.script.toString('hex'));
-      });
+      // check if we have any new utxos
+      const walletOutputs = unblindedTx.vout
+        .filter((o) => {
+          if (isConfidentialOutput(o)) {
+            return isUnblindedOutput(o);
+          }
+
+          return walletScripts.includes(o.prevout.script.toString('hex'));
+        })
+        .filter(
+          (walletOutput) => !allTransactions.some((tx) => txIsSpending(tx, { ...walletOutput }))
+        );
 
       // add the new utxos to the store
       const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
@@ -249,7 +270,7 @@ async function updateScriptHash(
   }
 
   // at the end of the update, free the locked utxos
-  store.dispatch(unlockUtxos());
+  if (historyDiff.newTxs.length > 0) store.dispatch(unlockUtxos());
 }
 
 // fetch a tx (and its prevouts) from websocket endpoint using the blockchain.transaction.get method

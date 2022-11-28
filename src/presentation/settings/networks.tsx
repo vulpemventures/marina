@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import Browser from 'webextension-polyfill';
 import { changeNetwork } from '../../application/redux/actions/app';
-import { restoreTaskMessage } from '../../domain/message';
+import { restoreTaskMessage, startWebSocketMessage } from '../../domain/message';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utils';
@@ -36,10 +36,13 @@ const SettingsNetworksView: React.FC<SettingsNetworksProps> = ({
       // switch the selected network
       await dispatch(changeNetwork(newNetwork as NetworkString));
 
-      // start deep restorer for all the accounts (done in background)
       const port = Browser.runtime.connect();
+      // switch the network websocket listener in the background
+      port.postMessage(startWebSocketMessage(newNetwork as NetworkString));
+
+      // start deep restorer for all the accounts (done in background)
       for (const ID of allAccountsIDs) {
-        port.postMessage(restoreTaskMessage(ID));
+        port.postMessage(restoreTaskMessage(ID, newNetwork as NetworkString));
       }
     }
     setIsLoading(false);

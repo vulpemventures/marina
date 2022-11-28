@@ -55,7 +55,7 @@ export class DeepRestorerService {
     this.store = store;
   }
 
-  async restore(accountID: AccountID): Promise<void> {
+  async restore(accountID: AccountID, network: NetworkString): Promise<void> {
     // wait for the previous task to finish
     while (this.runningTask) {
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -63,10 +63,7 @@ export class DeepRestorerService {
     // run the task
     this.runningTask = true;
     try {
-      const promisesByNetwork = DeepRestorerService.SUPPORTED_NETWORKS.map((network) =>
-        restoreAccount(this.store, accountID, network)
-      );
-      await Promise.all(promisesByNetwork);
+      await restoreAccount(this.store, accountID, network);
     } finally {
       this.runningTask = false;
     }

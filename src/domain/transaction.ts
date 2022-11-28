@@ -1,4 +1,4 @@
-import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, Outpoint, UnblindedOutput } from 'ldk';
 
 export type MapByNetwork<T> = Record<NetworkString, T>;
 export type UtxosMap = Record<string, UnblindedOutput>;
@@ -31,4 +31,12 @@ export interface TxDisplayInterface {
   transfers: Transfer[];
   webExplorersBlinders: string; // will be concat with webExplorerURL
   blockTimeMs?: number;
+  spentOutpoints: Outpoint[];
+}
+
+export function txIsSpending(tx: TxDisplayInterface, outpoint: Outpoint): boolean {
+  return tx.spentOutpoints.some(
+    (spendingOutpoint) =>
+      spendingOutpoint.txid === outpoint.txid && spendingOutpoint.vout === outpoint.vout
+  );
 }
