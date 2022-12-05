@@ -12,7 +12,6 @@ import {
 } from './action-types';
 import type { AnyAction } from 'redux';
 import type { Address } from '../../../domain/address';
-import type { TxDisplayInterface } from '../../../domain/transaction';
 import type { NetworkString, UnblindedOutput, TxInterface } from 'ldk';
 import type { AccountID } from '../../../domain/account';
 import type { ActionWithPayload } from '../../../domain/common';
@@ -62,11 +61,7 @@ export function setPset(pset: string, utxos: UnblindedOutput[]): AnyAction {
   };
 }
 
-export function addTx(
-  accountID: AccountID,
-  tx: TxDisplayInterface,
-  network: NetworkString
-): AnyAction {
+export function addTx(accountID: AccountID, tx: TxInterface, network: NetworkString): AnyAction {
   return {
     type: ADD_TX,
     payload: { tx, network, accountID },

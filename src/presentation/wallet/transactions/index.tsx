@@ -15,7 +15,7 @@ import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import Modal from '../../components/modal';
 import ShellPopUp from '../../components/shell-popup';
-import { txTypeAsString } from '../../../application/utils/transaction';
+import { toDisplayTransaction, txTypeAsString } from '../../../application/utils/transaction';
 import { fromSatoshiStr } from '../../utils';
 import type { TxDisplayInterface } from '../../../domain/transaction';
 import type { IAssets } from '../../../domain/assets';
@@ -25,6 +25,10 @@ import { txHasAsset } from '../../../application/redux/selectors/transaction.sel
 import type { ProxyStoreDispatch } from '../../../application/redux/proxyStore';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import AssetIcon from '../../components/assetIcon';
+import type { NetworkString, TxInterface } from 'ldk';
+import { getNetwork } from 'ldk';
+import type { Account } from '../../../domain/account';
+import { getAccountsScripts } from '../../../domain/account';
 
 interface LocationState {
   assetsBalance: { [hash: string]: number };
@@ -35,30 +39,45 @@ interface LocationState {
 
 export interface TransactionsProps {
   assets: IAssets;
-  transactions: TxDisplayInterface[];
+  transactions: TxInterface[];
+  accounts: Account[];
   webExplorerURL: string;
   isWalletVerified: boolean;
+  network: NetworkString;
 }
 
 const TransactionsView: React.FC<TransactionsProps> = ({
   assets,
   transactions,
+  accounts,
   webExplorerURL,
   isWalletVerified,
+  network,
 }) => {
   const history = useHistory();
   const { state } = useLocation<LocationState>();
   const dispatch = useDispatch<ProxyStoreDispatch>();
 
-  const [sortedTransactions, setSortedTransactions] = useState<TxDisplayInterface[]>([]);
+  const [scripts, setScripts] = useState<string[]>([]);
+  const [sortedTransactions, setSortedTransactions] = useState<TxInterface[]>([]);
+  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const walletScripts = (
+        await Promise.all(accounts.map((account) => getAccountsScripts(account, network)))
+      ).flat();
+      setScripts(walletScripts);
+    })().catch(console.error);
+  }, [accounts, network]);
 
   useEffect(() => {
     const sorted = transactions
       .filter(txHasAsset(state.assetHash))
       // Descending order
       .sort((a, b) => {
-        const momentB = moment(b.blockTimeMs);
-        const momentA = moment(a.blockTimeMs);
+        const momentB = moment(b.status.blockTime);
+        const momentA = moment(a.status.blockTime);
         return momentB.diff(momentA);
       });
 
@@ -66,14 +85,20 @@ const TransactionsView: React.FC<TransactionsProps> = ({
   }, [transactions]);
 
   // TxDetails Modal
+  const [modalOpen, setModalOpen] = useState(false);
   const [modalTxDetails, setModalTxDetails] = useState<TxDisplayInterface>();
 
-  // Save mnemonic modal
-  const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
+  const openModal = (tx: TxInterface) => {
+    setModalOpen(true);
+    setModalTxDetails(toDisplayTransaction(tx, scripts, getNetwork(network)));
+  };
+
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
+
   const handleSaveMnemonicConfirm = async () => {
     await browser.tabs.create({ url: `home.html#${BACKUP_UNLOCK_ROUTE}` });
   };
+
   const handleReceive = () => {
     if (!isWalletVerified) {
       showSaveMnemonicModal(true);
@@ -81,12 +106,14 @@ const TransactionsView: React.FC<TransactionsProps> = ({
       history.push(`${RECEIVE_ADDRESS_ROUTE}/${state.assetHash}`);
     }
   };
+
   const handleSend = async () => {
     await dispatch(setAsset(state.assetHash));
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
+
   const handleOpenExplorer = async () => {
     if (!modalTxDetails) return;
     const url = `${webExplorerURL}${modalTxDetails.webExplorersBlinders}`;
@@ -126,9 +153,9 @@ const TransactionsView: React.FC<TransactionsProps> = ({
                     assetTicker={state.assetTicker}
                     key={index}
                     handleClick={() => {
-                      setModalTxDetails(tx);
+                      openModal(tx);
                     }}
-                    tx={tx}
+                    tx={toDisplayTransaction(tx, scripts, getNetwork(network))}
                   />
                 );
               })}
@@ -137,7 +164,13 @@ const TransactionsView: React.FC<TransactionsProps> = ({
         </>
       )}
 
-      <Modal isOpen={modalTxDetails !== undefined} onClose={() => setModalTxDetails(undefined)}>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalTxDetails(undefined);
+          setModalOpen(false);
+        }}
+      >
         <div className="mx-auto text-center">
           <AssetIcon assetHash={state.assetHash} className="w-8 h-8 mt-0.5 block mx-auto mb-2" />
           <p className="text-base font-medium">{txTypeAsString(modalTxDetails?.type)}</p>

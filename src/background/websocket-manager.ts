@@ -7,7 +7,6 @@ import {
   confidential,
   isConfidentialOutput,
   isUnblindedOutput,
-  networks,
   Transaction,
   unblindTransaction,
 } from 'ldk';
@@ -22,6 +21,7 @@ import {
 } from '../application/redux/selectors/app.selector';
 import type { History } from '../application/redux/selectors/wallet.selector';
 import {
+  selectTransactionByID,
   selectTransactions,
   selectIsKnownTx,
   selectAccount,
@@ -33,7 +33,6 @@ import {
 } from '../application/redux/selectors/wallet.selector';
 import { sleep } from '../application/utils/common';
 import { defaultPrecision } from '../application/utils/constants';
-import { toDisplayTransaction } from '../application/utils/transaction';
 import type { AccountID } from '../domain/account';
 import type { Asset } from '../domain/assets';
 import type { RootReducerState } from '../domain/common';
@@ -138,7 +137,7 @@ export class WebsocketManager {
           continue;
         }
         const { scripthash, network } = job;
-        await updateScriptHash(this.socket, network, scripthash, this.marinaStore);
+        await this.updateAddressHistory(this.socket, network, scripthash, this.marinaStore);
       } catch {
         continue;
       }
@@ -153,7 +152,7 @@ export class WebsocketManager {
   }
 
   async forceUpdate(scripthash: string, network: NetworkString): Promise<void> {
-    await updateScriptHash(this.socket, network, scripthash, this.marinaStore);
+    await this.updateAddressHistory(this.socket, network, scripthash, this.marinaStore);
   }
 
   async forceUpdateAccount(accountID: AccountID, network: NetworkString): Promise<void> {
@@ -179,160 +178,176 @@ export class WebsocketManager {
       await this.forceUpdate(scriptHash, network);
     }
   }
+
+  // fetch a tx (and its prevouts) from websocket endpoint using the blockchain.transaction.get method
+  private async fetchTx(ws: ElectrumWS, txID: string, blockheight?: number): Promise<TxInterface> {
+    const txHex = (await ws.request('blockchain.transaction.get', txID)) as string;
+    const transaction = Transaction.fromHex(txHex);
+
+    let blockHeader: BlockHeader | undefined;
+    if (blockheight) {
+      const blockHeaderHex = (await ws.request('blockchain.block.header', blockheight)) as string;
+      blockHeader = deserializeBlockHeader(blockHeaderHex);
+    }
+
+    const txInterface: TxInterface = {
+      txid: txID,
+      fee: 0,
+      status: {
+        confirmed: blockHeader !== undefined,
+        blockHeight: blockHeader?.height,
+        blockTime: blockHeader?.timestamp,
+      },
+      vin: [],
+      vout: [],
+    };
+
+    for (const input of transaction.ins) {
+      const prevoutTxID = Buffer.from(input.hash).reverse().toString('hex');
+      const vout = input.index;
+
+      // prevent fetching the prevout if it is a pegin prevout
+      const prevout: Output | undefined = input.isPegin
+        ? undefined
+        : await this.getOrFetchOutput(prevoutTxID, vout);
+
+      txInterface.vin.push({
+        txid: prevoutTxID,
+        vout,
+        isPegin: input.isPegin ?? false,
+        prevout,
+      });
+    }
+
+    for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
+      const output = transaction.outs[outIndex];
+      txInterface.vout.push({
+        txid: txID,
+        vout: outIndex,
+        prevout: output,
+      });
+
+      // if fee output, add the fee value
+      if (output.script.length === 0) {
+        txInterface.fee = confidential.confidentialValueToSatoshi(output.value);
+      }
+    }
+
+    return txInterface;
+  }
+
+  // getOutput tries to fetch the output from the store, if not found, it fetches it from the websocket endpoint
+  private async getOrFetchOutput(txid: string, vout: number): Promise<Output> {
+    const tx = selectTransactionByID(txid)(this.marinaStore.getState());
+    if (tx) return tx.vout[vout];
+    const txHex = (await this.socket.request('blockchain.transaction.get', txid)) as string;
+    const transaction = Transaction.fromHex(txHex);
+    return {
+      txid,
+      vout,
+      prevout: transaction.outs[vout],
+    };
+  }
+
+  // getTx will try to return the tx from the marina store, if not found, it will fetch it from the websocket endpoint
+  private async getOrFetchTx(txid: string, blockheight?: number): Promise<TxInterface> {
+    const tx = selectTransactionByID(txid)(this.marinaStore.getState());
+    if (tx) return tx;
+    return this.fetchTx(this.socket, txid, blockheight);
+  }
+
+  // updateAccountHisory is triggered each time a new status is received for a scripthash
+  // it fetches the new txs from history and updates the utxos and transactions state
+  // updateTransactionsHistory
+  private async updateAddressHistory(
+    ws: ElectrumWS,
+    network: NetworkString,
+    scriptHash: string,
+    store: Store
+  ): Promise<void> {
+    const historyResp = (await ws.request(
+      'blockchain.scripthash.get_history',
+      scriptHash
+    )) as History;
+    const historyDiff = selectHistoryDiff(historyResp)(store.getState());
+    const accountID = selectAccountIDByScriptHash(scriptHash, network)(store.getState());
+    const blindKeyGetter = getPrivateBlindKeyGetter(store, network);
+
+    for (const { txID, height } of historyDiff.confirmedTxs) {
+      if (height <= 0) continue;
+      const blockHeaderHex = (await ws.request('blockchain.block.header', height)) as string;
+      const blockHeader = deserializeBlockHeader(blockHeaderHex);
+      const action = confirmTx(txID, blockHeader.timestamp, network);
+      store.dispatch(action);
+    }
+
+    // for each new tx which is not in the state, we fetch the transaction and unblind it
+    for (const { txID, height } of historyDiff.newTxs) {
+      if (selectIsKnownTx(txID)(store.getState())) continue;
+      try {
+        store.dispatch(pushUpdaterLoader());
+        const newTransaction = await this.getOrFetchTx(txID, height);
+        const { unblindedTx } = await unblindTransaction(newTransaction, blindKeyGetter);
+
+        // add the new tx to the store
+        store.dispatch(addTx(accountID, newTransaction, network));
+
+        // check if any utxos were spent in this tx
+        for (const input of unblindedTx.vin) {
+          const [utxoInStore, accountID] = selectUtxoByOutpoint(input, network)(store.getState());
+          if (utxoInStore) store.dispatch(deleteUtxo(accountID, input.txid, input.vout, network));
+        }
+
+        const state = store.getState();
+        const allTransactions = selectTransactions(...selectAllAccountsIDs(state))(state);
+
+        // check if we have any new utxos
+        const walletScripts = await getAllWalletScripts(state, network);
+        const walletOutputs = unblindedTx.vout
+          .filter((o) => {
+            if (isConfidentialOutput(o)) {
+              return isUnblindedOutput(o);
+            }
+
+            return walletScripts.includes(o.prevout.script.toString('hex'));
+          })
+          .filter(
+            (walletOutput) =>
+              !allTransactions.some((tx) => txIsSpending(newTransaction, { ...walletOutput }))
+          );
+
+        // add the new utxos to the store
+        const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
+        actions.forEach(store.dispatch);
+
+        const walletOutputsAssets = new Set(walletOutputs.map((o) => getAsset(o)));
+        const assetsNeedUpdate = Array.from(walletOutputsAssets).filter((a) =>
+          assetNeedUpdate(store, a)
+        );
+        const assetsInfos = await Promise.allSettled(
+          assetsNeedUpdate.map((a) => fetchAssetInfoFromEsplora(store, a, network))
+        );
+        for (let i = 0; i < assetsNeedUpdate.length; i++) {
+          const asset = assetsNeedUpdate[i];
+          const assetInfo = assetsInfos[i];
+          if (assetInfo.status === 'fulfilled') {
+            store.dispatch(addAsset(asset, assetInfo.value));
+          }
+        }
+      } finally {
+        store.dispatch(popUpdaterLoader());
+      }
+    }
+
+    // at the end of the update, free the locked utxos
+    if (historyDiff.newTxs.length > 0) store.dispatch(unlockUtxos());
+  }
 }
 
 // utility function converting an output script hex to a scripthash (reversed sha256 of the script)
 // scripthash is used by electrum protocol to identify a script to watch
 export function reverseAndHash(script: string): string {
   return crypto.sha256(Buffer.from(script, 'hex')).reverse().toString('hex');
-}
-
-// this function is triggered each time a new status is received for a scripthash
-// it fetches the new txs from history and updates the utxos and transactions state
-async function updateScriptHash(
-  ws: ElectrumWS,
-  network: NetworkString,
-  scriptHash: string,
-  store: Store
-): Promise<void> {
-  const historyResp = (await ws.request(
-    'blockchain.scripthash.get_history',
-    scriptHash
-  )) as History;
-  const historyDiff = selectHistoryDiff(historyResp)(store.getState());
-  const accountID = selectAccountIDByScriptHash(scriptHash, network)(store.getState());
-  const blindKeyGetter = getPrivateBlindKeyGetter(store, network);
-  const walletScripts = await getAllWalletScripts(store, network);
-
-  for (const { txID, height } of historyDiff.confirmedTxs) {
-    if (height <= 0) continue;
-    const blockHeaderHex = (await ws.request('blockchain.block.header', height)) as string;
-    const blockHeader = deserializeBlockHeader(blockHeaderHex);
-    const action = confirmTx(txID, blockHeader.timestamp, network);
-    store.dispatch(action);
-  }
-
-  // for each new tx which is not in the state, we fetch the transaction and unblind it
-  for (const { txID, height } of historyDiff.newTxs) {
-    if (selectIsKnownTx(txID)(store.getState())) continue;
-    try {
-      store.dispatch(pushUpdaterLoader());
-      const txFromElectrum = await fetchTx(ws, txID, height > 0 ? height : undefined);
-      const { unblindedTx } = await unblindTransaction(txFromElectrum, blindKeyGetter);
-      const displayTx = toDisplayTransaction(unblindedTx, walletScripts, networks[network]);
-
-      // add the new tx to the store
-      store.dispatch(addTx(accountID, displayTx, network));
-
-      // check if any utxos were spent in this tx
-      for (const input of unblindedTx.vin) {
-        const [utxoInStore, accountID] = selectUtxoByOutpoint(input, network)(store.getState());
-        if (utxoInStore) store.dispatch(deleteUtxo(accountID, input.txid, input.vout, network));
-      }
-
-      const state = store.getState();
-      const allTransactions = selectTransactions(...selectAllAccountsIDs(state))(state);
-
-      // check if we have any new utxos
-      const walletOutputs = unblindedTx.vout
-        .filter((o) => {
-          if (isConfidentialOutput(o)) {
-            return isUnblindedOutput(o);
-          }
-
-          return walletScripts.includes(o.prevout.script.toString('hex'));
-        })
-        .filter(
-          (walletOutput) => !allTransactions.some((tx) => txIsSpending(tx, { ...walletOutput }))
-        );
-
-      // add the new utxos to the store
-      const actions = walletOutputs.map((o) => addUtxo(accountID, o as UnblindedOutput, network));
-      actions.forEach(store.dispatch);
-
-      const walletOutputsAssets = new Set(walletOutputs.map((o) => getAsset(o)));
-      const assetsNeedUpdate = Array.from(walletOutputsAssets).filter((a) =>
-        assetNeedUpdate(store, a)
-      );
-      const assetsInfos = await Promise.allSettled(
-        assetsNeedUpdate.map((a) => requestAssetInfoFromEsplora(store, a, network))
-      );
-      for (let i = 0; i < assetsNeedUpdate.length; i++) {
-        const asset = assetsNeedUpdate[i];
-        const assetInfo = assetsInfos[i];
-        if (assetInfo.status === 'fulfilled') {
-          store.dispatch(addAsset(asset, assetInfo.value));
-        }
-      }
-    } finally {
-      store.dispatch(popUpdaterLoader());
-    }
-  }
-
-  // at the end of the update, free the locked utxos
-  if (historyDiff.newTxs.length > 0) store.dispatch(unlockUtxos());
-}
-
-// fetch a tx (and its prevouts) from websocket endpoint using the blockchain.transaction.get method
-async function fetchTx(ws: ElectrumWS, txID: string, blockheight?: number): Promise<TxInterface> {
-  const txHex = (await ws.request('blockchain.transaction.get', txID)) as string;
-  const transaction = Transaction.fromHex(txHex);
-
-  let blockHeader: BlockHeader | undefined;
-  if (blockheight) {
-    const blockHeaderHex = (await ws.request('blockchain.block.header', blockheight)) as string;
-    blockHeader = deserializeBlockHeader(blockHeaderHex);
-  }
-
-  const txInterface: TxInterface = {
-    txid: txID,
-    fee: 0,
-    status: {
-      confirmed: blockHeader !== undefined,
-      blockHeight: blockHeader?.height,
-      blockTime: blockHeader?.timestamp,
-    },
-    vin: [],
-    vout: [],
-  };
-
-  for (const input of transaction.ins) {
-    const prevoutTxID = Buffer.from(input.hash).reverse().toString('hex');
-    const vout = input.index;
-
-    // prevent fetching the prevout if it is a pegin prevout
-    const prevout: Output | undefined = input.isPegin
-      ? undefined
-      : {
-          txid: prevoutTxID,
-          vout,
-          prevout: Transaction.fromHex(await ws.request('blockchain.transaction.get', prevoutTxID))
-            .outs[vout],
-        };
-
-    txInterface.vin.push({
-      txid: prevoutTxID,
-      vout,
-      isPegin: input.isPegin ?? false,
-      prevout,
-    });
-  }
-
-  for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
-    const output = transaction.outs[outIndex];
-    txInterface.vout.push({
-      txid: txID,
-      vout: outIndex,
-      prevout: output,
-    });
-
-    // if fee output, add the fee value
-    if (output.script.length === 0) {
-      txInterface.fee = confidential.confidentialValueToSatoshi(output.value);
-    }
-  }
-
-  return txInterface;
 }
 
 function assetNeedUpdate(store: Store<RootReducerState>, assetHash: string): boolean {
@@ -344,7 +359,7 @@ function assetNeedUpdate(store: Store<RootReducerState>, assetHash: string): boo
   return false;
 }
 
-async function requestAssetInfoFromEsplora(
+async function fetchAssetInfoFromEsplora(
   store: Store<RootReducerState>,
   assetHash: string,
   network: NetworkString

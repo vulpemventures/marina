@@ -1,4 +1,4 @@
-import { balances } from 'ldk';
+import { balances, getAsset, isUnblindedOutput } from 'ldk';
 import type { AccountID } from '../../../domain/account';
 import type { RootReducerState } from '../../../domain/common';
 import { sumBalances } from '../../utils/balances';
@@ -27,9 +27,11 @@ const selectBalancesForAccount =
 
     const txs = selectTransactions(accountID)(state);
     const assets = Object.keys(balancesFromUtxos);
+    console.log(txs);
 
     for (const tx of txs) {
-      const allTxAssets = tx.transfers.map((t) => t.asset);
+      const allTxAssets = tx.vout.filter(isUnblindedOutput).map(getAsset);
+      // init assets with 0 balance if not present
       for (const a of allTxAssets) {
         if (!assets.includes(a)) {
           balancesFromUtxos[a] = 0;

@@ -1,8 +1,10 @@
-import { address, privateBlindKeyGetter } from 'ldk';
+import { privateBlindKeyGetter } from 'ldk';
 import type { BlindingKeyGetterAsync, NetworkString } from 'ldk';
 import type { Store } from 'redux';
 import { selectAllAccounts } from '../application/redux/selectors/wallet.selector';
 import type { Account } from '../domain/account';
+import { getAccountsScripts } from '../domain/account';
+import type { RootReducerState } from '../domain/common';
 
 export interface BlockHeader {
   version: number;
@@ -84,16 +86,13 @@ export function getPrivateBlindKeyGetter(
   };
 }
 
-const getScripts = async (account: Account, network: NetworkString) => {
-  const identity = await account.getWatchIdentity(network);
-  const addresses = await identity.getAddresses();
-  return addresses.map((a) => address.toOutputScript(a.confidentialAddress).toString('hex'));
-};
-
 // compute all the wallet scripts
-export async function getAllWalletScripts(store: Store, network: NetworkString): Promise<string[]> {
-  const accounts = selectAllAccounts(store.getState());
-  const promises = accounts.map((a) => getScripts(a, network));
+export async function getAllWalletScripts(
+  state: RootReducerState,
+  network: NetworkString
+): Promise<string[]> {
+  const accounts = selectAllAccounts(state);
+  const promises = accounts.map((a) => getAccountsScripts(a, network));
   const results = await Promise.all(promises);
   return results.flat();
 }

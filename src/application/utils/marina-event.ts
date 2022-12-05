@@ -1,4 +1,4 @@
-import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, TxInterface, UnblindedOutput } from 'ldk';
 import type { TxDisplayInterface, TxsHistory } from '../../domain/transaction';
 import type { MarinaEventType } from 'marina-provider';
 
@@ -9,7 +9,7 @@ export interface MarinaEvent<P extends any> {
 
 export type NewUtxoMarinaEvent = MarinaEvent<{ accountID: string; data: UnblindedOutput }>;
 export type SpentUtxoMarinaEvent = MarinaEvent<{ accountID: string; data: UnblindedOutput }>;
-export type NewTxMarinaEvent = MarinaEvent<{ accountID: string; data: TxDisplayInterface }>;
+export type NewTxMarinaEvent = MarinaEvent<{ accountID: string; data: TxInterface }>;
 export type EnabledMarinaEvent = MarinaEvent<{
   data: { hostname: string; network: NetworkString };
 }>;
@@ -17,6 +17,8 @@ export type DisabledMarinaEvent = MarinaEvent<{
   data: { hostname: string; network: NetworkString };
 }>;
 export type NetworkMarinaEvent = MarinaEvent<{ data: NetworkString }>;
+
+export type TxsDisplayHistory = Record<string, TxDisplayInterface>;
 
 // compare tx history states and return marina events
 export function compareTxsHistoryState(

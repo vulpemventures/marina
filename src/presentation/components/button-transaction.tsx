@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { TxDisplayInterface } from '../../domain/transaction';
+import { TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi } from '../utils';
 import TxIcon from './txIcon';
 import moment from 'moment';
@@ -10,7 +11,7 @@ interface Props {
   assetPrecision: number;
   disabled?: boolean;
   handleClick: () => void;
-  tx: TxDisplayInterface;
+  tx?: TxDisplayInterface;
 }
 
 const ButtonTransaction: React.FC<Props> = ({
@@ -21,7 +22,14 @@ const ButtonTransaction: React.FC<Props> = ({
   handleClick,
   assetHash,
 }: Props) => {
-  const transfer = tx.transfers.find((t) => t.asset === assetHash);
+  const [transfer, setTransfer] = useState(
+    tx ? tx.transfers.find((t) => t.asset === assetHash) : undefined
+  );
+
+  useEffect(() => {
+    setTransfer(tx ? tx.transfers.find((t) => t.asset === assetHash) : undefined);
+  }, [tx]);
+
   return (
     <button
       disabled={disabled}
@@ -30,9 +38,9 @@ const ButtonTransaction: React.FC<Props> = ({
       type="button"
     >
       <div className="flex items-center">
-        <TxIcon txType={tx.type} />
+        <TxIcon txType={tx?.type ?? TxType.Unknow} />
         <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
-          {moment(tx.blockTimeMs).format('DD MMM YYYY')}
+          {tx && moment(tx.blockTimeMs).format('DD MMM YYYY')}
         </span>
       </div>
       <div className="flex">

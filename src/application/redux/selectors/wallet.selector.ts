@@ -6,9 +6,9 @@ import type {
 } from '../../../domain/account';
 import { AccountType, accountFromMnemonicAndData, MainAccountID } from '../../../domain/account';
 import { decodePset } from 'ldk';
-import type { NetworkString, Outpoint, UnblindedOutput, StateRestorerOpts } from 'ldk';
+import type { NetworkString, Outpoint, UnblindedOutput, StateRestorerOpts, TxInterface } from 'ldk';
 import type { RootReducerState } from '../../../domain/common';
-import type { TxDisplayInterface, UtxosMap } from '../../../domain/transaction';
+import type { UtxosMap } from '../../../domain/transaction';
 import { toStringOutpoint } from '../../utils/utxos';
 import { selectNetwork } from './app.selector';
 
@@ -41,17 +41,17 @@ export const selectTransactions =
 
 const selectTransactionsForAccount =
   (accountID: AccountID, net?: NetworkString) =>
-  (state: RootReducerState): TxDisplayInterface[] => {
+  (state: RootReducerState): TxInterface[] => {
     const txs = selectTransactionState(accountID, net ?? state.app.network)(state);
     if (txs) return Object.values(txs);
     return [];
   };
 
-const selectTransactionByID =
+export const selectTransactionByID =
   (txID: string) =>
-  (state: RootReducerState): TxDisplayInterface | undefined => {
+  (state: RootReducerState): TxInterface | undefined => {
     const txs = selectTransactions(...selectAllAccountsIDs(state))(state);
-    return txs.find((tx) => tx.txId === txID);
+    return txs.find((tx) => tx.txid === txID);
   };
 
 export function hasMnemonicSelector(state: RootReducerState): boolean {
@@ -218,7 +218,7 @@ export function selectHistoryDiff(history: History) {
     for (const { tx_hash, height } of history) {
       const txInState = selectTransactionByID(tx_hash)(state);
       // if the tx is in the state, add it in the confirmedTxs array if it's confirmed according to the history
-      if (txInState && !txInState.blockTimeMs && height > 0) {
+      if (txInState && !txInState.status.confirmed && height > 0) {
         confirmedTxs.push({ txID: tx_hash, height });
       }
 

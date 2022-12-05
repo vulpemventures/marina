@@ -1,8 +1,7 @@
-import type { NetworkString, UnblindedOutput } from 'ldk';
+import type { NetworkString, TxInterface, UnblindedOutput } from 'ldk';
 import { crypto } from 'ldk';
 import type { AccountID } from 'marina-provider';
 import { MainAccountID } from '../../../domain/account';
-import type { TxDisplayInterface } from '../../../domain/transaction';
 import { TxStatusEnum } from '../../../domain/transaction';
 import type { UtxosTransactionsState } from '../../../domain/wallet';
 import { toStringOutpoint } from '../../utils/utxos';
@@ -203,7 +202,7 @@ function addUnspent(state: UtxosTransactionsState) {
 function addTx(state: UtxosTransactionsState) {
   return (
     accountID: AccountID,
-    tx: TxDisplayInterface,
+    tx: TxInterface,
     network: NetworkString
   ): UtxosTransactionsState => {
     return {
@@ -214,7 +213,7 @@ function addTx(state: UtxosTransactionsState) {
           ...state.transactions[network],
           [accountID]: {
             ...state.transactions[network][accountID],
-            [tx.txId]: tx,
+            [tx.txid]: tx,
           },
         },
       },
