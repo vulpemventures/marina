@@ -16,7 +16,7 @@ import type {
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
 
-export default class Marina extends WindowProxy<keyof MarinaProvider> implements MarinaProvider {
+export default class Marina extends WindowProxy<keyof MarinaProvider> {
   static PROVIDER_NAME = 'marina';
 
   private eventHandler: MarinaEventHandler;
@@ -108,11 +108,11 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('signTransaction', [psetBase64]);
   }
 
-  signMessage(message: string): Promise<SignedMessage> {
+  signMessage(message: string, index: number): Promise<SignedMessage> {
     if (!message || message.length === 0) {
       throw new Error('message cannot be empty');
     }
-    return this.proxy('signMessage', [message]);
+    return this.proxy('signMessage', [message, index]);
   }
 
   getCoins(ids?: AccountID[]): Promise<Utxo[]> {

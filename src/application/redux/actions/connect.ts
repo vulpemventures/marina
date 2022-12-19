@@ -6,10 +6,12 @@ import {
   DISABLE_WEBSITE,
   ENABLE_WEBSITE,
   FLUSH_MSG,
+  FLUSH_INDEX,
   FLUSH_SELECTED_HOSTNAME,
   FLUSH_TX,
   SELECT_HOSTNAME,
   SET_CREATE_ACCOUNT_DATA,
+  SET_INDEX,
   SET_MSG,
   SET_TX_DATA,
 } from './action-types';
@@ -38,6 +40,19 @@ export function setMsg(hostname: string, message: string): AnyAction {
 export function flushMsg(): AnyAction {
   return {
     type: FLUSH_MSG,
+  };
+}
+
+export function setIndex(hostname: string, index: number): AnyAction {
+  return {
+    type: SET_INDEX,
+    payload: { hostname, index},
+  };
+}
+
+export function flushIndex(): AnyAction {
+  return {
+    type: FLUSH_INDEX,
   };
 }
 

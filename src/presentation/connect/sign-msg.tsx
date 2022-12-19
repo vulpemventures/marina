@@ -22,11 +22,12 @@ function signMsgWithPassword(
   message: string,
   encryptedMnemonic: string,
   password: string,
-  network: NetworkString
+  network: NetworkString,
+  index: number,
 ): Promise<SignedMessage> {
   try {
     const mnemonic = decrypt(encryptedMnemonic, password);
-    return signMessageWithMnemonic(message, mnemonic, networks[network]);
+    return signMessageWithMnemonic(message, mnemonic, networks[network], index);
   } catch (e: any) {
     throw new Error(INVALID_PASSWORD_ERROR);
   }
@@ -74,7 +75,8 @@ const ConnectSignMsg: React.FC<WithConnectDataProps> = ({ connectData }) => {
         connectData.msg.message,
         encryptedMnemonic,
         password,
-        network
+        network,
+        connectData.msg.index || 0
       );
       await sendResponseMessage(true, signedMsg);
       window.close();

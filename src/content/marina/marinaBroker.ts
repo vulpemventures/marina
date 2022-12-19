@@ -13,6 +13,7 @@ import {
   flushTx,
   selectHostname,
   setCreateAccountData,
+  setIndex,
   setMsg,
   setTx,
   setTxData,
@@ -387,8 +388,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'signMessage': {
           this.checkHostnameAuthorization();
-          const [message] = params as [string];
+          const [message, index] = params as [string, number];
           await this.store.dispatchAsync(setMsg(this.hostname, message));
+          await this.store.dispatchAsync(setIndex(this.hostname, index));
           const { accepted, signedMessage } = await this.openAndWaitPopup<SignMessagePopupResponse>(
             'sign-msg'
           );

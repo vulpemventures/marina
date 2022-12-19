@@ -19,6 +19,7 @@ export type ConnectData = {
   msg?: {
     hostname?: string;
     message?: string;
+    index?: number;
   };
   createAccount?: {
     namespace?: string;
