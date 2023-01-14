@@ -2,7 +2,7 @@ import ShellPopUp from '../components/shell-popup';
 import ButtonList from '../components/button-list';
 import InputIcon from '../components/input-icon';
 import { useEffect, useState } from 'react';
-import { AccountDetails } from '../../domain/account-type';
+import type { AccountDetails } from '../../domain/account-type';
 import { walletRepository } from '../../infrastructure/storage/common';
 
 // TODO account icons ??
@@ -27,7 +27,7 @@ const SettingsAccounts: React.FC = () => {
   useEffect(() => {
     (async () => {
       setAccounts(await walletRepository.getAccountDetails());
-    })();
+    })().catch(console.error);
   }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,10 +58,7 @@ const SettingsAccounts: React.FC = () => {
           {Object.entries(accounts)
             .filter(([name, details]) => filterAccountsBySearchTerm(searchTerm)(name))
             .map(([name, details], index) => (
-              <div
-                key={index}
-                className='p-3 rounded-md shadow-md'
-              >
+              <div key={index} className="p-3 rounded-md shadow-md">
                 <div className="flex-center flex align-middle">
                   <AccountIcon name={name} />
                   <span className="text-grayDark mt-1 align-text-bottom">

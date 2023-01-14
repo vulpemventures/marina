@@ -2,13 +2,13 @@ import browser from 'webextension-polyfill';
 import MarinaBroker from './marina/marinaBroker';
 
 // start the broker + inject the inject-script.js script
-startContentScript().catch(console.error);
+startContentScript();
 
 // look at https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
-async function startContentScript() {
+function startContentScript() {
   if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
     const currentHostname = window.location.hostname;
-    await MarinaBroker.Start(currentHostname);
+    MarinaBroker.Start(currentHostname);
 
     injectScript(browser.runtime.getURL('inject-script.js'));
   }

@@ -14,9 +14,15 @@ import ButtonTransaction from '../../components/button-transaction';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshiStr } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import { Asset } from '../../../domain/asset';
+import type { Asset } from '../../../domain/asset';
 import { computeBalances } from '../../../utils';
-import { appRepository, assetRepository, sendFlowRepository, useSelectNetwork, useSelectTransactions, useSelectUtxos } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  assetRepository,
+  sendFlowRepository,
+  useSelectTransactions,
+  useSelectUtxos,
+} from '../../../infrastructure/storage/common';
 import { MainAccountName } from '../../../domain/account-type';
 
 interface LocationState {
@@ -24,10 +30,10 @@ interface LocationState {
 }
 
 const Transactions: React.FC = () => {
-  const { state: { assetHash } } = useLocation<LocationState>();
+  const {
+    state: { assetHash },
+  } = useLocation<LocationState>();
   const history = useHistory();
-  
-  const network = useSelectNetwork();
   const transactions = useSelectTransactions();
   const utxos = useSelectUtxos(MainAccountName)();
 
@@ -80,10 +86,7 @@ const Transactions: React.FC = () => {
         <>
           <Balance
             assetHash={assetHash}
-            assetBalance={fromSatoshiStr(
-              balances[assetHash] ?? 0,
-              asset?.precision 
-            )}
+            assetBalance={fromSatoshiStr(balances[assetHash] ?? 0, asset?.precision)}
             assetTicker={asset?.ticker ?? assetHash.slice(0, 4)}
             bigBalanceText={true}
           />
@@ -93,17 +96,13 @@ const Transactions: React.FC = () => {
           <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
           <div className="h-60 rounded-xl mb-1">
-            {asset && <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-              {transactions.map((tx, index) => {
-                return (
-                  <ButtonTransaction
-                    txDetails={tx}
-                    assetSelected={asset}
-                    key={index}
-                  />
-                );
-              })}
-            </ButtonList>}
+            {asset && (
+              <ButtonList title="Transactions" emptyText="Your transactions will appear here">
+                {transactions.map((tx, index) => {
+                  return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
+                })}
+              </ButtonList>
+            )}
           </div>
         </>
       )}

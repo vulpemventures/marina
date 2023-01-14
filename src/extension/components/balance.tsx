@@ -22,11 +22,11 @@ const Balance: React.FC<Props> = ({
   const handleOpenExplorer = async () => {
     const network = await appRepository.getNetwork();
     const webExplorerURL = await appRepository.getWebExplorerURL(network ?? 'liquid');
-    browser.tabs.create({
+    await browser.tabs.create({
       url: `${webExplorerURL}/asset/${assetHash}`,
       active: false,
     });
-  }
+  };
 
   return (
     <div className={className}>

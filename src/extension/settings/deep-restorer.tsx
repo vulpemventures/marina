@@ -3,7 +3,11 @@ import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
-import { appRepository, useSelectNetwork, walletRepository } from '../../infrastructure/storage/common';
+import {
+  appRepository,
+  useSelectNetwork,
+  walletRepository,
+} from '../../infrastructure/storage/common';
 import { AccountFactory } from '../../domain/account';
 import Browser from 'webextension-polyfill';
 import { subscribeMessage } from '../../domain/message';
@@ -27,10 +31,10 @@ const SettingsDeepRestorer: React.FC = () => {
       for (const accountName of Object.keys(accountsDetails)) {
         const account = await factory.make(network, accountName);
         await account.sync(gapLimit);
-        port.postMessage(subscribeMessage(accountName))
+        port.postMessage(subscribeMessage(accountName));
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
       if (e instanceof Error) setError(e.message);
     } finally {
       setIsLoading(false);

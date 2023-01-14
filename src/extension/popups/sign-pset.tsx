@@ -5,7 +5,11 @@ import ModalUnlock from '../components/modal-unlock';
 import PopupWindowProxy from './popupWindowProxy';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
-import { useSelectPopupHostname, useSelectPopupPsetToSign, walletRepository } from '../../infrastructure/storage/common';
+import {
+  useSelectPopupHostname,
+  useSelectPopupPsetToSign,
+  walletRepository,
+} from '../../infrastructure/storage/common';
 import { SignerService } from '../../domain/signer';
 import { popupResponseMessage } from '../../domain/message';
 

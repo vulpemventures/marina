@@ -1,22 +1,41 @@
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import { MessageHandler, newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
+import type {
+  MessageHandler} from '../../domain/message';
+import {
+  newErrorResponseMessage,
+  newSuccessResponseMessage,
+} from '../../domain/message';
 import Marina from '../../inject/marina/provider';
 import { MainAccountName } from '../../domain/account-type';
-import { AppRepository, AssetRepository, PopupsRepository, TaxiRepository, WalletRepository } from '../../infrastructure/repository';
+import type {
+  AppRepository,
+  AssetRepository,
+  PopupsRepository,
+  TaxiRepository,
+  WalletRepository,
+} from '../../infrastructure/repository';
 import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository';
 import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
-import { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
-import { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
+import type { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
+import type { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
 import { computeBalances } from '../../utils';
-import { TxDetails, UnblindedOutput } from '../../domain/transaction';
+import type { TxDetails, UnblindedOutput } from '../../domain/transaction';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { networks } from 'liquidjs-lib';
 import { PopupsStorageAPI } from '../../infrastructure/storage/popups-repository';
-import { EnabledMarinaEvent, MarinaEvent, NetworkMarinaEvent, NewTxMarinaEvent, NewUtxoMarinaEvent, SpentUtxoMarinaEvent } from '../marina-event';
+import type {
+  EnabledMarinaEvent,
+  MarinaEvent,
+  NetworkMarinaEvent,
+  NewTxMarinaEvent,
+  NewUtxoMarinaEvent,
+  SpentUtxoMarinaEvent,
+} from '../marina-event';
 import { stringify } from '../../browser-storage-converters';
-import { Account, AccountFactory } from '../../domain/account';
+import type { Account} from '../../domain/account';
+import { AccountFactory } from '../../domain/account';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -28,7 +47,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   private taxiRepository: TaxiRepository;
   private popupsRepository: PopupsRepository;
 
-  static async Start(hostname?: string) {
+  static Start(hostname?: string) {
     const broker = new MarinaBroker(hostname);
     broker.start();
   }
@@ -44,7 +63,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   }
 
   private dispatchEventToProvider<T extends MarinaEvent<any>>(event: T) {
-    window.dispatchEvent(new CustomEvent(`marina_event_${event.type.toLowerCase()}`, { detail: stringify(event.payload) }));
+    window.dispatchEvent(
+      new CustomEvent(`marina_event_${event.type.toLowerCase()}`, {
+        detail: stringify(event.payload),
+      })
+    );
   }
 
   protected start() {
@@ -52,30 +75,46 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     // subscribe to repository events and map them to MarinaEvents
     // providers will catch these events when on/off are called
     this.appRepository.onHostnameEnabled((hostname) => {
-      this.dispatchEventToProvider<EnabledMarinaEvent>({ type: "ENABLED", payload: { data: { hostname: hostname, network: 'liquid' } } });
+      this.dispatchEventToProvider<EnabledMarinaEvent>({
+        type: 'ENABLED',
+        payload: { data: { hostname: hostname, network: 'liquid' } },
+      });
       return Promise.resolve();
-    })
+    });
     this.appRepository.onNetworkChanged((network) => {
-      this.dispatchEventToProvider<NetworkMarinaEvent>({ type: "NETWORK", payload: { data: network } });
+      this.dispatchEventToProvider<NetworkMarinaEvent>({
+        type: 'NETWORK',
+        payload: { data: network },
+      });
       return Promise.resolve();
-    })
+    });
     this.walletRepository.onDeleteUtxo((utxo) => {
-      this.dispatchEventToProvider<SpentUtxoMarinaEvent>({ type: "SPENT_UTXO", payload: { data: utxo } });
+      this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
+        type: 'SPENT_UTXO',
+        payload: { data: utxo },
+      });
       return Promise.resolve();
     });
     this.walletRepository.onNewUtxo((utxo) => {
-      this.dispatchEventToProvider<NewUtxoMarinaEvent>({ type: "NEW_UTXO", payload: { data: utxo } });
+      this.dispatchEventToProvider<NewUtxoMarinaEvent>({
+        type: 'NEW_UTXO',
+        payload: { data: utxo },
+      });
       return Promise.resolve();
     });
     this.walletRepository.onNewTransaction((ID: string, details: TxDetails) => {
-      this.dispatchEventToProvider<NewTxMarinaEvent>({ type: "NEW_TX", payload: { data: { txID: ID, details } } });
+      this.dispatchEventToProvider<NewTxMarinaEvent>({
+        type: 'NEW_TX',
+        payload: { data: { txID: ID, details } },
+      });
       return Promise.resolve();
     });
   }
   // check if the current broker hostname is authorized
   private async checkHostnameAuthorization() {
     const enabledHostnames = await this.appRepository.getEnabledSites();
-    if (enabledHostnames.includes(this.hostname)) throw new Error('User must authorize the current website');
+    if (enabledHostnames.includes(this.hostname))
+      throw new Error('User must authorize the current website');
   }
 
   // check if the account is already in the wallet
@@ -95,7 +134,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   private async getSelectedAccount(): Promise<Account> {
     const network = await this.appRepository.getNetwork();
     if (network === null) throw new Error('network is not set up');
-    const factory = await AccountFactory.create(this.walletRepository, this.appRepository)
+    const factory = await AccountFactory.create(this.walletRepository, this.appRepository);
     return factory.make(network, this.selectedAccount);
   }
 
@@ -136,11 +175,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const accountNames = this.handleIdsParam(params ? params[0] : undefined);
           const network = await this.appRepository.getNetwork();
           if (network === null) throw new Error('network is not set up');
-          const factory = await AccountFactory.create(this.walletRepository, this.appRepository)
-          const accounts = await Promise.all(accountNames.map((name) => factory.make(network, name)));
-          const addresses = await Promise.all(
-            accounts.map((account) => account.getAllAddresses())
+          const factory = await AccountFactory.create(this.walletRepository, this.appRepository);
+          const accounts = await Promise.all(
+            accountNames.map((name) => factory.make(network, name))
           );
+          const addresses = await Promise.all(accounts.map((account) => account.getAllAddresses()));
           return successMsg(addresses.flat());
         }
 
@@ -244,7 +283,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getTransactions': {
           await this.checkHostnameAuthorization();
-          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
           const network = await this.appRepository.getNetwork();
           if (!network) throw new Error('Network not set up');
           const transactions = await this.walletRepository.getTransactions(network);

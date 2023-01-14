@@ -1,5 +1,5 @@
 import React from 'react';
-import { Asset } from '../../domain/asset';
+import type { Asset } from '../../domain/asset';
 import { formatAssetName, formatDecimalAmount, fromSatoshi } from '../utility';
 import AssetIcon from './assetIcon';
 

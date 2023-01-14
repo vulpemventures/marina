@@ -4,10 +4,15 @@ import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshi } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { Asset } from '../../../domain/asset';
+import type { Asset } from '../../../domain/asset';
 import AddressAmountForm from '../../components/address-amount-form';
 import { MainAccountName } from '../../../domain/account-type';
-import { assetRepository, sendFlowRepository, useSelectNetwork, useSelectUtxos } from '../../../infrastructure/storage/common';
+import {
+  assetRepository,
+  sendFlowRepository,
+  useSelectNetwork,
+  useSelectUtxos,
+} from '../../../infrastructure/storage/common';
 import { computeBalances } from '../../../utils';
 
 const AddressAmountView: React.FC = () => {
@@ -35,8 +40,6 @@ const AddressAmountView: React.FC = () => {
     })().catch(console.error);
   }, []);
 
-
-
   const handleBackBtn = async () => {
     await sendFlowRepository.reset();
     history.replace(DEFAULT_ROUTE);
@@ -49,26 +52,31 @@ const AddressAmountView: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      {(sendAsset && balances[sendAsset.assetHash]) && <><Balance
-        assetHash={sendAsset.assetHash}
-        assetBalance={fromSatoshi(balances[sendAsset.assetHash] ?? 0, sendAsset.precision)}
-        assetTicker={sendAsset.ticker}
-        className="mt-4"
-      />
+      {sendAsset && balances[sendAsset.assetHash] && (
+        <>
+          <Balance
+            assetHash={sendAsset.assetHash}
+            assetBalance={fromSatoshi(balances[sendAsset.assetHash] ?? 0, sendAsset.precision)}
+            assetTicker={sendAsset.ticker}
+            className="mt-4"
+          />
 
-        {network && <AddressAmountForm
-          history={history}
-          maxPossibleAmount={balances[sendAsset.assetHash] ?? 0}
-          network={network}
-          dataInCache={{
-            amount: 0,
-            address: '',
-            ...dataInCache,
-          }}
-          asset={sendAsset}
-          sendFlowRepository={sendFlowRepository}
-        />}
-      </>}
+          {network && (
+            <AddressAmountForm
+              history={history}
+              maxPossibleAmount={balances[sendAsset.assetHash] ?? 0}
+              network={network}
+              dataInCache={{
+                amount: 0,
+                address: '',
+                ...dataInCache,
+              }}
+              asset={sendAsset}
+              sendFlowRepository={sendFlowRepository}
+            />
+          )}
+        </>
+      )}
     </ShellPopUp>
   );
 };

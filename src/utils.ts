@@ -1,12 +1,12 @@
-import { address, networks, payments } from "liquidjs-lib";
-import { NetworkString, SignedMessage } from "marina-provider";
+import { address, networks, payments } from 'liquidjs-lib';
+import type { NetworkString, SignedMessage } from 'marina-provider';
 import * as crypto from 'crypto';
-import { INVALID_PASSWORD_ERROR } from "./constants";
-import { mnemonicToSeed } from "bip39";
-import { BIP32Factory } from "bip32";
-import * as ecc from "tiny-secp256k1";
+import { INVALID_PASSWORD_ERROR } from './constants';
+import { mnemonicToSeed } from 'bip39';
+import { BIP32Factory } from 'bip32';
+import * as ecc from 'tiny-secp256k1';
 import { signAsync } from 'bitcoinjs-message';
-import { UnblindedOutput } from "./domain/transaction";
+import type { UnblindedOutput } from './domain/transaction';
 
 const bip32 = BIP32Factory(ecc);
 

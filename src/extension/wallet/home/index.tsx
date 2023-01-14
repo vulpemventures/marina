@@ -15,10 +15,16 @@ import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utility';
-import { Asset } from '../../../domain/asset';
+import type { Asset } from '../../../domain/asset';
 import { SendFlowStep } from '../../../infrastructure/repository';
 import { computeBalances, getNetwork } from '../../../utils';
-import { appRepository, sendFlowRepository, useSelectAllAssets, useSelectNetwork, useSelectUtxos } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  sendFlowRepository,
+  useSelectAllAssets,
+  useSelectNetwork,
+  useSelectUtxos,
+} from '../../../infrastructure/storage/common';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -26,9 +32,9 @@ const Home: React.FC = () => {
   const utxos = useSelectUtxos()();
   const allWalletAssets = useSelectAllAssets();
   const [balances, setBalances] = useState<Record<string, number>>({});
-  
+
   useEffect(() => {
-    setBalances(computeBalances(utxos))
+    setBalances(computeBalances(utxos));
   }, [utxos]);
 
   const handleAssetBalanceButtonClick = (asset: Asset) => {
@@ -64,8 +70,7 @@ const Home: React.FC = () => {
           history.push(SEND_CONFIRMATION_ROUTE);
           break;
       }
-
-    })();
+    })().catch(console.error);
   }, []);
 
   return (
@@ -76,12 +81,14 @@ const Home: React.FC = () => {
     >
       <div className="h-popupContent">
         <div>
-          {network && <Balance
-            assetHash={getNetwork(network).assetHash}
-            assetBalance={fromSatoshiStr(balances[getNetwork(network).assetHash] ?? 0)}
-            assetTicker="L-BTC"
-            bigBalanceText={true}
-          />}
+          {network && (
+            <Balance
+              assetHash={getNetwork(network).assetHash}
+              assetBalance={fromSatoshiStr(balances[getNetwork(network).assetHash] ?? 0)}
+              assetTicker="L-BTC"
+              bigBalanceText={true}
+            />
+          )}
 
           <ButtonsSendReceive onReceive={handleReceive} onSend={handleSend} />
         </div>
@@ -91,21 +98,16 @@ const Home: React.FC = () => {
 
         <div className="h-60">
           <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {allWalletAssets.map(
-              (
-                asset: Asset,
-                index: React.Key
-              ) => {
-                return (
-                  <ButtonAsset
-                    asset={asset}
-                    quantity={balances[asset.assetHash]}
-                    key={index}
-                    handleClick={handleAssetBalanceButtonClick}
-                  />
-                );
-              }
-            )}
+            {allWalletAssets.map((asset: Asset, index: React.Key) => {
+              return (
+                <ButtonAsset
+                  asset={asset}
+                  quantity={balances[asset.assetHash]}
+                  key={index}
+                  handleClick={handleAssetBalanceButtonClick}
+                />
+              );
+            })}
           </ButtonList>
         </div>
       </div>

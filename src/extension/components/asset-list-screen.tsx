@@ -5,8 +5,7 @@ import ButtonAsset from './button-asset';
 import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
 import ButtonList from './button-list';
-import { sortAssets } from '../utility/sort';
-import { Asset } from '../../domain/asset';
+import type { Asset } from '../../domain/asset';
 
 export interface AssetListProps {
   assets: Array<Asset>; // the assets to display
@@ -16,7 +15,13 @@ export interface AssetListProps {
   emptyText?: string;
 }
 
-const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, balances, emptyText }) => {
+const AssetListScreen: React.FC<AssetListProps> = ({
+  title,
+  onClick,
+  assets,
+  balances,
+  emptyText,
+}) => {
   const history = useHistory();
 
   useEffect(() => {
@@ -69,13 +74,13 @@ const AssetListScreen: React.FC<AssetListProps> = ({ title, onClick, assets, bal
       />
 
       <div className="h-96 pb-1">
-        <ButtonList title={title} emptyText={emptyText ?? "no assets to display..."}>
+        <ButtonList title={title} emptyText={emptyText ?? 'no assets to display...'}>
           {searchResults.map((asset, index) => (
             <ButtonAsset
               asset={asset}
               quantity={balances ? balances[asset.assetHash] : undefined}
               key={index}
-              handleClick={({ assetHash }) => onClick(assetHash as string)}
+              handleClick={({ assetHash }) => onClick(assetHash )}
             />
           ))}
         </ButtonList>

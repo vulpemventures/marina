@@ -8,8 +8,8 @@ import type { NetworkString } from 'ldk';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utility';
 import Input from './input';
 import React from 'react';
-import { Asset } from '../../domain/asset';
-import { SendFlowRepository } from '../../infrastructure/repository';
+import type { Asset } from '../../domain/asset';
+import type { SendFlowRepository } from '../../infrastructure/repository';
 import { isValidAddressForNetwork } from '../../utils';
 
 interface FormValues {
@@ -21,7 +21,7 @@ interface FormProps {
   dataInCache: {
     address: string;
     amount: number;
-  },
+  };
   asset: Asset;
   maxPossibleAmount: number;
   sendFlowRepository: SendFlowRepository;
@@ -62,7 +62,17 @@ function isValidAmountString(precision: number, amount?: string) {
 }
 
 const BaseForm = (props: FormProps & FormikProps<FormValues>) => {
-  const { maxPossibleAmount, asset, errors, handleSubmit, isSubmitting, touched, values, setFieldValue, setFieldTouched } = props;
+  const {
+    maxPossibleAmount,
+    asset,
+    errors,
+    handleSubmit,
+    isSubmitting,
+    touched,
+    values,
+    setFieldValue,
+    setFieldTouched,
+  } = props;
   const setMaxAmount = () => {
     const max = fromSatoshi(maxPossibleAmount, asset.precision);
     setFieldValue('amount', max, true);
@@ -150,13 +160,16 @@ const AddressAmountForm = withFormik<FormProps, FormValues>({
           isValidAmountString(props.asset.precision, value?.toString())
         )
         .test('insufficient-funds', 'Insufficient funds', (value) => {
-          return value !== undefined && value <= fromSatoshi(props.maxPossibleAmount, props.asset.precision);
+          return (
+            value !== undefined &&
+            value <= fromSatoshi(props.maxPossibleAmount, props.asset.precision)
+          );
         }),
     }),
 
   handleSubmit: async (values, { props }) => {
     await props.sendFlowRepository.setReceiverAddressAmount(
-      values.address, 
+      values.address,
       toSatoshi(Number(values.amount), props.asset.precision)
     );
 

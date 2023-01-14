@@ -22,7 +22,6 @@ export type MessageHandler<T extends string> = (
   request: RequestMessage<T>
 ) => Promise<ResponseMessage>;
 
-
 export function isResponseMessage(message: unknown): message is ResponseMessage {
   const msg = message as ResponseMessage;
   return (
@@ -37,7 +36,6 @@ export function newSuccessResponseMessage(id: string, data?: any): ResponseMessa
 export function newErrorResponseMessage(id: string, error: Error): ResponseMessage {
   return { id, payload: { success: false, error: error.message } };
 }
-
 
 /// ** Background script messages ** /////
 
@@ -54,9 +52,9 @@ export interface Message<T> {
   data: T;
 }
 
-export type SubscribeMessage = Message<{ account: string; }>;
-export type PopupResponseMessage<ResponseT> = Message<{ response?: ResponseT; error?: string; }>;
-export type OpenPopupMessage = Message<{ name: PopupName; }>;
+export type SubscribeMessage = Message<{ account: string }>;
+export type PopupResponseMessage<ResponseT> = Message<{ response?: ResponseT; error?: string }>;
+export type OpenPopupMessage = Message<{ name: PopupName }>;
 export type LogInMessage = Message<undefined>;
 export type LogOutMessage = Message<undefined>;
 
@@ -86,7 +84,11 @@ export function popupResponseMessage<T>(response?: T, error?: string): PopupResp
 }
 
 export function isPopupResponseMessage(message: unknown): message is PopupResponseMessage<any> {
-  return message && (message as any).type === MessageType.PopupResponse && ((message as any).data || (message as any).error);
+  return (
+    message &&
+    (message as any).type === MessageType.PopupResponse &&
+    ((message as any).data || (message as any).error)
+  );
 }
 
 export function subscribeMessage(account: string): SubscribeMessage {

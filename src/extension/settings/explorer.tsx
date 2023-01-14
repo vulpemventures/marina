@@ -53,7 +53,7 @@ const SettingsExplorer: React.FC = () => {
       }
       if (urls) {
         await appRepository.setWebExplorerURL(network, urls.webExplorerURL);
-        await appRepository.setWebsocketExplorerURLs({ [network]: urls.websocketExplorerURL })
+        await appRepository.setWebsocketExplorerURLs({ [network]: urls.websocketExplorerURL });
       }
     }
   };
@@ -81,12 +81,14 @@ const SettingsExplorer: React.FC = () => {
       currentPage="Explorer"
     >
       <p className="font-regular my-8 text-base text-left">Select the explorer</p>
-      {network && <Select
-        list={explorerTypesForNetwork(network)}
-        selected={selected || 'Custom'}
-        onSelect={onSelect}
-        disabled={false}
-      />}
+      {network && (
+        <Select
+          list={explorerTypesForNetwork(network)}
+          selected={selected || 'Custom'}
+          onSelect={onSelect}
+          disabled={false}
+        />
+      )}
     </ShellPopUp>
   );
 };

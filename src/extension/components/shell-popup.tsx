@@ -121,7 +121,6 @@ const ShellPopUp: React.FC<Props> = ({
       <ModalMenu isOpen={isMenuModalOpen} handleClose={closeMenuModal} />
     </div>
   );
-
 };
 
 export default ShellPopUp;

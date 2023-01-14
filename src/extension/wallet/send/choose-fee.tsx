@@ -9,16 +9,24 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility'
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { Creator, networks, Transaction, Updater } from 'liquidjs-lib';
-import { Asset } from '../../../domain/asset';
+import type { Asset } from '../../../domain/asset';
 import { MainAccountName } from '../../../domain/account-type';
 import { computeBalances } from '../../../utils';
-import { useSelectNetwork, useSelectTaxiAssets, useSelectUtxos, useSelectAccount, sendFlowRepository, walletRepository, appRepository, assetRepository } from '../../../infrastructure/storage/common';
+import {
+  useSelectNetwork,
+  useSelectTaxiAssets,
+  useSelectUtxos,
+  useSelectAccount,
+  sendFlowRepository,
+  walletRepository,
+  assetRepository,
+} from '../../../infrastructure/storage/common';
 
 type Recipient = {
   address: string;
   asset: string;
   amount: number;
-}
+};
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -34,14 +42,14 @@ const ChooseFee: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [recipient, setRecipient] = useState<Recipient>();
-  const mainAccount = useSelectAccount(MainAccountName)()
+  const mainAccount = useSelectAccount(MainAccountName)();
 
   useEffect(() => {
     (async () => {
       if (!selectedFeeAsset) return;
       const asset = await assetRepository.getAsset(selectedFeeAsset);
       setAssetDetails(asset);
-    })();
+    })().catch(console.error);
   }, [selectedFeeAsset]);
 
   useEffect(() => {
@@ -54,14 +62,17 @@ const ChooseFee: React.FC = () => {
         return;
       }
       setRecipient({ address, asset, amount });
-    })();
+    })().catch(console.error);
   }, []);
 
   useEffect(() => {
     setBalances(computeBalances(utxos));
   }, [utxos]);
 
-  const isTaxi = () => taxiAssets.findIndex((asset) => typeof asset === 'string' ? asset === selectedFeeAsset : asset.assetHash === selectedFeeAsset) !== -1;
+  const isTaxi = () =>
+    taxiAssets.findIndex((asset) =>
+      typeof asset === 'string' ? asset === selectedFeeAsset : asset.assetHash === selectedFeeAsset
+    ) !== -1;
 
   // dispatch a set of actions in order to save the pset in redux state
   const handleConfirm = async () => {
@@ -94,7 +105,7 @@ const ChooseFee: React.FC = () => {
 
   const chooseFeeAndCreatePset = async (assetHash: string) => {
     if (selectedFeeAsset === assetHash || !network) {
-      return // skip if the same asset is selected
+      return; // skip if the same asset is selected
     }
 
     if (!recipient) {
@@ -110,50 +121,57 @@ const ChooseFee: React.FC = () => {
         network,
         [{ asset: recipient.asset, amount: recipient.amount }],
         true,
-        MainAccountName,
-      )
+        MainAccountName
+      );
 
       const updater = new Updater(pset);
 
       // get the witness utxos from repository
-      const witnessUtxos = await Promise.all(coinSelection.utxos.map((utxo) => {
-        return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
-      }));
+      const witnessUtxos = await Promise.all(
+        coinSelection.utxos.map((utxo) => {
+          return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+        })
+      );
 
-      updater.addInputs(coinSelection.utxos.map((utxo, i) => ({
-        txid: utxo.txID,
-        txIndex: utxo.vout,
-        sighashType: Transaction.SIGHASH_ALL,
-        witnessUtxo: witnessUtxos[i],
-      })));
-      
-      updater.addOutputs([{
-        asset: recipient.asset,
-        amount: recipient.amount,
-        script: address.toOutputScript(recipient.address, networks[network]),
-        blinderIndex: 0,
-        blindingPublicKey: address.fromConfidential(recipient.address).blindingKey,
-      }])
+      updater.addInputs(
+        coinSelection.utxos.map((utxo, i) => ({
+          txid: utxo.txID,
+          txIndex: utxo.vout,
+          sighashType: Transaction.SIGHASH_ALL,
+          witnessUtxo: witnessUtxos[i],
+        }))
+      );
+
+      updater.addOutputs([
+        {
+          asset: recipient.asset,
+          amount: recipient.amount,
+          script: address.toOutputScript(recipient.address, networks[network]),
+          blinderIndex: 0,
+          blindingPublicKey: address.fromConfidential(recipient.address).blindingKey,
+        },
+      ]);
 
       if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
-        const changeAddress = await mainAccount?.getNextAddress(true)
+        const changeAddress = await mainAccount?.getNextAddress(true);
         if (!changeAddress) {
           throw new Error('change address not found');
         }
 
-        updater.addOutputs([{
-          asset: coinSelection.changeOutputs[0].asset,
-          amount: coinSelection.changeOutputs[0].amount,
-          script: address.toOutputScript(changeAddress, networks[network]),
-          blinderIndex: 0,
-          blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
-        }]);
+        updater.addOutputs([
+          {
+            asset: coinSelection.changeOutputs[0].asset,
+            amount: coinSelection.changeOutputs[0].amount,
+            script: address.toOutputScript(changeAddress, networks[network]),
+            blinderIndex: 0,
+            blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
+          },
+        ]);
       }
 
-      const feeRate = 0.001
+      const feeRate = 0.001;
 
       const feeAmount = Math.floor(updater.pset.unsignedTx().virtualSize() * feeRate);
-
 
       if (recipient.asset === networks[network].assetHash && updater.pset.outputs.length > 1) {
         // subtract fee from change output
@@ -164,52 +182,57 @@ const ChooseFee: React.FC = () => {
           network,
           [{ asset: networks[network].assetHash, amount: feeAmount }],
           true,
-          MainAccountName,
-        )
+          MainAccountName
+        );
 
-        const newWitnessUtxos = await Promise.all(newCoinSelection.utxos.map((utxo) => {
-          return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
-        }));
+        const newWitnessUtxos = await Promise.all(
+          newCoinSelection.utxos.map((utxo) => {
+            return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+          })
+        );
 
-        updater.addInputs(newCoinSelection.utxos.map((utxo, i) => ({
-          txid: utxo.txID,
-          txIndex: utxo.vout,
-          sighashType: Transaction.SIGHASH_ALL,
-          witnessUtxo: newWitnessUtxos[i],
-        })));
+        updater.addInputs(
+          newCoinSelection.utxos.map((utxo, i) => ({
+            txid: utxo.txID,
+            txIndex: utxo.vout,
+            sighashType: Transaction.SIGHASH_ALL,
+            witnessUtxo: newWitnessUtxos[i],
+          }))
+        );
 
         if (newCoinSelection.changeOutputs && newCoinSelection.changeOutputs.length > 0) {
-          const changeAddress = await mainAccount?.getNextAddress(true)
+          const changeAddress = await mainAccount?.getNextAddress(true);
           if (!changeAddress) {
             throw new Error('change address not found');
           }
-          updater.addOutputs([{
-            asset: newCoinSelection.changeOutputs[0].asset,
-            amount: newCoinSelection.changeOutputs[0].amount,
-            script: address.toOutputScript(changeAddress, networks[network]),
-            blinderIndex: 0,
-            blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
-          }]);
+          updater.addOutputs([
+            {
+              asset: newCoinSelection.changeOutputs[0].asset,
+              amount: newCoinSelection.changeOutputs[0].amount,
+              script: address.toOutputScript(changeAddress, networks[network]),
+              blinderIndex: 0,
+              blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
+            },
+          ]);
         }
 
         // add the fee output
-        updater.addOutputs([{
-          asset: networks[network].assetHash,
-          amount: feeAmount,
-        }]);
+        updater.addOutputs([
+          {
+            asset: networks[network].assetHash,
+            amount: feeAmount,
+          },
+        ]);
 
         setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
 
-
         const psetBase64 = updater.pset.toBase64();
         setUnsignedPset(psetBase64);
-
 
         if (isTaxi()) {
           // make taxi topup tx
         }
       }
-
     } catch (error: any) {
       handleError(error);
     } finally {
@@ -217,7 +240,8 @@ const ChooseFee: React.FC = () => {
     }
   };
 
-  const selectedAssetHashWithLbtcFallback = () => selectedFeeAsset || networks[network ?? 'liquid'].assetHash;
+  const selectedAssetHashWithLbtcFallback = () =>
+    selectedFeeAsset || networks[network ?? 'liquid'].assetHash;
 
   const circleLoaderRef = React.useRef(null);
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
@@ -230,7 +254,9 @@ const ChooseFee: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={formatDecimalAmount(fromSatoshi(balances[selectedAssetHashWithLbtcFallback()] ?? 0))}
+        assetBalance={formatDecimalAmount(
+          fromSatoshi(balances[selectedAssetHashWithLbtcFallback()] ?? 0)
+        )}
         assetHash={selectedAssetHashWithLbtcFallback()}
         assetTicker={assetDetails?.ticker ?? ''}
         className="mt-4"
@@ -242,31 +268,43 @@ const ChooseFee: React.FC = () => {
           I pay fee in:
         </p>
         <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
-          {[{ assetHash: networks[network ?? 'liquid'].assetHash, name: 'Liquid BTC', precision: 8, ticker: 'L-BTC' } as Asset, ...taxiAssets].map((asset, index) => (
-            typeof asset !== 'string' ? <Button
-              className="flex-1"
-              isOutline={selectedFeeAsset !== asset.assetHash}
-              key={index}
-              onClick={() => chooseFeeAndCreatePset(asset.assetHash)}
-              roundedMd={true}
-              textBase={true}
-              extraData={asset}
-              disabled={loading}
-            >
-              {assetDetails?.ticker || asset.assetHash.slice(0, 4).toUpperCase()}
-            </Button> : <Button
-              className="flex-1"
-              isOutline={selectedFeeAsset !== asset}
-              key={index}
-              onClick={() => chooseFeeAndCreatePset(asset)}
-              roundedMd={true}
-              textBase={true}
-              extraData={asset}
-              disabled={loading}
-            >
-              {asset.slice(0, 4).toUpperCase()}
-            </Button>
-          ))}
+          {[
+            {
+              assetHash: networks[network ?? 'liquid'].assetHash,
+              name: 'Liquid BTC',
+              precision: 8,
+              ticker: 'L-BTC',
+            } as Asset,
+            ...taxiAssets,
+          ].map((asset, index) =>
+            typeof asset !== 'string' ? (
+              <Button
+                className="flex-1"
+                isOutline={selectedFeeAsset !== asset.assetHash}
+                key={index}
+                onClick={() => chooseFeeAndCreatePset(asset.assetHash)}
+                roundedMd={true}
+                textBase={true}
+                extraData={asset}
+                disabled={loading}
+              >
+                {assetDetails?.ticker || asset.assetHash.slice(0, 4).toUpperCase()}
+              </Button>
+            ) : (
+              <Button
+                className="flex-1"
+                isOutline={selectedFeeAsset !== asset}
+                key={index}
+                onClick={() => chooseFeeAndCreatePset(asset)}
+                roundedMd={true}
+                textBase={true}
+                extraData={asset}
+                disabled={loading}
+              >
+                {asset.slice(0, 4).toUpperCase()}
+              </Button>
+            )
+          )}
         </div>
       </div>
 
@@ -274,9 +312,7 @@ const ChooseFee: React.FC = () => {
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
-            <span className="font-regular mr-6 text-base">
-              {feeStr ? feeStr : '...'}
-            </span>
+            <span className="font-regular mr-6 text-base">{feeStr ? feeStr : '...'}</span>
           </div>
           {taxiAssets.includes(selectedFeeAsset) && (
             <p className="text-primary mt-3.5 text-xs font-medium text-left">

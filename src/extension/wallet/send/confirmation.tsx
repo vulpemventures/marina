@@ -5,7 +5,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { fromSatoshiStr } from '../../utility';
 import AssetIcon from '../../components/assetIcon';
-import { Asset } from '../../../domain/asset';
+import type { Asset } from '../../../domain/asset';
 import { assetRepository, sendFlowRepository } from '../../../infrastructure/storage/common';
 
 const Confirmation: React.FC = () => {
@@ -39,9 +39,8 @@ const Confirmation: React.FC = () => {
         return;
       }
       setSendAmount(sendAmount);
-    })();
+    })().catch(console.error);
   }, []);
-
 
   return (
     <ShellPopUp
@@ -51,7 +50,10 @@ const Confirmation: React.FC = () => {
       currentPage="Confirmation"
     >
       <h1 className="text-2xl">{sendAsset?.name}</h1>
-      <AssetIcon className="w-11 mt-0.5 block mx-auto mb-2" assetHash={sendAsset?.assetHash ?? ''} />
+      <AssetIcon
+        className="w-11 mt-0.5 block mx-auto mb-2"
+        assetHash={sendAsset?.assetHash ?? ''}
+      />
 
       <div className="px-3 mt-3">
         <h2 className="text-lg font-medium text-left">To</h2>

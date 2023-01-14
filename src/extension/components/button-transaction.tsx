@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { TxDetails, TxType } from '../../domain/transaction';
+import type { TxDetails} from '../../domain/transaction';
+import { TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
 import TxIcon from './txIcon';
 import moment from 'moment';
 import Modal from './modal';
 import { AssetHash, Transaction } from 'liquidjs-lib';
-import { Asset } from '../../domain/asset';
-import { BlockHeader } from '../../background/utils';
+import type { Asset } from '../../domain/asset';
+import type { BlockHeader } from '../../background/utils';
 import AssetIcon from './assetIcon';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import Button from './button';
 import Browser from 'webextension-polyfill';
-import { appRepository, useSelectNetwork, walletRepository } from '../../infrastructure/storage/common';
+import {
+  appRepository,
+  useSelectNetwork,
+  walletRepository,
+} from '../../infrastructure/storage/common';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -25,12 +30,9 @@ interface Props {
   assetSelected: Asset;
 }
 
-const ButtonTransaction: React.FC<Props> = ({
-  txDetails,
-  assetSelected,
-}) => {
+const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [transfer, setTransfer] = useState<{ amount: number, type: TxType }>();
+  const [transfer, setTransfer] = useState<{ amount: number; type: TxType }>();
   const [feeAmount, setFeeAmount] = useState<number>();
   const [txID, setTxID] = useState<string>();
   const [blockHeader, setBlockHeader] = useState<BlockHeader>();
@@ -74,7 +76,7 @@ const ButtonTransaction: React.FC<Props> = ({
 
       setTransfer({
         amount: transferAmount,
-        type: txTypeFromTransfer(transferAmount)
+        type: txTypeFromTransfer(transferAmount),
       });
     })().catch(console.error); // TODO display error in UI
 
@@ -89,7 +91,6 @@ const ButtonTransaction: React.FC<Props> = ({
       const header = await chainSource.fetchBlockHeader(txDetails.height);
       setBlockHeader(header);
     })().catch(console.error); // TODO display error in UI
-
   }, [txDetails]);
 
   const handleClick = () => {
@@ -99,7 +100,7 @@ const ButtonTransaction: React.FC<Props> = ({
   const reverseHex = (hex: string) => {
     return Buffer.from(hex, 'hex').reverse().toString('hex');
   };
-  
+
   const handleOpenExplorer = async () => {
     if (!txDetails.hex) return;
     const transaction = Transaction.fromHex(txDetails.hex);
@@ -107,19 +108,22 @@ const ButtonTransaction: React.FC<Props> = ({
     const txID = transaction.getId();
 
     const blinders: string[] = [];
-    for (let i=0; i<transaction.outs.length; i++) {
+    for (let i = 0; i < transaction.outs.length; i++) {
       const output = transaction.outs[i];
       if (output.script.length === 0) continue;
       const data = await walletRepository.getOutputBlindingData(txID, i);
       if (!data || !data.blindingData) continue;
-      
-      blinders.push(`${data.blindingData.value},${data.blindingData.asset},${reverseHex(data.blindingData.valueBlindingFactor)},${reverseHex(data.blindingData.assetBlindingFactor)}`);
+
+      blinders.push(
+        `${data.blindingData.value},${data.blindingData.asset},${reverseHex(
+          data.blindingData.valueBlindingFactor
+        )},${reverseHex(data.blindingData.assetBlindingFactor)}`
+      );
     }
 
     const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}}`;
     await Browser.tabs.create({ url, active: false });
   };
-
 
   return (
     <>
@@ -131,13 +135,17 @@ const ButtonTransaction: React.FC<Props> = ({
         <div className="flex items-center">
           <TxIcon txType={transfer?.type ?? TxType.Unknow} />
           <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
-            {blockHeader ? moment(blockHeader.timestamp * 1000).format('DD MMM YYYY') : 'uncomfirmed'}
+            {blockHeader
+              ? moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')
+              : 'uncomfirmed'}
           </span>
         </div>
         <div className="flex">
           <div className="text-primary whitespace-nowrap text-sm font-medium">
             {transfer ? (transfer.amount > 0 ? '+' : '') : ''}
-            {transfer ? formatDecimalAmount(fromSatoshi(transfer.amount, assetSelected.precision)) : '??'}{' '}
+            {transfer
+              ? formatDecimalAmount(fromSatoshi(transfer.amount, assetSelected.precision))
+              : '??'}{' '}
             {assetSelected.ticker}
           </div>
           <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
@@ -150,7 +158,10 @@ const ButtonTransaction: React.FC<Props> = ({
         }}
       >
         <div className="mx-auto text-center">
-          <AssetIcon assetHash={assetSelected.assetHash} className="w-8 h-8 mt-0.5 block mx-auto mb-2" />
+          <AssetIcon
+            assetHash={assetSelected.assetHash}
+            className="w-8 h-8 mt-0.5 block mx-auto mb-2"
+          />
           <p className="text-base font-medium">{transfer?.type}</p>
           {blockHeader && (
             <p className="text-xs font-light">
@@ -163,13 +174,15 @@ const ButtonTransaction: React.FC<Props> = ({
             <p className="text-primary text-base antialiased font-bold">Confirmed</p>
             <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
           </div>
-          {transfer && <div>
-            <p className="text-sm font-medium">{transfer.amount > 0 ? 'Inbound' : 'Outbound'}</p>
-            <p className="text-sm font-light">
-              {fromSatoshiStr(transfer.amount, assetSelected.precision)}{' '}
-              {assetSelected.ticker ?? assetSelected.assetHash.slice(0, 4)}
-            </p>
-          </div>}
+          {transfer && (
+            <div>
+              <p className="text-sm font-medium">{transfer.amount > 0 ? 'Inbound' : 'Outbound'}</p>
+              <p className="text-sm font-light">
+                {fromSatoshiStr(transfer.amount, assetSelected.precision)}{' '}
+                {assetSelected.ticker ?? assetSelected.assetHash.slice(0, 4)}
+              </p>
+            </div>
+          )}
           <div>
             <p className="text-base font-medium">Fee</p>
             <p className="text-xs font-light">{fromSatoshiStr(feeAmount || 0)} L-BTC</p>

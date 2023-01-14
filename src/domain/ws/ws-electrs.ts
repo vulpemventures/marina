@@ -85,7 +85,9 @@ export class ElectrumWS extends Observable {
     });
   }
 
-  public async batchRequest<R extends Array<any>>(...requests: { method: string; params: any[] }[]): Promise<R> {
+  public async batchRequest<R extends Array<any>>(
+    ...requests: { method: string; params: any[] }[]
+  ): Promise<R> {
     if (!this.connected) {
       await new Promise((resolve) => this.once(ElectrumWSEvent.CONNECTED, () => resolve(true)));
     }
@@ -95,7 +97,6 @@ export class ElectrumWS extends Observable {
       id = Math.ceil(Math.random() * 1e5);
     } while (this.requests.has(id));
 
-
     const payloads = requests.map((request) => ({
       jsonrpc: '2.0',
       method: request.method,
@@ -103,9 +104,9 @@ export class ElectrumWS extends Observable {
       id: id++,
     }));
 
-    const promises = payloads.map(p => this.createRequestPromise<any>(p.id, p.method))
-    
-    payloads.forEach(p => this.ws.send(JSON.stringify(p)));
+    const promises = payloads.map((p) => this.createRequestPromise<any>(p.id, p.method));
+
+    payloads.forEach((p) => this.ws.send(JSON.stringify(p)));
     return Promise.all(promises) as Promise<R>;
   }
 
@@ -131,9 +132,7 @@ export class ElectrumWS extends Observable {
     const promise = this.createRequestPromise<ResponseType>(id, method);
 
     console.debug('ElectrumWS SEND:', method, ...params);
-    this.ws.send(
-      JSON.stringify(payload)
-    );
+    this.ws.send(JSON.stringify(payload));
 
     return promise;
   }
@@ -247,6 +246,7 @@ export class ElectrumWS extends Observable {
   private onMessage(msg: MessageEvent) {
     // Handle potential multi-line frames
     const raw = typeof msg.data === 'string' ? msg.data : bytesToString(msg.data);
+    // eslint-disable-next-line no-control-regex
     const regExpNewLineOrBlank = new RegExp('\r|\n| ', 'g');
     const lines = raw.split(regExpNewLineOrBlank).filter((line) => line.length > 0);
 

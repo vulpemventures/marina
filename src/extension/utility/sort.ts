@@ -1,5 +1,5 @@
 import { FEATURED_ASSETS } from '../../constants';
-import { Asset } from '../../domain/asset';
+import type { Asset } from '../../domain/asset';
 
 /**
  * Takes a list of assets, and sort it by the following criteria:
@@ -8,9 +8,7 @@ import { Asset } from '../../domain/asset';
  * @param assets list of assets in no particular order
  * @returns assets sorted by criteria defined above
  */
-export function sortAssets(
-  assets: Asset[]
-): Asset[] {
+export function sortAssets(assets: Asset[]): Asset[] {
   let newAsset;
   const newAssetTicker = 'Any';
   const featuredAssets: Asset[] = [];

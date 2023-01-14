@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import type { RouteComponentProps } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import QRCode from 'qrcode.react';
 import Button from '../../components/button';
@@ -9,10 +8,9 @@ import Browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { subscribeMessage } from '../../../domain/message';
 import { MainAccountName } from '../../../domain/account-type';
-import { useSelectAccount, walletRepository } from '../../../infrastructure/storage/common';
-import { address } from 'liquidjs-lib';
+import { useSelectAccount } from '../../../infrastructure/storage/common';
 
-const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({}) => {
+const ReceiveView: React.FC = () => {
   const history = useHistory();
   const mainAccount = useSelectAccount(MainAccountName)();
 
@@ -34,10 +32,8 @@ const ReceiveView: React.FC<RouteComponentProps<{ asset: string }>> = ({}) => {
       if (confidentialAddress !== '') return; // address is already generated
       const addr = await mainAccount.getNextAddress(false);
       setConfidentialAddress(addr);
-      const port = Browser.runtime.connect()
-      port.postMessage(
-        subscribeMessage(mainAccount.name)
-      );
+      const port = Browser.runtime.connect();
+      port.postMessage(subscribeMessage(mainAccount.name));
     })().catch(console.error);
   }, [mainAccount]);
 

@@ -5,12 +5,14 @@ import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { extractErrorMessage } from '../../utility/error';
-import {
-  INVALID_PASSWORD_ERROR,
-  SOMETHING_WENT_WRONG_ERROR,
-} from '../../../constants';
+import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../../constants';
 import { SignerService } from '../../../domain/signer';
-import { appRepository, sendFlowRepository, useSelectNetwork, walletRepository } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  sendFlowRepository,
+  useSelectNetwork,
+  walletRepository,
+} from '../../../infrastructure/storage/common';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();
@@ -18,7 +20,6 @@ const SendEndOfFlow: React.FC = () => {
   const [unsignedPset, setUnsignedPset] = useState<string>();
   const [invalidPasswordError, setInvalidPasswordError] = useState(false);
   const [unlockModal, setUnlockModal] = useState(false);
-
 
   useEffect(() => {
     (async () => {
@@ -28,7 +29,13 @@ const SendEndOfFlow: React.FC = () => {
         return;
       }
       setUnsignedPset(unsignedPset);
-    })();
+    })().catch((error: unknown) => {
+      console.error(error);
+      history.push({
+        pathname: SEND_PAYMENT_ERROR_ROUTE,
+        state: { error: extractErrorMessage(error) || SOMETHING_WENT_WRONG_ERROR },
+      });
+    });
   }, []);
 
   const handleModalUnlockClose = () => setUnlockModal(false);
@@ -46,7 +53,7 @@ const SendEndOfFlow: React.FC = () => {
 
       const signer = await SignerService.fromPassword(walletRepository, password);
       const signed = await signer.signPset(unsignedPset);
-      toBroadcast = await signer.finalizeAndExtract(signed);
+      toBroadcast = signer.finalizeAndExtract(signed);
 
       const txid = await chainSource.broadcastTransaction(toBroadcast);
       if (!txid) throw new Error('something went wrong with the tx broadcasting');

@@ -5,9 +5,16 @@ import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
 import { Account, createAccountDetails } from '../../../domain/account';
-import { NetworkString } from 'marina-provider';
+import type { NetworkString } from 'marina-provider';
 import { MainAccountName } from '../../../domain/account-type';
-import { appRepository, onboardingRepository, useSelectIsFromPopupFlow, useSelectOnboardingMnemonic, useSelectOnboardingPassword, walletRepository } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  onboardingRepository,
+  useSelectIsFromPopupFlow,
+  useSelectOnboardingMnemonic,
+  useSelectOnboardingPassword,
+  walletRepository,
+} from '../../../infrastructure/storage/common';
 
 const GAP_LIMIT = 20;
 
@@ -27,14 +34,14 @@ const EndOfFlowOnboarding: React.FC = () => {
       return;
     }
     if (!onboardingMnemonic || !onboardingPassword) return;
-    
-    try {
 
+    try {
       setIsLoading(true);
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
-      const { encryptedMnemonic, passwordHash, masterBlindingKey, masterPublicKey } = createAccountDetails(onboardingMnemonic, onboardingPassword);
+      const { encryptedMnemonic, passwordHash, masterBlindingKey, masterPublicKey } =
+        createAccountDetails(onboardingMnemonic, onboardingPassword);
 
       // set the main account details
       const mainAccountNetworks: NetworkString[] = ['liquid', 'testnet', 'regtest'];
@@ -54,12 +61,10 @@ const EndOfFlowOnboarding: React.FC = () => {
         masterPublicKey,
         masterBlindingKey,
         walletRepository,
-      })
+      });
 
       // restore the accounts
-      await Promise.allSettled([
-        account.sync(GAP_LIMIT),
-      ])
+      await Promise.allSettled([account.sync(GAP_LIMIT)]);
 
       // set the popup
       await Browser.browserAction.setPopup({ popup: 'popup.html' });
@@ -109,5 +114,6 @@ const EndOfFlowOnboarding: React.FC = () => {
 export default EndOfFlowOnboarding;
 
 function checkPassword(password: string) {
-  if (password === undefined || password === null || password.length < 8) throw new Error(`Password must be 8 chars min`);
+  if (password === undefined || password === null || password.length < 8)
+    throw new Error(`Password must be 8 chars min`);
 }

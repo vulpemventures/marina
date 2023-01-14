@@ -1,12 +1,7 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
-import Browser from 'webextension-polyfill';
 import browser from 'webextension-polyfill';
-import { isLogInMessage, isLogOutMessage, OpenPopupMessage, PopupName } from '../domain/message';
-import {
-  isSubscribeMessage,
-  isOpenPopupMessage,
-  isPopupResponseMessage,
-} from '../domain/message';
+import type { OpenPopupMessage, PopupName } from '../domain/message';
+import { isLogInMessage, isLogOutMessage , isSubscribeMessage, isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
 import { Subscriber } from '../domain/subscriber';
 import { POPUP_RESPONSE } from '../extension/popups/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../extension/routes/constants';
@@ -33,31 +28,30 @@ const taxiService = new TaxiUpdater(taxiRepository, appRepository);
 
 // at startup, check if the user is logged in
 // if so, start the services
-appRepository.getStatus().then(({ isAuthenticated }) => {
-  if (isAuthenticated) {
-    startBackgroundServices();
-  }
-}).catch(console.error);
+appRepository
+  .getStatus()
+  .then(({ isAuthenticated }) => {
+    if (isAuthenticated) {
+      startBackgroundServices().catch(console.error);
+    }
+  })
+  .catch(console.error);
 
 async function startBackgroundServices() {
   const { isOnboardingCompleted } = await appRepository.getStatus();
   if (isOnboardingCompleted) {
-    console.warn('logInProcedure: starting services')
+    console.warn('logInProcedure: starting services');
     await Promise.allSettled([
-      updaterService.start(), 
+      updaterService.start(),
       subscriberService.start(),
-      taxiService.start(),
+      Promise.resolve(taxiService.start()),
     ]);
   }
 }
 
 async function stopBackgroundServices() {
-  console.warn('logOutProcedure: stopping services')
-  await Promise.allSettled([
-    updaterService.stop(), 
-    subscriberService.stop(),
-    taxiService.stop(),
-  ]);
+  console.warn('logOutProcedure: stopping services');
+  await Promise.allSettled([updaterService.stop(), subscriberService.stop(), taxiService.stop()]);
 }
 
 /**
@@ -111,7 +105,7 @@ browser.browserAction.onClicked.addListener(() => {
     // Check if wallet exists in storage and if not we open the
     // onboarding page again.
     const encryptedMnemonic = await walletRepository.getEncryptedMnemonic();
-    if (!encryptedMnemonic ) {
+    if (!encryptedMnemonic) {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {
@@ -142,7 +136,8 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
     }
 
     if (isSubscribeMessage(message)) {
-      subscriberService.subscribeAccount(message.data.account, true)
+      subscriberService
+        .subscribeAccount(message.data.account, true)
         .then(() => port.postMessage({ data: true }))
         .catch((error: any) => {
           console.error(error);
@@ -225,5 +220,3 @@ async function createBrowserPopup(name?: PopupName) {
   };
   await browser.windows.create(options as any);
 }
-
-

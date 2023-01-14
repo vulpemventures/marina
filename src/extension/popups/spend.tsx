@@ -1,5 +1,5 @@
 import React from 'react';
-import { UnblindedOutput } from '../../domain/transaction';
+import type { UnblindedOutput } from '../../domain/transaction';
 
 export interface SpendPopupResponse {
   accepted: boolean;
@@ -40,11 +40,11 @@ const ConnectSpend: React.FC = () => {
   // // send response message false when user closes the window without answering
   // window.addEventListener('beforeunload', () => sendResponseMessage(false));
 
-  return <></>
-    // <ShellConnectPopup
-    //   className="h-popupContent max-w-sm pb-20 text-center bg-bottom bg-no-repeat"
-    //   currentPage="Spend"
-    // >
+  return <></>;
+  // <ShellConnectPopup
+  //   className="h-popupContent max-w-sm pb-20 text-center bg-bottom bg-no-repeat"
+  //   currentPage="Spend"
+  // >
   //    {error.length === 0 ? (
   //       <>
   //         <h1 className="mt-8 text-2xl font-medium break-all">{connectData.tx?.hostname}</h1>
@@ -96,8 +96,8 @@ const ConnectSpend: React.FC = () => {
   //       handleModalUnlockClose={handleModalUnlockClose}
   //       handleUnlock={handleUnlock}
   //     />
-    // </ShellConnectPopup >
-// );
+  // </ShellConnectPopup >
+  // );
 };
 
 export default ConnectSpend;

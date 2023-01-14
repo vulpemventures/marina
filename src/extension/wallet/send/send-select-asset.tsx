@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
-import { sendFlowRepository, useSelectAllAssets, useSelectUtxos } from '../../../infrastructure/storage/common';
+import {
+  sendFlowRepository,
+  useSelectAllAssets,
+  useSelectUtxos,
+} from '../../../infrastructure/storage/common';
 import { computeBalances } from '../../../utils';
 
 const SendSelectAsset: React.FC = () => {
@@ -12,9 +16,8 @@ const SendSelectAsset: React.FC = () => {
   const balanceAssets = useSelectAllAssets();
 
   useEffect(() => {
-    if (utxos) setBalances(computeBalances(utxos))
+    if (utxos) setBalances(computeBalances(utxos));
   }, [utxos]);
-
 
   const handleSend = async (assetHash: string) => {
     // cache the assehash selected and go to address amount form

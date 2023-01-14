@@ -5,17 +5,17 @@ import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
 import { init } from '../../../infrastructure/repository';
-import { appRepository, onboardingRepository, sendFlowRepository } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  onboardingRepository,
+  sendFlowRepository,
+} from '../../../infrastructure/storage/common';
 
 const WalletRestore: React.FC = () => {
   const history = useHistory();
   const [mnemonic, setMnemonic] = useState<string>('');
 
-  const onSubmit = async ({
-    password,
-  }: {
-    password: string;
-  }) => {
+  const onSubmit = async ({ password }: { password: string }) => {
     if (mnemonic === '') throw new Error('need a valid mnemonic');
     await init(appRepository, sendFlowRepository);
     await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic);

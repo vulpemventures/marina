@@ -115,18 +115,10 @@ const Routes: React.FC = () => {
       <Route exact path={SETTINGS_MENU_SETTINGS_ROUTE} component={SettingsMenuSettings} />
       <Route exact path={SETTINGS_MENU_INFO_ROUTE} component={SettingsMenuInfo} />
       <Route exact path={SETTINGS_SHOW_MNEMONIC_ROUTE} component={SettingsShowMnemonic} />
-      <Route
-        exact
-        path={SETTINGS_CHANGE_PASSWORD_ROUTE}
-        component={SettingsChangePassword}
-      />
+      <Route exact path={SETTINGS_CHANGE_PASSWORD_ROUTE} component={SettingsChangePassword} />
       <Route exact path={SETTINGS_CURRENCY_ROUTE} component={SettingsCurrency} />
       <Route exact path={SETTINGS_EXPLORER_ROUTE} component={SettingsExplorer} />
-      <Route
-        exact
-        path={SETTINGS_EXPLORER_CUSTOM_ROUTE}
-        component={SettingsExplorerCustom}
-      />
+      <Route exact path={SETTINGS_EXPLORER_CUSTOM_ROUTE} component={SettingsExplorerCustom} />
       <Route exact path={SETTINGS_NETWORKS_ROUTE} component={SettingsNetworksView} />
       <Route exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
       <Route exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />

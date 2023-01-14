@@ -6,7 +6,6 @@ import * as Yup from 'yup';
 import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import Input from '../../components/input';
-import browser from 'webextension-polyfill';
 import { INVALID_PASSWORD_ERROR } from '../../../constants';
 import { match } from '../../../utils';
 import { appRepository, useSelectPasswordHash } from '../../../infrastructure/storage/common';
@@ -26,8 +25,8 @@ const LogInForm: React.FC<FormikProps<LogInFormValues>> = (props) => {
   const { isSubmitting, handleSubmit } = props;
 
   const openOnboardingTab = async () => {
-    const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
-    await browser.tabs.create({ url });
+    const url = Browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
+    await Browser.tabs.create({ url });
   };
 
   return (
@@ -68,9 +67,11 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       setErrors({ password: INVALID_PASSWORD_ERROR });
       setSubmitting(false);
     } else {
-      props.onSuccess()
+      props.onSuccess().catch((error) => {
+        setErrors({ password: error.message });
+        setSubmitting(false);
+      });
     }
-    
   },
   displayName: 'LogInForm',
 })(LogInForm);
@@ -79,7 +80,7 @@ const LogIn: React.FC = () => {
   const history = useHistory();
   const passwordHash = useSelectPasswordHash();
 
-  const onSuccess = async () => { 
+  const onSuccess = async () => {
     const port = Browser.runtime.connect();
     await appRepository.updateStatus({ isAuthenticated: true });
     port.postMessage(logInMessage());

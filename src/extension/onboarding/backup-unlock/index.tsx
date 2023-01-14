@@ -7,7 +7,10 @@ import Shell from '../../components/shell';
 import Input from '../../components/input';
 import Button from '../../components/button';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
-import { onboardingRepository, useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
+import {
+  onboardingRepository,
+  useSelectEncryptedMnemonic,
+} from '../../../infrastructure/storage/common';
 import { decrypt } from '../../../utils';
 
 interface BackUpUnlockFormValues {
@@ -67,14 +70,13 @@ const BackUpUnlock: React.FC = () => {
   const onSuccess = async (mnemonic: string) => {
     await onboardingRepository.setIsFromPopupFlow(mnemonic);
     history.push(INITIALIZE_SEED_PHRASE_ROUTE);
-  }
- 
+  };
+
   return (
     <Shell hasBackBtn={false}>
-      {encryptedMnemonic && <BackUpUnlockEnhancedForm
-        encryptedMnemonic={encryptedMnemonic}
-        onSuccess={onSuccess}
-      />}
+      {encryptedMnemonic && (
+        <BackUpUnlockEnhancedForm encryptedMnemonic={encryptedMnemonic} onSuccess={onSuccess} />
+      )}
     </Shell>
   );
 };

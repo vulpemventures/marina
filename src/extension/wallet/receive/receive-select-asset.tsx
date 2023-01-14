@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import { RECEIVE_ADDRESS_ROUTE } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
-import { Asset } from '../../../domain/asset';
+import type { Asset } from '../../../domain/asset';
 import { useSelectAllAssets } from '../../../infrastructure/storage/common';
 
 const ReceiveSelectAsset: React.FC = () => {

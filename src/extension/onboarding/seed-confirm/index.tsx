@@ -5,14 +5,18 @@ import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import { INVALID_MNEMONIC_ERROR } from '../../../constants';
-import { appRepository, useSelectIsFromPopupFlow, useSelectOnboardingMnemonic } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  useSelectIsFromPopupFlow,
+  useSelectOnboardingMnemonic,
+} from '../../../infrastructure/storage/common';
 
 const NULL_ERROR = '';
 
 const SeedConfirm: React.FC = () => {
   const history = useHistory();
   const isFromPopupFlow = useSelectIsFromPopupFlow();
-  const onboardingMnemonic = useSelectOnboardingMnemonic()
+  const onboardingMnemonic = useSelectOnboardingMnemonic();
   const [mnemonicRandomized, setMnemonicRandomized] = useState<string[]>([]);
 
   const shuffle = () => {
@@ -20,7 +24,7 @@ const SeedConfirm: React.FC = () => {
     const mnemonic = onboardingMnemonic.trim().split(' ');
     const mnemonicRandomized = shuffleMnemonic([...mnemonic]);
     setMnemonicRandomized(mnemonicRandomized);
-  }
+  };
 
   useEffect(() => {
     if (!onboardingMnemonic) return;
@@ -38,7 +42,6 @@ const SeedConfirm: React.FC = () => {
 
     setError(INVALID_MNEMONIC_ERROR);
     setSelected([]);
-    
   };
 
   // select a word among wordsList

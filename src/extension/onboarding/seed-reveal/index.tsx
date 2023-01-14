@@ -7,7 +7,10 @@ import {
 } from '../../routes/constants';
 import Shell from '../../components/shell';
 import RevealMnemonic from '../../components/reveal-mnemonic';
-import { useSelectIsFromPopupFlow, useSelectOnboardingMnemonic } from '../../../infrastructure/storage/common';
+import {
+  useSelectIsFromPopupFlow,
+  useSelectOnboardingMnemonic,
+} from '../../../infrastructure/storage/common';
 
 const SeedReveal: React.FC = () => {
   const history = useHistory();

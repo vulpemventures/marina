@@ -4,14 +4,16 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import PopupWindowProxy from './popupWindowProxy';
 import type { NetworkString, SignedMessage } from 'marina-provider';
-import {
-  INVALID_PASSWORD_ERROR,
-  SOMETHING_WENT_WRONG_ERROR,
-} from '../../constants';
+import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import { decrypt, signMessageWithMnemonic } from '../../utils';
 import { networks } from 'liquidjs-lib';
-import { useSelectEncryptedMnemonic, useSelectNetwork, useSelectPopupHostname, useSelectPopupMessageToSign } from '../../infrastructure/storage/common';
+import {
+  useSelectEncryptedMnemonic,
+  useSelectNetwork,
+  useSelectPopupHostname,
+  useSelectPopupMessageToSign,
+} from '../../infrastructure/storage/common';
 import { popupResponseMessage } from '../../domain/message';
 
 function signMsgWithPassword(
@@ -60,7 +62,8 @@ const ConnectSignMsg: React.FC = () => {
   };
 
   const handleUnlock = async (password: string) => {
-    if (!password || password.length === 0 || !messageToSign || !encryptedMnemonic || !network) return;
+    if (!password || password.length === 0 || !messageToSign || !encryptedMnemonic || !network)
+      return;
 
     try {
       // SIGN THE MESSAGE WITH FIRST ADDRESS FROM HD WALLET

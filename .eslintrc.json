@@ -56,6 +56,7 @@
     "cypress/no-unnecessary-waiting": "error",
     "cypress/assertion-before-screenshot": "warn",
     "cypress/no-force": "warn",
-    "cypress/no-async-tests": "error"
+    "cypress/no-async-tests": "error",
+    "react-hooks/rules-of-hooks": "off"
   }
 }

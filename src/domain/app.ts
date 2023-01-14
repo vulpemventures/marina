@@ -1,5 +1,5 @@
 export interface AppStatus {
-    isMnemonicVerified: boolean;
-    isOnboardingCompleted: boolean;
-    isAuthenticated: boolean;
+  isMnemonicVerified: boolean;
+  isOnboardingCompleted: boolean;
+  isAuthenticated: boolean;
 }

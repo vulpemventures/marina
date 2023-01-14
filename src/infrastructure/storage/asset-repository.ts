@@ -1,86 +1,88 @@
-import { AssetHash, networks, Transaction } from 'liquidjs-lib';
-import { Network } from 'liquidjs-lib/src/networks';
-import { NetworkString } from 'marina-provider';
+import { networks, Transaction } from 'liquidjs-lib';
+import type { NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import { Asset } from '../../domain/asset';
-import { AssetRepository, WalletRepository } from '../repository'
+import type { Asset } from '../../domain/asset';
+import type { AssetRepository, WalletRepository } from '../repository';
 import { DynamicStorageKey } from './dynamic-key';
-import { TxDetailsKey } from './wallet-repository';
 
 export const AssetKey = new DynamicStorageKey<[assethash: string]>('asset');
 
 const LIQUID_BTC = (hash: string) => ({
-    assetHash: hash,
-    name: 'Liquid Bitcoin',
-    ticker: 'L-BTC',
-    precision: 8,
+  assetHash: hash,
+  name: 'Liquid Bitcoin',
+  ticker: 'L-BTC',
+  precision: 8,
 });
 
 export class AssetStorageAPI implements AssetRepository {
-    constructor(private walletRepository: WalletRepository) {}
+  constructor(private walletRepository: WalletRepository) {}
 
-    static HARDCODED_ASSETS: Record<NetworkString, Record<string, Asset>> = {
-        'liquid': {
-            [networks.liquid.assetHash]: LIQUID_BTC(networks.liquid.assetHash),
-        },
-        'regtest': {
-            [networks.regtest.assetHash]: LIQUID_BTC(networks.regtest.assetHash),
-        },
-        'testnet': {
-            [networks.testnet.assetHash]: LIQUID_BTC(networks.testnet.assetHash),
-        },
-    };
+  static HARDCODED_ASSETS: Record<NetworkString, Record<string, Asset>> = {
+    liquid: {
+      [networks.liquid.assetHash]: LIQUID_BTC(networks.liquid.assetHash),
+    },
+    regtest: {
+      [networks.regtest.assetHash]: LIQUID_BTC(networks.regtest.assetHash),
+    },
+    testnet: {
+      [networks.testnet.assetHash]: LIQUID_BTC(networks.testnet.assetHash),
+    },
+  };
 
-    static isFeaturedAsset(assetHash: string): boolean {
-        return Object.values(AssetStorageAPI.HARDCODED_ASSETS).some(assets => Object.keys(assets).includes(assetHash));
+  static isFeaturedAsset(assetHash: string): boolean {
+    return Object.values(AssetStorageAPI.HARDCODED_ASSETS).some((assets) =>
+      Object.keys(assets).includes(assetHash)
+    );
+  }
+
+  static getFeaturedAsset(assetHash: string): Asset | undefined {
+    return Object.values(AssetStorageAPI.HARDCODED_ASSETS).find((assets) =>
+      Object.keys(assets).includes(assetHash)
+    )?.[assetHash];
+  }
+
+  async getAsset(assetHash: string): Promise<Asset | undefined> {
+    if (AssetStorageAPI.isFeaturedAsset(assetHash)) {
+      return AssetStorageAPI.getFeaturedAsset(assetHash);
     }
 
-    static getFeaturedAsset(assetHash: string): Asset | undefined {
-        return Object.values(AssetStorageAPI.HARDCODED_ASSETS).find(assets => Object.keys(assets).includes(assetHash))?.[assetHash];
-    }
+    const key = AssetKey.make(assetHash);
+    const { [key]: assetdetails } = await Browser.storage.local.get(key);
+    return assetdetails === null ? undefined : assetdetails;
+  }
 
-    async getAsset(assetHash: string): Promise<Asset | undefined> {
-        if (AssetStorageAPI.isFeaturedAsset(assetHash)) {
-            return AssetStorageAPI.getFeaturedAsset(assetHash);
+  addAsset(assethash: string, asset: Asset): Promise<void> {
+    return Browser.storage.local.set({ [AssetKey.make(assethash)]: asset });
+  }
+
+  async getAllAssets(network: NetworkString): Promise<Asset[]> {
+    const assetList: Asset[] = [];
+
+    const txIDs = await this.walletRepository.getTransactions(network);
+    const allTxDetails = await this.walletRepository.getTxDetails(...txIDs);
+
+    for (const [ID, { hex }] of Object.entries(allTxDetails)) {
+      if (!hex) continue;
+      for (const [vout] of Transaction.fromHex(hex).outs.entries()) {
+        const data = await this.walletRepository.getOutputBlindingData(ID, vout);
+        if (!data || !data.blindingData) continue;
+        if (assetList.find((a) => a.assetHash === data.blindingData?.asset)) continue;
+        const asset = await this.getAsset(data.blindingData.asset);
+        if (asset) {
+          assetList.push(asset);
         }
-
-        const key = AssetKey.make(assetHash);
-        const { [key]: assetdetails } = await Browser.storage.local.get(key);
-        return assetdetails === null ? undefined : assetdetails;
+      }
     }
 
-    addAsset(assethash: string, asset: Asset): Promise<void> {
-        return Browser.storage.local.set({ [AssetKey.make(assethash)]: asset });
+    for (const asset of Object.values(AssetStorageAPI.HARDCODED_ASSETS[network])) {
+      if (!assetList.find((a) => a.assetHash === asset.assetHash)) {
+        assetList.push(asset);
+      } else {
+        const index = assetList.findIndex((a) => a.assetHash === asset.assetHash);
+        assetList[index] = asset;
+      }
     }
 
-    async getAllAssets(network: NetworkString): Promise<Asset[]> {
-        const assetList: Asset[] = [];
-
-        const txIDs = await this.walletRepository.getTransactions(network);
-        const allTxDetails = await this.walletRepository.getTxDetails(...txIDs);
-
-        for (const [ID, { hex }] of Object.entries(allTxDetails)) {
-            if (!hex) continue;
-            for (const [vout, _] of Transaction.fromHex(hex).outs.entries()) {
-                const data = await this.walletRepository.getOutputBlindingData(ID, vout);
-                if (!data || !data.blindingData) continue;
-                if (assetList.find((a) => a.assetHash === data.blindingData?.asset)) continue;
-                const asset = await this.getAsset(data.blindingData.asset);
-                if (asset) {
-                    assetList.push(asset);
-                }
-            }
-        }
-
-        for (const asset of Object.values(AssetStorageAPI.HARDCODED_ASSETS[network])) {
-            if (!assetList.find((a) => a.assetHash === asset.assetHash)) {
-                assetList.push(asset);
-            } else {
-                const index = assetList.findIndex((a) => a.assetHash === asset.assetHash);
-                assetList[index] = asset;
-            }
-        }
-
-        return assetList;
-    }
+    return assetList;
+  }
 }

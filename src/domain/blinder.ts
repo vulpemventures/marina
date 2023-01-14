@@ -1,20 +1,25 @@
-import * as ecc from "tiny-secp256k1";
-import zkp from "@vulpemventures/secp256k1-zkp";
-import { AssetHash, Blinder, OwnedInput, Pset, ZKPGenerator, ZKPValidator } from "liquidjs-lib";
-import { WalletRepository } from "../infrastructure/repository";
+import * as ecc from 'tiny-secp256k1';
+import zkp from '@vulpemventures/secp256k1-zkp';
+import type { OwnedInput} from 'liquidjs-lib';
+import { AssetHash, Blinder, Pset, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
+import type { WalletRepository } from '../infrastructure/repository';
 
 const zkpLib = await zkp();
 const zkpValidator = new ZKPValidator(zkpLib);
 const keysGenerator = Pset.ECCKeysGenerator(ecc);
 
 export class BlinderService {
-  constructor(private walletRepository: WalletRepository) { }
+  constructor(private walletRepository: WalletRepository) {}
 
   async blindPset(psetBase64: string): Promise<string> {
     const pset = Pset.fromBase64(psetBase64);
     // find input index belonging to this account
-    const inputsScripts = pset.inputs.map(input => input.witnessUtxo?.script).filter(script => !!script);
-    const scriptsDetails = await this.walletRepository.getScriptDetails(...inputsScripts.map(script => script!.toString('hex')));
+    const inputsScripts = pset.inputs
+      .map((input) => input.witnessUtxo?.script)
+      .filter((script) => !!script);
+    const scriptsDetails = await this.walletRepository.getScriptDetails(
+      ...inputsScripts.map((script) => script!.toString('hex'))
+    );
 
     const inputIndexes = [];
     for (let i = 0; i < pset.inputs.length; i++) {
@@ -60,8 +65,7 @@ export class BlinderService {
       }
     }
 
-
-    const blinder = new Blinder(pset, ownedInputs, zkpValidator, zkpGenerator)
+    const blinder = new Blinder(pset, ownedInputs, zkpValidator, zkpGenerator);
     if (isLast) {
       blinder.blindLast({ outputBlindingArgs });
     } else {

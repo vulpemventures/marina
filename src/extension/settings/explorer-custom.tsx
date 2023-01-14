@@ -1,5 +1,6 @@
-import { FormikProps, withFormik } from 'formik';
-import { NetworkString } from 'marina-provider';
+import type { FormikProps} from 'formik';
+import { withFormik } from 'formik';
+import type { NetworkString } from 'marina-provider';
 import { useHistory } from 'react-router';
 import { appRepository, useSelectNetwork } from '../../infrastructure/storage/common';
 import Button from '../components/button';
@@ -43,11 +44,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
 
       <ButtonsAtBottom>
         <Button
-          disabled={
-            !!errors.webExplorerURL ||
-            !!errors.websocketExplorerURL ||
-            isSubmitting
-          }
+          disabled={!!errors.webExplorerURL || !!errors.websocketExplorerURL || isSubmitting}
           type="submit"
         >
           Update
@@ -75,9 +72,9 @@ const SettingsCustomExplorerForm = withFormik<
   handleSubmit: async (values, { props }) => {
     await appRepository.setWebsocketExplorerURLs({
       [props.network]: values.websocketExplorerURL,
-    })
+    });
 
-    await appRepository.setWebExplorerURL(props.network, values.webExplorerURL)
+    await appRepository.setWebExplorerURL(props.network, values.webExplorerURL);
 
     props.onDone();
   },
