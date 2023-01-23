@@ -4,23 +4,26 @@ import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
-import { Account, createAccountDetails } from '../../../domain/account';
-import type { NetworkString } from 'marina-provider';
-import { MainAccountName } from '../../../domain/account-type';
+import { Account } from '../../../domain/account';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
 import {
   appRepository,
   onboardingRepository,
   useSelectIsFromPopupFlow,
-  useSelectOnboardingMnemonic,
-  useSelectOnboardingPassword,
   walletRepository,
 } from '../../../infrastructure/storage/common';
+import { encrypt, hashPassword } from '../../../utils';
+import { SLIP77Factory } from 'slip77';
+import * as ecc from 'tiny-secp256k1';
+import BIP32Factory from 'bip32';
+import { mnemonicToSeedSync } from 'bip39';
 
-const GAP_LIMIT = 20;
+const bip32 = BIP32Factory(ecc);
+const slip77 = SLIP77Factory(ecc);
+
+const GAP_LIMIT = 30;
 
 const EndOfFlowOnboarding: React.FC = () => {
-  const onboardingMnemonic = useSelectOnboardingMnemonic();
-  const onboardingPassword = useSelectOnboardingPassword();
   const isFromPopup = useSelectIsFromPopupFlow();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -33,38 +36,88 @@ const EndOfFlowOnboarding: React.FC = () => {
       setIsLoading(false);
       return;
     }
-    if (!onboardingMnemonic || !onboardingPassword) return;
-
     try {
+      const onboardingMnemonic = await onboardingRepository.getOnboardingMnemonic();
+      const onboardingPassword = await onboardingRepository.getOnboardingPassword();
       setIsLoading(true);
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
-      const { encryptedMnemonic, passwordHash, masterBlindingKey, masterPublicKey } =
-        createAccountDetails(onboardingMnemonic, onboardingPassword);
+      const encryptedMnemonic = encrypt(onboardingMnemonic, onboardingPassword);
+      const seed = mnemonicToSeedSync(onboardingMnemonic);
+      const masterBlindingKey = slip77.fromSeed(seed).masterKey.toString('hex');
+      const passwordHash = hashPassword(onboardingPassword);
 
-      // set the main account details
-      const mainAccountNetworks: NetworkString[] = ['liquid', 'testnet', 'regtest'];
+      // set the global seed data
       await walletRepository.setSeedData(encryptedMnemonic, passwordHash, masterBlindingKey);
-      await walletRepository.updateAccountDetails(MainAccountName, {
-        masterPublicKey,
+
+      // set the default accounts data (MainAccount, MainAccountTest, MainAccountLegacy)
+      // cointype account (mainnet)
+      const defaultMainAccountXPub = bip32
+        .fromSeed(seed)
+        .derivePath(Account.BASE_DERIVATION_PATH)
+        .neutered()
+        .toBase58();
+      await walletRepository.updateAccountDetails(MainAccount, {
+        masterPublicKey: defaultMainAccountXPub,
         baseDerivationPath: Account.BASE_DERIVATION_PATH,
-        accountNetworks: mainAccountNetworks,
+        accountNetworks: ['liquid'],
       });
 
-      const chainSource = await appRepository.getChainSource('liquid');
-      if (!chainSource) throw new Error(`Chain source not found for network "liquid"`);
-      const account = new Account({
-        chainSource,
-        network: 'liquid',
-        name: MainAccountName,
-        masterPublicKey,
-        masterBlindingKey,
-        walletRepository,
+      // cointype account (testnet & regtest)
+      const defaultMainAccountXPubTestnet = bip32
+        .fromSeed(seed)
+        .derivePath(Account.BASE_DERIVATION_PATH_TESTNET)
+        .neutered()
+        .toBase58();
+      await walletRepository.updateAccountDetails(MainAccountTest, {
+        masterPublicKey: defaultMainAccountXPubTestnet,
+        baseDerivationPath: Account.BASE_DERIVATION_PATH_TESTNET,
+        accountNetworks: ['regtest', 'testnet'],
       });
+
+      // legacy account
+      const defaultLegacyMainAccountXPub = bip32
+        .fromSeed(seed)
+        .derivePath(Account.BASE_DERIVATION_PATH_LEGACY)
+        .neutered()
+        .toBase58();
+      await walletRepository.updateAccountDetails(MainAccountLegacy, {
+        masterPublicKey: defaultLegacyMainAccountXPub,
+        baseDerivationPath: Account.BASE_DERIVATION_PATH_LEGACY,
+        accountNetworks: ['liquid', 'regtest', 'testnet'],
+      });
+
+      // restore on liquid
+      const chainSource = await appRepository.getChainSource('liquid');
+      if (!chainSource) {
+        throw new Error('Chain source not found for liquid network');
+      }
+
+      const accountsToRestore = [
+        new Account({
+          name: MainAccount,
+          chainSource,
+          masterBlindingKey,
+          masterPublicKey: defaultMainAccountXPub,
+          walletRepository,
+          network: 'liquid',
+        }),
+        new Account({
+          name: MainAccountLegacy,
+          chainSource,
+          masterBlindingKey,
+          masterPublicKey: defaultLegacyMainAccountXPub,
+          walletRepository,
+          network: 'liquid',
+        }),
+      ];
 
       // restore the accounts
-      await Promise.allSettled([account.sync(GAP_LIMIT)]);
+      const result = await Promise.allSettled(
+        accountsToRestore.map((account) => account.sync(GAP_LIMIT))
+      );
+      console.warn(result);
 
       // set the popup
       await Browser.browserAction.setPopup({ popup: 'popup.html' });
@@ -80,7 +133,7 @@ const EndOfFlowOnboarding: React.FC = () => {
 
   useEffect(() => {
     tryToRestoreWallet().catch(console.error);
-  }, [onboardingMnemonic, onboardingPassword, isFromPopup]);
+  }, [isFromPopup]);
 
   if (isLoading) {
     return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;

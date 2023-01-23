@@ -2,10 +2,14 @@ import { Transaction } from 'liquidjs-lib';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import Browser from 'webextension-polyfill';
 import type { ListUnspentResponse } from '../domain/chainsource';
-import type { Unblinder} from '../domain/unblinder';
+import type { Unblinder } from '../domain/unblinder';
 import { WalletRepositoryUnblinder } from '../domain/unblinder';
 import type { TxDetails, UnblindingData } from '../domain/transaction';
-import type { WalletRepository, AppRepository, AssetRepository } from '../infrastructure/repository';
+import type {
+  WalletRepository,
+  AppRepository,
+  AssetRepository,
+} from '../infrastructure/repository';
 import {
   TxIDsKey,
   ScriptUnspentsKey,

@@ -6,9 +6,7 @@ import type { NetworkString } from 'marina-provider';
 import type { Slip77Interface } from 'slip77';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from '../domain/chainsource';
-import { mnemonicToSeedSync } from 'bip39';
 import type { AppRepository, WalletRepository } from '../infrastructure/repository';
-import { encrypt, hashPassword } from '../utils';
 
 const bip32 = BIP32Factory(ecc);
 const slip77 = SLIP77Factory(ecc);
@@ -54,6 +52,8 @@ export class AccountFactory {
   async make(network: NetworkString, accountName: string): Promise<Account> {
     const { [accountName]: details } = await this.walletRepository.getAccountDetails(accountName);
     if (!details) throw new Error('Account not found');
+    if (details.accountNetworks.indexOf(network) === -1)
+      throw new Error(`Account ${accountName} does not support network: ${network}`);
     const chainSource = this.chainSources.get(network);
     if (!chainSource) throw new Error('Chain source not found');
     return new Account({
@@ -145,13 +145,9 @@ export class Account {
   async getAllAddresses(): Promise<string[]> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get all addresses');
     if (!this.name) throw new Error('No name, cannot get all addresses');
-    const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
-      this.name
-    );
-    if (!accountDetails) throw new Error('Account not found');
-    const { lastUsedExternalIndex, lastUsedInternalIndex } = accountDetails;
-    const externalScripts = await this.deriveBatch(0, lastUsedExternalIndex, false, false);
-    const internalScripts = await this.deriveBatch(0, lastUsedInternalIndex, true, false);
+    const { internal, external } = await this.getLastUsedIndexes();
+    const externalScripts = await this.deriveBatch(0, external, false, false);
+    const internalScripts = await this.deriveBatch(0, internal, true, false);
     const scripts = [...externalScripts, ...internalScripts];
     const addresses = scripts.map((script) => {
       const { publicKey } = this.deriveBlindingKey(script);
@@ -167,13 +163,8 @@ export class Account {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get next address');
     if (!this.name) throw new Error('No name, cannot get next address');
 
-    const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
-      this.name
-    );
-    if (!accountDetails) throw new Error('Account not found');
-    const lastUsed = isInternal
-      ? accountDetails.lastUsedInternalIndex
-      : accountDetails.lastUsedExternalIndex;
+    const lastUsedIndexes = await this.getLastUsedIndexes();
+    const lastUsed = isInternal ? lastUsedIndexes.internal : lastUsedIndexes.external;
     const scripts = await this.deriveBatch(lastUsed, lastUsed + 1, isInternal);
     const script = scripts[0];
     const { publicKey } = this.deriveBlindingKey(script);
@@ -184,9 +175,10 @@ export class Account {
     }).address;
     if (!address) throw new Error('Could not derive address');
     // increment the account details
-    await this.walletRepository.updateAccountDetails(
+    await this.walletRepository.updateAccountLastUsedIndexes(
       this.name,
-      isInternal ? { lastUsedInternalIndex: lastUsed + 1 } : { lastUsedExternalIndex: lastUsed + 1 }
+      this.network.name as NetworkString,
+      { [isInternal ? 'internal' : 'external']: lastUsed + 1 }
     );
 
     return address;
@@ -211,7 +203,7 @@ export class Account {
       let batchCount = isInternal ? lastUsed.internal : lastUsed.external;
       let unusedScriptCounter = 0;
 
-      while (unusedScriptCounter <= gapLimit) {
+      while (unusedScriptCounter < gapLimit) {
         const scripts = await this.deriveBatch(
           batchCount,
           batchCount + gapLimit,
@@ -219,10 +211,11 @@ export class Account {
           false
         );
         const histories = await this.chainSource.fetchHistories(scripts);
+        console.log('histories', histories, 'for scripts', scripts, 'isInternal', isInternal);
         for (const [index, history] of histories.entries()) {
           if (history.length > 0) {
             unusedScriptCounter = 0; // reset counter
-            const newMaxIndex = index + 1 + batchCount;
+            const newMaxIndex = index + batchCount;
             if (isInternal) lastUsed.internal = newMaxIndex;
             else lastUsed.external = newMaxIndex;
 
@@ -242,10 +235,11 @@ export class Account {
 
     await Promise.allSettled([
       this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxsId),
-      this.walletRepository.updateAccountDetails(this.name, {
-        lastUsedInternalIndex: lastUsed.internal,
-        lastUsedExternalIndex: lastUsed.external,
-      }),
+      this.walletRepository.updateAccountLastUsedIndexes(
+        this.name,
+        this.network.name as NetworkString,
+        lastUsed
+      ),
       this.walletRepository.updateTxDetails(
         Object.fromEntries(
           Array.from(historyTxsId).map((txid) => [txid, { height: txidHeight.get(txid) }])
@@ -335,24 +329,14 @@ export class Account {
     const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
       this.name
     );
+    if (!accountDetails) return { internal: 0, external: 0 };
+    const { lastUsedIndexes } = accountDetails;
+    const net = this.network.name as NetworkString;
+    if (!lastUsedIndexes || !lastUsedIndexes[net]) return { internal: 0, external: 0 };
+
     return {
-      internal: accountDetails.lastUsedInternalIndex || 0,
-      external: accountDetails.lastUsedExternalIndex || 0,
+      internal: lastUsedIndexes[net].internal || 0,
+      external: lastUsedIndexes[net].external || 0,
     };
   }
-}
-
-export function createAccountDetails(onboardingMnemonic: string, onboardingPassword: string) {
-  const seed = mnemonicToSeedSync(onboardingMnemonic);
-
-  const masterPublicKey = bip32
-    .fromSeed(seed)
-    .derivePath(Account.BASE_DERIVATION_PATH)
-    .neutered()
-    .toBase58();
-
-  const encryptedMnemonic = encrypt(onboardingMnemonic, onboardingPassword);
-  const passwordHash = hashPassword(onboardingPassword);
-  const masterBlindingKey = slip77.fromSeed(seed).masterKey.toString('hex');
-  return { encryptedMnemonic, passwordHash, masterBlindingKey, masterPublicKey };
 }

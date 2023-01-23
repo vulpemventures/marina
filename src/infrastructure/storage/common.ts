@@ -94,7 +94,7 @@ export const useSelectAccount = (name: string): ReadonlyReactHook<Account | unde
           setAccount(account);
         }
       })().catch((r) => {
-        console.error(r);
+        console.error(`Error while useSelectAccount(${name})`, r);
         setAccount(undefined);
       });
     }, [details]);

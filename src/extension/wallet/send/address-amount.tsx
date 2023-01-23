@@ -6,7 +6,6 @@ import { fromSatoshi } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import type { Asset } from '../../../domain/asset';
 import AddressAmountForm from '../../components/address-amount-form';
-import { MainAccountName } from '../../../domain/account-type';
 import {
   assetRepository,
   sendFlowRepository,
@@ -14,11 +13,12 @@ import {
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
 import { computeBalances } from '../../../utils';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
 
 const AddressAmountView: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
-  const utxos = useSelectUtxos(MainAccountName)();
+  const utxos = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
   const [dataInCache, setDataInCache] = useState<{ amount?: number; address?: string }>();
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [sendAsset, setSendAsset] = useState<Asset>();

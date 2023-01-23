@@ -80,7 +80,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({
               asset={asset}
               quantity={balances ? balances[asset.assetHash] : undefined}
               key={index}
-              handleClick={({ assetHash }) => onClick(assetHash )}
+              handleClick={({ assetHash }) => onClick(assetHash)}
             />
           ))}
         </ButtonList>

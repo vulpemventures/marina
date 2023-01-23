@@ -1,4 +1,4 @@
-import type { FormikProps} from 'formik';
+import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import type { NetworkString } from 'marina-provider';
 import { useHistory } from 'react-router';

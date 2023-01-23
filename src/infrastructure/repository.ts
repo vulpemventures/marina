@@ -4,7 +4,12 @@ import type { AppStatus } from '../domain/app';
 import type { ChainSource, ListUnspentResponse } from '../domain/chainsource';
 import type { AccountDetails, ScriptDetails } from '../domain/account-type';
 import type { Asset } from '../domain/asset';
-import type { UnblindingData, CoinSelection, TxDetails, UnblindedOutput } from '../domain/transaction';
+import type {
+  UnblindingData,
+  CoinSelection,
+  TxDetails,
+  UnblindedOutput,
+} from '../domain/transaction';
 import Browser from 'webextension-polyfill';
 
 /**
@@ -78,6 +83,11 @@ export interface WalletRepository {
   // account, if no names, returns all accounts
   getAccountDetails(...names: string[]): Promise<Record<string, AccountDetails>>;
   updateAccountDetails(name: string, details: Partial<AccountDetails>): Promise<void>;
+  updateAccountLastUsedIndexes(
+    name: string,
+    network: NetworkString,
+    indexes: Partial<{ internal: number; external: number }>
+  ): Promise<void>;
 
   onNewTransaction(callback: (txID: string, tx: TxDetails) => Promise<void>): void;
   onNewUtxo(callback: (utxo: UnblindedOutput) => Promise<void>): void;

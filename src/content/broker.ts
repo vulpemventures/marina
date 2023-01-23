@@ -1,16 +1,7 @@
 import browser from 'webextension-polyfill';
 import { stringify } from '../browser-storage-converters';
-import type {
-  MessageHandler,
-  PopupName,
-  RequestMessage,
-  ResponseMessage
-} from '../domain/message';
-import {
-  isPopupResponseMessage,
-  openPopupMessage,
-  isResponseMessage
-} from '../domain/message';
+import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
+import { isPopupResponseMessage, openPopupMessage, isResponseMessage } from '../domain/message';
 
 export type BrokerOption = (broker: Broker) => void;
 

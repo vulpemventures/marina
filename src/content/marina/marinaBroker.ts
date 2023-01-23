@@ -1,13 +1,9 @@
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import type {
-  MessageHandler} from '../../domain/message';
-import {
-  newErrorResponseMessage,
-  newSuccessResponseMessage,
-} from '../../domain/message';
+import type { MessageHandler } from '../../domain/message';
+import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
-import { MainAccountName } from '../../domain/account-type';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../domain/account-type';
 import type {
   AppRepository,
   AssetRepository,
@@ -34,13 +30,13 @@ import type {
   SpentUtxoMarinaEvent,
 } from '../marina-event';
 import { stringify } from '../../browser-storage-converters';
-import type { Account} from '../../domain/account';
+import type { Account } from '../../domain/account';
 import { AccountFactory } from '../../domain/account';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
   private hostname: string;
-  private selectedAccount = MainAccountName;
+  private selectedAccount = MainAccount;
   private walletRepository: WalletRepository;
   private appRepository: AppRepository;
   private assetRepository: AssetRepository;
@@ -126,7 +122,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   // if ids is undefined, return the main account
   // if ids is empty, return an empty array
   private handleIdsParam(ids?: string[]): string[] {
-    if (!ids) return [MainAccountName];
+    if (!ids) return [MainAccount, MainAccountLegacy, MainAccountTest];
     if (ids.length === 0) return [];
     return ids;
   }
@@ -449,7 +445,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'getAccountInfo': {
           await this.checkHostnameAuthorization();
           let [accountName] = params as [string];
-          if (!accountName) accountName = MainAccountName;
+          if (!accountName) accountName = MainAccount;
 
           if (!this.accountExists(accountName)) {
             throw new Error(`Account ${accountName} not found`);

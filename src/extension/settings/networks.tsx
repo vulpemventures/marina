@@ -2,7 +2,6 @@ import type { NetworkString } from 'ldk';
 import React, { useState } from 'react';
 import Browser from 'webextension-polyfill';
 import { AccountFactory } from '../../domain/account';
-import { MainAccountName } from '../../domain/account-type';
 import { subscribeMessage } from '../../domain/message';
 import {
   appRepository,
@@ -28,10 +27,17 @@ const SettingsNetworksView: React.FC = () => {
         // switch the selected network
         await appRepository.setNetwork(newNetwork);
         const factory = await AccountFactory.create(walletRepository, appRepository, [newNetwork]);
-        const account = await factory.make(newNetwork, MainAccountName);
-        await account.sync();
         const port = Browser.runtime.connect();
-        port.postMessage(subscribeMessage(account.name));
+        const allAccounts = await walletRepository.getAccountDetails();
+        for (const name of Object.keys(allAccounts)) {
+          try {
+            const account = await factory.make(newNetwork, name);
+            await account.sync();
+            port.postMessage(subscribeMessage(account.name));
+          } catch (e) {
+            console.error(e);
+          }
+        }
       }
     } catch (e) {
       console.error(e);

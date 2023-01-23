@@ -1,6 +1,6 @@
 import * as ecc from 'tiny-secp256k1';
 import zkp from '@vulpemventures/secp256k1-zkp';
-import type { OwnedInput} from 'liquidjs-lib';
+import type { OwnedInput } from 'liquidjs-lib';
 import { AssetHash, Blinder, Pset, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
 import type { WalletRepository } from '../infrastructure/repository';
 

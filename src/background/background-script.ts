@@ -1,7 +1,13 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import type { OpenPopupMessage, PopupName } from '../domain/message';
-import { isLogInMessage, isLogOutMessage , isSubscribeMessage, isOpenPopupMessage, isPopupResponseMessage } from '../domain/message';
+import {
+  isLogInMessage,
+  isLogOutMessage,
+  isSubscribeMessage,
+  isOpenPopupMessage,
+  isPopupResponseMessage,
+} from '../domain/message';
 import { Subscriber } from '../domain/subscriber';
 import { POPUP_RESPONSE } from '../extension/popups/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../extension/routes/constants';

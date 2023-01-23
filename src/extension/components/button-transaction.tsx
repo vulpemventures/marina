@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { TxDetails} from '../../domain/transaction';
+import type { TxDetails } from '../../domain/transaction';
 import { TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
 import TxIcon from './txIcon';

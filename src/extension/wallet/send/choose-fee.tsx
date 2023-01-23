@@ -10,7 +10,6 @@ import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { Creator, networks, Transaction, Updater } from 'liquidjs-lib';
 import type { Asset } from '../../../domain/asset';
-import { MainAccountName } from '../../../domain/account-type';
 import { computeBalances } from '../../../utils';
 import {
   useSelectNetwork,
@@ -21,6 +20,7 @@ import {
   walletRepository,
   assetRepository,
 } from '../../../infrastructure/storage/common';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
 
 type Recipient = {
   address: string;
@@ -32,7 +32,7 @@ const ChooseFee: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
   const taxiAssets = useSelectTaxiAssets();
-  const utxos = useSelectUtxos(MainAccountName)();
+  const utxos = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
 
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [selectedFeeAsset, setSelectedFeeAsset] = useState<string>();
@@ -42,7 +42,7 @@ const ChooseFee: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [recipient, setRecipient] = useState<Recipient>();
-  const mainAccount = useSelectAccount(MainAccountName)();
+  const mainAccount = useSelectAccount(MainAccount)();
 
   useEffect(() => {
     (async () => {
@@ -121,7 +121,9 @@ const ChooseFee: React.FC = () => {
         network,
         [{ asset: recipient.asset, amount: recipient.amount }],
         true,
-        MainAccountName
+        MainAccount,
+        MainAccountLegacy,
+        MainAccountTest
       );
 
       const updater = new Updater(pset);
@@ -182,7 +184,9 @@ const ChooseFee: React.FC = () => {
           network,
           [{ asset: networks[network].assetHash, amount: feeAmount }],
           true,
-          MainAccountName
+          MainAccount,
+          MainAccountLegacy,
+          MainAccountTest
         );
 
         const newWitnessUtxos = await Promise.all(

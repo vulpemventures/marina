@@ -2,7 +2,7 @@ import type { NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import { ElectrumWS } from '../../domain/ws/ws-electrs';
 import type { AppStatus } from '../../domain/app';
-import type { ChainSource} from '../../domain/chainsource';
+import type { ChainSource } from '../../domain/chainsource';
 import { WsElectrumChainSource } from '../../domain/chainsource';
 import {
   BlockstreamExplorerURLs,

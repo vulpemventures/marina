@@ -65,6 +65,28 @@ export class WalletStorageAPI implements WalletRepository {
     return Browser.storage.local.set({ [key]: { ...currentDetails, ...details } });
   }
 
+  async updateAccountLastUsedIndexes(
+    name: string,
+    network: NetworkString,
+    indexes: Partial<{ internal: number; external: number }>
+  ): Promise<void> {
+    const key = AccountKey.make(name);
+    const currentDetails = (await this.getAccountDetails(name))[name];
+    const currentLastUsedIndexes = currentDetails.lastUsedIndexes?.[network] ?? {};
+    return Browser.storage.local.set({
+      [key]: {
+        ...currentDetails,
+        lastUsedIndexes: {
+          ...currentDetails.lastUsedIndexes,
+          [network]: {
+            ...currentLastUsedIndexes,
+            ...indexes,
+          },
+        },
+      },
+    });
+  }
+
   setLastUsedIndex(index: number, isInternal: boolean): Promise<void> {
     const key = isInternal ? WalletStorageKey.INTERNAL_INDEX : WalletStorageKey.EXTERNAL_INDEX;
     return Browser.storage.local.set({ [key]: index });
@@ -341,7 +363,7 @@ export class WalletStorageAPI implements WalletRepository {
         ([key, changes]) => ScriptUnspentsKey.is(key) && changes.newValue !== undefined
       );
 
-      for (const [,change] of listUnspentKeys) {
+      for (const [, change] of listUnspentKeys) {
         // check if there is NEW utxo
         const newUnspents = change.newValue as ListUnspentResponse | undefined;
         if (!newUnspents) continue; // it means we just deleted the key
@@ -368,9 +390,7 @@ export class WalletStorageAPI implements WalletRepository {
         // check if there is NEW utxo
         const newUnspents = change.newValue as ListUnspentResponse | undefined;
         if (!newUnspents) continue; // it means we just deleted the key
-        const oldUnspents = change.oldValue
-          ? (change.oldValue as ListUnspentResponse)
-          : [];
+        const oldUnspents = change.oldValue ? (change.oldValue as ListUnspentResponse) : [];
 
         const newUnspentsSet = new Set(newUnspents);
         const oldUnspentsDeleted = oldUnspents.filter((unspent) => !newUnspentsSet.has(unspent));

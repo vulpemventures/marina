@@ -4,7 +4,11 @@ import { AssetHash, confidential } from 'liquidjs-lib';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import type { Output } from 'liquidjs-lib/src/transaction';
-import type { AppRepository, AssetRepository, WalletRepository } from '../infrastructure/repository';
+import type {
+  AppRepository,
+  AssetRepository,
+  WalletRepository,
+} from '../infrastructure/repository';
 import type { UnblindingData } from './transaction';
 
 type AssetAxiosResponse = AxiosResponse<{ name?: string; ticker?: string; precision?: number }>;

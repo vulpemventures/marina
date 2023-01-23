@@ -23,7 +23,7 @@ import {
   useSelectTransactions,
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
-import { MainAccountName } from '../../../domain/account-type';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
 
 interface LocationState {
   assetHash: string;
@@ -35,7 +35,7 @@ const Transactions: React.FC = () => {
   } = useLocation<LocationState>();
   const history = useHistory();
   const transactions = useSelectTransactions();
-  const utxos = useSelectUtxos(MainAccountName)();
+  const utxos = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
 
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [asset, setAsset] = useState<Asset>();

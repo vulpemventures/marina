@@ -7,13 +7,12 @@ import { formatAddress } from '../../utility';
 import Browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { subscribeMessage } from '../../../domain/message';
-import { MainAccountName } from '../../../domain/account-type';
-import { useSelectAccount } from '../../../infrastructure/storage/common';
+import { MainAccount, MainAccountTest } from '../../../domain/account-type';
+import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
+import { AccountFactory } from '../../../domain/account';
 
 const ReceiveView: React.FC = () => {
   const history = useHistory();
-  const mainAccount = useSelectAccount(MainAccountName)();
-
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');
   const [isAddressExpanded, setAddressExpanded] = useState(false);
@@ -28,14 +27,20 @@ const ReceiveView: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      if (!mainAccount) return;
       if (confidentialAddress !== '') return; // address is already generated
+      const network = await appRepository.getNetwork();
+      if (!network) throw new Error('Network is not set');
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const accountFactory = await AccountFactory.create(walletRepository, appRepository, [
+        network,
+      ]);
+      const mainAccount = await accountFactory.make(network, accountName);
       const addr = await mainAccount.getNextAddress(false);
       setConfidentialAddress(addr);
       const port = Browser.runtime.connect();
       port.postMessage(subscribeMessage(mainAccount.name));
     })().catch(console.error);
-  }, [mainAccount]);
+  }, []);
 
   return (
     <ShellPopUp

@@ -1,5 +1,5 @@
 import { crypto } from 'liquidjs-lib';
-import type { BlockHeader} from '../background/utils';
+import type { BlockHeader } from '../background/utils';
 import { deserializeBlockHeader } from '../background/utils';
 import type { ElectrumWS } from './ws/ws-electrs';
 
