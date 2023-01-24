@@ -18,7 +18,7 @@ import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain
 const AddressAmountView: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
-  const utxos = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
+  const [utxos] = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
   const [dataInCache, setDataInCache] = useState<{ amount?: number; address?: string }>();
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [sendAsset, setSendAsset] = useState<Asset>();

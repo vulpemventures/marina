@@ -32,7 +32,7 @@ const ChooseFee: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
   const taxiAssets = useSelectTaxiAssets();
-  const utxos = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
+  const [utxos, utxosLoading] = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
 
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [selectedFeeAsset, setSelectedFeeAsset] = useState<string>();
@@ -66,6 +66,7 @@ const ChooseFee: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (utxosLoading) return;
     setBalances(computeBalances(utxos));
   }, [utxos]);
 

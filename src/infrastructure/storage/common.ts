@@ -157,24 +157,29 @@ export const useSelectPopupPsetToSign = makeReactHook<string>(
   PopupsStorageKeys.SIGN_TRANSACTION_PSET
 );
 
+// returns the utxos for the given accounts, and a boolean indicating if the utxos has been loaded
 export const useSelectUtxos = (...accounts: string[]) => {
-  const updateUtxosArray = async (setUtxos: (utxos: UnblindedOutput[]) => void) => {
-    const network = await appRepository.getNetwork();
-    if (!network) return;
-    else setUtxos(await walletRepository.getUtxos(network, ...accounts));
-  };
-
-  return () => {
+  return (): [UnblindedOutput[], boolean] => {
     const [utxos, setUtxos] = useState<UnblindedOutput[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const updateUtxosArray = async () => {
+      const network = await appRepository.getNetwork();
+      if (network) {
+        const newUtxos = await walletRepository.getUtxos(network, ...accounts);
+        setLoading(false);
+        setUtxos(newUtxos);
+      }
+    };
 
     useEffect(() => {
-      updateUtxosArray(setUtxos).catch(console.error);
+      updateUtxosArray().catch(console.error);
 
       const listener = (changes: Browser.Storage.StorageChange, areaName: string) => {
         if (areaName !== 'local') return;
         for (const [key, change] of Object.entries(changes)) {
           if (change.newValue && (ScriptUnspentsKey.is(key) || OutpointBlindingDataKey.is(key))) {
-            updateUtxosArray(setUtxos).catch(console.error);
+            updateUtxosArray().catch(console.error);
             return;
           }
         }
@@ -186,7 +191,7 @@ export const useSelectUtxos = (...accounts: string[]) => {
       };
     }, []);
 
-    return utxos;
+    return [utxos, loading];
   };
 };
 
@@ -255,12 +260,7 @@ export const useSelectTransactions = () => {
       if (!net) return;
       const txIds = await walletRepository.getTransactions(net);
       const details = await walletRepository.getTxDetails(...txIds);
-      const txDetails = Object.values(details).sort((a, b) => {
-        if (a.height === b.height) return 0;
-        if (a.height === undefined || a.height === -1) return 1;
-        if (b.height === undefined || b.height === -1) return -1;
-        return a.height - b.height;
-      });
+      const txDetails = Object.values(details).sort(sortTxDetails());
 
       setTransactions(txDetails);
 
@@ -275,7 +275,7 @@ export const useSelectTransactions = () => {
               (tx) => tx.hex && Transaction.fromHex(tx.hex).getId() === txID
             );
             if (index === -1) {
-              setTransactions([details, ...newTransactions]);
+              setTransactions([details, ...newTransactions].sort(sortTxDetails()));
             } else {
               newTransactions[index] = details;
               setTransactions(newTransactions);
@@ -291,3 +291,16 @@ export const useSelectTransactions = () => {
   }, []);
   return transactions;
 };
+
+function sortTxDetails(): ((a: TxDetails, b: TxDetails) => number) | undefined {
+  return (a, b) => {
+    if (a.height === b.height)
+      return 0;
+    if (a.height === undefined || a.height === -1)
+      return -1;
+    if (b.height === undefined || b.height === -1)
+      return 1;
+    return b.height - a.height;
+  };
+}
+

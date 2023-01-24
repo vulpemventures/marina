@@ -94,14 +94,14 @@ export class WalletRepositoryUnblinder implements Unblinder {
 
         await this.assetRepository.addAsset(asset, {
           name: name || 'Unknown',
-          ticker: ticker || '????',
+          ticker: ticker || asset.substring(0, 4),
           precision: precision || 8,
           assetHash: asset,
         });
       } catch (e) {
         await this.assetRepository.addAsset(asset, {
           name: 'Unknown',
-          ticker: '????',
+          ticker: asset.substring(0, 4),
           precision: 8,
           assetHash: asset,
         });

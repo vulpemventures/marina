@@ -12,7 +12,7 @@ import { computeBalances } from '../../../utils';
 const SendSelectAsset: React.FC = () => {
   const history = useHistory();
   const [balances, setBalances] = useState<Record<string, number>>({});
-  const utxos = useSelectUtxos()();
+  const [utxos] = useSelectUtxos()();
   const balanceAssets = useSelectAllAssets();
 
   useEffect(() => {

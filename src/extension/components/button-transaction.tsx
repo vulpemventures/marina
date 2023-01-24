@@ -36,6 +36,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
   const [feeAmount, setFeeAmount] = useState<number>();
   const [txID, setTxID] = useState<string>();
   const [blockHeader, setBlockHeader] = useState<BlockHeader>();
+  const [isLoading, setIsLoading] = useState(true);
   const network = useSelectNetwork();
 
   useEffect(() => {
@@ -90,7 +91,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       if (!chainSource) return;
       const header = await chainSource.fetchBlockHeader(txDetails.height);
       setBlockHeader(header);
-    })().catch(console.error); // TODO display error in UI
+    })().catch(console.error).finally(() => setIsLoading(false)); // TODO display error in UI
   }, [txDetails]);
 
   const handleClick = () => {
@@ -137,7 +138,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
             {blockHeader
               ? moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')
-              : 'uncomfirmed'}
+              : isLoading ? '...' : 'uncomfirmed'}
           </span>
         </div>
         <div className="flex">

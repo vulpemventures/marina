@@ -29,11 +29,13 @@ import {
 const Home: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
-  const utxos = useSelectUtxos()();
+  const [utxos, utxosLoading] = useSelectUtxos()();
   const allWalletAssets = useSelectAllAssets();
   const [balances, setBalances] = useState<Record<string, number>>({});
 
   useEffect(() => {
+    console.log('utxos', utxos, utxosLoading);
+    if (utxosLoading) return;
     setBalances(computeBalances(utxos));
   }, [utxos]);
 
@@ -97,18 +99,27 @@ const Home: React.FC = () => {
         <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
         <div className="h-60">
-          <ButtonList title="Assets" emptyText="You don't own any asset...">
-            {allWalletAssets.map((asset: Asset, index: React.Key) => {
-              return (
-                <ButtonAsset
-                  asset={asset}
-                  quantity={balances[asset.assetHash]}
-                  key={index}
-                  handleClick={handleAssetBalanceButtonClick}
-                />
-              );
-            })}
-          </ButtonList>
+          {!utxosLoading && <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
+            {allWalletAssets
+              // put the assets with balance defined on top
+              .sort((a, b) => {
+                const aBalance = balances[a.assetHash];
+                const bBalance = balances[b.assetHash];
+                if (aBalance && !bBalance) return -1;
+                if (!aBalance && bBalance) return 1;
+                return 0;
+              })
+              .map((asset: Asset, index: React.Key) => {
+                return (
+                  <ButtonAsset
+                    asset={asset}
+                    quantity={balances[asset.assetHash]}
+                    key={index}
+                    handleClick={handleAssetBalanceButtonClick}
+                  />
+                );
+              })}
+          </ButtonList>}
         </div>
       </div>
     </ShellPopUp>
