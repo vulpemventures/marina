@@ -126,12 +126,12 @@ export class Account {
       // persist the script details in the wallet repository
       await this.walletRepository.updateScriptDetails(
         Object.fromEntries(
-          scripts.map((script) => [
+          scripts.map((script, index) => [
             script.toString('hex'),
             {
               accountName: this.name,
               network: this.network.name as NetworkString,
-              derivationPath: `m/${chain}/${start}`,
+              derivationPath: `m/${chain}/${start+index}`,
               blindingPrivateKey: this.deriveBlindingKey(script).privateKey.toString('hex'),
             },
           ])
