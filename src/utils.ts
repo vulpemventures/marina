@@ -1,4 +1,4 @@
-import { address, networks, payments } from 'liquidjs-lib';
+import { address, networks, payments, Transaction } from 'liquidjs-lib';
 import type { NetworkString, SignedMessage } from 'marina-provider';
 import * as crypto from 'crypto';
 import { INVALID_PASSWORD_ERROR } from './constants';
@@ -7,6 +7,7 @@ import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { signAsync } from 'bitcoinjs-message';
 import type { UnblindedOutput } from './domain/transaction';
+import { appRepository, walletRepository } from './infrastructure/storage/common';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -103,4 +104,33 @@ export function getNetwork(network: NetworkString): networks.Network {
     throw new Error('network not found');
   }
   return net;
+}
+
+const reverseHex = (hex: string) => Buffer.from(hex, 'hex').reverse().toString('hex');
+
+export async function makeURLwithBlinders(transaction: Transaction) {
+  const webExplorerURL = await appRepository.getWebExplorerURL();
+  if (!webExplorerURL) {
+    throw new Error('web explorer url not found');
+  }
+  const txID = transaction.getId();
+
+  const blinders: string[] = [];
+  for (let i = 0; i < transaction.outs.length; i++) {
+    const output = transaction.outs[i];
+    if (output.script.length === 0)
+      continue;
+    const data = await walletRepository.getOutputBlindingData(txID, i);
+    if (!data || !data.blindingData)
+      continue;
+
+    blinders.push(
+      `${data.blindingData.value},${data.blindingData.asset},${reverseHex(
+        data.blindingData.valueBlindingFactor
+      )},${reverseHex(data.blindingData.assetBlindingFactor)}`
+    );
+  }
+
+  const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}`;
+  return url;
 }

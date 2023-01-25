@@ -19,8 +19,10 @@ import {
   sendFlowRepository,
   walletRepository,
   assetRepository,
+  appRepository,
 } from '../../../infrastructure/storage/common';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
+import { Account, AccountFactory } from '../../../domain/account';
 
 type Recipient = {
   address: string;
@@ -42,7 +44,6 @@ const ChooseFee: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [recipient, setRecipient] = useState<Recipient>();
-  const mainAccount = useSelectAccount(MainAccount)();
 
   useEffect(() => {
     (async () => {
@@ -75,7 +76,6 @@ const ChooseFee: React.FC = () => {
       typeof asset === 'string' ? asset === selectedFeeAsset : asset.assetHash === selectedFeeAsset
     ) !== -1;
 
-  // dispatch a set of actions in order to save the pset in redux state
   const handleConfirm = async () => {
     try {
       if (!selectedFeeAsset) throw new Error('fee asset not selected');
@@ -155,8 +155,12 @@ const ChooseFee: React.FC = () => {
         },
       ]);
 
+      const accountFactory = await AccountFactory.create(walletRepository, appRepository, [network]);
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const mainAccount = await accountFactory.make(network, accountName)
+
       if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
-        const changeAddress = await mainAccount?.getNextAddress(true);
+        const changeAddress = await mainAccount.getNextAddress(true);
         if (!changeAddress) {
           throw new Error('change address not found');
         }
@@ -172,9 +176,13 @@ const ChooseFee: React.FC = () => {
         ]);
       }
 
-      const feeRate = 0.001;
+      const chainSource = await appRepository.getChainSource(network);
+      if (!chainSource) {
+        throw new Error('chain source not found, cannot estimate fee');
+      }
 
-      const feeAmount = Math.floor(updater.pset.unsignedTx().virtualSize() * feeRate);
+
+      const feeAmount = 360;
 
       if (recipient.asset === networks[network].assetHash && updater.pset.outputs.length > 1) {
         // subtract fee from change output
@@ -206,7 +214,7 @@ const ChooseFee: React.FC = () => {
         );
 
         if (newCoinSelection.changeOutputs && newCoinSelection.changeOutputs.length > 0) {
-          const changeAddress = await mainAccount?.getNextAddress(true);
+          const changeAddress = await mainAccount.getNextAddress(true);
           if (!changeAddress) {
             throw new Error('change address not found');
           }
@@ -220,23 +228,24 @@ const ChooseFee: React.FC = () => {
             },
           ]);
         }
+      }
 
-        // add the fee output
-        updater.addOutputs([
-          {
-            asset: networks[network].assetHash,
-            amount: feeAmount,
-          },
-        ]);
+      // add the fee output
+      updater.addOutputs([
+        {
+          asset: networks[network].assetHash,
+          amount: feeAmount,
+        },
+      ]);
 
-        setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
+      setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
 
-        const psetBase64 = updater.pset.toBase64();
-        setUnsignedPset(psetBase64);
+      const psetBase64 = updater.pset.toBase64();
+      setUnsignedPset(psetBase64);
 
-        if (isTaxi()) {
-          // make taxi topup tx
-        }
+      if (isTaxi()) {
+        // TODO
+        // make taxi topup tx
       }
     } catch (error: any) {
       handleError(error);

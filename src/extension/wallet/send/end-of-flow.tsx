@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
@@ -13,55 +13,48 @@ import {
   useSelectNetwork,
   walletRepository,
 } from '../../../infrastructure/storage/common';
+import { BlinderService } from '../../../domain/blinder';
+import Browser from 'webextension-polyfill';
+import { subscribeMessage } from '../../../domain/message';
+import { MainAccount, MainAccountTest } from '../../../domain/account-type';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
-  const [unsignedPset, setUnsignedPset] = useState<string>();
   const [invalidPasswordError, setInvalidPasswordError] = useState(false);
-  const [unlockModal, setUnlockModal] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const unsignedPset = await sendFlowRepository.getUnsignedPset();
-      if (!unsignedPset) {
-        history.push(SEND_PAYMENT_ERROR_ROUTE);
-        return;
-      }
-      setUnsignedPset(unsignedPset);
-    })().catch((error: unknown) => {
-      console.error(error);
-      history.push({
-        pathname: SEND_PAYMENT_ERROR_ROUTE,
-        state: { error: extractErrorMessage(error) || SOMETHING_WENT_WRONG_ERROR },
-      });
-    });
-  }, []);
+  const [unlockModal, setUnlockModal] = useState(true);
 
   const handleModalUnlockClose = () => setUnlockModal(false);
   const handleUnlockModalOpen = () => {
-    setInvalidPasswordError(false);
+  setInvalidPasswordError(false);
     setUnlockModal(true);
   };
 
   const handleUnlock = async (password: string) => {
     let toBroadcast = undefined;
     try {
+      const unsignedPset = await sendFlowRepository.getUnsignedPset();
       if (!unsignedPset) throw new Error('unsigned pset not found');
       const chainSource = await appRepository.getChainSource(network);
       if (!chainSource) throw new Error('chain source not found');
 
+      const blinder = new BlinderService(walletRepository);
+      const blindedPset = await blinder.blindPset(unsignedPset);
       const signer = await SignerService.fromPassword(walletRepository, password);
-      const signed = await signer.signPset(unsignedPset);
+      const signed = await signer.signPset(blindedPset);
       toBroadcast = signer.finalizeAndExtract(signed);
 
       const txid = await chainSource.broadcastTransaction(toBroadcast);
       if (!txid) throw new Error('something went wrong with the tx broadcasting');
+      await sendFlowRepository.reset(); 
+      const port = Browser.runtime.connect();
+      port.postMessage(subscribeMessage(MainAccount))
+      port.postMessage(subscribeMessage(MainAccountTest))
 
       // push to success page
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txid },
+        state: { txhex: toBroadcast },
       });
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);

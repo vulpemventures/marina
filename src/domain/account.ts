@@ -172,7 +172,7 @@ export class Account {
       output: script,
       network: this.network,
       blindkey: publicKey,
-    }).address;
+    }).confidentialAddress;
     if (!address) throw new Error('Could not derive address');
     // increment the account details
     await this.walletRepository.updateAccountLastUsedIndexes(

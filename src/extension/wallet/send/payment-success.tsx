@@ -5,16 +5,14 @@ import useLottieLoader from '../../hooks/use-lottie-loader';
 import Button from '../../components/button';
 import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
+import { Transaction } from 'liquidjs-lib';
+import { makeURLwithBlinders } from '../../../utils';
 
 interface LocationState {
-  txid: string;
+  txhex: string;
 }
 
-export interface PaymentSuccessProps {
-  electrsExplorerURL: string;
-}
-
-const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL }) => {
+const PaymentSuccessView: React.FC = () => {
   const { state } = useLocation<LocationState>();
   const history = useHistory();
 
@@ -22,11 +20,14 @@ const PaymentSuccessView: React.FC<PaymentSuccessProps> = ({ electrsExplorerURL 
   const checkmarkLoaderRef = React.useRef(null);
   useLottieLoader(checkmarkLoaderRef, '/assets/animations/checkmark.json');
 
-  const handleOpenExplorer = () =>
+  const handleOpenExplorer = async () => {
+    const tx = Transaction.fromHex(state.txhex);
+    const url = await makeURLwithBlinders(tx);
     browser.tabs.create({
-      url: `${electrsExplorerURL}/tx/${state.txid}`,
+      url,
       active: false,
     });
+  };
 
   const handleBackToHome = () => history.push(DEFAULT_ROUTE);
 

@@ -279,15 +279,14 @@ export class WalletStorageAPI implements WalletRepository {
         );
       }
 
+      console.log('outputs', outputs);
       if (outputs) {
-        outputs
-          .filter((output: any) => output.address !== 'fake') // only add change outputs
-          .push(
-            ...(outputs as { value: number }[]).map((output) => ({
-              asset: target.asset,
-              amount: output.value,
-            }))
-          );
+        changeOutputs.push(...outputs
+          .filter((output: any) => output.address === undefined) // only add change outputs
+          .map((output: { value: number; }) => ({
+            asset: target.asset,
+            amount: output.value,
+          })));
       }
     }
 

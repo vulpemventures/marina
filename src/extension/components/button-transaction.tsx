@@ -17,6 +17,7 @@ import {
   useSelectNetwork,
   walletRepository,
 } from '../../infrastructure/storage/common';
+import { makeURLwithBlinders } from '../../utils';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -98,31 +99,11 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
     setModalOpen(true);
   };
 
-  const reverseHex = (hex: string) => {
-    return Buffer.from(hex, 'hex').reverse().toString('hex');
-  };
-
   const handleOpenExplorer = async () => {
     if (!txDetails.hex) return;
     const transaction = Transaction.fromHex(txDetails.hex);
     const webExplorerURL = await appRepository.getWebExplorerURL(network);
-    const txID = transaction.getId();
-
-    const blinders: string[] = [];
-    for (let i = 0; i < transaction.outs.length; i++) {
-      const output = transaction.outs[i];
-      if (output.script.length === 0) continue;
-      const data = await walletRepository.getOutputBlindingData(txID, i);
-      if (!data || !data.blindingData) continue;
-
-      blinders.push(
-        `${data.blindingData.value},${data.blindingData.asset},${reverseHex(
-          data.blindingData.valueBlindingFactor
-        )},${reverseHex(data.blindingData.assetBlindingFactor)}`
-      );
-    }
-
-    const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}}`;
+    const url = await makeURLwithBlinders(transaction);
     await Browser.tabs.create({ url, active: false });
   };
 
@@ -202,3 +183,6 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
 };
 
 export default ButtonTransaction;
+
+
+
