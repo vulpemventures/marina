@@ -23,7 +23,7 @@ const PaymentSuccessView: React.FC = () => {
   const handleOpenExplorer = async () => {
     const tx = Transaction.fromHex(state.txhex);
     const url = await makeURLwithBlinders(tx);
-    browser.tabs.create({
+    await browser.tabs.create({
       url,
       active: false,
     });

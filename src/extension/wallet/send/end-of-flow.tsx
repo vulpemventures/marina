@@ -26,7 +26,7 @@ const SendEndOfFlow: React.FC = () => {
 
   const handleModalUnlockClose = () => setUnlockModal(false);
   const handleUnlockModalOpen = () => {
-  setInvalidPasswordError(false);
+    setInvalidPasswordError(false);
     setUnlockModal(true);
   };
 
@@ -46,10 +46,10 @@ const SendEndOfFlow: React.FC = () => {
 
       const txid = await chainSource.broadcastTransaction(toBroadcast);
       if (!txid) throw new Error('something went wrong with the tx broadcasting');
-      await sendFlowRepository.reset(); 
+      await sendFlowRepository.reset();
       const port = Browser.runtime.connect();
-      port.postMessage(subscribeMessage(MainAccount))
-      port.postMessage(subscribeMessage(MainAccountTest))
+      port.postMessage(subscribeMessage(MainAccount));
+      port.postMessage(subscribeMessage(MainAccountTest));
 
       // push to success page
       history.push({

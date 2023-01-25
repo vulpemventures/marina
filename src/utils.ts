@@ -1,4 +1,5 @@
-import { address, networks, payments, Transaction } from 'liquidjs-lib';
+import type { Transaction } from 'liquidjs-lib';
+import { address, networks, payments } from 'liquidjs-lib';
 import type { NetworkString, SignedMessage } from 'marina-provider';
 import * as crypto from 'crypto';
 import { INVALID_PASSWORD_ERROR } from './constants';
@@ -118,11 +119,9 @@ export async function makeURLwithBlinders(transaction: Transaction) {
   const blinders: string[] = [];
   for (let i = 0; i < transaction.outs.length; i++) {
     const output = transaction.outs[i];
-    if (output.script.length === 0)
-      continue;
+    if (output.script.length === 0) continue;
     const data = await walletRepository.getOutputBlindingData(txID, i);
-    if (!data || !data.blindingData)
-      continue;
+    if (!data || !data.blindingData) continue;
 
     blinders.push(
       `${data.blindingData.value},${data.blindingData.asset},${reverseHex(

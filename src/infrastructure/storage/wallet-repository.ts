@@ -280,12 +280,14 @@ export class WalletStorageAPI implements WalletRepository {
       }
 
       if (outputs) {
-        changeOutputs.push(...outputs
-          .filter((output: any) => output.address === undefined) // only add change outputs
-          .map((output: { value: number; }) => ({
-            asset: target.asset,
-            amount: output.value,
-          })));
+        changeOutputs.push(
+          ...outputs
+            .filter((output: any) => output.address === undefined) // only add change outputs
+            .map((output: { value: number }) => ({
+              asset: target.asset,
+              amount: output.value,
+            }))
+        );
       }
     }
 

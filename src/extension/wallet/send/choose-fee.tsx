@@ -154,9 +154,11 @@ const ChooseFee: React.FC = () => {
         },
       ]);
 
-      const accountFactory = await AccountFactory.create(walletRepository, appRepository, [network]);
+      const accountFactory = await AccountFactory.create(walletRepository, appRepository, [
+        network,
+      ]);
       const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-      const mainAccount = await accountFactory.make(network, accountName)
+      const mainAccount = await accountFactory.make(network, accountName);
 
       if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
         const changeAddress = await mainAccount.getNextAddress(true);
@@ -179,7 +181,6 @@ const ChooseFee: React.FC = () => {
       if (!chainSource) {
         throw new Error('chain source not found, cannot estimate fee');
       }
-
 
       const feeAmount = 360;
 

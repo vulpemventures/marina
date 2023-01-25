@@ -98,27 +98,29 @@ const Home: React.FC = () => {
         <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
         <div className="h-60">
-          {!utxosLoading && <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
-            {allWalletAssets
-              // put the assets with balance defined on top
-              .sort((a, b) => {
-                const aBalance = balances[a.assetHash];
-                const bBalance = balances[b.assetHash];
-                if (aBalance && !bBalance) return -1;
-                if (!aBalance && bBalance) return 1;
-                return 0;
-              })
-              .map((asset: Asset, index: React.Key) => {
-                return (
-                  <ButtonAsset
-                    asset={asset}
-                    quantity={balances[asset.assetHash]}
-                    key={index}
-                    handleClick={handleAssetBalanceButtonClick}
-                  />
-                );
-              })}
-          </ButtonList>}
+          {!utxosLoading && (
+            <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
+              {allWalletAssets
+                // put the assets with balance defined on top
+                .sort((a, b) => {
+                  const aBalance = balances[a.assetHash];
+                  const bBalance = balances[b.assetHash];
+                  if (aBalance && !bBalance) return -1;
+                  if (!aBalance && bBalance) return 1;
+                  return 0;
+                })
+                .map((asset: Asset, index: React.Key) => {
+                  return (
+                    <ButtonAsset
+                      asset={asset}
+                      quantity={balances[asset.assetHash]}
+                      key={index}
+                      handleClick={handleAssetBalanceButtonClick}
+                    />
+                  );
+                })}
+            </ButtonList>
+          )}
         </div>
       </div>
     </ShellPopUp>

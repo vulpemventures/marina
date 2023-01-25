@@ -74,7 +74,7 @@ export class Updater {
             // for all new txs, we need to fetch the tx hex
             const oldTxIDsSet = new Set(oldTxIDs);
             const txIDsToFetch = newTxIDs.filter((txID) => !oldTxIDsSet.has(txID));
-            console.warn('TxIDsKey', key, txIDsToFetch)
+            console.warn('TxIDsKey', key, txIDsToFetch);
             try {
               const chainSource = await this.appRepository.getChainSource(network);
               if (!chainSource) {
@@ -89,7 +89,7 @@ export class Updater {
               console.error(e);
             }
           } else if (ScriptUnspentsKey.is(key)) {
-            console.warn('ScriptUnspentsKey', key)
+            console.warn('ScriptUnspentsKey', key);
             const [script] = ScriptUnspentsKey.decode(key);
             const newUnspents = changes[key].newValue as ListUnspentResponse | undefined;
             if (!newUnspents) continue; // it means we just deleted the key
@@ -112,8 +112,6 @@ export class Updater {
               if (details?.hex) txMapToHex.set(ID, details.hex);
               else missingTxs.push(ID);
             }
-
-
 
             // if not found in cache, fetch them from the chain source
             if (missingTxs.length > 0) {
@@ -162,7 +160,7 @@ export class Updater {
               console.error('Errors while unblinding', errors);
             }
           } else if (TxDetailsKey.is(key) && changes[key].newValue?.hex) {
-            console.warn('updater txDetailsKey change', key)
+            console.warn('updater txDetailsKey change', key);
             if (changes[key].oldValue && changes[key].oldValue.hex) continue;
             const [txID] = TxDetailsKey.decode(key);
             const newTxDetails = changes[key].newValue as TxDetails | undefined;

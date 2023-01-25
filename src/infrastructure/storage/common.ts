@@ -294,13 +294,9 @@ export const useSelectTransactions = () => {
 
 function sortTxDetails(): ((a: TxDetails, b: TxDetails) => number) | undefined {
   return (a, b) => {
-    if (a.height === b.height)
-      return 0;
-    if (a.height === undefined || a.height === -1)
-      return -1;
-    if (b.height === undefined || b.height === -1)
-      return 1;
+    if (a.height === b.height) return 0;
+    if (a.height === undefined || a.height === -1) return -1;
+    if (b.height === undefined || b.height === -1) return 1;
     return b.height - a.height;
   };
 }
-

@@ -226,9 +226,9 @@ export class Account {
             }
             // fetch unspents
             const unspents = await this.chainSource.fetchUnspentOutputs([scripts[index]]);
-            await this.walletRepository.updateScriptUnspents(
-              { [scripts[index].toString('hex')]: unspents[0] }
-            );
+            await this.walletRepository.updateScriptUnspents({
+              [scripts[index].toString('hex')]: unspents[0],
+            });
           } else {
             unusedScriptCounter += 1;
           }

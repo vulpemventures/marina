@@ -5,7 +5,7 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
 import TxIcon from './txIcon';
 import moment from 'moment';
 import Modal from './modal';
-import { AssetHash, Transaction } from 'liquidjs-lib';
+import { Transaction } from 'liquidjs-lib';
 import type { Asset } from '../../domain/asset';
 import type { BlockHeader } from '../../background/utils';
 import AssetIcon from './assetIcon';
@@ -92,7 +92,9 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       if (!chainSource) return;
       const header = await chainSource.fetchBlockHeader(txDetails.height);
       setBlockHeader(header);
-    })().catch(console.error).finally(() => setIsLoading(false)); // TODO display error in UI
+    })()
+      .catch(console.error)
+      .finally(() => setIsLoading(false)); // TODO display error in UI
   }, [txDetails]);
 
   const handleClick = () => {
@@ -118,7 +120,9 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
             {blockHeader
               ? moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')
-              : isLoading ? '...' : 'uncomfirmed'}
+              : isLoading
+              ? '...'
+              : 'uncomfirmed'}
           </span>
         </div>
         <div className="flex">
@@ -182,6 +186,3 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
 };
 
 export default ButtonTransaction;
-
-
-
