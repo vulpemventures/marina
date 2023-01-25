@@ -41,9 +41,10 @@ export class WsElectrumChainSource implements ChainSource {
 
   async fetchUnspentOutputs(scripts: Buffer[]): Promise<ListUnspentResponse[]> {
     const scriptsHashes = scripts.map(toScriptHash);
-    return this.ws.batchRequest<ListUnspentResponse[]>(
+    const resp = await this.ws.batchRequest<ListUnspentResponse[]>(
       ...scriptsHashes.map((s) => ({ method: ListUnspentMethod, params: [s] }))
     );
+    return resp;
   }
 
   async fetchTransactions(txids: string[]): Promise<{ txID: string; hex: string }[]> {

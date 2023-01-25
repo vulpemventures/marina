@@ -29,6 +29,7 @@ const SettingsDeepRestorer: React.FC = () => {
       const factory = await AccountFactory.create(walletRepository, appRepository, [network]);
       const port = Browser.runtime.connect();
       for (const accountName of Object.keys(accountsDetails)) {
+        if (!accountsDetails[accountName].accountNetworks.includes(network)) continue;
         const account = await factory.make(network, accountName);
         await account.sync(gapLimit);
         port.postMessage(subscribeMessage(accountName));

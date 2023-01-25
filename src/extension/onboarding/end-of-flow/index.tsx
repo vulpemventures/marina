@@ -80,7 +80,7 @@ const EndOfFlowOnboarding: React.FC = () => {
       const defaultLegacyMainAccountXPub = bip32
         .fromSeed(seed)
         .derivePath(Account.BASE_DERIVATION_PATH_LEGACY)
-        .neutered()
+        // .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccountLegacy, {
         masterPublicKey: defaultLegacyMainAccountXPub,

@@ -15,14 +15,13 @@ import {
   useSelectNetwork,
   useSelectTaxiAssets,
   useSelectUtxos,
-  useSelectAccount,
   sendFlowRepository,
   walletRepository,
   assetRepository,
   appRepository,
 } from '../../../infrastructure/storage/common';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
-import { Account, AccountFactory } from '../../../domain/account';
+import { AccountFactory } from '../../../domain/account';
 
 type Recipient = {
   address: string;
@@ -302,7 +301,7 @@ const ChooseFee: React.FC = () => {
                 extraData={asset}
                 disabled={loading}
               >
-                {assetDetails?.ticker || asset.assetHash.slice(0, 4).toUpperCase()}
+                {asset.ticker || asset.assetHash.slice(0, 4).toUpperCase()}
               </Button>
             ) : (
               <Button

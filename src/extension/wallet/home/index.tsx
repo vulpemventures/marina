@@ -34,7 +34,6 @@ const Home: React.FC = () => {
   const [balances, setBalances] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    console.log('utxos', utxos, utxosLoading);
     if (utxosLoading) return;
     setBalances(computeBalances(utxos));
   }, [utxos]);

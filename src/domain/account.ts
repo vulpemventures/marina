@@ -203,7 +203,7 @@ export class Account {
       let batchCount = isInternal ? lastUsed.internal : lastUsed.external;
       let unusedScriptCounter = 0;
 
-      while (unusedScriptCounter < gapLimit) {
+      while (unusedScriptCounter <= gapLimit) {
         const scripts = await this.deriveBatch(
           batchCount,
           batchCount + gapLimit,
@@ -211,7 +211,6 @@ export class Account {
           false
         );
         const histories = await this.chainSource.fetchHistories(scripts);
-        console.log('histories', histories, 'for scripts', scripts, 'isInternal', isInternal);
         for (const [index, history] of histories.entries()) {
           if (history.length > 0) {
             unusedScriptCounter = 0; // reset counter
@@ -225,6 +224,11 @@ export class Account {
               if (height !== undefined) heightsSet.add(height);
               txidHeight.set(tx_hash, height);
             }
+            // fetch unspents
+            const unspents = await this.chainSource.fetchUnspentOutputs([scripts[index]]);
+            await this.walletRepository.updateScriptUnspents(
+              { [scripts[index].toString('hex')]: unspents[0] }
+            );
           } else {
             unusedScriptCounter += 1;
           }
@@ -233,7 +237,7 @@ export class Account {
       }
     }
 
-    await Promise.allSettled([
+    await Promise.all([
       this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxsId),
       this.walletRepository.updateAccountLastUsedIndexes(
         this.name,
@@ -246,18 +250,9 @@ export class Account {
         )
       ),
     ]);
-    // fetch the unspents
-    const scripts = await this.deriveBatch(0, lastUsed.external, false, true);
-    const internalScripts = await this.deriveBatch(0, lastUsed.internal, true, true);
-    const scriptToUpdate = [...scripts, ...internalScripts];
-    const unspents = await this.chainSource.fetchUnspentOutputs(scriptToUpdate);
-    await this.walletRepository.updateScriptUnspents(
-      Object.fromEntries(
-        unspents
-          .filter((ls) => ls.length > 0)
-          .map((utxos, index) => [scriptToUpdate[index].toString('hex'), utxos])
-      )
-    );
+    // rederive with cache=true in order to persist the restored script data
+    await this.deriveBatch(0, lastUsed.external, false, true);
+    await this.deriveBatch(0, lastUsed.internal, true, true);
 
     return {
       lastUsed: {
@@ -274,6 +269,12 @@ export class Account {
       await this.chainSource.subscribeScriptStatus(
         script,
         async (_: string, status: string | null) => {
+          const unspents = await this.chainSource.fetchUnspentOutputs([script]);
+          const unspentForScript = unspents[0];
+          await this.walletRepository.updateScriptUnspents({
+            [script.toString('hex')]: unspentForScript,
+          });
+
           const history = await this.chainSource.fetchHistories([script]);
           const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
 
@@ -286,12 +287,6 @@ export class Account {
               Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
             ),
           ]);
-
-          const unspents = await this.chainSource.fetchUnspentOutputs([script]);
-          const unspentForScript = unspents[0];
-          await this.walletRepository.updateScriptUnspents({
-            [script.toString('hex')]: unspentForScript,
-          });
         }
       );
     }

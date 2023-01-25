@@ -279,7 +279,6 @@ export class WalletStorageAPI implements WalletRepository {
         );
       }
 
-      console.log('outputs', outputs);
       if (outputs) {
         changeOutputs.push(...outputs
           .filter((output: any) => output.address === undefined) // only add change outputs

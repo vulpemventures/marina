@@ -105,7 +105,6 @@ export class ElectrumWS extends Observable {
     }));
 
     const promises = payloads.map((p) => this.createRequestPromise<any>(p.id, p.method));
-
     payloads.forEach((p) => this.ws.send(JSON.stringify(p)));
     return Promise.all(promises) as Promise<R>;
   }

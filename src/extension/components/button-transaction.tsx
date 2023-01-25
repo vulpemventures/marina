@@ -27,7 +27,7 @@ function txTypeFromTransfer(transfer?: number): TxType {
 }
 
 interface Props {
-  txDetails: TxDetails;
+  txDetails?: TxDetails;
   assetSelected: Asset;
 }
 
@@ -43,7 +43,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
   useEffect(() => {
     // compute transfer
     (async () => {
-      if (!txDetails.hex) return;
+      if (!txDetails?.hex) return;
       const transaction = Transaction.fromHex(txDetails.hex);
       const txID = transaction.getId();
       setTxID(txID);
@@ -57,9 +57,9 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           continue;
         }
 
-        if (AssetHash.fromBytes(output.asset).hex === assetSelected.assetHash) {
-          const data = await walletRepository.getOutputBlindingData(txID, outIndex);
-          if (!data || !data.blindingData) continue;
+        const data = await walletRepository.getOutputBlindingData(txID, outIndex);
+        if (!data || !data.blindingData) continue;
+        if (data.blindingData.asset === assetSelected.assetHash) {
           transferAmount += data.blindingData.value;
         }
       }
@@ -83,7 +83,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
     })().catch(console.error); // TODO display error in UI
 
     (async () => {
-      if (!txDetails.height || txDetails.height === -1) {
+      if (!txDetails?.height || txDetails.height === -1) {
         setBlockHeader(undefined);
         return;
       }
@@ -100,9 +100,8 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
   };
 
   const handleOpenExplorer = async () => {
-    if (!txDetails.hex) return;
+    if (!txDetails?.hex) return;
     const transaction = Transaction.fromHex(txDetails.hex);
-    const webExplorerURL = await appRepository.getWebExplorerURL(network);
     const url = await makeURLwithBlinders(transaction);
     await Browser.tabs.create({ url, active: false });
   };

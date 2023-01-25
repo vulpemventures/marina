@@ -74,6 +74,7 @@ export class Updater {
             // for all new txs, we need to fetch the tx hex
             const oldTxIDsSet = new Set(oldTxIDs);
             const txIDsToFetch = newTxIDs.filter((txID) => !oldTxIDsSet.has(txID));
+            console.warn('TxIDsKey', key, txIDsToFetch)
             try {
               const chainSource = await this.appRepository.getChainSource(network);
               if (!chainSource) {
@@ -88,6 +89,7 @@ export class Updater {
               console.error(e);
             }
           } else if (ScriptUnspentsKey.is(key)) {
+            console.warn('ScriptUnspentsKey', key)
             const [script] = ScriptUnspentsKey.decode(key);
             const newUnspents = changes[key].newValue as ListUnspentResponse | undefined;
             if (!newUnspents) continue; // it means we just deleted the key
@@ -111,20 +113,24 @@ export class Updater {
               else missingTxs.push(ID);
             }
 
-            const { [script]: details } = await this.walletRepository.getScriptDetails(script);
-            if (!details || !details.network) {
-              console.error('Script details not found', script);
-              continue;
-            }
+
 
             // if not found in cache, fetch them from the chain source
             if (missingTxs.length > 0) {
-              const chainSource = await this.appRepository.getChainSource(details.network);
+              const { [script]: details } = await this.walletRepository.getScriptDetails(script);
+              if (!details || !details.network) {
+                console.warn('Script details not found', script);
+              }
+
+              const chainSource = await this.appRepository.getChainSource(details?.network);
               if (!chainSource) {
                 console.error('Chain source not found', details.network);
                 continue;
               }
               const txs = await chainSource.fetchTransactions(missingTxs);
+              await this.walletRepository.updateTxDetails(
+                Object.fromEntries(txs.map((tx) => [tx.txID, tx]))
+              );
               for (const tx of txs) {
                 txMapToHex.set(tx.txID, tx.hex);
               }
@@ -156,6 +162,7 @@ export class Updater {
               console.error('Errors while unblinding', errors);
             }
           } else if (TxDetailsKey.is(key) && changes[key].newValue?.hex) {
+            console.warn('updater txDetailsKey change', key)
             if (changes[key].oldValue && changes[key].oldValue.hex) continue;
             const [txID] = TxDetailsKey.decode(key);
             const newTxDetails = changes[key].newValue as TxDetails | undefined;
