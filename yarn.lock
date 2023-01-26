@@ -6764,29 +6764,6 @@ lines-and-columns@^2.0.2:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-2.0.3.tgz#b2f0badedb556b747020ab8ea7f0373e22efac1b"
   integrity sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==
 
-liquidjs-lib@^6.0.2-liquid.23:
-  version "6.0.2-liquid.23"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.23.tgz#5bd8f132410e8bf1775726d78a2bde132ba405cd"
-  integrity sha512-LaHjE+n7va0CkQYCzp1OgKYTTrT4MH4wVGARBLm/oDHAWtZCGE65c9/wzkmUhqFUMd3xSnWqLHKlWD7NFMOjdg==
-  dependencies:
-    "@types/randombytes" "^2.0.0"
-    "@types/wif" "^2.0.2"
-    axios "^0.21.1"
-    bech32 "^2.0.0"
-    bip174-liquid "^1.0.3"
-    bip66 "^1.1.0"
-    bitcoin-ops "^1.4.0"
-    bitcoinjs-lib "^6.0.2"
-    bitset "^5.1.1"
-    blech32 "^1.0.1"
-    bs58check "^2.0.0"
-    create-hash "^1.2.0"
-    ecpair "^2.0.1"
-    slip77 "^0.2.0"
-    typeforce "^1.11.3"
-    varuint-bitcoin "^1.1.2"
-    wif "^2.0.1"
-
 liquidjs-lib@^6.0.2-liquid.7, "liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib.git#psbt-taproot-support":
   version "6.0.2-liquid.8"
   resolved "git+https://github.com/louisinger/liquidjs-lib.git#680f5d94d27aa85935fe4a3caa444bf217e3739b"
@@ -6804,6 +6781,28 @@ liquidjs-lib@^6.0.2-liquid.7, "liquidjs-lib@git+https://github.com/louisinger/li
     bs58check "^2.0.0"
     create-hash "^1.2.0"
     ecpair "^2.0.1"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.1.2"
+    wif "^2.0.1"
+
+"liquidjs-lib@git+https://github.com/louisinger/liquidjs-lib#estimatesize":
+  version "6.0.2-liquid.22"
+  resolved "git+https://github.com/louisinger/liquidjs-lib#a0da9e64a8cceb33952acb0b2e500999eaff777e"
+  dependencies:
+    "@types/randombytes" "^2.0.0"
+    "@types/wif" "^2.0.2"
+    axios "^0.21.1"
+    bech32 "^2.0.0"
+    bip174-liquid "^1.0.3"
+    bip66 "^1.1.0"
+    bitcoin-ops "^1.4.0"
+    bitcoinjs-lib "^6.0.2"
+    bitset "^5.1.1"
+    blech32 "^1.0.1"
+    bs58check "^2.0.0"
+    create-hash "^1.2.0"
+    ecpair "^2.0.1"
+    slip77 "^0.2.0"
     typeforce "^1.11.3"
     varuint-bitcoin "^1.1.2"
     wif "^2.0.1"
