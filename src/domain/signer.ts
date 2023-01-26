@@ -23,8 +23,7 @@ export class SignerService {
     return new SignerService(walletRepository, masterNode);
   }
 
-  async signPset(psetBase64: string): Promise<string> {
-    const pset = Pset.fromBase64(psetBase64);
+  async signPset(pset: Pset): Promise<Pset> {
     const inputsScripts = pset.inputs
       .map((input) => input.witnessUtxo?.script)
       .filter((script) => !!script);
@@ -64,11 +63,10 @@ export class SignerService {
       );
     }
 
-    return signer.pset.toBase64();
+    return signer.pset;
   }
 
-  finalizeAndExtract(psetBase64: string): string {
-    const pset = Pset.fromBase64(psetBase64);
+  finalizeAndExtract(pset: Pset): string {
     const finalizer = new Finalizer(pset);
     finalizer.finalize();
     return Extractor.extract(finalizer.pset).toHex();

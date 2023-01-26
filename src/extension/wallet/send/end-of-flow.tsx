@@ -17,6 +17,7 @@ import { BlinderService } from '../../../domain/blinder';
 import Browser from 'webextension-polyfill';
 import { subscribeMessage } from '../../../domain/message';
 import { MainAccount, MainAccountTest } from '../../../domain/account-type';
+import { Pset } from 'liquidjs-lib';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();
@@ -39,7 +40,7 @@ const SendEndOfFlow: React.FC = () => {
       if (!chainSource) throw new Error('chain source not found');
 
       const blinder = new BlinderService(walletRepository);
-      const blindedPset = await blinder.blindPset(unsignedPset);
+      const blindedPset = await blinder.blindPset(Pset.fromBase64(unsignedPset));
       const signer = await SignerService.fromPassword(walletRepository, password);
       const signed = await signer.signPset(blindedPset);
       toBroadcast = signer.finalizeAndExtract(signed);

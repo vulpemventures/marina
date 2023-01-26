@@ -11,8 +11,7 @@ const keysGenerator = Pset.ECCKeysGenerator(ecc);
 export class BlinderService {
   constructor(private walletRepository: WalletRepository) {}
 
-  async blindPset(psetBase64: string): Promise<string> {
-    const pset = Pset.fromBase64(psetBase64);
+  async blindPset(pset: Pset): Promise<Pset> {
     // find input index belonging to this account
     const inputsScripts = pset.inputs
       .map((input) => input.witnessUtxo?.script)
@@ -72,6 +71,6 @@ export class BlinderService {
       blinder.blindNonLast({ outputBlindingArgs });
     }
 
-    return blinder.pset.toBase64();
+    return blinder.pset;
   }
 }

@@ -12,6 +12,7 @@ import {
 } from '../../infrastructure/storage/common';
 import { SignerService } from '../../domain/signer';
 import { popupResponseMessage } from '../../domain/message';
+import { Pset } from 'liquidjs-lib';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -48,8 +49,8 @@ const ConnectSignTransaction: React.FC = () => {
       if (!psetToSign) throw new Error('no pset to sign');
       if (!password || password.length === 0) throw new Error('Need password');
       const signer = await SignerService.fromPassword(walletRepository, password);
-      const signedPset = await signer.signPset(psetToSign);
-      await sendResponseMessage(true, signedPset);
+      const signedPset = await signer.signPset(Pset.fromBase64(psetToSign));
+      await sendResponseMessage(true, signedPset.toBase64());
       window.close();
     } catch (e: any) {
       console.error(e);
