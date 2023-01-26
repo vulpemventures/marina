@@ -1,8 +1,6 @@
 import type { Transaction } from 'liquidjs-lib';
 import { address, networks, payments } from 'liquidjs-lib';
 import type { NetworkString, SignedMessage } from 'marina-provider';
-import * as crypto from 'crypto';
-import { INVALID_PASSWORD_ERROR } from './constants';
 import { mnemonicToSeed } from 'bip39';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
@@ -33,41 +31,6 @@ export const isValidAddressForNetwork = (addr: string, net: NetworkString): bool
     return false;
   }
 };
-
-const iv = Buffer.alloc(16, 0);
-export function encrypt(payload: string, password: string): string {
-  const hash = crypto.createHash('sha1').update(password);
-  const secret = hash.digest().subarray(0, 16);
-  const key = crypto.createCipheriv('aes-128-cbc', secret, iv);
-  let encrypted = key.update(payload, 'utf8', 'hex');
-  encrypted += key.final('hex');
-  return encrypted;
-}
-
-export function decrypt(encrypted: string, password: string): string {
-  try {
-    const hash = crypto.createHash('sha1').update(password);
-    const secret = hash.digest().subarray(0, 16);
-    const key = crypto.createDecipheriv('aes-128-cbc', secret, iv);
-    let decrypted = key.update(encrypted, 'hex', 'utf8');
-    decrypted += key.final('utf8');
-    return decrypted;
-  } catch {
-    throw new Error(INVALID_PASSWORD_ERROR);
-  }
-}
-
-export function sha256Hash(str: crypto.BinaryLike): string {
-  return crypto.createHash('sha256').update(str).digest('hex');
-}
-
-export function hashPassword(text: string): string {
-  return sha256Hash(text);
-}
-
-export function match(password: string, passwordHash: string) {
-  return hashPassword(password) === passwordHash;
-}
 
 export async function signMessageWithMnemonic(
   message: string,

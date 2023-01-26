@@ -11,14 +11,15 @@ import {
   onboardingRepository,
   useSelectEncryptedMnemonic,
 } from '../../../infrastructure/storage/common';
-import { decrypt } from '../../../utils';
+import type { Encrypted } from '../../../encryption';
+import { decrypt } from '../../../encryption';
 
 interface BackUpUnlockFormValues {
   password: string;
 }
 
 interface BackUpUnlockFormProps {
-  encryptedMnemonic: string;
+  encryptedMnemonic: Encrypted;
   onSuccess: (mnemonicToBackup: string) => Promise<void>;
 }
 
@@ -53,7 +54,7 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
 
   handleSubmit: async (values, { props, setErrors }) => {
     try {
-      const mnemonic = decrypt(props.encryptedMnemonic, values.password);
+      const mnemonic = await decrypt(props.encryptedMnemonic, values.password);
       await props.onSuccess(mnemonic);
     } catch (err) {
       console.error(err);

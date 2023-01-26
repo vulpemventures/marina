@@ -131,7 +131,7 @@ export class Account {
             {
               accountName: this.name,
               network: this.network.name as NetworkString,
-              derivationPath: `m/${chain}/${start+index}`,
+              derivationPath: `m/${chain}/${start + index}`,
               blindingPrivateKey: this.deriveBlindingKey(script).privateKey.toString('hex'),
             },
           ])

@@ -11,6 +11,7 @@ import type {
   UnblindedOutput,
 } from '../domain/transaction';
 import Browser from 'webextension-polyfill';
+import type { Encrypted } from '../encryption';
 
 /**
  * The AppRepository stores the global application state like settings, network or explorer URLs.
@@ -71,14 +72,9 @@ export interface WalletRepository {
     outpointToBlindingData: Array<[{ txID: string; vout: number }, UnblindingData]>
   ): Promise<void>;
 
-  getEncryptedMnemonic(): Promise<string | undefined>;
+  getEncryptedMnemonic(): Promise<Encrypted | undefined>;
   getMasterBlindingKey(): Promise<string | undefined>;
-  getPasswordHash(): Promise<string | undefined>;
-  setSeedData(
-    encryptedMnemonic: string,
-    passwordHash: string,
-    masterBlindingKey: string
-  ): Promise<void>;
+  setSeedData(encryptedMnemonic: Encrypted, masterBlindingKey: string): Promise<void>;
 
   // account, if no names, returns all accounts
   getAccountDetails(...names: string[]): Promise<Record<string, AccountDetails>>;

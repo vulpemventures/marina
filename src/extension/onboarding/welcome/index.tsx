@@ -9,8 +9,7 @@ const Welcome: React.FC = () => {
   const history = useHistory();
   const handleClick = () => history.push(INITIALIZE_SELECT_ACTION_ROUTE);
   const encryptedMnemonic = useSelectEncryptedMnemonic();
-  const hasMnemonic = () =>
-    encryptedMnemonic !== null && encryptedMnemonic !== undefined && encryptedMnemonic !== '';
+  const hasMnemonic = () => encryptedMnemonic !== null && encryptedMnemonic !== undefined;
 
   return (
     <div

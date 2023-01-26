@@ -4,7 +4,7 @@ import { BIP32Factory } from 'bip32';
 import { Pset, Signer, Transaction, script as bscript, Finalizer, Extractor } from 'liquidjs-lib';
 import { mnemonicToSeed } from 'bip39';
 import type { WalletRepository } from '../infrastructure/repository';
-import { hashPassword, decrypt } from '../utils';
+import { decrypt } from '../encryption';
 
 const bip32 = BIP32Factory(ecc);
 const sigValidator = Pset.ECDSASigValidator(ecc);
@@ -16,11 +16,9 @@ export class SignerService {
   ) {}
 
   static async fromPassword(walletRepository: WalletRepository, password: string) {
-    const passwordHash = await walletRepository.getPasswordHash();
-    if (hashPassword(password) !== passwordHash) throw new Error('Invalid password');
     const encrypted = await walletRepository.getEncryptedMnemonic();
     if (!encrypted) throw new Error('No mnemonic found in wallet');
-    const decryptedMnemonic = decrypt(encrypted, password);
+    const decryptedMnemonic = await decrypt(encrypted, password);
     const masterNode = bip32.fromSeed(await mnemonicToSeed(decryptedMnemonic));
     return new SignerService(walletRepository, masterNode);
   }

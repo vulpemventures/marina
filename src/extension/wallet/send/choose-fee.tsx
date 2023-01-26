@@ -185,7 +185,9 @@ const ChooseFee: React.FC = () => {
       const millisatoshiPerByte = 110;
       const size = updater.pset.estimateVirtualSize();
       console.log(size);
-      const feeAmount = Math.ceil(updater.pset.estimateVirtualSize() * (millisatoshiPerByte / 1000));
+      const feeAmount = Math.ceil(
+        updater.pset.estimateVirtualSize() * (millisatoshiPerByte / 1000)
+      );
 
       if (recipient.asset === networks[network].assetHash && updater.pset.outputs.length > 1) {
         // subtract fee from change output

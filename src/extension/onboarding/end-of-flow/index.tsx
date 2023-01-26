@@ -12,11 +12,11 @@ import {
   useSelectIsFromPopupFlow,
   walletRepository,
 } from '../../../infrastructure/storage/common';
-import { encrypt, hashPassword } from '../../../utils';
 import { SLIP77Factory } from 'slip77';
 import * as ecc from 'tiny-secp256k1';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
+import { encrypt } from '../../../encryption';
 
 const bip32 = BIP32Factory(ecc);
 const slip77 = SLIP77Factory(ecc);
@@ -43,13 +43,12 @@ const EndOfFlowOnboarding: React.FC = () => {
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
-      const encryptedMnemonic = encrypt(onboardingMnemonic, onboardingPassword);
+      const encryptedData = await encrypt(onboardingMnemonic, onboardingPassword);
       const seed = mnemonicToSeedSync(onboardingMnemonic);
       const masterBlindingKey = slip77.fromSeed(seed).masterKey.toString('hex');
-      const passwordHash = hashPassword(onboardingPassword);
 
       // set the global seed data
-      await walletRepository.setSeedData(encryptedMnemonic, passwordHash, masterBlindingKey);
+      await walletRepository.setSeedData(encryptedData, masterBlindingKey);
 
       // set the default accounts data (MainAccount, MainAccountTest, MainAccountLegacy)
       // cointype account (mainnet)

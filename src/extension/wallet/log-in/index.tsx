@@ -7,17 +7,18 @@ import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants'
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { INVALID_PASSWORD_ERROR } from '../../../constants';
-import { match } from '../../../utils';
-import { appRepository, useSelectPasswordHash } from '../../../infrastructure/storage/common';
+import { appRepository, useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
 import Browser from 'webextension-polyfill';
 import { logInMessage } from '../../../domain/message';
+import type { Encrypted } from '../../../encryption';
+import { decrypt } from '../../../encryption';
 
 interface LogInFormValues {
   password: string;
 }
 
 interface LogInFormProps {
-  passwordHash: string;
+  encryptedMnemonic: Encrypted;
   onSuccess: () => Promise<void>;
 }
 
@@ -61,8 +62,13 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
       .required('Please input password')
       .min(8, 'Password should be 8 characters minimum.'),
   }),
-  handleSubmit: (values, { props, setErrors, setSubmitting }) => {
-    const authenticated = match(values.password, props.passwordHash);
+  handleSubmit: async (values, { props, setErrors, setSubmitting }) => {
+    let authenticated = true;
+    try {
+      await decrypt(props.encryptedMnemonic, values.password);
+    } catch {
+      authenticated = false;
+    }
     if (!authenticated) {
       setErrors({ password: INVALID_PASSWORD_ERROR });
       setSubmitting(false);
@@ -78,7 +84,7 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
 
 const LogIn: React.FC = () => {
   const history = useHistory();
-  const passwordHash = useSelectPasswordHash();
+  const encrypted = useSelectEncryptedMnemonic();
 
   const onSuccess = async () => {
     const port = Browser.runtime.connect();
@@ -106,7 +112,7 @@ const LogIn: React.FC = () => {
         <h2 className="text-grayLight text-lg font-medium">
           The ultimate gateway to access the Liquid Network
         </h2>
-        <LogInEnhancedForm onSuccess={onSuccess} passwordHash={passwordHash ?? ''} />
+        {encrypted && <LogInEnhancedForm onSuccess={onSuccess} encryptedMnemonic={encrypted} />}
       </div>
     </>
   );

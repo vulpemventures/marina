@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { INVALID_PASSWORD_ERROR } from '../../constants';
+import { decrypt } from '../../encryption';
 import { walletRepository } from '../../infrastructure/storage/common';
-import { decrypt, match } from '../../utils';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
 import ShellPopUp from '../components/shell-popup';
@@ -13,18 +12,13 @@ const SettingsShowMnemonic: React.FC = () => {
   const handleModalUnlockCancel = () => showUnlockModal(false);
 
   const handleShowMnemonic = async (password: string) => {
-    const passwordHash = await walletRepository.getPasswordHash();
     const encryptedMnemonic = await walletRepository.getEncryptedMnemonic();
-    if (!passwordHash || !encryptedMnemonic) {
-      throw new Error('No password or mnemonic');
+    if (!encryptedMnemonic) {
+      throw new Error('No encrypted mnemonic');
     }
-    if (!match(password, passwordHash)) {
-      throw new Error(INVALID_PASSWORD_ERROR);
-    }
-    const mnemo = decrypt(encryptedMnemonic, password);
+    const mnemo = await decrypt(encryptedMnemonic, password);
     setMnemonic(mnemo);
     showUnlockModal(false);
-    return Promise.resolve();
   };
 
   return (

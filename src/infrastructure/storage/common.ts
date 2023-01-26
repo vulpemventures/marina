@@ -6,6 +6,7 @@ import { Account } from '../../domain/account';
 import type { AccountDetails } from '../../domain/account-type';
 import type { Asset } from '../../domain/asset';
 import type { UnblindedOutput, TxDetails } from '../../domain/transaction';
+import type { Encrypted } from '../../encryption';
 import { sortAssets } from '../../extension/utility/sort';
 import {
   AppStorageAPI,
@@ -124,11 +125,10 @@ export const useSelectIsOnboardingCompleted = makeReactHook<boolean>(
   'local',
   AppStorageKeys.ONBOARDING_COMPLETED
 );
-export const useSelectEncryptedMnemonic = makeReactHook<string>(
+export const useSelectEncryptedMnemonic = makeReactHook<Encrypted>(
   'local',
   WalletStorageKey.ENCRYPTED_MNEMONIC
 );
-export const useSelectPasswordHash = makeReactHook<string>('local', WalletStorageKey.PASSWORD_HASH);
 export const useSelectIsFromPopupFlow = makeReactHook<boolean>(
   'local',
   OnboardingStorageKeys.IS_FROM_POPUP_FLOW

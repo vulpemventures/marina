@@ -16,6 +16,7 @@ import type {
 } from '../../domain/transaction';
 import type { WalletRepository } from '../repository';
 import { DynamicStorageKey } from './dynamic-key';
+import type { Encrypted } from '../../encryption';
 
 type LockedOutpoint = {
   txID: string;
@@ -27,7 +28,6 @@ export enum WalletStorageKey {
   INTERNAL_INDEX = 'internalIndex',
   EXTERNAL_INDEX = 'externalIndex',
   ENCRYPTED_MNEMONIC = 'encryptedMnemonic',
-  PASSWORD_HASH = 'passwordHash',
   MASTER_BLINDING_KEY = 'masterBlindingKey',
   LOCKED_OUTPOINTS = 'lockedOutpoints',
 }
@@ -308,18 +308,11 @@ export class WalletStorageAPI implements WalletRepository {
     return Transaction.fromHex(txDetails.hex).outs[vout];
   }
 
-  async getEncryptedMnemonic(): Promise<string | undefined> {
+  async getEncryptedMnemonic(): Promise<Encrypted | undefined> {
     const { [WalletStorageKey.ENCRYPTED_MNEMONIC]: value } = await Browser.storage.local.get(
       WalletStorageKey.ENCRYPTED_MNEMONIC
     );
-    return value ? value : undefined;
-  }
-
-  async getPasswordHash(): Promise<string | undefined> {
-    const { [WalletStorageKey.PASSWORD_HASH]: value } = await Browser.storage.local.get(
-      WalletStorageKey.PASSWORD_HASH
-    );
-    return value ? value : undefined;
+    return value ? (value as Encrypted) : undefined;
   }
 
   async getMasterBlindingKey(): Promise<string | undefined> {
@@ -329,14 +322,9 @@ export class WalletStorageAPI implements WalletRepository {
     return value ? value : undefined;
   }
 
-  async setSeedData(
-    encryptedMnemonic: string,
-    passwordHash: string,
-    masterBlindingKey: string
-  ): Promise<void> {
+  async setSeedData(encryptedMnemonic: Encrypted, masterBlindingKey: string): Promise<void> {
     return Browser.storage.local.set({
       [WalletStorageKey.ENCRYPTED_MNEMONIC]: encryptedMnemonic,
-      [WalletStorageKey.PASSWORD_HASH]: passwordHash,
       [WalletStorageKey.MASTER_BLINDING_KEY]: masterBlindingKey,
     });
   }

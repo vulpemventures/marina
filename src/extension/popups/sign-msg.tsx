@@ -6,7 +6,7 @@ import PopupWindowProxy from './popupWindowProxy';
 import type { NetworkString, SignedMessage } from 'marina-provider';
 import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
-import { decrypt, signMessageWithMnemonic } from '../../utils';
+import { signMessageWithMnemonic } from '../../utils';
 import { networks } from 'liquidjs-lib';
 import {
   useSelectEncryptedMnemonic,
@@ -15,15 +15,17 @@ import {
   useSelectPopupMessageToSign,
 } from '../../infrastructure/storage/common';
 import { popupResponseMessage } from '../../domain/message';
+import type { Encrypted } from '../../encryption';
+import { decrypt } from '../../encryption';
 
-function signMsgWithPassword(
+async function signMsgWithPassword(
   message: string,
-  encryptedMnemonic: string,
+  encryptedMnemonic: Encrypted,
   password: string,
   network: NetworkString
 ): Promise<SignedMessage> {
   try {
-    const mnemonic = decrypt(encryptedMnemonic, password);
+    const mnemonic = await decrypt(encryptedMnemonic, password);
     return signMessageWithMnemonic(message, mnemonic, networks[network]);
   } catch (e: any) {
     throw new Error(INVALID_PASSWORD_ERROR);
