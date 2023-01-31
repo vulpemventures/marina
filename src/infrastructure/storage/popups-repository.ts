@@ -1,10 +1,11 @@
 import Browser from 'webextension-polyfill';
-import type { PopupsRepository } from '../repository';
+import type { PopupsRepository, SpendParameters } from '../repository';
 
 export enum PopupsStorageKeys {
-  HOSTNAME = 'enableHostname',
-  SIGN_TRANSACTION_PSET = 'signTransactionPset',
-  SIGN_MESSAGE = 'signMessage',
+  HOSTNAME = 'enableHostname', // store the storage to enable in the popup connect/enable
+  SIGN_TRANSACTION_PSET = 'signTransactionPset',  // store the pset to sign in the connect/sign-pset popup
+  SIGN_MESSAGE = 'signMessage', // store the message to sign in the connect/sign-message popup
+  SPEND_PARAMETERS = 'spendParameters', // store the spend parameters in the connect/spend popup
 }
 
 export class PopupsStorageAPI implements PopupsRepository {
@@ -13,6 +14,7 @@ export class PopupsStorageAPI implements PopupsRepository {
       PopupsStorageKeys.HOSTNAME,
       PopupsStorageKeys.SIGN_TRANSACTION_PSET,
       PopupsStorageKeys.SIGN_MESSAGE,
+      PopupsStorageKeys.SPEND_PARAMETERS,
     ]);
   }
   async setHostnameToEnable(hostname: string): Promise<void> {
@@ -32,6 +34,12 @@ export class PopupsStorageAPI implements PopupsRepository {
     await Browser.storage.local.set({
       [PopupsStorageKeys.SIGN_MESSAGE]: message,
       [PopupsStorageKeys.HOSTNAME]: hostname,
+    });
+  }
+
+  async setSpendParameters(parameters: SpendParameters): Promise<void> {
+    await Browser.storage.local.set({
+      [PopupsStorageKeys.SPEND_PARAMETERS]: parameters,
     });
   }
 }

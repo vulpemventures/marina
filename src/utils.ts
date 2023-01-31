@@ -1,12 +1,16 @@
-import type { Transaction } from 'liquidjs-lib';
+import { Creator, Pset, Transaction, Updater, UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
 import { address, networks, payments } from 'liquidjs-lib';
-import type { NetworkString, SignedMessage } from 'marina-provider';
+import type { AddressRecipient, DataRecipient, NetworkString, SignedMessage } from 'marina-provider';
 import { mnemonicToSeed } from 'bip39';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { signAsync } from 'bitcoinjs-message';
 import type { UnblindedOutput } from './domain/transaction';
 import { appRepository, walletRepository } from './infrastructure/storage/common';
+import { getScriptType, ScriptType } from 'liquidjs-lib/src/address';
+import { varSliceSize, varuint } from 'liquidjs-lib/src/bufferutils';
+import { AccountFactory } from './domain/account';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from './domain/account-type';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -95,4 +99,261 @@ export async function makeURLwithBlinders(transaction: Transaction) {
 
   const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}`;
   return url;
+}
+
+function estimateScriptSigSize(type: ScriptType): number {
+  switch (type) {
+    case ScriptType.P2Pkh:
+      return 108;
+    case ScriptType.P2Sh, ScriptType.P2Wsh:
+      return 35;
+    case ScriptType.P2Wsh, ScriptType.P2Tr, ScriptType.P2Wpkh:
+      return 1;
+  }
+  return 0;
+}
+
+const INPUT_BASE_SIZE = 40; // 32 bytes for outpoint, 4 bytes for sequence, 4 for index
+
+function txBaseSize(
+  inScriptSigsSize: number[],
+  outNonWitnessesSize: number[],
+): number {
+  const inSize = inScriptSigsSize.reduce((a, b) => a + b + INPUT_BASE_SIZE, 0);
+  const outSize =
+    outNonWitnessesSize.reduce((a, b) => a + b, 0) + 33 + 9 + 1 + 1; // add unconf fee output size
+  return (
+    9 +
+    varuint.encodingLength(inScriptSigsSize.length) +
+    inSize +
+    varuint.encodingLength(outNonWitnessesSize.length + 1) +
+    outSize
+  );
+}
+
+function txWitnessSize(
+  inWitnessesSize: number[],
+  outWitnessesSize: number[],
+): number {
+  const inSize = inWitnessesSize.reduce((a, b) => a + b, 0);
+  const outSize = outWitnessesSize.reduce((a, b) => a + b, 0) + 1 + 1; // add the size of proof for unconf fee output
+  return inSize + outSize;
+}
+
+// estimate pset virtual size after signing, take confidential outputs into account
+// aims to estimate the fee amount needed to be paid before blinding or signing the pset
+function estimateVirtualSize(pset: Pset): number {
+    const inScriptSigsSize = [];
+    const inWitnessesSize = [];
+    for (const input of pset.inputs) { 
+      const utxo = input.getUtxo();
+      if (!utxo) throw new Error('missing input utxo, cannot estimate pset virtual size');
+      const type = getScriptType(utxo.script);
+      const scriptSigSize = estimateScriptSigSize(type);
+      let witnessSize = 1 + 1 + 1; // add no issuance proof + no token proof + no pegin
+      if (input.redeemScript) {
+        // get multisig
+        witnessSize += varSliceSize(input.redeemScript);
+        const pay = payments.p2ms({ output: input.redeemScript });
+        if (pay && pay.m) {
+          witnessSize += pay.m * 75 + pay.m - 1;
+        }
+      } else {
+        // len + witness[sig, pubkey]
+        witnessSize += 1 + 107;
+      }
+      inScriptSigsSize.push(scriptSigSize);
+      inWitnessesSize.push(witnessSize);
+    }
+
+    const outSizes = [];
+    const outWitnessesSize = [];
+    for (const output of pset.outputs) {
+      let outSize = 33 + 9 + 1; // asset + value + empty nonce
+      let witnessSize = 1 + 1; // no rangeproof + no surjectionproof
+      if (output.needsBlinding()) {
+        outSize = 33 + 33 + 33; // asset commitment + value commitment + nonce
+        witnessSize = 3 + 4174 + 1 + 131; // rangeproof + surjectionproof + their sizes
+      }
+      outSizes.push(outSize);
+      outWitnessesSize.push(witnessSize);
+    }
+
+    const baseSize = txBaseSize(inScriptSigsSize, outSizes);
+    const sizeWithWitness =
+      baseSize + txWitnessSize(inWitnessesSize, outWitnessesSize);
+    const weight = baseSize * 3 + sizeWithWitness;
+    return (weight + 3) / 4;
+  }
+
+type MakeSendPsetResult = {
+  pset: Pset;
+  feeAmount: number; // fee amount in satoshi
+}
+
+// create a pset with the given recipients and data recipients
+// lock the selected utxos
+export async function makeSendPset(recipients: AddressRecipient[], dataRecipients: DataRecipient[], feeAssetHash: string): Promise<MakeSendPsetResult> {
+  const pset = Creator.newPset();
+  let network = await appRepository.getNetwork();
+  if (!network) {
+    network = 'liquid';
+  }
+
+  const coinSelection = await walletRepository.selectUtxos(
+    network,
+    [...recipients, ...dataRecipients]
+      .filter(({ value }) => value > 0)
+      .map(({ asset, value }) => ({ asset, amount: value })),
+    true,
+    MainAccount,
+    MainAccountLegacy,
+    MainAccountTest
+  );
+
+  const ins: UpdaterInput[] = [];
+  const outs: UpdaterOutput[] = [];
+
+  // get the witness utxos from repository
+  const UtxosWitnessUtxos = await Promise.all(
+    coinSelection.utxos.map((utxo) => {
+      return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+    })
+  );
+
+  ins.push(...coinSelection.utxos.map((utxo, i) => ({
+      txid: utxo.txID,
+      txIndex: utxo.vout,
+      sighashType: Transaction.SIGHASH_ALL,
+      witnessUtxo: UtxosWitnessUtxos[i],
+    }))
+  );
+
+  // add recipients
+  for (const recipient of recipients) {
+    const updaterOut: UpdaterOutput = {
+      asset: recipient.asset,
+      amount: recipient.value,
+      script: address.toOutputScript(recipient.address, networks[network]),
+    };
+    if (address.isConfidential(recipient.address)) {
+      updaterOut.blinderIndex = 0;
+      updaterOut.blindingPublicKey = address.fromConfidential(recipient.address).blindingKey;
+    }
+    outs.push(updaterOut);
+  }
+
+  // add data (OP_RETURN) recipients
+  for (const dataRecipient of dataRecipients) {
+    const opReturnPayment = payments.embed({ data: [Buffer.from(dataRecipient.data, 'hex')] });
+    const updaterOut: UpdaterOutput = {
+      asset: dataRecipient.asset,
+      amount: dataRecipient.value,
+      script: opReturnPayment.output,
+    };
+    outs.push(updaterOut);
+  }
+
+  const changeOutputsStartIndex = outs.length;
+
+  // add the changes outputs
+  if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
+    const accountFactory = await AccountFactory.create(walletRepository, appRepository, [network]);
+    const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+    const mainAccount = await accountFactory.make(network, accountName);
+
+    for (const { asset, amount } of coinSelection.changeOutputs) {
+      const changeAddress = await mainAccount.getNextAddress(true);
+      if (!changeAddress) {
+        throw new Error('change address not found');
+      }
+
+      outs.push({
+        asset,
+        amount,
+        script: address.toOutputScript(changeAddress, networks[network]),
+        blinderIndex: 0,
+        blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
+      });
+    }
+  }
+
+  const chainSource = await appRepository.getChainSource(network);
+  if (!chainSource) {
+    throw new Error('chain source not found, cannot estimate fee');
+  }
+
+  const millisatoshiPerByte = 110;
+  const feeAmount = Math.ceil(
+    estimateVirtualSize(pset) * (millisatoshiPerByte / 1000)
+  );
+
+
+  if (feeAssetHash === networks[network].assetHash) {
+    // check if one of the change outputs can cover the fees
+    const lbtcChangeOutputIndex = outs.slice(changeOutputsStartIndex).findIndex((out) => out.asset === feeAssetHash && out.amount >= feeAmount);
+
+    // add the fee output
+    outs.push({
+      asset: feeAssetHash,
+      amount: feeAmount,
+    })
+
+    if (lbtcChangeOutputIndex) {
+      outs[changeOutputsStartIndex + lbtcChangeOutputIndex].amount -= feeAmount;
+    } else {
+      // reselect
+      const newCoinSelection = await walletRepository.selectUtxos(
+        network,
+        [{ asset: networks[network].assetHash, amount: feeAmount }],
+        true,
+        MainAccount,
+        MainAccountLegacy,
+        MainAccountTest
+      );
+
+      const newWitnessUtxos = await Promise.all(
+        newCoinSelection.utxos.map((utxo) => {
+          return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+        })
+      );
+
+      ins.push(...newCoinSelection.utxos.map((utxo, i) => ({
+          txid: utxo.txID,
+          txIndex: utxo.vout,
+          sighashType: Transaction.SIGHASH_ALL,
+          witnessUtxo: newWitnessUtxos[i],
+        }))
+      );
+
+      if (newCoinSelection.changeOutputs && newCoinSelection.changeOutputs.length > 0) {
+        const accountFactory = await AccountFactory.create(walletRepository, appRepository, [network]);
+        const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+        const mainAccount = await accountFactory.make(network, accountName);
+        const changeAddress = await mainAccount.getNextAddress(true);
+        if (!changeAddress) {
+          throw new Error('change address not found');
+        }
+        outs.push({
+          asset: newCoinSelection.changeOutputs[0].asset,
+          amount: newCoinSelection.changeOutputs[0].amount,
+          script: address.toOutputScript(changeAddress, networks[network]),
+          blinderIndex: 0,
+          blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
+        })
+      }
+    }
+    // taxi fee
+  } else {
+    throw new Error('taxi topup not supported')
+  }
+
+  const updater = (new Updater(pset))
+    .addInputs(ins)
+    .addOutputs(outs);
+
+  return {
+    pset: updater.pset,
+    feeAmount
+  };
 }

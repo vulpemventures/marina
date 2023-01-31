@@ -102,7 +102,10 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
   };
 
   const handleOpenExplorer = async () => {
-    if (!txDetails?.hex) return;
+    if (!txDetails?.hex) {
+      console.error('txDetails.hex is undefined');
+      return;
+    }
     const transaction = Transaction.fromHex(txDetails.hex);
     const url = await makeURLwithBlinders(transaction);
     await Browser.tabs.create({ url, active: false });

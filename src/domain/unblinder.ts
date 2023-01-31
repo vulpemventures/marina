@@ -4,12 +4,16 @@ import { AssetHash, confidential } from 'liquidjs-lib';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import type { Output } from 'liquidjs-lib/src/transaction';
+import { SLIP77Factory } from 'slip77';
 import type {
   AppRepository,
   AssetRepository,
   WalletRepository,
 } from '../infrastructure/repository';
 import type { UnblindingData } from './transaction';
+import * as ecc from 'tiny-secp256k1';
+
+const slip77 = SLIP77Factory(ecc);
 
 type AssetAxiosResponse = AxiosResponse<{ name?: string; ticker?: string; precision?: number }>;
 
@@ -21,7 +25,7 @@ export class WalletRepositoryUnblinder implements Unblinder {
   private lib: confidential.Confidential;
 
   constructor(
-    private cache: WalletRepository,
+    private walletRepository: WalletRepository,
     private appRepository: AppRepository,
     private assetRepository: AssetRepository,
     zkpLib: ZKPInterface
@@ -30,15 +34,14 @@ export class WalletRepositoryUnblinder implements Unblinder {
   }
 
   async unblind(...outputs: Output[]): Promise<(UnblindingData | Error)[]> {
-    const scripts = outputs.map((o) => o.script.toString('hex'));
-    const scriptDetails = await this.cache.getScriptDetails(...scripts);
+    const masterBlindingKey = await this.walletRepository.getMasterBlindingKey();
+    if (!masterBlindingKey) throw new Error('Master blinding key not found');
+    const slip77node = slip77.fromMasterBlindingKey(masterBlindingKey);
 
     const unblindingResults: (UnblindingData | Error)[] = [];
 
     for (const output of outputs) {
       try {
-        const script = output.script.toString('hex');
-
         // if output is unconfidential, we don't need to unblind it
         if (!isConfidentialOutput(output)) {
           unblindingResults.push({
@@ -49,13 +52,12 @@ export class WalletRepositoryUnblinder implements Unblinder {
           });
           continue;
         }
-
-        const blindingPrivKey = scriptDetails[script]?.blindingPrivateKey;
-        if (!blindingPrivKey) throw new Error('Could not find script blindingKey in cache');
+        const blindPrivKey = slip77node.derive(output.script).privateKey
+        if (!blindPrivKey) throw new Error('Blinding private key error for script ' + output.script);
 
         const unblinded = this.lib.unblindOutputWithKey(
           output,
-          Buffer.from(blindingPrivKey, 'hex')
+          blindPrivKey
         );
 
         unblindingResults.push({

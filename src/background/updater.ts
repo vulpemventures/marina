@@ -12,7 +12,6 @@ import type {
 } from '../infrastructure/repository';
 import {
   TxIDsKey,
-  ScriptUnspentsKey,
   TxDetailsKey,
 } from '../infrastructure/storage/wallet-repository';
 
@@ -50,14 +49,32 @@ export class Updater {
     if (this.listener) this.stop();
     this.listener = this.onChangesListener();
     Browser.storage.onChanged.addListener(this.listener);
+
+    Browser.alarms.create(Updater.ALARM, { periodInMinutes: 5 });
+    Browser.alarms.onAlarm.addListener(async (alarm) => {
+      if (alarm.name === Updater.ALARM) {
+        try {
+          await this.update();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    });
   }
 
   // remove the onChanged chrome storage listener
-  stop() {
+  async stop() {
+    await Browser.alarms.clear(Updater.ALARM).catch(console.error); // ignore errors
     if (this.listener) {
       Browser.storage.onChanged.removeListener(this.listener);
       this.listener = undefined;
     }
+  }
+
+  private update() {
+    const chainSource = this.appRepository.getChainSource();
+    if (!chainSource) throw new Error('Chain source not set');
+    const transactionsInStorage = this.walletRepository.getTransactions();
   }
 
   // onChangesListener iterates over the storage changes to trigger the right actions
@@ -88,79 +105,7 @@ export class Updater {
             } catch (e) {
               console.error(e);
             }
-          } else if (ScriptUnspentsKey.is(key)) {
-            console.warn('ScriptUnspentsKey', key);
-            const [script] = ScriptUnspentsKey.decode(key);
-            const newUnspents = changes[key].newValue as ListUnspentResponse | undefined;
-            if (!newUnspents) continue; // it means we just deleted the key
-            const oldUnspents = changes[key].oldValue
-              ? (changes[key].oldValue as ListUnspentResponse)
-              : [];
-
-            // for all new unspents, we need to fetch the tx hex
-            const oldUnspentsSet = new Set(oldUnspents);
-            const utxosToUnblind = newUnspents.filter((unspent) => !oldUnspentsSet.has(unspent));
-
-            // get the tx hexes in order to unblind their Output
-            const txIDs = utxosToUnblind.map((unspent) => unspent.tx_hash);
-            const fromCache = await this.walletRepository.getTxDetails(...txIDs);
-
-            const txMapToHex = new Map<string, string>();
-            const missingTxs = [];
-
-            for (const [ID, details] of Object.entries(fromCache)) {
-              if (details?.hex) txMapToHex.set(ID, details.hex);
-              else missingTxs.push(ID);
-            }
-
-            // if not found in cache, fetch them from the chain source
-            if (missingTxs.length > 0) {
-              const { [script]: details } = await this.walletRepository.getScriptDetails(script);
-              if (!details || !details.network) {
-                console.warn('Script details not found', script);
-              }
-
-              const chainSource = await this.appRepository.getChainSource(details?.network);
-              if (!chainSource) {
-                console.error('Chain source not found', details.network);
-                continue;
-              }
-              const txs = await chainSource.fetchTransactions(missingTxs);
-              await this.walletRepository.updateTxDetails(
-                Object.fromEntries(txs.map((tx) => [tx.txID, tx]))
-              );
-              for (const tx of txs) {
-                txMapToHex.set(tx.txID, tx.hex);
-              }
-            }
-
-            const outputs = utxosToUnblind.map((unspent) => {
-              const txHex = txMapToHex.get(unspent.tx_hash);
-              if (!txHex) throw new Error('Tx hex not found');
-              const tx = Transaction.fromHex(txHex);
-              return tx.outs[unspent.tx_pos];
-            });
-
-            const unblindedResults = await this.unblinder.unblind(...outputs);
-            const errors = unblindedResults.filter((u) => u instanceof Error) as Error[];
-            const successfullyUnblinded = unblindedResults.filter(
-              (u) => !(u instanceof Error)
-            ) as UnblindingData[];
-
-            await this.walletRepository.updateOutpointBlindingData(
-              successfullyUnblinded.map((unblinded, i) => {
-                return [
-                  { txID: utxosToUnblind[i].tx_hash, vout: utxosToUnblind[i].tx_pos },
-                  unblinded,
-                ];
-              })
-            );
-
-            if (errors.length > 0) {
-              console.error('Errors while unblinding', errors);
-            }
           } else if (TxDetailsKey.is(key) && changes[key].newValue?.hex) {
-            console.warn('updater txDetailsKey change', key);
             if (changes[key].oldValue && changes[key].oldValue.hex) continue;
             const [txID] = TxDetailsKey.decode(key);
             const newTxDetails = changes[key].newValue as TxDetails | undefined;
@@ -169,9 +114,13 @@ export class Updater {
             const unblindedResults = await this.unblinder.unblind(...tx.outs);
             const updateArray: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
             for (const [vout, unblinded] of unblindedResults.entries()) {
-              if (unblinded instanceof Error) continue;
+              if (unblinded instanceof Error) {
+                console.error('Error while unblinding', unblinded);
+                continue;
+              }
               updateArray.push([{ txID, vout }, unblinded]);
             }
+            console.warn('TxDetailsKey', key, updateArray);
             await this.walletRepository.updateOutpointBlindingData(updateArray);
           }
         } catch (e) {

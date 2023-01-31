@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
-import { address } from 'ldk';
 import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
@@ -8,26 +7,18 @@ import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
-import { Creator, networks, Transaction, Updater } from 'liquidjs-lib';
+import { networks } from 'liquidjs-lib';
 import type { Asset } from '../../../domain/asset';
-import { computeBalances } from '../../../utils';
+import { computeBalances, makeSendPset } from '../../../utils';
 import {
   useSelectNetwork,
   useSelectTaxiAssets,
   useSelectUtxos,
   sendFlowRepository,
-  walletRepository,
   assetRepository,
-  appRepository,
 } from '../../../infrastructure/storage/common';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
-import { AccountFactory } from '../../../domain/account';
-
-type Recipient = {
-  address: string;
-  asset: string;
-  amount: number;
-};
+import { AddressRecipient } from 'marina-provider';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -42,7 +33,7 @@ const ChooseFee: React.FC = () => {
   const [feeStr, setFeeStr] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [recipient, setRecipient] = useState<Recipient>();
+  const [recipient, setRecipient] = useState<AddressRecipient>();
 
   useEffect(() => {
     (async () => {
@@ -56,12 +47,12 @@ const ChooseFee: React.FC = () => {
     (async () => {
       const address = await sendFlowRepository.getReceiverAddress();
       const asset = await sendFlowRepository.getSelectedAsset();
-      const amount = await sendFlowRepository.getAmount();
-      if (!address || !asset || !amount) {
+      const value = await sendFlowRepository.getAmount();
+      if (!address || !asset || !value) {
         history.goBack();
         return;
       }
-      setRecipient({ address, asset, amount });
+      setRecipient({ address, asset, value });
     })().catch(console.error);
   }, []);
 
@@ -69,11 +60,6 @@ const ChooseFee: React.FC = () => {
     if (utxosLoading) return;
     setBalances(computeBalances(utxos));
   }, [utxos]);
-
-  const isTaxi = () =>
-    taxiAssets.findIndex((asset) =>
-      typeof asset === 'string' ? asset === selectedFeeAsset : asset.assetHash === selectedFeeAsset
-    ) !== -1;
 
   const handleConfirm = async () => {
     try {
@@ -104,7 +90,7 @@ const ChooseFee: React.FC = () => {
   };
 
   const chooseFeeAndCreatePset = async (assetHash: string) => {
-    if (selectedFeeAsset === assetHash || !network) {
+    if (!selectedFeeAsset || selectedFeeAsset === assetHash || !network) {
       return; // skip if the same asset is selected
     }
 
@@ -115,143 +101,10 @@ const ChooseFee: React.FC = () => {
     try {
       setLoading(true);
       setSelectedFeeAsset(assetHash);
-
-      const pset = Creator.newPset();
-      const coinSelection = await walletRepository.selectUtxos(
-        network,
-        [{ asset: recipient.asset, amount: recipient.amount }],
-        true,
-        MainAccount,
-        MainAccountLegacy,
-        MainAccountTest
-      );
-
-      const updater = new Updater(pset);
-
-      // get the witness utxos from repository
-      const witnessUtxos = await Promise.all(
-        coinSelection.utxos.map((utxo) => {
-          return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
-        })
-      );
-
-      updater.addInputs(
-        coinSelection.utxos.map((utxo, i) => ({
-          txid: utxo.txID,
-          txIndex: utxo.vout,
-          sighashType: Transaction.SIGHASH_ALL,
-          witnessUtxo: witnessUtxos[i],
-        }))
-      );
-
-      updater.addOutputs([
-        {
-          asset: recipient.asset,
-          amount: recipient.amount,
-          script: address.toOutputScript(recipient.address, networks[network]),
-          blinderIndex: 0,
-          blindingPublicKey: address.fromConfidential(recipient.address).blindingKey,
-        },
-      ]);
-
-      const accountFactory = await AccountFactory.create(walletRepository, appRepository, [
-        network,
-      ]);
-      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-      const mainAccount = await accountFactory.make(network, accountName);
-
-      if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
-        const changeAddress = await mainAccount.getNextAddress(true);
-        if (!changeAddress) {
-          throw new Error('change address not found');
-        }
-
-        updater.addOutputs([
-          {
-            asset: coinSelection.changeOutputs[0].asset,
-            amount: coinSelection.changeOutputs[0].amount,
-            script: address.toOutputScript(changeAddress, networks[network]),
-            blinderIndex: 0,
-            blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
-          },
-        ]);
-      }
-
-      const chainSource = await appRepository.getChainSource(network);
-      if (!chainSource) {
-        throw new Error('chain source not found, cannot estimate fee');
-      }
-
-      const millisatoshiPerByte = 110;
-      const size = updater.pset.estimateVirtualSize();
-      console.log(size);
-      const feeAmount = Math.ceil(
-        updater.pset.estimateVirtualSize() * (millisatoshiPerByte / 1000)
-      );
-
-      if (recipient.asset === networks[network].assetHash && updater.pset.outputs.length > 1) {
-        // subtract fee from change output
-        updater.pset.outputs[1].value = updater.pset.outputs[1].value - feeAmount;
-      } else {
-        // reselect
-        const newCoinSelection = await walletRepository.selectUtxos(
-          network,
-          [{ asset: networks[network].assetHash, amount: feeAmount }],
-          true,
-          MainAccount,
-          MainAccountLegacy,
-          MainAccountTest
-        );
-
-        const newWitnessUtxos = await Promise.all(
-          newCoinSelection.utxos.map((utxo) => {
-            return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
-          })
-        );
-
-        updater.addInputs(
-          newCoinSelection.utxos.map((utxo, i) => ({
-            txid: utxo.txID,
-            txIndex: utxo.vout,
-            sighashType: Transaction.SIGHASH_ALL,
-            witnessUtxo: newWitnessUtxos[i],
-          }))
-        );
-
-        if (newCoinSelection.changeOutputs && newCoinSelection.changeOutputs.length > 0) {
-          const changeAddress = await mainAccount.getNextAddress(true);
-          if (!changeAddress) {
-            throw new Error('change address not found');
-          }
-          updater.addOutputs([
-            {
-              asset: newCoinSelection.changeOutputs[0].asset,
-              amount: newCoinSelection.changeOutputs[0].amount,
-              script: address.toOutputScript(changeAddress, networks[network]),
-              blinderIndex: 0,
-              blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
-            },
-          ]);
-        }
-      }
-
-      // add the fee output
-      updater.addOutputs([
-        {
-          asset: networks[network].assetHash,
-          amount: feeAmount,
-        },
-      ]);
-
+      const { pset, feeAmount } = await makeSendPset([recipient], [], selectedFeeAsset);
       setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
-
-      const psetBase64 = updater.pset.toBase64();
+      const psetBase64 = pset.toBase64();
       setUnsignedPset(psetBase64);
-
-      if (isTaxi()) {
-        // TODO
-        // make taxi topup tx
-      }
     } catch (error: any) {
       handleError(error);
     } finally {

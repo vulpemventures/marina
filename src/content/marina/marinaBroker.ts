@@ -32,10 +32,13 @@ import type {
 import { stringify } from '../../browser-storage-converters';
 import type { Account } from '../../domain/account';
 import { AccountFactory } from '../../domain/account';
+import { AddressRecipient, DataRecipient, isAddressRecipient, isDataRecipient, NetworkString, Recipient } from 'marina-provider';
+import { SpendPopupResponse } from '../../extension/popups/spend';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
   private hostname: string;
+  private network: NetworkString = 'liquid';
   private selectedAccount = MainAccount;
   private walletRepository: WalletRepository;
   private appRepository: AppRepository;
@@ -78,20 +81,21 @@ export default class MarinaBroker extends Broker<keyof Marina> {
       return Promise.resolve();
     });
     this.appRepository.onNetworkChanged((network) => {
+      this.network = network;
       this.dispatchEventToProvider<NetworkMarinaEvent>({
         type: 'NETWORK',
         payload: { data: network },
       });
       return Promise.resolve();
     });
-    this.walletRepository.onDeleteUtxo((utxo) => {
+    this.walletRepository.onDeleteUtxo(this.network, (utxo) => {
       this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
         type: 'SPENT_UTXO',
         payload: { data: utxo },
       });
       return Promise.resolve();
     });
-    this.walletRepository.onNewUtxo((utxo) => {
+    this.walletRepository.onNewUtxo(this.network, (utxo) => {
       this.dispatchEventToProvider<NewUtxoMarinaEvent>({
         type: 'NEW_UTXO',
         payload: { data: utxo },
@@ -216,52 +220,62 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg(signedPset);
         }
 
-        // case 'sendTransaction': {
-        //   await this.checkHostnameAuthorization();
-        //   const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
-        //   const lbtc = lbtcAssetByNetwork(selectNetwork(this.state));
-        //   const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
+        case 'sendTransaction': {
+          await this.checkHostnameAuthorization();
+          const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
+          const network = await this.appRepository.getNetwork();
+          if (network === null) throw new Error('network is not set up');
+          const lbtc = networks[network].assetHash;
+          const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
+          const taxiAssets = await this.taxiRepository.getTaxiAssets(network);
+          // validate if fee asset is valid
+          if (![lbtc, ...taxiAssets].includes(feeAsset)) {
+            throw new Error(`${feeAsset} not supported as fee asset.`);
+          }
 
-        //   // validate if fee asset is valid
-        //   if (![lbtc, ...selectTaxiAssets(this.state)].includes(feeAsset)) {
-        //     throw new Error(`${feeAsset} not supported as fee asset.`);
-        //   }
+          // validate object recipient (asset and value)
+          // - if no asset is present, assume lbtc for the current network
+          // - value must be present, a safe integer and higher or equal to zero
+          // - if value is for example 1.0, parseInt it to eliminate float
+          for (const rcpt of recipients) {
+            if (!rcpt.asset) {
+              if (!lbtc) throw new Error('missing asset on recipient');
+              rcpt.asset = lbtc;
+            }
+            if (!rcpt.value) throw new Error('missing value on recipient');
+            if (!Number.isSafeInteger(rcpt.value)) throw new Error('invalid value on recipient');
+            if (rcpt.value < 0) throw new Error('negative value on recipient');
+            rcpt.value = parseInt(rcpt.value.toString(), 10);
+          }
 
-        //   // validate object recipient (asset and value)
-        //   // - if no asset is present, assume lbtc for the current network
-        //   // - value must be present, a safe integer and higher or equal to zero
-        //   // - if value is for example 1.0, parseInt it to eliminate float
-        //   for (const rcpt of recipients) {
-        //     if (!rcpt.asset) {
-        //       if (!lbtc) throw new Error('missing asset on recipient');
-        //       rcpt.asset = lbtc;
-        //     }
-        //     if (!rcpt.value) throw new Error('missing value on recipient');
-        //     if (!Number.isSafeInteger(rcpt.value)) throw new Error('invalid value on recipient');
-        //     if (rcpt.value < 0) throw new Error('negative value on recipient');
-        //     rcpt.value = parseInt(rcpt.value.toString(), 10);
-        //   }
+          const { addressRecipients, dataRecipients } = sortRecipients(recipients);
 
-        //   const { addressRecipients, data } = sortRecipients(recipients);
+          await this.popupsRepository.setSpendParameters({
+            hostname: this.hostname,
+            addressRecipients,
+            dataRecipients,
+            feeAsset,
+          })
 
-        //   await this.store.dispatchAsync(
-        //     setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(this.state), data)
-        //   );
+          const { accepted, signedTxHex } =
+            await this.openAndWaitPopup<SpendPopupResponse>('spend');
 
-        //   const { accepted, signedTxHex, selectedUtxos, unconfirmedOutputs } =
-        //     await this.openAndWaitPopup<SpendPopupResponse>('spend');
+          if (!accepted) throw new Error('the user rejected the create tx request');
+          if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
-        //   if (!accepted) throw new Error('the user rejected the create tx request');
-        //   if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
-
-        //   const txid = await broadcastTx(selectHTTPExplorerURL()(this.state), signedTxHex);
-        //   if (!txid) throw new Error('something went wrong with the tx broadcasting');
-
-        //   // lock selected utxos and credit change utxos (aka unconfirmed outputs)
-        //   await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, unconfirmedOutputs, this.store);
-
-        //   return successMsg({ txid, hex: signedTxHex });
-        // }
+          // try to broadcast the tx
+          try {
+            const chainSource = await this.appRepository.getChainSource();
+            if (!chainSource) throw new Error('chain source is not set up, cannot broadcast');
+            const txid = await chainSource.broadcastTransaction(signedTxHex);
+            return successMsg({ txid, hex: signedTxHex });
+          } catch (e) {
+            console.warn('broadcasting failed, returning the signed tx hex', e);
+            return successMsg({ txid: null, hex: signedTxHex });
+          } finally {
+            await this.popupsRepository.clear();
+          }
+        }
 
         case 'signMessage': {
           await this.checkHostnameAuthorization();
@@ -471,24 +485,21 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   };
 }
 
-// function validateTemplate(template: Template): Template<string> | undefined {
-//   switch (template.type as string) {
-//     case 'ionio-artifact': {
-//       const artifact = JSON.parse(template.template);
-//       const expectedProperties = ['contractName', 'functions', 'constructorInputs'];
-//       if (!expectedProperties.every((property) => property in artifact)) {
-//         throw new Error('Invalid template: incomplete artifact');
-//       }
-//       return template;
-//     }
-//     default: {
-//       throw new Error(`Unknown template type ${template.type}`);
-//     }
-//   }
-// }
+function sortRecipients(recipients: Recipient[]): {
+  dataRecipients: DataRecipient[];
+  addressRecipients: AddressRecipient[];
+} {
+  const addressRecipients: AddressRecipient[] = [];
+  const dataRecipients: DataRecipient[] = [];
 
-// const increment = (n: number | undefined): number => {
-//   if (n === undefined || n === null || n === -1) return 0;
-//   if (n < 0) return 1; // -Infinity = 0, return 0+1=1
-//   return n + 1;
-// };
+  for (const recipient of recipients) {
+    if (isDataRecipient(recipient)) {
+      dataRecipients.push(recipient);
+    } else if (isAddressRecipient(recipient)) {
+      addressRecipients.push(recipient);
+    }
+  }
+
+  return { dataRecipients, addressRecipients };
+}
+

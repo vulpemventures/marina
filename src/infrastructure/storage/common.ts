@@ -8,6 +8,7 @@ import type { Asset } from '../../domain/asset';
 import type { UnblindedOutput, TxDetails } from '../../domain/transaction';
 import type { Encrypted } from '../../encryption';
 import { sortAssets } from '../../extension/utility/sort';
+import { SpendParameters } from '../repository';
 import {
   AppStorageAPI,
   AppStorageKeys,
@@ -22,7 +23,6 @@ import { TaxiAssetsKey, TaxiStorageAPI, TaxiURLKey } from './taxi-repository';
 import {
   AccountKey,
   OutpointBlindingDataKey,
-  ScriptUnspentsKey,
   TxDetailsKey,
   WalletStorageAPI,
   WalletStorageKey,
@@ -157,6 +157,11 @@ export const useSelectPopupPsetToSign = makeReactHook<string>(
   PopupsStorageKeys.SIGN_TRANSACTION_PSET
 );
 
+export const useSelectPopupSpendParameters = makeReactHook<SpendParameters>(
+  'local',
+  PopupsStorageKeys.SPEND_PARAMETERS
+);
+
 // returns the utxos for the given accounts, and a boolean indicating if the utxos has been loaded
 export const useSelectUtxos = (...accounts: string[]) => {
   return (): [UnblindedOutput[], boolean] => {
@@ -178,7 +183,7 @@ export const useSelectUtxos = (...accounts: string[]) => {
       const listener = (changes: Browser.Storage.StorageChange, areaName: string) => {
         if (areaName !== 'local') return;
         for (const [key, change] of Object.entries(changes)) {
-          if (change.newValue && (ScriptUnspentsKey.is(key) || OutpointBlindingDataKey.is(key))) {
+          if (change.newValue && (TxDetailsKey.is(key) || OutpointBlindingDataKey.is(key))) {
             updateUtxosArray().catch(console.error);
             return;
           }
@@ -284,6 +289,21 @@ export const useSelectTransactions = () => {
         }
       };
       Browser.storage.onChanged.addListener(listener);
+
+      // check if we have the hex, if not fetch it
+      const chainSource = await appRepository.getChainSource();
+      if (chainSource) {
+        const txIDs = Object.entries(details)
+          .filter(([, details]) => !details.hex)
+          .map(([txID]) => txID);
+
+        console.debug(`Fetching ${txIDs.length} transactions from the chain source`)
+        const txs = await chainSource.fetchTransactions(txIDs);
+        await walletRepository.updateTxDetails(
+          Object.fromEntries(txs.map((tx) => [tx.txID, tx]))
+        );
+      }
+
       return () => {
         Browser.storage.onChanged.removeListener(listener);
       };

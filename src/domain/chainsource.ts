@@ -11,7 +11,6 @@ export interface ChainSource {
   unsubscribeScriptStatus(script: Buffer): Promise<void>;
   fetchHistories(scripts: Buffer[]): Promise<GetHistoryResponse[]>;
   fetchTransactions(txids: string[]): Promise<{ txID: string; hex: string }[]>;
-  fetchUnspentOutputs(scripts: Buffer[]): Promise<ListUnspentResponse[]>;
   fetchBlockHeader(height: number): Promise<BlockHeader>;
   estimateFees(targetNumberBlocks: number): Promise<number>;
   broadcastTransaction(hex: string): Promise<string>;
@@ -33,19 +32,10 @@ const EstimateFee = 'blockchain.estimatefee'; // returns fee rate in sats/kBytes
 const GetBlockHeader = 'blockchain.block.header'; // returns block header as hex string
 const GetHistoryMethod = 'blockchain.scripthash.get_history';
 const GetTransactionMethod = 'blockchain.transaction.get'; // returns hex string
-const ListUnspentMethod = 'blockchain.scripthash.listunspent'; // returns array of Outpoint
 const SubscribeStatusMethod = 'blockchain.scripthash'; // ElectrumWS automatically adds '.subscribe'
 
 export class WsElectrumChainSource implements ChainSource {
   constructor(private ws: ElectrumWS) {}
-
-  async fetchUnspentOutputs(scripts: Buffer[]): Promise<ListUnspentResponse[]> {
-    const scriptsHashes = scripts.map(toScriptHash);
-    const resp = await this.ws.batchRequest<ListUnspentResponse[]>(
-      ...scriptsHashes.map((s) => ({ method: ListUnspentMethod, params: [s] }))
-    );
-    return resp;
-  }
 
   async fetchTransactions(txids: string[]): Promise<{ txID: string; hex: string }[]> {
     const responses = await this.ws.batchRequest<string[]>(

@@ -3,6 +3,8 @@ import { Account } from '../domain/account';
 import type { WalletRepository, AppRepository } from '../infrastructure/repository';
 import type { ChainSource } from './chainsource';
 
+const ChainSourceError = (network?: string) => new Error('Chain source not found, cannot start subscriber service on network: ' + network);
+
 // subscriber manages the subscription for all the accounts
 export class Subscriber {
   private chainSource: ChainSource | null = null;
@@ -17,13 +19,14 @@ export class Subscriber {
     this.masterBlindingKey = masterBlindingKey;
     const chainSource = await this.appRepository.getChainSource();
     if (chainSource === null) {
-      console.error('Chain source not found');
+      throw ChainSourceError();
     }
     this.chainSource = chainSource;
     await this.subscribeAllAccounts();
     this.appRepository.onNetworkChanged(async (network: NetworkString) => {
       await this.unsubscribeAllAccounts();
       this.chainSource = await this.appRepository.getChainSource(network);
+      if (!this.chainSource) throw ChainSourceError(network);
       await this.subscribeAllAccounts();
     });
   }

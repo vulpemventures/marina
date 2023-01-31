@@ -1,5 +1,5 @@
 import type { UpdaterInput } from 'liquidjs-lib';
-import type { NetworkString } from 'marina-provider';
+import type { AddressRecipient, DataRecipient, NetworkString } from 'marina-provider';
 import type { AppStatus } from '../domain/app';
 import type { ChainSource, ListUnspentResponse } from '../domain/chainsource';
 import type { AccountDetails, ScriptDetails } from '../domain/account-type';
@@ -67,7 +67,7 @@ export interface WalletRepository {
   getTxDetails(...txIDs: string[]): Promise<Record<string, TxDetails>>;
   updateScriptDetails(scriptToDetails: Record<string, ScriptDetails>): Promise<void>;
   updateTxDetails(txIDtoDetails: Record<string, TxDetails>): Promise<void>;
-  updateScriptUnspents(scriptToUnspents: Record<string, ListUnspentResponse>): Promise<void>;
+  // updateScriptUnspents(scriptToUnspents: Record<string, ListUnspentResponse>): Promise<void>;
   updateOutpointBlindingData(
     outpointToBlindingData: Array<[{ txID: string; vout: number }, UnblindingData]>
   ): Promise<void>;
@@ -86,8 +86,8 @@ export interface WalletRepository {
   ): Promise<void>;
 
   onNewTransaction(callback: (txID: string, tx: TxDetails) => Promise<void>): void;
-  onNewUtxo(callback: (utxo: UnblindedOutput) => Promise<void>): void;
-  onDeleteUtxo(callback: (utxo: UnblindedOutput) => Promise<void>): void;
+  onNewUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void;
+  onDeleteUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void;
 }
 
 // asset registry is a local cache of remote elements-registry
@@ -98,13 +98,20 @@ export interface AssetRepository {
   addAsset(assethash: string, asset: Asset): Promise<void>;
 }
 
+export type SpendParameters = {
+  hostname: string;
+  addressRecipients: AddressRecipient[];
+  dataRecipients: DataRecipient[];
+  feeAsset: string;
+};
+
 // store the data needed by the popups created by some of the provider calls
 // it lets to communicate between the provider and the popup
 export interface PopupsRepository {
   setHostnameToEnable(hostname: string): Promise<void>; // on "enable"
   setPsetToSign(psetBase64: string, hostname: string): Promise<void>; // on "signTransaction"
   setMessageToSign(message: string, hostname: string): Promise<void>; // on "signMessage"
-
+  setSpendParameters(parameters: SpendParameters): Promise<void>; // on "sendTransaction"
   clear(): Promise<void>; // clear all data
 }
 

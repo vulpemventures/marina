@@ -224,11 +224,6 @@ export class Account {
               if (height !== undefined) heightsSet.add(height);
               txidHeight.set(tx_hash, height);
             }
-            // fetch unspents
-            const unspents = await this.chainSource.fetchUnspentOutputs([scripts[index]]);
-            await this.walletRepository.updateScriptUnspents({
-              [scripts[index].toString('hex')]: unspents[0],
-            });
           } else {
             unusedScriptCounter += 1;
           }
@@ -268,13 +263,7 @@ export class Account {
     for (const script of scripts) {
       await this.chainSource.subscribeScriptStatus(
         script,
-        async (_: string, status: string | null) => {
-          const unspents = await this.chainSource.fetchUnspentOutputs([script]);
-          const unspentForScript = unspents[0];
-          await this.walletRepository.updateScriptUnspents({
-            [script.toString('hex')]: unspentForScript,
-          });
-
+        async (_: string, __: string | null) => {
           const history = await this.chainSource.fetchHistories([script]);
           const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
 

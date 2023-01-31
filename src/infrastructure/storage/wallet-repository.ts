@@ -33,7 +33,7 @@ export enum WalletStorageKey {
 }
 // dynamic keys
 export const TxDetailsKey = new DynamicStorageKey<[txid: string]>('txdetails');
-export const ScriptUnspentsKey = new DynamicStorageKey<[script: string]>('unspents');
+// export const ScriptUnspentsKey = new DynamicStorageKey<[script: string]>('unspents');
 export const ScriptDetailsKey = new DynamicStorageKey<[script: string]>('details');
 export const OutpointBlindingDataKey = new DynamicStorageKey<[txid: string, vout: number]>(
   'blindingdata'
@@ -164,16 +164,16 @@ export class WalletStorageAPI implements WalletRepository {
     );
   }
 
-  updateScriptUnspents(scriptToUnspents: Record<string, ListUnspentResponse>): Promise<void> {
-    return Browser.storage.local.set(
-      Object.fromEntries(
-        Object.entries(scriptToUnspents).map(([script, unspents]) => [
-          ScriptUnspentsKey.make(script),
-          unspents,
-        ])
-      )
-    );
-  }
+  // updateScriptUnspents(scriptToUnspents: Record<string, ListUnspentResponse>): Promise<void> {
+  //   return Browser.storage.local.set(
+  //     Object.fromEntries(
+  //       Object.entries(scriptToUnspents).map(([script, unspents]) => [
+  //         ScriptUnspentsKey.make(script),
+  //         unspents,
+  //       ])
+  //     )
+  //   );
+  // }
 
   updateOutpointBlindingData(
     outpointToBlindingData: Array<[{ txID: string; vout: number }, UnblindingData]>
@@ -191,41 +191,68 @@ export class WalletStorageAPI implements WalletRepository {
   async getOutputBlindingData(
     txID: string,
     vout: number
-  ): Promise<{ txID: string; vout: number; blindingData?: UnblindingData }> {
+  ): Promise<UnblindedOutput> {
     const keys = [OutpointBlindingDataKey.make(txID, vout)];
     const { [keys[0]]: blindingData } = await Browser.storage.local.get(keys);
     return { txID, vout, blindingData: (blindingData as UnblindingData) ?? undefined };
+  }
+
+  private async getUtxosFromTransactions(walletScripts: Buffer[], ...networks: NetworkString[]): Promise<UnblindedOutput[]> {
+    const transactions = await this.getTransactions(...networks);
+    const txDetails = await this.getTxDetails(...transactions);
+    const detailsWithIDs = Object.entries(txDetails).map(([txid, details]) => ({ txid, ...details }));
+
+    // sort by height (older first, uncomfirmed last)
+    detailsWithIDs.sort((a, b) => {
+      if (a.height === b.height) {
+        return 0;
+      }
+      if (heightUncomfirmed(a.height)) {
+        return 1;
+      }
+      if (heightUncomfirmed(b.height)) {
+        return -1;
+      }
+      return a.height! - b.height!;
+    });
+
+    console.warn('detailsWithIDs', detailsWithIDs);
+
+    const allUtxos: UnblindedOutput[] = [];
+    for (const { txid, hex } of detailsWithIDs) {
+      if (!hex) continue; 
+      const tx = Transaction.fromHex(hex);
+      // remove the spent inputs from the utxos array
+      for (const input of tx.ins) {
+        const index = allUtxos.findIndex(
+          (utxo) => utxo.txID === Buffer.from(input.hash).reverse().toString('hex') && utxo.vout === input.index
+        );
+        if (index !== -1) {
+          allUtxos.splice(index, 1);
+        }
+      }
+      // add the outputs to the utxos array
+      for (let i = 0; i < tx.outs.length; i++) {
+        if (!walletScripts.find(script => script.equals(tx.outs[i].script))) continue;
+        const blindingData = await this.getOutputBlindingData(txid, i);
+        allUtxos.push(blindingData);
+      }
+    }
+
+    console.warn('allUtxos', allUtxos);
+
+    return allUtxos;
   }
 
   async getUtxos(network: NetworkString, ...accountNames: string[]): Promise<UnblindedOutput[]> {
     let scripts = await this.getScripts(network);
 
     if (accountNames.length > 0) {
-      // if accountNames is set, we need to filter the scripts
       const scriptDetails = await this.getScriptDetails(...scripts);
-      scripts = scripts.filter(
-        (script) =>
-          scriptDetails[script] && accountNames.includes(scriptDetails[script].accountName)
-      );
+      scripts = scripts.filter((script) => accountNames.includes(scriptDetails[script].accountName));
     }
 
-    const keys = scripts.map((s) => ScriptUnspentsKey.make(s));
-    const scriptToUnspent: Record<string, ListUnspentResponse> = await Browser.storage.local.get(
-      keys
-    );
-    const outpoints = Object.values(scriptToUnspent).flat();
-    const outpointsKeys = outpoints.map((outpoint) =>
-      OutpointBlindingDataKey.make(outpoint.tx_hash, outpoint.tx_pos)
-    );
-    const outpointsToBlindingData: Record<string, UnblindingData> = await Browser.storage.local.get(
-      outpointsKeys
-    );
-    const allUtxos = outpoints.map((outpoint) => ({
-      txID: outpoint.tx_hash,
-      vout: outpoint.tx_pos,
-      blindingData:
-        outpointsToBlindingData[OutpointBlindingDataKey.make(outpoint.tx_hash, outpoint.tx_pos)],
-    }));
+    const allUtxos = await this.getUtxosFromTransactions(scripts.map(s => Buffer.from(s, 'hex')), network);
 
     const lockedOutpoints = await this.getLockedOutpoints();
     return allUtxos.filter(
@@ -344,50 +371,32 @@ export class WalletStorageAPI implements WalletRepository {
     });
   }
 
-  onNewUtxo(callback: (utxo: UnblindedOutput) => Promise<void>) {
-    return Browser.storage.onChanged.addListener(async (changes, areaName) => {
-      if (areaName !== 'local') return;
-      const listUnspentKeys = Object.entries(changes).filter(
-        ([key, changes]) => ScriptUnspentsKey.is(key) && changes.newValue !== undefined
-      );
+  onNewUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>) {
+    let utxosPromise = this.getUtxos(network);
 
-      for (const [, change] of listUnspentKeys) {
-        // check if there is NEW utxo
-        const newUnspents = change.newValue as ListUnspentResponse | undefined;
-        if (!newUnspents) continue; // it means we just deleted the key
-        const oldUnspents = change.oldValue ? (change.oldValue as ListUnspentResponse) : [];
-
-        const oldUnspentsSet = new Set(oldUnspents);
-        const newUnspentsAdded = newUnspents.filter((unspent) => !oldUnspentsSet.has(unspent));
-        for (const newUtxo of newUnspentsAdded) {
-          const utxo = await this.getOutputBlindingData(newUtxo.tx_hash, newUtxo.tx_pos);
-          await callback(utxo);
-        }
+    this.onNewTransaction(async () => {
+      const oldUtxos = await utxosPromise;
+      const newUtxosState = await this.getUtxos(network);
+      const newUtxos = newUtxosState.filter((utxo) => !oldUtxos.includes(utxo));
+      utxosPromise = Promise.resolve(newUtxosState);
+      for (const utxo of newUtxos) {
+        await callback(utxo);
       }
-    });
+    })
   }
 
-  onDeleteUtxo(callback: (utxo: UnblindedOutput) => Promise<void>): void {
-    return Browser.storage.onChanged.addListener(async (changes, areaName) => {
-      if (areaName !== 'local') return;
-      const listUnspentKeys = Object.entries(changes).filter(
-        ([key, changes]) => ScriptUnspentsKey.is(key) && changes.newValue !== undefined
-      );
+  onDeleteUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void {
+    let utxosPromise = this.getUtxos(network);
 
-      for (const [, change] of listUnspentKeys) {
-        // check if there is NEW utxo
-        const newUnspents = change.newValue as ListUnspentResponse | undefined;
-        if (!newUnspents) continue; // it means we just deleted the key
-        const oldUnspents = change.oldValue ? (change.oldValue as ListUnspentResponse) : [];
-
-        const newUnspentsSet = new Set(newUnspents);
-        const oldUnspentsDeleted = oldUnspents.filter((unspent) => !newUnspentsSet.has(unspent));
-        for (const oldUtxo of oldUnspentsDeleted) {
-          const utxo = await this.getOutputBlindingData(oldUtxo.tx_hash, oldUtxo.tx_pos);
-          await callback(utxo);
-        }
+    this.onNewTransaction(async () => {
+      const oldUtxos = await utxosPromise;
+      const newUtxosState = await this.getUtxos(network);
+      const deletedUtxos = oldUtxos.filter((utxo) => !newUtxosState.includes(utxo));
+      utxosPromise = Promise.resolve(newUtxosState);
+      for (const utxo of deletedUtxos) {
+        await callback(utxo);
       }
-    });
+    })
   }
 
   private async getScripts(...networks: NetworkString[]): Promise<Array<string>> {
@@ -408,7 +417,7 @@ export class WalletStorageAPI implements WalletRepository {
       .map(([key]) => AccountKey.decode(key)[0]);
   }
 
-  static LOCKTIME = 5 * 60 * 1000; // 5 minutes
+  static LOCKTIME = 1 * 60 * 1000; // 1 minutes
 
   private async lockOutpoints(outpoints: Array<{ txID: string; vout: number }>): Promise<void> {
     const { [WalletStorageKey.LOCKED_OUTPOINTS]: lockedOutpoints } =
@@ -453,3 +462,5 @@ export class WalletStorageAPI implements WalletRepository {
     }));
   }
 }
+
+const heightUncomfirmed = (h?: number) => (!h || h === -1)
