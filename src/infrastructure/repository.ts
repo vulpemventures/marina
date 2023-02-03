@@ -1,7 +1,7 @@
 import type { UpdaterInput } from 'liquidjs-lib';
 import type { AddressRecipient, DataRecipient, NetworkString } from 'marina-provider';
 import type { AppStatus } from '../domain/app';
-import type { ChainSource, ListUnspentResponse } from '../domain/chainsource';
+import type { ChainSource } from '../domain/chainsource';
 import type { AccountDetails, ScriptDetails } from '../domain/account-type';
 import type { Asset } from '../domain/asset';
 import type {

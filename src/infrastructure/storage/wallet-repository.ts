@@ -7,7 +7,6 @@ import coinselect from 'coinselect';
 import type { TxOutput } from 'liquidjs-lib';
 import { Transaction } from 'liquidjs-lib';
 import type { AccountDetails, ScriptDetails } from '../../domain/account-type';
-import type { ListUnspentResponse } from '../../domain/chainsource';
 import type {
   TxDetails,
   UnblindingData,
@@ -188,60 +187,48 @@ export class WalletStorageAPI implements WalletRepository {
     );
   }
 
-  async getOutputBlindingData(
-    txID: string,
-    vout: number
-  ): Promise<UnblindedOutput> {
+  async getOutputBlindingData(txID: string, vout: number): Promise<UnblindedOutput> {
     const keys = [OutpointBlindingDataKey.make(txID, vout)];
     const { [keys[0]]: blindingData } = await Browser.storage.local.get(keys);
     return { txID, vout, blindingData: (blindingData as UnblindingData) ?? undefined };
   }
 
-  private async getUtxosFromTransactions(walletScripts: Buffer[], ...networks: NetworkString[]): Promise<UnblindedOutput[]> {
-    const transactions = await this.getTransactions(...networks);
-    const txDetails = await this.getTxDetails(...transactions);
-    const detailsWithIDs = Object.entries(txDetails).map(([txid, details]) => ({ txid, ...details }));
+  private async getUtxosFromTransactions(
+    walletScripts: Buffer[],
+    ...networks: NetworkString[]
+  ): Promise<UnblindedOutput[]> {
+    const transactionsIDs = await this.getTransactions(...networks);
+    const txDetails = await this.getTxDetails(...transactionsIDs);
 
-    // sort by height (older first, uncomfirmed last)
-    detailsWithIDs.sort((a, b) => {
-      if (a.height === b.height) {
-        return 0;
-      }
-      if (heightUncomfirmed(a.height)) {
-        return 1;
-      }
-      if (heightUncomfirmed(b.height)) {
-        return -1;
-      }
-      return a.height! - b.height!;
-    });
+    const outpointsInInputs = new Set<string>();
+    const walletOutputs = new Set<string>();
 
-    console.warn('detailsWithIDs', detailsWithIDs);
-
-    const allUtxos: UnblindedOutput[] = [];
-    for (const { txid, hex } of detailsWithIDs) {
-      if (!hex) continue; 
-      const tx = Transaction.fromHex(hex);
-      // remove the spent inputs from the utxos array
+    const transactions = Object.values(txDetails)
+      .filter((tx) => tx.hex)
+      .map((tx) => Transaction.fromHex(tx.hex!));
+    for (const tx of transactions) {
       for (const input of tx.ins) {
-        const index = allUtxos.findIndex(
-          (utxo) => utxo.txID === Buffer.from(input.hash).reverse().toString('hex') && utxo.vout === input.index
+        outpointsInInputs.add(
+          `${Buffer.from(input.hash).reverse().toString('hex')}:${input.index}`
         );
-        if (index !== -1) {
-          allUtxos.splice(index, 1);
-        }
       }
-      // add the outputs to the utxos array
       for (let i = 0; i < tx.outs.length; i++) {
-        if (!walletScripts.find(script => script.equals(tx.outs[i].script))) continue;
-        const blindingData = await this.getOutputBlindingData(txid, i);
-        allUtxos.push(blindingData);
+        if (!walletScripts.find((script) => script.equals(tx.outs[i].script))) continue;
+        walletOutputs.add(`${tx.getId()}:${i}`);
       }
     }
 
-    console.warn('allUtxos', allUtxos);
+    const utxosOutpoints = Array.from(walletOutputs)
+      .filter((outpoint) => !outpointsInInputs.has(outpoint))
+      .map((outpoint) => {
+        const [txid, vout] = outpoint.split(':');
+        return { txID: txid, vout: Number(vout) };
+      });
 
-    return allUtxos;
+    const utxos = await Promise.all(
+      utxosOutpoints.map((outpoint) => this.getOutputBlindingData(outpoint.txID, outpoint.vout))
+    );
+    return utxos;
   }
 
   async getUtxos(network: NetworkString, ...accountNames: string[]): Promise<UnblindedOutput[]> {
@@ -249,15 +236,24 @@ export class WalletStorageAPI implements WalletRepository {
 
     if (accountNames.length > 0) {
       const scriptDetails = await this.getScriptDetails(...scripts);
-      scripts = scripts.filter((script) => accountNames.includes(scriptDetails[script].accountName));
+      scripts = scripts.filter((script) =>
+        accountNames.includes(scriptDetails[script].accountName)
+      );
     }
-
-    const allUtxos = await this.getUtxosFromTransactions(scripts.map(s => Buffer.from(s, 'hex')), network);
+    const allUtxos = await this.getUtxosFromTransactions(
+      scripts.map((s) => Buffer.from(s, 'hex')),
+      network
+    );
 
     const lockedOutpoints = await this.getLockedOutpoints();
-    return allUtxos.filter(
-      (utxo) => !lockedOutpoints.includes({ txID: utxo.txID, vout: utxo.vout })
-    );
+    const unlockedUtxos = [];
+
+    for (const utxo of allUtxos) {
+      if (lockedOutpoints.has(`${utxo.txID}:${utxo.vout}`)) continue;
+      unlockedUtxos.push(utxo);
+    }
+
+    return unlockedUtxos;
   }
 
   async selectUtxos(
@@ -382,7 +378,7 @@ export class WalletStorageAPI implements WalletRepository {
       for (const utxo of newUtxos) {
         await callback(utxo);
       }
-    })
+    });
   }
 
   onDeleteUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void {
@@ -396,7 +392,7 @@ export class WalletStorageAPI implements WalletRepository {
       for (const utxo of deletedUtxos) {
         await callback(utxo);
       }
-    })
+    });
   }
 
   private async getScripts(...networks: NetworkString[]): Promise<Array<string>> {
@@ -422,6 +418,7 @@ export class WalletStorageAPI implements WalletRepository {
   private async lockOutpoints(outpoints: Array<{ txID: string; vout: number }>): Promise<void> {
     const { [WalletStorageKey.LOCKED_OUTPOINTS]: lockedOutpoints } =
       await Browser.storage.local.get(WalletStorageKey.LOCKED_OUTPOINTS);
+    console.log('lockOutpoints', outpoints, lockedOutpoints);
     const current = lockedOutpoints ?? [];
     const until = Date.now() + WalletStorageAPI.LOCKTIME;
     for (const outpoint of outpoints) {
@@ -448,7 +445,7 @@ export class WalletStorageAPI implements WalletRepository {
     return Browser.storage.local.set({ [WalletStorageKey.LOCKED_OUTPOINTS]: Array.from(set) });
   }
 
-  private async getLockedOutpoints(): Promise<Array<{ txID: string; vout: number }>> {
+  private async getLockedOutpoints(): Promise<Set<string>> {
     try {
       await this.unlockOutpoints();
     } catch (e) {
@@ -456,11 +453,8 @@ export class WalletStorageAPI implements WalletRepository {
     }
     const { [WalletStorageKey.LOCKED_OUTPOINTS]: lockedOutpoints } =
       await Browser.storage.local.get(WalletStorageKey.LOCKED_OUTPOINTS);
-    return (lockedOutpoints ?? []).map((outpoint: LockedOutpoint) => ({
-      txID: outpoint.txID,
-      vout: outpoint.vout,
-    }));
+
+    if (!lockedOutpoints) return new Set();
+    return new Set(lockedOutpoints.map((o: any) => `${o.txID}:${o.vout}`));
   }
 }
-
-const heightUncomfirmed = (h?: number) => (!h || h === -1)

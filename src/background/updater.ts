@@ -1,7 +1,6 @@
 import { Transaction } from 'liquidjs-lib';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import Browser from 'webextension-polyfill';
-import type { ListUnspentResponse } from '../domain/chainsource';
 import type { Unblinder } from '../domain/unblinder';
 import { WalletRepositoryUnblinder } from '../domain/unblinder';
 import type { TxDetails, UnblindingData } from '../domain/transaction';
@@ -10,10 +9,7 @@ import type {
   AppRepository,
   AssetRepository,
 } from '../infrastructure/repository';
-import {
-  TxIDsKey,
-  TxDetailsKey,
-} from '../infrastructure/storage/wallet-repository';
+import { TxIDsKey, TxDetailsKey } from '../infrastructure/storage/wallet-repository';
 
 // this is OK because we have set up topLevelAwait in webpack config
 const zkpLib = await zkp();
@@ -34,7 +30,7 @@ export class Updater {
   constructor(
     private walletRepository: WalletRepository,
     private appRepository: AppRepository,
-    private assetRepository: AssetRepository
+    assetRepository: AssetRepository
   ) {
     this.unblinder = new WalletRepositoryUnblinder(
       walletRepository,
@@ -45,21 +41,10 @@ export class Updater {
   }
 
   // set up the onChanged chrome storage listener
-  start() {
-    if (this.listener) this.stop();
+  async start() {
+    if (this.listener) await this.stop();
     this.listener = this.onChangesListener();
     Browser.storage.onChanged.addListener(this.listener);
-
-    Browser.alarms.create(Updater.ALARM, { periodInMinutes: 5 });
-    Browser.alarms.onAlarm.addListener(async (alarm) => {
-      if (alarm.name === Updater.ALARM) {
-        try {
-          await this.update();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    });
   }
 
   // remove the onChanged chrome storage listener
@@ -69,12 +54,6 @@ export class Updater {
       Browser.storage.onChanged.removeListener(this.listener);
       this.listener = undefined;
     }
-  }
-
-  private update() {
-    const chainSource = this.appRepository.getChainSource();
-    if (!chainSource) throw new Error('Chain source not set');
-    const transactionsInStorage = this.walletRepository.getTransactions();
   }
 
   // onChangesListener iterates over the storage changes to trigger the right actions

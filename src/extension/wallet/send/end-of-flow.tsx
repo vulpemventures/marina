@@ -40,6 +40,8 @@ const SendEndOfFlow: React.FC = () => {
       if (!chainSource) throw new Error('chain source not found');
 
       const blinder = new BlinderService(walletRepository);
+
+      console.log(unsignedPset);
       const blindedPset = await blinder.blindPset(Pset.fromBase64(unsignedPset));
       const signer = await SignerService.fromPassword(walletRepository, password);
       const signed = await signer.signPset(blindedPset);

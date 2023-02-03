@@ -32,8 +32,9 @@ import type {
 import { stringify } from '../../browser-storage-converters';
 import type { Account } from '../../domain/account';
 import { AccountFactory } from '../../domain/account';
-import { AddressRecipient, DataRecipient, isAddressRecipient, isDataRecipient, NetworkString, Recipient } from 'marina-provider';
-import { SpendPopupResponse } from '../../extension/popups/spend';
+import type { AddressRecipient, DataRecipient, NetworkString, Recipient } from 'marina-provider';
+import { isAddressRecipient, isDataRecipient } from 'marina-provider';
+import type { SpendPopupResponse } from '../../extension/popups/spend';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -255,10 +256,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             addressRecipients,
             dataRecipients,
             feeAsset,
-          })
+          });
 
-          const { accepted, signedTxHex } =
-            await this.openAndWaitPopup<SpendPopupResponse>('spend');
+          const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
+            'spend'
+          );
 
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
@@ -502,4 +504,3 @@ function sortRecipients(recipients: Recipient[]): {
 
   return { dataRecipients, addressRecipients };
 }
-

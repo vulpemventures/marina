@@ -192,7 +192,6 @@ export class Account {
     if (!this.name) throw new Error('No name, cannot sync');
 
     const historyTxsId: Set<string> = new Set();
-    const heightsSet: Set<number> = new Set();
     const txidHeight: Map<string, number | undefined> = new Map();
 
     const lastUsed = await this.getLastUsedIndexes();
@@ -214,14 +213,13 @@ export class Account {
         for (const [index, history] of histories.entries()) {
           if (history.length > 0) {
             unusedScriptCounter = 0; // reset counter
-            const newMaxIndex = index + batchCount;
+            const newMaxIndex = index + batchCount + 1;
             if (isInternal) lastUsed.internal = newMaxIndex;
             else lastUsed.external = newMaxIndex;
 
             // update the history set
             for (const { tx_hash, height } of history) {
               historyTxsId.add(tx_hash);
-              if (height !== undefined) heightsSet.add(height);
               txidHeight.set(tx_hash, height);
             }
           } else {
@@ -261,23 +259,17 @@ export class Account {
   async subscribeBatch(start: number, end: number, isInternal: boolean): Promise<void> {
     const scripts = await this.deriveBatch(start, end, isInternal, false);
     for (const script of scripts) {
-      await this.chainSource.subscribeScriptStatus(
-        script,
-        async (_: string, __: string | null) => {
-          const history = await this.chainSource.fetchHistories([script]);
-          const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
+      await this.chainSource.subscribeScriptStatus(script, async (_: string, __: string | null) => {
+        const history = await this.chainSource.fetchHistories([script]);
+        const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
 
-          await Promise.all([
-            this.walletRepository.addTransactions(
-              this.network.name as NetworkString,
-              ...historyTxId
-            ),
-            this.walletRepository.updateTxDetails(
-              Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
-            ),
-          ]);
-        }
-      );
+        await Promise.all([
+          this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxId),
+          this.walletRepository.updateTxDetails(
+            Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
+          ),
+        ]);
+      });
     }
   }
 

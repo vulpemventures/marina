@@ -1,4 +1,3 @@
-import { Transaction } from 'liquidjs-lib';
 import type { NetworkString } from 'marina-provider';
 import { useEffect, useState } from 'react';
 import Browser from 'webextension-polyfill';
@@ -8,7 +7,7 @@ import type { Asset } from '../../domain/asset';
 import type { UnblindedOutput, TxDetails } from '../../domain/transaction';
 import type { Encrypted } from '../../encryption';
 import { sortAssets } from '../../extension/utility/sort';
-import { SpendParameters } from '../repository';
+import type { SpendParameters } from '../repository';
 import {
   AppStorageAPI,
   AppStorageKeys,
@@ -259,64 +258,57 @@ export const useSelectTaxiAssets = () => {
 
 export const useSelectTransactions = () => {
   const [transactions, setTransactions] = useState<TxDetails[]>([]);
+
+  const updateTransactions = async () => {
+    const net = await appRepository.getNetwork();
+    if (!net) return;
+    const txIds = await walletRepository.getTransactions(net);
+    const details = await walletRepository.getTxDetails(...txIds);
+    const txDetails = Object.values(details).sort(sortTxDetails());
+
+    setTransactions(txDetails);
+
+    // check if we have the hex, if not fetch it
+    const chainSource = await appRepository.getChainSource();
+    if (chainSource) {
+      const txIDs = Object.entries(details)
+        .filter(([, details]) => !details.hex)
+        .map(([txID]) => txID);
+
+      console.debug(`Fetching ${txIDs.length} transactions from the chain source`);
+      const txs = await chainSource.fetchTransactions(txIDs);
+      await walletRepository.updateTxDetails(Object.fromEntries(txs.map((tx) => [tx.txID, tx])));
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      const net = await appRepository.getNetwork();
-      if (!net) return;
-      const txIds = await walletRepository.getTransactions(net);
-      const details = await walletRepository.getTxDetails(...txIds);
-      const txDetails = Object.values(details).sort(sortTxDetails());
-
-      setTransactions(txDetails);
-
-      const listener = (changes: Browser.Storage.StorageChange, areaName: string) => {
-        if (areaName !== 'local') return;
-        for (const [key, change] of Object.entries(changes)) {
-          if (TxDetailsKey.is(key) && change.newValue) {
-            const details = change.newValue as TxDetails;
-            const [txID] = TxDetailsKey.decode(key);
-            const newTransactions = [...transactions];
-            const index = newTransactions.findIndex(
-              (tx) => tx.hex && Transaction.fromHex(tx.hex).getId() === txID
-            );
-            if (index === -1) {
-              setTransactions([details, ...newTransactions].sort(sortTxDetails()));
-            } else {
-              newTransactions[index] = details;
-              setTransactions(newTransactions);
-            }
-          }
+    const listener = async (changes: Browser.Storage.StorageChange, areaName: string) => {
+      if (areaName !== 'local') return;
+      for (const [key, change] of Object.entries(changes)) {
+        if (TxDetailsKey.is(key) && change.newValue) {
+          await updateTransactions();
         }
-      };
-      Browser.storage.onChanged.addListener(listener);
-
-      // check if we have the hex, if not fetch it
-      const chainSource = await appRepository.getChainSource();
-      if (chainSource) {
-        const txIDs = Object.entries(details)
-          .filter(([, details]) => !details.hex)
-          .map(([txID]) => txID);
-
-        console.debug(`Fetching ${txIDs.length} transactions from the chain source`)
-        const txs = await chainSource.fetchTransactions(txIDs);
-        await walletRepository.updateTxDetails(
-          Object.fromEntries(txs.map((tx) => [tx.txID, tx]))
-        );
       }
+    };
 
-      return () => {
-        Browser.storage.onChanged.removeListener(listener);
-      };
-    })().catch(console.error);
+    updateTransactions().catch(console.error);
+
+    Browser.storage.onChanged.addListener(listener);
+    return () => {
+      Browser.storage.onChanged.removeListener(listener);
+    };
   }, []);
+
   return transactions;
 };
 
+// sort function for txDetails, use the height member to sort
+// put unconfirmed txs first and then sort by height (desc)
 function sortTxDetails(): ((a: TxDetails, b: TxDetails) => number) | undefined {
   return (a, b) => {
     if (a.height === b.height) return 0;
-    if (a.height === undefined || a.height === -1) return -1;
-    if (b.height === undefined || b.height === -1) return 1;
+    if (!a.height || a.height === -1) return -1;
+    if (!b.height || b.height === -1) return 1;
     return b.height - a.height;
   };
 }

@@ -1,9 +1,10 @@
 import type { NetworkString } from 'marina-provider';
 import { Account } from '../domain/account';
 import type { WalletRepository, AppRepository } from '../infrastructure/repository';
-import type { ChainSource } from './chainsource';
+import type { ChainSource } from '../domain/chainsource';
 
-const ChainSourceError = (network?: string) => new Error('Chain source not found, cannot start subscriber service on network: ' + network);
+const ChainSourceError = (network: string) =>
+  new Error('Chain source not found, cannot start subscriber service on network: ' + network);
 
 // subscriber manages the subscription for all the accounts
 export class Subscriber {
@@ -19,7 +20,7 @@ export class Subscriber {
     this.masterBlindingKey = masterBlindingKey;
     const chainSource = await this.appRepository.getChainSource();
     if (chainSource === null) {
-      throw ChainSourceError();
+      throw ChainSourceError('unknown');
     }
     this.chainSource = chainSource;
     await this.subscribeAllAccounts();

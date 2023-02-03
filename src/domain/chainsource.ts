@@ -14,17 +14,12 @@ export interface ChainSource {
   fetchBlockHeader(height: number): Promise<BlockHeader>;
   estimateFees(targetNumberBlocks: number): Promise<number>;
   broadcastTransaction(hex: string): Promise<string>;
+  getRelayFee(): Promise<number>;
 }
 
 export type GetHistoryResponse = Array<{
   tx_hash: string;
   height: number;
-}>;
-
-export type ListUnspentResponse = Array<{
-  tx_hash: string;
-  tx_pos: number;
-  height: number; // if 0 = unconfirmed
 }>;
 
 const BroadcastTransaction = 'blockchain.transaction.broadcast'; // returns txid
@@ -33,6 +28,7 @@ const GetBlockHeader = 'blockchain.block.header'; // returns block header as hex
 const GetHistoryMethod = 'blockchain.scripthash.get_history';
 const GetTransactionMethod = 'blockchain.transaction.get'; // returns hex string
 const SubscribeStatusMethod = 'blockchain.scripthash'; // ElectrumWS automatically adds '.subscribe'
+const GetRelayFeeMethod = 'blockchain.relayfee';
 
 export class WsElectrumChainSource implements ChainSource {
   constructor(private ws: ElectrumWS) {}
@@ -76,6 +72,10 @@ export class WsElectrumChainSource implements ChainSource {
 
   async broadcastTransaction(hex: string): Promise<string> {
     return this.ws.request<string>(BroadcastTransaction, hex);
+  }
+
+  async getRelayFee(): Promise<number> {
+    return this.ws.request<number>(GetRelayFeeMethod);
   }
 }
 

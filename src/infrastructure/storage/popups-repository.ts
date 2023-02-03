@@ -3,7 +3,7 @@ import type { PopupsRepository, SpendParameters } from '../repository';
 
 export enum PopupsStorageKeys {
   HOSTNAME = 'enableHostname', // store the storage to enable in the popup connect/enable
-  SIGN_TRANSACTION_PSET = 'signTransactionPset',  // store the pset to sign in the connect/sign-pset popup
+  SIGN_TRANSACTION_PSET = 'signTransactionPset', // store the pset to sign in the connect/sign-pset popup
   SIGN_MESSAGE = 'signMessage', // store the message to sign in the connect/sign-message popup
   SPEND_PARAMETERS = 'spendParameters', // store the spend parameters in the connect/spend popup
 }

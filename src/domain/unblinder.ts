@@ -52,13 +52,11 @@ export class WalletRepositoryUnblinder implements Unblinder {
           });
           continue;
         }
-        const blindPrivKey = slip77node.derive(output.script).privateKey
-        if (!blindPrivKey) throw new Error('Blinding private key error for script ' + output.script);
+        const blindPrivKey = slip77node.derive(output.script).privateKey;
+        if (!blindPrivKey)
+          throw new Error('Blinding private key error for script ' + output.script.toString('hex'));
 
-        const unblinded = this.lib.unblindOutputWithKey(
-          output,
-          blindPrivKey
-        );
+        const unblinded = this.lib.unblindOutputWithKey(output, blindPrivKey);
 
         unblindingResults.push({
           value: parseInt(unblinded.value, 10),

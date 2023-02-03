@@ -18,7 +18,7 @@ import {
   assetRepository,
 } from '../../../infrastructure/storage/common';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
-import { AddressRecipient } from 'marina-provider';
+import type { AddressRecipient } from 'marina-provider';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -90,9 +90,8 @@ const ChooseFee: React.FC = () => {
   };
 
   const chooseFeeAndCreatePset = async (assetHash: string) => {
-    if (!selectedFeeAsset || selectedFeeAsset === assetHash || !network) {
-      return; // skip if the same asset is selected
-    }
+    if (selectedFeeAsset === assetHash) throw new Error('asset already selected');
+    if (!network) throw new Error('network not selected');
 
     if (!recipient) {
       throw new Error('address/amount to send not found');
@@ -101,7 +100,7 @@ const ChooseFee: React.FC = () => {
     try {
       setLoading(true);
       setSelectedFeeAsset(assetHash);
-      const { pset, feeAmount } = await makeSendPset([recipient], [], selectedFeeAsset);
+      const { pset, feeAmount } = await makeSendPset([recipient], [], assetHash);
       setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
       const psetBase64 = pset.toBase64();
       setUnsignedPset(psetBase64);

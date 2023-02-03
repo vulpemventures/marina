@@ -8,7 +8,7 @@ import {
   isOpenPopupMessage,
   isPopupResponseMessage,
 } from '../domain/message';
-import { Subscriber } from '../domain/subscriber';
+import { Subscriber } from './subscriber';
 import { POPUP_RESPONSE } from '../extension/popups/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../extension/routes/constants';
 import { AppStorageAPI } from '../infrastructure/storage/app-repository';
