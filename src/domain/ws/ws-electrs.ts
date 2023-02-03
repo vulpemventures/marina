@@ -105,7 +105,7 @@ export class ElectrumWS extends Observable {
     }));
 
     const promises = payloads.map((p) => this.createRequestPromise<any>(p.id, p.method));
-    payloads.forEach((p) => this.ws.send(JSON.stringify(p)));
+    payloads.forEach((p) => this.ws.send(formatRequest(p)));
     return Promise.all(promises) as Promise<R>;
   }
 
@@ -131,7 +131,7 @@ export class ElectrumWS extends Observable {
     const promise = this.createRequestPromise<ResponseType>(id, method);
 
     console.debug('ElectrumWS SEND:', method, ...params);
-    this.ws.send(JSON.stringify(payload));
+    this.ws.send(formatRequest(payload));
 
     return promise;
   }
@@ -328,4 +328,13 @@ export class ElectrumWS extends Observable {
 function bytesToString(bytes: BufferSource) {
   const decoder = new TextDecoder('utf-8');
   return decoder.decode(bytes);
+}
+
+function stringToBytes(str: string) {
+  const encoder = new TextEncoder(); // utf-8 is the default
+  return encoder.encode(str);
+}
+
+function formatRequest(r: RpcRequest): Uint8Array {
+  return stringToBytes(JSON.stringify(r) + '\n');
 }

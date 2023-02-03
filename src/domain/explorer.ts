@@ -32,7 +32,7 @@ export const NigiriDefaultExplorerURLs: ExplorerURLs = {
   webExplorerURL: 'http://localhost:5001',
   explorerURL: 'http://localhost:3001',
   wsURL: 'ws://localhost:3001',
-  websocketExplorerURL: 'ws://localhost:1234',
+  websocketExplorerURL: 'ws://127.0.0.1:1234',
 };
 
 export const MempoolExplorerURLs: ExplorerURLs = {
