@@ -4,7 +4,7 @@ import type { MaybeNull } from './common';
 
 // @ts-ignore
 import coinselect from 'coinselect';
-import type { TxOutput } from 'liquidjs-lib';
+import { networks, TxOutput } from 'liquidjs-lib';
 import { Transaction } from 'liquidjs-lib';
 import type { AccountDetails, ScriptDetails } from '../../domain/account-type';
 import type {
@@ -162,17 +162,6 @@ export class WalletStorageAPI implements WalletRepository {
       )
     );
   }
-
-  // updateScriptUnspents(scriptToUnspents: Record<string, ListUnspentResponse>): Promise<void> {
-  //   return Browser.storage.local.set(
-  //     Object.fromEntries(
-  //       Object.entries(scriptToUnspents).map(([script, unspents]) => [
-  //         ScriptUnspentsKey.make(script),
-  //         unspents,
-  //       ])
-  //     )
-  //   );
-  // }
 
   updateOutpointBlindingData(
     outpointToBlindingData: Array<[{ txID: string; vout: number }, UnblindingData]>
@@ -393,6 +382,13 @@ export class WalletStorageAPI implements WalletRepository {
         await callback(utxo);
       }
     });
+  }
+
+  async getAccountScripts(network: NetworkString, ...names: string[]): Promise<Record<string, ScriptDetails>> {
+    const wholeStorage = await Browser.storage.local.get(null);
+    return Object.fromEntries(Object.entries(wholeStorage)
+      .filter(([key, value]) => ScriptDetailsKey.is(key) && names.includes((value as ScriptDetails).accountName))
+      .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails]));
   }
 
   private async getScripts(...networks: NetworkString[]): Promise<Array<string>> {

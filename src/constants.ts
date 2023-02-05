@@ -1,4 +1,4 @@
-import { networks } from 'ldk';
+import { networks } from 'liquidjs-lib';
 
 export const INVALID_MNEMONIC_ERROR = 'Invalid mnemonic';
 export const INVALID_PASSWORD_ERROR = 'Invalid password';

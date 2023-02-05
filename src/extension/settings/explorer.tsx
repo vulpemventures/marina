@@ -9,7 +9,7 @@ import {
   MempoolTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/explorer';
-import type { NetworkString } from 'ldk';
+import type { NetworkString } from 'marina-provider';
 import { useHistory } from 'react-router';
 import { SETTINGS_EXPLORER_CUSTOM_ROUTE } from '../routes/constants';
 import { appRepository, useSelectNetwork } from '../../infrastructure/storage/common';

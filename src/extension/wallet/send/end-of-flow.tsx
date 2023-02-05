@@ -10,7 +10,6 @@ import { SignerService } from '../../../domain/signer';
 import {
   appRepository,
   sendFlowRepository,
-  useSelectNetwork,
   walletRepository,
 } from '../../../infrastructure/storage/common';
 import { BlinderService } from '../../../domain/blinder';
@@ -21,7 +20,6 @@ import { Pset } from 'liquidjs-lib';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();
-  const network = useSelectNetwork();
   const [invalidPasswordError, setInvalidPasswordError] = useState(false);
   const [unlockModal, setUnlockModal] = useState(true);
 
@@ -36,6 +34,8 @@ const SendEndOfFlow: React.FC = () => {
     try {
       const unsignedPset = await sendFlowRepository.getUnsignedPset();
       if (!unsignedPset) throw new Error('unsigned pset not found');
+      const network = await appRepository.getNetwork();
+      if (!network) throw new Error('network not found');
       const chainSource = await appRepository.getChainSource(network);
       if (!chainSource) throw new Error('chain source not found');
 
@@ -53,6 +53,15 @@ const SendEndOfFlow: React.FC = () => {
       const port = Browser.runtime.connect();
       port.postMessage(subscribeMessage(MainAccount));
       port.postMessage(subscribeMessage(MainAccountTest));
+
+      // update tx in repository
+      await walletRepository.addTransactions(network, txid);
+      await walletRepository.updateTxDetails({
+        [txid]: {
+          height: 0, // unconfirmed
+          hex: toBroadcast,
+        },
+      })
 
       // push to success page
       history.push({

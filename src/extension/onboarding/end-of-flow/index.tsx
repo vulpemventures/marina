@@ -5,7 +5,7 @@ import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
 import { Account } from '../../../domain/account';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
+import { AccountType, MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
 import {
   appRepository,
   onboardingRepository,
@@ -58,6 +58,7 @@ const EndOfFlowOnboarding: React.FC = () => {
         .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccount, {
+        accountType: AccountType.P2WPH,
         masterPublicKey: defaultMainAccountXPub,
         baseDerivationPath: Account.BASE_DERIVATION_PATH,
         accountNetworks: ['liquid'],
@@ -70,6 +71,7 @@ const EndOfFlowOnboarding: React.FC = () => {
         .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccountTest, {
+        accountType: AccountType.P2WPH,
         masterPublicKey: defaultMainAccountXPubTestnet,
         baseDerivationPath: Account.BASE_DERIVATION_PATH_TESTNET,
         accountNetworks: ['regtest', 'testnet'],
@@ -82,6 +84,7 @@ const EndOfFlowOnboarding: React.FC = () => {
         // .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccountLegacy, {
+        accountType: AccountType.P2WPH,
         masterPublicKey: defaultLegacyMainAccountXPub,
         baseDerivationPath: Account.BASE_DERIVATION_PATH_LEGACY,
         accountNetworks: ['liquid', 'regtest', 'testnet'],

@@ -67,7 +67,6 @@ export interface WalletRepository {
   getTxDetails(...txIDs: string[]): Promise<Record<string, TxDetails>>;
   updateScriptDetails(scriptToDetails: Record<string, ScriptDetails>): Promise<void>;
   updateTxDetails(txIDtoDetails: Record<string, TxDetails>): Promise<void>;
-  // updateScriptUnspents(scriptToUnspents: Record<string, ListUnspentResponse>): Promise<void>;
   updateOutpointBlindingData(
     outpointToBlindingData: Array<[{ txID: string; vout: number }, UnblindingData]>
   ): Promise<void>;
@@ -78,7 +77,8 @@ export interface WalletRepository {
 
   // account, if no names, returns all accounts
   getAccountDetails(...names: string[]): Promise<Record<string, AccountDetails>>;
-  updateAccountDetails(name: string, details: Partial<AccountDetails>): Promise<void>;
+  getAccountScripts(network: NetworkString, ...names: string[]): Promise<Record<string, ScriptDetails>>;
+  updateAccountDetails<T extends AccountDetails>(name: string, details: Partial<T>): Promise<void>;
   updateAccountLastUsedIndexes(
     name: string,
     network: NetworkString,

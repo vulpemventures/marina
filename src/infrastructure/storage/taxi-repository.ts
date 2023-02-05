@@ -1,4 +1,4 @@
-import type { NetworkString } from 'ldk';
+import type { NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import type { Asset } from '../../domain/asset';
 import type { AppRepository, AssetRepository, TaxiRepository } from '../repository';

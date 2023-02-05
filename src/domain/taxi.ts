@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { NetworkString } from 'ldk';
+import type { NetworkString } from 'marina-provider';
 
 export interface TaxiAssetDetails {
   assetHash: string;

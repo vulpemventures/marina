@@ -1,4 +1,4 @@
-import type { NetworkString } from 'ldk';
+import type { NetworkString } from 'marina-provider';
 import React, { useState } from 'react';
 import Browser from 'webextension-polyfill';
 import { AccountFactory } from '../../domain/account';
