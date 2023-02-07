@@ -4,8 +4,8 @@ import type { MaybeNull } from './common';
 
 // @ts-ignore
 import coinselect from 'coinselect';
-import { networks, TxOutput } from 'liquidjs-lib';
-import { Transaction } from 'liquidjs-lib';
+import type { TxOutput } from 'liquidjs-lib';
+import { networks , Transaction } from 'liquidjs-lib';
 import type { AccountDetails, ScriptDetails } from '../../domain/account-type';
 import type {
   TxDetails,
@@ -64,48 +64,32 @@ export class WalletStorageAPI implements WalletRepository {
     return Browser.storage.local.set({ [key]: { ...currentDetails, ...details } });
   }
 
-  async updateAccountLastUsedIndexes(
+  async updateAccountKeyIndex(
     name: string,
     network: NetworkString,
     indexes: Partial<{ internal: number; external: number }>
   ): Promise<void> {
     const key = AccountKey.make(name);
     const currentDetails = (await this.getAccountDetails(name))[name];
-    const currentLastUsedIndexes = currentDetails.lastUsedIndexes?.[network] ?? {};
+    const currentIndexes = currentDetails.nextKeyIndexes?.[network] ?? {};
     return Browser.storage.local.set({
       [key]: {
         ...currentDetails,
-        lastUsedIndexes: {
-          ...currentDetails.lastUsedIndexes,
+        nextKeyIndexes: {
+          ...currentDetails.nextKeyIndexes,
           [network]: {
-            ...currentLastUsedIndexes,
+            ...currentIndexes,
             ...indexes,
           },
         },
-      },
+      } as AccountDetails,
     });
-  }
-
-  setLastUsedIndex(index: number, isInternal: boolean): Promise<void> {
-    const key = isInternal ? WalletStorageKey.INTERNAL_INDEX : WalletStorageKey.EXTERNAL_INDEX;
-    return Browser.storage.local.set({ [key]: index });
   }
 
   async getTransactions(...network: NetworkString[]): Promise<string[]> {
     const keys = network.map((n) => TxIDsKey.make(n));
     const values = await Browser.storage.local.get(keys);
     return Object.values(values).flat() as Array<string>;
-  }
-
-  async getLastUsedIndexes(): MaybeNull<{ internal?: number; external?: number }> {
-    const indexes = await Browser.storage.local.get([
-      WalletStorageKey.INTERNAL_INDEX,
-      WalletStorageKey.EXTERNAL_INDEX,
-    ]);
-    return {
-      internal: (indexes[WalletStorageKey.INTERNAL_INDEX] as number) ?? undefined,
-      external: (indexes[WalletStorageKey.EXTERNAL_INDEX] as number) ?? undefined,
-    };
   }
 
   async getScriptDetails(...scripts: string[]): Promise<Record<string, ScriptDetails>> {
@@ -384,11 +368,19 @@ export class WalletStorageAPI implements WalletRepository {
     });
   }
 
-  async getAccountScripts(network: NetworkString, ...names: string[]): Promise<Record<string, ScriptDetails>> {
+  async getAccountScripts(
+    network: NetworkString,
+    ...names: string[]
+  ): Promise<Record<string, ScriptDetails>> {
     const wholeStorage = await Browser.storage.local.get(null);
-    return Object.fromEntries(Object.entries(wholeStorage)
-      .filter(([key, value]) => ScriptDetailsKey.is(key) && names.includes((value as ScriptDetails).accountName))
-      .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails]));
+    return Object.fromEntries(
+      Object.entries(wholeStorage)
+        .filter(
+          ([key, value]) =>
+            ScriptDetailsKey.is(key) && names.includes((value as ScriptDetails).accountName)
+        )
+        .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails])
+    );
   }
 
   private async getScripts(...networks: NetworkString[]): Promise<Array<string>> {

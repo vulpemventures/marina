@@ -30,7 +30,7 @@ const Home: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
   const [utxos, utxosLoading] = useSelectUtxos()();
-  console.log('utxos', utxos)
+  console.log('utxos', utxos);
   const allWalletAssets = useSelectAllAssets();
   const [balances, setBalances] = useState<Record<string, number>>({});
 

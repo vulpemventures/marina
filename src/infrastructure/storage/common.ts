@@ -7,7 +7,7 @@ import type { Asset } from '../../domain/asset';
 import type { UnblindedOutput, TxDetails } from '../../domain/transaction';
 import type { Encrypted } from '../../encryption';
 import { sortAssets } from '../../extension/utility/sort';
-import type { SpendParameters } from '../repository';
+import type { CreateAccountParameters, SpendParameters } from '../repository';
 import {
   AppStorageAPI,
   AppStorageKeys,
@@ -159,6 +159,11 @@ export const useSelectPopupPsetToSign = makeReactHook<string>(
 export const useSelectPopupSpendParameters = makeReactHook<SpendParameters>(
   'local',
   PopupsStorageKeys.SPEND_PARAMETERS
+);
+
+export const useSelectPopupCreateAccountParameters = makeReactHook<CreateAccountParameters>(
+  'local',
+  PopupsStorageKeys.CREATE_ACCOUNT_PARAMETERS
 );
 
 // returns the utxos for the given accounts, and a boolean indicating if the utxos has been loaded

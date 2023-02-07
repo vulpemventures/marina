@@ -2,14 +2,22 @@ import * as ecc from 'tiny-secp256k1';
 import ZKPlib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
-import { networks, payments } from 'liquidjs-lib';
+import { address, bip341, networks, payments } from 'liquidjs-lib';
 import type { NetworkString } from 'marina-provider';
 import type { Slip77Interface } from 'slip77';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from '../domain/chainsource';
 import type { AppRepository, WalletRepository } from '../infrastructure/repository';
-import { AccountDetails, AccountType, ScriptDetails } from './account-type';
-import { Argument, Artifact, Contract } from '@ionio-lang/ionio';
+import type {
+  AccountDetails,
+  ArtifactWithConstructorArgs,
+  IonioScriptDetails,
+  ScriptDetails} from './account-type';
+import {
+  AccountType
+} from './account-type';
+import type { Argument} from '@ionio-lang/ionio';
+import { Artifact, Contract } from '@ionio-lang/ionio';
 
 const zkp = await ZKPlib();
 const bip32 = BIP32Factory(ecc);
@@ -22,7 +30,7 @@ const IONIO_NOT_SUPPORTED = new Error('Ionio account not supported');
 type PubKeyWithRelativeDerivationPath = {
   publicKey: Buffer;
   derivationPath: string;
-}
+};
 
 type AccountOpts = {
   masterPublicKey: string;
@@ -37,7 +45,7 @@ export class AccountFactory {
   private chainSources = new Map<NetworkString, ChainSource>();
   masterBlindingKey: string | undefined;
 
-  private constructor(private walletRepository: WalletRepository) { }
+  private constructor(private walletRepository: WalletRepository) {}
 
   static async create(
     walletRepository: WalletRepository,
@@ -109,12 +117,11 @@ export class Account {
   }
 
   async subscribeAllScripts(): Promise<void> {
-    const scripts = Object.keys(await this.walletRepository.getAccountScripts(
-      this.network.name as NetworkString,
-      this.name
-    )).map(b => Buffer.from(b, 'hex'));
+    const scripts = Object.keys(
+      await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name)
+    ).map((b) => Buffer.from(b, 'hex'));
 
-    console.log(`Subscribing to ${scripts.length} scripts for account ${this.name}`)
+    console.warn(`subscribing to ${scripts.length} scripts`)
     for (const script of scripts) {
       await this.chainSource.subscribeScriptStatus(script, async (_: string, __: string | null) => {
         const history = await this.chainSource.fetchHistories([script]);
@@ -125,15 +132,14 @@ export class Account {
             Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
           ),
         ]);
-      })
+      });
     }
   }
 
   async unsubscribeAllScripts(): Promise<void> {
-    const scripts = Object.keys(await this.walletRepository.getAccountScripts(
-      this.network.name as NetworkString,
-      this.name
-    )).map(b => Buffer.from(b, 'hex'));
+    const scripts = Object.keys(
+      await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name)
+    ).map((b) => Buffer.from(b, 'hex'));
 
     for (const script of scripts) {
       await this.chainSource.unsubscribeScriptStatus(script);
@@ -144,27 +150,37 @@ export class Account {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get all addresses');
     if (!this.name) throw new Error('No name, cannot get all addresses');
     const type = await this.getAccountType();
-    const scripts = await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name);
+    const scripts = await this.walletRepository.getAccountScripts(
+      this.network.name as NetworkString,
+      this.name
+    );
 
-    if (type === AccountType.P2WPH) {
-      return Object.keys(scripts)
-        .map((script: string) => this.createP2WKHAddress(Buffer.from(script, 'hex')));
+    switch (type) {
+      case AccountType.P2WPKH:
+        return Object.keys(scripts).map((script: string) =>
+          this.createP2WPKHAddress(Buffer.from(script, 'hex'))
+        );
+      case AccountType.Ionio:
+        return Object.keys(scripts).map((script: string) =>
+          this.createTaprootAddress(Buffer.from(script, 'hex'))
+        );
+      default:
+        throw new Error('Account type not supported');
     }
-
-    // TODO IONIO: create segwit v1 address from scriptpubkey
-    throw IONIO_NOT_SUPPORTED;
   }
 
   // get next address generate a new script and persist its details in cache
   // it also increments the account last used index depending on isInternal
-  async getNextAddress(isInternal: boolean): Promise<string> {
+  async getNextAddress(
+    isInternal: boolean,
+    artifactWithArgs?: ArtifactWithConstructorArgs
+  ): Promise<string> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get next address');
     if (!this.name) throw new Error('No name, cannot get next address');
 
-    const lastUsedIndexes = await this.getLastUsedIndexes();
-    const lastUsed = isInternal ? lastUsedIndexes.internal : lastUsedIndexes.external;
-    // TODO: persist script details
-    const publicKeys = await this.deriveBatchPublicKeys(lastUsed, lastUsed + 1, isInternal);
+    const nextIndexes = await this.getNextIndexes();
+    const next = isInternal ? nextIndexes.internal : nextIndexes.external;
+    const publicKeys = await this.deriveBatchPublicKeys(next, next + 1, isInternal);
     const type = await this.getAccountType();
 
     let address = undefined;
@@ -172,12 +188,15 @@ export class Account {
     let scriptDetails = undefined;
 
     switch (type) {
-      case AccountType.P2WPH:
+      case AccountType.P2WPKH:
         [script, scriptDetails] = this.createP2PWKHScript(publicKeys[0]);
-        address = this.createP2WKHAddress(Buffer.from(script, 'hex'));
+        address = this.createP2WPKHAddress(Buffer.from(script, 'hex'));
         break;
       case AccountType.Ionio:
-        throw IONIO_NOT_SUPPORTED;
+        if (!artifactWithArgs)
+          throw new Error('Artifact with args is required for Ionio account type');
+        [script, scriptDetails] = this.createTaprootScript(publicKeys[0], artifactWithArgs);
+        break;
       default:
         throw new Error('Unsupported account type: ' + type);
     }
@@ -187,52 +206,62 @@ export class Account {
 
     // increment the account details last used index & persist the new script details
     await Promise.allSettled([
-      this.walletRepository.updateAccountLastUsedIndexes(
-        this.name,
-        this.network.name as NetworkString,
-        { [isInternal ? 'internal' : 'external']: lastUsed + 1 }),
+      this.walletRepository.updateAccountKeyIndex(this.name, this.network.name as NetworkString, {
+        [isInternal ? 'internal' : 'external']: next + 1,
+      }),
       this.walletRepository.updateScriptDetails({
-        [script]: scriptDetails
-      })
+        [script]: scriptDetails,
+      }),
     ]);
 
     return address;
   }
 
   async sync(gapLimit = GAP_LIMIT): Promise<{
-    lastUsed: { internal: number; external: number };
+    next: { internal: number; external: number };
   }> {
     if (!this.chainSource) throw new Error('No chain source, cannot sync');
     if (!this.walletRepository) throw new Error('No wallet repository, cannot sync');
     const type = await this.getAccountType();
-    if (type !== AccountType.P2WPH) throw new Error('Unsupported sync function for account type: ' + type);
+    if (type !== AccountType.P2WPKH)
+      throw new Error('Unsupported sync function for account type: ' + type);
 
     const historyTxsId: Set<string> = new Set();
     const txidHeight: Map<string, number | undefined> = new Map();
-    const restoredScripts: Record<string, ScriptDetails> = {};
+    let restoredScripts: Record<string, ScriptDetails> = {};
+    let tempRestoredScripts: Record<string, ScriptDetails> = {};
 
-    const lastUsed = await this.getLastUsedIndexes();
+    const nextIndexes = await this.getNextIndexes();
 
     const walletChains = [0, 1];
     for (const i of walletChains) {
       const isInternal = i === 1;
-      let batchCount = isInternal ? lastUsed.internal : lastUsed.external;
+      let batchCount = isInternal ? nextIndexes.internal : nextIndexes.external;
       let unusedScriptCounter = 0;
 
       while (unusedScriptCounter <= gapLimit) {
-        const publicKeys = await this.deriveBatchPublicKeys(batchCount, batchCount + gapLimit, isInternal);
-        const scriptsWithDetails = publicKeys.map((publicKey) => this.createP2PWKHScript(publicKey));
+        const publicKeys = await this.deriveBatchPublicKeys(
+          batchCount,
+          batchCount + gapLimit,
+          isInternal
+        );
+        const scriptsWithDetails = publicKeys.map((publicKey) =>
+          this.createP2PWKHScript(publicKey)
+        );
 
         const scripts = scriptsWithDetails.map(([script]) => Buffer.from(script, 'hex'));
         const histories = await this.chainSource.fetchHistories(scripts);
 
         for (const [index, history] of histories.entries()) {
+          tempRestoredScripts[scriptsWithDetails[index][0]] = scriptsWithDetails[index][1];
           if (history.length > 0) {
             unusedScriptCounter = 0; // reset counter
-            restoredScripts[scriptsWithDetails[index][0]] = scriptsWithDetails[index][1];
+            // update the restored scripts with all the script details until now
+            restoredScripts = { ...restoredScripts, ...tempRestoredScripts };
+            tempRestoredScripts = {};
             const newMaxIndex = index + batchCount + 1;
-            if (isInternal) lastUsed.internal = newMaxIndex;
-            else lastUsed.external = newMaxIndex;
+            if (isInternal) nextIndexes.internal = newMaxIndex;
+            else nextIndexes.external = newMaxIndex;
 
             // update the history set
             for (const { tx_hash, height } of history) {
@@ -249,10 +278,10 @@ export class Account {
 
     await Promise.allSettled([
       this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxsId),
-      this.walletRepository.updateAccountLastUsedIndexes(
+      this.walletRepository.updateAccountKeyIndex(
         this.name,
         this.network.name as NetworkString,
-        lastUsed
+        nextIndexes
       ),
       this.walletRepository.updateTxDetails(
         Object.fromEntries(
@@ -263,9 +292,9 @@ export class Account {
     ]);
 
     return {
-      lastUsed: {
-        internal: lastUsed.internal,
-        external: lastUsed.external,
+      next: {
+        internal: nextIndexes.internal,
+        external: nextIndexes.external,
       },
     };
   }
@@ -282,7 +311,7 @@ export class Account {
   private async deriveBatchPublicKeys(
     start: number,
     end: number,
-    isInternal: boolean,
+    isInternal: boolean
   ): Promise<PubKeyWithRelativeDerivationPath[]> {
     if (!this.node) throw new Error('No node, Account cannot derive scripts');
     const chain = isInternal ? 1 : 0;
@@ -296,30 +325,32 @@ export class Account {
     return results;
   }
 
-  private async getLastUsedIndexes(): Promise<{ internal: number; external: number }> {
+  private async getNextIndexes(): Promise<{ internal: number; external: number }> {
     if (!this.walletRepository || !this.name) return { internal: 0, external: 0 };
     const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
       this.name
     );
     if (!accountDetails) return { internal: 0, external: 0 };
-    const { lastUsedIndexes } = accountDetails;
+    const { nextKeyIndexes } = accountDetails;
     const net = this.network.name as NetworkString;
-    if (!lastUsedIndexes || !lastUsedIndexes[net]) return { internal: 0, external: 0 };
+    if (!nextKeyIndexes || !nextKeyIndexes[net]) return { internal: 0, external: 0 };
 
     return {
-      internal: lastUsedIndexes[net].internal || 0,
-      external: lastUsedIndexes[net].external || 0,
+      internal: nextKeyIndexes[net].internal || 0,
+      external: nextKeyIndexes[net].external || 0,
     };
   }
 
   private async getAccountDetails(): Promise<AccountDetails> {
-    const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(this.name);
+    const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
+      this.name
+    );
     this._cacheAccountType = accountDetails.accountType;
     if (!accountDetails) throw new Error('Account details not found');
     return accountDetails;
   }
 
-  private async getAccountType(): Promise<AccountType> {
+  async getAccountType(): Promise<AccountType> {
     if (!this._cacheAccountType) {
       const details = await this.getAccountDetails();
       return details.accountType;
@@ -327,20 +358,25 @@ export class Account {
     return this._cacheAccountType;
   }
 
-  private createP2PWKHScript(
-    { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath
-  ): [string, ScriptDetails] {
+  private createP2PWKHScript({
+    publicKey,
+    derivationPath,
+  }: PubKeyWithRelativeDerivationPath): [string, ScriptDetails] {
     const script = payments.p2wpkh({ pubkey: publicKey, network: this.network }).output;
     if (!script) throw new Error('Could not derive script');
-    return [script.toString('hex'), {
-      derivationPath,
-      accountName: this.name,
-      network: this.network.name as NetworkString,
-      blindingPrivateKey: this.deriveBlindingKey(script).privateKey.toString('hex'),
-    }];
+    return [
+      script.toString('hex'),
+      {
+        derivationPath,
+        accountName: this.name,
+        network: this.network.name as NetworkString,
+        blindingPrivateKey: this.deriveBlindingKey(script).privateKey.toString('hex'),
+      },
+    ];
   }
 
-  private createP2WKHAddress(script: Buffer): string {
+  // segwit v0 confidential address
+  private createP2WPKHAddress(script: Buffer): string {
     const { publicKey: blindkey } = this.deriveBlindingKey(script);
     const address = payments.p2wpkh({
       output: script,
@@ -351,13 +387,38 @@ export class Account {
     return address;
   }
 
-  // private createIonioScript(
-  //   { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath, 
-  //   artifact: Artifact,
-  //   params: Argument[]
-  // ): [string, ScriptDetails] {
-  //   const contract = new Contract(artifact, params, this.network, { ecc, zkp });
-  // }
+  private createTaprootScript(
+    { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath,
+    { artifact, args }: ArtifactWithConstructorArgs
+  ): [string, ScriptDetails] {
+    const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name }) => {
+      // inject xOnlyPublicKey argument if one of the contructor args is named like the account name
+      if (name === this.name) {
+        return '0x'.concat(publicKey.subarray(1).toString('hex'));
+      }
 
+      const param = args[name];
+      if (!param) {
+        throw new Error(`missing contructor arg ${name}`);
+      }
+      return param;
+    });
 
+    const contract = new Contract(artifact, constructorArgs, this.network, { ecc, zkp });
+    const scriptDetails: IonioScriptDetails = {
+      accountName: this.name,
+      network: this.network.name as NetworkString,
+      blindingPrivateKey: this.deriveBlindingKey(contract.scriptPubKey).privateKey.toString('hex'),
+      derivationPath,
+      args,
+      artifact,
+    };
+    return [contract.scriptPubKey.toString('hex'), scriptDetails];
+  }
+
+  // segwit v1 confidential address
+  private createTaprootAddress(script: Buffer): string {
+    const { publicKey: blindkey } = this.deriveBlindingKey(script);
+    return address.toConfidential(address.fromOutputScript(script, this.network), blindkey);
+  }
 }

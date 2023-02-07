@@ -58,10 +58,10 @@ const SendEndOfFlow: React.FC = () => {
       await walletRepository.addTransactions(network, txid);
       await walletRepository.updateTxDetails({
         [txid]: {
-          height: 0, // unconfirmed
+          height: 0, // unconfirmed, subscriber will update this once the tx is propagated
           hex: toBroadcast,
         },
-      })
+      });
 
       // push to success page
       history.push({

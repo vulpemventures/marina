@@ -77,9 +77,12 @@ export interface WalletRepository {
 
   // account, if no names, returns all accounts
   getAccountDetails(...names: string[]): Promise<Record<string, AccountDetails>>;
-  getAccountScripts(network: NetworkString, ...names: string[]): Promise<Record<string, ScriptDetails>>;
+  getAccountScripts(
+    network: NetworkString,
+    ...names: string[]
+  ): Promise<Record<string, ScriptDetails>>;
   updateAccountDetails<T extends AccountDetails>(name: string, details: Partial<T>): Promise<void>;
-  updateAccountLastUsedIndexes(
+  updateAccountKeyIndex(
     name: string,
     network: NetworkString,
     indexes: Partial<{ internal: number; external: number }>
@@ -105,6 +108,11 @@ export type SpendParameters = {
   feeAsset: string;
 };
 
+export type CreateAccountParameters = {
+  name: string; // account name
+  hostname: string; // who is requesting the account creation
+};
+
 // store the data needed by the popups created by some of the provider calls
 // it lets to communicate between the provider and the popup
 export interface PopupsRepository {
@@ -112,6 +120,7 @@ export interface PopupsRepository {
   setPsetToSign(psetBase64: string, hostname: string): Promise<void>; // on "signTransaction"
   setMessageToSign(message: string, hostname: string): Promise<void>; // on "signMessage"
   setSpendParameters(parameters: SpendParameters): Promise<void>; // on "sendTransaction"
+  setCreateAccountParameters(parameters: CreateAccountParameters): Promise<void>; // on "createAccount"
   clear(): Promise<void>; // clear all data
 }
 

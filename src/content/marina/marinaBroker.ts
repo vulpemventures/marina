@@ -3,7 +3,12 @@ import Broker from '../broker';
 import type { MessageHandler } from '../../domain/message';
 import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../domain/account-type';
+import {
+  AccountType,
+  MainAccount,
+  MainAccountLegacy,
+  MainAccountTest,
+} from '../../domain/account-type';
 import type {
   AppRepository,
   AssetRepository,
@@ -35,6 +40,8 @@ import { AccountFactory } from '../../domain/account';
 import type { AddressRecipient, DataRecipient, NetworkString, Recipient } from 'marina-provider';
 import { isAddressRecipient, isDataRecipient } from 'marina-provider';
 import type { SpendPopupResponse } from '../../extension/popups/spend';
+import type { CreateAccountPopupResponse } from '../../extension/popups/create-account';
+import type { Argument, Artifact } from '@ionio-lang/ionio';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -139,6 +146,28 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     return factory.make(network, this.selectedAccount);
   }
 
+  private async getNextAddress(isInternal: boolean, params: any[]): Promise<string> {
+    const account = await this.getSelectedAccount();
+    let nextAddress = '';
+
+    switch (await account.getAccountType()) {
+      case AccountType.P2WPKH:
+        nextAddress = await account.getNextAddress(isInternal);
+        break;
+      case AccountType.Ionio:
+        if (!params || params.length < 1) {
+          throw new Error('missing Artifact parameter');
+        }
+        const [artifact, args] = params as [Artifact, { [name: string]: Argument }];
+        nextAddress = await account.getNextAddress(isInternal, { artifact, args });
+        break;
+      default:
+        throw new Error('Unsupported account type');
+    }
+
+    return nextAddress;
+  }
+
   private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
     if (!this.hostname) throw MarinaBroker.NotSetUpError;
     const successMsg = <T = any>(data?: T) => newSuccessResponseMessage(id, data);
@@ -186,22 +215,14 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'getNextAddress': {
           await this.checkHostnameAuthorization();
-          if (params && params.length > 0) {
-            throw new Error('Only custom script accounts can expect construct parameters');
-          }
-          const account = await this.getSelectedAccount();
-          const nextAddress = await account.getNextAddress(false);
+          const nextAddress = await this.getNextAddress(false, params || []);
           return successMsg(nextAddress);
         }
 
         case 'getNextChangeAddress': {
           await this.checkHostnameAuthorization();
-          if (params && params.length > 0) {
-            throw new Error('Only custom script accounts can expect construct parameters');
-          }
-          const account = await this.getSelectedAccount();
-          const nextChangeAddress = await account.getNextAddress(true);
-          return successMsg(nextChangeAddress);
+          const nextAddress = await this.getNextAddress(true, params || []);
+          return successMsg(nextAddress);
         }
 
         case 'signTransaction': {
@@ -368,81 +389,22 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg(true);
         }
 
-        // case 'importTemplate': {
-        //   await this.checkHostnameAuthorization();
-        //   const accountData = this.state.wallet.accounts[this.selectedAccount];
-        //   if (accountData.type !== AccountType.CustomScriptAccount) {
-        //     throw new Error('Only custom script accounts can import templates');
-        //   }
+        case 'createAccount': {
+          await this.checkHostnameAuthorization();
+          const [name] = params as [string];
 
-        //   let contract: Template | undefined;
-        //   let changeContract: Template | undefined;
-        //   if (params && params.length > 0) {
-        //     if (!validateTemplate(params[0])) {
-        //       throw new Error('Invalid template');
-        //     }
-        //     contract = params[0];
+          await this.popupsRepository.setCreateAccountParameters({
+            hostname: this.hostname,
+            name,
+          });
 
-        //     if (params[1]) {
-        //       if (!validateTemplate(params[1])) {
-        //         throw new Error('Invalid change template');
-        //       }
-        //       changeContract = params[1];
-        //     }
-        //   }
+          const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>(
+            'create-account'
+          );
+          if (!accepted) throw new Error('user rejected the create account request');
 
-        //   await this.store.dispatchAsync(
-        //     setCustomScriptTemplate(
-        //       this.selectedAccount,
-        //       contract!.template,
-        //       changeContract?.template
-        //     )
-        //   );
-
-        //   const isFuncSpendable = (fn: ArtifactFunction) => {
-        //     return (
-        //       fn.functionInputs.length === 1 &&
-        //       fn.functionInputs[0].type === PrimitiveType.Signature &&
-        //       (!fn.require || fn.require.length === 0)
-        //     );
-        //   };
-
-        //   const artifact: Artifact = JSON.parse(contract!.template);
-        //   let isSpendableByMarina = artifact.functions.every(isFuncSpendable);
-
-        //   if (isSpendableByMarina && changeContract) {
-        //     const changeArtifact = JSON.parse(changeContract.template);
-        //     isSpendableByMarina = changeArtifact.functions.every(isFuncSpendable);
-        //   }
-
-        //   await this.store.dispatchAsync(
-        //     setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
-        //   );
-
-        //   return successMsg(true);
-        // }
-
-        // case 'createAccount': {
-        //   await this.checkHostnameAuthorization();
-        //   const [accountName] = params as [string];
-        //   if (this.accountExists(accountName)) {
-        //     throw new Error(`Account ${accountName} already exists`);
-        //   }
-
-        //   await this.store.dispatchAsync(
-        //     setCreateAccountData({
-        //       namespace: accountName,
-        //       hostname: this.hostname,
-        //     })
-        //   );
-
-        //   const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>(
-        //     'create-account'
-        //   );
-        //   if (!accepted) throw new Error('user rejected the create account request');
-
-        //   return successMsg(accepted);
-        // }
+          return successMsg(accepted);
+        }
 
         case 'broadcastTransaction': {
           await this.checkHostnameAuthorization();
