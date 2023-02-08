@@ -15,7 +15,6 @@ import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utility';
-import type { Asset } from '../../../domain/asset';
 import { SendFlowStep } from '../../../infrastructure/repository';
 import { computeBalances, getNetwork } from '../../../utils';
 import {
@@ -25,12 +24,12 @@ import {
   useSelectNetwork,
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
+import type { Asset } from 'marina-provider';
 
 const Home: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
   const [utxos, utxosLoading] = useSelectUtxos()();
-  console.log('utxos', utxos);
   const allWalletAssets = useSelectAllAssets();
   const [balances, setBalances] = useState<Record<string, number>>({});
 

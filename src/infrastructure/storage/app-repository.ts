@@ -125,6 +125,7 @@ export class AppStorageAPI implements AppRepository {
 
   async enableSite(url: string): Promise<void> {
     const enabledSites = await this.getEnabledSites();
+    console.warn('Enabling site', url, enabledSites);
     if (!enabledSites.includes(url)) {
       enabledSites.push(url);
       return Browser.storage.local.set({ [AppStorageKeys.ENABLED_SITES]: enabledSites });

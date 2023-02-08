@@ -92,9 +92,11 @@ const ShellPopUp: React.FC<Props> = ({
 
             {network !== 'liquid' && (
               <div>
-                <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
-                  {network && formatNetwork(network)}
-                </span>
+                {network && (
+                  <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
+                    {formatNetwork(network)}
+                  </span>
+                )}
               </div>
             )}
           </div>

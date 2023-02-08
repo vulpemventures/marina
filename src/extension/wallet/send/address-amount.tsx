@@ -4,7 +4,6 @@ import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshi } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import type { Asset } from '../../../domain/asset';
 import AddressAmountForm from '../../components/address-amount-form';
 import {
   assetRepository,
@@ -13,7 +12,8 @@ import {
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
 import { computeBalances } from '../../../utils';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
+import type { Asset } from 'marina-provider';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
 
 const AddressAmountView: React.FC = () => {
   const history = useHistory();

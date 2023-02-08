@@ -1,5 +1,5 @@
+import type { Asset } from 'marina-provider';
 import React from 'react';
-import type { Asset } from '../../domain/asset';
 import { formatAssetName, formatDecimalAmount, fromSatoshi } from '../utility';
 import AssetIcon from './assetIcon';
 

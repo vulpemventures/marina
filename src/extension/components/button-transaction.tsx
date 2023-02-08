@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import classNames from 'classnames';
 import type { TxDetails } from '../../domain/transaction';
 import { TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
@@ -6,7 +7,6 @@ import TxIcon from './txIcon';
 import moment from 'moment';
 import Modal from './modal';
 import { Transaction } from 'liquidjs-lib';
-import type { Asset } from '../../domain/asset';
 import type { BlockHeader } from '../../background/utils';
 import AssetIcon from './assetIcon';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
@@ -18,6 +18,7 @@ import {
   walletRepository,
 } from '../../infrastructure/storage/common';
 import { makeURLwithBlinders } from '../../utils';
+import type { Asset } from 'marina-provider';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -125,7 +126,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
               ? moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')
               : isLoading
               ? '...'
-              : 'uncomfirmed'}
+              : 'mempool'}
           </span>
         </div>
         <div className="flex">
@@ -153,14 +154,24 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           <p className="text-base font-medium">{transfer?.type}</p>
           {blockHeader && (
             <p className="text-xs font-light">
-              {moment(blockHeader.timestamp).format('DD MMMM YYYY')}
+              {moment(blockHeader.timestamp * 1000).format('DD MMMM YYYY HH:mm')}
             </p>
           )}
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
           <div className="flex flex-row">
-            <p className="text-primary text-base antialiased font-bold">Confirmed</p>
-            <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
+            <p
+              className={classNames('text-base antialiased', {
+                'text-primary': txDetails?.height ? txDetails.height > 0 : false,
+              })}
+            >
+              {txDetails?.height ? 'Confirmed' : 'Unconfirmed'}
+            </p>
+            <img
+              className="w-6 h-6 -mt-0.5"
+              src={txDetails?.height ? 'assets/images/confirm.svg' : 'assets/images/cross.svg'}
+              alt="confirm"
+            />
           </div>
           {transfer && (
             <div>

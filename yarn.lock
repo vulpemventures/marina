@@ -6992,10 +6992,9 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marina-provider@^1.7.2:
+"marina-provider@https://github.com/louisinger/marina-provider.git#new-provider":
   version "1.7.2"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.7.2.tgz#6a046587f535e344403bc83988554f43104b1d50"
-  integrity sha512-j6hIN0lXxxicudc4FDKZ1dzAoMQY5oGjxl6tkZ4bCOM7ANPNykbB0IVDF49yVuJgckudnuU/U+pU3+WhI2y7+A==
+  resolved "https://github.com/louisinger/marina-provider.git#734e8bf85961f6e27ad4957a1839fe7f6ddc18da"
 
 marky@^1.2.2:
   version "1.2.5"

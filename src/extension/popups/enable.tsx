@@ -17,16 +17,16 @@ const ConnectEnableView: React.FC = () => {
     return popupWindowProxy.sendResponse(popupResponseMessage(data));
   };
 
-  const handleReject = async () => {
-    await sendResponseMessage(false);
+  const handleReject = () => {
+    sendResponseMessage(false);
     window.close();
   };
 
-  const handleConnect = async () => {
+  const handleConnect = async (hostname: string) => {
     try {
-      if (hostnameToEnable) await appRepository.enableSite(hostnameToEnable);
+      await appRepository.enableSite(hostname);
     } finally {
-      await sendResponseMessage(true);
+      sendResponseMessage(true);
       window.close();
     }
   };
@@ -56,14 +56,16 @@ const ConnectEnableView: React.FC = () => {
         </div>
       ))}
 
-      <ButtonsAtBottom>
-        <Button isOutline={true} onClick={handleReject} textBase={true}>
-          Reject
-        </Button>
-        <Button onClick={debouncedHandleConnect} textBase={true}>
-          Connect
-        </Button>
-      </ButtonsAtBottom>
+      {hostnameToEnable && (
+        <ButtonsAtBottom>
+          <Button isOutline={true} onClick={handleReject} textBase={true}>
+            Reject
+          </Button>
+          <Button onClick={() => debouncedHandleConnect(hostnameToEnable)} textBase={true}>
+            Connect
+          </Button>
+        </ButtonsAtBottom>
+      )}
     </ShellConnectPopup>
   );
 };

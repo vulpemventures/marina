@@ -1,9 +1,15 @@
 import type { UpdaterInput } from 'liquidjs-lib';
-import type { AddressRecipient, DataRecipient, NetworkString } from 'marina-provider';
+import type {
+  AccountInfo,
+  AccountType,
+  AddressRecipient,
+  Asset,
+  DataRecipient,
+  NetworkString,
+  ScriptDetails,
+} from 'marina-provider';
 import type { AppStatus } from '../domain/app';
 import type { ChainSource } from '../domain/chainsource';
-import type { AccountDetails, ScriptDetails } from '../domain/account-type';
-import type { Asset } from '../domain/asset';
 import type {
   UnblindingData,
   CoinSelection,
@@ -12,6 +18,10 @@ import type {
 } from '../domain/transaction';
 import Browser from 'webextension-polyfill';
 import type { Encrypted } from '../encryption';
+
+export type AccountDetails = AccountInfo & {
+  nextKeyIndexes: Record<NetworkString, { internal: number; external: number }>;
+};
 
 /**
  * The AppRepository stores the global application state like settings, network or explorer URLs.
@@ -111,6 +121,7 @@ export type SpendParameters = {
 export type CreateAccountParameters = {
   name: string; // account name
   hostname: string; // who is requesting the account creation
+  accountType: AccountType;
 };
 
 // store the data needed by the popups created by some of the provider calls

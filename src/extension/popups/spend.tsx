@@ -3,12 +3,13 @@ import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
 import { BlinderService } from '../../domain/blinder';
 import { popupResponseMessage } from '../../domain/message';
 import { SignerService } from '../../domain/signer';
+import type { SpendParameters } from '../../infrastructure/repository';
 import {
   useSelectAllAssets,
   useSelectPopupSpendParameters,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { makeSendPset } from '../../utils';
+import { makeSendPsetFromMainAccounts } from '../../utils';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
@@ -24,7 +25,7 @@ export interface SpendPopupResponse {
 
 const ConnectSpend: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>();
 
   const popupWindowProxy = new PopupWindowProxy<SpendPopupResponse>();
   const spendParameters = useSelectPopupSpendParameters();
@@ -39,23 +40,22 @@ const ConnectSpend: React.FC = () => {
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
-    return popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedTxHex }));
+    popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedTxHex }));
   };
 
-  const handleReject = async () => {
+  const handleReject = () => {
     try {
       // Flush tx data
-      await sendResponseMessage(false);
+      sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
     window.close();
   };
 
-  const handlePasswordInput = async (password: string) => {
-    if (!spendParameters) return;
+  const handlePasswordInput = async (password: string, spendParameters: SpendParameters) => {
     try {
-      const { pset } = await makeSendPset(
+      const { pset } = await makeSendPsetFromMainAccounts(
         spendParameters.addressRecipients,
         spendParameters.dataRecipients,
         spendParameters.feeAsset
@@ -64,9 +64,11 @@ const ConnectSpend: React.FC = () => {
       const blindedPset = await blinder.blindPset(pset);
       const signer = await SignerService.fromPassword(walletRepository, password);
       const signedPset = await signer.signPset(blindedPset);
-      await sendResponseMessage(true, signer.finalizeAndExtract(signedPset));
+      sendResponseMessage(true, signer.finalizeAndExtract(signedPset));
+      window.close();
     } catch (e) {
       console.error(e);
+      showUnlockModal(false);
       setError(extractErrorMessage(e));
     }
   };
@@ -79,7 +81,7 @@ const ConnectSpend: React.FC = () => {
       className="h-popupContent max-w-sm pb-20 text-center bg-bottom bg-no-repeat"
       currentPage="Spend"
     >
-      {error.length === 0 && spendParameters ? (
+      {!error && spendParameters ? (
         <>
           <h1 className="mt-8 text-2xl font-medium break-all">{spendParameters.hostname}</h1>
           <p className="mt-4 text-base font-medium">Requests you to spend</p>
@@ -136,11 +138,15 @@ const ConnectSpend: React.FC = () => {
           </Button>
         </div>
       )}
-      <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={handlePasswordInput}
-      />
+      {spendParameters && (
+        <ModalUnlock
+          isModalUnlockOpen={isModalUnlockOpen}
+          handleModalUnlockClose={handleModalUnlockClose}
+          handleUnlock={async (password: string) =>
+            await handlePasswordInput(password, spendParameters)
+          }
+        />
+      )}
     </ShellConnectPopup>
   );
 };

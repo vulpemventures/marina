@@ -2,8 +2,8 @@ import React from 'react';
 import { useHistory } from 'react-router';
 import { RECEIVE_ADDRESS_ROUTE } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
-import type { Asset } from '../../../domain/asset';
 import { useSelectAllAssets } from '../../../infrastructure/storage/common';
+import type { Asset } from 'marina-provider';
 
 const ReceiveSelectAsset: React.FC = () => {
   const history = useHistory();

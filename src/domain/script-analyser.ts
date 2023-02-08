@@ -1,5 +1,5 @@
 import type { bip341 } from 'liquidjs-lib';
-import { script  } from 'liquidjs-lib';
+import { script } from 'liquidjs-lib';
 
 // analyse a script to know what it need as input
 const { OPS } = script;

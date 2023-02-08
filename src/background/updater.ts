@@ -70,7 +70,6 @@ export class Updater {
             // for all new txs, we need to fetch the tx hex
             const oldTxIDsSet = new Set(oldTxIDs);
             const txIDsToFetch = newTxIDs.filter((txID) => !oldTxIDsSet.has(txID));
-            console.warn('TxIDsKey', key, txIDsToFetch);
             try {
               const chainSource = await this.appRepository.getChainSource(network);
               if (!chainSource) {
@@ -99,7 +98,6 @@ export class Updater {
               }
               updateArray.push([{ txID, vout }, unblinded]);
             }
-            console.warn('TxDetailsKey', key, updateArray);
             await this.walletRepository.updateOutpointBlindingData(updateArray);
           }
         } catch (e) {

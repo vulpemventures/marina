@@ -14,7 +14,6 @@ import ButtonTransaction from '../../components/button-transaction';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshiStr } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import type { Asset } from '../../../domain/asset';
 import { computeBalances } from '../../../utils';
 import {
   appRepository,
@@ -23,7 +22,7 @@ import {
   useSelectTransactions,
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
+import type { Asset } from 'marina-provider';
 
 interface LocationState {
   assetHash: string;
@@ -35,7 +34,8 @@ const Transactions: React.FC = () => {
   } = useLocation<LocationState>();
   const history = useHistory();
   const transactions = useSelectTransactions();
-  const [utxos] = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
+  console.log(transactions);
+  const [utxos] = useSelectUtxos()();
 
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [asset, setAsset] = useState<Asset>();

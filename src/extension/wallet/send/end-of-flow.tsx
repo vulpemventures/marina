@@ -15,8 +15,8 @@ import {
 import { BlinderService } from '../../../domain/blinder';
 import Browser from 'webextension-polyfill';
 import { subscribeMessage } from '../../../domain/message';
-import { MainAccount, MainAccountTest } from '../../../domain/account-type';
 import { Pset } from 'liquidjs-lib';
+import { MainAccount, MainAccountTest } from '../../../domain/account';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();

@@ -8,8 +8,7 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility'
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { networks } from 'liquidjs-lib';
-import type { Asset } from '../../../domain/asset';
-import { computeBalances, makeSendPset } from '../../../utils';
+import { computeBalances, makeSendPsetFromMainAccounts } from '../../../utils';
 import {
   useSelectNetwork,
   useSelectTaxiAssets,
@@ -17,8 +16,8 @@ import {
   sendFlowRepository,
   assetRepository,
 } from '../../../infrastructure/storage/common';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account-type';
-import type { AddressRecipient } from 'marina-provider';
+import type { AddressRecipient, Asset } from 'marina-provider';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -100,7 +99,7 @@ const ChooseFee: React.FC = () => {
     try {
       setLoading(true);
       setSelectedFeeAsset(assetHash);
-      const { pset, feeAmount } = await makeSendPset([recipient], [], assetHash);
+      const { pset, feeAmount } = await makeSendPsetFromMainAccounts([recipient], [], assetHash);
       setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
       const psetBase64 = pset.toBase64();
       setUnsignedPset(psetBase64);

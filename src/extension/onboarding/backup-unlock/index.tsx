@@ -34,7 +34,7 @@ const BackUpUnlockForm = (props: FormikProps<BackUpUnlockFormValues>) => {
       </div>
       <div className="">
         <Button type="submit" disabled={isSubmitting}>
-          {!isSubmitting ? `Unlock` : `Please wait...`}
+          {!isSubmitting ? `Unlock` : `Loading...`}
         </Button>
       </div>
     </form>

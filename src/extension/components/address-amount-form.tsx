@@ -4,11 +4,10 @@ import type { RouteComponentProps } from 'react-router';
 import Button from './button';
 import { SEND_CHOOSE_FEE_ROUTE } from '../routes/constants';
 import * as Yup from 'yup';
-import type { NetworkString } from 'marina-provider';
+import type { Asset, NetworkString } from 'marina-provider';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utility';
 import Input from './input';
 import React from 'react';
-import type { Asset } from '../../domain/asset';
 import type { SendFlowRepository } from '../../infrastructure/repository';
 import { isValidAddressForNetwork } from '../../utils';
 

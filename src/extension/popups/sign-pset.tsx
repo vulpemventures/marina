@@ -35,9 +35,9 @@ const ConnectSignTransaction: React.FC = () => {
     return popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedPset }));
   };
 
-  const rejectSignRequest = async () => {
+  const rejectSignRequest = () => {
     try {
-      await sendResponseMessage(false);
+      sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -50,7 +50,7 @@ const ConnectSignTransaction: React.FC = () => {
       if (!password || password.length === 0) throw new Error('Need password');
       const signer = await SignerService.fromPassword(walletRepository, password);
       const signedPset = await signer.signPset(Pset.fromBase64(psetToSign));
-      await sendResponseMessage(true, signedPset.toBase64());
+      sendResponseMessage(true, signedPset.toBase64());
       window.close();
     } catch (e: any) {
       console.error(e);
@@ -101,11 +101,13 @@ const ConnectSignTransaction: React.FC = () => {
           </Button>
         </>
       )}
-      <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={signTx}
-      />
+      {psetToSign && (
+        <ModalUnlock
+          isModalUnlockOpen={isModalUnlockOpen}
+          handleModalUnlockClose={handleModalUnlockClose}
+          handleUnlock={signTx}
+        />
+      )}
     </ShellConnectPopup>
   );
 };

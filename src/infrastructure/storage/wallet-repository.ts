@@ -1,19 +1,16 @@
-import type { NetworkString } from 'marina-provider';
-import Browser from 'webextension-polyfill';
-import type { MaybeNull } from './common';
-
 // @ts-ignore
 import coinselect from 'coinselect';
+import type { NetworkString, ScriptDetails } from 'marina-provider';
+import Browser from 'webextension-polyfill';
 import type { TxOutput } from 'liquidjs-lib';
-import { networks , Transaction } from 'liquidjs-lib';
-import type { AccountDetails, ScriptDetails } from '../../domain/account-type';
+import { Transaction } from 'liquidjs-lib';
 import type {
   TxDetails,
   UnblindingData,
   UnblindedOutput,
   CoinSelection,
 } from '../../domain/transaction';
-import type { WalletRepository } from '../repository';
+import type { AccountDetails, WalletRepository } from '../repository';
 import { DynamicStorageKey } from './dynamic-key';
 import type { Encrypted } from '../../encryption';
 

@@ -1,14 +1,12 @@
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
 import type { MessageHandler } from '../../domain/message';
-import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
-import Marina from '../../inject/marina/provider';
 import {
-  AccountType,
-  MainAccount,
-  MainAccountLegacy,
-  MainAccountTest,
-} from '../../domain/account-type';
+  subscribeMessage,
+  newErrorResponseMessage,
+  newSuccessResponseMessage,
+} from '../../domain/message';
+import Marina from '../../inject/marina/provider';
 import type {
   AppRepository,
   AssetRepository,
@@ -36,12 +34,25 @@ import type {
 } from '../marina-event';
 import { stringify } from '../../browser-storage-converters';
 import type { Account } from '../../domain/account';
-import { AccountFactory } from '../../domain/account';
-import type { AddressRecipient, DataRecipient, NetworkString, Recipient } from 'marina-provider';
-import { isAddressRecipient, isDataRecipient } from 'marina-provider';
+import {
+  MainAccount,
+  MainAccountLegacy,
+  MainAccountTest,
+  AccountFactory,
+} from '../../domain/account';
+import type {
+  Address,
+  AddressRecipient,
+  ArtifactWithConstructorArgs,
+  DataRecipient,
+  NetworkString,
+  Recipient,
+  ScriptDetails,
+  Utxo,
+} from 'marina-provider';
+import { AccountType, isAddressRecipient, isDataRecipient } from 'marina-provider';
 import type { SpendPopupResponse } from '../../extension/popups/spend';
 import type { CreateAccountPopupResponse } from '../../extension/popups/create-account';
-import type { Argument, Artifact } from '@ionio-lang/ionio';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -121,7 +132,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   // check if the current broker hostname is authorized
   private async checkHostnameAuthorization() {
     const enabledHostnames = await this.appRepository.getEnabledSites();
-    if (enabledHostnames.includes(this.hostname))
+    if (!enabledHostnames.includes(this.hostname))
       throw new Error('User must authorize the current website');
   }
 
@@ -146,21 +157,23 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     return factory.make(network, this.selectedAccount);
   }
 
-  private async getNextAddress(isInternal: boolean, params: any[]): Promise<string> {
+  private async getNextAddress(isInternal: boolean, params: any[]): Promise<Address> {
     const account = await this.getSelectedAccount();
-    let nextAddress = '';
+    let nextAddress = undefined;
 
     switch (await account.getAccountType()) {
-      case AccountType.P2WPKH:
+      case AccountType.P2WPKH: {
         nextAddress = await account.getNextAddress(isInternal);
         break;
-      case AccountType.Ionio:
+      }
+      case AccountType.Ionio: {
         if (!params || params.length < 1) {
           throw new Error('missing Artifact parameter');
         }
-        const [artifact, args] = params as [Artifact, { [name: string]: Argument }];
-        nextAddress = await account.getNextAddress(isInternal, { artifact, args });
+        const [artifactWithArgs] = params as [ArtifactWithConstructorArgs];
+        nextAddress = await account.getNextAddress(isInternal, artifactWithArgs);
         break;
+      }
       default:
         throw new Error('Unsupported account type');
     }
@@ -216,12 +229,14 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'getNextAddress': {
           await this.checkHostnameAuthorization();
           const nextAddress = await this.getNextAddress(false, params || []);
+          this.backgroundScriptPort.postMessage(subscribeMessage(this.selectedAccount));
           return successMsg(nextAddress);
         }
 
         case 'getNextChangeAddress': {
           await this.checkHostnameAuthorization();
           const nextAddress = await this.getNextAddress(true, params || []);
+          this.backgroundScriptPort.postMessage(subscribeMessage(this.selectedAccount));
           return successMsg(nextAddress);
         }
 
@@ -279,9 +294,11 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             feeAsset,
           });
 
+          console.log('SPEND');
           const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
             'spend'
           );
+          console.log('accepted', accepted, 'signedTxHex', signedTxHex);
 
           if (!accepted) throw new Error('the user rejected the create tx request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
@@ -291,6 +308,15 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             const chainSource = await this.appRepository.getChainSource();
             if (!chainSource) throw new Error('chain source is not set up, cannot broadcast');
             const txid = await chainSource.broadcastTransaction(signedTxHex);
+            await Promise.allSettled([
+              this.walletRepository.updateTxDetails({
+                [txid]: {
+                  hex: signedTxHex,
+                },
+              }),
+              this.walletRepository.addTransactions(network, txid),
+            ]);
+            this.backgroundScriptPort.postMessage(subscribeMessage(this.selectedAccount));
             return successMsg({ txid, hex: signedTxHex });
           } catch (e) {
             console.warn('broadcasting failed, returning the signed tx hex', e);
@@ -328,11 +354,27 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const network = await this.appRepository.getNetwork();
           if (!network) throw new Error('Network not set up');
           const coins = await this.walletRepository.getUtxos(network, ...accountsIDs);
-          const results = coins.map((unblindedOutput) => ({
-            txid: unblindedOutput.txID,
-            vout: unblindedOutput.vout,
-            unblindData: unblindedOutput.blindingData,
-          }));
+          const results: Utxo[] = [];
+          for (const coin of coins) {
+            const witnessUtxo = await this.walletRepository.getWitnessUtxo(coin.txID, coin.vout);
+            let scriptDetails: ScriptDetails | undefined;
+
+            if (witnessUtxo) {
+              const script = witnessUtxo.script.toString('hex');
+              const { [script]: details } = await this.walletRepository.getScriptDetails(
+                witnessUtxo?.script.toString('hex')
+              );
+              scriptDetails = details;
+            }
+
+            results.push({
+              ...coin,
+              txid: coin.txID,
+              scriptDetails,
+              witnessUtxo,
+            });
+          }
+
           return successMsg(results);
         }
 
@@ -381,7 +423,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         case 'useAccount': {
           await this.checkHostnameAuthorization();
           const [accountName] = params as [string];
-          if (!this.accountExists(accountName)) {
+          if (!(await this.accountExists(accountName))) {
             throw new Error(`Account ${accountName} not found`);
           }
 
@@ -391,16 +433,18 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
         case 'createAccount': {
           await this.checkHostnameAuthorization();
-          const [name] = params as [string];
+          const [name, accountType] = params as [string, AccountType];
 
           await this.popupsRepository.setCreateAccountParameters({
             hostname: this.hostname,
             name,
+            accountType: accountType || AccountType.Ionio,
           });
 
           const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>(
             'create-account'
           );
+          console.log('create account response', accepted);
           if (!accepted) throw new Error('user rejected the create account request');
 
           return successMsg(accepted);
@@ -416,6 +460,14 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
           // broadcast tx
           const txid = await chainSource.broadcastTransaction(signedTxHex);
+          await Promise.allSettled([
+            this.walletRepository.updateTxDetails({
+              [txid]: {
+                hex: signedTxHex,
+              },
+            }),
+            this.walletRepository.addTransactions(network, txid),
+          ]);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
           return successMsg({ txid, hex: signedTxHex });
         }
@@ -425,7 +477,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           let [accountName] = params as [string];
           if (!accountName) accountName = MainAccount;
 
-          if (!this.accountExists(accountName)) {
+          if (!(await this.accountExists(accountName))) {
             throw new Error(`Account ${accountName} not found`);
           }
 
@@ -443,6 +495,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return newErrorResponseMessage(id, new Error('Method not implemented.'));
       }
     } catch (err) {
+      console.error(err);
       if (err instanceof Error) return newErrorResponseMessage(id, err);
       else throw err;
     }

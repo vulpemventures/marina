@@ -84,11 +84,7 @@ export function popupResponseMessage<T>(response?: T, error?: string): PopupResp
 }
 
 export function isPopupResponseMessage(message: unknown): message is PopupResponseMessage<any> {
-  return (
-    message &&
-    (message as any).type === MessageType.PopupResponse &&
-    ((message as any).data || (message as any).error)
-  );
+  return message && (message as any).type === MessageType.PopupResponse && (message as any).data;
 }
 
 export function subscribeMessage(account: string): SubscribeMessage {

@@ -3,7 +3,6 @@ import * as ecc from 'tiny-secp256k1';
 import { BIP32Factory } from 'bip32';
 import { crypto } from 'liquidjs-lib';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
-import { AccountType } from '../../domain/account-type';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
@@ -17,6 +16,7 @@ import {
 import { popupResponseMessage } from '../../domain/message';
 import { decrypt } from '../../encryption';
 import { mnemonicToSeedSync } from 'bip39';
+import type { CreateAccountParameters } from '../../infrastructure/repository';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -49,19 +49,18 @@ const ConnectCreateAccount: React.FC = () => {
     return popupWindowProxy.sendResponse(popupResponseMessage({ accepted }));
   };
 
-  const rejectResponseMessage = async (error: string) => {
+  const rejectResponseMessage = (error: string) => {
     try {
-      await popupWindowProxy.sendResponse(popupResponseMessage({ accepted: false }, error));
+      popupWindowProxy.sendResponse(popupResponseMessage({ accepted: false }, error));
     } catch (e) {
       console.error(e);
     }
     window.close();
   };
 
-  const createAndSetNewAccount = async (password: string) => {
+  const createAndSetNewAccount = async (password: string, params: CreateAccountParameters) => {
     try {
       if (!password || password.length === 0) throw new Error('need password');
-      if (!parameters) throw new Error('need createAccount parameters');
 
       const network = await appRepository.getNetwork();
       if (!network) throw new Error('no network network selected, cannot create account');
@@ -73,25 +72,26 @@ const ConnectCreateAccount: React.FC = () => {
 
       const allAccounts = await walletRepository.getAccountDetails();
       const allAccountsNames = Object.keys(allAccounts);
-      if (allAccountsNames.includes(parameters.name)) {
-        throw new Error(`account with name ${parameters.name} already exists`);
+      if (allAccountsNames.includes(params.name)) {
+        throw new Error(`account with name ${params.name} already exists`);
       }
 
-      const baseDerivationPath = SLIP13(parameters.name);
+      const baseDerivationPath = SLIP13(params.name);
       const masterPublicKey = bip32
         .fromSeed(mnemonicToSeedSync(mnemonic))
         .derivePath(baseDerivationPath)
         .neutered()
         .toBase58();
 
-      await walletRepository.updateAccountDetails(parameters.name, {
-        accountType: AccountType.Ionio,
+      await walletRepository.updateAccountDetails(params.name, {
+        accountID: params.name,
+        type: params.accountType,
         accountNetworks: [network],
         baseDerivationPath,
-        masterPublicKey,
+        masterXPub: masterPublicKey,
       });
 
-      await sendResponseMessage(true);
+      sendResponseMessage(true);
       window.close();
     } catch (e: unknown) {
       console.error(e);
@@ -118,6 +118,7 @@ const ConnectCreateAccount: React.FC = () => {
           <p className="text-small mt-4 font-medium">
             {' '}
             <b>namespace:</b> {parameters?.name} <br />
+            <b>account type:</b> {parameters?.accountType} <br />
           </p>
 
           <ButtonsAtBottom>
@@ -142,16 +143,21 @@ const ConnectCreateAccount: React.FC = () => {
             className="w-36 container mx-auto mt-10"
             onClick={handleUnlockModalOpen}
             textBase={true}
+            disabled={parameters === undefined}
           >
             Unlock
           </Button>
         </>
       )}
-      <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={createAndSetNewAccount}
-      />
+      {parameters && (
+        <ModalUnlock
+          isModalUnlockOpen={isModalUnlockOpen}
+          handleModalUnlockClose={handleModalUnlockClose}
+          handleUnlock={async (password: string) =>
+            await createAndSetNewAccount(password, parameters)
+          }
+        />
+      )}
     </ShellConnectPopup>
   );
 };

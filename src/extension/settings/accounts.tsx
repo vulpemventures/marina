@@ -2,31 +2,28 @@ import ShellPopUp from '../components/shell-popup';
 import ButtonList from '../components/button-list';
 import InputIcon from '../components/input-icon';
 import { useEffect, useState } from 'react';
-import type { AccountDetails } from '../../domain/account-type';
 import { walletRepository } from '../../infrastructure/storage/common';
-
-// TODO account icons ??
-function getImgFilename(name: string): string {
-  return 'circle.svg';
-}
-
-const AccountIcon: React.FC<{ name: string }> = ({ name }) => {
-  return (
-    <img
-      className="w-8 mr-1.5"
-      src={`assets/images/${getImgFilename(name)}`}
-      alt="receive transaction"
-    />
-  );
-};
+import type { AccountDetails } from '../../infrastructure/repository';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../domain/account';
 
 const SettingsAccounts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [accounts, setAccounts] = useState<Record<string, AccountDetails>>({});
+  const [accountsList, setAccountsList] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
-      setAccounts(await walletRepository.getAccountDetails());
+      const accounts = await walletRepository.getAccountDetails();
+      setAccounts(accounts);
+      // ensure that the main accounts are always at the top of the list
+      setAccountsList([
+        MainAccount,
+        MainAccountLegacy,
+        MainAccountTest,
+        ...Object.keys(accounts).filter(
+          (name) => name !== MainAccount && name !== MainAccountLegacy && name !== MainAccountTest
+        ),
+      ]);
     })().catch(console.error);
   }, []);
 
@@ -49,21 +46,23 @@ const SettingsAccounts: React.FC = () => {
         type="search"
       />
 
-      <div className="max-h-80">
+      <div className="h-80">
         <ButtonList
           emptyText="no accounts on your Marina wallet"
-          title="Change account"
+          title="Accounts"
           titleColor="grayDark"
         >
-          {Object.entries(accounts)
-            .filter(([name, details]) => filterAccountsBySearchTerm(searchTerm)(name))
+          {accountsList
+            .filter((name: string) => filterAccountsBySearchTerm(searchTerm)(name))
+            .map((name: string) => [name, accounts[name]] as [string, AccountDetails])
             .map(([name, details], index) => (
               <div key={index} className="p-3 rounded-md shadow-md">
-                <div className="flex-center flex align-middle">
-                  <AccountIcon name={name} />
-                  <span className="text-grayDark mt-1 align-text-bottom">
-                    {name} ({details.baseDerivationPath})
-                    <br />
+                <div className="flex-center flex flex-col align-middle">
+                  <span className="text-primary mt-1 text-sm font-bold">
+                    {name} ({details.type})
+                  </span>
+                  <span className="text-grayDark mt-1 text-sm">
+                    {details.accountNetworks.join(', ')}
                   </span>
                 </div>
               </div>
@@ -77,5 +76,4 @@ const SettingsAccounts: React.FC = () => {
 function filterAccountsBySearchTerm(term: string) {
   return (account: string) => account.toLowerCase().includes(term);
 }
-
 export default SettingsAccounts;

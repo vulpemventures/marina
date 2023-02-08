@@ -1,6 +1,5 @@
-import type { NetworkString } from 'marina-provider';
+import type { Asset, NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import type { Asset } from '../../domain/asset';
 import type { AppRepository, AssetRepository, TaxiRepository } from '../repository';
 import { DynamicStorageKey } from './dynamic-key';
 

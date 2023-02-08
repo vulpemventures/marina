@@ -16,10 +16,10 @@ import {
 import { mnemonicToSeed } from 'bip39';
 import type { WalletRepository } from '../infrastructure/repository';
 import { decrypt } from '../encryption';
-import { AccountType, isIonioScriptDetails } from './account-type';
-import type { Argument} from '@ionio-lang/ionio';
 import { Contract, H_POINT } from '@ionio-lang/ionio';
 import { analyzeTapscriptTree } from './script-analyser';
+import { AccountType, isIonioScriptDetails } from 'marina-provider';
+import { h2b } from '../utils';
 
 const zkp = await ZKPLib(); // allowed by top-level-await from webpack
 
@@ -62,8 +62,8 @@ export class SignerService {
         .derivePath(inputAccount.baseDerivationPath)
         .derivePath(scriptDetails.derivationPath.replace('m/', '')!);
 
-      switch (inputAccount.accountType) {
-        case AccountType.P2WPKH:
+      switch (inputAccount.type) {
+        case AccountType.P2WPKH: {
           const sighash = input.sighashType || Transaction.SIGHASH_ALL; // '||' lets to overwrite SIGHASH_DEFAULT (0x00)
           const signature = key.sign(pset.getInputPreimage(index, sighash));
 
@@ -78,31 +78,18 @@ export class SignerService {
             Pset.ECDSASigValidator(ecc)
           );
           break;
-        case AccountType.Ionio:
+        }
+        case AccountType.Ionio: {
           if (!isIonioScriptDetails(scriptDetails)) throw new Error('Invalid script details');
-          const { artifact, args } = scriptDetails;
+          const { artifact, params } = scriptDetails;
           const isScriptPath = input.tapLeafScript && input.tapLeafScript.length > 0;
           // if no path is specified, we search for a leaf with only marina sig needed
           // if we found it, update the tapLeafScript input field
           if (!isScriptPath) {
-            const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name }) => {
-              // inject xOnlyPublicKey argument if one of the contructor args is named like the account name
-              if (name === scriptDetails.accountName) {
-                return '0x'.concat(key.publicKey.subarray(1).toString('hex'));
-              }
-
-              const param = args[name];
-              if (!param) {
-                throw new Error(`missing contructor arg ${name}`);
-              }
-              return param;
+            const contract = new Contract(artifact, params, networks[scriptDetails.network], {
+              ecc,
+              zkp,
             });
-            const contract = new Contract(
-              artifact,
-              constructorArgs,
-              networks[scriptDetails.network],
-              { ecc, zkp }
-            );
             const taprootTree = contract.getTaprootTree();
             const needs = analyzeTapscriptTree(taprootTree);
             const autospendableLeafScripts = Object.entries(needs)
@@ -110,7 +97,7 @@ export class SignerService {
                 if (scriptNeeds.hasIntrospection || scriptNeeds.needParameters) return false;
                 return (
                   scriptNeeds.sigs.length === 1 &&
-                  Buffer.from(scriptNeeds.sigs[0].pubkey, 'hex').equals(key.publicKey.subarray(1))
+                  h2b(scriptNeeds.sigs[0].pubkey).equals(key.publicKey.subarray(1))
                 );
               })
               .map(([script]) => script);
@@ -155,7 +142,7 @@ export class SignerService {
                 tapScriptSigs: [
                   {
                     leafHash,
-                    pubkey: key.publicKey,
+                    pubkey: key.publicKey.subarray(1),
                     signature,
                   },
                 ],
@@ -165,6 +152,7 @@ export class SignerService {
           }
 
           break;
+        }
         default:
           throw new Error('Unsupported account type');
       }

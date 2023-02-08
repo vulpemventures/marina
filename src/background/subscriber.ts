@@ -51,7 +51,7 @@ export class Subscriber {
     const account = new Account({
       name,
       chainSource: this.chainSource,
-      masterPublicKey: details.masterPublicKey,
+      masterPublicKey: details.masterXPub,
       masterBlindingKey: this.masterBlindingKey!,
       walletRepository: this.walletRepository,
       network,
@@ -72,7 +72,7 @@ export class Subscriber {
         new Account({
           name,
           chainSource: this.chainSource,
-          masterPublicKey: details.masterPublicKey,
+          masterPublicKey: details.masterXPub,
           masterBlindingKey: this.masterBlindingKey!,
           walletRepository: this.walletRepository,
           network,
@@ -104,7 +104,7 @@ export class Subscriber {
     const account = new Account({
       name,
       chainSource: this.chainSource,
-      masterPublicKey: details.masterPublicKey,
+      masterPublicKey: details.masterXPub,
       masterBlindingKey: this.masterBlindingKey!,
       walletRepository: this.walletRepository,
       network,
@@ -125,7 +125,7 @@ export class Subscriber {
         new Account({
           name,
           chainSource: this.chainSource,
-          masterPublicKey: details.masterPublicKey,
+          masterPublicKey: details.masterXPub,
           masterBlindingKey: this.masterBlindingKey!,
           walletRepository: this.walletRepository,
           network,

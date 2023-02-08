@@ -9,7 +9,6 @@ import {
   isPopupResponseMessage,
 } from '../domain/message';
 import { Subscriber } from './subscriber';
-import { POPUP_RESPONSE } from '../extension/popups/popupBroker';
 import { INITIALIZE_WELCOME_ROUTE } from '../extension/routes/constants';
 import { AppStorageAPI } from '../infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../infrastructure/storage/asset-repository';
@@ -18,6 +17,8 @@ import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
 import { TaxiUpdater } from './taxi';
 import { Updater } from './updater';
 import { tabIsOpen } from './utils';
+
+const POPUP_RESPONSE = 'popup-response';
 
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
@@ -46,7 +47,6 @@ appRepository
 async function startBackgroundServices() {
   const { isOnboardingCompleted } = await appRepository.getStatus();
   if (isOnboardingCompleted) {
-    console.warn('logInProcedure: starting services');
     await Promise.allSettled([
       updaterService.start(),
       subscriberService.start(),
@@ -56,7 +56,6 @@ async function startBackgroundServices() {
 }
 
 async function stopBackgroundServices() {
-  console.warn('logOutProcedure: stopping services');
   await Promise.allSettled([updaterService.stop(), subscriberService.stop(), taxiService.stop()]);
 }
 
@@ -130,14 +129,14 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
     if (isOpenPopupMessage(message)) {
       handleOpenPopupMessage(message, port).catch((error: any) => {
         console.error(error);
-        port.postMessage({ data: undefined });
+        port.postMessage({ data: undefined, error: error.message });
       });
       return;
     }
 
     if (isPopupResponseMessage(message)) {
       // propagate popup response
-      eventEmitter.emit(POPUP_RESPONSE, message.data);
+      eventEmitter.emit(POPUP_RESPONSE, message);
       return;
     }
 

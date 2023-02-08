@@ -14,8 +14,7 @@ import type { UnblindedOutput } from './domain/transaction';
 import { appRepository, walletRepository } from './infrastructure/storage/common';
 import { getScriptType, ScriptType } from 'liquidjs-lib/src/address';
 import { varSliceSize, varuint } from 'liquidjs-lib/src/bufferutils';
-import { AccountFactory } from './domain/account';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from './domain/account-type';
+import { AccountFactory, MainAccount, MainAccountLegacy, MainAccountTest } from './domain/account';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -196,8 +195,8 @@ type MakeSendPsetResult = {
 };
 
 // create a pset with the given recipients and data recipients
-// lock the selected utxos
-export async function makeSendPset(
+// select utxos from the main accounts
+export async function makeSendPsetFromMainAccounts(
   recipients: AddressRecipient[],
   dataRecipients: DataRecipient[],
   feeAssetHash: string
@@ -272,7 +271,7 @@ export async function makeSendPset(
     const mainAccount = await accountFactory.make(network, accountName);
 
     for (const { asset, amount } of coinSelection.changeOutputs) {
-      const changeAddress = await mainAccount.getNextAddress(true);
+      const { confidentialAddress: changeAddress } = await mainAccount.getNextAddress(true);
       if (!changeAddress) {
         throw new Error('change address not found');
       }
@@ -303,6 +302,7 @@ export async function makeSendPset(
 
   const newIns = [];
   const newOuts = [];
+
   if (feeAssetHash === networks[network].assetHash) {
     // check if one of the change outputs can cover the fees
     const onlyChangeOuts = outs.slice(changeOutputsStartIndex);
@@ -351,7 +351,7 @@ export async function makeSendPset(
         ]);
         const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
         const mainAccount = await accountFactory.make(network, accountName);
-        const changeAddress = await mainAccount.getNextAddress(true);
+        const { confidentialAddress: changeAddress } = await mainAccount.getNextAddress(true);
         if (!changeAddress) {
           throw new Error('change address not found');
         }
@@ -403,4 +403,8 @@ export async function makeSendPset(
     pset: updater.pset,
     feeAmount,
   };
+}
+
+export function h2b(hex: string): Buffer {
+  return Buffer.from(hex, 'hex');
 }

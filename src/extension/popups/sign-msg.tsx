@@ -54,9 +54,9 @@ const ConnectSignMsg: React.FC = () => {
     return popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedMessage }));
   };
 
-  const handleReject = async () => {
+  const handleReject = () => {
     try {
-      await sendResponseMessage(false);
+      sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -75,7 +75,7 @@ const ConnectSignMsg: React.FC = () => {
         password,
         network
       );
-      await sendResponseMessage(true, signedMsg);
+      sendResponseMessage(true, signedMsg);
       window.close();
     } catch (e: any) {
       console.error(e);

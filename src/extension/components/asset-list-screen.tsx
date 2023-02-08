@@ -5,7 +5,7 @@ import ButtonAsset from './button-asset';
 import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
 import ButtonList from './button-list';
-import type { Asset } from '../../domain/asset';
+import type { Asset } from 'marina-provider';
 
 export interface AssetListProps {
   assets: Array<Asset>; // the assets to display

@@ -2,30 +2,32 @@ import * as ecc from 'tiny-secp256k1';
 import ZKPlib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
-import { address, bip341, networks, payments } from 'liquidjs-lib';
-import type { NetworkString } from 'marina-provider';
+import { address, networks, payments } from 'liquidjs-lib';
+import type {
+  Address,
+  ArtifactWithConstructorArgs,
+  IonioScriptDetails,
+  NetworkString,
+  ScriptDetails,
+} from 'marina-provider';
+import { AccountType, isIonioScriptDetails } from 'marina-provider';
 import type { Slip77Interface } from 'slip77';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from '../domain/chainsource';
-import type { AppRepository, WalletRepository } from '../infrastructure/repository';
-import type {
-  AccountDetails,
-  ArtifactWithConstructorArgs,
-  IonioScriptDetails,
-  ScriptDetails} from './account-type';
-import {
-  AccountType
-} from './account-type';
-import type { Argument} from '@ionio-lang/ionio';
-import { Artifact, Contract } from '@ionio-lang/ionio';
+import type { AccountDetails, AppRepository, WalletRepository } from '../infrastructure/repository';
+import type { Argument } from '@ionio-lang/ionio';
+import { Contract } from '@ionio-lang/ionio';
+import { h2b } from '../utils';
+
+export const MainAccountLegacy = 'mainAccountLegacy';
+export const MainAccount = 'mainAccount';
+export const MainAccountTest = 'mainAccountTest';
 
 const zkp = await ZKPlib();
 const bip32 = BIP32Factory(ecc);
 const slip77 = SLIP77Factory(ecc);
 
 const GAP_LIMIT = 20;
-
-const IONIO_NOT_SUPPORTED = new Error('Ionio account not supported');
 
 type PubKeyWithRelativeDerivationPath = {
   publicKey: Buffer;
@@ -78,7 +80,7 @@ export class AccountFactory {
     return new Account({
       name: accountName,
       chainSource,
-      masterPublicKey: details.masterPublicKey,
+      masterPublicKey: details.masterXPub,
       masterBlindingKey: this.masterBlindingKey!,
       walletRepository: this.walletRepository,
       network,
@@ -121,7 +123,7 @@ export class Account {
       await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name)
     ).map((b) => Buffer.from(b, 'hex'));
 
-    console.warn(`subscribing to ${scripts.length} scripts`)
+    console.warn(`subscribing to ${scripts.length} scripts`);
     for (const script of scripts) {
       await this.chainSource.subscribeScriptStatus(script, async (_: string, __: string | null) => {
         const history = await this.chainSource.fetchHistories([script]);
@@ -146,7 +148,7 @@ export class Account {
     }
   }
 
-  async getAllAddresses(): Promise<string[]> {
+  async getAllAddresses(): Promise<Address[]> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get all addresses');
     if (!this.name) throw new Error('No name, cannot get all addresses');
     const type = await this.getAccountType();
@@ -157,13 +159,21 @@ export class Account {
 
     switch (type) {
       case AccountType.P2WPKH:
-        return Object.keys(scripts).map((script: string) =>
-          this.createP2WPKHAddress(Buffer.from(script, 'hex'))
-        );
+        return Object.entries(scripts).map(([script, details]) => ({
+          confidentialAddress: this.createP2WPKHAddress(Buffer.from(script, 'hex')),
+          ...details,
+        }));
       case AccountType.Ionio:
-        return Object.keys(scripts).map((script: string) =>
-          this.createTaprootAddress(Buffer.from(script, 'hex'))
-        );
+        return Object.entries(scripts).map(([script, details]) => ({
+          confidentialAddress: this.createTaprootAddress(Buffer.from(script, 'hex')),
+          ...details,
+          contract: isIonioScriptDetails(details)
+            ? new Contract(details.artifact, details.params, networks[details.network], {
+                ecc,
+                zkp,
+              })
+            : undefined,
+        }));
       default:
         throw new Error('Account type not supported');
     }
@@ -174,35 +184,36 @@ export class Account {
   async getNextAddress(
     isInternal: boolean,
     artifactWithArgs?: ArtifactWithConstructorArgs
-  ): Promise<string> {
+  ): Promise<Address> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get next address');
     if (!this.name) throw new Error('No name, cannot get next address');
 
     const nextIndexes = await this.getNextIndexes();
     const next = isInternal ? nextIndexes.internal : nextIndexes.external;
-    const publicKeys = await this.deriveBatchPublicKeys(next, next + 1, isInternal);
+    const publicKeys = this.deriveBatchPublicKeys(next, next + 1, isInternal);
     const type = await this.getAccountType();
 
-    let address = undefined;
+    let confidentialAddress = undefined;
     let script = undefined;
     let scriptDetails = undefined;
 
     switch (type) {
       case AccountType.P2WPKH:
         [script, scriptDetails] = this.createP2PWKHScript(publicKeys[0]);
-        address = this.createP2WPKHAddress(Buffer.from(script, 'hex'));
+        confidentialAddress = this.createP2WPKHAddress(Buffer.from(script, 'hex'));
         break;
       case AccountType.Ionio:
         if (!artifactWithArgs)
           throw new Error('Artifact with args is required for Ionio account type');
         [script, scriptDetails] = this.createTaprootScript(publicKeys[0], artifactWithArgs);
+        confidentialAddress = this.createTaprootAddress(Buffer.from(script, 'hex'));
         break;
       default:
-        throw new Error('Unsupported account type: ' + type);
+        throw new Error('Unsupported account type');
     }
 
     if (!script || !scriptDetails) throw new Error('unable to derive new script');
-    if (!address) throw new Error('unable to create address from script:' + script);
+    if (!confidentialAddress) throw new Error('unable to create address from script:' + script);
 
     // increment the account details last used index & persist the new script details
     await Promise.allSettled([
@@ -214,7 +225,18 @@ export class Account {
       }),
     ]);
 
-    return address;
+    return {
+      confidentialAddress,
+      ...scriptDetails,
+      contract: isIonioScriptDetails(scriptDetails)
+        ? new Contract(
+            scriptDetails.artifact,
+            scriptDetails.params,
+            networks[scriptDetails.network],
+            { ecc, zkp }
+          )
+        : undefined,
+    };
   }
 
   async sync(gapLimit = GAP_LIMIT): Promise<{
@@ -240,7 +262,7 @@ export class Account {
       let unusedScriptCounter = 0;
 
       while (unusedScriptCounter <= gapLimit) {
-        const publicKeys = await this.deriveBatchPublicKeys(
+        const publicKeys = this.deriveBatchPublicKeys(
           batchCount,
           batchCount + gapLimit,
           isInternal
@@ -249,7 +271,7 @@ export class Account {
           this.createP2PWKHScript(publicKey)
         );
 
-        const scripts = scriptsWithDetails.map(([script]) => Buffer.from(script, 'hex'));
+        const scripts = scriptsWithDetails.map(([script]) => h2b(script));
         const histories = await this.chainSource.fetchHistories(scripts);
 
         for (const [index, history] of histories.entries()) {
@@ -308,11 +330,11 @@ export class Account {
   }
 
   // Derive a range from start to end index of public keys applying the base derivation path
-  private async deriveBatchPublicKeys(
+  private deriveBatchPublicKeys(
     start: number,
     end: number,
     isInternal: boolean
-  ): Promise<PubKeyWithRelativeDerivationPath[]> {
+  ): PubKeyWithRelativeDerivationPath[] {
     if (!this.node) throw new Error('No node, Account cannot derive scripts');
     const chain = isInternal ? 1 : 0;
     const results: PubKeyWithRelativeDerivationPath[] = [];
@@ -345,7 +367,7 @@ export class Account {
     const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
       this.name
     );
-    this._cacheAccountType = accountDetails.accountType;
+    this._cacheAccountType = accountDetails.type;
     if (!accountDetails) throw new Error('Account details not found');
     return accountDetails;
   }
@@ -353,7 +375,7 @@ export class Account {
   async getAccountType(): Promise<AccountType> {
     if (!this._cacheAccountType) {
       const details = await this.getAccountDetails();
-      return details.accountType;
+      return details.type;
     }
     return this._cacheAccountType;
   }
@@ -391,7 +413,7 @@ export class Account {
     { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath,
     { artifact, args }: ArtifactWithConstructorArgs
   ): [string, ScriptDetails] {
-    const constructorArgs: Argument[] = artifact.constructorInputs.map(({ name }) => {
+    const constructorArgs: Argument[] = (artifact.constructorInputs || []).map(({ name }) => {
       // inject xOnlyPublicKey argument if one of the contructor args is named like the account name
       if (name === this.name) {
         return '0x'.concat(publicKey.subarray(1).toString('hex'));
@@ -403,6 +425,7 @@ export class Account {
       }
       return param;
     });
+    console.log(artifact);
 
     const contract = new Contract(artifact, constructorArgs, this.network, { ecc, zkp });
     const scriptDetails: IonioScriptDetails = {
@@ -410,8 +433,8 @@ export class Account {
       network: this.network.name as NetworkString,
       blindingPrivateKey: this.deriveBlindingKey(contract.scriptPubKey).privateKey.toString('hex'),
       derivationPath,
-      args,
       artifact,
+      params: constructorArgs,
     };
     return [contract.scriptPubKey.toString('hex'), scriptDetails];
   }

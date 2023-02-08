@@ -5,8 +5,8 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { fromSatoshiStr } from '../../utility';
 import AssetIcon from '../../components/assetIcon';
-import type { Asset } from '../../../domain/asset';
 import { assetRepository, sendFlowRepository } from '../../../infrastructure/storage/common';
+import type { Asset } from 'marina-provider';
 
 const Confirmation: React.FC = () => {
   const history = useHistory();

@@ -37,7 +37,7 @@ const ModalUnlockForm = (props: FormikProps<ModalUnlockFormValues>) => {
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {!isSubmitting ? `Unlock` : `Please wait...`}
+          {!isSubmitting ? `Unlock` : `Loading...`}
         </Button>
       </ButtonsAtBottom>
     </form>

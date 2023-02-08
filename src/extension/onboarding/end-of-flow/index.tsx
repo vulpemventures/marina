@@ -4,13 +4,7 @@ import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
-import { Account } from '../../../domain/account';
-import {
-  AccountType,
-  MainAccount,
-  MainAccountLegacy,
-  MainAccountTest,
-} from '../../../domain/account-type';
+import { Account, MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
 import {
   appRepository,
   onboardingRepository,
@@ -22,6 +16,7 @@ import * as ecc from 'tiny-secp256k1';
 import BIP32Factory from 'bip32';
 import { mnemonicToSeedSync } from 'bip39';
 import { encrypt } from '../../../encryption';
+import { AccountType } from 'marina-provider';
 
 const bip32 = BIP32Factory(ecc);
 const slip77 = SLIP77Factory(ecc);
@@ -63,8 +58,9 @@ const EndOfFlowOnboarding: React.FC = () => {
         .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccount, {
-        accountType: AccountType.P2WPKH,
-        masterPublicKey: defaultMainAccountXPub,
+        accountID: MainAccount,
+        type: AccountType.P2WPKH,
+        masterXPub: defaultMainAccountXPub,
         baseDerivationPath: Account.BASE_DERIVATION_PATH,
         accountNetworks: ['liquid'],
       });
@@ -76,8 +72,9 @@ const EndOfFlowOnboarding: React.FC = () => {
         .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccountTest, {
-        accountType: AccountType.P2WPKH,
-        masterPublicKey: defaultMainAccountXPubTestnet,
+        accountID: MainAccountTest,
+        type: AccountType.P2WPKH,
+        masterXPub: defaultMainAccountXPubTestnet,
         baseDerivationPath: Account.BASE_DERIVATION_PATH_TESTNET,
         accountNetworks: ['regtest', 'testnet'],
       });
@@ -89,8 +86,9 @@ const EndOfFlowOnboarding: React.FC = () => {
         // .neutered()
         .toBase58();
       await walletRepository.updateAccountDetails(MainAccountLegacy, {
-        accountType: AccountType.P2WPKH,
-        masterPublicKey: defaultLegacyMainAccountXPub,
+        accountID: MainAccountLegacy,
+        type: AccountType.P2WPKH,
+        masterXPub: defaultLegacyMainAccountXPub,
         baseDerivationPath: Account.BASE_DERIVATION_PATH_LEGACY,
         accountNetworks: ['liquid', 'regtest', 'testnet'],
       });

@@ -1,13 +1,11 @@
-import type { NetworkString } from 'marina-provider';
+import type { Asset, NetworkString } from 'marina-provider';
 import { useEffect, useState } from 'react';
 import Browser from 'webextension-polyfill';
 import { Account } from '../../domain/account';
-import type { AccountDetails } from '../../domain/account-type';
-import type { Asset } from '../../domain/asset';
 import type { UnblindedOutput, TxDetails } from '../../domain/transaction';
 import type { Encrypted } from '../../encryption';
 import { sortAssets } from '../../extension/utility/sort';
-import type { CreateAccountParameters, SpendParameters } from '../repository';
+import type { AccountDetails, CreateAccountParameters, SpendParameters } from '../repository';
 import {
   AppStorageAPI,
   AppStorageKeys,
@@ -40,15 +38,16 @@ export type ReadonlyReactHook<T> = () => T | undefined;
 
 export function makeReactHook<T>(namespace: 'sync' | 'local', key: string): ReadonlyReactHook<T> {
   return function useStorageSelector(): T | undefined {
-    const storage = Browser.storage[namespace];
     const [value, setValue] = useState<T>();
 
     useEffect(() => {
-      storage
+      Browser.storage[namespace]
         .get(key)
         .then(({ [key]: value }) => setValue(value as T))
         .catch(console.error);
+    }, [key, namespace]);
 
+    useEffect(() => {
       const listener = (
         changes: Record<string, Browser.Storage.StorageChange>,
         areaName: string
@@ -61,7 +60,7 @@ export function makeReactHook<T>(namespace: 'sync' | 'local', key: string): Read
       return () => {
         Browser.storage.onChanged.removeListener(listener);
       };
-    }, []);
+    }, [key, namespace]);
 
     return value;
   };
@@ -87,7 +86,7 @@ export const useSelectAccount = (name: string): ReadonlyReactHook<Account | unde
             name,
             chainSource,
             masterBlindingKey,
-            masterPublicKey: details.masterPublicKey,
+            masterPublicKey: details.masterXPub,
             network,
             walletRepository,
           });

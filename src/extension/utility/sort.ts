@@ -1,5 +1,5 @@
+import type { Asset } from 'marina-provider';
 import { FEATURED_ASSETS } from '../../constants';
-import type { Asset } from '../../domain/asset';
 
 /**
  * Takes a list of assets, and sort it by the following criteria:
