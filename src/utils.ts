@@ -118,10 +118,11 @@ function estimateScriptSigSize(type: ScriptType): number {
 }
 
 const INPUT_BASE_SIZE = 40; // 32 bytes for outpoint, 4 bytes for sequence, 4 for index
+const UNCONFIDENTIAL_OUTPUT_SIZE = 33 + 9 + 1 + 1; // 33 bytes for value, 9 bytes for asset, 1 byte for nonce, 1 byte for script length
 
 function txBaseSize(inScriptSigsSize: number[], outNonWitnessesSize: number[]): number {
   const inSize = inScriptSigsSize.reduce((a, b) => a + b + INPUT_BASE_SIZE, 0);
-  const outSize = outNonWitnessesSize.reduce((a, b) => a + b, 0) + 33 + 9 + 1 + 1; // add unconf fee output size
+  const outSize = outNonWitnessesSize.reduce((a, b) => a + b, 0);
   return (
     9 +
     varuint.encodingLength(inScriptSigsSize.length) +
@@ -136,8 +137,6 @@ function txWitnessSize(inWitnessesSize: number[], outWitnessesSize: number[]): n
   const outSize = outWitnessesSize.reduce((a, b) => a + b, 0) + 1 + 1; // add the size of proof for unconf fee output
   return inSize + outSize;
 }
-
-const FEE_OUTPUT_SIZE = 33 + 9 + 1 + 1; // unconf fee output size
 
 // estimate pset virtual size after signing, take confidential outputs into account
 // aims to estimate the fee amount needed to be paid before blinding or signing the pset
@@ -179,7 +178,7 @@ function estimateVirtualSize(pset: Pset, withFeeOutput: boolean): number {
   }
 
   if (withFeeOutput) {
-    outSizes.push(FEE_OUTPUT_SIZE);
+    outSizes.push(UNCONFIDENTIAL_OUTPUT_SIZE);
     outWitnessesSize.push(1 + 1); // no rangeproof + no surjectionproof
   }
 
