@@ -93,6 +93,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       if (!chainSource) return;
       const header = await chainSource.fetchBlockHeader(txDetails.height);
       setBlockHeader(header);
+      await chainSource.close();
     })()
       .catch(console.error)
       .finally(() => setIsLoading(false)); // TODO display error in UI

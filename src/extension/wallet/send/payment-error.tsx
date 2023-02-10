@@ -20,6 +20,7 @@ const PaymentError: React.FC = () => {
     const chainSource = await appRepository.getChainSource(network);
     if (!chainSource) throw new Error('chain source not found');
     const txid = await chainSource.broadcastTransaction(state?.tx);
+    await chainSource.close();
     // navigate to payment success page
     history.push({
       pathname: SEND_PAYMENT_SUCCESS_ROUTE,

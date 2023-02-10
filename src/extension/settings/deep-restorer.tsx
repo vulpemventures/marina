@@ -10,7 +10,7 @@ import {
 } from '../../infrastructure/storage/common';
 import { AccountFactory } from '../../domain/account';
 import Browser from 'webextension-polyfill';
-import { subscribeMessage } from '../../domain/message';
+import { AccountType } from 'marina-provider';
 
 type GapLimit = 20 | 40 | 80 | 160;
 
@@ -28,11 +28,11 @@ const SettingsDeepRestorer: React.FC = () => {
       const accountsDetails = await walletRepository.getAccountDetails();
       const factory = await AccountFactory.create(walletRepository, appRepository, [network]);
       const port = Browser.runtime.connect();
-      for (const accountName of Object.keys(accountsDetails)) {
-        if (!accountsDetails[accountName].accountNetworks.includes(network)) continue;
+      for (const [accountName, details] of Object.entries(accountsDetails)) {
+        if (!details.accountNetworks.includes(network)) continue;
+        if (details.type !== AccountType.P2WPKH) continue; // only P2WPKH are restorable 
         const account = await factory.make(network, accountName);
-        await account.sync(gapLimit);
-        port.postMessage(subscribeMessage(accountName));
+        await account.sync(gapLimit, { internal: 0, external: 0 }); // force restore from 0
       }
     } catch (e) {
       console.error(e);

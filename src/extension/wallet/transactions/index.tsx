@@ -34,7 +34,6 @@ const Transactions: React.FC = () => {
   } = useLocation<LocationState>();
   const history = useHistory();
   const transactions = useSelectTransactions();
-  console.log(transactions);
   const [utxos] = useSelectUtxos()();
 
   const [balances, setBalances] = useState<Record<string, number>>({});

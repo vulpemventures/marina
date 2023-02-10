@@ -1,5 +1,4 @@
 import * as ecc from 'tiny-secp256k1';
-import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import { BIP32Factory } from 'bip32';
 import {
@@ -14,14 +13,12 @@ import {
   Updater,
 } from 'liquidjs-lib';
 import { mnemonicToSeed } from 'bip39';
-import type { WalletRepository } from '../infrastructure/repository';
+import type { AppRepository, WalletRepository } from '../infrastructure/repository';
 import { decrypt } from '../encryption';
 import { Contract, H_POINT } from '@ionio-lang/ionio';
 import { analyzeTapscriptTree } from './script-analyser';
 import { AccountType, isIonioScriptDetails } from 'marina-provider';
 import { h2b } from '../utils';
-
-const zkp = await ZKPLib(); // allowed by top-level-await from webpack
 
 const bip32 = BIP32Factory(ecc);
 const bip341 = bip341lib.BIP341Factory(ecc);
@@ -29,15 +26,16 @@ const bip341 = bip341lib.BIP341Factory(ecc);
 export class SignerService {
   private constructor(
     private walletRepository: WalletRepository,
+    private appRepository: AppRepository,
     private masterNode: BIP32Interface
   ) {}
 
-  static async fromPassword(walletRepository: WalletRepository, password: string) {
+  static async fromPassword(walletRepository: WalletRepository, appRepository: AppRepository, password: string) {
     const encrypted = await walletRepository.getEncryptedMnemonic();
     if (!encrypted) throw new Error('No mnemonic found in wallet');
     const decryptedMnemonic = await decrypt(encrypted, password);
     const masterNode = bip32.fromSeed(await mnemonicToSeed(decryptedMnemonic));
-    return new SignerService(walletRepository, masterNode);
+    return new SignerService(walletRepository, appRepository, masterNode);
   }
 
   async signPset(pset: Pset): Promise<Pset> {
@@ -57,6 +55,9 @@ export class SignerService {
       const scriptDetails = scriptsDetails[script.toString('hex')];
       if (!scriptDetails || !scriptDetails.derivationPath) continue;
       const inputAccount = accounts[scriptDetails.accountName]!;
+
+      const network = await this.appRepository.getNetwork();
+      if (!network) throw new Error('No network found');
 
       const key = this.masterNode
         .derivePath(inputAccount.baseDerivationPath)
@@ -86,9 +87,9 @@ export class SignerService {
           // if no path is specified, we search for a leaf with only marina sig needed
           // if we found it, update the tapLeafScript input field
           if (!isScriptPath) {
-            const contract = new Contract(artifact, params, networks[scriptDetails.network], {
+            const contract = new Contract(artifact, params, networks[network], {
               ecc,
-              zkp,
+              zkp: await require('@vulpemventures/secp256k1-zkp')(),
             });
             const taprootTree = contract.getTaprootTree();
             const needs = analyzeTapscriptTree(taprootTree);
@@ -128,7 +129,7 @@ export class SignerService {
             const preimage = signer.pset.getInputPreimage(
               index,
               sighash,
-              networks[scriptDetails.network].genesisBlockHash,
+              networks[network].genesisBlockHash,
               leafHash
             );
 
@@ -138,7 +139,7 @@ export class SignerService {
             signer.addSignature(
               index,
               {
-                genesisBlockHash: networks[scriptDetails.network].genesisBlockHash,
+                genesisBlockHash: networks[network].genesisBlockHash,
                 tapScriptSigs: [
                   {
                     leafHash,

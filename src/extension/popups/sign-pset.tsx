@@ -6,6 +6,7 @@ import PopupWindowProxy from './popupWindowProxy';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import {
+  appRepository,
   useSelectPopupHostname,
   useSelectPopupPsetToSign,
   walletRepository,
@@ -48,7 +49,7 @@ const ConnectSignTransaction: React.FC = () => {
     try {
       if (!psetToSign) throw new Error('no pset to sign');
       if (!password || password.length === 0) throw new Error('Need password');
-      const signer = await SignerService.fromPassword(walletRepository, password);
+      const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
       const signedPset = await signer.signPset(Pset.fromBase64(psetToSign));
       sendResponseMessage(true, signedPset.toBase64());
       window.close();

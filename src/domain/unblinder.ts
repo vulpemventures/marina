@@ -42,6 +42,8 @@ export class WalletRepositoryUnblinder implements Unblinder {
 
     for (const output of outputs) {
       try {
+        if (output.script.length === 0) throw new Error('Empty script: fee output');
+
         // if output is unconfidential, we don't need to unblind it
         if (!isConfidentialOutput(output)) {
           unblindingResults.push({

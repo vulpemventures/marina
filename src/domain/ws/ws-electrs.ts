@@ -1,4 +1,5 @@
 import { Observable } from './observable';
+import WebSocket from 'isomorphic-ws';
 
 type RpcResponse = {
   jsonrpc: string;
@@ -242,7 +243,7 @@ export class ElectrumWS extends Observable {
     }, CONNECTED_TIMEOUT);
   }
 
-  private onMessage(msg: MessageEvent) {
+  private onMessage(msg: WebSocket.MessageEvent) {
     // Handle potential multi-line frames
     const raw = typeof msg.data === 'string' ? msg.data : bytesToString(msg.data);
     // eslint-disable-next-line no-control-regex
@@ -303,14 +304,14 @@ export class ElectrumWS extends Observable {
     return false;
   }
 
-  private onError(event: Event) {
-    if ((event as ErrorEvent).error) {
-      console.error('ElectrumWS ERROR:', (event as ErrorEvent).error);
-      this.fire(ElectrumWSEvent.ERROR, (event as ErrorEvent).error);
+  private onError(event: WebSocket.ErrorEvent) {
+    if (event.error) {
+      console.error('ElectrumWS ERROR:', event.error);
+      this.fire(ElectrumWSEvent.ERROR, event.error);
     }
   }
 
-  private onClose(event: CloseEvent | Error) {
+  private onClose(event: WebSocket.CloseEvent | Error) {
     this.fire(ElectrumWSEvent.CLOSE, event);
 
     if (!this.connected) clearTimeout(this.connectedTimeout);
@@ -325,7 +326,10 @@ export class ElectrumWS extends Observable {
   }
 }
 
-function bytesToString(bytes: BufferSource) {
+function bytesToString(bytes: Buffer | ArrayBuffer | Buffer[]) {
+  if (Array.isArray(bytes)) {
+    bytes = Buffer.concat(bytes);
+  }
   const decoder = new TextDecoder('utf-8');
   return decoder.decode(bytes);
 }

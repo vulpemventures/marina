@@ -4,22 +4,14 @@ import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
-import { Account, MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
+import { Account, MainAccount, MainAccountLegacy } from '../../../domain/account';
 import {
   appRepository,
   onboardingRepository,
   useSelectIsFromPopupFlow,
   walletRepository,
 } from '../../../infrastructure/storage/common';
-import { SLIP77Factory } from 'slip77';
-import * as ecc from 'tiny-secp256k1';
-import BIP32Factory from 'bip32';
-import { mnemonicToSeedSync } from 'bip39';
-import { encrypt } from '../../../encryption';
-import { AccountType } from 'marina-provider';
-
-const bip32 = BIP32Factory(ecc);
-const slip77 = SLIP77Factory(ecc);
+import { initWalletRepository } from '../../../infrastructure/utils';
 
 const GAP_LIMIT = 30;
 
@@ -43,57 +35,9 @@ const EndOfFlowOnboarding: React.FC = () => {
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
-      const encryptedData = await encrypt(onboardingMnemonic, onboardingPassword);
-      const seed = mnemonicToSeedSync(onboardingMnemonic);
-      const masterBlindingKey = slip77.fromSeed(seed).masterKey.toString('hex');
+      const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub } = await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
 
-      // set the global seed data
-      await walletRepository.setSeedData(encryptedData, masterBlindingKey);
-
-      // set the default accounts data (MainAccount, MainAccountTest, MainAccountLegacy)
-      // cointype account (mainnet)
-      const defaultMainAccountXPub = bip32
-        .fromSeed(seed)
-        .derivePath(Account.BASE_DERIVATION_PATH)
-        .neutered()
-        .toBase58();
-      await walletRepository.updateAccountDetails(MainAccount, {
-        accountID: MainAccount,
-        type: AccountType.P2WPKH,
-        masterXPub: defaultMainAccountXPub,
-        baseDerivationPath: Account.BASE_DERIVATION_PATH,
-        accountNetworks: ['liquid'],
-      });
-
-      // cointype account (testnet & regtest)
-      const defaultMainAccountXPubTestnet = bip32
-        .fromSeed(seed)
-        .derivePath(Account.BASE_DERIVATION_PATH_TESTNET)
-        .neutered()
-        .toBase58();
-      await walletRepository.updateAccountDetails(MainAccountTest, {
-        accountID: MainAccountTest,
-        type: AccountType.P2WPKH,
-        masterXPub: defaultMainAccountXPubTestnet,
-        baseDerivationPath: Account.BASE_DERIVATION_PATH_TESTNET,
-        accountNetworks: ['regtest', 'testnet'],
-      });
-
-      // legacy account
-      const defaultLegacyMainAccountXPub = bip32
-        .fromSeed(seed)
-        .derivePath(Account.BASE_DERIVATION_PATH_LEGACY)
-        // .neutered()
-        .toBase58();
-      await walletRepository.updateAccountDetails(MainAccountLegacy, {
-        accountID: MainAccountLegacy,
-        type: AccountType.P2WPKH,
-        masterXPub: defaultLegacyMainAccountXPub,
-        baseDerivationPath: Account.BASE_DERIVATION_PATH_LEGACY,
-        accountNetworks: ['liquid', 'regtest', 'testnet'],
-      });
-
-      // restore on liquid
+      // restore main accounts on Liquid network (so only MainAccount & MainAccountLegacy)
       const chainSource = await appRepository.getChainSource('liquid');
       if (!chainSource) {
         throw new Error('Chain source not found for liquid network');
@@ -119,15 +63,15 @@ const EndOfFlowOnboarding: React.FC = () => {
       ];
 
       // restore the accounts
-      const result = await Promise.allSettled(
+      await Promise.allSettled(
         accountsToRestore.map((account) => account.sync(GAP_LIMIT))
       );
-      console.warn(result);
 
       // set the popup
       await Browser.browserAction.setPopup({ popup: 'popup.html' });
       await appRepository.updateStatus({ isOnboardingCompleted: true });
       await onboardingRepository.flush();
+      await chainSource.close();
     } catch (err: unknown) {
       console.error(err);
       setErrorMsg(extractErrorMessage(err));

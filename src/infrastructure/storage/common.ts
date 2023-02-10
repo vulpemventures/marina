@@ -186,7 +186,7 @@ export const useSelectUtxos = (...accounts: string[]) => {
       const listener = (changes: Browser.Storage.StorageChange, areaName: string) => {
         if (areaName !== 'local') return;
         for (const [key, change] of Object.entries(changes)) {
-          if (change.newValue && (TxDetailsKey.is(key) || OutpointBlindingDataKey.is(key))) {
+          if (change.newValue && (TxDetailsKey.is(key) || OutpointBlindingDataKey.is(key)) || key === AppStorageKeys.NETWORK) {
             updateUtxosArray().catch(console.error);
             return;
           }

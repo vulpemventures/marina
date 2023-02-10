@@ -4,9 +4,7 @@ import QRCode from 'qrcode.react';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utility';
-import Browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { subscribeMessage } from '../../../domain/message';
 import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../domain/account';
 
@@ -36,8 +34,6 @@ const ReceiveView: React.FC = () => {
       const mainAccount = await accountFactory.make(network, accountName);
       const addr = await mainAccount.getNextAddress(false);
       setConfidentialAddress(addr.confidentialAddress);
-      const port = Browser.runtime.connect();
-      port.postMessage(subscribeMessage(mainAccount.name));
     })().catch(console.error);
   }, []);
 

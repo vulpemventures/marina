@@ -8,7 +8,7 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility'
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { networks } from 'liquidjs-lib';
-import { computeBalances, makeSendPsetFromMainAccounts } from '../../../utils';
+import { computeBalances, makeSendPset } from '../../../utils';
 import {
   useSelectNetwork,
   useSelectTaxiAssets,
@@ -99,7 +99,7 @@ const ChooseFee: React.FC = () => {
     try {
       setLoading(true);
       setSelectedFeeAsset(assetHash);
-      const { pset, feeAmount } = await makeSendPsetFromMainAccounts([recipient], [], assetHash);
+      const { pset, feeAmount } = await makeSendPset([recipient], [], assetHash);
       setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
       const psetBase64 = pset.toBase64();
       setUnsignedPset(psetBase64);

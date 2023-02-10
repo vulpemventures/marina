@@ -2,7 +2,6 @@ import type { NetworkString } from 'marina-provider';
 import React, { useState } from 'react';
 import Browser from 'webextension-polyfill';
 import { AccountFactory } from '../../domain/account';
-import { subscribeMessage } from '../../domain/message';
 import {
   appRepository,
   useSelectNetwork,
@@ -33,7 +32,6 @@ const SettingsNetworksView: React.FC = () => {
           try {
             const account = await factory.make(newNetwork, name);
             await account.sync();
-            port.postMessage(subscribeMessage(account.name));
           } catch (e) {
             console.error(e);
           }

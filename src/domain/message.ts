@@ -42,7 +42,6 @@ export function newErrorResponseMessage(id: string, error: Error): ResponseMessa
 enum MessageType {
   Login,
   Logout,
-  Subscribe,
   OpenPopup,
   PopupResponse,
 }
@@ -52,7 +51,6 @@ export interface Message<T> {
   data: T;
 }
 
-export type SubscribeMessage = Message<{ account: string }>;
 export type PopupResponseMessage<ResponseT> = Message<{ response?: ResponseT; error?: string }>;
 export type OpenPopupMessage = Message<{ name: PopupName }>;
 export type LogInMessage = Message<undefined>;
@@ -85,14 +83,6 @@ export function popupResponseMessage<T>(response?: T, error?: string): PopupResp
 
 export function isPopupResponseMessage(message: unknown): message is PopupResponseMessage<any> {
   return message && (message as any).type === MessageType.PopupResponse && (message as any).data;
-}
-
-export function subscribeMessage(account: string): SubscribeMessage {
-  return { type: MessageType.Subscribe, data: { account } };
-}
-
-export function isSubscribeMessage(message: unknown): message is SubscribeMessage {
-  return message && (message as any).type === MessageType.Subscribe && (message as any).data;
 }
 
 export function logInMessage(): LogInMessage {

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
+import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
 import { BlinderService } from '../../domain/blinder';
 import { popupResponseMessage } from '../../domain/message';
 import { SignerService } from '../../domain/signer';
 import type { SpendParameters } from '../../infrastructure/repository';
 import {
+  appRepository,
   useSelectAllAssets,
   useSelectPopupSpendParameters,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { makeSendPsetFromMainAccounts } from '../../utils';
+import { makeSendPset } from '../../utils';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
@@ -55,14 +57,14 @@ const ConnectSpend: React.FC = () => {
 
   const handlePasswordInput = async (password: string, spendParameters: SpendParameters) => {
     try {
-      const { pset } = await makeSendPsetFromMainAccounts(
+      const { pset } = await makeSendPset(
         spendParameters.addressRecipients,
         spendParameters.dataRecipients,
         spendParameters.feeAsset
       );
-      const blinder = new BlinderService(walletRepository);
+      const blinder = new BlinderService(walletRepository, await ZKPLib());
       const blindedPset = await blinder.blindPset(pset);
-      const signer = await SignerService.fromPassword(walletRepository, password);
+      const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
       const signedPset = await signer.signPset(blindedPset);
       sendResponseMessage(true, signer.finalizeAndExtract(signedPset));
       window.close();

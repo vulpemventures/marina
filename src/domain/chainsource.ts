@@ -15,6 +15,7 @@ export interface ChainSource {
   estimateFees(targetNumberBlocks: number): Promise<number>;
   broadcastTransaction(hex: string): Promise<string>;
   getRelayFee(): Promise<number>;
+  close(): Promise<void>;
 }
 
 export type GetHistoryResponse = Array<{
@@ -76,6 +77,10 @@ export class WsElectrumChainSource implements ChainSource {
 
   async getRelayFee(): Promise<number> {
     return this.ws.request<number>(GetRelayFeeMethod);
+  }
+
+  async close() {
+    await this.ws.close('close');
   }
 }
 

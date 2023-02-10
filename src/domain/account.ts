@@ -1,5 +1,5 @@
 import * as ecc from 'tiny-secp256k1';
-import ZKPlib from '@vulpemventures/secp256k1-zkp';
+import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
 import { address, networks, payments } from 'liquidjs-lib';
@@ -18,12 +18,12 @@ import type { AccountDetails, AppRepository, WalletRepository } from '../infrast
 import type { Argument } from '@ionio-lang/ionio';
 import { Contract } from '@ionio-lang/ionio';
 import { h2b } from '../utils';
+import { ZKPInterface } from 'liquidjs-lib/src/confidential';
 
 export const MainAccountLegacy = 'mainAccountLegacy';
 export const MainAccount = 'mainAccount';
 export const MainAccountTest = 'mainAccountTest';
 
-const zkp = await ZKPlib();
 const bip32 = BIP32Factory(ecc);
 const slip77 = SLIP77Factory(ecc);
 
@@ -44,7 +44,7 @@ type AccountOpts = {
 };
 
 export class AccountFactory {
-  private chainSources = new Map<NetworkString, ChainSource>();
+  chainSources = new Map<NetworkString, ChainSource>();
   masterBlindingKey: string | undefined;
 
   private constructor(private walletRepository: WalletRepository) {}
@@ -123,7 +123,6 @@ export class Account {
       await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name)
     ).map((b) => Buffer.from(b, 'hex'));
 
-    console.warn(`subscribing to ${scripts.length} scripts`);
     for (const script of scripts) {
       await this.chainSource.subscribeScriptStatus(script, async (_: string, __: string | null) => {
         const history = await this.chainSource.fetchHistories([script]);
@@ -148,7 +147,7 @@ export class Account {
     }
   }
 
-  async getAllAddresses(): Promise<Address[]> {
+  async getAllAddresses(): Promise<(Address)[]> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get all addresses');
     if (!this.name) throw new Error('No name, cannot get all addresses');
     const type = await this.getAccountType();
@@ -164,11 +163,12 @@ export class Account {
           ...details,
         }));
       case AccountType.Ionio:
+        const zkp = await ZKPLib();
         return Object.entries(scripts).map(([script, details]) => ({
           confidentialAddress: this.createTaprootAddress(Buffer.from(script, 'hex')),
           ...details,
           contract: isIonioScriptDetails(details)
-            ? new Contract(details.artifact, details.params, networks[details.network], {
+            ? new Contract(details.artifact, details.params, this.network, {
                 ecc,
                 zkp,
               })
@@ -194,8 +194,8 @@ export class Account {
     const type = await this.getAccountType();
 
     let confidentialAddress = undefined;
-    let script = undefined;
-    let scriptDetails = undefined;
+    let script: string | undefined = undefined;
+    let scriptDetails: ScriptDetails | undefined = undefined;
 
     switch (type) {
       case AccountType.P2WPKH:
@@ -205,7 +205,7 @@ export class Account {
       case AccountType.Ionio:
         if (!artifactWithArgs)
           throw new Error('Artifact with args is required for Ionio account type');
-        [script, scriptDetails] = this.createTaprootScript(publicKeys[0], artifactWithArgs);
+        [script, scriptDetails] = this.createTaprootScript(publicKeys[0], artifactWithArgs, await ZKPLib());
         confidentialAddress = this.createTaprootAddress(Buffer.from(script, 'hex'));
         break;
       default:
@@ -232,14 +232,14 @@ export class Account {
         ? new Contract(
             scriptDetails.artifact,
             scriptDetails.params,
-            networks[scriptDetails.network],
-            { ecc, zkp }
+            this.network,
+            { ecc, zkp: await ZKPLib() }
           )
         : undefined,
     };
   }
 
-  async sync(gapLimit = GAP_LIMIT): Promise<{
+  async sync(gapLimit = GAP_LIMIT, start?: { internal: number, external: number }): Promise<{
     next: { internal: number; external: number };
   }> {
     if (!this.chainSource) throw new Error('No chain source, cannot sync');
@@ -253,12 +253,12 @@ export class Account {
     let restoredScripts: Record<string, ScriptDetails> = {};
     let tempRestoredScripts: Record<string, ScriptDetails> = {};
 
-    const nextIndexes = await this.getNextIndexes();
-
+    const indexes = start ?? await this.getNextIndexes();
     const walletChains = [0, 1];
     for (const i of walletChains) {
+      tempRestoredScripts = {};
       const isInternal = i === 1;
-      let batchCount = isInternal ? nextIndexes.internal : nextIndexes.external;
+      let batchCount = isInternal ? indexes.internal : indexes.external;
       let unusedScriptCounter = 0;
 
       while (unusedScriptCounter <= gapLimit) {
@@ -282,8 +282,8 @@ export class Account {
             restoredScripts = { ...restoredScripts, ...tempRestoredScripts };
             tempRestoredScripts = {};
             const newMaxIndex = index + batchCount + 1;
-            if (isInternal) nextIndexes.internal = newMaxIndex;
-            else nextIndexes.external = newMaxIndex;
+            if (isInternal) indexes.internal = newMaxIndex;
+            else indexes.external = newMaxIndex;
 
             // update the history set
             for (const { tx_hash, height } of history) {
@@ -303,7 +303,7 @@ export class Account {
       this.walletRepository.updateAccountKeyIndex(
         this.name,
         this.network.name as NetworkString,
-        nextIndexes
+        indexes
       ),
       this.walletRepository.updateTxDetails(
         Object.fromEntries(
@@ -315,8 +315,8 @@ export class Account {
 
     return {
       next: {
-        internal: nextIndexes.internal,
-        external: nextIndexes.external,
+        internal: indexes.internal,
+        external: indexes.external,
       },
     };
   }
@@ -391,7 +391,7 @@ export class Account {
       {
         derivationPath,
         accountName: this.name,
-        network: this.network.name as NetworkString,
+        networks: [this.network.name as NetworkString],
         blindingPrivateKey: this.deriveBlindingKey(script).privateKey.toString('hex'),
       },
     ];
@@ -411,7 +411,8 @@ export class Account {
 
   private createTaprootScript(
     { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath,
-    { artifact, args }: ArtifactWithConstructorArgs
+    { artifact, args }: ArtifactWithConstructorArgs,
+    zkp: ZKPInterface
   ): [string, ScriptDetails] {
     const constructorArgs: Argument[] = (artifact.constructorInputs || []).map(({ name }) => {
       // inject xOnlyPublicKey argument if one of the contructor args is named like the account name
@@ -425,12 +426,10 @@ export class Account {
       }
       return param;
     });
-    console.log(artifact);
-
     const contract = new Contract(artifact, constructorArgs, this.network, { ecc, zkp });
     const scriptDetails: IonioScriptDetails = {
       accountName: this.name,
-      network: this.network.name as NetworkString,
+      networks: [this.network.name as NetworkString],
       blindingPrivateKey: this.deriveBlindingKey(contract.scriptPubKey).privateKey.toString('hex'),
       derivationPath,
       artifact,

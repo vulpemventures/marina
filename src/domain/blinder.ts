@@ -1,15 +1,16 @@
 import * as ecc from 'tiny-secp256k1';
-import zkp from '@vulpemventures/secp256k1-zkp';
 import type { OwnedInput } from 'liquidjs-lib';
 import { AssetHash, Blinder, Pset, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
 import type { WalletRepository } from '../infrastructure/repository';
+import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 
-const zkpLib = await zkp();
-const zkpValidator = new ZKPValidator(zkpLib);
 const keysGenerator = Pset.ECCKeysGenerator(ecc);
-
 export class BlinderService {
-  constructor(private walletRepository: WalletRepository) {}
+  private zkpValidator: ZKPValidator;
+
+  constructor(private walletRepository: WalletRepository, private zkpLib: ZKPInterface) {
+    this.zkpValidator = new ZKPValidator(zkpLib);
+  }
 
   async blindPset(pset: Pset): Promise<Pset> {
     // find input index belonging to this account
@@ -49,7 +50,7 @@ export class BlinderService {
       });
     }
 
-    const zkpGenerator = new ZKPGenerator(zkpLib, ZKPGenerator.WithOwnedInputs(ownedInputs));
+    const zkpGenerator = new ZKPGenerator(this.zkpLib, ZKPGenerator.WithOwnedInputs(ownedInputs));
     const outputBlindingArgs = zkpGenerator.blindOutputs(pset, keysGenerator);
 
     let isLast = true;
@@ -64,7 +65,7 @@ export class BlinderService {
       }
     }
 
-    const blinder = new Blinder(pset, ownedInputs, zkpValidator, zkpGenerator);
+    const blinder = new Blinder(pset, ownedInputs, this.zkpValidator, zkpGenerator);
     if (isLast) {
       blinder.blindLast({ outputBlindingArgs });
     } else {

@@ -9,45 +9,14 @@ export function sleep(ms: number): Promise<any> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function fetchUtxos(address: string, txid?: string): Promise<any> {
-  try {
-    let utxos = (await axios.get(`${APIURL}/address/${address}/utxo`)).data;
-    if (txid) {
-      utxos = utxos.filter((u: any) => u.txid === txid);
-    }
-    return utxos;
-  } catch (e) {
-    console.error(e);
-    throw e;
-  }
-}
-
-export async function faucet(address: string, amount: number, asset?: string): Promise<any> {
+export async function faucet(address: string, amount: number, asset?: string): Promise<string> {
   try {
     const { status, data } = await axios.post(`${APIURL}/faucet`, { address, amount, asset });
     if (status !== 200) {
       throw new Error('Invalid address');
     }
     const { txId } = data;
-
-    while (true) {
-      await sleep(1000);
-      try {
-        const utxos = await fetchUtxos(address, txId);
-        if (utxos.length > 0) {
-          return txId;
-        }
-      } catch (ignore) {}
-    }
-  } catch (e) {
-    console.error(e);
-    throw e;
-  }
-}
-
-export async function fetchTxHex(txId: string): Promise<string> {
-  try {
-    return (await axios.get(`${APIURL}/tx/${txId}/hex`)).data;
+    return txId;
   } catch (e) {
     console.error(e);
     throw e;

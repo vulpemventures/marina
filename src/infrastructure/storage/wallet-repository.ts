@@ -134,11 +134,13 @@ export class WalletStorageAPI implements WalletRepository {
   }
 
   async updateScriptDetails(scriptToDetails: Record<string, ScriptDetails>): Promise<void> {
+    const currentDetails = await this.getScriptDetails(...Object.keys(scriptToDetails));
+
     return Browser.storage.local.set(
       Object.fromEntries(
         Object.entries(scriptToDetails).map(([script, details]) => [
           ScriptDetailsKey.make(script),
-          details,
+          { ...details, networks: [...new Set([...(currentDetails[script]?.networks ?? []), ...details.networks])] },
         ])
       )
     );
@@ -174,7 +176,7 @@ export class WalletStorageAPI implements WalletRepository {
     const walletOutputs = new Set<string>();
 
     const transactions = Object.values(txDetails)
-      .filter((tx) => tx.hex)
+      .filter((tx) => tx?.hex)
       .map((tx) => Transaction.fromHex(tx.hex!));
     for (const tx of transactions) {
       for (const input of tx.ins) {
@@ -374,7 +376,7 @@ export class WalletStorageAPI implements WalletRepository {
       Object.entries(wholeStorage)
         .filter(
           ([key, value]) =>
-            ScriptDetailsKey.is(key) && names.includes((value as ScriptDetails).accountName)
+            ScriptDetailsKey.is(key) && names.includes((value as ScriptDetails).accountName) && (value as ScriptDetails).networks.includes(network)
         )
         .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails])
     );
@@ -386,7 +388,7 @@ export class WalletStorageAPI implements WalletRepository {
     return Object.entries(wholeStorage)
       .filter(
         ([key, value]) =>
-          ScriptDetailsKey.is(key) && networks.includes((value as ScriptDetails).network)
+          ScriptDetailsKey.is(key) && (value as ScriptDetails).networks.some((network) => networks.includes(network))
       )
       .map(([key]) => ScriptDetailsKey.decode(key)[0]);
   }
@@ -403,7 +405,6 @@ export class WalletStorageAPI implements WalletRepository {
   private async lockOutpoints(outpoints: Array<{ txID: string; vout: number }>): Promise<void> {
     const { [WalletStorageKey.LOCKED_OUTPOINTS]: lockedOutpoints } =
       await Browser.storage.local.get(WalletStorageKey.LOCKED_OUTPOINTS);
-    console.log('lockOutpoints', outpoints, lockedOutpoints);
     const current = lockedOutpoints ?? [];
     const until = Date.now() + WalletStorageAPI.LOCKTIME;
     for (const outpoint of outpoints) {

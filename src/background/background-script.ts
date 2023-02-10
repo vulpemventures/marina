@@ -1,22 +1,25 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
+import zkp from '@vulpemventures/secp256k1-zkp';
 import type { OpenPopupMessage, PopupName } from '../domain/message';
 import {
   isLogInMessage,
   isLogOutMessage,
-  isSubscribeMessage,
   isOpenPopupMessage,
   isPopupResponseMessage,
 } from '../domain/message';
-import { Subscriber } from './subscriber';
+import { SubscriberService } from './subscriber';
 import { INITIALIZE_WELCOME_ROUTE } from '../extension/routes/constants';
 import { AppStorageAPI } from '../infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
 import { TaxiUpdater } from './taxi';
-import { Updater } from './updater';
+import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
+
+// top-level await supported via webpack
+const zkpLib = await zkp();
 
 const POPUP_RESPONSE = 'popup-response';
 
@@ -29,8 +32,8 @@ const appRepository = new AppStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 
-const updaterService = new Updater(walletRepository, appRepository, assetRepository);
-const subscriberService = new Subscriber(walletRepository, appRepository);
+const updaterService = new UpdaterService(walletRepository, appRepository, assetRepository, zkpLib);
+const subscriberService = new SubscriberService(walletRepository, appRepository);
 const taxiService = new TaxiUpdater(taxiRepository, appRepository);
 
 // at startup, check if the user is logged in
@@ -137,17 +140,6 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
     if (isPopupResponseMessage(message)) {
       // propagate popup response
       eventEmitter.emit(POPUP_RESPONSE, message);
-      return;
-    }
-
-    if (isSubscribeMessage(message)) {
-      subscriberService
-        .subscribeAccount(message.data.account, true)
-        .then(() => port.postMessage({ data: true }))
-        .catch((error: any) => {
-          console.error(error);
-          port.postMessage({ data: false, error: error.message });
-        });
       return;
     }
 

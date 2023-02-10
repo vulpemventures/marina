@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import { useHistory } from 'react-router';
 import Button from '../../components/button';
 import ModalUnlock from '../../components/modal-unlock';
@@ -14,7 +15,6 @@ import {
 } from '../../../infrastructure/storage/common';
 import { BlinderService } from '../../../domain/blinder';
 import Browser from 'webextension-polyfill';
-import { subscribeMessage } from '../../../domain/message';
 import { Pset } from 'liquidjs-lib';
 import { MainAccount, MainAccountTest } from '../../../domain/account';
 
@@ -38,21 +38,14 @@ const SendEndOfFlow: React.FC = () => {
       if (!network) throw new Error('network not found');
       const chainSource = await appRepository.getChainSource(network);
       if (!chainSource) throw new Error('chain source not found');
-
-      const blinder = new BlinderService(walletRepository);
-
-      console.log(unsignedPset);
+      const blinder = new BlinderService(walletRepository, await ZKPLib());
       const blindedPset = await blinder.blindPset(Pset.fromBase64(unsignedPset));
-      const signer = await SignerService.fromPassword(walletRepository, password);
+      const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
       const signed = await signer.signPset(blindedPset);
       toBroadcast = signer.finalizeAndExtract(signed);
-
       const txid = await chainSource.broadcastTransaction(toBroadcast);
       if (!txid) throw new Error('something went wrong with the tx broadcasting');
       await sendFlowRepository.reset();
-      const port = Browser.runtime.connect();
-      port.postMessage(subscribeMessage(MainAccount));
-      port.postMessage(subscribeMessage(MainAccountTest));
 
       // update tx in repository
       await walletRepository.addTransactions(network, txid);
@@ -62,6 +55,7 @@ const SendEndOfFlow: React.FC = () => {
           hex: toBroadcast,
         },
       });
+      await chainSource.close();
 
       // push to success page
       history.push({

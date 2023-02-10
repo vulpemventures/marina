@@ -1,140 +1,104 @@
 import type { NetworkString } from 'marina-provider';
-import { Account } from '../domain/account';
-import type { WalletRepository, AppRepository } from '../infrastructure/repository';
+import { Account, AccountFactory } from '../domain/account';
+import type { WalletRepository, AppRepository, AccountDetails } from '../infrastructure/repository';
 import type { ChainSource } from '../domain/chainsource';
+import Browser from 'webextension-polyfill';
+import { AccountKey, ScriptDetailsKey } from '../infrastructure/storage/wallet-repository';
+import { address } from 'liquidjs-lib';
 
 const ChainSourceError = (network: string) =>
   new Error('Chain source not found, cannot start subscriber service on network: ' + network);
 
 // subscriber manages the subscription for all the accounts
-export class Subscriber {
+export class SubscriberService {
   private chainSource: ChainSource | null = null;
-  private masterBlindingKey: string | undefined;
-  private subscribedAccounts = new Set<string>();
+  private subscribedScripts = new Set<string>();
+  private network: NetworkString | null = null;
 
-  constructor(private walletRepository: WalletRepository, private appRepository: AppRepository) {}
+  constructor(private walletRepository: WalletRepository, private appRepository: AppRepository) { }
 
   async start() {
-    const masterBlindingKey = await this.walletRepository.getMasterBlindingKey();
-    if (!masterBlindingKey) throw new Error('Master blinding key not found');
-    this.masterBlindingKey = masterBlindingKey;
+    const network = await this.appRepository.getNetwork();
+    if (!network) throw new Error('no network selected');
+    this.network = network;
+    
     const chainSource = await this.appRepository.getChainSource();
     if (chainSource === null) {
       throw ChainSourceError('unknown');
     }
     this.chainSource = chainSource;
-    await this.subscribeAllAccounts();
+
+    await this.initSubscribtions();
+
     this.appRepository.onNetworkChanged(async (network: NetworkString) => {
-      await this.unsubscribeAllAccounts();
+      await this.unsubscribe();
+      await this.chainSource?.close();
+      this.network = network;
       this.chainSource = await this.appRepository.getChainSource(network);
       if (!this.chainSource) throw ChainSourceError(network);
-      await this.subscribeAllAccounts();
+      await this.initSubscribtions();
     });
+
+    Browser.storage.onChanged.addListener(async (changes: Record<string, Browser.Storage.StorageChange>, areaName: string) => {
+      if (areaName !== 'local') return;
+      for (const key of Object.keys(changes)) {
+        // check if new script has been generated
+        if (ScriptDetailsKey.is(key)) {
+          const [script] = ScriptDetailsKey.decode(key);
+          await this.subscribeScript(script);
+          continue;
+        }
+      }
+    })
   }
 
   async stop() {
-    for (const name of this.subscribedAccounts) {
-      await this.unsubscribeAccount(name);
-    }
-    this.subscribedAccounts.clear();
-  }
-
-  async subscribeAccount(name: string, force = false): Promise<void> {
-    if (!force && this.subscribedAccounts.has(name)) return;
-    if (force) await this.unsubscribeAccount(name);
-    const network = await this.appRepository.getNetwork();
-    if (!network) throw new Error('network selected not found');
-    if (!this.chainSource) throw new Error('Chain source not found');
-
-    const { [name]: details } = await this.walletRepository.getAccountDetails(name);
-    if (!details) throw new Error('Account not found');
-    const account = new Account({
-      name,
-      chainSource: this.chainSource,
-      masterPublicKey: details.masterXPub,
-      masterBlindingKey: this.masterBlindingKey!,
-      walletRepository: this.walletRepository,
-      network,
-    });
-    await account.subscribeAllScripts();
-    this.subscribedAccounts.add(name);
-  }
-
-  async subscribeAllAccounts(): Promise<void> {
-    const accountsDetails = await this.walletRepository.getAccountDetails();
-    const network = await this.appRepository.getNetwork();
-    if (!network) throw new Error('network selected not found');
-    if (!this.chainSource) throw new Error('Chain source not found');
-    const accounts = [];
-    for (const [name, details] of Object.entries(accountsDetails)) {
-      if (this.subscribedAccounts.has(name)) continue; // skip already subscribed accounts
-      accounts.push(
-        new Account({
-          name,
-          chainSource: this.chainSource,
-          masterPublicKey: details.masterXPub,
-          masterBlindingKey: this.masterBlindingKey!,
-          walletRepository: this.walletRepository,
-          network,
-        })
-      );
-    }
-    await Promise.allSettled(accounts.map((account) => account.subscribeAllScripts())).then(
-      (results) => {
-        for (const result of results) {
-          if (result.status === 'rejected') {
-            console.error('Error subscribing account', result.reason);
-          }
-        }
-      }
+    await Promise.allSettled(
+      Array.from(this.subscribedScripts)
+        .map(s => this.chainSource?.unsubscribeScriptStatus(Buffer.from(s, 'hex')))
     );
-
-    for (const account of accounts) {
-      this.subscribedAccounts.add(account.name);
-    }
+    await this.chainSource?.close();
   }
 
-  async unsubscribeAccount(name: string): Promise<void> {
-    if (!this.subscribedAccounts.has(name)) return;
-    const { [name]: details } = await this.walletRepository.getAccountDetails(name);
-    if (!details) throw new Error('Account not found');
+  private async initSubscribtions() {
     const network = await this.appRepository.getNetwork();
-    if (!network) throw new Error('network selected not found');
-    if (!this.chainSource) throw new Error('Chain source not found');
-    const account = new Account({
-      name,
-      chainSource: this.chainSource,
-      masterPublicKey: details.masterXPub,
-      masterBlindingKey: this.masterBlindingKey!,
-      walletRepository: this.walletRepository,
-      network,
-    });
-    await account.unsubscribeAllScripts();
-    this.subscribedAccounts.delete(name);
+    if (!network) throw new Error('cannot init subscriptions, no network selected');
+    const accounts = await this.walletRepository.getAccountDetails();
+
+    const accountsFiltered = [];
+    for (const [name, details] of Object.entries(accounts)) {
+      if (!details.accountNetworks.includes(network)) continue;
+      accountsFiltered.push(name);
+    }
+
+    const scriptsDetails = await this.walletRepository.getAccountScripts(network, ...accountsFiltered);
+    await Promise.all(
+      Object.keys(scriptsDetails).map(s => this.subscribeScript(s))
+    );
   }
 
-  async unsubscribeAllAccounts(): Promise<void> {
-    const accountsDetails = await this.walletRepository.getAccountDetails();
-    const accounts = [];
-    const network = await this.appRepository.getNetwork();
-    if (!network) throw new Error('network selected not found');
-    for (const [name, details] of Object.entries(accountsDetails)) {
-      if (!this.subscribedAccounts.has(name)) continue; // skip already unsubscribed accounts
-      if (!this.chainSource) continue;
-      accounts.push(
-        new Account({
-          name,
-          chainSource: this.chainSource,
-          masterPublicKey: details.masterXPub,
-          masterBlindingKey: this.masterBlindingKey!,
-          walletRepository: this.walletRepository,
-          network,
-        })
-      );
-    }
-    await Promise.all(accounts.map((account) => account.unsubscribeAllScripts()));
-    for (const account of accounts) {
-      this.subscribedAccounts.delete(account.name);
-    }
+  private async subscribeScript(script: string) {
+    if (this.subscribedScripts.has(script)) return;
+    this.subscribedScripts.add(script);
+    const scriptBuff = Buffer.from(script, 'hex');
+    await this.chainSource?.subscribeScriptStatus(scriptBuff, async (_: string, status: string | null) => {
+      if (status === null) return;
+      const history = await this.chainSource?.fetchHistories([scriptBuff]);
+      if (!history) return;
+      const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
+      await Promise.all([
+        this.walletRepository.addTransactions(this.network as NetworkString, ...historyTxId),
+        this.walletRepository.updateTxDetails(
+          Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
+        ),
+      ]);
+    })
+  }
+
+  private async unsubscribe() {
+    await Promise.all(
+      Array.from(this.subscribedScripts).map(s => this.chainSource?.unsubscribeScriptStatus(Buffer.from(s, 'hex')))
+    )
+    this.subscribedScripts = new Set<string>();
   }
 }
