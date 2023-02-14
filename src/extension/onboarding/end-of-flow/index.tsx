@@ -35,7 +35,8 @@ const EndOfFlowOnboarding: React.FC = () => {
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
-      const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub } = await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
+      const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub } =
+        await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
 
       // restore main accounts on Liquid network (so only MainAccount & MainAccountLegacy)
       const chainSource = await appRepository.getChainSource('liquid');
@@ -63,9 +64,7 @@ const EndOfFlowOnboarding: React.FC = () => {
       ];
 
       // restore the accounts
-      await Promise.allSettled(
-        accountsToRestore.map((account) => account.sync(GAP_LIMIT))
-      );
+      await Promise.allSettled(accountsToRestore.map((account) => account.sync(GAP_LIMIT)));
 
       // set the popup
       await Browser.browserAction.setPopup({ popup: 'popup.html' });

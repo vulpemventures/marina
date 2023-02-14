@@ -57,6 +57,9 @@
     "cypress/assertion-before-screenshot": "warn",
     "cypress/no-force": "warn",
     "cypress/no-async-tests": "error",
-    "react-hooks/rules-of-hooks": "off"
+    "react-hooks/rules-of-hooks": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/restrict-plus-operands": "off",
+    "no-loop-func": "off"
   }
 }

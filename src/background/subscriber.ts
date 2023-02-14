@@ -1,10 +1,8 @@
 import type { NetworkString } from 'marina-provider';
-import { Account, AccountFactory } from '../domain/account';
-import type { WalletRepository, AppRepository, AccountDetails } from '../infrastructure/repository';
+import type { WalletRepository, AppRepository } from '../infrastructure/repository';
 import type { ChainSource } from '../domain/chainsource';
 import Browser from 'webextension-polyfill';
-import { AccountKey, ScriptDetailsKey } from '../infrastructure/storage/wallet-repository';
-import { address } from 'liquidjs-lib';
+import { ScriptDetailsKey } from '../infrastructure/storage/wallet-repository';
 
 const ChainSourceError = (network: string) =>
   new Error('Chain source not found, cannot start subscriber service on network: ' + network);
@@ -15,13 +13,13 @@ export class SubscriberService {
   private subscribedScripts = new Set<string>();
   private network: NetworkString | null = null;
 
-  constructor(private walletRepository: WalletRepository, private appRepository: AppRepository) { }
+  constructor(private walletRepository: WalletRepository, private appRepository: AppRepository) {}
 
   async start() {
     const network = await this.appRepository.getNetwork();
     if (!network) throw new Error('no network selected');
     this.network = network;
-    
+
     const chainSource = await this.appRepository.getChainSource();
     if (chainSource === null) {
       throw ChainSourceError('unknown');
@@ -39,23 +37,26 @@ export class SubscriberService {
       await this.initSubscribtions();
     });
 
-    Browser.storage.onChanged.addListener(async (changes: Record<string, Browser.Storage.StorageChange>, areaName: string) => {
-      if (areaName !== 'local') return;
-      for (const key of Object.keys(changes)) {
-        // check if new script has been generated
-        if (ScriptDetailsKey.is(key)) {
-          const [script] = ScriptDetailsKey.decode(key);
-          await this.subscribeScript(script);
-          continue;
+    Browser.storage.onChanged.addListener(
+      async (changes: Record<string, Browser.Storage.StorageChange>, areaName: string) => {
+        if (areaName !== 'local') return;
+        for (const key of Object.keys(changes)) {
+          // check if new script has been generated
+          if (ScriptDetailsKey.is(key)) {
+            const [script] = ScriptDetailsKey.decode(key);
+            await this.subscribeScript(script);
+            continue;
+          }
         }
       }
-    })
+    );
   }
 
   async stop() {
     await Promise.allSettled(
-      Array.from(this.subscribedScripts)
-        .map(s => this.chainSource?.unsubscribeScriptStatus(Buffer.from(s, 'hex')))
+      Array.from(this.subscribedScripts).map((s) =>
+        this.chainSource?.unsubscribeScriptStatus(Buffer.from(s, 'hex'))
+      )
     );
     await this.chainSource?.close();
   }
@@ -71,34 +72,40 @@ export class SubscriberService {
       accountsFiltered.push(name);
     }
 
-    const scriptsDetails = await this.walletRepository.getAccountScripts(network, ...accountsFiltered);
-    await Promise.all(
-      Object.keys(scriptsDetails).map(s => this.subscribeScript(s))
+    const scriptsDetails = await this.walletRepository.getAccountScripts(
+      network,
+      ...accountsFiltered
     );
+    await Promise.all(Object.keys(scriptsDetails).map((s) => this.subscribeScript(s)));
   }
 
   private async subscribeScript(script: string) {
     if (this.subscribedScripts.has(script)) return;
     this.subscribedScripts.add(script);
     const scriptBuff = Buffer.from(script, 'hex');
-    await this.chainSource?.subscribeScriptStatus(scriptBuff, async (_: string, status: string | null) => {
-      if (status === null) return;
-      const history = await this.chainSource?.fetchHistories([scriptBuff]);
-      if (!history) return;
-      const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
-      await Promise.all([
-        this.walletRepository.addTransactions(this.network as NetworkString, ...historyTxId),
-        this.walletRepository.updateTxDetails(
-          Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
-        ),
-      ]);
-    })
+    await this.chainSource?.subscribeScriptStatus(
+      scriptBuff,
+      async (_: string, status: string | null) => {
+        if (status === null) return;
+        const history = await this.chainSource?.fetchHistories([scriptBuff]);
+        if (!history) return;
+        const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
+        await Promise.all([
+          this.walletRepository.addTransactions(this.network as NetworkString, ...historyTxId),
+          this.walletRepository.updateTxDetails(
+            Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
+          ),
+        ]);
+      }
+    );
   }
 
   private async unsubscribe() {
     await Promise.all(
-      Array.from(this.subscribedScripts).map(s => this.chainSource?.unsubscribeScriptStatus(Buffer.from(s, 'hex')))
-    )
+      Array.from(this.subscribedScripts).map((s) =>
+        this.chainSource?.unsubscribeScriptStatus(Buffer.from(s, 'hex'))
+      )
+    );
     this.subscribedScripts = new Set<string>();
   }
 }

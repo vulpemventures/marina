@@ -1,6 +1,5 @@
 import type { NetworkString } from 'marina-provider';
 import React, { useState } from 'react';
-import Browser from 'webextension-polyfill';
 import { AccountFactory } from '../../domain/account';
 import {
   appRepository,
@@ -26,7 +25,6 @@ const SettingsNetworksView: React.FC = () => {
         // switch the selected network
         await appRepository.setNetwork(newNetwork);
         const factory = await AccountFactory.create(walletRepository, appRepository, [newNetwork]);
-        const port = Browser.runtime.connect();
         const allAccounts = await walletRepository.getAccountDetails();
         for (const name of Object.keys(allAccounts)) {
           try {

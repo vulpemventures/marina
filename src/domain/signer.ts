@@ -30,7 +30,11 @@ export class SignerService {
     private masterNode: BIP32Interface
   ) {}
 
-  static async fromPassword(walletRepository: WalletRepository, appRepository: AppRepository, password: string) {
+  static async fromPassword(
+    walletRepository: WalletRepository,
+    appRepository: AppRepository,
+    password: string
+  ) {
     const encrypted = await walletRepository.getEncryptedMnemonic();
     if (!encrypted) throw new Error('No mnemonic found in wallet');
     const decryptedMnemonic = await decrypt(encrypted, password);

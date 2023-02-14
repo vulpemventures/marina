@@ -1,10 +1,7 @@
 import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import type { MessageHandler } from '../../domain/message';
-import {
-  newErrorResponseMessage,
-  newSuccessResponseMessage,
-} from '../../domain/message';
+import type { MessageHandler, ResponseMessage } from '../../domain/message';
+import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
 import type {
   AppRepository,
@@ -182,7 +179,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
   private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
     if (!this.hostname) throw MarinaBroker.NotSetUpError;
-    const successMsg: Function = <T = any>(data?: T) => newSuccessResponseMessage(id, data);
+    const successMsg: (data?: any) => ResponseMessage = <T = any>(data?: T) =>
+      newSuccessResponseMessage(id, data);
 
     try {
       switch (name) {

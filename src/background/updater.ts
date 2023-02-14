@@ -9,7 +9,7 @@ import type {
   AssetRepository,
 } from '../infrastructure/repository';
 import { TxIDsKey, TxDetailsKey } from '../infrastructure/storage/wallet-repository';
-import { ZKPInterface } from 'liquidjs-lib/src/confidential';
+import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 
 /**
  * Updater is a class that listens to the chrome storage changes and triggers the right actions
@@ -27,7 +27,7 @@ export class UpdaterService {
     private walletRepository: WalletRepository,
     private appRepository: AppRepository,
     assetRepository: AssetRepository,
-    zkpLib: ZKPInterface,
+    zkpLib: ZKPInterface
   ) {
     this.unblinder = new WalletRepositoryUnblinder(
       walletRepository,
@@ -69,7 +69,9 @@ export class UpdaterService {
 
               // for all new txs, we need to fetch the tx hex
               const oldTxIDsSet = new Set(oldTxIDs);
-              const txIDsToFetch = newTxIDs.filter((txID) => isValidTxID(txID) && !oldTxIDsSet.has(txID));
+              const txIDsToFetch = newTxIDs.filter(
+                (txID) => isValidTxID(txID) && !oldTxIDsSet.has(txID)
+              );
               const chainSource = await this.appRepository.getChainSource(network);
               if (!chainSource) {
                 console.error('Chain source not found', network);
@@ -81,7 +83,7 @@ export class UpdaterService {
                 Object.fromEntries(transactions.map((tx, i) => [txIDsToFetch[i], tx]))
               );
             } else if (TxDetailsKey.is(key) && changes[key].newValue?.hex) {
-              // for all txs hex change in the store, we'll try unblind the outputs 
+              // for all txs hex change in the store, we'll try unblind the outputs
               if (changes[key].oldValue && changes[key].oldValue.hex) continue;
               const [txID] = TxDetailsKey.decode(key);
               const newTxDetails = changes[key].newValue as TxDetails | undefined;

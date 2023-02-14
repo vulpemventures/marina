@@ -140,7 +140,12 @@ export class WalletStorageAPI implements WalletRepository {
       Object.fromEntries(
         Object.entries(scriptToDetails).map(([script, details]) => [
           ScriptDetailsKey.make(script),
-          { ...details, networks: [...new Set([...(currentDetails[script]?.networks ?? []), ...details.networks])] },
+          {
+            ...details,
+            networks: [
+              ...new Set([...(currentDetails[script]?.networks ?? []), ...details.networks]),
+            ],
+          },
         ])
       )
     );
@@ -376,7 +381,9 @@ export class WalletStorageAPI implements WalletRepository {
       Object.entries(wholeStorage)
         .filter(
           ([key, value]) =>
-            ScriptDetailsKey.is(key) && names.includes((value as ScriptDetails).accountName) && (value as ScriptDetails).networks.includes(network)
+            ScriptDetailsKey.is(key) &&
+            names.includes((value as ScriptDetails).accountName) &&
+            (value as ScriptDetails).networks.includes(network)
         )
         .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails])
     );
@@ -388,7 +395,8 @@ export class WalletStorageAPI implements WalletRepository {
     return Object.entries(wholeStorage)
       .filter(
         ([key, value]) =>
-          ScriptDetailsKey.is(key) && (value as ScriptDetails).networks.some((network) => networks.includes(network))
+          ScriptDetailsKey.is(key) &&
+          (value as ScriptDetails).networks.some((network) => networks.includes(network))
       )
       .map(([key]) => ScriptDetailsKey.decode(key)[0]);
   }

@@ -14,9 +14,7 @@ import {
   walletRepository,
 } from '../../../infrastructure/storage/common';
 import { BlinderService } from '../../../domain/blinder';
-import Browser from 'webextension-polyfill';
 import { Pset } from 'liquidjs-lib';
-import { MainAccount, MainAccountTest } from '../../../domain/account';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();

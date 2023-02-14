@@ -1,5 +1,5 @@
-import { crypto, Pset, UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
-import { Creator, Transaction, Updater, address, networks, payments } from 'liquidjs-lib';
+import type { Pset, UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
+import { crypto, Creator, Transaction, Updater, address, networks, payments } from 'liquidjs-lib';
 import type {
   AccountID,
   AddressRecipient,

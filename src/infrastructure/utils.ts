@@ -1,11 +1,12 @@
-import * as ecc from "tiny-secp256k1";
-import { mnemonicToSeed } from "bip39";
-import { AccountType, NetworkString } from "marina-provider";
-import { Account, MainAccount, MainAccountTest, MainAccountLegacy } from "../domain/account";
-import { encrypt } from "../encryption";
-import { WalletRepository } from "./repository";
-import { SLIP77Factory } from "slip77";
-import { BIP32Factory } from "bip32";
+import * as ecc from 'tiny-secp256k1';
+import { mnemonicToSeed } from 'bip39';
+import type { NetworkString } from 'marina-provider';
+import { AccountType } from 'marina-provider';
+import { Account, MainAccount, MainAccountTest, MainAccountLegacy } from '../domain/account';
+import { encrypt } from '../encryption';
+import type { WalletRepository } from './repository';
+import { SLIP77Factory } from 'slip77';
+import { BIP32Factory } from 'bip32';
 
 const slip77 = SLIP77Factory(ecc);
 const bip32 = BIP32Factory(ecc);
@@ -17,14 +18,14 @@ const initialNextKeyIndexes: Record<NetworkString, { external: number; internal:
 };
 
 export function makeAccountXPub(seed: Buffer, basePath: string) {
-  return bip32
-    .fromSeed(seed)
-    .derivePath(basePath)
-    .neutered()
-    .toBase58();
+  return bip32.fromSeed(seed).derivePath(basePath).neutered().toBase58();
 }
 
-export async function initWalletRepository(walletRepository: WalletRepository, onboardingMnemonic: string, onboardingPassword: string) {
+export async function initWalletRepository(
+  walletRepository: WalletRepository,
+  onboardingMnemonic: string,
+  onboardingPassword: string
+) {
   const encryptedData = await encrypt(onboardingMnemonic, onboardingPassword);
   const seed = await mnemonicToSeed(onboardingMnemonic);
   const masterBlindingKey = slip77.fromSeed(seed).masterKey.toString('hex');

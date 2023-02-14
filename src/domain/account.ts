@@ -18,7 +18,7 @@ import type { AccountDetails, AppRepository, WalletRepository } from '../infrast
 import type { Argument } from '@ionio-lang/ionio';
 import { Contract } from '@ionio-lang/ionio';
 import { h2b } from '../utils';
-import { ZKPInterface } from 'liquidjs-lib/src/confidential';
+import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 
 export const MainAccountLegacy = 'mainAccountLegacy';
 export const MainAccount = 'mainAccount';
@@ -147,7 +147,7 @@ export class Account {
     }
   }
 
-  async getAllAddresses(): Promise<(Address)[]> {
+  async getAllAddresses(): Promise<Address[]> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get all addresses');
     if (!this.name) throw new Error('No name, cannot get all addresses');
     const type = await this.getAccountType();
@@ -157,12 +157,13 @@ export class Account {
     );
 
     switch (type) {
-      case AccountType.P2WPKH:
+      case AccountType.P2WPKH: {
         return Object.entries(scripts).map(([script, details]) => ({
           confidentialAddress: this.createP2WPKHAddress(Buffer.from(script, 'hex')),
           ...details,
         }));
-      case AccountType.Ionio:
+      }
+      case AccountType.Ionio: {
         const zkp = await ZKPLib();
         return Object.entries(scripts).map(([script, details]) => ({
           confidentialAddress: this.createTaprootAddress(Buffer.from(script, 'hex')),
@@ -174,6 +175,7 @@ export class Account {
               })
             : undefined,
         }));
+      }
       default:
         throw new Error('Account type not supported');
     }
@@ -205,7 +207,11 @@ export class Account {
       case AccountType.Ionio:
         if (!artifactWithArgs)
           throw new Error('Artifact with args is required for Ionio account type');
-        [script, scriptDetails] = this.createTaprootScript(publicKeys[0], artifactWithArgs, await ZKPLib());
+        [script, scriptDetails] = this.createTaprootScript(
+          publicKeys[0],
+          artifactWithArgs,
+          await ZKPLib()
+        );
         confidentialAddress = this.createTaprootAddress(Buffer.from(script, 'hex'));
         break;
       default:
@@ -229,17 +235,18 @@ export class Account {
       confidentialAddress,
       ...scriptDetails,
       contract: isIonioScriptDetails(scriptDetails)
-        ? new Contract(
-            scriptDetails.artifact,
-            scriptDetails.params,
-            this.network,
-            { ecc, zkp: await ZKPLib() }
-          )
+        ? new Contract(scriptDetails.artifact, scriptDetails.params, this.network, {
+            ecc,
+            zkp: await ZKPLib(),
+          })
         : undefined,
     };
   }
 
-  async sync(gapLimit = GAP_LIMIT, start?: { internal: number, external: number }): Promise<{
+  async sync(
+    gapLimit = GAP_LIMIT,
+    start?: { internal: number; external: number }
+  ): Promise<{
     next: { internal: number; external: number };
   }> {
     if (!this.chainSource) throw new Error('No chain source, cannot sync');
@@ -253,7 +260,7 @@ export class Account {
     let restoredScripts: Record<string, ScriptDetails> = {};
     let tempRestoredScripts: Record<string, ScriptDetails> = {};
 
-    const indexes = start ?? await this.getNextIndexes();
+    const indexes = start ?? (await this.getNextIndexes());
     const walletChains = [0, 1];
     for (const i of walletChains) {
       tempRestoredScripts = {};
