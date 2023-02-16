@@ -7,11 +7,11 @@ import { SignerService } from '../../domain/signer';
 import type { SpendParameters } from '../../infrastructure/repository';
 import {
   appRepository,
+  taxiRepository,
   useSelectAllAssets,
   useSelectPopupSpendParameters,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { makeSendPset } from '../../utils';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
@@ -19,11 +19,16 @@ import ShellConnectPopup from '../components/shell-connect-popup';
 import { fromSatoshi, formatAddress } from '../utility';
 import { extractErrorMessage } from '../utility/error';
 import PopupWindowProxy from './popupWindowProxy';
+import { PsetBuilder } from '../../utils';
+import type { Pset } from 'liquidjs-lib';
+import { networks } from 'liquidjs-lib';
 
 export interface SpendPopupResponse {
   accepted: boolean;
   signedTxHex?: string;
 }
+
+const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
 
 const ConnectSpend: React.FC = () => {
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -57,11 +62,24 @@ const ConnectSpend: React.FC = () => {
 
   const handlePasswordInput = async (password: string, spendParameters: SpendParameters) => {
     try {
-      const { pset } = await makeSendPset(
-        spendParameters.addressRecipients,
-        spendParameters.dataRecipients,
-        spendParameters.feeAsset
-      );
+      const network = await appRepository.getNetwork();
+      if (!network) throw new Error('Network not found');
+      let pset: Pset;
+
+      if (spendParameters.feeAsset === networks[network].assetHash) {
+        const result = await psetBuilder.createRegularPset(
+          spendParameters.addressRecipients,
+          spendParameters.dataRecipients
+        );
+        pset = result.pset;
+      } else {
+        const result = await psetBuilder.createTaxiPset(
+          spendParameters.feeAsset,
+          spendParameters.addressRecipients,
+          spendParameters.dataRecipients
+        );
+        pset = result.pset;
+      }
       const blinder = new BlinderService(walletRepository, await ZKPLib());
       const blindedPset = await blinder.blindPset(pset);
       const signer = await SignerService.fromPassword(walletRepository, appRepository, password);

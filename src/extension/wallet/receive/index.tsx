@@ -28,9 +28,7 @@ const ReceiveView: React.FC = () => {
       const network = await appRepository.getNetwork();
       if (!network) throw new Error('Network is not set');
       const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-      const accountFactory = await AccountFactory.create(walletRepository, appRepository, [
-        network,
-      ]);
+      const accountFactory = await AccountFactory.create(walletRepository);
       const mainAccount = await accountFactory.make(network, accountName);
       const addr = await mainAccount.getNextAddress(false);
       setConfidentialAddress(addr.confidentialAddress);

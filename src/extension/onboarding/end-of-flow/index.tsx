@@ -47,7 +47,6 @@ const EndOfFlowOnboarding: React.FC = () => {
       const accountsToRestore = [
         new Account({
           name: MainAccount,
-          chainSource,
           masterBlindingKey,
           masterPublicKey: defaultMainAccountXPub,
           walletRepository,
@@ -55,7 +54,6 @@ const EndOfFlowOnboarding: React.FC = () => {
         }),
         new Account({
           name: MainAccountLegacy,
-          chainSource,
           masterBlindingKey,
           masterPublicKey: defaultLegacyMainAccountXPub,
           walletRepository,
@@ -64,7 +62,11 @@ const EndOfFlowOnboarding: React.FC = () => {
       ];
 
       // restore the accounts
-      await Promise.allSettled(accountsToRestore.map((account) => account.sync(GAP_LIMIT)));
+      await Promise.allSettled(
+        accountsToRestore.map((account) =>
+          account.sync(chainSource, GAP_LIMIT, { internal: 0, external: 0 })
+        )
+      );
 
       // set the popup
       await Browser.browserAction.setPopup({ popup: 'popup.html' });

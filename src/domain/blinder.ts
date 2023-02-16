@@ -13,28 +13,8 @@ export class BlinderService {
   }
 
   async blindPset(pset: Pset): Promise<Pset> {
-    // find input index belonging to this account
-    const inputsScripts = pset.inputs
-      .map((input) => input.witnessUtxo?.script)
-      .filter((script) => !!script);
-    const scriptsDetails = await this.walletRepository.getScriptDetails(
-      ...inputsScripts.map((script) => script!.toString('hex'))
-    );
-
-    const inputIndexes = [];
-    for (let i = 0; i < pset.inputs.length; i++) {
-      const input = pset.inputs[i];
-      const script = input.witnessUtxo?.script;
-      if (!script) continue;
-      const scriptDetails = scriptsDetails[script.toString('hex')];
-      if (scriptDetails) {
-        inputIndexes.push(i);
-      }
-    }
-
     const ownedInputs: OwnedInput[] = [];
-    for (const inputIndex of inputIndexes) {
-      const input = pset.inputs[inputIndex];
+    for (const [inputIndex, input] of pset.inputs.entries()) {
       const unblindOutput = await this.walletRepository.getOutputBlindingData(
         Buffer.from(input.previousTxid).reverse().toString('hex'),
         input.previousTxIndex
@@ -51,8 +31,17 @@ export class BlinderService {
     }
 
     const zkpGenerator = new ZKPGenerator(this.zkpLib, ZKPGenerator.WithOwnedInputs(ownedInputs));
-    const outputBlindingArgs = zkpGenerator.blindOutputs(pset, keysGenerator);
 
+    // find the output indexes to blind
+    const outputIndexes = [];
+    for (const [index, output] of pset.outputs.entries()) {
+      if (output.blindingPubkey && output.blinderIndex) {
+        outputIndexes.push(index);
+      }
+    }
+
+    const outputBlindingArgs = zkpGenerator.blindOutputs(pset, keysGenerator, outputIndexes);
+    const inputIndexes = ownedInputs.map((input) => input.index);
     let isLast = true;
     for (const out of pset.outputs) {
       if (out.isFullyBlinded()) continue;

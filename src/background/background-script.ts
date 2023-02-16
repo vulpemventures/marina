@@ -14,7 +14,7 @@ import { AppStorageAPI } from '../infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
-import { TaxiUpdater } from './taxi';
+import { TaxiUpdater } from './taxi-updater';
 import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
 
@@ -34,7 +34,7 @@ const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 
 const updaterService = new UpdaterService(walletRepository, appRepository, assetRepository, zkpLib);
 const subscriberService = new SubscriberService(walletRepository, appRepository);
-const taxiService = new TaxiUpdater(taxiRepository, appRepository);
+const taxiService = new TaxiUpdater(taxiRepository, appRepository, assetRepository);
 
 // at startup, check if the user is logged in
 // if so, start the services

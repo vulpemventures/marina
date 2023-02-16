@@ -10,13 +10,14 @@ import {
   onboardingRepository,
   sendFlowRepository,
 } from '../../../infrastructure/storage/common';
+import { validateMnemonic } from 'bip39';
 
 const WalletRestore: React.FC = () => {
   const history = useHistory();
   const [mnemonic, setMnemonic] = useState<string>('');
 
   const onSubmit = async ({ password }: { password: string }) => {
-    if (mnemonic === '') throw new Error('need a valid mnemonic');
+    if (mnemonic === '' || !validateMnemonic(mnemonic)) throw new Error('need a valid mnemonic');
     await init(appRepository, sendFlowRepository);
     await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic);
     await appRepository.updateStatus({ isMnemonicVerified: true }); // set the mnemonic as verified cause we are in the restore mnemonic flow

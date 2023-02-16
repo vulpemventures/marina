@@ -1,24 +1,17 @@
 import type { Asset, NetworkString } from 'marina-provider';
 import { useEffect, useState } from 'react';
 import Browser from 'webextension-polyfill';
-import { Account } from '../../domain/account';
 import type { UnblindedOutput, TxDetails } from '../../domain/transaction';
 import type { Encrypted } from '../../encryption';
 import { sortAssets } from '../../extension/utility/sort';
-import type { AccountDetails, CreateAccountParameters, SpendParameters } from '../repository';
-import {
-  AppStorageAPI,
-  AppStorageKeys,
-  WebExplorerURLKey,
-  WebsocketURLKey,
-} from './app-repository';
+import type { CreateAccountParameters, SpendParameters } from '../repository';
+import { AppStorageAPI, AppStorageKeys } from './app-repository';
 import { AssetKey, AssetStorageAPI } from './asset-repository';
 import { OnboardingStorageAPI, OnboardingStorageKeys } from './onboarding-repository';
 import { PopupsStorageKeys } from './popups-repository';
 import { SendFlowStorageAPI } from './send-flow-repository';
-import { TaxiAssetsKey, TaxiStorageAPI, TaxiURLKey } from './taxi-repository';
+import { TaxiAssetsKey, TaxiStorageAPI } from './taxi-repository';
 import {
-  AccountKey,
   OutpointBlindingDataKey,
   TxDetailsKey,
   WalletStorageAPI,
@@ -66,63 +59,7 @@ export function makeReactHook<T>(namespace: 'sync' | 'local', key: string): Read
   };
 }
 
-export const useSelectAccount = (name: string): ReadonlyReactHook<Account | undefined> => {
-  const useAccountDetailsHook = makeReactHook<AccountDetails>('local', AccountKey.make(name));
-  return () => {
-    const [account, setAccount] = useState<Account>();
-    const details = useAccountDetailsHook();
-
-    useEffect(() => {
-      (async () => {
-        const network = await appRepository.getNetwork();
-        if (!network) throw new Error(`No network selected`);
-        if (details && details.accountNetworks.includes(network)) {
-          const chainSource = await appRepository.getChainSource(network);
-          if (!chainSource) throw new Error(`No chain source for network ${network}`);
-          const masterBlindingKey = await walletRepository.getMasterBlindingKey();
-          if (!masterBlindingKey) throw new Error(`No master blinding key`);
-
-          const account = new Account({
-            name,
-            chainSource,
-            masterBlindingKey,
-            masterPublicKey: details.masterXPub,
-            network,
-            walletRepository,
-          });
-          setAccount(account);
-        }
-      })().catch((r) => {
-        console.error(`Error while useSelectAccount(${name})`, r);
-        setAccount(undefined);
-      });
-    }, [details]);
-
-    return account;
-  };
-};
-
-export const useSelectAccounts = (
-  ...names: string[]
-): ReadonlyReactHook<Record<string, Account | undefined>> => {
-  return () => {
-    const accounts: Record<string, Account | undefined> = {};
-    for (const name of names) {
-      accounts[name] = useSelectAccount(name)();
-    }
-    return accounts;
-  };
-};
-
 export const useSelectNetwork = makeReactHook<NetworkString>('local', AppStorageKeys.NETWORK);
-export const useSelectIsAuthenticated = makeReactHook<boolean>(
-  'local',
-  AppStorageKeys.AUTHENTICATED
-);
-export const useSelectIsOnboardingCompleted = makeReactHook<boolean>(
-  'local',
-  AppStorageKeys.ONBOARDING_COMPLETED
-);
 export const useSelectEncryptedMnemonic = makeReactHook<Encrypted>(
   'local',
   WalletStorageKey.ENCRYPTED_MNEMONIC
@@ -135,16 +72,6 @@ export const useSelectOnboardingMnemonic = makeReactHook<string>(
   'local',
   OnboardingStorageKeys.ONBOARDING_MNEMONIC
 );
-export const useSelectOnboardingPassword = makeReactHook<string>(
-  'local',
-  OnboardingStorageKeys.ONBOARDING_PASSWORD
-);
-export const useSelectWebsocketURL = (net: NetworkString) =>
-  makeReactHook<string>('local', WebsocketURLKey.make(net));
-export const useSelectWebExplorerURL = (net: NetworkString) =>
-  makeReactHook<string>('local', WebExplorerURLKey.make(net));
-export const useSelectTaxiURL = (net: NetworkString) =>
-  makeReactHook<string>('local', TaxiURLKey.make(net));
 export const useSelectPopupHostname = makeReactHook<string>('local', PopupsStorageKeys.HOSTNAME);
 export const useSelectPopupMessageToSign = makeReactHook<string>(
   'local',
@@ -154,12 +81,10 @@ export const useSelectPopupPsetToSign = makeReactHook<string>(
   'local',
   PopupsStorageKeys.SIGN_TRANSACTION_PSET
 );
-
 export const useSelectPopupSpendParameters = makeReactHook<SpendParameters>(
   'local',
   PopupsStorageKeys.SPEND_PARAMETERS
 );
-
 export const useSelectPopupCreateAccountParameters = makeReactHook<CreateAccountParameters>(
   'local',
   PopupsStorageKeys.CREATE_ACCOUNT_PARAMETERS

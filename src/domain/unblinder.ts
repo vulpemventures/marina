@@ -1,4 +1,3 @@
-import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 import { AssetHash, confidential } from 'liquidjs-lib';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
@@ -12,10 +11,9 @@ import type {
 } from '../infrastructure/repository';
 import type { UnblindingData } from './transaction';
 import * as ecc from 'tiny-secp256k1';
+import type { AssetAxiosResponse } from '../utils';
 
 const slip77 = SLIP77Factory(ecc);
-
-type AssetAxiosResponse = AxiosResponse<{ name?: string; ticker?: string; precision?: number }>;
 
 export interface Unblinder {
   unblind(...outputs: Output[]): Promise<(UnblindingData | Error)[]>;

@@ -24,14 +24,15 @@ const SettingsDeepRestorer: React.FC = () => {
     setIsLoading(true);
     setError('');
     try {
-      const accountsDetails = await walletRepository.getAccountDetails();
-      const factory = await AccountFactory.create(walletRepository, appRepository, [network]);
-      for (const [accountName, details] of Object.entries(accountsDetails)) {
-        if (!details.accountNetworks.includes(network)) continue;
-        if (details.type !== AccountType.P2WPKH) continue; // only P2WPKH are restorable
-        const account = await factory.make(network, accountName);
-        await account.sync(gapLimit, { internal: 0, external: 0 }); // force restore from 0
+      const factory = await AccountFactory.create(walletRepository);
+      const allAccounts = await factory.makeAll(network);
+      const chainSource = await appRepository.getChainSource(network);
+      if (!chainSource) throw new Error('Chain source not found, cannot restore accounts');
+      for (const account of allAccounts) {
+        if ((await account.getAccountType()) !== AccountType.P2WPKH) continue;
+        await account.sync(chainSource, gapLimit, { internal: 0, external: 0 });
       }
+      await chainSource.close();
     } catch (e) {
       console.error(e);
       if (e instanceof Error) setError(e.message);

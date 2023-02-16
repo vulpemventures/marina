@@ -1,4 +1,5 @@
 import type { NetworkString } from 'marina-provider';
+import { AccountType } from 'marina-provider';
 import React, { useState } from 'react';
 import { AccountFactory } from '../../domain/account';
 import {
@@ -24,16 +25,19 @@ const SettingsNetworksView: React.FC = () => {
       if (newNetwork !== network) {
         // switch the selected network
         await appRepository.setNetwork(newNetwork);
-        const factory = await AccountFactory.create(walletRepository, appRepository, [newNetwork]);
-        const allAccounts = await walletRepository.getAccountDetails();
-        for (const name of Object.keys(allAccounts)) {
+        const factory = await AccountFactory.create(walletRepository);
+        const allAccounts = await factory.makeAll(newNetwork);
+        const chainSource = await appRepository.getChainSource(newNetwork);
+        if (!chainSource) throw new Error('Chain source not found, cannot restore accounts');
+        for (const account of allAccounts) {
           try {
-            const account = await factory.make(newNetwork, name);
-            await account.sync();
+            if ((await account.getAccountType()) !== AccountType.P2WPKH) continue; // only sync P2WPKH accounts
+            await account.sync(chainSource, 20);
           } catch (e) {
             console.error(e);
           }
         }
+        await chainSource.close();
       }
     } catch (e) {
       console.error(e);

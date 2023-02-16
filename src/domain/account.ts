@@ -14,7 +14,7 @@ import { AccountType, isIonioScriptDetails } from 'marina-provider';
 import type { Slip77Interface } from 'slip77';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from '../domain/chainsource';
-import type { AccountDetails, AppRepository, WalletRepository } from '../infrastructure/repository';
+import type { AccountDetails, WalletRepository } from '../infrastructure/repository';
 import type { Argument } from '@ionio-lang/ionio';
 import { Contract } from '@ionio-lang/ionio';
 import { h2b } from '../utils';
@@ -37,37 +37,22 @@ type PubKeyWithRelativeDerivationPath = {
 type AccountOpts = {
   masterPublicKey: string;
   masterBlindingKey: string;
-  chainSource: ChainSource;
   walletRepository: WalletRepository;
   network: NetworkString;
   name: string;
 };
 
+// AccountFactory loads the master blinding key and creates account instance from repository data.
 export class AccountFactory {
-  chainSources = new Map<NetworkString, ChainSource>();
-  masterBlindingKey: string | undefined;
+  private constructor(
+    private walletRepository: WalletRepository,
+    private masterBlindingKey: string
+  ) {}
 
-  private constructor(private walletRepository: WalletRepository) {}
-
-  static async create(
-    walletRepository: WalletRepository,
-    appRepository: AppRepository,
-    networks?: NetworkString[]
-  ): Promise<AccountFactory> {
-    const factory = new AccountFactory(walletRepository);
-    for (const net of networks || (['liquid', 'testnet', 'regtest'] as NetworkString[])) {
-      const chainSource = await appRepository.getChainSource(net);
-      if (!chainSource) {
-        console.error('Chain source not found', net);
-        continue;
-      }
-      factory.chainSources.set(net, chainSource);
-    }
-
+  static async create(walletRepository: WalletRepository): Promise<AccountFactory> {
     const masterBlindingKey = await walletRepository.getMasterBlindingKey();
     if (!masterBlindingKey) throw new Error('Master blinding key not found');
-    factory.masterBlindingKey = masterBlindingKey;
-    return factory;
+    return new AccountFactory(walletRepository, masterBlindingKey);
   }
 
   async make(network: NetworkString, accountName: string): Promise<Account> {
@@ -75,22 +60,34 @@ export class AccountFactory {
     if (!details) throw new Error('Account not found');
     if (details.accountNetworks.indexOf(network) === -1)
       throw new Error(`Account ${accountName} does not support network: ${network}`);
-    const chainSource = this.chainSources.get(network);
-    if (!chainSource) throw new Error('Chain source not found');
     return new Account({
       name: accountName,
-      chainSource,
       masterPublicKey: details.masterXPub,
-      masterBlindingKey: this.masterBlindingKey!,
+      masterBlindingKey: this.masterBlindingKey,
       walletRepository: this.walletRepository,
       network,
     });
+  }
+
+  async makeAll(network: NetworkString): Promise<Account[]> {
+    const accounts = await this.walletRepository.getAccountDetails();
+    return Object.entries(accounts)
+      .filter(([_, details]) => details.accountNetworks.indexOf(network) !== -1)
+      .map(
+        ([name, details]) =>
+          new Account({
+            name,
+            masterPublicKey: details.masterXPub,
+            masterBlindingKey: this.masterBlindingKey,
+            walletRepository: this.walletRepository,
+            network,
+          })
+      );
   }
 }
 
 // Account is a readonly way to interact with the account data (transactions, utxos, scripts, etc.)
 export class Account {
-  private chainSource: ChainSource;
   private network: networks.Network;
   private node: BIP32Interface;
   private blindingKeyNode: Slip77Interface;
@@ -103,7 +100,6 @@ export class Account {
   static BASE_DERIVATION_PATH_TESTNET = "m/84'/1'/0'";
 
   constructor({
-    chainSource,
     masterBlindingKey,
     masterPublicKey,
     network,
@@ -111,40 +107,10 @@ export class Account {
     name,
   }: AccountOpts) {
     this.name = name;
-    this.chainSource = chainSource;
     this.network = networks[network];
     this.node = bip32.fromBase58(masterPublicKey);
     this.blindingKeyNode = slip77.fromMasterBlindingKey(masterBlindingKey);
     this.walletRepository = walletRepository;
-  }
-
-  async subscribeAllScripts(): Promise<void> {
-    const scripts = Object.keys(
-      await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name)
-    ).map((b) => Buffer.from(b, 'hex'));
-
-    for (const script of scripts) {
-      await this.chainSource.subscribeScriptStatus(script, async (_: string, __: string | null) => {
-        const history = await this.chainSource.fetchHistories([script]);
-        const historyTxId = history[0].map(({ tx_hash }) => tx_hash);
-        await Promise.all([
-          this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxId),
-          this.walletRepository.updateTxDetails(
-            Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
-          ),
-        ]);
-      });
-    }
-  }
-
-  async unsubscribeAllScripts(): Promise<void> {
-    const scripts = Object.keys(
-      await this.walletRepository.getAccountScripts(this.network.name as NetworkString, this.name)
-    ).map((b) => Buffer.from(b, 'hex'));
-
-    for (const script of scripts) {
-      await this.chainSource.unsubscribeScriptStatus(script);
-    }
   }
 
   async getAllAddresses(): Promise<Address[]> {
@@ -244,13 +210,12 @@ export class Account {
   }
 
   async sync(
+    chainSource: ChainSource,
     gapLimit = GAP_LIMIT,
     start?: { internal: number; external: number }
   ): Promise<{
     next: { internal: number; external: number };
   }> {
-    if (!this.chainSource) throw new Error('No chain source, cannot sync');
-    if (!this.walletRepository) throw new Error('No wallet repository, cannot sync');
     const type = await this.getAccountType();
     if (type !== AccountType.P2WPKH)
       throw new Error('Unsupported sync function for account type: ' + type);
@@ -279,7 +244,7 @@ export class Account {
         );
 
         const scripts = scriptsWithDetails.map(([script]) => h2b(script));
-        const histories = await this.chainSource.fetchHistories(scripts);
+        const histories = await chainSource.fetchHistories(scripts);
 
         for (const [index, history] of histories.entries()) {
           tempRestoredScripts[scriptsWithDetails[index][0]] = scriptsWithDetails[index][1];

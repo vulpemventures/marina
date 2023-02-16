@@ -136,6 +136,7 @@ export interface PopupsRepository {
 }
 
 export interface TaxiRepository {
+  setTaxiURLs(record: Partial<Record<NetworkString, string>>): Promise<void>;
   getTaxiURL(network: NetworkString): Promise<string>;
   setTaxiAssets(network: NetworkString, assets: string[]): Promise<void>;
   getTaxiAssets(network: NetworkString): Promise<(Asset | string)[]>;

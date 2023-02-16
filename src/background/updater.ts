@@ -93,6 +93,8 @@ export class UpdaterService {
               const updateArray: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
               for (const [vout, unblinded] of unblindedResults.entries()) {
                 if (unblinded instanceof Error) {
+                  if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
+                  if (unblinded.message === 'Empty script: fee output') continue;
                   console.error('Error while unblinding', unblinded);
                   continue;
                 }

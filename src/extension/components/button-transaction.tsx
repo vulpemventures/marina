@@ -81,9 +81,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
         amount: transferAmount,
         type: txTypeFromTransfer(transferAmount),
       });
-    })().catch(console.error); // TODO display error in UI
 
-    (async () => {
       if (!txDetails?.height || txDetails.height === -1) {
         setBlockHeader(undefined);
         return;
@@ -96,7 +94,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       await chainSource.close();
     })()
       .catch(console.error)
-      .finally(() => setIsLoading(false)); // TODO display error in UI
+      .finally(() => setIsLoading(false));
   }, [txDetails]);
 
   const handleClick = () => {
@@ -109,10 +107,11 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       return;
     }
     const transaction = Transaction.fromHex(txDetails.hex);
-    const url = await makeURLwithBlinders(transaction);
+    const url = await makeURLwithBlinders(transaction, appRepository, walletRepository);
     await Browser.tabs.create({ url, active: false });
   };
 
+  if (transfer?.amount === 0) return null;
   return (
     <>
       <button

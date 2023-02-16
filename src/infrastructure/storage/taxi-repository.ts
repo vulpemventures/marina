@@ -7,13 +7,30 @@ export const TaxiURLKey = new DynamicStorageKey<[network: NetworkString]>('taxiU
 export const TaxiAssetsKey = new DynamicStorageKey<[network: NetworkString]>('taxiAssets');
 
 export class TaxiStorageAPI implements TaxiRepository {
+  static DEFAULT_TAXI_URLS: Record<NetworkString, string | undefined> = {
+    regtest: 'http://localhost:8000',
+    testnet: 'https://stage-api.liquid.taxi/v1',
+    liquid: 'https://grpc.liquid.taxi/v1',
+  };
+
   constructor(private assetRepository: AssetRepository, private appRepository: AppRepository) {}
+
+  async setTaxiURLs(record: Partial<Record<NetworkString, string>>): Promise<void> {
+    return Browser.storage.local.set(
+      Object.entries(record).reduce<Record<string, string>>((acc, [network, url]) => {
+        if (!url) return acc;
+        acc[TaxiURLKey.make(network as NetworkString)] = url;
+        return acc;
+      }, {})
+    );
+  }
 
   async getTaxiURL(network: NetworkString): Promise<string> {
     const key = TaxiURLKey.make(network);
-    const { [key]: url } = await Browser.storage.local.get(key);
+    let { [key]: url } = await Browser.storage.local.get(key);
     if (!url) {
-      throw new Error(`Taxi URL not found for network ${network}`);
+      url = TaxiStorageAPI.DEFAULT_TAXI_URLS[network];
+      if (!url) throw new Error(`Taxi URL not set for network ${network}`);
     }
     return url;
   }

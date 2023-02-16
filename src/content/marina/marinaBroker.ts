@@ -37,6 +37,7 @@ import {
   AccountFactory,
 } from '../../domain/account';
 import type {
+  AccountID,
   Address,
   AddressRecipient,
   ArtifactWithConstructorArgs,
@@ -54,15 +55,22 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
   private hostname: string;
   private network: NetworkString = 'liquid';
-  private selectedAccount = MainAccount;
+  private selectedAccount: AccountID = MainAccount;
   private walletRepository: WalletRepository;
   private appRepository: AppRepository;
   private assetRepository: AssetRepository;
   private taxiRepository: TaxiRepository;
   private popupsRepository: PopupsRepository;
 
-  static Start(hostname?: string) {
+  static async Start(hostname: string) {
     const broker = new MarinaBroker(hostname);
+    const network = await broker.appRepository.getNetwork();
+    if (network) {
+      broker.network = network;
+      if (network !== 'liquid') {
+        broker.selectedAccount = MainAccountTest;
+      }
+    }
     broker.start();
   }
 
@@ -148,8 +156,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
   private async getSelectedAccount(): Promise<Account> {
     const network = await this.appRepository.getNetwork();
-    if (network === null) throw new Error('network is not set up');
-    const factory = await AccountFactory.create(this.walletRepository, this.appRepository);
+    if (!network) throw new Error('network is not set up');
+    const factory = await AccountFactory.create(this.walletRepository);
     return factory.make(network, this.selectedAccount);
   }
 
@@ -215,7 +223,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const accountNames = this.handleIdsParam(params ? params[0] : undefined);
           const network = await this.appRepository.getNetwork();
           if (network === null) throw new Error('network is not set up');
-          const factory = await AccountFactory.create(this.walletRepository, this.appRepository);
+          const factory = await AccountFactory.create(this.walletRepository);
           const accounts = await Promise.all(
             accountNames.map((name) => factory.make(network, name))
           );

@@ -8,16 +8,21 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility'
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { networks } from 'liquidjs-lib';
-import { computeBalances, makeSendPset } from '../../../utils';
+import { computeBalances, PsetBuilder } from '../../../utils';
 import {
   useSelectNetwork,
   useSelectTaxiAssets,
   useSelectUtxos,
   sendFlowRepository,
   assetRepository,
+  walletRepository,
+  appRepository,
+  taxiRepository,
 } from '../../../infrastructure/storage/common';
 import type { AddressRecipient, Asset } from 'marina-provider';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
+
+const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
@@ -29,18 +34,10 @@ const ChooseFee: React.FC = () => {
   const [selectedFeeAsset, setSelectedFeeAsset] = useState<string>();
   const [assetDetails, setAssetDetails] = useState<Asset>();
   const [unsignedPset, setUnsignedPset] = useState<string>();
-  const [feeStr, setFeeStr] = useState<string>();
+  const [feeAmount, setFeeAmount] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [recipient, setRecipient] = useState<AddressRecipient>();
-
-  useEffect(() => {
-    (async () => {
-      if (!selectedFeeAsset) return;
-      const asset = await assetRepository.getAsset(selectedFeeAsset);
-      setAssetDetails(asset);
-    })().catch(console.error);
-  }, [selectedFeeAsset]);
 
   useEffect(() => {
     (async () => {
@@ -84,7 +81,7 @@ const ChooseFee: React.FC = () => {
     console.error(err);
     setError(extractErrorMessage(err));
     setUnsignedPset(undefined);
-    setFeeStr(undefined);
+    setFeeAmount(undefined);
     setSelectedFeeAsset(undefined);
   };
 
@@ -99,10 +96,21 @@ const ChooseFee: React.FC = () => {
     try {
       setLoading(true);
       setSelectedFeeAsset(assetHash);
-      const { pset, feeAmount } = await makeSendPset([recipient], [], assetHash);
-      setFeeStr(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
-      const psetBase64 = pset.toBase64();
-      setUnsignedPset(psetBase64);
+      const asset = await assetRepository.getAsset(assetHash);
+      setAssetDetails(asset);
+      if (assetHash === networks[network].assetHash) {
+        const { pset, feeAmount } = await psetBuilder.createRegularPset([recipient], []);
+        setFeeAmount(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
+        setUnsignedPset(pset.toBase64());
+      } else {
+        const { pset, feeAmount } = await psetBuilder.createTaxiPset(assetHash, [recipient], []);
+        setFeeAmount(
+          fromSatoshiStr(feeAmount, assetDetails?.precision ?? 8) +
+            ' ' +
+            (assetDetails?.ticker ?? assetHash.substring(0, 4).toUpperCase())
+        );
+        setUnsignedPset(pset.toBase64());
+      }
     } catch (error: any) {
       handleError(error);
     } finally {
@@ -182,7 +190,7 @@ const ChooseFee: React.FC = () => {
         <>
           <div className="flex flex-row items-baseline justify-between mt-12">
             <span className="text-lg font-medium">Fee:</span>
-            <span className="font-regular mr-6 text-base">{feeStr ? feeStr : '...'}</span>
+            <span className="font-regular mr-6 text-base">{feeAmount ? feeAmount : '...'}</span>
           </div>
           {taxiAssets.includes(selectedFeeAsset) && (
             <p className="text-primary mt-3.5 text-xs font-medium text-left">

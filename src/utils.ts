@@ -1,5 +1,16 @@
-import type { Pset, UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
-import { crypto, Creator, Transaction, Updater, address, networks, payments } from 'liquidjs-lib';
+import type { AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
+import {
+  crypto,
+  Creator,
+  Transaction,
+  Updater,
+  address,
+  networks,
+  payments,
+  Pset,
+} from 'liquidjs-lib';
 import type {
   AccountID,
   AddressRecipient,
@@ -11,11 +22,11 @@ import { mnemonicToSeed } from 'bip39';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { signAsync } from 'bitcoinjs-message';
-import type { UnblindedOutput } from './domain/transaction';
-import { appRepository, walletRepository } from './infrastructure/storage/common';
+import type { CoinSelection, UnblindedOutput, UnblindingData } from './domain/transaction';
 import { getScriptType, ScriptType } from 'liquidjs-lib/src/address';
 import { varSliceSize, varuint } from 'liquidjs-lib/src/bufferutils';
 import { AccountFactory, MainAccount, MainAccountLegacy, MainAccountTest } from './domain/account';
+import type { AppRepository, TaxiRepository, WalletRepository } from './infrastructure/repository';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -81,7 +92,11 @@ export function getNetwork(network: NetworkString): networks.Network {
 
 const reverseHex = (hex: string) => Buffer.from(hex, 'hex').reverse().toString('hex');
 
-export async function makeURLwithBlinders(transaction: Transaction) {
+export async function makeURLwithBlinders(
+  transaction: Transaction,
+  appRepository: AppRepository,
+  walletRepository: WalletRepository
+) {
   const webExplorerURL = await appRepository.getWebExplorerURL();
   if (!webExplorerURL) {
     throw new Error('web explorer url not found');
@@ -189,119 +204,146 @@ function estimateVirtualSize(pset: Pset, withFeeOutput: boolean): number {
   return (weight + 3) / 4;
 }
 
-type MakeSendPsetResult = {
+type PsetWithFee = {
   pset: Pset;
   feeAmount: number; // fee amount in satoshi
 };
 
-// create a pset with the given recipients and data recipients
-export async function makeSendPset(
-  recipients: AddressRecipient[],
-  dataRecipients: DataRecipient[],
-  feeAssetHash: string,
-  fromAccounts: AccountID[] = [MainAccount, MainAccountLegacy, MainAccountTest]
-): Promise<MakeSendPsetResult> {
-  const pset = Creator.newPset();
-  let network = await appRepository.getNetwork();
-  if (!network) {
-    network = 'liquid';
-  }
+interface Topup {
+  partial: string;
+  topupId: string;
+}
 
-  const coinSelection = await walletRepository.selectUtxos(
-    network,
-    [...recipients, ...dataRecipients]
-      .filter(({ value }) => value > 0)
-      .map(({ asset, value }) => ({ asset, amount: value })),
-    true,
-    ...fromAccounts
+type RawTopupWithAssetData = {
+  assetHash: string;
+  assetAmount: string;
+  assetSpread: string;
+  expiry: string;
+  inBlindingData: Array<{
+    asset: string;
+    value: string;
+    assetBlinder: string;
+    valueBlinder: string;
+  }>;
+  topup: {
+    topupId: string;
+    partial: string;
+  };
+};
+
+export interface TopupWithAssetReply {
+  assetAmount: number;
+  assetHash: string;
+  assetSpread: number;
+  expiry: number;
+  inBlindingData: Array<UnblindingData>;
+  topup: Topup;
+}
+
+function castTopupData(raw: RawTopupWithAssetData): TopupWithAssetReply {
+  return {
+    assetAmount: Number(raw.assetAmount),
+    assetHash: raw.assetHash,
+    assetSpread: Number(raw.assetSpread),
+    expiry: Number(raw.expiry),
+    inBlindingData: raw.inBlindingData.map((data) => ({
+      asset: data.asset,
+      value: parseInt(data.value, 10),
+      assetBlindingFactor: Buffer.from(data.assetBlinder, 'base64').reverse().toString('hex'),
+      valueBlindingFactor: Buffer.from(data.valueBlinder, 'base64').reverse().toString('hex'),
+    })),
+    topup: {
+      topupId: raw.topup.topupId,
+      partial: raw.topup.partial,
+    },
+  };
+}
+
+async function fetchTaxiTopup(
+  taxiUrl: string,
+  params: { assetHash: string; estimatedTxSize: number; millisatPerByte: number }
+): Promise<TopupWithAssetReply> {
+  const { data } = await axios.post<any, AxiosResponse<RawTopupWithAssetData>>(
+    `${taxiUrl}/asset/topup`,
+    params
   );
+  return castTopupData(data);
+}
 
-  const ins: UpdaterInput[] = [];
-  const outs: UpdaterOutput[] = [];
+export class PsetBuilder {
+  constructor(
+    private walletRepository: WalletRepository,
+    private appRepository: AppRepository,
+    private taxiRepository: TaxiRepository
+  ) {}
 
-  // get the witness utxos from repository
-  const UtxosWitnessUtxos = await Promise.all(
-    coinSelection.utxos.map((utxo) => {
-      return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
-    })
-  );
-
-  ins.push(
-    ...coinSelection.utxos.map((utxo, i) => ({
-      txid: utxo.txID,
-      txIndex: utxo.vout,
-      sighashType: Transaction.SIGHASH_ALL,
-      witnessUtxo: UtxosWitnessUtxos[i],
-    }))
-  );
-
-  // add recipients
-  for (const recipient of recipients) {
-    const updaterOut: UpdaterOutput = {
-      asset: recipient.asset,
-      amount: recipient.value,
-      script: address.toOutputScript(recipient.address, networks[network]),
-    };
-    if (address.isConfidential(recipient.address)) {
-      updaterOut.blinderIndex = 0;
-      updaterOut.blindingPublicKey = address.fromConfidential(recipient.address).blindingKey;
+  async createRegularPset(
+    recipients: AddressRecipient[],
+    dataRecipients: DataRecipient[],
+    fromAccounts: AccountID[] = [MainAccount, MainAccountLegacy, MainAccountTest]
+  ): Promise<PsetWithFee> {
+    const pset = Creator.newPset();
+    const network = await this.appRepository.getNetwork();
+    if (!network) {
+      throw new Error('network not set');
     }
-    outs.push(updaterOut);
-  }
+    const feeAssetHash = networks[network].assetHash;
 
-  // add data (OP_RETURN) recipients
-  for (const dataRecipient of dataRecipients) {
-    const opReturnPayment = payments.embed({ data: [Buffer.from(dataRecipient.data, 'hex')] });
-    const updaterOut: UpdaterOutput = {
-      asset: dataRecipient.asset,
-      amount: dataRecipient.value,
-      script: opReturnPayment.output,
-    };
-    outs.push(updaterOut);
-  }
+    const coinSelection = await this.walletRepository.selectUtxos(
+      network,
+      [...recipients, ...dataRecipients]
+        .filter(({ value }) => value > 0)
+        .map(({ asset, value }) => ({ asset, amount: value })),
+      true,
+      ...fromAccounts
+    );
 
-  const changeOutputsStartIndex = outs.length;
+    const { ins, outs } = await this.createUpdaterInsOuts(
+      coinSelection,
+      recipients,
+      dataRecipients
+    );
+    const changeOutputsStartIndex = outs.length;
 
-  // add the changes outputs
-  if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
-    const accountFactory = await AccountFactory.create(walletRepository, appRepository, [network]);
-    const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-    const mainAccount = await accountFactory.make(network, accountName);
+    // add the changes outputs
+    if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
+      const accountFactory = await AccountFactory.create(this.walletRepository);
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const mainAccount = await accountFactory.make(network, accountName);
 
-    for (const { asset, amount } of coinSelection.changeOutputs) {
-      const { confidentialAddress: changeAddress } = await mainAccount.getNextAddress(true);
-      if (!changeAddress) {
-        throw new Error('change address not found');
+      for (const { asset, amount } of coinSelection.changeOutputs) {
+        const { confidentialAddress: changeAddress } = await mainAccount.getNextAddress(true);
+        if (!changeAddress) {
+          throw new Error('change address not found');
+        }
+
+        outs.push({
+          asset,
+          amount,
+          script: address.toOutputScript(changeAddress, networks[network]),
+          blinderIndex: 0,
+          blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
+        });
       }
-
-      outs.push({
-        asset,
-        amount,
-        script: address.toOutputScript(changeAddress, networks[network]),
-        blinderIndex: 0,
-        blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
-      });
     }
-  }
 
-  const chainSource = await appRepository.getChainSource(network);
-  if (!chainSource) {
-    throw new Error('chain source not found, cannot estimate fee');
-  }
+    const chainSource = await this.appRepository.getChainSource(network);
+    if (!chainSource) {
+      throw new Error('chain source not found, cannot estimate fee');
+    }
+    const updater = new Updater(pset).addInputs(ins).addOutputs(outs);
+    // we add 50% to the min relay fee in order to be sure that the transaction will be accepted by the network
+    // some inputs and outputs may be added later to pay the fees
+    const relayFee = (await chainSource.getRelayFee()) * 1.5;
+    await chainSource.close();
 
-  const updater = new Updater(pset).addInputs(ins).addOutputs(outs);
+    const sats1000Bytes = relayFee * 10 ** 8;
+    const estimatedSize = estimateVirtualSize(updater.pset, true);
+    let feeAmount = Math.ceil(estimatedSize * (sats1000Bytes / 1000));
 
-  // we add 50% to the min relay fee in order to be sure that the transaction will be accepted by the network
-  // some inputs and outputs may be added later to pay the fees
-  const relayFee = (await chainSource.getRelayFee()) * 1.5;
-  const sats1000Bytes = relayFee * 10 ** 8;
-  const estimatedSize = estimateVirtualSize(updater.pset, true);
-  let feeAmount = Math.ceil(estimatedSize * (sats1000Bytes / 1000));
+    const newIns = [];
+    const newOuts = [];
 
-  const newIns = [];
-  const newOuts = [];
-
-  if (feeAssetHash === networks[network].assetHash) {
     // check if one of the change outputs can cover the fees
     const onlyChangeOuts = outs.slice(changeOutputsStartIndex);
     const lbtcChangeOutputIndex = onlyChangeOuts.findIndex(
@@ -319,7 +361,7 @@ export async function makeSendPset(
       ]);
     } else {
       // reselect
-      const newCoinSelection = await walletRepository.selectUtxos(
+      const newCoinSelection = await this.walletRepository.selectUtxos(
         network,
         [{ asset: networks[network].assetHash, amount: feeAmount }],
         true,
@@ -328,7 +370,7 @@ export async function makeSendPset(
 
       const newWitnessUtxos = await Promise.all(
         newCoinSelection.utxos.map((utxo) => {
-          return walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+          return this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
         })
       );
 
@@ -342,9 +384,7 @@ export async function makeSendPset(
       );
 
       if (newCoinSelection.changeOutputs && newCoinSelection.changeOutputs.length > 0) {
-        const accountFactory = await AccountFactory.create(walletRepository, appRepository, [
-          network,
-        ]);
+        const accountFactory = await AccountFactory.create(this.walletRepository);
         const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
         const mainAccount = await accountFactory.make(network, accountName);
         const { confidentialAddress: changeAddress } = await mainAccount.getNextAddress(true);
@@ -390,15 +430,173 @@ export async function makeSendPset(
         ]);
       }
     }
-    // taxi fee
-  } else {
-    throw new Error('taxi topup not supported');
+
+    return {
+      pset: updater.pset,
+      feeAmount,
+    };
   }
 
-  return {
-    pset: updater.pset,
-    feeAmount,
-  };
+  async createTaxiPset(
+    taxiAsset: string,
+    recipients: AddressRecipient[],
+    dataRecipients: DataRecipient[],
+    fromAccounts: AccountID[] = [MainAccount, MainAccountLegacy, MainAccountTest]
+  ): Promise<PsetWithFee> {
+    const network = await this.appRepository.getNetwork();
+    if (!network) throw new Error('network not found');
+    const taxiURL = await this.taxiRepository.getTaxiURL(network);
+
+    // first coin select in order to estimate the tx size
+    const firstCoinSelection = await this.walletRepository.selectUtxos(
+      network,
+      [...recipients, ...dataRecipients]
+        .filter(({ value }) => value > 0)
+        .map(({ asset, value }) => ({
+          asset,
+          amount: value,
+        })),
+      false, // DO NOT lock
+      ...fromAccounts
+    );
+
+    const updaterData = await this.createUpdaterInsOuts(
+      firstCoinSelection,
+      recipients,
+      dataRecipients
+    );
+    const psetForEstimation = new Updater(Creator.newPset({}))
+      .addInputs(updaterData.ins)
+      .addOutputs(updaterData.outs).pset;
+    const size = estimateVirtualSize(psetForEstimation, true);
+    let feeRate = 120;
+    const chainSource = await this.appRepository.getChainSource(network);
+    if (chainSource) {
+      feeRate = await chainSource.getRelayFee();
+      await chainSource.close();
+    }
+
+    const { topup, assetAmount, inBlindingData } = await fetchTaxiTopup(taxiURL, {
+      assetHash: taxiAsset,
+      estimatedTxSize: Math.ceil(size),
+      millisatPerByte: feeRate * 10 ** 8,
+    });
+    if (!topup) throw new Error('taxi topup not found');
+
+    const pset = Pset.fromBase64(topup.partial);
+    // we'll need this to persist the taxi blinding data in wallet repository
+    const outpointsToBlindingData: [
+      {
+        txID: string;
+        vout: number;
+      },
+      UnblindingData
+    ][] = [];
+    for (const [index, input] of pset.inputs.entries()) {
+      outpointsToBlindingData.push([
+        {
+          txID: Buffer.from(input.previousTxid).reverse().toString('hex'),
+          vout: input.previousTxIndex,
+        },
+        inBlindingData[index],
+      ]);
+    }
+
+    const coinSelection = await this.walletRepository.selectUtxos(
+      network,
+      [...recipients, ...dataRecipients, { asset: taxiAsset, value: assetAmount }]
+        .filter(({ value }) => value > 0)
+        .map(({ asset, value }) => ({ asset, amount: value })),
+      true,
+      ...fromAccounts
+    );
+
+    const { ins, outs } = await this.createUpdaterInsOuts(
+      coinSelection,
+      recipients,
+      dataRecipients
+    );
+
+    if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
+      const accountFactory = await AccountFactory.create(this.walletRepository);
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const mainAccount = await accountFactory.make(network, accountName);
+      for (const changeOutput of coinSelection.changeOutputs) {
+        const { confidentialAddress: changeAddress } = await mainAccount.getNextAddress(true);
+        if (!changeAddress) {
+          throw new Error('change address not found');
+        }
+        outs.push({
+          asset: changeOutput.asset,
+          amount: changeOutput.amount,
+          script: address.toOutputScript(changeAddress, networks[network]),
+          blinderIndex: 0,
+          blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
+        });
+      }
+    }
+
+    const updater = new Updater(pset);
+    updater.addInputs(ins).addOutputs(outs);
+
+    // store the blinding data of the taxi inputs
+    await this.walletRepository.updateOutpointBlindingData(outpointsToBlindingData);
+
+    console.log(pset);
+    return { pset: updater.pset, feeAmount: assetAmount };
+  }
+
+  private async createUpdaterInsOuts(
+    coinSelection: CoinSelection,
+    recipients: AddressRecipient[],
+    dataRecipients: DataRecipient[]
+  ) {
+    const ins: UpdaterInput[] = [];
+    const outs: UpdaterOutput[] = [];
+
+    // get the witness utxos from repository
+    const utxosWitnessUtxos = await Promise.all(
+      coinSelection.utxos.map((utxo) => {
+        return this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+      })
+    );
+
+    ins.push(
+      ...coinSelection.utxos.map((utxo, i) => ({
+        txid: utxo.txID,
+        txIndex: utxo.vout,
+        sighashType: Transaction.SIGHASH_ALL,
+        witnessUtxo: utxosWitnessUtxos[i],
+      }))
+    );
+
+    // add recipients
+    for (const recipient of recipients) {
+      const updaterOut: UpdaterOutput = {
+        asset: recipient.asset,
+        amount: recipient.value,
+        script: address.toOutputScript(recipient.address),
+      };
+      if (address.isConfidential(recipient.address)) {
+        updaterOut.blinderIndex = 0;
+        updaterOut.blindingPublicKey = address.fromConfidential(recipient.address).blindingKey;
+      }
+      outs.push(updaterOut);
+    }
+
+    // add data (OP_RETURN) recipients
+    for (const dataRecipient of dataRecipients) {
+      const opReturnPayment = payments.embed({ data: [Buffer.from(dataRecipient.data, 'hex')] });
+      const updaterOut: UpdaterOutput = {
+        asset: dataRecipient.asset,
+        amount: dataRecipient.value,
+        script: opReturnPayment.output,
+      };
+      outs.push(updaterOut);
+    }
+
+    return { ins, outs };
+  }
 }
 
 export function h2b(hex: string): Buffer {
@@ -415,3 +613,9 @@ export function SLIP13(namespace: string): string {
   const D = hash128.readUint32LE(12) || 0x80000000;
   return `m/${A}/${B}/${C}/${D}`;
 }
+
+export type AssetAxiosResponse = AxiosResponse<{
+  name?: string;
+  ticker?: string;
+  precision?: number;
+}>;

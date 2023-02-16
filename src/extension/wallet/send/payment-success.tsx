@@ -7,6 +7,7 @@ import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Transaction } from 'liquidjs-lib';
 import { makeURLwithBlinders } from '../../../utils';
+import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
 
 interface LocationState {
   txhex: string;
@@ -22,7 +23,7 @@ const PaymentSuccessView: React.FC = () => {
 
   const handleOpenExplorer = async () => {
     const tx = Transaction.fromHex(state.txhex);
-    const url = await makeURLwithBlinders(tx);
+    const url = await makeURLwithBlinders(tx, appRepository, walletRepository);
     await browser.tabs.create({
       url,
       active: false,

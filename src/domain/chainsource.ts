@@ -80,7 +80,11 @@ export class WsElectrumChainSource implements ChainSource {
   }
 
   async close() {
-    await this.ws.close('close');
+    try {
+      await this.ws.close('close');
+    } catch (e) {
+      console.debug('error closing ws:', e);
+    }
   }
 }
 

@@ -8,8 +8,7 @@ startContentScript();
 function startContentScript() {
   if (doctypeCheck() && suffixCheck() && documentElementCheck()) {
     const currentHostname = window.location.hostname;
-    MarinaBroker.Start(currentHostname);
-
+    MarinaBroker.Start(currentHostname).catch(console.error);
     injectScript(browser.runtime.getURL('inject-script.js'));
   }
 }

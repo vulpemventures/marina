@@ -23,7 +23,7 @@ import { AppStorageAPI } from '../src/infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../src/infrastructure/storage/asset-repository';
 import { WalletStorageAPI } from '../src/infrastructure/storage/wallet-repository';
 import { initWalletRepository, makeAccountXPub } from '../src/infrastructure/utils';
-import { computeBalances, makeSendPset, SLIP13 } from '../src/utils';
+import { computeBalances, PsetBuilder, SLIP13 } from '../src/utils';
 import { faucet, sleep } from './_regtest';
 import captchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
 import type { Artifact } from '@ionio-lang/ionio';
@@ -32,6 +32,7 @@ import {
   replaceArtifactConstructorWithArguments,
   templateString,
 } from '@ionio-lang/ionio';
+import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
 
 // we need this to mock the browser.storage.local calls in repositories
 jest.mock('webextension-polyfill');
@@ -41,6 +42,8 @@ const PASSWORD = 'PASSWORD';
 const appRepository = new AppStorageAPI();
 const walletRepository = new WalletStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
+const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
+const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
 
 let factory: AccountFactory;
 let mnemonic: string;
@@ -57,11 +60,7 @@ describe('Application Layer', () => {
       regtest: NigiriDefaultExplorerURLs.websocketExplorerURL,
       testnet: BlockstreamTestnetExplorerURLs.websocketExplorerURL,
     });
-    factory = await AccountFactory.create(walletRepository, appRepository, [
-      'liquid',
-      'regtest',
-      'testnet',
-    ]);
+    factory = await AccountFactory.create(walletRepository);
   });
 
   describe('Account', () => {
@@ -138,9 +137,11 @@ describe('Application Layer', () => {
           masterXPub,
         });
         const account = await factory.make('regtest', accountName);
-        await expect(account.sync()).rejects.toThrowError(
+        const chainSource = await appRepository.getChainSource('regtest');
+        await expect(account.sync(chainSource!)).rejects.toThrowError(
           'Unsupported sync function for account type: ionio'
         );
+        await chainSource?.close();
       });
 
       test('should restore an account with transactions (and unblind utxos via UpdaterService running in background)', async () => {
@@ -196,7 +197,9 @@ describe('Application Layer', () => {
         expect(accountDetails[randomAccountName].nextKeyIndexes['regtest'].external).toEqual(0);
         expect(accountDetails[randomAccountName].nextKeyIndexes['regtest'].internal).toEqual(0);
         account = await factory.make('regtest', randomAccountName);
-        const res = await account.sync(20);
+        const chainSource = await appRepository.getChainSource('regtest');
+        const res = await account.sync(chainSource!, 20);
+        await chainSource?.close();
         await updater.waitForProcessing();
         expect(res.next.external).toEqual(20);
         expect(res.next.internal).toEqual(3);
@@ -287,7 +290,9 @@ describe('Application Layer', () => {
       });
       await faucet(captchaAddress.confidentialAddress, 1);
       await sleep(5000); // wait for the txs to be confirmed
-      await account.sync(20, { internal: 0, external: 0 });
+      const chainSource = await appRepository.getChainSource('regtest');
+      await account.sync(chainSource!, 20, { internal: 0, external: 0 });
+      await chainSource?.close();
       await updater.stop();
       await subscriber.stop();
     }, 20_000);
@@ -296,7 +301,7 @@ describe('Application Layer', () => {
       const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
       const blinder = new BlinderService(walletRepository, zkpLib);
       const signer = await SignerService.fromPassword(walletRepository, appRepository, PASSWORD);
-      const { pset } = await makeSendPset(
+      const { pset } = await psetBuilder.createRegularPset(
         [
           {
             address:
@@ -306,7 +311,6 @@ describe('Application Layer', () => {
           },
         ],
         [],
-        networks.regtest.assetHash,
         [accountName]
       );
 
@@ -316,8 +320,9 @@ describe('Application Layer', () => {
       expect(hex).toBeTruthy();
       const transaction = Transaction.fromHex(hex);
       expect(transaction.ins).toHaveLength(2);
-      const chainSource = factory.chainSources.get('regtest');
+      const chainSource = await appRepository.getChainSource('regtest');
       const txID = await chainSource?.broadcastTransaction(hex);
+      await chainSource?.close();
       expect(txID).toEqual(transaction.getId());
     }, 10_000);
 
@@ -363,15 +368,11 @@ describe('Application Layer', () => {
         const signed = await tx.unlock();
         const transaction = Extractor.extract(signed.pset);
         const hex = transaction.toHex();
-        const txID = await factory.chainSources.get('regtest')?.broadcastTransaction(hex);
+        const chainSource = await appRepository.getChainSource('regtest');
+        const txID = await chainSource?.broadcastTransaction(hex);
+        await chainSource?.close();
         expect(txID).toEqual(transaction.getId());
       }, 12_000);
     });
-  });
-
-  afterAll(async () => {
-    for (const source of factory.chainSources.values()) {
-      await source.close();
-    }
   });
 });
