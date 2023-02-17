@@ -8,7 +8,7 @@
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts,.tsx src test",
     "lint:fix": "eslint --fix --ext .ts,.tsx src test",
-    "test": "NETWORK=regtest jest --no-cache --force-exit test/**.spec.ts",
+    "test": "NETWORK=regtest jest --no-cache test/**.spec.ts",
     "prettier": "prettier --write src test",
     "prettier:check": "prettier --check src test",
     "web-ext:build": "web-ext build --source-dir dist --overwrite-dest",

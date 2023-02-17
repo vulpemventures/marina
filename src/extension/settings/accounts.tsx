@@ -4,12 +4,23 @@ import InputIcon from '../components/input-icon';
 import { useEffect, useState } from 'react';
 import { walletRepository } from '../../infrastructure/storage/common';
 import type { AccountDetails } from '../../infrastructure/repository';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../domain/account';
+import type { RestorationJSONDictionary } from '../../domain/account';
+import {
+  AccountFactory,
+  MainAccount,
+  MainAccountLegacy,
+  MainAccountTest,
+} from '../../domain/account';
+import Button from '../components/button';
+import { AccountType } from 'marina-provider';
+import { extractErrorMessage } from '../utility/error';
 
 const SettingsAccounts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [accounts, setAccounts] = useState<Record<string, AccountDetails>>({});
   const [accountsList, setAccountsList] = useState<string[]>([]);
+
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     (async () => {
@@ -30,6 +41,40 @@ const SettingsAccounts: React.FC = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = event.target.value.toLowerCase().replace('-', '');
     setSearchTerm(searchTerm);
+  };
+
+  const downloadIonioRestorationFile = async () => {
+    try {
+      setError(undefined);
+      const ionioAccounts = Object.entries(accounts).filter(
+        ([_, a]) => a.type === AccountType.Ionio
+      );
+      if (ionioAccounts.length === 0) throw new Error('no Ionio accounts found');
+      const factory = await AccountFactory.create(walletRepository);
+      const restoration: RestorationJSONDictionary = {
+        liquid: [],
+        testnet: [],
+        regtest: [],
+      };
+
+      for (const [name, details] of ionioAccounts) {
+        for (const net of details.accountNetworks) {
+          const account = await factory.make(net, name);
+          const restorationJSON = await account.restorationJSON();
+          restoration[net].push(restorationJSON);
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(restoration)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'marina-ionio-restoration.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    }
   };
 
   return (
@@ -68,6 +113,12 @@ const SettingsAccounts: React.FC = () => {
               </div>
             ))}
         </ButtonList>
+      </div>
+      <div className="mt-1">
+        <Button textBase={true} onClick={downloadIonioRestorationFile}>
+          Download restoration JSON
+        </Button>
+        {error && <div className="text-red h-5 m-2 font-medium">{error}</div>}
       </div>
     </ShellPopUp>
   );

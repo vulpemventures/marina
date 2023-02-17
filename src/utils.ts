@@ -541,8 +541,6 @@ export class PsetBuilder {
 
     // store the blinding data of the taxi inputs
     await this.walletRepository.updateOutpointBlindingData(outpointsToBlindingData);
-
-    console.log(pset);
     return { pset: updater.pset, feeAmount: assetAmount };
   }
 

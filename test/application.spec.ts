@@ -138,6 +138,7 @@ describe('Application Layer', () => {
         });
         const account = await factory.make('regtest', accountName);
         const chainSource = await appRepository.getChainSource('regtest');
+        await sleep(2000);
         await expect(account.sync(chainSource!)).rejects.toThrowError(
           'Unsupported sync function for account type: ionio'
         );
@@ -326,7 +327,7 @@ describe('Application Layer', () => {
       expect(txID).toEqual(transaction.getId());
     }, 10_000);
 
-    describe('Ionio contract', () => {
+    describe('Ionio contract account', () => {
       it('transfer_with_captcha.ionio contract', async () => {
         const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
         const signer = await SignerService.fromPassword(walletRepository, appRepository, PASSWORD);
@@ -373,6 +374,38 @@ describe('Application Layer', () => {
         await chainSource?.close();
         expect(txID).toEqual(transaction.getId());
       }, 12_000);
+
+      it('should be able to restore using a restorationJSON', async () => {
+        let ionioAccount = await factory.make('regtest', ionioAccountName);
+        const restorationFile = await ionioAccount.restorationJSON();
+        // delete the script details to simulate a "delete account" scenario
+        await walletRepository.updateAccountDetails(ionioAccountName, {
+          nextKeyIndexes: {
+            liquid: { external: 0, internal: 0 },
+            testnet: { external: 0, internal: 0 },
+            regtest: { external: 0, internal: 0 },
+          },
+        });
+        const { [ionioAccountName]: details } = await walletRepository.getAccountDetails(
+          ionioAccountName
+        );
+        expect(details.nextKeyIndexes.regtest.external).toEqual(0);
+        expect(details.nextKeyIndexes.regtest.internal).toEqual(0);
+
+        ionioAccount = await factory.make('regtest', ionioAccountName);
+        const chainSource = await appRepository.getChainSource('regtest');
+        await ionioAccount.restoreFromJSON(chainSource!, restorationFile);
+        await chainSource?.close();
+
+        const { [ionioAccountName]: accountDetails } = await walletRepository.getAccountDetails(
+          ionioAccountName
+        );
+        expect(accountDetails.nextKeyIndexes.regtest.external).toEqual(1);
+        expect(accountDetails.nextKeyIndexes.regtest.internal).toEqual(0);
+
+        const addresses = await ionioAccount.getAllAddresses();
+        expect(addresses[0].confidentialAddress).toEqual(captchaAddress.confidentialAddress);
+      }, 10_000);
     });
   });
 });

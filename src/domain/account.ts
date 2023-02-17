@@ -15,7 +15,7 @@ import type { Slip77Interface } from 'slip77';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from '../domain/chainsource';
 import type { AccountDetails, WalletRepository } from '../infrastructure/repository';
-import type { Argument } from '@ionio-lang/ionio';
+import type { Argument, Artifact } from '@ionio-lang/ionio';
 import { Contract } from '@ionio-lang/ionio';
 import { h2b } from '../utils';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
@@ -40,6 +40,18 @@ type AccountOpts = {
   walletRepository: WalletRepository;
   network: NetworkString;
   name: string;
+};
+
+type contractName = string;
+
+export type RestorationJSON = {
+  accountName: string;
+  artifacts: Record<contractName, Artifact>;
+  pathToArguments: Record<string, [contractName, Argument[]]>;
+};
+
+export type RestorationJSONDictionary = {
+  [network: string]: RestorationJSON[];
 };
 
 // AccountFactory loads the master blinding key and creates account instance from repository data.
@@ -293,6 +305,88 @@ export class Account {
     };
   }
 
+  async restoreFromJSON(chainSource: ChainSource, json: RestorationJSON): Promise<void> {
+    const restoredScripts: Record<string, ScriptDetails> = {};
+    const indexes = { internal: 0, external: 0 };
+
+    const zkp = await ZKPLib();
+    for (const [scriptRelativePath, [contractName, args]] of Object.entries(json.pathToArguments)) {
+      const splittedPath = scriptRelativePath.split('/');
+      const index = parseInt(splittedPath[splittedPath.length - 1]);
+      const isInternal = splittedPath[splittedPath.length - 2] === '1';
+      const pubKeyWithPath = this.deriveBatchPublicKeys(index, index + 1, isInternal)[0];
+      const artifact = json.artifacts[contractName];
+      const argsByName = artifact.constructorInputs.reduce((acc, input, index) => {
+        if (input.name === this.name) return acc;
+        acc[input.name] = args[index];
+        return acc;
+      }, {} as Record<string, Argument>);
+      const [script, scriptDetails] = this.createTaprootScript(
+        pubKeyWithPath,
+        { artifact: json.artifacts[contractName], args: argsByName },
+        zkp
+      );
+      restoredScripts[script] = scriptDetails;
+      if (isInternal) indexes.internal = Math.max(indexes.internal, index + 1);
+      else indexes.external = Math.max(indexes.external, index + 1);
+    }
+
+    const historyTxsId: Set<string> = new Set();
+    const txidHeight: Map<string, number | undefined> = new Map();
+    const histories = await chainSource.fetchHistories(Object.keys(restoredScripts).map(h2b));
+
+    for (const history of histories.values()) {
+      if (history.length > 0) {
+        // update the history set
+        for (const { tx_hash, height } of history) {
+          historyTxsId.add(tx_hash);
+          txidHeight.set(tx_hash, height);
+        }
+      }
+    }
+
+    await Promise.allSettled([
+      this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxsId),
+      this.walletRepository.updateAccountKeyIndex(
+        this.name,
+        this.network.name as NetworkString,
+        indexes
+      ),
+      this.walletRepository.updateTxDetails(
+        Object.fromEntries(
+          Array.from(historyTxsId).map((txid) => [txid, { height: txidHeight.get(txid) }])
+        )
+      ),
+      this.walletRepository.updateScriptDetails(restoredScripts),
+    ]);
+  }
+
+  async restorationJSON(): Promise<RestorationJSON> {
+    if ((await this.getAccountType()) !== AccountType.Ionio)
+      throw new Error('Account is not Ionio type, cannot export restoration JSON');
+    const addresses = await this.getAllAddresses();
+    const artifactByName: Record<contractName, Artifact> = {};
+    const derivationPathToArgs: Record<string, [contractName, Argument[]]> = {};
+    for (const address of addresses) {
+      if (address.contract) {
+        if (isIonioScriptDetails(address) && address.derivationPath) {
+          if (!artifactByName[address.artifact.contractName]) {
+            artifactByName[address.artifact.contractName] = address.artifact;
+          }
+          derivationPathToArgs[address.derivationPath] = [
+            address.artifact.contractName,
+            address.params,
+          ];
+        }
+      }
+    }
+    return {
+      accountName: this.name,
+      artifacts: artifactByName,
+      pathToArguments: derivationPathToArgs,
+    };
+  }
+
   private deriveBlindingKey(script: Buffer): { publicKey: Buffer; privateKey: Buffer } {
     if (!this.blindingKeyNode)
       throw new Error('No blinding key node, Account cannot derive blinding key');
@@ -339,8 +433,8 @@ export class Account {
     const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
       this.name
     );
-    this._cacheAccountType = accountDetails.type;
     if (!accountDetails) throw new Error('Account details not found');
+    this._cacheAccountType = accountDetails.type;
     return accountDetails;
   }
 
@@ -381,6 +475,7 @@ export class Account {
     return address;
   }
 
+  // segwit v1 confidential address based on Ionio artifact
   private createTaprootScript(
     { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath,
     { artifact, args }: ArtifactWithConstructorArgs,

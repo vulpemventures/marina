@@ -30,7 +30,7 @@ export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
       <textarea
         id="mnemonic"
         name="mnemonic"
-        rows={5}
+        rows={4}
         className={cx(
           'border-2 focus:ring-primary focus:border-primary sm:text-sm placeholder-grayLight block w-3/5 rounded-md shadow-sm',
           {

@@ -18,6 +18,7 @@ import type {
 } from '../domain/transaction';
 import Browser from 'webextension-polyfill';
 import type { Encrypted } from '../encryption';
+import type { RestorationJSONDictionary } from '../domain/account';
 
 export type AccountDetails = AccountInfo & {
   nextKeyIndexes: Record<NetworkString, { internal: number; external: number }>;
@@ -85,7 +86,7 @@ export interface WalletRepository {
   getMasterBlindingKey(): Promise<string | undefined>;
   setSeedData(encryptedMnemonic: Encrypted, masterBlindingKey: string): Promise<void>;
 
-  // account, if no names, returns all accounts
+  // if no names, returns all accounts
   getAccountDetails(...names: string[]): Promise<Record<string, AccountDetails>>;
   getAccountScripts(
     network: NetworkString,
@@ -147,6 +148,8 @@ export interface OnboardingRepository {
   getOnboardingMnemonic(): Promise<string | undefined>;
   getOnboardingPassword(): Promise<string | undefined>;
   setOnboardingPasswordAndMnemonic(password: string, mnemonic: string): Promise<void>;
+  setRestorationJSONDictionary(json: RestorationJSONDictionary): Promise<void>;
+  getRestorationJSONDictionary(): Promise<RestorationJSONDictionary | undefined>;
   setIsFromPopupFlow(mnemonicToBackup: string): Promise<void>;
   flush(): Promise<void>; // flush all data
 }
