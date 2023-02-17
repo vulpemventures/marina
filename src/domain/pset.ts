@@ -1,17 +1,7 @@
 import type { AxiosResponse } from 'axios';
 import axios from 'axios';
-import type {
-  UpdaterInput,
-  UpdaterOutput} from 'liquidjs-lib';
-import {
-  Pset,
-  payments,
-  Creator,
-  networks,
-  address,
-  Updater,
-  Transaction
-} from 'liquidjs-lib';
+import type { UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
+import { Pset, payments, Creator, networks, address, Updater, Transaction } from 'liquidjs-lib';
 import { ScriptType, getScriptType } from 'liquidjs-lib/src/address';
 import { varuint, varSliceSize } from 'liquidjs-lib/src/bufferutils';
 import type { UnblindingData, AddressRecipient, DataRecipient, AccountID } from 'marina-provider';

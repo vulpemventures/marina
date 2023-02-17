@@ -6,22 +6,20 @@ import type {
   Asset,
   DataRecipient,
   NetworkString,
-  ScriptDetails} from 'marina-provider';
-import {
-  AccountType
+  ScriptDetails,
 } from 'marina-provider';
+import { AccountType } from 'marina-provider';
 import type { UnblindingData, CoinSelection, TxDetails, UnblindedOutput } from './transaction';
 import Browser from 'webextension-polyfill';
 import type { Encrypted } from './encryption';
 import { encrypt } from './encryption';
-import type {
-  RestorationJSONDictionary} from '../application/account';
+import type { RestorationJSONDictionary } from '../application/account';
 import {
   Account,
   MainAccount,
   MainAccountLegacy,
   MainAccountTest,
-  makeAccountXPub
+  makeAccountXPub,
 } from '../application/account';
 import { mnemonicToSeed } from 'bip39';
 import { SLIP77Factory } from 'slip77';

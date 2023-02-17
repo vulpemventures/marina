@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import type { TxDetails } from '../../domain/transaction';
-import { makeURLwithBlinders , TxType } from '../../domain/transaction';
+import { makeURLwithBlinders, TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
 import TxIcon from './txIcon';
 import moment from 'moment';
