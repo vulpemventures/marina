@@ -50,9 +50,7 @@ const iv = 'f341557fcf9b9286';
 export async function encrypt(payload: string, password: string): Promise<Encrypted> {
   const options = defaultScryptOptions();
   const passwordDerived = await passwordToKey(password, options);
-  const hash = crypto.createHash('sha256').update(passwordDerived);
-  const secret = hash.digest();
-  const key = crypto.createCipheriv('aes-256-cbc', secret, iv);
+  const key = crypto.createCipheriv('aes-256-cbc', passwordDerived, iv);
   let encrypted = key.update(payload, 'utf8', 'base64');
   encrypted += key.final('base64');
   return {
@@ -69,9 +67,7 @@ export async function encrypt(payload: string, password: string): Promise<Encryp
 export async function decrypt(encryptedData: Encrypted, password: string): Promise<string> {
   try {
     const passwordDerived = await passwordToKey(password, encryptedData.options);
-    const hash = crypto.createHash('sha256').update(passwordDerived);
-    const secret = hash.digest();
-    const key = crypto.createDecipheriv('aes-256-cbc', secret, iv);
+    const key = crypto.createDecipheriv('aes-256-cbc', passwordDerived, iv);
     let decrypted = key.update(encryptedData.data, 'base64', 'utf8');
     decrypted += key.final('utf8');
     return decrypted;
