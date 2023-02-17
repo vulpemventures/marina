@@ -1,6 +1,6 @@
 import Browser from 'webextension-polyfill';
-import type { SendFlowRepository } from '../repository';
-import { SendFlowStep } from '../repository';
+import type { SendFlowRepository } from '../../domain/repository';
+import { SendFlowStep } from '../../domain/repository';
 
 type Data = {
   pset?: string;

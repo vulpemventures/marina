@@ -1,7 +1,7 @@
 import * as ecc from 'tiny-secp256k1';
 import type { OwnedInput } from 'liquidjs-lib';
 import { AssetHash, Blinder, Pset, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
-import type { WalletRepository } from '../infrastructure/repository';
+import type { WalletRepository } from '../domain/repository';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 
 const keysGenerator = Pset.ECCKeysGenerator(ecc);

@@ -1,17 +1,16 @@
 import type { NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import { ElectrumWS } from '../../domain/ws/ws-electrs';
-import type { AppStatus } from '../../domain/app';
-import type { ChainSource } from '../../domain/chainsource';
-import { WsElectrumChainSource } from '../../domain/chainsource';
+import { ElectrumWS } from '../ws/ws-electrs';
+import { WsElectrumChainSource } from '../electrum-chain-source';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/explorer';
-import type { AppRepository } from '../repository';
+import type { AppRepository, AppStatus } from '../../domain/repository';
 import type { MaybeNull } from './common';
 import { DynamicStorageKey } from './dynamic-key';
+import type { ChainSource } from '../../domain/chainsource';
 
 export enum AppStorageKeys {
   ONBOARDING_COMPLETED = 'onboardingCompleted',

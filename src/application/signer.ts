@@ -13,12 +13,12 @@ import {
   Updater,
 } from 'liquidjs-lib';
 import { mnemonicToSeed } from 'bip39';
-import type { AppRepository, WalletRepository } from '../infrastructure/repository';
-import { decrypt } from '../encryption';
+import type { AppRepository, WalletRepository } from '../domain/repository';
+import { decrypt } from '../domain/encryption';
 import { Contract, H_POINT } from '@ionio-lang/ionio';
-import { analyzeTapscriptTree } from './script-analyser';
+import { analyzeTapscriptTree } from '../pkg/script-analyser';
 import { AccountType, isIonioScriptDetails } from 'marina-provider';
-import { h2b } from '../utils';
+import { h2b } from './utils';
 
 const bip32 = BIP32Factory(ecc);
 const bip341 = bip341lib.BIP341Factory(ecc);

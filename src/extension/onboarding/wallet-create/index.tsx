@@ -1,7 +1,7 @@
 import { generateMnemonic } from 'bip39';
 import React from 'react';
 import { useHistory } from 'react-router';
-import { init } from '../../../infrastructure/repository';
+import { init } from '../../../domain/repository';
 import {
   appRepository,
   onboardingRepository,

@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { stringify } from '../browser-storage-converters';
+import { stringify } from '../infrastructure/browser-storage-converters';
 import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
 import { isPopupResponseMessage, openPopupMessage, isResponseMessage } from '../domain/message';
 

@@ -3,7 +3,7 @@ import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import PopupWindowProxy from './popupWindowProxy';
-import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
+import { SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import {
   appRepository,
@@ -11,7 +11,7 @@ import {
   useSelectPopupPsetToSign,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { SignerService } from '../../domain/signer';
+import { SignerService } from '../../application/signer';
 import { popupResponseMessage } from '../../domain/message';
 import { Pset } from 'liquidjs-lib';
 

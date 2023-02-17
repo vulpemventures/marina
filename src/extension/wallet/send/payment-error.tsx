@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory, useLocation } from 'react-router';
 import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
-import { SOMETHING_WENT_WRONG_ERROR } from '../../../constants';
+import { SOMETHING_WENT_WRONG_ERROR } from '../../../domain/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { appRepository, useSelectNetwork } from '../../../infrastructure/storage/common';
 

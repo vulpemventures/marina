@@ -2,7 +2,7 @@ import * as ecc from 'tiny-secp256k1';
 import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
-import { address, networks, payments } from 'liquidjs-lib';
+import { address, crypto, networks, payments } from 'liquidjs-lib';
 import type {
   Address,
   ArtifactWithConstructorArgs,
@@ -13,12 +13,12 @@ import type {
 import { AccountType, isIonioScriptDetails } from 'marina-provider';
 import type { Slip77Interface } from 'slip77';
 import { SLIP77Factory } from 'slip77';
-import type { ChainSource } from '../domain/chainsource';
-import type { AccountDetails, WalletRepository } from '../infrastructure/repository';
+import type { AccountDetails, WalletRepository } from '../domain/repository';
 import type { Argument, Artifact } from '@ionio-lang/ionio';
 import { Contract } from '@ionio-lang/ionio';
-import { h2b } from '../utils';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
+import { h2b } from './utils';
+import type { ChainSource } from '../domain/chainsource';
 
 export const MainAccountLegacy = 'mainAccountLegacy';
 export const MainAccount = 'mainAccount';
@@ -53,6 +53,21 @@ export type RestorationJSON = {
 export type RestorationJSONDictionary = {
   [network: string]: RestorationJSON[];
 };
+
+export function makeAccountXPub(seed: Buffer, basePath: string) {
+  return bip32.fromSeed(seed).derivePath(basePath).neutered().toBase58();
+}
+
+// slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
+export function SLIP13(namespace: string): string {
+  const hash = crypto.sha256(Buffer.from(namespace));
+  const hash128 = hash.subarray(0, 16);
+  const A = hash128.readUInt32LE(0) || 0x80000000;
+  const B = hash128.readUint32LE(4) || 0x80000000;
+  const C = hash128.readUint32LE(8) || 0x80000000;
+  const D = hash128.readUint32LE(12) || 0x80000000;
+  return `m/${A}/${B}/${C}/${D}`;
+}
 
 // AccountFactory loads the master blinding key and creates account instance from repository data.
 export class AccountFactory {

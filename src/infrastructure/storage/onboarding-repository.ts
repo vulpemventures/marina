@@ -1,6 +1,6 @@
 import Browser from 'webextension-polyfill';
-import type { RestorationJSONDictionary } from '../../domain/account';
-import type { OnboardingRepository } from '../repository';
+import type { RestorationJSONDictionary } from '../../application/account';
+import type { OnboardingRepository } from '../../domain/repository';
 
 export enum OnboardingStorageKeys {
   ONBOARDING_MNEMONIC = 'onboardingMnemonic',

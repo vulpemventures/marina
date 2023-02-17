@@ -10,9 +10,9 @@ import type {
   UnblindedOutput,
   CoinSelection,
 } from '../../domain/transaction';
-import type { AccountDetails, WalletRepository } from '../repository';
+import type { AccountDetails, WalletRepository } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
-import type { Encrypted } from '../../encryption';
+import type { Encrypted } from '../../domain/encryption';
 
 type LockedOutpoint = {
   txID: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getAssetImagePath } from '../../constants';
+import { getAssetImagePath } from '../../domain/constants';
 
 const UNKNOWN_ASSET_ICON = 'assets/images/liquid-assets/unknown.png';
 

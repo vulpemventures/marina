@@ -5,14 +5,14 @@ import Shell from '../../components/shell';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
-import { init } from '../../../infrastructure/repository';
+import { init } from '../../../domain/repository';
 import {
   appRepository,
   onboardingRepository,
   sendFlowRepository,
 } from '../../../infrastructure/storage/common';
 import { validateMnemonic } from 'bip39';
-import type { RestorationJSON, RestorationJSONDictionary } from '../../../domain/account';
+import type { RestorationJSON, RestorationJSONDictionary } from '../../../application/account';
 import { extractErrorMessage } from '../../utility/error';
 
 const WalletRestore: React.FC = () => {

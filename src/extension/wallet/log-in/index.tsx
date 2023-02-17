@@ -6,12 +6,12 @@ import * as Yup from 'yup';
 import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants';
 import Button from '../../components/button';
 import Input from '../../components/input';
-import { INVALID_PASSWORD_ERROR } from '../../../constants';
+import { INVALID_PASSWORD_ERROR } from '../../../domain/constants';
 import { appRepository, useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
 import Browser from 'webextension-polyfill';
 import { logInMessage } from '../../../domain/message';
-import type { Encrypted } from '../../../encryption';
-import { decrypt } from '../../../encryption';
+import type { Encrypted } from '../../../domain/encryption';
+import { decrypt } from '../../../domain/encryption';
 
 interface LogInFormValues {
   password: string;

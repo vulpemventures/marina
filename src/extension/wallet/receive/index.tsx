@@ -6,7 +6,7 @@ import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
-import { AccountFactory, MainAccount, MainAccountTest } from '../../../domain/account';
+import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 
 const ReceiveView: React.FC = () => {
   const history = useHistory();

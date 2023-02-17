@@ -3,14 +3,14 @@ import ButtonList from '../components/button-list';
 import InputIcon from '../components/input-icon';
 import { useEffect, useState } from 'react';
 import { walletRepository } from '../../infrastructure/storage/common';
-import type { AccountDetails } from '../../infrastructure/repository';
-import type { RestorationJSONDictionary } from '../../domain/account';
+import type { AccountDetails } from '../../domain/repository';
+import type { RestorationJSONDictionary } from '../../application/account';
 import {
   AccountFactory,
   MainAccount,
   MainAccountLegacy,
   MainAccountTest,
-} from '../../domain/account';
+} from '../../application/account';
 import Button from '../components/button';
 import { AccountType } from 'marina-provider';
 import { extractErrorMessage } from '../utility/error';

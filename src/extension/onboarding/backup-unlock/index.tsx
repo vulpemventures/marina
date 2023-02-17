@@ -11,8 +11,8 @@ import {
   onboardingRepository,
   useSelectEncryptedMnemonic,
 } from '../../../infrastructure/storage/common';
-import type { Encrypted } from '../../../encryption';
-import { decrypt } from '../../../encryption';
+import type { Encrypted } from '../../../domain/encryption';
+import { decrypt } from '../../../domain/encryption';
 
 interface BackUpUnlockFormValues {
   password: string;

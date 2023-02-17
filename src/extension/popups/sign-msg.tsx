@@ -1,13 +1,13 @@
+import * as ecc from 'tiny-secp256k1';
 import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
 import PopupWindowProxy from './popupWindowProxy';
 import type { NetworkString, SignedMessage } from 'marina-provider';
-import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../constants';
+import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
-import { signMessageWithMnemonic } from '../../utils';
-import { networks } from 'liquidjs-lib';
+import { networks, payments } from 'liquidjs-lib';
 import {
   useSelectEncryptedMnemonic,
   useSelectNetwork,
@@ -15,8 +15,33 @@ import {
   useSelectPopupMessageToSign,
 } from '../../infrastructure/storage/common';
 import { popupResponseMessage } from '../../domain/message';
-import type { Encrypted } from '../../encryption';
-import { decrypt } from '../../encryption';
+import type { Encrypted } from '../../domain/encryption';
+import { decrypt } from '../../domain/encryption';
+import { BIP32Factory } from 'bip32';
+import { mnemonicToSeed } from 'bip39';
+import { signAsync } from 'bitcoinjs-message';
+
+const bip32 = BIP32Factory(ecc);
+
+async function signMessageWithMnemonic(
+  message: string,
+  mnemonic: string,
+  network: networks.Network
+): Promise<SignedMessage> {
+  const seed = await mnemonicToSeed(mnemonic);
+  const node = bip32.fromSeed(seed, network);
+  const child = node.derivePath("m/84'/0'/0'/0/0");
+  const signature = await signAsync(message, child.privateKey!, true, {
+    segwitType: 'p2wpkh',
+  });
+
+  const pay = payments.p2wpkh({ pubkey: child.publicKey, network });
+  return {
+    signature: signature.toString('base64'),
+    address: pay.address!,
+    publicKey: child.publicKey.toString('hex'),
+  };
+}
 
 async function signMsgWithPassword(
   message: string,

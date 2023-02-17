@@ -11,9 +11,9 @@ import {
   useSelectNetwork,
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
-import { computeBalances } from '../../../utils';
 import type { Asset } from 'marina-provider';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../application/account';
+import { computeBalances } from '../../../domain/transaction';
 
 const AddressAmountView: React.FC = () => {
   const history = useHistory();

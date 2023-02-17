@@ -4,18 +4,24 @@ import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
-import { Account, AccountFactory, MainAccount, MainAccountLegacy } from '../../../domain/account';
+import {
+  Account,
+  AccountFactory,
+  MainAccount,
+  MainAccountLegacy,
+  makeAccountXPub,
+  SLIP13,
+} from '../../../application/account';
 import {
   appRepository,
   onboardingRepository,
   useSelectIsFromPopupFlow,
   walletRepository,
 } from '../../../infrastructure/storage/common';
-import { initWalletRepository, makeAccountXPub } from '../../../infrastructure/utils';
 import type { NetworkString } from 'marina-provider';
 import { AccountType } from 'marina-provider';
-import { SLIP13 } from '../../../utils';
 import { mnemonicToSeed } from 'bip39';
+import { initWalletRepository } from '../../../domain/repository';
 import type { ChainSource } from '../../../domain/chainsource';
 
 const GAP_LIMIT = 30;

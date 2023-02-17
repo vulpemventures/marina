@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Browser from 'webextension-polyfill';
-import type { AppRepository, AssetRepository, TaxiRepository } from '../infrastructure/repository';
-import type { AssetAxiosResponse } from '../utils';
+import type { AssetAxiosResponse } from '../application/utils';
+import type { AppRepository, AssetRepository, TaxiRepository } from '../domain/repository';
 
 // set up a Browser.alarms in order to fetch the taxi assets every minute
 export class TaxiUpdater {

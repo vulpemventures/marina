@@ -4,7 +4,7 @@ import Button from '../../components/button';
 import { useHistory } from 'react-router-dom';
 import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
-import { INVALID_MNEMONIC_ERROR } from '../../../constants';
+import { INVALID_MNEMONIC_ERROR } from '../../../domain/constants';
 import {
   appRepository,
   useSelectIsFromPopupFlow,

@@ -1,3 +1,4 @@
+import { address, networks } from 'liquidjs-lib';
 import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import type { RouteComponentProps } from 'react-router';
@@ -8,8 +9,7 @@ import type { Asset, NetworkString } from 'marina-provider';
 import { fromSatoshi, getMinAmountFromPrecision, toSatoshi } from '../utility';
 import Input from './input';
 import React from 'react';
-import type { SendFlowRepository } from '../../infrastructure/repository';
-import { isValidAddressForNetwork } from '../../utils';
+import type { SendFlowRepository } from '../../domain/repository';
 
 interface FormValues {
   address: string;
@@ -27,6 +27,19 @@ interface FormProps {
   history: RouteComponentProps['history'];
   network: NetworkString;
 }
+
+const isValidAddressForNetwork = (addr: string, net: NetworkString): boolean => {
+  try {
+    const network = networks[net];
+    if (!network) {
+      throw new Error('network not found');
+    }
+    address.toOutputScript(addr, network);
+    return true;
+  } catch (ignore) {
+    return false;
+  }
+};
 
 /**
  * Sanitize input amount

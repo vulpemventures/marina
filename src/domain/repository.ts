@@ -1,28 +1,43 @@
 import type { UpdaterInput } from 'liquidjs-lib';
+import * as ecc from 'tiny-secp256k1';
 import type {
   AccountInfo,
-  AccountType,
   AddressRecipient,
   Asset,
   DataRecipient,
   NetworkString,
-  ScriptDetails,
+  ScriptDetails} from 'marina-provider';
+import {
+  AccountType
 } from 'marina-provider';
-import type { AppStatus } from '../domain/app';
-import type { ChainSource } from '../domain/chainsource';
-import type {
-  UnblindingData,
-  CoinSelection,
-  TxDetails,
-  UnblindedOutput,
-} from '../domain/transaction';
+import type { UnblindingData, CoinSelection, TxDetails, UnblindedOutput } from './transaction';
 import Browser from 'webextension-polyfill';
-import type { Encrypted } from '../encryption';
-import type { RestorationJSONDictionary } from '../domain/account';
+import type { Encrypted } from './encryption';
+import { encrypt } from './encryption';
+import type {
+  RestorationJSONDictionary} from '../application/account';
+import {
+  Account,
+  MainAccount,
+  MainAccountLegacy,
+  MainAccountTest,
+  makeAccountXPub
+} from '../application/account';
+import { mnemonicToSeed } from 'bip39';
+import { SLIP77Factory } from 'slip77';
+import type { ChainSource } from './chainsource';
+
+export interface AppStatus {
+  isMnemonicVerified: boolean;
+  isOnboardingCompleted: boolean;
+  isAuthenticated: boolean;
+}
 
 export type AccountDetails = AccountInfo & {
   nextKeyIndexes: Record<NetworkString, { internal: number; external: number }>;
 };
+
+const slip77 = SLIP77Factory(ecc);
 
 /**
  * The AppRepository stores the global application state like settings, network or explorer URLs.
@@ -54,7 +69,7 @@ export interface AppRepository {
 type MaybeNull<T> = Promise<T | null>;
 
 /**
- *  WalletRepository stores all the chain data (transactions, unspents, blinding data and accounts details)
+ *  WalletRepository stores all the chain data (transactions, scripts, blinding data and accounts details)
  */
 export interface WalletRepository {
   addTransactions(network: NetworkString, ...txIDs: string[]): Promise<void>;
@@ -178,4 +193,58 @@ export async function init(appRepository: AppRepository, sendFlowRepository: Sen
   await Browser.storage.local.clear();
   await sendFlowRepository.reset();
   await appRepository.setNetwork('liquid');
+}
+
+const initialNextKeyIndexes: Record<NetworkString, { external: number; internal: number }> = {
+  liquid: { external: 0, internal: 0 },
+  regtest: { external: 0, internal: 0 },
+  testnet: { external: 0, internal: 0 },
+};
+
+export async function initWalletRepository(
+  walletRepository: WalletRepository,
+  onboardingMnemonic: string,
+  onboardingPassword: string
+) {
+  const encryptedData = await encrypt(onboardingMnemonic, onboardingPassword);
+  const seed = await mnemonicToSeed(onboardingMnemonic);
+  const masterBlindingKey = slip77.fromSeed(seed).masterKey.toString('hex');
+
+  // set the global seed data
+  await walletRepository.setSeedData(encryptedData, masterBlindingKey);
+
+  // set the default accounts data (MainAccount, MainAccountTest, MainAccountLegacy)
+  // cointype account (mainnet)
+  const defaultMainAccountXPub = makeAccountXPub(seed, Account.BASE_DERIVATION_PATH);
+  await walletRepository.updateAccountDetails(MainAccount, {
+    accountID: MainAccount,
+    type: AccountType.P2WPKH,
+    masterXPub: defaultMainAccountXPub,
+    baseDerivationPath: Account.BASE_DERIVATION_PATH,
+    accountNetworks: ['liquid'],
+    nextKeyIndexes: initialNextKeyIndexes,
+  });
+
+  // cointype account (testnet & regtest)
+  const defaultMainAccountXPubTestnet = makeAccountXPub(seed, Account.BASE_DERIVATION_PATH_TESTNET);
+  await walletRepository.updateAccountDetails(MainAccountTest, {
+    accountID: MainAccountTest,
+    type: AccountType.P2WPKH,
+    masterXPub: defaultMainAccountXPubTestnet,
+    baseDerivationPath: Account.BASE_DERIVATION_PATH_TESTNET,
+    accountNetworks: ['regtest', 'testnet'],
+    nextKeyIndexes: initialNextKeyIndexes,
+  });
+
+  // legacy account
+  const defaultLegacyMainAccountXPub = makeAccountXPub(seed, Account.BASE_DERIVATION_PATH_LEGACY);
+  await walletRepository.updateAccountDetails(MainAccountLegacy, {
+    accountID: MainAccountLegacy,
+    type: AccountType.P2WPKH,
+    masterXPub: defaultLegacyMainAccountXPub,
+    baseDerivationPath: Account.BASE_DERIVATION_PATH_LEGACY,
+    accountNetworks: ['liquid', 'regtest', 'testnet'],
+    nextKeyIndexes: initialNextKeyIndexes,
+  });
+  return { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub };
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as ecc from 'tiny-secp256k1';
 import { BIP32Factory } from 'bip32';
-import { SOMETHING_WENT_WRONG_ERROR } from '../../constants';
+import { SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
@@ -13,10 +13,10 @@ import {
   walletRepository,
 } from '../../infrastructure/storage/common';
 import { popupResponseMessage } from '../../domain/message';
-import { decrypt } from '../../encryption';
+import { decrypt } from '../../domain/encryption';
 import { mnemonicToSeedSync } from 'bip39';
-import type { CreateAccountParameters } from '../../infrastructure/repository';
-import { SLIP13 } from '../../utils';
+import type { CreateAccountParameters } from '../../domain/repository';
+import { SLIP13 } from '../../application/account';
 
 const bip32 = BIP32Factory(ecc);
 

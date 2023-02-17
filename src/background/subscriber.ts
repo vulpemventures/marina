@@ -1,8 +1,8 @@
 import type { NetworkString } from 'marina-provider';
-import type { WalletRepository, AppRepository } from '../infrastructure/repository';
-import type { ChainSource } from '../domain/chainsource';
+import type { WalletRepository, AppRepository } from '../domain/repository';
 import Browser from 'webextension-polyfill';
 import { ScriptDetailsKey } from '../infrastructure/storage/wallet-repository';
+import type { ChainSource } from '../domain/chainsource';
 
 const ChainSourceError = (network: string) =>
   new Error('Chain source not found, cannot start subscriber service on network: ' + network);

@@ -9,13 +9,13 @@ import type {
   PopupsRepository,
   TaxiRepository,
   WalletRepository,
-} from '../../infrastructure/repository';
+} from '../../domain/repository';
 import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository';
 import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
 import type { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
 import type { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
-import { computeBalances } from '../../utils';
 import type { TxDetails, UnblindedOutput } from '../../domain/transaction';
+import { computeBalances } from '../../domain/transaction';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { networks } from 'liquidjs-lib';
@@ -28,14 +28,14 @@ import type {
   NewUtxoMarinaEvent,
   SpentUtxoMarinaEvent,
 } from '../marina-event';
-import { stringify } from '../../browser-storage-converters';
-import type { Account } from '../../domain/account';
+import { stringify } from '../../infrastructure/browser-storage-converters';
+import type { Account } from '../../application/account';
 import {
   MainAccount,
   MainAccountLegacy,
   MainAccountTest,
   AccountFactory,
-} from '../../domain/account';
+} from '../../application/account';
 import type {
   AccountID,
   Address,

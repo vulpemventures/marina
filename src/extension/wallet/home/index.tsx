@@ -15,8 +15,7 @@ import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utility';
-import { SendFlowStep } from '../../../infrastructure/repository';
-import { computeBalances, getNetwork } from '../../../utils';
+import { SendFlowStep } from '../../../domain/repository';
 import {
   appRepository,
   sendFlowRepository,
@@ -25,6 +24,8 @@ import {
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
+import { networks } from 'liquidjs-lib';
+import { computeBalances } from '../../../domain/transaction';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -84,8 +85,8 @@ const Home: React.FC = () => {
         <div>
           {network && (
             <Balance
-              assetHash={getNetwork(network).assetHash}
-              assetBalance={fromSatoshiStr(balances[getNetwork(network).assetHash] ?? 0)}
+              assetHash={networks[network].assetHash}
+              assetBalance={fromSatoshiStr(balances[networks[network].assetHash] ?? 0)}
               assetTicker="L-BTC"
               bigBalanceText={true}
             />

@@ -8,7 +8,6 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility'
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { networks } from 'liquidjs-lib';
-import { computeBalances, PsetBuilder } from '../../../utils';
 import {
   useSelectNetwork,
   useSelectTaxiAssets,
@@ -20,7 +19,9 @@ import {
   taxiRepository,
 } from '../../../infrastructure/storage/common';
 import type { AddressRecipient, Asset } from 'marina-provider';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../domain/account';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../application/account';
+import { PsetBuilder } from '../../../domain/pset';
+import { computeBalances } from '../../../domain/transaction';
 
 const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
 

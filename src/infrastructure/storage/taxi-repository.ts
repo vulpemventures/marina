@@ -1,6 +1,6 @@
 import type { Asset, NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import type { AppRepository, AssetRepository, TaxiRepository } from '../repository';
+import type { AppRepository, AssetRepository, TaxiRepository } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
 
 export const TaxiURLKey = new DynamicStorageKey<[network: NetworkString]>('taxiURL');

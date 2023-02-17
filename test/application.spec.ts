@@ -9,9 +9,11 @@ import {
   MainAccount,
   MainAccountLegacy,
   MainAccountTest,
-} from '../src/domain/account';
-import { BlinderService } from '../src/domain/blinder';
-import { SignerService } from '../src/domain/signer';
+  SLIP13,
+  makeAccountXPub,
+} from '../src/application/account';
+import { BlinderService } from '../src/application/blinder';
+import { SignerService } from '../src/application/signer';
 import { UpdaterService } from '../src/background/updater';
 import { SubscriberService } from '../src/background/subscriber';
 import {
@@ -22,8 +24,7 @@ import {
 import { AppStorageAPI } from '../src/infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../src/infrastructure/storage/asset-repository';
 import { WalletStorageAPI } from '../src/infrastructure/storage/wallet-repository';
-import { initWalletRepository, makeAccountXPub } from '../src/infrastructure/utils';
-import { computeBalances, PsetBuilder, SLIP13 } from '../src/utils';
+import { PsetBuilder } from '../src/domain/pset';
 import { faucet, sleep } from './_regtest';
 import captchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
 import type { Artifact } from '@ionio-lang/ionio';
@@ -33,8 +34,11 @@ import {
   templateString,
 } from '@ionio-lang/ionio';
 import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
+import { initWalletRepository } from '../src/domain/repository';
+import { computeBalances } from '../src/domain/transaction';
 
 // we need this to mock the browser.storage.local calls in repositories
+// replace webextension-polyfill with a mock defined in __mocks__ folder
 jest.mock('webextension-polyfill');
 
 const PASSWORD = 'PASSWORD';

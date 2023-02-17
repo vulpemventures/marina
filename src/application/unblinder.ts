@@ -4,14 +4,10 @@ import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import type { Output } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
-import type {
-  AppRepository,
-  AssetRepository,
-  WalletRepository,
-} from '../infrastructure/repository';
-import type { UnblindingData } from './transaction';
+import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
+import type { UnblindingData } from '../domain/transaction';
 import * as ecc from 'tiny-secp256k1';
-import type { AssetAxiosResponse } from '../utils';
+import type { AssetAxiosResponse } from './utils';
 
 const slip77 = SLIP77Factory(ecc);
 

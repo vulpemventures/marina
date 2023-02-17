@@ -6,8 +6,8 @@ import Button from '../../components/button';
 import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Transaction } from 'liquidjs-lib';
-import { makeURLwithBlinders } from '../../../utils';
 import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
+import { makeURLwithBlinders } from '../../../domain/transaction';
 
 interface LocationState {
   txhex: string;

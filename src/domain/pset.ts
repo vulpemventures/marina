@@ -1,125 +1,28 @@
 import type { AxiosResponse } from 'axios';
 import axios from 'axios';
-import type { UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
-import {
-  crypto,
-  Creator,
-  Transaction,
-  Updater,
-  address,
-  networks,
-  payments,
-  Pset,
-} from 'liquidjs-lib';
 import type {
-  AccountID,
-  AddressRecipient,
-  DataRecipient,
-  NetworkString,
-  SignedMessage,
-} from 'marina-provider';
-import { mnemonicToSeed } from 'bip39';
-import { BIP32Factory } from 'bip32';
-import * as ecc from 'tiny-secp256k1';
-import { signAsync } from 'bitcoinjs-message';
-import type { CoinSelection, UnblindedOutput, UnblindingData } from './domain/transaction';
-import { getScriptType, ScriptType } from 'liquidjs-lib/src/address';
-import { varSliceSize, varuint } from 'liquidjs-lib/src/bufferutils';
-import { AccountFactory, MainAccount, MainAccountLegacy, MainAccountTest } from './domain/account';
-import type { AppRepository, TaxiRepository, WalletRepository } from './infrastructure/repository';
-
-const bip32 = BIP32Factory(ecc);
-
-export const isConfidentialAddress = (addr: string): boolean => {
-  try {
-    address.fromConfidential(addr);
-    return true;
-  } catch (ignore) {
-    return false;
-  }
-};
-
-export const isValidAddressForNetwork = (addr: string, net: NetworkString): boolean => {
-  try {
-    const network = networks[net];
-    if (!network) {
-      throw new Error('network not found');
-    }
-    address.toOutputScript(addr, network);
-    return true;
-  } catch (ignore) {
-    return false;
-  }
-};
-
-export async function signMessageWithMnemonic(
-  message: string,
-  mnemonic: string,
-  network: networks.Network
-): Promise<SignedMessage> {
-  const seed = await mnemonicToSeed(mnemonic);
-  const node = bip32.fromSeed(seed, network);
-  const child = node.derivePath("m/84'/0'/0'/0/0");
-  const signature = await signAsync(message, child.privateKey!, true, {
-    segwitType: 'p2wpkh',
-  });
-
-  const pay = payments.p2wpkh({ pubkey: child.publicKey, network });
-  return {
-    signature: signature.toString('base64'),
-    address: pay.address!,
-    publicKey: child.publicKey.toString('hex'),
-  };
-}
-
-export function computeBalances(utxos: UnblindedOutput[]): Record<string, number> {
-  const balances: Record<string, number> = {};
-  for (const utxo of utxos) {
-    if (!utxo.blindingData) continue;
-    const { asset, value } = utxo.blindingData;
-    balances[asset] = (balances[asset] || 0) + value;
-  }
-  return balances;
-}
-
-export function getNetwork(network: NetworkString): networks.Network {
-  const net = networks[network];
-  if (!net) {
-    throw new Error('network not found');
-  }
-  return net;
-}
-
-const reverseHex = (hex: string) => Buffer.from(hex, 'hex').reverse().toString('hex');
-
-export async function makeURLwithBlinders(
-  transaction: Transaction,
-  appRepository: AppRepository,
-  walletRepository: WalletRepository
-) {
-  const webExplorerURL = await appRepository.getWebExplorerURL();
-  if (!webExplorerURL) {
-    throw new Error('web explorer url not found');
-  }
-  const txID = transaction.getId();
-
-  const blinders: string[] = [];
-  for (let i = 0; i < transaction.outs.length; i++) {
-    const output = transaction.outs[i];
-    if (output.script.length === 0) continue;
-    const data = await walletRepository.getOutputBlindingData(txID, i);
-    if (!data || !data.blindingData) continue;
-
-    blinders.push(
-      `${data.blindingData.value},${data.blindingData.asset},${reverseHex(
-        data.blindingData.valueBlindingFactor
-      )},${reverseHex(data.blindingData.assetBlindingFactor)}`
-    );
-  }
-
-  const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}`;
-  return url;
-}
+  UpdaterInput,
+  UpdaterOutput} from 'liquidjs-lib';
+import {
+  Pset,
+  payments,
+  Creator,
+  networks,
+  address,
+  Updater,
+  Transaction
+} from 'liquidjs-lib';
+import { ScriptType, getScriptType } from 'liquidjs-lib/src/address';
+import { varuint, varSliceSize } from 'liquidjs-lib/src/bufferutils';
+import type { UnblindingData, AddressRecipient, DataRecipient, AccountID } from 'marina-provider';
+import {
+  MainAccount,
+  MainAccountLegacy,
+  MainAccountTest,
+  AccountFactory,
+} from '../application/account';
+import type { WalletRepository, AppRepository, TaxiRepository } from './repository';
+import type { CoinSelection } from './transaction';
 
 function estimateScriptSigSize(type: ScriptType): number {
   switch (type) {
@@ -596,24 +499,3 @@ export class PsetBuilder {
     return { ins, outs };
   }
 }
-
-export function h2b(hex: string): Buffer {
-  return Buffer.from(hex, 'hex');
-}
-
-// slip13: https://github.com/satoshilabs/slips/blob/master/slip-0013.md#hd-structure
-export function SLIP13(namespace: string): string {
-  const hash = crypto.sha256(Buffer.from(namespace));
-  const hash128 = hash.subarray(0, 16);
-  const A = hash128.readUInt32LE(0) || 0x80000000;
-  const B = hash128.readUint32LE(4) || 0x80000000;
-  const C = hash128.readUint32LE(8) || 0x80000000;
-  const D = hash128.readUint32LE(12) || 0x80000000;
-  return `m/${A}/${B}/${C}/${D}`;
-}
-
-export type AssetAxiosResponse = AxiosResponse<{
-  name?: string;
-  ticker?: string;
-  precision?: number;
-}>;

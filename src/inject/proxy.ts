@@ -1,4 +1,4 @@
-import { parse } from '../browser-storage-converters';
+import { parse } from '../infrastructure/browser-storage-converters';
 
 export default class WindowProxy<T extends string> {
   protected providerName: string;

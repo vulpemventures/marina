@@ -8,7 +8,7 @@ import {
   useSelectNetwork,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { AccountFactory } from '../../domain/account';
+import { AccountFactory } from '../../application/account';
 import { AccountType } from 'marina-provider';
 
 type GapLimit = 20 | 40 | 80 | 160;

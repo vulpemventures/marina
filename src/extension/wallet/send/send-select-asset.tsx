@@ -7,7 +7,7 @@ import {
   useSelectAllAssets,
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
-import { computeBalances } from '../../../utils';
+import { computeBalances } from '../../../domain/transaction';
 
 const SendSelectAsset: React.FC = () => {
   const history = useHistory();

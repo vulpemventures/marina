@@ -1,7 +1,7 @@
 import type { NetworkString } from 'marina-provider';
 import { AccountType } from 'marina-provider';
 import React, { useState } from 'react';
-import { AccountFactory } from '../../domain/account';
+import { AccountFactory } from '../../application/account';
 import {
   appRepository,
   useSelectNetwork,

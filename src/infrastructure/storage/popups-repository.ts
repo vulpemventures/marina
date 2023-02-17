@@ -1,5 +1,9 @@
 import Browser from 'webextension-polyfill';
-import type { CreateAccountParameters, PopupsRepository, SpendParameters } from '../repository';
+import type {
+  CreateAccountParameters,
+  PopupsRepository,
+  SpendParameters,
+} from '../../domain/repository';
 
 export enum PopupsStorageKeys {
   HOSTNAME = 'enableHostname', // store the storage to enable in the popup connect/enable

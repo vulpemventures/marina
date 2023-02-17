@@ -14,7 +14,6 @@ import ButtonTransaction from '../../components/button-transaction';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshiStr } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import { computeBalances } from '../../../utils';
 import {
   appRepository,
   assetRepository,
@@ -23,6 +22,7 @@ import {
   useSelectUtxos,
 } from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
+import { computeBalances } from '../../../domain/transaction';
 
 interface LocationState {
   assetHash: string;

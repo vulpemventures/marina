@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import type { TxDetails } from '../../domain/transaction';
-import { TxType } from '../../domain/transaction';
+import { makeURLwithBlinders , TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
 import TxIcon from './txIcon';
 import moment from 'moment';
@@ -17,7 +17,6 @@ import {
   useSelectNetwork,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { makeURLwithBlinders } from '../../utils';
 import type { Asset } from 'marina-provider';
 
 function txTypeFromTransfer(transfer?: number): TxType {

@@ -6,14 +6,14 @@ import ModalUnlock from '../../components/modal-unlock';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { extractErrorMessage } from '../../utility/error';
-import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../../constants';
-import { SignerService } from '../../../domain/signer';
+import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../../domain/constants';
+import { SignerService } from '../../../application/signer';
 import {
   appRepository,
   sendFlowRepository,
   walletRepository,
 } from '../../../infrastructure/storage/common';
-import { BlinderService } from '../../../domain/blinder';
+import { BlinderService } from '../../../application/blinder';
 import { Pset } from 'liquidjs-lib';
 
 const SendEndOfFlow: React.FC = () => {

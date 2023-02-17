@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { decrypt } from '../../encryption';
+import { decrypt } from '../../domain/encryption';
 import { walletRepository } from '../../infrastructure/storage/common';
 import ModalUnlock from '../components/modal-unlock';
 import RevealMnemonic from '../components/reveal-mnemonic';
