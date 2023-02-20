@@ -50,6 +50,8 @@ import type {
 import { AccountType, isAddressRecipient, isDataRecipient } from 'marina-provider';
 import type { SpendPopupResponse } from '../../extension/popups/spend';
 import type { CreateAccountPopupResponse } from '../../extension/popups/create-account';
+import { BlinderService } from '../../application/blinder';
+import zkpLib from '@vulpemventures/secp256k1-zkp';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -258,6 +260,17 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           await this.popupsRepository.clear();
 
           return successMsg(signedPset);
+        }
+
+        case 'blindTransaction': {
+          await this.checkHostnameAuthorization();
+          if (!params || params.length !== 1) {
+            throw new Error('Missing params');
+          }
+          const [pset] = params;
+          const blinder = new BlinderService(this.walletRepository, await zkpLib());
+          const blindedPset = await blinder.blindPset(pset);
+          return successMsg(blindedPset);
         }
 
         case 'sendTransaction': {
