@@ -7,7 +7,7 @@ import {
   BlockstreamTestnetExplorerURLs,
   NigiriDefaultExplorerURLs,
 } from '../../domain/explorer';
-import type { AppRepository, AppStatus } from '../../domain/repository';
+import type { AppRepository, AppStatus, Loader } from '../../domain/repository';
 import type { MaybeNull } from './common';
 import { DynamicStorageKey } from './dynamic-key';
 import type { ChainSource } from '../../domain/chainsource';
@@ -24,7 +24,45 @@ export enum AppStorageKeys {
 export const WebsocketURLKey = new DynamicStorageKey<[net: NetworkString]>('webSocketURL');
 export const WebExplorerURLKey = new DynamicStorageKey<[net: NetworkString]>('webExplorerURL');
 
+function increment(n: number | null | undefined): number {
+  if (!n || n <= 0) return 1;
+  return n + 1;
+}
+
+function decrement(n: number | null | undefined): number {
+  if (!n || n <= 0) return 0;
+  return n - 1;
+}
+
+function LoaderFromStaticKey(key: string): Loader {
+  return {
+    increment: async () => {
+      const { [key]: value } = await Browser.storage.local.get([key]);
+      return Browser.storage.local.set({ [key]: increment(value) });
+    },
+    decrement: async () => {
+      const { [key]: value } = await Browser.storage.local.get([key]);
+      return Browser.storage.local.set({ [key]: decrement(value) });
+    },
+    onChanged: (callback) => {
+      const listener = (
+        changes: Record<string, Browser.Storage.StorageChange>,
+        areaName: string
+      ) => {
+        if (areaName === 'local' && key in changes) {
+          callback((changes[key].newValue ?? 0) > 0);
+        }
+      };
+      Browser.storage.onChanged.addListener(listener);
+      return () => Browser.storage.onChanged.removeListener(listener);
+    },
+  };
+}
+
 export class AppStorageAPI implements AppRepository {
+  restorerLoader = LoaderFromStaticKey('restorerLoader');
+  updaterLoader = LoaderFromStaticKey('updaterLoader');
+
   static DEFAULT_WEB_URLS = new Map<NetworkString, string>([
     ['liquid', BlockstreamExplorerURLs.webExplorerURL],
     ['testnet', BlockstreamTestnetExplorerURLs.webExplorerURL],

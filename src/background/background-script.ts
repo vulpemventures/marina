@@ -1,7 +1,7 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import zkp from '@vulpemventures/secp256k1-zkp';
-import type { OpenPopupMessage, PopupName } from '../domain/message';
+import { isRestoreMessage, OpenPopupMessage, PopupName, RestoreMessage } from '../domain/message';
 import {
   isLogInMessage,
   isLogOutMessage,
@@ -17,6 +17,7 @@ import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
 import { TaxiUpdater } from './taxi-updater';
 import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
+import { AccountFactory } from '../application/account';
 
 // top-level await supported via webpack
 const zkpLib = await zkp();
@@ -55,6 +56,21 @@ async function startBackgroundServices() {
       subscriberService.start(),
       Promise.resolve(taxiService.start()),
     ]);
+  }
+}
+
+async function restoreTask(restoreMessage: RestoreMessage): Promise<void> {
+  try {
+    await appRepository.restorerLoader.increment();
+    const factory = await AccountFactory.create(walletRepository);
+    const network = await appRepository.getNetwork();
+    if (!network) throw new Error('no network selected');
+    const account = await factory.make(restoreMessage.data.network, restoreMessage.data.accountID);
+    const chainSource = await appRepository.getChainSource();
+    if (!chainSource) throw new Error('no chain source selected');
+    await account.sync(chainSource, restoreMessage.data.gapLimit);
+  } finally {
+    await appRepository.restorerLoader.decrement();
   }
 }
 
@@ -150,6 +166,11 @@ browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
 
     if (isLogOutMessage(message)) {
       stopBackgroundServices().catch(console.error);
+      return;
+    }
+
+    if (isRestoreMessage(message)) {
+      restoreTask(message).catch(console.error);
       return;
     }
   });

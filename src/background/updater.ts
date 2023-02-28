@@ -61,42 +61,51 @@ export class UpdaterService {
               const [network] = TxIDsKey.decode(key);
               const newTxIDs = changes[key].newValue as string[] | undefined;
               if (!newTxIDs) continue; // it means we just deleted the key
-              const oldTxIDs = changes[key].oldValue ? (changes[key].oldValue as string[]) : [];
-
-              // for all new txs, we need to fetch the tx hex
-              const oldTxIDsSet = new Set(oldTxIDs);
-              const txIDsToFetch = newTxIDs.filter(
-                (txID) => isValidTxID(txID) && !oldTxIDsSet.has(txID)
-              );
-              const chainSource = await this.appRepository.getChainSource(network);
-              if (!chainSource) {
-                console.error('Chain source not found', network);
-                continue;
+              try {
+                await this.appRepository.updaterLoader.increment();
+                const oldTxIDs = changes[key].oldValue ? (changes[key].oldValue as string[]) : [];
+                // for all new txs, we need to fetch the tx hex
+                const oldTxIDsSet = new Set(oldTxIDs);
+                const txIDsToFetch = newTxIDs.filter(
+                  (txID) => isValidTxID(txID) && !oldTxIDsSet.has(txID)
+                );
+                const chainSource = await this.appRepository.getChainSource(network);
+                if (!chainSource) {
+                  console.error('Chain source not found', network);
+                  continue;
+                }
+                const transactions = await chainSource.fetchTransactions(txIDsToFetch);
+                await chainSource.close();
+                await this.walletRepository.updateTxDetails(
+                  Object.fromEntries(transactions.map((tx, i) => [txIDsToFetch[i], tx]))
+                );
+              } finally {
+                await this.appRepository.updaterLoader.decrement();
               }
-              const transactions = await chainSource.fetchTransactions(txIDsToFetch);
-              await chainSource.close();
-              await this.walletRepository.updateTxDetails(
-                Object.fromEntries(transactions.map((tx, i) => [txIDsToFetch[i], tx]))
-              );
             } else if (TxDetailsKey.is(key) && changes[key].newValue?.hex) {
               // for all txs hex change in the store, we'll try unblind the outputs
               if (changes[key].oldValue && changes[key].oldValue.hex) continue;
               const [txID] = TxDetailsKey.decode(key);
               const newTxDetails = changes[key].newValue as TxDetails | undefined;
               if (!newTxDetails || !newTxDetails.hex) continue; // it means we just deleted the key
-              const tx = Transaction.fromHex(newTxDetails.hex);
-              const unblindedResults = await this.unblinder.unblind(...tx.outs);
-              const updateArray: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
-              for (const [vout, unblinded] of unblindedResults.entries()) {
-                if (unblinded instanceof Error) {
-                  if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
-                  if (unblinded.message === 'Empty script: fee output') continue;
-                  console.error('Error while unblinding', unblinded);
-                  continue;
+              try {
+                await this.appRepository.updaterLoader.increment();
+                const tx = Transaction.fromHex(newTxDetails.hex);
+                const unblindedResults = await this.unblinder.unblind(...tx.outs);
+                const updateArray: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
+                for (const [vout, unblinded] of unblindedResults.entries()) {
+                  if (unblinded instanceof Error) {
+                    if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
+                    if (unblinded.message === 'Empty script: fee output') continue;
+                    console.error('Error while unblinding', unblinded);
+                    continue;
+                  }
+                  updateArray.push([{ txID, vout }, unblinded]);
                 }
-                updateArray.push([{ txID, vout }, unblinded]);
+                await this.walletRepository.updateOutpointBlindingData(updateArray);
+              } finally {
+                await this.appRepository.updaterLoader.decrement();
               }
-              await this.walletRepository.updateOutpointBlindingData(updateArray);
             }
           } catch (e) {
             console.error('Updater silent error: ', e);

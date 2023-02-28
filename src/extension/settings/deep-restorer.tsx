@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
@@ -8,8 +8,8 @@ import {
   useSelectNetwork,
   walletRepository,
 } from '../../infrastructure/storage/common';
-import { AccountFactory } from '../../application/account';
-import { AccountType } from 'marina-provider';
+import Browser from 'webextension-polyfill';
+import { restoreMessage } from '../../domain/message';
 
 type GapLimit = 20 | 40 | 80 | 160;
 
@@ -19,25 +19,25 @@ const SettingsDeepRestorer: React.FC = () => {
   const [gapLimit, setGapLimit] = useState<GapLimit>(20);
   const network = useSelectNetwork();
 
+  useEffect(() => {
+    return appRepository.restorerLoader.onChanged((isLoading) => {
+      setIsLoading(isLoading);
+    });
+  }, []);
+
   const onClickRestore = async () => {
     if (!network) return;
-    setIsLoading(true);
     setError('');
     try {
-      const factory = await AccountFactory.create(walletRepository);
-      const allAccounts = await factory.makeAll(network);
-      const chainSource = await appRepository.getChainSource(network);
-      if (!chainSource) throw new Error('Chain source not found, cannot restore accounts');
-      for (const account of allAccounts) {
-        if ((await account.getAccountType()) !== AccountType.P2WPKH) continue;
-        await account.sync(chainSource, gapLimit, { internal: 0, external: 0 });
-      }
-      await chainSource.close();
+      const allAccounts = await walletRepository.getAccountDetails();
+      const port = Browser.runtime.connect();
+      const messages = Object.entries(allAccounts)
+        .filter(([, details]) => details.accountNetworks.includes(network))
+        .map(([account]) => restoreMessage(account, network, gapLimit));
+      messages.forEach((message) => port.postMessage(message));
     } catch (e) {
       console.error(e);
       if (e instanceof Error) setError(e.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 

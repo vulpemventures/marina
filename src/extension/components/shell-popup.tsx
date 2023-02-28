@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { formatNetwork } from '../utility';
-import { sendFlowRepository, useSelectNetwork } from '../../infrastructure/storage/common';
+import {
+  appRepository,
+  sendFlowRepository,
+  useSelectNetwork,
+} from '../../infrastructure/storage/common';
 
 interface Props {
   btnDisabled?: boolean;
@@ -27,6 +31,21 @@ const ShellPopUp: React.FC<Props> = ({
 }) => {
   const history = useHistory();
   const network = useSelectNetwork();
+  const [isRestorerLoading, setIsRestorerLoading] = useState(false);
+  const [isUpdaterLoading, setIsUpdaterLoading] = useState(false);
+
+  useEffect(() => {
+    const closeFnUpdaterLoader = appRepository.updaterLoader.onChanged((isUpdaterLoading) => {
+      setIsUpdaterLoading(isUpdaterLoading);
+    });
+    const closeFnRestorerLoader = appRepository.restorerLoader.onChanged((isRestorerLoading) => {
+      setIsRestorerLoading(isRestorerLoading);
+    });
+    return () => {
+      closeFnUpdaterLoader();
+      closeFnRestorerLoader();
+    };
+  });
 
   // Menu modal
   const [isMenuModalOpen, showMenuModal] = useState(false);
@@ -46,6 +65,16 @@ const ShellPopUp: React.FC<Props> = ({
       history.goBack();
     }
   };
+
+  function getLoaderText(): string | undefined {
+    if (isRestorerLoading) return 'Restoring...';
+    if (isUpdaterLoading) return 'Updating...';
+    return undefined;
+  }
+
+  function loader(): JSX.Element {
+    return <span className="animate-pulse">{getLoaderText()}</span>;
+  }
 
   let nav;
   if (hasBackBtn && !currentPage) {
@@ -100,6 +129,7 @@ const ShellPopUp: React.FC<Props> = ({
               </div>
             )}
           </div>
+          {(isUpdaterLoading || isRestorerLoading) && loader()}
           <button disabled={btnDisabled} onClick={openMenuModal}>
             <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
           </button>

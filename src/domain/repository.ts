@@ -38,6 +38,12 @@ export type AccountDetails = AccountInfo & {
 
 const slip77 = SLIP77Factory(ecc);
 
+export interface Loader {
+  increment(): Promise<void>;
+  decrement(): Promise<void>;
+  onChanged(callback: (isLoading: boolean) => void): () => void;
+}
+
 /**
  * The AppRepository stores the global application state like settings, network or explorer URLs.
  */
@@ -58,11 +64,16 @@ export interface AppRepository {
   getEnabledSites(): Promise<string[]>;
   enableSite(url: string): Promise<void>;
   disableSite(url: string): Promise<void>;
-  // clear marina state (including wallet data)
-  clear(): Promise<void>;
 
   onHostnameEnabled(callback: (websiteEnabled: string) => Promise<void>): void;
   onNetworkChanged(callback: (network: NetworkString) => Promise<void>): void;
+
+  /** loaders **/
+  restorerLoader: Loader;
+  updaterLoader: Loader;
+
+  // clear marina state (including wallet data)
+  clear(): Promise<void>;
 }
 
 type MaybeNull<T> = Promise<T | null>;

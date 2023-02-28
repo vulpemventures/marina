@@ -1,5 +1,7 @@
 ///// ** Inject <-> Content Script messages ** /////
 
+import { AccountID, NetworkString } from 'marina-provider';
+
 // request = a call of a provider's method
 export interface RequestMessage<T extends string> {
   id: string;
@@ -44,6 +46,7 @@ enum MessageType {
   Logout,
   OpenPopup,
   PopupResponse,
+  Restore,
 }
 
 export interface Message<T> {
@@ -55,6 +58,11 @@ export type PopupResponseMessage<ResponseT> = Message<{ response?: ResponseT; er
 export type OpenPopupMessage = Message<{ name: PopupName }>;
 export type LogInMessage = Message<undefined>;
 export type LogOutMessage = Message<undefined>;
+export type RestoreMessage = Message<{
+  accountID: AccountID;
+  network: NetworkString;
+  gapLimit: number;
+}>;
 
 // popup names are linked to the connect/:name routes
 export type PopupName = 'enable' | 'sign-msg' | 'sign-pset' | 'spend' | 'create-account';
@@ -99,4 +107,16 @@ export function logOutMessage(): LogOutMessage {
 
 export function isLogOutMessage(message: unknown): message is LogOutMessage {
   return (message && (message as any).type === MessageType.Logout) as boolean;
+}
+
+export function restoreMessage(
+  accountID: AccountID,
+  network: NetworkString,
+  gapLimit: number
+): RestoreMessage {
+  return { type: MessageType.Restore, data: { accountID, network, gapLimit } };
+}
+
+export function isRestoreMessage(message: unknown): message is RestoreMessage {
+  return (message && (message as any).type === MessageType.Restore) as boolean;
 }
