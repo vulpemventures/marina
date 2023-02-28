@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ShellPopUp from '../components/shell-popup';
 import Select from '../components/select';
-import type { ExplorerType } from '../../domain/explorer';
+import {
+  ExplorerType,
+  isBlockstreamWebExplorerURL,
+  isMempoolWebExplorerURL,
+  isNigiriWebExplorerURL,
+} from '../../domain/explorer';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
@@ -30,10 +35,33 @@ function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
 const SettingsExplorer: React.FC = () => {
   const history = useHistory();
   const network = useSelectNetwork();
-
   const [selected, setSelected] = React.useState<ExplorerType>();
 
+  useEffect(() => {
+    (async () => {
+      const webExplorerURL = await appRepository.getWebExplorerURL();
+      if (!webExplorerURL) return;
+      if (isMempoolWebExplorerURL(webExplorerURL)) {
+        setSelected('Mempool');
+        return;
+      }
+
+      if (isBlockstreamWebExplorerURL(webExplorerURL)) {
+        setSelected('Blockstream');
+        return;
+      }
+
+      if (isNigiriWebExplorerURL(webExplorerURL)) {
+        setSelected('Nigiri');
+        return;
+      }
+
+      setSelected('Custom');
+    })();
+  }, [selected]);
+
   const handleChange = async (explorer: ExplorerType) => {
+    const network = await appRepository.getNetwork();
     if (!network) return;
     let urls;
     if (explorerTypesForNetwork(network).includes(explorer)) {
@@ -80,15 +108,17 @@ const SettingsExplorer: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Explorer"
     >
-      <p className="font-regular my-8 text-base text-left">Select the explorer</p>
-      {network && (
-        <Select
-          list={explorerTypesForNetwork(network)}
-          selected={selected || 'Custom'}
-          onSelect={onSelect}
-          disabled={false}
-        />
-      )}
+      <>
+        <p className="font-regular my-8 text-base text-left">Select the explorer</p>
+        {network && (
+          <Select
+            list={explorerTypesForNetwork(network)}
+            selected={selected || 'Custom'}
+            onSelect={onSelect}
+            disabled={false}
+          />
+        )}
+      </>
     </ShellPopUp>
   );
 };

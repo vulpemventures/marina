@@ -8,6 +8,7 @@ import ButtonsAtBottom from '../components/buttons-at-bottom';
 import Input from '../components/input';
 import ShellPopUp from '../components/shell-popup';
 import * as Yup from 'yup';
+import { BlockstreamExplorerURLs } from '../../domain/explorer';
 
 type SettingsExplorerFormValues = {
   websocketExplorerURL: string;
@@ -29,7 +30,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       <p className="font-sm text-left">Web explorer</p>
       <Input
         name="webExplorerURL"
-        placeholder="a valid web version of explorer"
+        placeholder={BlockstreamExplorerURLs.webExplorerURL}
         type="text"
         {...props}
       />
@@ -37,7 +38,7 @@ const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) =>
       <p className="font-sm text-left">Web socket endpoint</p>
       <Input
         name="websocketExplorerURL"
-        placeholder="a valid web socket endpoint"
+        placeholder={BlockstreamExplorerURLs.websocketExplorerURL}
         type="text"
         {...props}
       />
@@ -58,24 +59,21 @@ const SettingsCustomExplorerForm = withFormik<
   SettingsExplorerFormProps,
   SettingsExplorerFormValues
 >({
-  mapPropsToValues: (props): SettingsExplorerFormValues => ({
+  mapPropsToValues: (): SettingsExplorerFormValues => ({
     webExplorerURL: '',
     websocketExplorerURL: '',
   }),
 
   validationSchema: Yup.object().shape({
-    explorerURL: Yup.string().required('an explorer URL is required'),
-    webExplorerURL: Yup.string().required('a web explorer URL is required'),
-    websocketExplorerURL: Yup.string().required('a websocket explorer URL is required'),
+    webExplorerURL: Yup.string().required('Web explorer URL required'),
+    websocketExplorerURL: Yup.string().required('Websocket URL required'),
   }),
 
   handleSubmit: async (values, { props }) => {
     await appRepository.setWebsocketExplorerURLs({
       [props.network]: values.websocketExplorerURL,
     });
-
     await appRepository.setWebExplorerURL(props.network, values.webExplorerURL);
-
     props.onDone();
   },
 
