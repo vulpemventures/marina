@@ -24,6 +24,7 @@ import {
 import { mnemonicToSeed } from 'bip39';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from './chainsource';
+import { BlockHeader } from '../background/utils';
 
 export interface AppStatus {
   isMnemonicVerified: boolean;
@@ -185,6 +186,12 @@ export interface SendFlowRepository {
   setUnsignedPset(pset: string): Promise<void>;
   getUnsignedPset(): Promise<string | undefined>;
   getStep(): Promise<SendFlowStep>;
+}
+
+// this repository aims to cache the block headers
+export interface BlockheadersRepository {
+  getBlockHeader(network: NetworkString, height: number): Promise<BlockHeader | undefined>;
+  setBlockHeader(network: NetworkString, blockHeader: BlockHeader): Promise<void>;
 }
 
 export async function init(appRepository: AppRepository, sendFlowRepository: SendFlowRepository) {

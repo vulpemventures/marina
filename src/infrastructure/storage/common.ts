@@ -7,6 +7,7 @@ import { sortAssets } from '../../extension/utility/sort';
 import type { CreateAccountParameters, SpendParameters } from '../../domain/repository';
 import { AppStorageAPI, AppStorageKeys } from './app-repository';
 import { AssetKey, AssetStorageAPI } from './asset-repository';
+import { BlockHeadersAPI } from './blockheaders-repository';
 import { OnboardingStorageAPI, OnboardingStorageKeys } from './onboarding-repository';
 import { PopupsStorageKeys } from './popups-repository';
 import { SendFlowStorageAPI } from './send-flow-repository';
@@ -26,6 +27,7 @@ export const assetRepository = new AssetStorageAPI(walletRepository);
 export const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 export const onboardingRepository = new OnboardingStorageAPI();
 export const sendFlowRepository = new SendFlowStorageAPI();
+export const blockHeadersRepository = new BlockHeadersAPI();
 
 export type ReadonlyReactHook<T> = () => T | undefined;
 

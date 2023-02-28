@@ -14,6 +14,7 @@ import Button from './button';
 import Browser from 'webextension-polyfill';
 import {
   appRepository,
+  blockHeadersRepository,
   useSelectNetwork,
   walletRepository,
 } from '../../infrastructure/storage/common';
@@ -38,11 +39,10 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
   const [txID, setTxID] = useState<string>();
   const [blockHeader, setBlockHeader] = useState<BlockHeader>();
   const [isLoading, setIsLoading] = useState(true);
-  const network = useSelectNetwork();
 
   useEffect(() => {
-    // compute transfer
     (async () => {
+      // first of all, compute the transfer amount from blinding data and tx hex
       if (!txDetails?.hex) return;
       const transaction = Transaction.fromHex(txDetails.hex);
       const txID = transaction.getId();
@@ -81,16 +81,29 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
         type: txTypeFromTransfer(transferAmount),
       });
 
+      // get the block header, if not found in repository, fetch it from the chain
+      // skip if the tx is not confirmed (height === -1)
       if (!txDetails?.height || txDetails.height === -1) {
         setBlockHeader(undefined);
         return;
       }
+
       if (blockHeader && blockHeader.height === txDetails.height) return;
-      const chainSource = await appRepository.getChainSource(network);
-      if (!chainSource) return;
-      const header = await chainSource.fetchBlockHeader(txDetails.height);
+
+      const network = await appRepository.getNetwork();
+      if (!network) return;
+
+      let header = await blockHeadersRepository.getBlockHeader(network, txDetails.height);
+
+      if (!header) {
+        const chainSource = await appRepository.getChainSource(network);
+        if (!chainSource) return;
+        header = await chainSource.fetchBlockHeader(txDetails.height);
+        if (header) await blockHeadersRepository.setBlockHeader(network, header);
+        await chainSource.close();
+      }
+
       setBlockHeader(header);
-      await chainSource.close();
     })()
       .catch(console.error)
       .finally(() => setIsLoading(false));
