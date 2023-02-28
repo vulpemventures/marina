@@ -142,8 +142,8 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
               <div className="h-2.5 bg-primary rounded-full w-20"></div>
             </div>
           ) : (
-            <span className="text-danger items-center mr-2 text-xs font-medium text-left">
-              mempool
+            <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
+              unconfirmed
             </span>
           )}
         </div>
@@ -178,18 +178,16 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
           <div className="flex flex-row">
-            <p
-              className={classNames('text-base antialiased', {
-                'text-primary': txDetails?.height ? txDetails.height > 0 : false,
-              })}
-            >
-              {txDetails?.height ? 'Confirmed' : 'Unconfirmed'}
-            </p>
-            <img
-              className="w-6 h-6 -mt-0.5"
-              src={txDetails?.height ? 'assets/images/confirm.svg' : 'assets/images/cross.svg'}
-              alt="confirm"
-            />
+            {txDetails?.height ? (
+              <>
+                <p className="text-primary text-base antialiased">Confirmed</p>
+                <img className="w-6 h-6 -mt-0.5" src="assets/images/confirm.svg" alt="confirm" />
+              </>
+            ) : (
+              <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
+                Unconfirmed
+              </span>
+            )}
           </div>
           {transfer && (
             <div>
