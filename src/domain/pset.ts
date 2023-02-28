@@ -163,6 +163,8 @@ async function fetchTaxiTopup(
   return castTopupData(data);
 }
 
+// This class is responsible for creating psets
+// It selects utxos from WalletRepository but do not handle locking them
 export class PsetBuilder {
   constructor(
     private walletRepository: WalletRepository,
@@ -187,7 +189,7 @@ export class PsetBuilder {
       [...recipients, ...dataRecipients]
         .filter(({ value }) => value > 0)
         .map(({ asset, value }) => ({ asset, amount: value })),
-      true,
+      undefined,
       ...fromAccounts
     );
 
@@ -253,11 +255,15 @@ export class PsetBuilder {
         },
       ]);
     } else {
-      // reselect
+      // reselect utxos to pay the fees
       const newCoinSelection = await this.walletRepository.selectUtxos(
         network,
         [{ asset: networks[network].assetHash, amount: feeAmount }],
-        true,
+        // exclude the already selected utxos used in the pset inputs
+        updater.pset.inputs.map((input) => ({
+          txID: Buffer.from(input.previousTxid).reverse().toString('hex'),
+          vout: input.previousTxIndex,
+        })),
         ...fromAccounts
       );
 
@@ -349,7 +355,7 @@ export class PsetBuilder {
           asset,
           amount: value,
         })),
-      false, // DO NOT lock
+      undefined,
       ...fromAccounts
     );
 
@@ -400,7 +406,7 @@ export class PsetBuilder {
       [...recipients, ...dataRecipients, { asset: taxiAsset, value: assetAmount }]
         .filter(({ value }) => value > 0)
         .map(({ asset, value }) => ({ asset, amount: value })),
-      true,
+      undefined,
       ...fromAccounts
     );
 

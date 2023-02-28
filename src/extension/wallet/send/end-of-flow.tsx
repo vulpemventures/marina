@@ -15,6 +15,7 @@ import {
 } from '../../../infrastructure/storage/common';
 import { BlinderService } from '../../../application/blinder';
 import { Pset } from 'liquidjs-lib';
+import { lockTransactionInputs } from '../../../domain/transaction';
 
 const SendEndOfFlow: React.FC = () => {
   const history = useHistory();
@@ -28,7 +29,7 @@ const SendEndOfFlow: React.FC = () => {
   };
 
   const handleUnlock = async (password: string) => {
-    let toBroadcast = undefined;
+    let extractedTx = undefined;
     try {
       const unsignedPset = await sendFlowRepository.getUnsignedPset();
       if (!unsignedPset) throw new Error('unsigned pset not found');
@@ -40,9 +41,10 @@ const SendEndOfFlow: React.FC = () => {
       const blindedPset = await blinder.blindPset(Pset.fromBase64(unsignedPset));
       const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
       const signed = await signer.signPset(blindedPset);
-      toBroadcast = signer.finalizeAndExtract(signed);
-      const txid = await chainSource.broadcastTransaction(toBroadcast);
+      extractedTx = signer.finalizeAndExtract(signed);
+      const txid = await chainSource.broadcastTransaction(extractedTx);
       if (!txid) throw new Error('something went wrong with the tx broadcasting');
+      await lockTransactionInputs(walletRepository, extractedTx);
       await sendFlowRepository.reset();
 
       // update tx in repository
@@ -50,7 +52,7 @@ const SendEndOfFlow: React.FC = () => {
       await walletRepository.updateTxDetails({
         [txid]: {
           height: 0, // unconfirmed, subscriber will update this once the tx is propagated
-          hex: toBroadcast,
+          hex: extractedTx,
         },
       });
       await chainSource.close();
@@ -58,7 +60,7 @@ const SendEndOfFlow: React.FC = () => {
       // push to success page
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-        state: { txhex: toBroadcast },
+        state: { txhex: extractedTx },
       });
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
@@ -70,7 +72,7 @@ const SendEndOfFlow: React.FC = () => {
           pathname: SEND_PAYMENT_ERROR_ROUTE,
           state: {
             error: errorMessage,
-            tx: toBroadcast,
+            tx: extractedTx,
           },
         });
       }

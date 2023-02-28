@@ -35,7 +35,7 @@ import {
 } from '@ionio-lang/ionio';
 import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
 import { initWalletRepository } from '../src/domain/repository';
-import { computeBalances } from '../src/domain/transaction';
+import { computeBalances, lockTransactionInputs } from '../src/domain/transaction';
 
 // we need this to mock the browser.storage.local calls in repositories
 // replace webextension-polyfill with a mock defined in __mocks__ folder
@@ -327,6 +327,7 @@ describe('Application Layer', () => {
       expect(transaction.ins).toHaveLength(2);
       const chainSource = await appRepository.getChainSource('regtest');
       const txID = await chainSource?.broadcastTransaction(hex);
+      await lockTransactionInputs(walletRepository, hex);
       await chainSource?.close();
       expect(txID).toEqual(transaction.getId());
     }, 10_000);
@@ -375,6 +376,7 @@ describe('Application Layer', () => {
         const hex = transaction.toHex();
         const chainSource = await appRepository.getChainSource('regtest');
         const txID = await chainSource?.broadcastTransaction(hex);
+        await lockTransactionInputs(walletRepository, hex);
         await chainSource?.close();
         expect(txID).toEqual(transaction.getId());
       }, 12_000);

@@ -14,7 +14,7 @@ import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository
 import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
 import type { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
 import type { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
-import type { TxDetails, UnblindedOutput } from '../../domain/transaction';
+import { lockTransactionInputs, TxDetails, UnblindedOutput } from '../../domain/transaction';
 import { computeBalances } from '../../domain/transaction';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
@@ -323,6 +323,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             if (!chainSource) throw new Error('chain source is not set up, cannot broadcast');
             const txid = await chainSource.broadcastTransaction(signedTxHex);
             await Promise.allSettled([
+              lockTransactionInputs(this.walletRepository, signedTxHex),
               this.walletRepository.updateTxDetails({
                 [txid]: {
                   hex: signedTxHex,
@@ -473,6 +474,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           // broadcast tx
           const txid = await chainSource.broadcastTransaction(signedTxHex);
           await Promise.allSettled([
+            lockTransactionInputs(this.walletRepository, signedTxHex),
             this.walletRepository.updateTxDetails({
               [txid]: {
                 hex: signedTxHex,

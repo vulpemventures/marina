@@ -10,13 +10,11 @@ import type {
   UnblindedOutput,
   CoinSelection,
 } from '../../domain/transaction';
-import type { AccountDetails, WalletRepository } from '../../domain/repository';
+import type { AccountDetails, WalletRepository, Outpoint } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
 import type { Encrypted } from '../../domain/encryption';
 
-type LockedOutpoint = {
-  txID: string;
-  vout: number;
+type LockedOutpoint = Outpoint & {
   until: number; // timestamp in milliseconds, after which the outpoint should be unlocked
 };
 
@@ -217,30 +215,32 @@ export class WalletStorageAPI implements WalletRepository {
         accountNames.includes(scriptDetails[script].accountName)
       );
     }
-    const allUtxos = await this.getUtxosFromTransactions(
+    return this.getUtxosFromTransactions(
       scripts.map((s) => Buffer.from(s, 'hex')),
       network
     );
+  }
 
+  async getUnlockedUtxos(
+    network: NetworkString,
+    ...accountNames: string[]
+  ): Promise<UnblindedOutput[]> {
+    const allUtxos = await this.getUtxos(network, ...accountNames);
     const lockedOutpoints = await this.getLockedOutpoints();
-    const unlockedUtxos = [];
-
-    for (const utxo of allUtxos) {
-      if (lockedOutpoints.has(`${utxo.txID}:${utxo.vout}`)) continue;
-      unlockedUtxos.push(utxo);
-    }
-
-    return unlockedUtxos;
+    return allUtxos.filter((utxo) => !lockedOutpoints.has(`${utxo.txID}:${utxo.vout}`));
   }
 
   async selectUtxos(
     network: NetworkString,
     targets: { amount: number; asset: string }[],
-    lock = false,
+    excludeOutpoints: Outpoint[] = [],
     ...acountNames: string[]
   ): Promise<CoinSelection> {
-    const allUtxos = await this.getUtxos(network, ...acountNames);
-    const onlyWithUnblindingData = allUtxos.filter((utxo) => utxo.blindingData);
+    const utxos = (await this.getUnlockedUtxos(network, ...acountNames)).filter(
+      (utxo) =>
+        utxo.blindingData &&
+        !excludeOutpoints.find(({ txID, vout }) => utxo.txID === txID && utxo.vout === vout)
+    );
     // accumulate targets with same asset
     targets = targets.reduce((acc, target) => {
       const existingTarget = acc.find((t) => t.asset === target.asset);
@@ -255,11 +255,11 @@ export class WalletStorageAPI implements WalletRepository {
     const selectedUtxos: UnblindedOutput[] = [];
     const changeOutputs: { asset: string; amount: number }[] = [];
     for (const target of targets) {
-      const utxos = onlyWithUnblindingData.filter(
+      const utxosFilteredByAsset = utxos.filter(
         (utxo) => utxo.blindingData?.asset === target.asset
       );
       const { inputs, outputs } = coinselect(
-        utxos.map((utxo) => ({
+        utxosFilteredByAsset.map((utxo) => ({
           txId: utxo.txID,
           vout: utxo.vout,
           value: utxo.blindingData?.value,
@@ -272,7 +272,7 @@ export class WalletStorageAPI implements WalletRepository {
         selectedUtxos.push(
           ...(inputs as { txId: string; vout: number }[]).map(
             (input) =>
-              onlyWithUnblindingData.find(
+              utxos.find(
                 (utxo) => utxo.txID === input.txId && utxo.vout === input.vout
               ) as UnblindedOutput
           )
@@ -289,10 +289,6 @@ export class WalletStorageAPI implements WalletRepository {
             }))
         );
       }
-    }
-
-    if (lock) {
-      await this.lockOutpoints(selectedUtxos);
     }
 
     return {
@@ -327,6 +323,21 @@ export class WalletStorageAPI implements WalletRepository {
       [WalletStorageKey.ENCRYPTED_MNEMONIC]: encryptedMnemonic,
       [WalletStorageKey.MASTER_BLINDING_KEY]: masterBlindingKey,
     });
+  }
+
+  async lockOutpoints(outpoints: Outpoint[]): Promise<void> {
+    const { [WalletStorageKey.LOCKED_OUTPOINTS]: lockedOutpoints } =
+      await Browser.storage.local.get(WalletStorageKey.LOCKED_OUTPOINTS);
+    const current = lockedOutpoints ?? [];
+    const until = Date.now() + WalletStorageAPI.LOCKTIME;
+    for (const outpoint of outpoints) {
+      if (
+        current.findIndex((o: any) => o.txID === outpoint.txID && o.vout === outpoint.vout) === -1
+      ) {
+        current.push({ txID: outpoint.txID, vout: outpoint.vout, until });
+      }
+    }
+    return Browser.storage.local.set({ [WalletStorageKey.LOCKED_OUTPOINTS]: current });
   }
 
   onNewTransaction(callback: (txID: string, tx: TxDetails) => Promise<void>) {
@@ -409,21 +420,6 @@ export class WalletStorageAPI implements WalletRepository {
   }
 
   static LOCKTIME = 1 * 60 * 1000; // 1 minutes
-
-  private async lockOutpoints(outpoints: Array<{ txID: string; vout: number }>): Promise<void> {
-    const { [WalletStorageKey.LOCKED_OUTPOINTS]: lockedOutpoints } =
-      await Browser.storage.local.get(WalletStorageKey.LOCKED_OUTPOINTS);
-    const current = lockedOutpoints ?? [];
-    const until = Date.now() + WalletStorageAPI.LOCKTIME;
-    for (const outpoint of outpoints) {
-      if (
-        current.findIndex((o: any) => o.txID === outpoint.txID && o.vout === outpoint.vout) === -1
-      ) {
-        current.push({ txID: outpoint.txID, vout: outpoint.vout, until });
-      }
-    }
-    return Browser.storage.local.set({ [WalletStorageKey.LOCKED_OUTPOINTS]: current });
-  }
 
   // unlock all outpoints that are locked for more than WalletStorageAPI.LOCKTIME milliseconds
   private async unlockOutpoints(): Promise<void> {

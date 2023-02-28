@@ -67,6 +67,8 @@ export interface AppRepository {
 
 type MaybeNull<T> = Promise<T | null>;
 
+export type Outpoint = { txID: string; vout: number };
+
 /**
  *  WalletRepository stores all the chain data (transactions, scripts, blinding data and accounts details)
  */
@@ -77,12 +79,17 @@ export interface WalletRepository {
     network: NetworkString,
     ...accountNames: string[]
   ): Promise<{ txID: string; vout: number; blindingData?: UnblindingData }[]>;
+  getUnlockedUtxos(
+    network: NetworkString,
+    ...accountNames: string[]
+  ): Promise<{ txID: string; vout: number; blindingData?: UnblindingData }[]>;
   selectUtxos(
     network: NetworkString,
     targets: { asset: string; amount: number }[],
-    lock: boolean,
-    ...onlyAccounts: string[]
+    excludeOutpoints?: Outpoint[],
+    ...onlyAccounts: string[] // optional, if not provided, all accounts utxos can be selected
   ): Promise<CoinSelection>;
+  lockOutpoints(outpoints: Outpoint[]): Promise<void>;
   getOutputBlindingData(
     txID: string,
     vout: number

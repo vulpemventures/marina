@@ -4,7 +4,12 @@ import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../../domain/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
-import { appRepository, useSelectNetwork } from '../../../infrastructure/storage/common';
+import {
+  appRepository,
+  useSelectNetwork,
+  walletRepository,
+} from '../../../infrastructure/storage/common';
+import { lockTransactionInputs } from '../../../domain/transaction';
 
 interface LocationState {
   error: string;
@@ -17,15 +22,20 @@ const PaymentError: React.FC = () => {
   const network = useSelectNetwork();
 
   const handleRetry = async () => {
-    const chainSource = await appRepository.getChainSource(network);
-    if (!chainSource) throw new Error('chain source not found');
-    const txid = await chainSource.broadcastTransaction(state?.tx);
-    await chainSource.close();
-    // navigate to payment success page
-    history.push({
-      pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-      state: { txid },
-    });
+    if (state.tx) {
+      const chainSource = await appRepository.getChainSource(network);
+      if (!chainSource) throw new Error('chain source not found');
+      const txid = await chainSource.broadcastTransaction(state?.tx);
+      await lockTransactionInputs(walletRepository, state.tx);
+      try {
+        await chainSource.close();
+      } catch {}
+      // navigate to payment success page
+      history.push({
+        pathname: SEND_PAYMENT_SUCCESS_ROUTE,
+        state: { txid },
+      });
+    }
   };
 
   const handleBackBtn = () => {

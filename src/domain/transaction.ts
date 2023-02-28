@@ -1,5 +1,5 @@
-import type { Transaction } from 'liquidjs-lib';
-import type { AppRepository, WalletRepository } from './repository';
+import { Transaction } from 'liquidjs-lib';
+import type { AppRepository, Outpoint, WalletRepository } from './repository';
 
 export type UnblindingData = {
   value: number;
@@ -71,4 +71,17 @@ export async function makeURLwithBlinders(
 
   const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}`;
   return url;
+}
+
+export async function lockTransactionInputs(
+  walletRepository: WalletRepository,
+  txHex: string
+): Promise<void> {
+  const transaction = Transaction.fromHex(txHex);
+  return walletRepository.lockOutpoints(
+    transaction.ins.map((input) => ({
+      txID: Buffer.from(input.hash).reverse().toString('hex'),
+      vout: input.index,
+    }))
+  );
 }
