@@ -92,11 +92,7 @@ const SettingsAccounts: React.FC = () => {
       />
 
       <div className="h-80">
-        <ButtonList
-          emptyText="no accounts on your Marina wallet"
-          title="Accounts"
-          titleColor="grayDark"
-        >
+        <ButtonList emptyText="no accounts on your Marina wallet" title="" titleColor="grayDark">
           {accountsList
             .filter((name: string) => filterAccountsBySearchTerm(searchTerm)(name))
             .map((name: string) => [name, accounts[name]] as [string, AccountDetails])
@@ -104,11 +100,14 @@ const SettingsAccounts: React.FC = () => {
               <div key={index} className="p-3 rounded-md shadow-md">
                 <div className="flex-center flex flex-col align-middle">
                   <span className="text-primary mt-1 text-sm font-bold">
-                    {name} ({details.type})
+                    {name} ({details.type.toUpperCase()})
                   </span>
                   <span className="text-grayDark mt-1 text-sm">
                     {details.accountNetworks.join(', ')}
                   </span>
+                  {[MainAccount, MainAccountLegacy, MainAccountTest].includes(name) && (
+                    <span className="text-grayDark mt-1 text-sm">{details.baseDerivationPath}</span>
+                  )}
                 </div>
               </div>
             ))}

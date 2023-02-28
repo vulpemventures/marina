@@ -133,13 +133,19 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       >
         <div className="flex items-center">
           <TxIcon txType={transfer?.type ?? TxType.Unknow} />
-          <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
-            {blockHeader
-              ? moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')
-              : isLoading
-              ? '...'
-              : 'mempool'}
-          </span>
+          {blockHeader ? (
+            <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
+              {moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')}
+            </span>
+          ) : isLoading ? (
+            <div role="status" className="animate-pulse w-full">
+              <div className="h-2.5 bg-primary rounded-full w-20"></div>
+            </div>
+          ) : (
+            <span className="text-danger items-center mr-2 text-xs font-medium text-left">
+              mempool
+            </span>
+          )}
         </div>
         <div className="flex">
           <div className="text-primary whitespace-nowrap text-sm font-medium">
