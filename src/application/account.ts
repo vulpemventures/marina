@@ -501,10 +501,12 @@ export class Account {
       if (name === this.name) {
         return '0x'.concat(publicKey.subarray(1).toString('hex'));
       }
-
       const param = args[name];
       if (!param) {
         throw new Error(`missing contructor arg ${name}`);
+      }
+      if (param instanceof Uint8Array) {
+        return Buffer.from(param);
       }
       return param;
     });

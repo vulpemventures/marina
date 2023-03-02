@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import ShellPopUp from '../components/shell-popup';
 import Select from '../components/select';
+import type { ExplorerType } from '../../domain/explorer';
 import {
-  ExplorerType,
   isBlockstreamWebExplorerURL,
   isMempoolWebExplorerURL,
   isNigiriWebExplorerURL,
-} from '../../domain/explorer';
-import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,
   MempoolExplorerURLs,
@@ -57,7 +55,7 @@ const SettingsExplorer: React.FC = () => {
       }
 
       setSelected('Custom');
-    })();
+    })().catch(console.error);
   }, [selected]);
 
   const handleChange = async (explorer: ExplorerType) => {

@@ -24,7 +24,7 @@ import {
 import { mnemonicToSeed } from 'bip39';
 import { SLIP77Factory } from 'slip77';
 import type { ChainSource } from './chainsource';
-import { BlockHeader } from '../background/utils';
+import type { BlockHeader } from '../background/utils';
 
 export interface AppStatus {
   isMnemonicVerified: boolean;

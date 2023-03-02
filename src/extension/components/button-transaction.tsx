@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import classNames from 'classnames';
 import type { TxDetails } from '../../domain/transaction';
 import { makeURLwithBlinders, TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
@@ -15,7 +14,6 @@ import Browser from 'webextension-polyfill';
 import {
   appRepository,
   blockHeadersRepository,
-  useSelectNetwork,
   walletRepository,
 } from '../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';

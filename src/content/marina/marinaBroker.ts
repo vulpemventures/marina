@@ -14,8 +14,8 @@ import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository
 import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
 import type { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
 import type { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
-import { lockTransactionInputs, TxDetails, UnblindedOutput } from '../../domain/transaction';
-import { computeBalances } from '../../domain/transaction';
+import type { TxDetails, UnblindedOutput } from '../../domain/transaction';
+import { lockTransactionInputs, computeBalances } from '../../domain/transaction';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { networks } from 'liquidjs-lib';

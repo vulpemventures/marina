@@ -1,6 +1,6 @@
 ///// ** Inject <-> Content Script messages ** /////
 
-import { AccountID, NetworkString } from 'marina-provider';
+import type { AccountID, NetworkString } from 'marina-provider';
 
 // request = a call of a provider's method
 export interface RequestMessage<T extends string> {

@@ -1,8 +1,9 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import browser from 'webextension-polyfill';
 import zkp from '@vulpemventures/secp256k1-zkp';
-import { isRestoreMessage, OpenPopupMessage, PopupName, RestoreMessage } from '../domain/message';
+import type { OpenPopupMessage, PopupName, RestoreMessage } from '../domain/message';
 import {
+  isRestoreMessage,
   isLogInMessage,
   isLogOutMessage,
   isOpenPopupMessage,

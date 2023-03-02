@@ -1,5 +1,5 @@
 import { Transaction } from 'liquidjs-lib';
-import type { AppRepository, Outpoint, WalletRepository } from './repository';
+import type { AppRepository, WalletRepository } from './repository';
 
 export type UnblindingData = {
   value: number;
