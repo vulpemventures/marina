@@ -1,8 +1,8 @@
 import { crypto } from 'liquidjs-lib';
+import type { ElectrumWS } from 'ws-electrumx-client';
 import type { BlockHeader } from '../background/utils';
 import { deserializeBlockHeader } from '../background/utils';
 import type { ChainSource } from '../domain/chainsource';
-import type { ElectrumWS } from './ws/ws-electrs';
 
 export type GetHistoryResponse = Array<{
   tx_hash: string;
@@ -36,7 +36,15 @@ export class WsElectrumChainSource implements ChainSource {
     callback: (scripthash: string, status: string | null) => void
   ) {
     const scriptHash = toScriptHash(script);
-    await this.ws.subscribe(SubscribeStatusMethod, callback, scriptHash);
+    await this.ws.subscribe(
+      SubscribeStatusMethod,
+      (scripthash: unknown, status: unknown) => {
+        if (scripthash === scriptHash) {
+          callback(scripthash, status as string | null);
+        }
+      },
+      scriptHash
+    );
   }
 
   async fetchHistories(scripts: Buffer[]): Promise<GetHistoryResponse[]> {

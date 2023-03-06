@@ -1,6 +1,5 @@
 import type { NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import { ElectrumWS } from '../ws/ws-electrs';
 import { WsElectrumChainSource } from '../electrum-chain-source';
 import {
   BlockstreamExplorerURLs,
@@ -11,6 +10,7 @@ import type { AppRepository, AppStatus, Loader } from '../../domain/repository';
 import type { MaybeNull } from './common';
 import { DynamicStorageKey } from './dynamic-key';
 import type { ChainSource } from '../../domain/chainsource';
+import { ElectrumWS } from 'ws-electrumx-client';
 
 export enum AppStorageKeys {
   ONBOARDING_COMPLETED = 'onboardingCompleted',

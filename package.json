@@ -58,6 +58,7 @@
     "uuid": "^8.3.2",
     "webext-redux": "^2.1.7",
     "webextension-polyfill": "^0.8.0",
+    "ws-electrumx-client": "^1.0.0",
     "yup": "^0.32.9"
   },
   "devDependencies": {
