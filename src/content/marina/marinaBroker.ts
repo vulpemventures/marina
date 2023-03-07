@@ -21,6 +21,7 @@ import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { networks } from 'liquidjs-lib';
 import { PopupsStorageAPI } from '../../infrastructure/storage/popups-repository';
 import type {
+  DisabledMarinaEvent,
   EnabledMarinaEvent,
   MarinaEvent,
   NetworkMarinaEvent,
@@ -98,41 +99,52 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     super.start(this.marinaMessageHandler);
     // subscribe to repository events and map them to MarinaEvents
     // providers will catch these events when on/off are called
-    this.appRepository.onHostnameEnabled((hostname) => {
-      this.dispatchEventToProvider<EnabledMarinaEvent>({
+    this.appRepository.onHostnameEnabled(async (hostname) => {
+      const net = (await this.appRepository.getNetwork()) || 'liquid';
+      return this.dispatchEventToProvider<EnabledMarinaEvent>({
         type: 'ENABLED',
-        payload: { data: { hostname: hostname, network: 'liquid' } },
+        payload: { data: { hostname: hostname, network: net } },
       });
-      return Promise.resolve();
+    });
+    this.appRepository.onHostnameDisabled(async (hostname) => {
+      const net = (await this.appRepository.getNetwork()) || 'liquid';
+      return this.dispatchEventToProvider<DisabledMarinaEvent>({
+        type: 'DISABLED',
+        payload: { data: { hostname: hostname, network: net } },
+      });
     });
     this.appRepository.onNetworkChanged((network) => {
       this.network = network;
-      this.dispatchEventToProvider<NetworkMarinaEvent>({
-        type: 'NETWORK',
-        payload: { data: network },
-      });
-      return Promise.resolve();
+      return Promise.resolve(
+        this.dispatchEventToProvider<NetworkMarinaEvent>({
+          type: 'NETWORK',
+          payload: { data: network },
+        })
+      );
     });
-    this.walletRepository.onDeleteUtxo(this.network, (utxo) => {
-      this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
-        type: 'SPENT_UTXO',
-        payload: { data: utxo },
-      });
-      return Promise.resolve();
+    this.walletRepository.onDeleteUtxo(this.network)((utxo) => {
+      return Promise.resolve(
+        this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
+          type: 'SPENT_UTXO',
+          payload: { data: utxo },
+        })
+      );
     });
-    this.walletRepository.onNewUtxo(this.network, (utxo) => {
-      this.dispatchEventToProvider<NewUtxoMarinaEvent>({
-        type: 'NEW_UTXO',
-        payload: { data: utxo },
-      });
-      return Promise.resolve();
+    this.walletRepository.onNewUtxo(this.network)((utxo) => {
+      return Promise.resolve(
+        this.dispatchEventToProvider<NewUtxoMarinaEvent>({
+          type: 'NEW_UTXO',
+          payload: { data: utxo },
+        })
+      );
     });
     this.walletRepository.onNewTransaction((ID: string, details: TxDetails) => {
-      this.dispatchEventToProvider<NewTxMarinaEvent>({
-        type: 'NEW_TX',
-        payload: { data: { txID: ID, details } },
-      });
-      return Promise.resolve();
+      return Promise.resolve(
+        this.dispatchEventToProvider<NewTxMarinaEvent>({
+          type: 'NEW_TX',
+          payload: { data: { txID: ID, details } },
+        })
+      );
     });
   }
   // check if the current broker hostname is authorized

@@ -171,10 +171,9 @@ export class AppStorageAPI implements AppRepository {
 
   async disableSite(url: string): Promise<void> {
     const enabledSites = await this.getEnabledSites();
-    const index = enabledSites.indexOf(url);
-    if (index !== -1) return;
+    const newEnabledSites = enabledSites.filter((site) => site !== url);
     return Browser.storage.local.set({
-      [AppStorageKeys.ENABLED_SITES]: enabledSites.splice(index, 1),
+      [AppStorageKeys.ENABLED_SITES]: newEnabledSites,
     });
   }
 
@@ -183,7 +182,10 @@ export class AppStorageAPI implements AppRepository {
   }
 
   onHostnameEnabled(callback: (websiteEnabled: string) => Promise<void>) {
-    return Browser.storage.onChanged.addListener(async (changes, areaName) => {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
       if (areaName !== 'local') return;
       const changesEnabledSites = changes[AppStorageKeys.ENABLED_SITES];
       if (changesEnabledSites) {
@@ -192,11 +194,34 @@ export class AppStorageAPI implements AppRepository {
         const added = newVal.filter((v) => !oldVal.includes(v));
         await Promise.allSettled(added.map(callback));
       }
-    });
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
   }
 
-  onNetworkChanged(callback: (network: NetworkString) => Promise<void>): void {
-    return Browser.storage.onChanged.addListener(async (changes, areaName) => {
+  onHostnameDisabled(callback: (websiteDisabled: string) => Promise<void>) {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
+      if (areaName !== 'local') return;
+      const changesEnabledSites = changes[AppStorageKeys.ENABLED_SITES];
+      if (changesEnabledSites) {
+        const oldVal = (changesEnabledSites.oldValue as string[]) ?? [];
+        const newVal = (changesEnabledSites.newValue as string[]) ?? [];
+        const removed = oldVal.filter((v) => !newVal.includes(v));
+        await Promise.allSettled(removed.map(callback));
+      }
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
+  }
+
+  onNetworkChanged(callback: (network: NetworkString) => Promise<void>) {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
       if (areaName !== 'local') return;
       const changesNetwork = changes[AppStorageKeys.NETWORK];
       if (changesNetwork) {
@@ -204,7 +229,9 @@ export class AppStorageAPI implements AppRepository {
         const newVal = changesNetwork.newValue as NetworkString;
         if (oldVal !== newVal) await callback(newVal);
       }
-    });
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
   }
 
   clear(): Promise<void> {

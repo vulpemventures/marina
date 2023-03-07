@@ -44,6 +44,10 @@ export interface Loader {
   onChanged(callback: (isLoading: boolean) => void): () => void;
 }
 
+export type EventEmitter<ArgsT extends any[]> = (
+  callback: (...args: ArgsT) => Promise<void>
+) => () => void;
+
 /**
  * The AppRepository stores the global application state like settings, network or explorer URLs.
  */
@@ -65,8 +69,9 @@ export interface AppRepository {
   enableSite(url: string): Promise<void>;
   disableSite(url: string): Promise<void>;
 
-  onHostnameEnabled(callback: (websiteEnabled: string) => Promise<void>): void;
-  onNetworkChanged(callback: (network: NetworkString) => Promise<void>): void;
+  onHostnameEnabled: EventEmitter<[hostname: string]>;
+  onHostnameDisabled: EventEmitter<[hostname: string]>;
+  onNetworkChanged: EventEmitter<[NetworkString]>;
 
   /** loaders **/
   restorerLoader: Loader;
@@ -131,9 +136,10 @@ export interface WalletRepository {
     indexes: Partial<{ internal: number; external: number }>
   ): Promise<void>;
 
-  onNewTransaction(callback: (txID: string, tx: TxDetails) => Promise<void>): void;
-  onNewUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void;
-  onDeleteUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void;
+  onNewTransaction: EventEmitter<[txID: string, details: TxDetails]>;
+  onNewUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
+  onDeleteUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
+  onNewScript: EventEmitter<[script: string, details: ScriptDetails]>;
 }
 
 // asset registry is a local cache of remote elements-registry

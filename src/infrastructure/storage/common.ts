@@ -31,7 +31,7 @@ export const blockHeadersRepository = new BlockHeadersAPI();
 
 export type ReadonlyReactHook<T> = () => T | undefined;
 
-export function makeReactHook<T>(namespace: 'sync' | 'local', key: string): ReadonlyReactHook<T> {
+function makeReactHook<T>(namespace: 'sync' | 'local', key: string): ReadonlyReactHook<T> {
   return function useStorageSelector(): T | undefined {
     const [value, setValue] = useState<T>();
 

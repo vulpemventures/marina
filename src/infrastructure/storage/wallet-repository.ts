@@ -341,10 +341,19 @@ export class WalletStorageAPI implements WalletRepository {
   }
 
   onNewTransaction(callback: (txID: string, tx: TxDetails) => Promise<void>) {
-    return Browser.storage.onChanged.addListener(async (changes, areaName) => {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
       if (areaName !== 'local') return;
       const txKeys = Object.entries(changes)
-        .filter(([key, changes]) => TxDetailsKey.is(key) && changes.newValue !== undefined)
+        .filter(
+          ([key, changes]) =>
+            TxDetailsKey.is(key) &&
+            changes.newValue !== undefined &&
+            changes.newValue.hex !== undefined &&
+            changes.oldValue?.hex === undefined
+        )
         .map(([key]) => key);
 
       for (const txKey of txKeys) {
@@ -352,35 +361,59 @@ export class WalletStorageAPI implements WalletRepository {
         const details = changes[txKey].newValue as TxDetails;
         await callback(txID, details);
       }
-    });
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
   }
 
-  onNewUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>) {
-    let utxosPromise = this.getUtxos(network);
-
-    this.onNewTransaction(async () => {
-      const oldUtxos = await utxosPromise;
-      const newUtxosState = await this.getUtxos(network);
-      const newUtxos = newUtxosState.filter((utxo) => !oldUtxos.includes(utxo));
-      utxosPromise = Promise.resolve(newUtxosState);
-      for (const utxo of newUtxos) {
-        await callback(utxo);
-      }
-    });
+  onNewUtxo(network: NetworkString) {
+    return (callback: (utxo: UnblindedOutput) => Promise<void>) => {
+      return this.onNewTransaction(async (txID: string) => {
+        const newUtxosState = await this.getUtxos(network);
+        const utxosFromNewTx = newUtxosState.filter((utxo) => utxo.txID === txID);
+        for (const utxo of utxosFromNewTx) {
+          await callback(utxo);
+        }
+      });
+    };
   }
 
-  onDeleteUtxo(network: NetworkString, callback: (utxo: UnblindedOutput) => Promise<void>): void {
-    let utxosPromise = this.getUtxos(network);
+  onDeleteUtxo(network: NetworkString) {
+    return (callback: (utxo: UnblindedOutput) => Promise<void>) => {
+      let utxosPromise = this.getUtxos(network);
 
-    this.onNewTransaction(async () => {
-      const oldUtxos = await utxosPromise;
-      const newUtxosState = await this.getUtxos(network);
-      const deletedUtxos = oldUtxos.filter((utxo) => !newUtxosState.includes(utxo));
-      utxosPromise = Promise.resolve(newUtxosState);
-      for (const utxo of deletedUtxos) {
-        await callback(utxo);
+      return this.onNewTransaction(async () => {
+        const oldUtxos = await utxosPromise;
+        const newUtxosState = await this.getUtxos(network);
+        const deletedUtxos = oldUtxos.filter(
+          (utxo) => !newUtxosState.find((u) => u.txID === utxo.txID && u.vout === utxo.vout)
+        );
+        utxosPromise = Promise.resolve(newUtxosState);
+        for (const utxo of deletedUtxos) {
+          await callback(utxo);
+        }
+      });
+    };
+  }
+
+  onNewScript(callback: (script: string, details: ScriptDetails) => Promise<void>) {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
+      if (areaName !== 'local') return;
+      const scriptKeys = Object.entries(changes)
+        .filter(([key, changes]) => ScriptDetailsKey.is(key) && changes.newValue !== undefined)
+        .map(([key]) => key);
+
+      for (const scriptKey of scriptKeys) {
+        const [script] = ScriptDetailsKey.decode(scriptKey);
+        const details = changes[scriptKey].newValue as ScriptDetails;
+        await callback(script, details);
       }
-    });
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
   }
 
   async getAccountScripts(

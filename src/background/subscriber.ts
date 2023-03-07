@@ -1,7 +1,5 @@
 import type { NetworkString } from 'marina-provider';
 import type { WalletRepository, AppRepository } from '../domain/repository';
-import Browser from 'webextension-polyfill';
-import { ScriptDetailsKey } from '../infrastructure/storage/wallet-repository';
 import type { ChainSource } from '../domain/chainsource';
 
 const ChainSourceError = (network: string) =>
@@ -37,19 +35,9 @@ export class SubscriberService {
       await this.initSubscribtions();
     });
 
-    Browser.storage.onChanged.addListener(
-      async (changes: Record<string, Browser.Storage.StorageChange>, areaName: string) => {
-        if (areaName !== 'local') return;
-        for (const key of Object.keys(changes)) {
-          // check if new script has been generated
-          if (ScriptDetailsKey.is(key)) {
-            const [script] = ScriptDetailsKey.decode(key);
-            await this.subscribeScript(script);
-            continue;
-          }
-        }
-      }
-    );
+    this.walletRepository.onNewScript(async (script: string) => {
+      await this.subscribeScript(script);
+    });
   }
 
   async stop() {
