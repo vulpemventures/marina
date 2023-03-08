@@ -53,6 +53,7 @@ import type { SpendPopupResponse } from '../../extension/popups/spend';
 import type { CreateAccountPopupResponse } from '../../extension/popups/create-account';
 import { BlinderService } from '../../application/blinder';
 import zkpLib from '@vulpemventures/secp256k1-zkp';
+import { WalletRepositoryUnblinder } from '../../application/unblinder';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -95,6 +96,26 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     );
   }
 
+  private async unblindedOutputToUtxo(coin: UnblindedOutput): Promise<Utxo> {
+    const witnessUtxo = await this.walletRepository.getWitnessUtxo(coin.txID, coin.vout);
+    let scriptDetails: ScriptDetails | undefined;
+
+    if (witnessUtxo) {
+      const script = witnessUtxo.script.toString('hex');
+      const { [script]: details } = await this.walletRepository.getScriptDetails(
+        witnessUtxo?.script.toString('hex')
+      );
+      scriptDetails = details;
+    }
+    return {
+      txid: coin.txID,
+      vout: coin.vout,
+      blindingData: coin.blindingData,
+      scriptDetails: scriptDetails,
+      witnessUtxo: witnessUtxo,
+    };
+  }
+
   protected start() {
     super.start(this.marinaMessageHandler);
     // subscribe to repository events and map them to MarinaEvents
@@ -122,21 +143,17 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         })
       );
     });
-    this.walletRepository.onDeleteUtxo(this.network)((utxo) => {
-      return Promise.resolve(
-        this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
-          type: 'SPENT_UTXO',
-          payload: { data: utxo },
-        })
-      );
+    this.walletRepository.onDeleteUtxo(this.network)(async (utxo) => {
+      return this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
+        type: 'SPENT_UTXO',
+        payload: { data: await this.unblindedOutputToUtxo(utxo) },
+      });
     });
-    this.walletRepository.onNewUtxo(this.network)((utxo) => {
-      return Promise.resolve(
-        this.dispatchEventToProvider<NewUtxoMarinaEvent>({
-          type: 'NEW_UTXO',
-          payload: { data: utxo },
-        })
-      );
+    this.walletRepository.onNewUtxo(this.network)(async (utxo) => {
+      return this.dispatchEventToProvider<NewUtxoMarinaEvent>({
+        type: 'NEW_UTXO',
+        payload: { data: await this.unblindedOutputToUtxo(utxo) },
+      });
     });
     this.walletRepository.onNewTransaction((ID: string, details: TxDetails) => {
       return Promise.resolve(
@@ -380,28 +397,42 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const network = await this.appRepository.getNetwork();
           if (!network) throw new Error('Network not set up');
           const coins = await this.walletRepository.getUtxos(network, ...accountsIDs);
-          const results: Utxo[] = [];
+          const utxos: Utxo[] = [];
+          const unblinder = new WalletRepositoryUnblinder(
+            this.walletRepository,
+            this.appRepository,
+            this.assetRepository,
+            await zkpLib()
+          );
           for (const coin of coins) {
-            const witnessUtxo = await this.walletRepository.getWitnessUtxo(coin.txID, coin.vout);
-            let scriptDetails: ScriptDetails | undefined;
-
-            if (witnessUtxo) {
-              const script = witnessUtxo.script.toString('hex');
-              const { [script]: details } = await this.walletRepository.getScriptDetails(
-                witnessUtxo?.script.toString('hex')
-              );
-              scriptDetails = details;
+            const utxo = await this.unblindedOutputToUtxo(coin);
+            // check if the coins need unblinding
+            if (
+              coin.blindingData ||
+              !utxo.witnessUtxo ||
+              !utxo.witnessUtxo.rangeProof ||
+              !utxo.witnessUtxo.surjectionProof ||
+              !(utxo.witnessUtxo.rangeProof.length > 0) ||
+              !(utxo.witnessUtxo.surjectionProof.length > 0)
+            ) {
+              utxos.push(utxo);
+              continue;
             }
 
-            results.push({
-              ...coin,
-              txid: coin.txID,
-              scriptDetails,
-              witnessUtxo,
-            });
+            // if need unblinding, unblind, cache result, and add to the list
+            const unblinded = (await unblinder.unblind(utxo.witnessUtxo)).at(0);
+            if (unblinded instanceof Error || !unblinded) {
+              console.warn('unblinding failed', unblinded);
+              continue;
+            }
+            await this.walletRepository.updateOutpointBlindingData([
+              [{ txID: utxo.txid, vout: utxo.vout }, unblinded],
+            ]);
+            utxo.blindingData = unblinded;
+            utxos.push(utxo);
           }
 
-          return successMsg(results);
+          return successMsg(utxos);
         }
 
         case 'getBalances': {
@@ -411,7 +442,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (!network) throw new Error('Network not set up');
           const utxos = await this.walletRepository.getUtxos(network, ...accountsIDs);
           const onlyUnblinded = utxos.filter((utxo) => utxo.blindingData);
-          const balances = computeBalances(onlyUnblinded as UnblindedOutput[]);
+          const balances = computeBalances(onlyUnblinded);
 
           const balancesResult = [];
           for (const [assetHash, amount] of Object.entries(balances)) {

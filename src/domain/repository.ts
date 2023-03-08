@@ -91,10 +91,7 @@ export type Outpoint = { txID: string; vout: number };
 export interface WalletRepository {
   addTransactions(network: NetworkString, ...txIDs: string[]): Promise<void>;
   getTransactions(...network: NetworkString[]): Promise<string[]>;
-  getUtxos(
-    network: NetworkString,
-    ...accountNames: string[]
-  ): Promise<{ txID: string; vout: number; blindingData?: UnblindingData }[]>;
+  getUtxos(network: NetworkString, ...accountNames: string[]): Promise<UnblindedOutput[]>;
   getUnlockedUtxos(
     network: NetworkString,
     ...accountNames: string[]
@@ -106,10 +103,7 @@ export interface WalletRepository {
     ...onlyAccounts: string[] // optional, if not provided, all accounts utxos can be selected
   ): Promise<CoinSelection>;
   lockOutpoints(outpoints: Outpoint[]): Promise<void>;
-  getOutputBlindingData(
-    txID: string,
-    vout: number
-  ): Promise<{ txID: string; vout: number; blindingData?: UnblindingData } | undefined>;
+  getOutputBlindingData(txID: string, vout: number): Promise<UnblindedOutput>;
   getWitnessUtxo(txID: string, vout: number): Promise<UpdaterInput['witnessUtxo']>;
   getScriptDetails(...scripts: string[]): Promise<Record<string, ScriptDetails>>;
   getTxDetails(...txIDs: string[]): Promise<Record<string, TxDetails>>;
