@@ -3,7 +3,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { ProvidePlugin } = require('webpack');
 
-module.exports = {
+module.exports = (env) => ({
   experiments: {
     topLevelAwait: true,
   },
@@ -43,8 +43,9 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         { from: './public' }, 
+        { from: `./manifest/manifest.${env.version}.json`, to: `manifest.json`},
       ],
     }),
   ],
   output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
-};
+});

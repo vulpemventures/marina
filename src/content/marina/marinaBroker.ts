@@ -406,7 +406,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           );
           for (const coin of coins) {
             const utxo = await this.unblindedOutputToUtxo(coin);
-            // check if the coins need unblinding
+            // add coins that are not blinded or that are already unblinded
             if (
               coin.blindingData ||
               !utxo.witnessUtxo ||
@@ -419,10 +419,10 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               continue;
             }
 
-            // if need unblinding, unblind, cache result, and add to the list
             const unblinded = (await unblinder.unblind(utxo.witnessUtxo)).at(0);
             if (unblinded instanceof Error || !unblinded) {
               console.warn('unblinding failed', unblinded);
+              utxos.push(utxo); // add the utxo anyway
               continue;
             }
             await this.walletRepository.updateOutpointBlindingData([

@@ -20,6 +20,9 @@ import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
 import { AccountFactory } from '../application/account';
 
+// manifest v2 needs browserAction, v3 needs action
+const action = browser.browserAction ?? browser.action;
+
 // top-level await supported via webpack
 const zkpLib = await zkp();
 
@@ -99,7 +102,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
           // After an update, and only if the user is already onboarded,
           // we need the setup the popup or the first click on the
           // extension icon will do nothing
-          await browser.browserAction.setPopup({ popup: 'popup.html' });
+          await action.setPopup({ popup: 'popup.html' });
         }
       }
     }
@@ -112,14 +115,14 @@ browser.runtime.onStartup.addListener(() => {
     const encryptedMnemonic = await walletRepository.getEncryptedMnemonic();
     if (encryptedMnemonic) {
       // Everytime the browser starts up we need to set up the popup page
-      await browser.browserAction.setPopup({ popup: 'popup.html' });
+      await action.setPopup({ popup: 'popup.html' });
     }
   })().catch(console.error);
 });
 
 // this listener only run IF AND ONLY IF the popup is not set
 // popup is set at the end of onboarding workflow
-browser.browserAction.onClicked.addListener(() => {
+action.onClicked.addListener(() => {
   (async () => {
     // here we prevent to open many onboarding pages fullscreen
     // in case we have one active already in the current tab
@@ -134,9 +137,9 @@ browser.browserAction.onClicked.addListener(() => {
       welcomeTabID = await openInitializeWelcomeRoute();
       return;
     } else {
-      await browser.browserAction.setPopup({ popup: 'popup.html' });
+      await action.setPopup({ popup: 'popup.html' });
       // Function browser.browserAction.openPopup() exists in Firefox but not in Chrome
-      if (browser.browserAction.openPopup) await browser.browserAction.openPopup();
+      if (action.openPopup !== undefined) await action.openPopup();
     }
   })().catch(console.error);
 });

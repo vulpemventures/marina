@@ -3,8 +3,10 @@
   "version": "0.4.14",
   "private": true,
   "scripts": {
-    "start": "NETWORK=regtest webpack --config webpack.dev.js",
-    "build": "NODE_ENV=production webpack --config webpack.prod.js",
+    "start": "NETWORK=regtest webpack --config webpack.dev.js --env version=v2",
+    "start:v3": "NETWORK=regtest webpack --config webpack.dev.js --env version=v3",
+    "build": "NODE_ENV=production webpack --config webpack.prod.js --env version=v2",
+    "build:v3": "NODE_ENV=production webpack --config webpack.prod.js --env version=v3",
     "clean": "rimraf dist",
     "lint": "eslint --ext .ts,.tsx src test",
     "lint:fix": "eslint --fix --ext .ts,.tsx src test",
@@ -12,12 +14,7 @@
     "prettier": "prettier --write src test",
     "prettier:check": "prettier --check src test",
     "web-ext:build": "web-ext build --source-dir dist --overwrite-dest",
-    "web-ext:lint": "web-ext lint --source-dir dist",
-    "cypress:open": "yarn cypress:build && yarn run cypress open",
-    "cypress:build": "webpack --config webpack.cypress.js",
-    "cypress:run": "yarn cypress:chrome",
-    "cypress:chrome": "yarn run cypress run --browser chrome --config video=false",
-    "cypress:chromium": "yarn run cypress run --browser chromium --config video=false"
+    "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
     "@ionio-lang/ionio": "^0.3.0",

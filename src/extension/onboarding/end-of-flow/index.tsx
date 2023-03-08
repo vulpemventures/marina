@@ -139,7 +139,7 @@ const EndOfFlowOnboarding: React.FC = () => {
       }
 
       // set the popup
-      await Browser.browserAction.setPopup({ popup: 'popup.html' });
+      await (Browser.browserAction ?? Browser.action).setPopup({ popup: 'popup.html' });
       await appRepository.updateStatus({ isOnboardingCompleted: true });
       await onboardingRepository.flush();
       await liquidChainSource.close();
