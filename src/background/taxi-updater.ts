@@ -1,6 +1,5 @@
-import axios from 'axios';
 import Browser from 'webextension-polyfill';
-import type { AssetAxiosResponse } from '../application/utils';
+import { fetchAsset } from '../application/utils';
 import type { AppRepository, AssetRepository, TaxiRepository } from '../domain/repository';
 
 // set up a Browser.alarms in order to fetch the taxi assets every minute
@@ -55,16 +54,8 @@ export class TaxiUpdater {
       const assetDetails = await this.assetRepository.getAsset(asset);
       if (assetDetails && assetDetails.name !== 'Unknown') continue;
       try {
-        const { name, ticker, precision } = await axios
-          .get<any, AssetAxiosResponse>(`${webExplorerURL}/api/asset/${asset}`)
-          .then((r) => r.data);
-
-        await this.assetRepository.addAsset(asset, {
-          name: name || 'Unknown',
-          ticker: ticker || asset.substring(0, 4),
-          precision: precision || 8,
-          assetHash: asset,
-        });
+        const assetFromExplorer = await fetchAsset(webExplorerURL, asset);
+        await this.assetRepository.addAsset(asset, assetFromExplorer);
       } catch (e) {
         await this.assetRepository.addAsset(asset, {
           name: 'Unknown',
@@ -86,6 +77,7 @@ interface TaxiAssetDetails {
 }
 
 async function fetchAssetsFromTaxi(taxiUrl: string): Promise<string[]> {
-  const { data } = await axios.get(`${taxiUrl}/assets`);
-  return data.assets.map((asset: TaxiAssetDetails) => asset.assetHash);
+  const response = await fetch(`${taxiUrl}/assets`);
+  const data = await response.json();
+  return (data.assets ?? []).map((asset: TaxiAssetDetails) => asset.assetHash);
 }

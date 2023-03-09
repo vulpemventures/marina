@@ -1,4 +1,4 @@
-import axios from 'axios';
+import * as ecc from 'tiny-secp256k1';
 import { AssetHash, confidential } from 'liquidjs-lib';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
@@ -6,8 +6,7 @@ import type { Output } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
 import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
 import type { UnblindingData } from '../domain/transaction';
-import * as ecc from 'tiny-secp256k1';
-import type { AssetAxiosResponse } from './utils';
+import { fetchAsset } from './utils';
 
 const slip77 = SLIP77Factory(ecc);
 
@@ -84,16 +83,8 @@ export class WalletRepositoryUnblinder implements Unblinder {
       const assetDetails = await this.assetRepository.getAsset(asset);
       if (assetDetails && assetDetails.name !== 'Unknown') continue;
       try {
-        const { name, ticker, precision } = await axios
-          .get<any, AssetAxiosResponse>(`${webExplorerURL}/api/asset/${asset}`)
-          .then((r) => r.data);
-
-        await this.assetRepository.addAsset(asset, {
-          name: name || 'Unknown',
-          ticker: ticker || asset.substring(0, 4),
-          precision: precision || 8,
-          assetHash: asset,
-        });
+        const assetFromExplorer = await fetchAsset(webExplorerURL, asset);
+        await this.assetRepository.addAsset(asset, assetFromExplorer);
       } catch (e) {
         await this.assetRepository.addAsset(asset, {
           name: 'Unknown',
