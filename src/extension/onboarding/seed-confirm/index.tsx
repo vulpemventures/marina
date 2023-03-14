@@ -6,14 +6,15 @@ import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import Shell from '../../components/shell';
 import { INVALID_MNEMONIC_ERROR } from '../../../domain/constants';
 import {
-  appRepository,
   useSelectIsFromPopupFlow,
   useSelectOnboardingMnemonic,
 } from '../../../infrastructure/storage/common';
+import { useStorageContext } from '../../context/storage-context';
 
 const NULL_ERROR = '';
 
 const SeedConfirm: React.FC = () => {
+  const { appRepository } = useStorageContext();
   const history = useHistory();
   const isFromPopupFlow = useSelectIsFromPopupFlow();
   const onboardingMnemonic = useSelectOnboardingMnemonic();

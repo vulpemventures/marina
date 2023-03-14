@@ -2,18 +2,17 @@ import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import PopupWindowProxy from './popupWindowProxy';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import {
-  appRepository,
   useSelectPopupHostname,
   useSelectPopupPsetToSign,
-  walletRepository,
 } from '../../infrastructure/storage/common';
 import { SignerService } from '../../application/signer';
 import { popupResponseMessage } from '../../domain/message';
 import { Pset } from 'liquidjs-lib';
+import { useBackgroundPortContext } from '../context/background-port-context';
+import { useStorageContext } from '../context/storage-context';
 
 export interface SignTransactionPopupResponse {
   accepted: boolean;
@@ -21,7 +20,8 @@ export interface SignTransactionPopupResponse {
 }
 
 const ConnectSignTransaction: React.FC = () => {
-  const popupWindowProxy = new PopupWindowProxy<SignTransactionPopupResponse>();
+  const { walletRepository, appRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -33,12 +33,12 @@ const ConnectSignTransaction: React.FC = () => {
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedPset?: string) => {
-    return popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedPset }));
+    return backgroundPort.sendMessage(popupResponseMessage({ accepted, signedPset }));
   };
 
-  const rejectSignRequest = () => {
+  const rejectSignRequest = async () => {
     try {
-      sendResponseMessage(false);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -51,7 +51,7 @@ const ConnectSignTransaction: React.FC = () => {
       if (!password || password.length === 0) throw new Error('Need password');
       const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
       const signedPset = await signer.signPset(Pset.fromBase64(psetToSign));
-      sendResponseMessage(true, signedPset.toBase64());
+      await sendResponseMessage(true, signedPset.toBase64());
       window.close();
     } catch (e: any) {
       console.error(e);

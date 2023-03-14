@@ -7,11 +7,13 @@ import { DEFAULT_ROUTE, INITIALIZE_WELCOME_ROUTE } from '../../routes/constants'
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { INVALID_PASSWORD_ERROR } from '../../../domain/constants';
-import { appRepository, useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
+import { useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
 import Browser from 'webextension-polyfill';
 import { logInMessage } from '../../../domain/message';
 import type { Encrypted } from '../../../domain/encryption';
 import { decrypt } from '../../../domain/encryption';
+import { useStorageContext } from '../../context/storage-context';
+import { useBackgroundPortContext } from '../../context/background-port-context';
 
 interface LogInFormValues {
   password: string;
@@ -85,11 +87,12 @@ const LogInEnhancedForm = withFormik<LogInFormProps, LogInFormValues>({
 const LogIn: React.FC = () => {
   const history = useHistory();
   const encrypted = useSelectEncryptedMnemonic();
+  const { appRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
 
   const onSuccess = async () => {
-    const port = Browser.runtime.connect();
     await appRepository.updateStatus({ isAuthenticated: true });
-    port.postMessage(logInMessage());
+    await backgroundPort.sendMessage(logInMessage());
     history.push(DEFAULT_ROUTE);
   };
 

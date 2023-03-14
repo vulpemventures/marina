@@ -18,16 +18,14 @@ const AssetImg: React.FC<{ path: string } & ImgProps> = ({ path, className, onCl
 const AssetIcon: React.FC<{ assetHash: string } & ImgProps> = ({ assetHash, className }) => {
   const [err, setError] = React.useState(false);
 
-  if (err) {
-    return <AssetImg path={UNKNOWN_ASSET_ICON} className={className} />;
-  }
+  const onError = (e: any) => {
+    setError(true);
+  };
 
-  return (
-    <AssetImg
-      path={getAssetImagePath(assetHash)}
-      className={className}
-      onError={() => setError(true)}
-    />
+  return err === false ? (
+    <AssetImg path={getAssetImagePath(assetHash)} className={className} onError={onError} />
+  ) : (
+    <AssetImg path={UNKNOWN_ASSET_ICON} className={className} />
   );
 };
 

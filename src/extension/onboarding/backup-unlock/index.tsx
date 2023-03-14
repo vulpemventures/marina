@@ -7,12 +7,10 @@ import Shell from '../../components/shell';
 import Input from '../../components/input';
 import Button from '../../components/button';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
-import {
-  onboardingRepository,
-  useSelectEncryptedMnemonic,
-} from '../../../infrastructure/storage/common';
+import { useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
 import type { Encrypted } from '../../../domain/encryption';
 import { decrypt } from '../../../domain/encryption';
+import { useStorageContext } from '../../context/storage-context';
 
 interface BackUpUnlockFormValues {
   password: string;
@@ -66,6 +64,7 @@ const BackUpUnlockEnhancedForm = withFormik<BackUpUnlockFormProps, BackUpUnlockF
 })(BackUpUnlockForm);
 
 const BackUpUnlock: React.FC = () => {
+  const { onboardingRepository } = useStorageContext();
   const history = useHistory();
   const encryptedMnemonic = useSelectEncryptedMnemonic();
   const onSuccess = async (mnemonic: string) => {

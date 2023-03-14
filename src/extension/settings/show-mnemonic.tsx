@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { decrypt } from '../../domain/encryption';
-import { walletRepository } from '../../infrastructure/storage/common';
 import ModalUnlock from '../components/modal-unlock';
+import { useStorageContext } from '../context/storage-context';
 import RevealMnemonic from '../components/reveal-mnemonic';
 import ShellPopUp from '../components/shell-popup';
 
 const SettingsShowMnemonic: React.FC = () => {
+  const { walletRepository } = useStorageContext();
   const [mnemonic, setMnemonic] = useState('');
   const [isModalUnlockOpen, showUnlockModal] = useState(true);
   const handleShowModal = () => showUnlockModal(true);

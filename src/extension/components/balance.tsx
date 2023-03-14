@@ -1,8 +1,8 @@
 import React from 'react';
 import cx from 'classnames';
-import browser from 'webextension-polyfill';
+import Browser from 'webextension-polyfill';
 import AssetIcon from './assetIcon';
-import { appRepository } from '../../infrastructure/storage/common';
+import { useStorageContext } from '../context/storage-context';
 
 interface Props {
   assetBalance: string | number;
@@ -19,10 +19,11 @@ const Balance: React.FC<Props> = ({
   assetTicker,
   assetHash,
 }) => {
+  const { appRepository } = useStorageContext();
+
   const handleOpenExplorer = async () => {
-    const network = await appRepository.getNetwork();
-    const webExplorerURL = await appRepository.getWebExplorerURL(network ?? 'liquid');
-    await browser.tabs.create({
+    const webExplorerURL = await appRepository.getWebExplorerURL();
+    await Browser.tabs.create({
       url: `${webExplorerURL}/asset/${assetHash}`,
       active: false,
     });

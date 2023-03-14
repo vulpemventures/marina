@@ -5,41 +5,34 @@ import { BlinderService } from '../../application/blinder';
 import { popupResponseMessage } from '../../domain/message';
 import { SignerService } from '../../application/signer';
 import type { SpendParameters } from '../../domain/repository';
-import {
-  appRepository,
-  taxiRepository,
-  useSelectAllAssets,
-  useSelectPopupSpendParameters,
-  walletRepository,
-} from '../../infrastructure/storage/common';
+import { useSelectPopupSpendParameters } from '../../infrastructure/storage/common';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { fromSatoshi, formatAddress } from '../utility';
 import { extractErrorMessage } from '../utility/error';
-import PopupWindowProxy from './popupWindowProxy';
 import type { Pset } from 'liquidjs-lib';
 import { networks } from 'liquidjs-lib';
 import { PsetBuilder } from '../../domain/pset';
+import { useStorageContext } from '../context/storage-context';
+import { useBackgroundPortContext } from '../context/background-port-context';
 
 export interface SpendPopupResponse {
   accepted: boolean;
   signedTxHex?: string;
 }
 
-const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
-
 const ConnectSpend: React.FC = () => {
+  const { walletRepository, appRepository, taxiRepository, cache } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
-  const popupWindowProxy = new PopupWindowProxy<SpendPopupResponse>();
   const spendParameters = useSelectPopupSpendParameters();
-  const allAssets = useSelectAllAssets();
 
   const getTicker = (asset: string) => {
-    const assetInfo = allAssets.find((a) => a.assetHash === asset);
+    const assetInfo = cache?.assets.find((a) => a.assetHash === asset);
     return assetInfo ? assetInfo.ticker : asset.slice(0, 4);
   };
 
@@ -47,13 +40,13 @@ const ConnectSpend: React.FC = () => {
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedTxHex?: string) => {
-    popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedTxHex }));
+    return backgroundPort.sendMessage(popupResponseMessage({ accepted, signedTxHex }));
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     try {
       // Flush tx data
-      sendResponseMessage(false);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -61,6 +54,7 @@ const ConnectSpend: React.FC = () => {
   };
 
   const handlePasswordInput = async (password: string, spendParameters: SpendParameters) => {
+    const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
     try {
       const network = await appRepository.getNetwork();
       if (!network) throw new Error('Network not found');
@@ -84,7 +78,7 @@ const ConnectSpend: React.FC = () => {
       const blindedPset = await blinder.blindPset(pset);
       const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
       const signedPset = await signer.signPset(blindedPset);
-      sendResponseMessage(true, signer.finalizeAndExtract(signedPset));
+      await sendResponseMessage(true, signer.finalizeAndExtract(signedPset));
       window.close();
     } catch (e) {
       console.error(e);

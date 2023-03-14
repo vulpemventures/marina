@@ -8,30 +8,22 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility'
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { networks } from 'liquidjs-lib';
-import {
-  useSelectNetwork,
-  useSelectTaxiAssets,
-  useSelectUtxos,
-  sendFlowRepository,
-  assetRepository,
-  walletRepository,
-  appRepository,
-  taxiRepository,
-} from '../../../infrastructure/storage/common';
+import { useSelectTaxiAssets } from '../../../infrastructure/storage/common';
 import type { AddressRecipient, Asset } from 'marina-provider';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../application/account';
 import { PsetBuilder } from '../../../domain/pset';
-import { computeBalances } from '../../../domain/transaction';
-
-const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
+import { useStorageContext } from '../../context/storage-context';
 
 const ChooseFee: React.FC = () => {
   const history = useHistory();
-  const network = useSelectNetwork();
-  const taxiAssets = useSelectTaxiAssets();
-  const [utxos, utxosLoading] = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
-
-  const [balances, setBalances] = useState<Record<string, number>>({});
+  const {
+    appRepository,
+    walletRepository,
+    assetRepository,
+    sendFlowRepository,
+    taxiRepository,
+    cache,
+  } = useStorageContext();
+  const taxiAssets = useSelectTaxiAssets(taxiRepository)();
   const [selectedFeeAsset, setSelectedFeeAsset] = useState<string>();
   const [assetDetails, setAssetDetails] = useState<Asset>();
   const [unsignedPset, setUnsignedPset] = useState<string>();
@@ -52,11 +44,6 @@ const ChooseFee: React.FC = () => {
       setRecipient({ address, asset, value });
     })().catch(console.error);
   }, []);
-
-  useEffect(() => {
-    if (utxosLoading) return;
-    setBalances(computeBalances(utxos));
-  }, [utxos]);
 
   const handleConfirm = async () => {
     try {
@@ -87,9 +74,8 @@ const ChooseFee: React.FC = () => {
   };
 
   const chooseFeeAndCreatePset = async (assetHash: string) => {
+    const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
     if (selectedFeeAsset === assetHash) throw new Error('asset already selected');
-    if (!network) throw new Error('network not selected');
-
     if (!recipient) {
       throw new Error('address/amount to send not found');
     }
@@ -97,6 +83,8 @@ const ChooseFee: React.FC = () => {
     try {
       setLoading(true);
       setSelectedFeeAsset(assetHash);
+      const network = await appRepository.getNetwork();
+      if (!network) throw new Error('network not found');
       const asset = await assetRepository.getAsset(assetHash);
       setAssetDetails(asset);
       if (assetHash === networks[network].assetHash) {
@@ -120,7 +108,7 @@ const ChooseFee: React.FC = () => {
   };
 
   const selectedAssetHashWithLbtcFallback = () =>
-    selectedFeeAsset || networks[network ?? 'liquid'].assetHash;
+    selectedFeeAsset || networks[cache?.network ?? 'liquid'].assetHash;
 
   const circleLoaderRef = React.useRef(null);
   useLottieLoader(circleLoaderRef, '/assets/animations/circle-loader.json');
@@ -134,7 +122,7 @@ const ChooseFee: React.FC = () => {
     >
       <Balance
         assetBalance={formatDecimalAmount(
-          fromSatoshi(balances[selectedAssetHashWithLbtcFallback()] ?? 0)
+          fromSatoshi(cache?.balances[selectedAssetHashWithLbtcFallback()] ?? 0)
         )}
         assetHash={selectedAssetHashWithLbtcFallback()}
         assetTicker={assetDetails?.ticker ?? ''}
@@ -149,7 +137,7 @@ const ChooseFee: React.FC = () => {
         <div key={1} className="flex flex-row justify-center gap-0.5 mx-auto w-11/12 mt-2">
           {[
             {
-              assetHash: networks[network ?? 'liquid'].assetHash,
+              assetHash: networks[cache?.network ?? 'liquid'].assetHash,
               name: 'Liquid BTC',
               precision: 8,
               ticker: 'L-BTC',

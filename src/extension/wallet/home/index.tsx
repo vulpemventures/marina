@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router';
 import {
   RECEIVE_SELECT_ASSET_ROUTE,
@@ -16,28 +16,13 @@ import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiStr } from '../../utility';
 import { SendFlowStep } from '../../../domain/repository';
-import {
-  appRepository,
-  sendFlowRepository,
-  useSelectAllAssets,
-  useSelectNetwork,
-  useSelectUtxos,
-} from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
 import { networks } from 'liquidjs-lib';
-import { computeBalances } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 const Home: React.FC = () => {
   const history = useHistory();
-  const network = useSelectNetwork();
-  const [utxos, utxosLoading] = useSelectUtxos()();
-  const allWalletAssets = useSelectAllAssets();
-  const [balances, setBalances] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    if (utxosLoading) return;
-    setBalances(computeBalances(utxos));
-  }, [utxos]);
+  const { appRepository, sendFlowRepository, cache } = useStorageContext();
 
   const handleAssetBalanceButtonClick = (asset: Asset) => {
     history.push({
@@ -83,10 +68,12 @@ const Home: React.FC = () => {
     >
       <div className="h-popupContent">
         <div>
-          {network && (
+          {cache?.network && (
             <Balance
-              assetHash={networks[network].assetHash}
-              assetBalance={fromSatoshiStr(balances[networks[network].assetHash] ?? 0)}
+              assetHash={networks[cache?.network].assetHash}
+              assetBalance={fromSatoshiStr(
+                cache?.balances[networks[cache?.network].assetHash] ?? 0
+              )}
               assetTicker="L-BTC"
               bigBalanceText={true}
             />
@@ -99,29 +86,27 @@ const Home: React.FC = () => {
         <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
         <div className="h-60">
-          {!utxosLoading && (
-            <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
-              {allWalletAssets
-                // put the assets with balance defined on top
-                .sort((a, b) => {
-                  const aBalance = balances[a.assetHash];
-                  const bBalance = balances[b.assetHash];
-                  if (aBalance && !bBalance) return -1;
-                  if (!aBalance && bBalance) return 1;
-                  return 0;
-                })
-                .map((asset: Asset, index: React.Key) => {
-                  return (
-                    <ButtonAsset
-                      asset={asset}
-                      quantity={balances[asset.assetHash]}
-                      key={index}
-                      handleClick={handleAssetBalanceButtonClick}
-                    />
-                  );
-                })}
-            </ButtonList>
-          )}
+          <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
+            {cache?.assets
+              // put the assets with balance defined on top
+              .sort((a, b) => {
+                const aBalance = cache?.balances[a.assetHash];
+                const bBalance = cache?.balances[b.assetHash];
+                if (aBalance && !bBalance) return -1;
+                if (!aBalance && bBalance) return 1;
+                return 0;
+              })
+              .map((asset: Asset, index: React.Key) => {
+                return (
+                  <ButtonAsset
+                    asset={asset}
+                    quantity={cache?.balances[asset.assetHash]}
+                    key={index}
+                    handleClick={handleAssetBalanceButtonClick}
+                  />
+                );
+              })}
+          </ButtonList>
         </div>
       </div>
     </ShellPopUp>

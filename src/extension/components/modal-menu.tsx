@@ -1,8 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { useHistory } from 'react-router';
-import Browser from 'webextension-polyfill';
 import { logOutMessage } from '../../domain/message';
-import { appRepository } from '../../infrastructure/storage/common';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
   LOGIN_ROUTE,
@@ -10,6 +8,8 @@ import {
   SETTINGS_MENU_SECURITY_ROUTE,
   SETTINGS_MENU_SETTINGS_ROUTE,
 } from '../routes/constants';
+import { useBackgroundPortContext } from '../context/background-port-context';
+import { useStorageContext } from '../context/storage-context';
 
 interface Props {
   isOpen: boolean;
@@ -18,6 +18,8 @@ interface Props {
 
 const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const history = useHistory();
+  const { appRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
 
   const ref = useRef<HTMLDivElement | null>(null);
   useOnClickOutside(ref, useCallback(handleClose, [ref, handleClose]));
@@ -25,9 +27,8 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const handleSettings = () => history.push(SETTINGS_MENU_SETTINGS_ROUTE);
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
   const handleLogOut = async () => {
-    const port = Browser.runtime.connect();
     await appRepository.updateStatus({ isAuthenticated: false });
-    port.postMessage(logOutMessage());
+    await backgroundPort.sendMessage(logOutMessage());
     history.push(LOGIN_ROUTE);
   };
 

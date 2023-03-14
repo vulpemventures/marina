@@ -1,4 +1,3 @@
-import type { BrokerOption } from '../broker';
 import Broker from '../broker';
 import type { MessageHandler, ResponseMessage } from '../../domain/message';
 import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
@@ -54,6 +53,7 @@ import type { CreateAccountPopupResponse } from '../../extension/popups/create-a
 import { BlinderService } from '../../application/blinder';
 import zkpLib from '@vulpemventures/secp256k1-zkp';
 import { WalletRepositoryUnblinder } from '../../application/unblinder';
+import { PolyfillBackgroundPort } from '../../port/message';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -78,8 +78,8 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     broker.start();
   }
 
-  private constructor(hostname = '', brokerOpts?: BrokerOption[]) {
-    super(Marina.PROVIDER_NAME, brokerOpts);
+  private constructor(hostname = '') {
+    super(Marina.PROVIDER_NAME, PolyfillBackgroundPort);
     this.hostname = hostname;
     this.walletRepository = new WalletStorageAPI();
     this.appRepository = new AppStorageAPI();
@@ -180,7 +180,12 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   // if ids is undefined, return the main account
   // if ids is empty, return an empty array
   private handleIdsParam(ids?: string[]): string[] {
-    if (!ids) return [MainAccount, MainAccountLegacy, MainAccountTest];
+    if (!ids) {
+      const mainAccounts = [MainAccountLegacy];
+      if (this.network !== 'liquid') mainAccounts.push(MainAccountTest);
+      else mainAccounts.push(MainAccount);
+      return mainAccounts;
+    }
     if (ids.length === 0) return [];
     return ids;
   }

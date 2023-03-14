@@ -1,5 +1,5 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
-import browser from 'webextension-polyfill';
+import Browser from 'webextension-polyfill';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import type { OpenPopupMessage, PopupName, RestoreMessage } from '../domain/message';
 import {
@@ -19,9 +19,11 @@ import { TaxiUpdater } from './taxi-updater';
 import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
 import { AccountFactory } from '../application/account';
+import { PolyfillBackgroundPort } from '../port/message';
+import { extractErrorMessage } from '../extension/utility/error';
 
-// manifest v2 needs browserAction, v3 needs action
-const action = browser.browserAction ?? browser.action;
+// manifest v2 needs BrowserAction, v3 needs action
+const action = Browser.browserAction ?? Browser.action;
 
 // top-level await supported via webpack
 const zkpLib = await zkp();
@@ -87,7 +89,7 @@ async function stopBackgroundServices() {
  * and when the browser is updated to a new version.
  * https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
  */
-browser.runtime.onInstalled.addListener(({ reason }) => {
+Browser.runtime.onInstalled.addListener(({ reason }) => {
   (async () => {
     switch (reason) {
       //On first install, open new tab for onboarding
@@ -110,7 +112,7 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 });
 
 // /!\ FIX: prevent opening the onboarding page if the browser has been closed
-browser.runtime.onStartup.addListener(() => {
+Browser.runtime.onStartup.addListener(() => {
   (async () => {
     const encryptedMnemonic = await walletRepository.getEncryptedMnemonic();
     if (encryptedMnemonic) {
@@ -138,7 +140,7 @@ action.onClicked.addListener(() => {
       return;
     } else {
       await action.setPopup({ popup: 'popup.html' });
-      // Function browser.browserAction.openPopup() exists in Firefox but not in Chrome
+      // Function Browser.browserAction.openPopup() exists in Firefox but not in Chrome
       if (action.openPopup !== undefined) await action.openPopup();
     }
   })().catch(console.error);
@@ -147,42 +149,42 @@ action.onClicked.addListener(() => {
 // the event emitter is used to link all the content-scripts (popups and providers ones)
 const eventEmitter = new SafeEventEmitter();
 
-browser.runtime.onConnect.addListener((port: browser.Runtime.Port) => {
-  port.onMessage.addListener((message: any) => {
-    if (isOpenPopupMessage(message)) {
-      handleOpenPopupMessage(message, port).catch((error: any) => {
-        console.error(error);
-        port.postMessage({ data: undefined, error: error.message });
-      });
-      return;
+PolyfillBackgroundPort.onMessage(async (message: any, port: Browser.Runtime.Port) => {
+  if (isOpenPopupMessage(message)) {
+    try {
+      await handleOpenPopupMessage(message, port);
+    } catch (error) {
+      console.error(error);
+      port.postMessage({ data: undefined, error: extractErrorMessage(error) });
     }
+    return;
+  }
 
-    if (isPopupResponseMessage(message)) {
-      // propagate popup response
-      eventEmitter.emit(POPUP_RESPONSE, message);
-      return;
-    }
+  if (isPopupResponseMessage(message)) {
+    // propagate popup response
+    eventEmitter.emit(POPUP_RESPONSE, message);
+    return;
+  }
 
-    if (isLogInMessage(message)) {
-      startBackgroundServices().catch(console.error);
-      return;
-    }
+  if (isLogInMessage(message)) {
+    await startBackgroundServices();
+    return;
+  }
 
-    if (isLogOutMessage(message)) {
-      stopBackgroundServices().catch(console.error);
-      return;
-    }
+  if (isLogOutMessage(message)) {
+    await stopBackgroundServices();
+    return;
+  }
 
-    if (isRestoreMessage(message)) {
-      restoreTask(message).catch(console.error);
-      return;
-    }
-  });
+  if (isRestoreMessage(message)) {
+    await restoreTask(message);
+    return;
+  }
 });
 
 // Open the popup window and wait for a response
 // then forward the response to content-script
-async function handleOpenPopupMessage(message: OpenPopupMessage, port: browser.Runtime.Port) {
+async function handleOpenPopupMessage(message: OpenPopupMessage, port: Browser.Runtime.Port) {
   await createBrowserPopup(message.data.name);
   eventEmitter.once(POPUP_RESPONSE, (data: any) => {
     port.postMessage(data);
@@ -191,9 +193,9 @@ async function handleOpenPopupMessage(message: OpenPopupMessage, port: browser.R
 
 try {
   // set the idle detection interval
-  browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
+  Browser.idle.setDetectionInterval(IDLE_TIMEOUT_IN_SECONDS);
   // add listener on Idle API, sending a message if the new state isn't 'active'
-  browser.idle.onStateChanged.addListener(function (newState: browser.Idle.IdleState) {
+  Browser.idle.onStateChanged.addListener(function (newState: Browser.Idle.IdleState) {
     console.debug('Idle state changed to ' + newState);
     switch (newState) {
       default:
@@ -206,8 +208,8 @@ try {
 }
 
 async function openInitializeWelcomeRoute(): Promise<number | undefined> {
-  const url = browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
-  const { id } = await browser.tabs.create({ url });
+  const url = Browser.runtime.getURL(`home.html#${INITIALIZE_WELCOME_ROUTE}`);
+  const { id } = await Browser.tabs.create({ url });
   return id;
 }
 
@@ -220,7 +222,7 @@ async function createBrowserPopup(name?: PopupName) {
   let _top = 0;
   try {
     // Position popup in top right corner of window.
-    const { left, top, width } = await browser.windows.getLastFocused();
+    const { left, top, width } = await Browser.windows.getLastFocused();
     if (typeof left !== 'undefined' && typeof top !== 'undefined' && typeof width !== 'undefined') {
       _top = top;
       _left = left + (width - POPUP_WIDTH);
@@ -240,5 +242,5 @@ async function createBrowserPopup(name?: PopupName) {
     left: _left,
     top: _top,
   };
-  await browser.windows.create(options as any);
+  await Browser.windows.create(options as any);
 }

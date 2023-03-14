@@ -8,16 +8,13 @@ import { SEND_PAYMENT_ERROR_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../rout
 import { extractErrorMessage } from '../../utility/error';
 import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../../domain/constants';
 import { SignerService } from '../../../application/signer';
-import {
-  appRepository,
-  sendFlowRepository,
-  walletRepository,
-} from '../../../infrastructure/storage/common';
 import { BlinderService } from '../../../application/blinder';
 import { Pset } from 'liquidjs-lib';
 import { lockTransactionInputs } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 const SendEndOfFlow: React.FC = () => {
+  const { appRepository, walletRepository, sendFlowRepository } = useStorageContext();
   const history = useHistory();
   const [invalidPasswordError, setInvalidPasswordError] = useState(false);
   const [unlockModal, setUnlockModal] = useState(true);

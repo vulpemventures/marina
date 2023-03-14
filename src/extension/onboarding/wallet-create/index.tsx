@@ -2,16 +2,13 @@ import { generateMnemonic } from 'bip39';
 import React from 'react';
 import { useHistory } from 'react-router';
 import { init } from '../../../domain/repository';
-import {
-  appRepository,
-  onboardingRepository,
-  sendFlowRepository,
-} from '../../../infrastructure/storage/common';
+import { useStorageContext } from '../../context/storage-context';
 import Shell from '../../components/shell';
 import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import OnboardingForm from '../onboarding-form';
 
 const WalletCreate: React.FC = () => {
+  const { appRepository, sendFlowRepository, onboardingRepository } = useStorageContext();
   const history = useHistory();
 
   const onSubmit = async ({ password }: { password: string }) => {

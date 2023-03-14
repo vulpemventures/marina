@@ -142,6 +142,7 @@ export interface AssetRepository {
   getAsset(assetHash: string): Promise<Asset | undefined>;
   // persist newly asset in the repository
   addAsset(assethash: string, asset: Asset): Promise<void>;
+  onNewAsset: EventEmitter<[asset: Asset]>;
 }
 
 export type SpendParameters = {
@@ -172,7 +173,7 @@ export interface TaxiRepository {
   setTaxiURLs(record: Partial<Record<NetworkString, string>>): Promise<void>;
   getTaxiURL(network: NetworkString): Promise<string>;
   setTaxiAssets(network: NetworkString, assets: string[]): Promise<void>;
-  getTaxiAssets(network: NetworkString): Promise<(Asset | string)[]>;
+  getTaxiAssets(network?: NetworkString): Promise<(Asset | string)[]>;
 }
 
 // this repository is used to cache data during the onboarding flow

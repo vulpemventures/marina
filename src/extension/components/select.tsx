@@ -3,7 +3,7 @@ import { Listbox } from '@headlessui/react';
 interface Props {
   list: string[];
   selected: string;
-  onSelect: (v: string) => void;
+  onSelect: (v: string) => Promise<void> | void;
   disabled: boolean;
   onClick?: () => void;
 }

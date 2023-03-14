@@ -11,12 +11,8 @@ import AssetIcon from './assetIcon';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import Button from './button';
 import Browser from 'webextension-polyfill';
-import {
-  appRepository,
-  blockHeadersRepository,
-  walletRepository,
-} from '../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
+import { useStorageContext } from '../context/storage-context';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -31,6 +27,7 @@ interface Props {
 }
 
 const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
+  const { walletRepository, blockHeadersRepository, appRepository } = useStorageContext();
   const [modalOpen, setModalOpen] = useState(false);
   const [transfer, setTransfer] = useState<{ amount: number; type: TxType }>();
   const [feeAmount, setFeeAmount] = useState<number>();

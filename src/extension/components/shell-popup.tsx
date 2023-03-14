@@ -2,12 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
+import { useStorageContext } from '../context/storage-context';
 import { formatNetwork } from '../utility';
-import {
-  appRepository,
-  sendFlowRepository,
-  useSelectNetwork,
-} from '../../infrastructure/storage/common';
 
 interface Props {
   btnDisabled?: boolean;
@@ -30,7 +26,7 @@ const ShellPopUp: React.FC<Props> = ({
   btnDisabled = false,
 }) => {
   const history = useHistory();
-  const network = useSelectNetwork();
+  const { appRepository, sendFlowRepository, cache } = useStorageContext();
   const [isRestorerLoading, setIsRestorerLoading] = useState(false);
   const [isUpdaterLoading, setIsUpdaterLoading] = useState(false);
 
@@ -119,11 +115,11 @@ const ShellPopUp: React.FC<Props> = ({
               <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
             </button>
 
-            {network !== 'liquid' && (
+            {cache?.network !== 'liquid' && (
               <div>
-                {network && (
+                {cache?.network && (
                   <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
-                    {formatNetwork(network)}
+                    {cache && formatNetwork(cache.network)}
                   </span>
                 )}
               </div>

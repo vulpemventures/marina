@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
-import { appRepository } from '../../infrastructure/storage/common';
 import { BACKUP_UNLOCK_ROUTE } from '../routes/constants';
 import Button from './button';
 import SaveMnemonicModal from './modal-save-mnemonic';
+import { useStorageContext } from '../context/storage-context';
 
 type Props = {
   onReceive: () => void;
@@ -11,6 +11,7 @@ type Props = {
 };
 
 const ButtonsSendReceive: React.FC<Props> = ({ onReceive, onSend }) => {
+  const { appRepository } = useStorageContext();
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
   const [isWalletVerified, setIsWalletVerified] = useState(false);
 

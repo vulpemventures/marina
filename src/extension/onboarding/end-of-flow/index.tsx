@@ -12,21 +12,18 @@ import {
   makeAccountXPub,
   SLIP13,
 } from '../../../application/account';
-import {
-  appRepository,
-  onboardingRepository,
-  useSelectIsFromPopupFlow,
-  walletRepository,
-} from '../../../infrastructure/storage/common';
+import { useSelectIsFromPopupFlow } from '../../../infrastructure/storage/common';
 import type { NetworkString } from 'marina-provider';
 import { AccountType } from 'marina-provider';
 import { mnemonicToSeed } from 'bip39';
 import { initWalletRepository } from '../../../domain/repository';
 import type { ChainSource } from '../../../domain/chainsource';
+import { useStorageContext } from '../../context/storage-context';
 
 const GAP_LIMIT = 30;
 
 const EndOfFlowOnboarding: React.FC = () => {
+  const { appRepository, onboardingRepository, walletRepository } = useStorageContext();
   const isFromPopup = useSelectIsFromPopupFlow();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +39,10 @@ const EndOfFlowOnboarding: React.FC = () => {
     try {
       const onboardingMnemonic = await onboardingRepository.getOnboardingMnemonic();
       const onboardingPassword = await onboardingRepository.getOnboardingPassword();
+
+      if (!onboardingMnemonic || !onboardingPassword) {
+        throw new Error('onboarding Mnemonic or password not found');
+      }
       setIsLoading(true);
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);

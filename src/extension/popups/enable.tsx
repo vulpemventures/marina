@@ -2,23 +2,25 @@ import React, { useRef } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import { debounce } from 'lodash';
-import PopupWindowProxy from './popupWindowProxy';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
-import { appRepository, useSelectPopupHostname } from '../../infrastructure/storage/common';
+import { useSelectPopupHostname } from '../../infrastructure/storage/common';
 import { popupResponseMessage } from '../../domain/message';
+import { useStorageContext } from '../context/storage-context';
+import { useBackgroundPortContext } from '../context/background-port-context';
 
 const permissions = ['View confidential addresses of your wallet', 'View balances of your wallet'];
 
 const ConnectEnableView: React.FC = () => {
+  const { appRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
   const hostnameToEnable = useSelectPopupHostname();
-  const popupWindowProxy = new PopupWindowProxy<boolean>();
 
   const sendResponseMessage = (data: boolean) => {
-    return popupWindowProxy.sendResponse(popupResponseMessage(data));
+    return backgroundPort.sendMessage(popupResponseMessage(data));
   };
 
-  const handleReject = () => {
-    sendResponseMessage(false);
+  const handleReject = async () => {
+    await sendResponseMessage(false);
     window.close();
   };
 
@@ -26,7 +28,7 @@ const ConnectEnableView: React.FC = () => {
     try {
       await appRepository.enableSite(hostname);
     } finally {
-      sendResponseMessage(true);
+      await sendResponseMessage(true);
       window.close();
     }
   };

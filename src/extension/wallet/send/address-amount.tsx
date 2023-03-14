@@ -5,27 +5,14 @@ import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshi } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import AddressAmountForm from '../../components/address-amount-form';
-import {
-  assetRepository,
-  sendFlowRepository,
-  useSelectNetwork,
-  useSelectUtxos,
-} from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
-import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../../application/account';
-import { computeBalances } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 const AddressAmountView: React.FC = () => {
   const history = useHistory();
-  const network = useSelectNetwork();
-  const [utxos] = useSelectUtxos(MainAccount, MainAccountLegacy, MainAccountTest)();
+  const { sendFlowRepository, assetRepository, cache } = useStorageContext();
   const [dataInCache, setDataInCache] = useState<{ amount?: number; address?: string }>();
-  const [balances, setBalances] = useState<Record<string, number>>({});
   const [sendAsset, setSendAsset] = useState<Asset>();
-
-  useEffect(() => {
-    setBalances(computeBalances(utxos));
-  }, [utxos]);
 
   useEffect(() => {
     (async () => {
@@ -52,20 +39,23 @@ const AddressAmountView: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      {sendAsset && balances[sendAsset.assetHash] && (
+      {sendAsset && cache?.balances[sendAsset.assetHash] && (
         <>
           <Balance
             assetHash={sendAsset.assetHash}
-            assetBalance={fromSatoshi(balances[sendAsset.assetHash] ?? 0, sendAsset.precision)}
+            assetBalance={fromSatoshi(
+              cache?.balances[sendAsset.assetHash] ?? 0,
+              sendAsset.precision
+            )}
             assetTicker={sendAsset.ticker}
             className="mt-4"
           />
 
-          {network && (
+          {cache?.network && (
             <AddressAmountForm
               history={history}
-              maxPossibleAmount={balances[sendAsset.assetHash] ?? 0}
-              network={network}
+              maxPossibleAmount={cache?.balances[sendAsset.assetHash] ?? 0}
+              network={cache.network}
               dataInCache={{
                 amount: 0,
                 address: '',

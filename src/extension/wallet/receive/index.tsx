@@ -5,10 +5,11 @@ import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { formatAddress } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
-import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
+import { useStorageContext } from '../../context/storage-context';
 
 const ReceiveView: React.FC = () => {
+  const { appRepository, walletRepository } = useStorageContext();
   const history = useHistory();
   const [confidentialAddress, setConfidentialAddress] = useState('');
   const [buttonText, setButtonText] = useState('Copy');

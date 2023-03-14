@@ -177,7 +177,7 @@ export class AppStorageAPI implements AppRepository {
     });
   }
 
-  async setNetwork(network: NetworkString): Promise<void> {
+  setNetwork(network: NetworkString): Promise<void> {
     return Browser.storage.local.set({ [AppStorageKeys.NETWORK]: network });
   }
 

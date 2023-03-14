@@ -6,17 +6,14 @@ import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import ModalUnlock from '../components/modal-unlock';
 import ShellConnectPopup from '../components/shell-connect-popup';
-import PopupWindowProxy from './popupWindowProxy';
-import {
-  appRepository,
-  useSelectPopupCreateAccountParameters,
-  walletRepository,
-} from '../../infrastructure/storage/common';
+import { useSelectPopupCreateAccountParameters } from '../../infrastructure/storage/common';
 import { popupResponseMessage } from '../../domain/message';
 import { decrypt } from '../../domain/encryption';
 import { mnemonicToSeedSync } from 'bip39';
 import type { CreateAccountParameters } from '../../domain/repository';
 import { SLIP13 } from '../../application/account';
+import { useStorageContext } from '../context/storage-context';
+import { useBackgroundPortContext } from '../context/background-port-context';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -25,7 +22,8 @@ export interface CreateAccountPopupResponse {
 }
 
 const ConnectCreateAccount: React.FC = () => {
-  const popupWindowProxy = new PopupWindowProxy<CreateAccountPopupResponse>();
+  const { appRepository, walletRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
   const parameters = useSelectPopupCreateAccountParameters();
 
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -35,12 +33,12 @@ const ConnectCreateAccount: React.FC = () => {
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean) => {
-    return popupWindowProxy.sendResponse(popupResponseMessage({ accepted }));
+    return backgroundPort.sendMessage(popupResponseMessage({ accepted }));
   };
 
-  const rejectResponseMessage = (error: string) => {
+  const rejectResponseMessage = async (error: string) => {
     try {
-      popupWindowProxy.sendResponse(popupResponseMessage({ accepted: false }, error));
+      await backgroundPort.sendMessage(popupResponseMessage({ accepted: false }, error));
     } catch (e) {
       console.error(e);
     }
@@ -80,7 +78,7 @@ const ConnectCreateAccount: React.FC = () => {
         masterXPub: masterPublicKey,
       });
 
-      sendResponseMessage(true);
+      await sendResponseMessage(true);
       window.close();
     } catch (e: unknown) {
       console.error(e);

@@ -3,14 +3,12 @@ import React, { useState } from 'react';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
-import PopupWindowProxy from './popupWindowProxy';
 import type { NetworkString, SignedMessage } from 'marina-provider';
 import { INVALID_PASSWORD_ERROR, SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import { networks, payments } from 'liquidjs-lib';
 import {
   useSelectEncryptedMnemonic,
-  useSelectNetwork,
   useSelectPopupHostname,
   useSelectPopupMessageToSign,
 } from '../../infrastructure/storage/common';
@@ -20,6 +18,8 @@ import { decrypt } from '../../domain/encryption';
 import { BIP32Factory } from 'bip32';
 import { mnemonicToSeed } from 'bip39';
 import { signAsync } from 'bitcoinjs-message';
+import { useBackgroundPortContext } from '../context/background-port-context';
+import { useStorageContext } from '../context/storage-context';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -63,25 +63,24 @@ export interface SignMessagePopupResponse {
 }
 
 const ConnectSignMsg: React.FC = () => {
+  const { appRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const messageToSign = useSelectPopupMessageToSign();
   const hostname = useSelectPopupHostname();
   const encryptedMnemonic = useSelectEncryptedMnemonic();
-  const network = useSelectNetwork();
-
-  const popupWindowProxy = new PopupWindowProxy<SignMessagePopupResponse>();
 
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
   const sendResponseMessage = (accepted: boolean, signedMessage?: SignedMessage) => {
-    return popupWindowProxy.sendResponse(popupResponseMessage({ accepted, signedMessage }));
+    return backgroundPort.sendMessage(popupResponseMessage({ accepted, signedMessage }));
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     try {
-      sendResponseMessage(false);
+      await sendResponseMessage(false);
     } catch (e) {
       console.error(e);
     }
@@ -89,6 +88,7 @@ const ConnectSignMsg: React.FC = () => {
   };
 
   const handleUnlock = async (password: string) => {
+    const network = await appRepository.getNetwork();
     if (!password || password.length === 0 || !messageToSign || !encryptedMnemonic || !network)
       return;
 
@@ -100,7 +100,7 @@ const ConnectSignMsg: React.FC = () => {
         password,
         network
       );
-      sendResponseMessage(true, signedMsg);
+      await sendResponseMessage(true, signedMsg);
       window.close();
     } catch (e: any) {
       console.error(e);

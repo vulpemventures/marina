@@ -6,14 +6,15 @@ import Button from '../../components/button';
 import browser from 'webextension-polyfill';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import { Transaction } from 'liquidjs-lib';
-import { appRepository, walletRepository } from '../../../infrastructure/storage/common';
 import { makeURLwithBlinders } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 interface LocationState {
   txhex: string;
 }
 
 const PaymentSuccessView: React.FC = () => {
+  const { appRepository, walletRepository } = useStorageContext();
   const { state } = useLocation<LocationState>();
   const history = useHistory();
 

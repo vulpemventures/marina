@@ -2,7 +2,6 @@ import ShellPopUp from '../components/shell-popup';
 import ButtonList from '../components/button-list';
 import InputIcon from '../components/input-icon';
 import { useEffect, useState } from 'react';
-import { walletRepository } from '../../infrastructure/storage/common';
 import type { AccountDetails } from '../../domain/repository';
 import type { RestorationJSONDictionary } from '../../application/account';
 import {
@@ -14,8 +13,10 @@ import {
 import Button from '../components/button';
 import { AccountType } from 'marina-provider';
 import { extractErrorMessage } from '../utility/error';
+import { useStorageContext } from '../context/storage-context';
 
 const SettingsAccounts: React.FC = () => {
+  const { walletRepository } = useStorageContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [accounts, setAccounts] = useState<Record<string, AccountDetails>>({});
   const [accountsList, setAccountsList] = useState<string[]>([]);

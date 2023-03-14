@@ -4,12 +4,8 @@ import ShellPopUp from '../../components/shell-popup';
 import Button from '../../components/button';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../../domain/constants';
 import { SEND_CONFIRMATION_ROUTE, SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
-import {
-  appRepository,
-  useSelectNetwork,
-  walletRepository,
-} from '../../../infrastructure/storage/common';
 import { lockTransactionInputs } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 interface LocationState {
   error: string;
@@ -17,13 +13,13 @@ interface LocationState {
 }
 
 const PaymentError: React.FC = () => {
+  const { appRepository, walletRepository } = useStorageContext();
   const history = useHistory();
   const { state } = useLocation<LocationState>();
-  const network = useSelectNetwork();
 
   const handleRetry = async () => {
     if (state.tx) {
-      const chainSource = await appRepository.getChainSource(network);
+      const chainSource = await appRepository.getChainSource();
       if (!chainSource) throw new Error('chain source not found');
       const txid = await chainSource.broadcastTransaction(state?.tx);
       await lockTransactionInputs(walletRepository, state.tx);

@@ -14,29 +14,23 @@ import ButtonTransaction from '../../components/button-transaction';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshiStr } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import {
-  appRepository,
-  assetRepository,
-  sendFlowRepository,
-  useSelectTransactions,
-  useSelectUtxos,
-} from '../../../infrastructure/storage/common';
+import { useSelectTransactions } from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
-import { computeBalances } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 interface LocationState {
   assetHash: string;
 }
 
 const Transactions: React.FC = () => {
+  const { assetRepository, appRepository, sendFlowRepository, walletRepository, cache } =
+    useStorageContext();
+
   const {
     state: { assetHash },
   } = useLocation<LocationState>();
   const history = useHistory();
-  const transactions = useSelectTransactions();
-  const [utxos] = useSelectUtxos()();
-
-  const [balances, setBalances] = useState<Record<string, number>>({});
+  const transactions = useSelectTransactions(appRepository, walletRepository)();
   const [asset, setAsset] = useState<Asset>();
 
   useEffect(() => {
@@ -45,10 +39,6 @@ const Transactions: React.FC = () => {
       setAsset(asset);
     })().catch(console.error);
   }, [assetHash]);
-
-  useEffect(() => {
-    setBalances(computeBalances(utxos));
-  }, [utxos]);
 
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
 
@@ -85,7 +75,7 @@ const Transactions: React.FC = () => {
         <>
           <Balance
             assetHash={assetHash}
-            assetBalance={fromSatoshiStr(balances[assetHash] ?? 0, asset?.precision)}
+            assetBalance={fromSatoshiStr(cache?.balances[assetHash] ?? 0, asset?.precision)}
             assetTicker={asset?.ticker ?? assetHash.slice(0, 4)}
             bigBalanceText={true}
           />

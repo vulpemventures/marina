@@ -1,23 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router';
 import { SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
-import {
-  sendFlowRepository,
-  useSelectAllAssets,
-  useSelectUtxos,
-} from '../../../infrastructure/storage/common';
-import { computeBalances } from '../../../domain/transaction';
+import { useStorageContext } from '../../context/storage-context';
 
 const SendSelectAsset: React.FC = () => {
   const history = useHistory();
-  const [balances, setBalances] = useState<Record<string, number>>({});
-  const [utxos] = useSelectUtxos()();
-  const balanceAssets = useSelectAllAssets();
-
-  useEffect(() => {
-    if (utxos) setBalances(computeBalances(utxos));
-  }, [utxos]);
+  const { sendFlowRepository, cache } = useStorageContext();
 
   const handleSend = async (assetHash: string) => {
     // cache the assehash selected and go to address amount form
@@ -29,8 +18,8 @@ const SendSelectAsset: React.FC = () => {
     <AssetListScreen
       title="Send Asset"
       onClick={handleSend}
-      assets={balanceAssets}
-      balances={balances}
+      assets={cache?.assets || []}
+      balances={cache?.balances || {}}
       emptyText="You don't have any assets to send."
     />
   );

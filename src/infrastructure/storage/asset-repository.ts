@@ -84,4 +84,18 @@ export class AssetStorageAPI implements AssetRepository {
 
     return assetList;
   }
+
+  onNewAsset(callback: (asset: Asset) => void) {
+    const listener = (changes: Browser.Storage.StorageChange, areaName: string) => {
+      if (areaName !== 'local') return;
+      for (const [key, change] of Object.entries(changes)) {
+        if (AssetKey.is(key) && change.newValue) {
+          callback(change.newValue);
+        }
+      }
+    };
+
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
+  }
 }

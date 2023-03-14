@@ -2,13 +2,13 @@ import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
 import type { NetworkString } from 'marina-provider';
 import { useHistory } from 'react-router';
-import { appRepository, useSelectNetwork } from '../../infrastructure/storage/common';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import Input from '../components/input';
 import ShellPopUp from '../components/shell-popup';
 import * as Yup from 'yup';
 import { BlockstreamExplorerURLs } from '../../domain/explorer';
+import { useStorageContext } from '../context/storage-context';
 
 type SettingsExplorerFormValues = {
   websocketExplorerURL: string;
@@ -17,7 +17,7 @@ type SettingsExplorerFormValues = {
 
 interface SettingsExplorerFormProps {
   network: NetworkString;
-  onDone: () => void;
+  onDone: (values: SettingsExplorerFormValues) => Promise<void>;
 }
 
 const SettingsExplorerForm = (props: FormikProps<SettingsExplorerFormValues>) => {
@@ -70,22 +70,25 @@ const SettingsCustomExplorerForm = withFormik<
   }),
 
   handleSubmit: async (values, { props }) => {
-    await appRepository.setWebsocketExplorerURLs({
-      [props.network]: values.websocketExplorerURL,
-    });
-    await appRepository.setWebExplorerURL(props.network, values.webExplorerURL);
-    props.onDone();
+    await props.onDone(values);
   },
 
   displayName: 'SettingsExplorerCustomForm',
 })(SettingsExplorerForm);
 
 const SettingsExplorerCustom: React.FC = () => {
+  const { appRepository, cache } = useStorageContext();
   const history = useHistory();
-  const network = useSelectNetwork();
 
-  const onDone = () => {
-    history.goBack();
+  const onDone = async (values: SettingsExplorerFormValues) => {
+    if (!cache?.network) {
+      return Promise.resolve();
+    }
+    await appRepository.setWebsocketExplorerURLs({
+      [cache.network]: values.websocketExplorerURL,
+    });
+    await appRepository.setWebExplorerURL(cache.network, values.webExplorerURL);
+    return Promise.resolve(history.goBack());
   };
 
   return (
@@ -94,7 +97,7 @@ const SettingsExplorerCustom: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Explorer"
     >
-      {network && <SettingsCustomExplorerForm onDone={onDone} network={network} />}
+      {cache?.network && <SettingsCustomExplorerForm onDone={onDone} network={cache.network} />}
     </ShellPopUp>
   );
 };

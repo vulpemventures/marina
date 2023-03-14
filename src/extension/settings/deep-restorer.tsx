@@ -3,21 +3,18 @@ import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
-import {
-  appRepository,
-  useSelectNetwork,
-  walletRepository,
-} from '../../infrastructure/storage/common';
-import Browser from 'webextension-polyfill';
 import { restoreMessage } from '../../domain/message';
+import { useStorageContext } from '../context/storage-context';
+import { useBackgroundPortContext } from '../context/background-port-context';
 
 type GapLimit = 20 | 40 | 80 | 160;
 
 const SettingsDeepRestorer: React.FC = () => {
+  const { backgroundPort } = useBackgroundPortContext();
+  const { appRepository, walletRepository, cache } = useStorageContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [gapLimit, setGapLimit] = useState<GapLimit>(20);
-  const network = useSelectNetwork();
 
   useEffect(() => {
     return appRepository.restorerLoader.onChanged((isLoading) => {
@@ -26,15 +23,16 @@ const SettingsDeepRestorer: React.FC = () => {
   }, []);
 
   const onClickRestore = async () => {
-    if (!network) return;
     setError('');
     try {
+      if (!cache?.network) throw new Error('No network selected');
+
       const allAccounts = await walletRepository.getAccountDetails();
-      const port = Browser.runtime.connect();
       const messages = Object.entries(allAccounts)
-        .filter(([, details]) => details.accountNetworks.includes(network))
-        .map(([account]) => restoreMessage(account, network, gapLimit));
-      messages.forEach((message) => port.postMessage(message));
+        .filter(([, details]) => details.accountNetworks.includes(cache.network))
+        .map(([account]) => restoreMessage(account, cache.network, gapLimit));
+
+      await Promise.all(messages.map((message) => backgroundPort.sendMessage(message)));
     } catch (e) {
       console.error(e);
       if (e instanceof Error) setError(e.message);

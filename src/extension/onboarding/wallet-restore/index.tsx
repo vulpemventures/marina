@@ -6,16 +6,13 @@ import { INITIALIZE_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
 import { init } from '../../../domain/repository';
-import {
-  appRepository,
-  onboardingRepository,
-  sendFlowRepository,
-} from '../../../infrastructure/storage/common';
 import { validateMnemonic } from 'bip39';
 import type { RestorationJSON, RestorationJSONDictionary } from '../../../application/account';
 import { extractErrorMessage } from '../../utility/error';
+import { useStorageContext } from '../../context/storage-context';
 
 const WalletRestore: React.FC = () => {
+  const { appRepository, sendFlowRepository, onboardingRepository } = useStorageContext();
   const history = useHistory();
   const [mnemonic, setMnemonic] = useState<string>('');
   const [restoration, setRestoration] = useState<RestorationJSONDictionary>();

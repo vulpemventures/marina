@@ -76,9 +76,31 @@ export class UpdaterService {
                 }
                 const transactions = await chainSource.fetchTransactions(txIDsToFetch);
                 await chainSource.close();
-                await this.walletRepository.updateTxDetails(
-                  Object.fromEntries(transactions.map((tx, i) => [txIDsToFetch[i], tx]))
-                );
+
+                // try to unblind the outputs
+                const unblindedOutpoints: Array<[{ txID: string; vout: number }, UnblindingData]> =
+                  [];
+                for (const { txID, hex } of transactions) {
+                  const unblindedResults = await this.unblinder.unblind(
+                    ...Transaction.fromHex(hex).outs
+                  );
+                  for (const [vout, unblinded] of unblindedResults.entries()) {
+                    if (unblinded instanceof Error) {
+                      if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
+                      if (unblinded.message === 'Empty script: fee output') continue;
+                      console.error('Error while unblinding', unblinded);
+                      continue;
+                    }
+                    unblindedOutpoints.push([{ txID, vout }, unblinded]);
+                  }
+                }
+
+                await Promise.all([
+                  this.walletRepository.updateOutpointBlindingData(unblindedOutpoints),
+                  this.walletRepository.updateTxDetails(
+                    Object.fromEntries(transactions.map((tx, i) => [txIDsToFetch[i], tx]))
+                  ),
+                ]);
               } finally {
                 await this.appRepository.updaterLoader.decrement();
               }
@@ -91,16 +113,21 @@ export class UpdaterService {
               try {
                 await this.appRepository.updaterLoader.increment();
                 const tx = Transaction.fromHex(newTxDetails.hex);
-                const unblindedResults = await this.unblinder.unblind(...tx.outs);
                 const updateArray: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
-                for (const [vout, unblinded] of unblindedResults.entries()) {
-                  if (unblinded instanceof Error) {
-                    if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
-                    if (unblinded.message === 'Empty script: fee output') continue;
-                    console.error('Error while unblinding', unblinded);
+                for (const [vout, output] of tx.outs.entries()) {
+                  const { blindingData } = await this.walletRepository.getOutputBlindingData(
+                    txID,
+                    vout
+                  );
+                  if (blindingData) continue; // already unblinded
+                  const unblindResults = await this.unblinder.unblind(output);
+                  if (unblindResults[0] instanceof Error) {
+                    if (unblindResults[0].message === 'secp256k1_rangeproof_rewind') continue;
+                    if (unblindResults[0].message === 'Empty script: fee output') continue;
+                    console.error('Error while unblinding', unblindResults[0]);
                     continue;
                   }
-                  updateArray.push([{ txID, vout }, unblinded]);
+                  updateArray.push([{ txID, vout }, unblindResults[0]]);
                 }
                 await this.walletRepository.updateOutpointBlindingData(updateArray);
               } finally {

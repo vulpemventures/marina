@@ -5,10 +5,11 @@ import ShellPopUp from '../../components/shell-popup';
 import { SEND_CHOOSE_FEE_ROUTE, SEND_END_OF_FLOW_ROUTE } from '../../routes/constants';
 import { fromSatoshiStr } from '../../utility';
 import AssetIcon from '../../components/assetIcon';
-import { assetRepository, sendFlowRepository } from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
+import { useStorageContext } from '../../context/storage-context';
 
 const Confirmation: React.FC = () => {
+  const { sendFlowRepository, assetRepository } = useStorageContext();
   const history = useHistory();
   const handleSend = () => history.push(SEND_END_OF_FLOW_ROUTE);
   const handleBackBtn = () => history.push(SEND_CHOOSE_FEE_ROUTE);

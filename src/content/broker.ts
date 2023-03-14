@@ -1,22 +1,10 @@
-import browser from 'webextension-polyfill';
 import { stringify } from '../infrastructure/browser-storage-converters';
 import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
 import { isPopupResponseMessage, openPopupMessage, isResponseMessage } from '../domain/message';
-
-export type BrokerOption = (broker: Broker) => void;
+import type { BackgroundPort } from '../port/message';
 
 export default class Broker<T extends string = string> {
-  protected backgroundScriptPort: browser.Runtime.Port;
-  protected providerName: string;
-
-  constructor(name: string, options: BrokerOption[] = []) {
-    this.backgroundScriptPort = browser.runtime.connect();
-    for (const opt of options) {
-      opt(this);
-    }
-
-    this.providerName = name;
-  }
+  constructor(protected providerName: string, private backgroundPort: BackgroundPort) {}
 
   protected start(handler: MessageHandler<T>) {
     // start listening for messages from the injected script in page
@@ -45,16 +33,18 @@ export default class Broker<T extends string = string> {
   }
 
   protected async openAndWaitPopup<T>(popupName: PopupName): Promise<T> {
-    this.backgroundScriptPort.postMessage(openPopupMessage(popupName));
+    await this.backgroundPort.sendMessage(openPopupMessage(popupName));
 
     return new Promise<T>((resolve) => {
-      this.backgroundScriptPort.onMessage.addListener((message) => {
+      this.backgroundPort.onMessage((message) => {
         if (isPopupResponseMessage(message)) {
           if (message.data.error) {
             throw new Error(message.data.error);
           }
+
           resolve(message.data.response as T);
         }
+        return Promise.resolve();
       });
     });
   }

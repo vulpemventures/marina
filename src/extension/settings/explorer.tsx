@@ -15,7 +15,7 @@ import {
 import type { NetworkString } from 'marina-provider';
 import { useHistory } from 'react-router';
 import { SETTINGS_EXPLORER_CUSTOM_ROUTE } from '../routes/constants';
-import { appRepository, useSelectNetwork } from '../../infrastructure/storage/common';
+import { useStorageContext } from '../context/storage-context';
 
 function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
   switch (network) {
@@ -31,8 +31,8 @@ function explorerTypesForNetwork(network: NetworkString): ExplorerType[] {
 }
 
 const SettingsExplorer: React.FC = () => {
+  const { appRepository, cache } = useStorageContext();
   const history = useHistory();
-  const network = useSelectNetwork();
   const [selected, setSelected] = React.useState<ExplorerType>();
 
   useEffect(() => {
@@ -108,9 +108,9 @@ const SettingsExplorer: React.FC = () => {
     >
       <>
         <p className="font-regular my-8 text-base text-left">Select the explorer</p>
-        {network && (
+        {cache?.network && (
           <Select
-            list={explorerTypesForNetwork(network)}
+            list={explorerTypesForNetwork(cache.network)}
             selected={selected || 'Custom'}
             onSelect={onSelect}
             disabled={false}
