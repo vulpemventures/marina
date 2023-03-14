@@ -53,7 +53,6 @@ import type { CreateAccountPopupResponse } from '../../extension/popups/create-a
 import { BlinderService } from '../../application/blinder';
 import zkpLib from '@vulpemventures/secp256k1-zkp';
 import { WalletRepositoryUnblinder } from '../../application/unblinder';
-import { PolyfillBackgroundPort } from '../../port/message';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
@@ -79,7 +78,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   }
 
   private constructor(hostname = '') {
-    super(Marina.PROVIDER_NAME, PolyfillBackgroundPort);
+    super(Marina.PROVIDER_NAME);
     this.hostname = hostname;
     this.walletRepository = new WalletStorageAPI();
     this.appRepository = new AppStorageAPI();

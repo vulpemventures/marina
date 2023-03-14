@@ -1,10 +1,12 @@
 import { stringify } from '../infrastructure/browser-storage-converters';
 import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
-import { isPopupResponseMessage, openPopupMessage, isResponseMessage } from '../domain/message';
-import type { BackgroundPort } from '../port/message';
+import { openPopupMessage, isResponseMessage } from '../domain/message';
+import { getBackgroundPortImplementation } from '../port/message';
 
 export default class Broker<T extends string = string> {
-  constructor(protected providerName: string, private backgroundPort: BackgroundPort) {}
+  private backgroundPort = getBackgroundPortImplementation();
+
+  constructor(protected providerName: string) {}
 
   protected start(handler: MessageHandler<T>) {
     // start listening for messages from the injected script in page
@@ -33,20 +35,9 @@ export default class Broker<T extends string = string> {
   }
 
   protected async openAndWaitPopup<T>(popupName: PopupName): Promise<T> {
-    await this.backgroundPort.sendMessage(openPopupMessage(popupName));
-
-    return new Promise<T>((resolve) => {
-      this.backgroundPort.onMessage((message) => {
-        if (isPopupResponseMessage(message)) {
-          if (message.data.error) {
-            throw new Error(message.data.error);
-          }
-
-          resolve(message.data.response as T);
-        }
-        return Promise.resolve();
-      });
-    });
+    const response = await this.backgroundPort.sendMessage<T>(openPopupMessage(popupName), true);
+    if (!response) throw new Error('no response from background script');
+    return response;
   }
 
   // send Message to inject script

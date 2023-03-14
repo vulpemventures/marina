@@ -1,7 +1,7 @@
 const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { ProvidePlugin } = require('webpack');
+const { ProvidePlugin, DefinePlugin } = require('webpack');
 
 module.exports = (env) => ({
   experiments: {
@@ -46,6 +46,9 @@ module.exports = (env) => ({
         { from: `./manifest/manifest.${env.version}.json`, to: `manifest.json`},
       ],
     }),
+    new DefinePlugin({
+      'process.env.MANIFEST_VERSION': JSON.stringify(env.version),
+    })
   ],
   output: { filename: '[name].js', path: path.resolve(__dirname, 'dist') },
 });

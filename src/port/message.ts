@@ -122,23 +122,85 @@ export function isRestoreMessage(message: unknown): message is RestoreMessage {
   return (message && (message as any).type === MessageType.Restore) as boolean;
 }
 
-type CallbackPortFunction = (message: any, port: Browser.Runtime.Port) => Promise<void>;
+type CallbackPortFunction = (message: any, sendResponse: (message: any) => void) => Promise<void>;
 
 export interface BackgroundPort {
-  sendMessage<T extends Message<any>>(message: T): Promise<void>;
+  sendMessage<ResponseT, MsgT extends Message<any> = Message<any>>(
+    message: MsgT,
+    withResponse?: boolean
+  ): Promise<ResponseT | void>;
   onMessage(callback: CallbackPortFunction): void;
 }
 
-export const PolyfillBackgroundPort: BackgroundPort = {
-  sendMessage<T extends Message<any>>(message: T) {
+// Polyfill implementation using webextension-polyfill library
+// target manifest v2
+const PolyfillBackgroundPort: BackgroundPort = {
+  sendMessage<ResponseT = void, T extends Message<any> = Message<any>>(
+    message: T,
+    withResponse = false
+  ): Promise<ResponseT | void> {
     const port = Browser.runtime.connect();
-    return Promise.resolve(port.postMessage(message));
+    port.postMessage(message);
+
+    if (!withResponse) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      port.onMessage.addListener((message) => {
+        if (isPopupResponseMessage(message)) {
+          if (message.data.error) {
+            throw new Error(message.data.error);
+          }
+
+          resolve(message.data.response as ResponseT);
+        }
+        resolve(message);
+      });
+    });
   },
   onMessage: (callback: CallbackPortFunction): void => {
     Browser.runtime.onConnect.addListener((port: Browser.Runtime.Port) => {
       port.onMessage.addListener((message: any) => {
-        callback(message, port).catch((e) => console.error(e));
+        callback(message, (msg) => port.postMessage(msg)).catch((e) => console.error(e));
       });
     });
   },
 };
+
+// Chrome implementation using the chrome.runtime global API
+// target manifest v3 & chrome based browsers
+const ChromeBackgroundPort: BackgroundPort = {
+  async sendMessage<RT = void, T = Message<any>>(message: T): Promise<RT | void> {
+    return await chrome.runtime.sendMessage<T, RT>(message);
+  },
+  onMessage: (callback: CallbackPortFunction): void => {
+    chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
+      callback(request, (message: any) => {
+        if (isPopupResponseMessage(message)) {
+          if (message.data.error) {
+            throw new Error(message.data.error);
+          }
+          sendResponse(message.data.response);
+        }
+        sendResponse(message);
+      }).catch((e) => {
+        sendResponse({ error: e });
+      });
+      return true;
+    });
+  },
+};
+
+export function getBackgroundPortImplementation(): BackgroundPort {
+  const manifestVersion = process.env.MANIFEST_VERSION;
+  if (!manifestVersion) {
+    throw new Error('MANIFEST_VERSION is not defined');
+  }
+  if (manifestVersion !== 'v3' && manifestVersion !== 'v2') {
+    throw new Error(`MANIFEST_VERSION is not valid: ${manifestVersion}`);
+  }
+
+  if (manifestVersion === 'v3') {
+    return ChromeBackgroundPort;
+  }
+  return PolyfillBackgroundPort;
+}

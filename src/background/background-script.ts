@@ -19,8 +19,8 @@ import { TaxiUpdater } from './taxi-updater';
 import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
 import { AccountFactory } from '../application/account';
-import { PolyfillBackgroundPort } from '../port/message';
 import { extractErrorMessage } from '../extension/utility/error';
+import { getBackgroundPortImplementation } from '../port/message';
 
 // manifest v2 needs BrowserAction, v3 needs action
 const action = Browser.browserAction ?? Browser.action;
@@ -33,6 +33,8 @@ const POPUP_RESPONSE = 'popup-response';
 // MUST be > 15 seconds
 const IDLE_TIMEOUT_IN_SECONDS = 300; // 5 minutes
 let welcomeTabID: number | undefined = undefined;
+
+const backgroundPort = getBackgroundPortImplementation();
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
@@ -149,45 +151,51 @@ action.onClicked.addListener(() => {
 // the event emitter is used to link all the content-scripts (popups and providers ones)
 const eventEmitter = new SafeEventEmitter();
 
-PolyfillBackgroundPort.onMessage(async (message: any, port: Browser.Runtime.Port) => {
+backgroundPort.onMessage(async (message, sendResponse) => {
   if (isOpenPopupMessage(message)) {
     try {
-      await handleOpenPopupMessage(message, port);
+      await handleOpenPopupMessage(message, sendResponse);
     } catch (error) {
       console.error(error);
-      port.postMessage({ data: undefined, error: extractErrorMessage(error) });
+      sendResponse({ data: undefined, error: extractErrorMessage(error) });
     }
     return;
   }
-
   if (isPopupResponseMessage(message)) {
     // propagate popup response
     eventEmitter.emit(POPUP_RESPONSE, message);
+    sendResponse({ data: undefined, error: undefined });
     return;
   }
 
   if (isLogInMessage(message)) {
     await startBackgroundServices();
+    sendResponse({ data: undefined, error: undefined });
     return;
   }
 
   if (isLogOutMessage(message)) {
     await stopBackgroundServices();
+    sendResponse({ data: undefined, error: undefined });
     return;
   }
 
   if (isRestoreMessage(message)) {
     await restoreTask(message);
+    sendResponse({ data: undefined, error: undefined });
     return;
   }
 });
 
 // Open the popup window and wait for a response
 // then forward the response to content-script
-async function handleOpenPopupMessage(message: OpenPopupMessage, port: Browser.Runtime.Port) {
+async function handleOpenPopupMessage(
+  message: OpenPopupMessage,
+  sendResponse: (response: any) => void
+) {
   await createBrowserPopup(message.data.name);
   eventEmitter.once(POPUP_RESPONSE, (data: any) => {
-    port.postMessage(data);
+    sendResponse(data);
   });
 }
 

@@ -19,7 +19,6 @@ const SettingsNetworksView: React.FC = () => {
     try {
       const newNetwork = net.toLowerCase() as NetworkString;
       if (newNetwork === cache?.network) throw new Error('Network already selected');
-      console.log('switching network to', newNetwork);
       // switch the selected network
       await appRepository.setNetwork(newNetwork);
       const factory = await AccountFactory.create(walletRepository);
