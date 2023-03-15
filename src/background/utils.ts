@@ -1,12 +1,5 @@
 import Browser from 'webextension-polyfill';
-
-export interface BlockHeader {
-  version: number;
-  previousBlockHash: string;
-  merkleRoot: string;
-  timestamp: number;
-  height: number;
-}
+import type { BlockHeader } from '../domain/chainsource';
 
 const DYNAFED_HF_MASK = 2147483648;
 

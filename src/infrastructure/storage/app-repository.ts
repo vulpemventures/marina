@@ -1,6 +1,6 @@
 import type { NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import { WsElectrumChainSource } from '../electrum-chain-source';
+import { WsElectrumChainSource } from '../../port/electrum-chain-source';
 import {
   BlockstreamExplorerURLs,
   BlockstreamTestnetExplorerURLs,

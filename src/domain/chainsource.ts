@@ -1,5 +1,15 @@
-import type { BlockHeader } from '../background/utils';
-import type { GetHistoryResponse } from '../infrastructure/electrum-chain-source';
+export type TransactionHistory = Array<{
+  tx_hash: string;
+  height: number;
+}>;
+
+export interface BlockHeader {
+  version: number;
+  previousBlockHash: string;
+  merkleRoot: string;
+  timestamp: number;
+  height: number;
+}
 
 export interface ChainSource {
   subscribeScriptStatus(
@@ -7,7 +17,7 @@ export interface ChainSource {
     callback: (scripthash: string, status: string | null) => void
   ): Promise<void>;
   unsubscribeScriptStatus(script: Buffer): Promise<void>;
-  fetchHistories(scripts: Buffer[]): Promise<GetHistoryResponse[]>;
+  fetchHistories(scripts: Buffer[]): Promise<TransactionHistory[]>;
   fetchTransactions(txids: string[]): Promise<{ txID: string; hex: string }[]>;
   fetchBlockHeader(height: number): Promise<BlockHeader>;
   estimateFees(targetNumberBlocks: number): Promise<number>;

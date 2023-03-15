@@ -1,13 +1,7 @@
 import { crypto } from 'liquidjs-lib';
 import type { ElectrumWS } from 'ws-electrumx-client';
-import type { BlockHeader } from '../background/utils';
 import { deserializeBlockHeader } from '../background/utils';
-import type { ChainSource } from '../domain/chainsource';
-
-export type GetHistoryResponse = Array<{
-  tx_hash: string;
-  height: number;
-}>;
+import type { BlockHeader, ChainSource, TransactionHistory } from '../domain/chainsource';
 
 const BroadcastTransaction = 'blockchain.transaction.broadcast'; // returns txid
 const EstimateFee = 'blockchain.estimatefee'; // returns fee rate in sats/kBytes
@@ -47,9 +41,9 @@ export class WsElectrumChainSource implements ChainSource {
     );
   }
 
-  async fetchHistories(scripts: Buffer[]): Promise<GetHistoryResponse[]> {
+  async fetchHistories(scripts: Buffer[]): Promise<TransactionHistory[]> {
     const scriptsHashes = scripts.map((s) => toScriptHash(s));
-    const responses = await this.ws.batchRequest<GetHistoryResponse[]>(
+    const responses = await this.ws.batchRequest<TransactionHistory[]>(
       ...scriptsHashes.map((s) => ({ method: GetHistoryMethod, params: [s] }))
     );
     return responses;
