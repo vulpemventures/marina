@@ -100,7 +100,7 @@ const Home: React.FC = () => {
                 return (
                   <ButtonAsset
                     asset={asset}
-                    quantity={cache?.balances[asset.assetHash]}
+                    quantity={cache?.balances[asset.assetHash] || 0}
                     key={index}
                     handleClick={handleAssetBalanceButtonClick}
                   />
