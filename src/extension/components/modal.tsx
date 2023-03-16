@@ -17,7 +17,7 @@ const Modal: React.FC<Props> = ({ isOpen, onClose, children }) => {
   }
 
   return (
-    <div className="bg-smokeLight fixed inset-0 z-50 flex">
+    <div className="bg-smokeLight -top-16 fixed inset-0 z-50 flex">
       <div
         className="rounded-xl min-h-80 relative flex flex-col max-w-xs p-8 m-auto bg-white"
         ref={ref}
