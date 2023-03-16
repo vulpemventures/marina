@@ -6,13 +6,13 @@ import TxIcon from './txIcon';
 import moment from 'moment';
 import Modal from './modal';
 import { Transaction } from 'liquidjs-lib';
-import type { BlockHeader } from '../../background/utils';
 import AssetIcon from './assetIcon';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import Button from './button';
 import Browser from 'webextension-polyfill';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../context/storage-context';
+import type { BlockHeader } from '../../domain/chainsource';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;

@@ -23,8 +23,7 @@ import {
 } from '../application/account';
 import { mnemonicToSeed } from 'bip39';
 import { SLIP77Factory } from 'slip77';
-import type { ChainSource } from './chainsource';
-import type { BlockHeader } from '../background/utils';
+import type { BlockHeader, ChainSource } from './chainsource';
 
 export interface AppStatus {
   isMnemonicVerified: boolean;

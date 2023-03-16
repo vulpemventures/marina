@@ -1,8 +1,8 @@
 import Browser from 'webextension-polyfill';
 import type { NetworkString } from 'marina-provider';
-import type { BlockHeader } from '../../background/utils';
 import type { BlockheadersRepository } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
+import type { BlockHeader } from '../../domain/chainsource';
 
 const BlockHeaderKey = new DynamicStorageKey<[network: NetworkString, height: number]>(
   'blockheader'
