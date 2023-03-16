@@ -23,7 +23,7 @@ jobs:
       run: yarn playwright install --with-deps
 
     - name: Run Playwright tests
-      run: yarn playwright test
+      run: xvfb-run npx playwright test
       
     - uses: actions/upload-artifact@v3
       if: always()
