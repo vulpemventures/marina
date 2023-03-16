@@ -22,7 +22,7 @@ export interface CreateAccountPopupResponse {
 }
 
 const ConnectCreateAccount: React.FC = () => {
-  const { appRepository, walletRepository } = useStorageContext();
+  const { walletRepository } = useStorageContext();
   const { backgroundPort } = useBackgroundPortContext();
   const parameters = useSelectPopupCreateAccountParameters();
 
@@ -49,9 +49,6 @@ const ConnectCreateAccount: React.FC = () => {
     try {
       if (!password || password.length === 0) throw new Error('need password');
 
-      const network = await appRepository.getNetwork();
-      if (!network) throw new Error('no network network selected, cannot create account');
-
       const encrypted = await walletRepository.getEncryptedMnemonic();
       if (!encrypted) throw new Error('no wallet seed');
 
@@ -73,7 +70,7 @@ const ConnectCreateAccount: React.FC = () => {
       await walletRepository.updateAccountDetails(params.name, {
         accountID: params.name,
         type: params.accountType,
-        accountNetworks: [network],
+        accountNetworks: ['liquid', 'testnet', 'regtest'],
         baseDerivationPath,
         masterXPub: masterPublicKey,
       });
