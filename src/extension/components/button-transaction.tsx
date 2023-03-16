@@ -5,7 +5,7 @@ import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
 import TxIcon from './txIcon';
 import moment from 'moment';
 import Modal from './modal';
-import { Transaction } from 'liquidjs-lib';
+import { networks, Transaction } from 'liquidjs-lib';
 import AssetIcon from './assetIcon';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import Button from './button';
@@ -44,11 +44,12 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       setTxID(txID);
 
       let transferAmount = 0;
+      let lbtcFeeAmount = 0;
 
       for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
         const output = transaction.outs[outIndex];
         if (output.script.length === 0) {
-          setFeeAmount(confidentialValueToSatoshi(output.value));
+          lbtcFeeAmount = confidentialValueToSatoshi(output.value);
           continue;
         }
 
@@ -71,10 +72,22 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
         }
       }
 
+      const network = await appRepository.getNetwork();
+      if (!network) return;
+
+      if (
+        assetSelected.assetHash === networks[network].assetHash &&
+        transferAmount + lbtcFeeAmount === 0
+      ) {
+        // in case of L-BTC, ignore the tx where we only use LBTC to pay the fees
+        transferAmount = 0;
+      }
+
       setTransfer({
         amount: transferAmount,
         type: txTypeFromTransfer(transferAmount),
       });
+      setFeeAmount(lbtcFeeAmount);
 
       // get the block header, if not found in repository, fetch it from the chain
       // skip if the tx is not confirmed (height === -1)
@@ -84,9 +97,6 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       }
 
       if (blockHeader && blockHeader.height === txDetails.height) return;
-
-      const network = await appRepository.getNetwork();
-      if (!network) return;
 
       let header = await blockHeadersRepository.getBlockHeader(network, txDetails.height);
 
