@@ -6,7 +6,7 @@ on:
     branches: [ master ]
 jobs:
   test:
-    timeout-minutes: 60
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -14,13 +14,17 @@ jobs:
       with:
         node-version: 16
     - name: Install dependencies
-      run: yarn
-    - name: Install Playwright Browsers
-      run: yarn playwright install --with-deps
+      run: yarn install --frozen-lockfile
+    
     - name: Build marina extension
       run: yarn build:v3
+
+    - name: Install Playwright Browsers
+      run: yarn playwright install --with-deps
+
     - name: Run Playwright tests
       run: yarn playwright test
+      
     - uses: actions/upload-artifact@v3
       if: always()
       with:
