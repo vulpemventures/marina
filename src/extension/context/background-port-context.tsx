@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import type { BackgroundPort } from '../../port/message';
-import { getBackgroundPortImplementation } from '../../port/message';
+import type { BackgroundPort } from '../../port/background-port';
+import { getBackgroundPortImplementation } from '../../port/background-port';
 
 export interface BackgroundPortContextProps {
   backgroundPort: BackgroundPort;

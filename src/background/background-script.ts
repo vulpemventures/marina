@@ -20,7 +20,7 @@ import { UpdaterService } from './updater';
 import { tabIsOpen } from './utils';
 import { AccountFactory } from '../application/account';
 import { extractErrorMessage } from '../extension/utility/error';
-import { getBackgroundPortImplementation } from '../port/message';
+import { getBackgroundPortImplementation } from '../port/background-port';
 
 // manifest v2 needs BrowserAction, v3 needs action
 const action = Browser.browserAction ?? Browser.action;

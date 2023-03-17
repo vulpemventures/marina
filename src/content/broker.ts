@@ -1,7 +1,7 @@
 import { stringify } from '../infrastructure/browser-storage-converters';
 import type { MessageHandler, PopupName, RequestMessage, ResponseMessage } from '../domain/message';
 import { openPopupMessage, isResponseMessage } from '../domain/message';
-import { getBackgroundPortImplementation } from '../port/message';
+import { getBackgroundPortImplementation } from '../port/background-port';
 
 export default class Broker<T extends string = string> {
   private backgroundPort = getBackgroundPortImplementation();

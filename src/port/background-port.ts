@@ -2,6 +2,7 @@
 
 import type { AccountID, NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
+import { extractErrorMessage } from '../extension/utility/error';
 
 // request = a call of a provider's method
 export interface RequestMessage<T extends string> {
@@ -166,12 +167,30 @@ const PolyfillBackgroundPort: BackgroundPort = {
   },
 };
 
+// chrome (manifest v3) sendMessage throws some "Could not establish connection. Receiving end does not exist." errors randomly
+// this is a workaround to retry the message if this error is thrown, up to 3 times
+const couldNotEstablishConnectionError = "Could not establish connection. Receiving end does not exist."
+const maxCouldNotEstablishConnectionError = 3;
+
 // Chrome implementation using the chrome.runtime global API
 // target manifest v3 & chrome based browsers
 const ChromeBackgroundPort: BackgroundPort = {
   async sendMessage<RT = void, T = Message<any>>(message: T): Promise<RT | void> {
-    return await chrome.runtime.sendMessage<T, RT>(message);
-  },
+    const sendMsg = () => chrome.runtime.sendMessage(message);
+    let errorCount = 0;
+    while (errorCount < maxCouldNotEstablishConnectionError) {
+      try {
+        return await sendMsg();
+      } catch (e) {
+        if (extractErrorMessage(e) === couldNotEstablishConnectionError) {
+          errorCount++;
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } else {
+          throw e;
+        }
+      }
+    }
+  } ,
   onMessage: (callback: CallbackPortFunction): void => {
     chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       callback(request, (message: any) => {
