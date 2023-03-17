@@ -39,9 +39,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      if (!cache) return;
-
-      if (!cache.authenticated && !cache.loading) {
+      if (!cache || !cache.authenticated) {
         history.push(LOGIN_ROUTE);
         return;
       }
@@ -59,7 +57,7 @@ const Home: React.FC = () => {
           break;
       }
     })().catch(console.error);
-  }, [cache?.authenticated]);
+  }, []);
 
   return (
     <ShellPopUp
