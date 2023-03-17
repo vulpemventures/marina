@@ -22,7 +22,7 @@ import { useStorageContext } from '../../context/storage-context';
 
 const Home: React.FC = () => {
   const history = useHistory();
-  const { appRepository, sendFlowRepository, cache } = useStorageContext();
+  const { sendFlowRepository, cache } = useStorageContext();
 
   const handleAssetBalanceButtonClick = (asset: Asset) => {
     history.push({
@@ -39,8 +39,9 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const { isAuthenticated } = await appRepository.getStatus();
-      if (!isAuthenticated) {
+      if (!cache) return;
+
+      if (!cache.authenticated && !cache.loading) {
         history.push(LOGIN_ROUTE);
         return;
       }
@@ -58,7 +59,7 @@ const Home: React.FC = () => {
           break;
       }
     })().catch(console.error);
-  }, []);
+  }, [cache?.authenticated]);
 
   return (
     <ShellPopUp

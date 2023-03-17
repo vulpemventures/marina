@@ -71,6 +71,7 @@ export interface AppRepository {
   onHostnameEnabled: EventEmitter<[hostname: string]>;
   onHostnameDisabled: EventEmitter<[hostname: string]>;
   onNetworkChanged: EventEmitter<[NetworkString]>;
+  onIsAuthenticatedChanged: EventEmitter<[authenticated: boolean]>;
 
   /** loaders **/
   restorerLoader: Loader;

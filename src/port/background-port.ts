@@ -169,7 +169,8 @@ const PolyfillBackgroundPort: BackgroundPort = {
 
 // chrome (manifest v3) sendMessage throws some "Could not establish connection. Receiving end does not exist." errors randomly
 // this is a workaround to retry the message if this error is thrown, up to 3 times
-const couldNotEstablishConnectionError = "Could not establish connection. Receiving end does not exist."
+const couldNotEstablishConnectionError =
+  'Could not establish connection. Receiving end does not exist.';
 const maxCouldNotEstablishConnectionError = 3;
 
 // Chrome implementation using the chrome.runtime global API
@@ -190,7 +191,7 @@ const ChromeBackgroundPort: BackgroundPort = {
         }
       }
     }
-  } ,
+  },
   onMessage: (callback: CallbackPortFunction): void => {
     chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       callback(request, (message: any) => {

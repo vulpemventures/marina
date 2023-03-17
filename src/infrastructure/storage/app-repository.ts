@@ -234,6 +234,23 @@ export class AppStorageAPI implements AppRepository {
     return () => Browser.storage.onChanged.removeListener(listener);
   }
 
+  onIsAuthenticatedChanged(callback: (isAuthenticated: boolean) => Promise<void>) {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
+      if (areaName !== 'local') return;
+      const changesIsAuthenticated = changes[AppStorageKeys.AUTHENTICATED];
+      if (changesIsAuthenticated) {
+        const oldVal = changesIsAuthenticated.oldValue as boolean;
+        const newVal = changesIsAuthenticated.newValue as boolean;
+        if (oldVal !== newVal) await callback(newVal);
+      }
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
+  }
+
   clear(): Promise<void> {
     return Browser.storage.local.clear();
   }

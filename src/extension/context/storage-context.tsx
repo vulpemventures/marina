@@ -33,6 +33,8 @@ interface StorageContextCache {
   balances: Record<string, number>;
   utxos: UnblindedOutput[];
   assets: Asset[];
+  authenticated: boolean;
+  loading: boolean;
 }
 
 interface StorageContextProps {
@@ -57,6 +59,8 @@ const StorageContext = createContext<StorageContextProps>({
 });
 
 export const StorageProvider = ({ children }: { children: React.ReactNode }) => {
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [network, setNetwork] = useState<NetworkString>('liquid');
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [utxos, setUtxos] = useState<UnblindedOutput[]>([]);
@@ -105,22 +109,51 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
   }, [assets]);
 
   useEffect(() => {
-    setInitialState().catch(console.error);
-    const closeAssetListener = assetRepository.onNewAsset((asset) =>
-      Promise.resolve(setAssets((assets) => [...assets, asset]))
-    );
-    const closeNetworkListener = appRepository.onNetworkChanged(async (net) => {
-      setNetwork(net);
-      closeUtxosListeners?.();
-      await setInitialState();
+    if (isAuthenticated) {
+      setInitialState().catch(console.error);
+      const closeAssetListener = assetRepository.onNewAsset((asset) =>
+        Promise.resolve(setAssets((assets) => [...assets, asset]))
+      );
+
+      const closeNetworkListener = appRepository.onNetworkChanged(async (net) => {
+        setNetwork(net);
+        closeUtxosListeners?.();
+        await setInitialState();
+      });
+
+      return () => {
+        // close all while unmounting
+        closeUtxosListeners?.();
+        closeNetworkListener();
+        closeNetworkListener();
+        closeAssetListener();
+      };
+    } else {
+      setBalances({});
+      setUtxos([]);
+      setAssets([]);
+      setSortedAssets([]);
+      setNetwork('liquid');
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    appRepository
+      .getStatus()
+      .then((status) => {
+        if (status) {
+          setIsAuthenticated(true);
+        }
+        setLoading(false);
+      })
+      .catch(console.error);
+
+    const closeAuthListener = appRepository.onIsAuthenticatedChanged((auth) => {
+      setIsAuthenticated(auth);
+      return Promise.resolve();
     });
 
-    return () => {
-      // close all while unmounting
-      closeNetworkListener?.();
-      closeNetworkListener();
-      closeAssetListener();
-    };
+    return closeAuthListener;
   }, []);
 
   return (
@@ -138,6 +171,8 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
           network,
           utxos,
           assets: sortedAssets,
+          authenticated: isAuthenticated,
+          loading,
         },
       }}
     >
