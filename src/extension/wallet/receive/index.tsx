@@ -16,11 +16,9 @@ const ReceiveView: React.FC = () => {
   const [isAddressExpanded, setAddressExpanded] = useState(false);
   const handleExpand = () => setAddressExpanded(true);
   const handleBackBtn = () => history.replace(DEFAULT_ROUTE);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(confidentialAddress).then(
-      () => setButtonText('Copied'),
-      (err) => console.error('Could not copy text: ', err)
-    );
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(confidentialAddress);
+    setButtonText('Copied');
   };
 
   useEffect(() => {
@@ -57,7 +55,9 @@ const ReceiveView: React.FC = () => {
             <p className="mt-2.5 text-xs font-medium break-all">{confidentialAddress}</p>
           ) : (
             <>
-              <p className="font-regular mt-2.5 text-lg">{formatAddress(confidentialAddress)}</p>
+              <p id="address" className="font-regular mt-2.5 text-lg">
+                {formatAddress(confidentialAddress)}
+              </p>
               <button
                 className="mt-1.5 text-xs font-medium text-primary focus:outline-none"
                 onClick={handleExpand}
