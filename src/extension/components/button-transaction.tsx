@@ -156,7 +156,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           <div className="text-primary whitespace-nowrap text-sm font-medium">
             {transfer ? (transfer.amount > 0 ? '+' : '') : ''}
             {transfer
-              ? formatDecimalAmount(fromSatoshi(transfer.amount, assetSelected.precision))
+              ? formatDecimalAmount(fromSatoshi(transfer.amount, assetSelected.precision), false)
               : '??'}{' '}
             {assetSelected.ticker}
           </div>
