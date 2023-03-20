@@ -88,9 +88,19 @@ const ChooseFee: React.FC = () => {
       const asset = await assetRepository.getAsset(assetHash);
       setAssetDetails(asset);
       if (assetHash === networks[network].assetHash) {
-        const { pset, feeAmount } = await psetBuilder.createRegularPset([recipient], []);
-        setFeeAmount(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
-        setUnsignedPset(pset.toBase64());
+        if (cache?.balances[recipient.asset] === recipient.value) {
+          console.log('send all');
+          const { pset, feeAmount } = await psetBuilder.createSendAllPset(
+            recipient.address,
+            recipient.asset
+          );
+          setFeeAmount(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
+          setUnsignedPset(pset.toBase64());
+        } else {
+          const { pset, feeAmount } = await psetBuilder.createRegularPset([recipient], []);
+          setFeeAmount(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
+          setUnsignedPset(pset.toBase64());
+        }
       } else {
         const { pset, feeAmount } = await psetBuilder.createTaxiPset(assetHash, [recipient], []);
         setFeeAmount(

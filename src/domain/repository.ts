@@ -92,16 +92,14 @@ export interface WalletRepository {
   addTransactions(network: NetworkString, ...txIDs: string[]): Promise<void>;
   getTransactions(...network: NetworkString[]): Promise<string[]>;
   getUtxos(network: NetworkString, ...accountNames: string[]): Promise<UnblindedOutput[]>;
-  getUnlockedUtxos(
-    network: NetworkString,
-    ...accountNames: string[]
-  ): Promise<{ txID: string; vout: number; blindingData?: UnblindingData }[]>;
+  getUnlockedUtxos(network: NetworkString, ...accountNames: string[]): Promise<UnblindedOutput[]>;
   selectUtxos(
     network: NetworkString,
     targets: { asset: string; amount: number }[],
     excludeOutpoints?: Outpoint[],
     ...onlyAccounts: string[] // optional, if not provided, all accounts utxos can be selected
   ): Promise<CoinSelection>;
+  unlockUtxos(): Promise<void>;
   lockOutpoints(outpoints: Outpoint[]): Promise<void>;
   getOutputBlindingData(txID: string, vout: number): Promise<UnblindedOutput>;
   getWitnessUtxo(txID: string, vout: number): Promise<UpdaterInput['witnessUtxo']>;

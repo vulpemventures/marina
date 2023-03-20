@@ -57,6 +57,7 @@ appRepository
   .catch(console.error);
 
 async function startBackgroundServices() {
+  await walletRepository.unlockUtxos(); // unlock all utxos at startup
   const { isOnboardingCompleted } = await appRepository.getStatus();
   if (isOnboardingCompleted) {
     await Promise.allSettled([

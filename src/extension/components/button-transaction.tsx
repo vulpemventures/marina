@@ -46,6 +46,8 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       let transferAmount = 0;
       let lbtcFeeAmount = 0;
 
+      let hasOutputWithAnotherAsset = false;
+
       for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
         const output = transaction.outs[outIndex];
         if (output.script.length === 0) {
@@ -57,8 +59,12 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
         if (!data || !data.blindingData) continue;
         if (data.blindingData.asset === assetSelected.assetHash) {
           transferAmount += data.blindingData.value;
+          continue;
         }
+        hasOutputWithAnotherAsset = true;
       }
+
+      const hasOutputWithSelectedAsset = transferAmount > 0;
 
       for (let inIndex = 0; inIndex < transaction.ins.length; inIndex++) {
         const input = transaction.ins[inIndex];
@@ -75,12 +81,20 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       const network = await appRepository.getNetwork();
       if (!network) return;
 
+      // ignore the tx where we don't have any output with the selected asset
+      if (!hasOutputWithSelectedAsset) {
+        setTransfer(undefined);
+        return;
+      }
+
       if (
         assetSelected.assetHash === networks[network].assetHash &&
-        transferAmount + lbtcFeeAmount === 0
+        transferAmount + lbtcFeeAmount === 0 &&
+        hasOutputWithAnotherAsset
       ) {
         // in case of L-BTC, ignore the tx where we only use LBTC to pay the fees
-        transferAmount = 0;
+        setTransfer(undefined);
+        return;
       }
 
       setTransfer({
@@ -92,6 +106,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       // get the block header, if not found in repository, fetch it from the chain
       // skip if the tx is not confirmed (height === -1)
       if (!txDetails?.height || txDetails.height === -1) {
+        // check if the tx has been confirmed
         setBlockHeader(undefined);
         return;
       }
@@ -128,7 +143,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
     await Browser.tabs.create({ url, active: false });
   };
 
-  if (transfer?.amount === 0) return null;
+  if (!transfer) return null;
   return (
     <>
       <button
