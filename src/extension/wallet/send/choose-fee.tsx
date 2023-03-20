@@ -89,7 +89,6 @@ const ChooseFee: React.FC = () => {
       setAssetDetails(asset);
       if (assetHash === networks[network].assetHash) {
         if (cache?.balances[recipient.asset] === recipient.value) {
-          console.log('send all');
           const { pset, feeAmount } = await psetBuilder.createSendAllPset(
             recipient.address,
             recipient.asset

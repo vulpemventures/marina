@@ -297,7 +297,6 @@ export class WalletStorageAPI implements WalletRepository {
       }
     }
 
-    console.log('selectedUtxos', selectedUtxos);
     // check if we have enough utxos for each target
     // throw CoinSelectionError if not
     for (const { amount, asset } of targets) {

@@ -18,7 +18,6 @@ const PaymentError: React.FC = () => {
   const { state } = useLocation<LocationState>();
 
   const handleRetry = async () => {
-    console.log('retrying', state);
     if (!state?.tx) throw new Error('tx not found, unable to broadcast');
     const chainSource = await appRepository.getChainSource();
     if (!chainSource) throw new Error('chain source not found');
