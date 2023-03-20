@@ -30,7 +30,7 @@ pwTest(
   }
 );
 
-pwTest.only(
+pwTest(
   'should be able to send some funds via wallet/send popup UI',
   async ({ page, extensionId }) => {
     await makeOnboardingRestore(page, extensionId); // create a new wallet
