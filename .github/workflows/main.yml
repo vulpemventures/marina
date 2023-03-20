@@ -30,6 +30,9 @@ jobs:
       - name: Install Nigiri
         uses: vulpemventures/nigiri-github-action@v1
 
+      - name: Enable websocat
+        run: docker run --net=host solsson/websocat -b ws-l:127.0.0.1:1234 tcp:127.0.0.1:50001&
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 

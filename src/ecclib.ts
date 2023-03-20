@@ -9,13 +9,17 @@
 import b64wasm from 'tiny-secp256k1-lib/secp256k1.wasm';
 // @ts-ignore
 // eslint-disable-next-line
-import * as rand from 'tiny-secp256k1-lib/rand.browser.js';
+import { randomBytes } from 'crypto-browserify';
 // @ts-ignore
 // eslint-disable-next-line
 import * as validate_error from 'tiny-secp256k1-lib/validate_error.js';
 
 const secp256k1imports = {
-  './rand.js': rand,
+  './rand.js': {
+    generateInt32(): number {
+      return randomBytes(4).readInt32BE();
+    },
+  },
   './validate_error.js': validate_error,
 };
 

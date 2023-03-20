@@ -2,6 +2,5 @@ postcss.config.js
 tailwind.config.js
 src/react-app-env.d.ts
 jest.config.js
-cypress/
 webpack.*.js
 tsconfig.json

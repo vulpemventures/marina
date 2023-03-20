@@ -48,5 +48,7 @@ runtaxi.sh
 
 /taxid
 
-# cypress
-/cypress/videos
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

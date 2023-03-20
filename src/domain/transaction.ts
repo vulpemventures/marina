@@ -1,57 +1,87 @@
-import type { NetworkString, UnblindedOutput } from 'ldk';
+import { Transaction } from 'liquidjs-lib';
+import type { AppRepository, WalletRepository } from './repository';
 
-export type UtxosAndTxsByNetwork = Record<NetworkString, UtxosAndTxs>;
-
-export interface UtxosAndTxs {
-  // outpoint string -> UnblindedOutput
-  utxosMap: Record<string, UnblindedOutput>;
-  transactions: TxsHistory;
-}
-
-export type TxsHistory = Record<TxDisplayInterface['txId'], TxDisplayInterface>;
+export type UnblindingData = {
+  value: number;
+  asset: string;
+  assetBlindingFactor: string;
+  valueBlindingFactor: string;
+};
 
 export enum TxType {
-  SelfTransfer = 0,
-  Deposit = 1,
-  Withdraw = 2,
-  Swap = 3,
-  Unknow = 4,
+  SelfTransfer = 'SelfTransfer',
+  Deposit = 'Deposit',
+  Withdraw = 'Withdraw',
+  Swap = 'Swap',
+  Unknow = 'Unknow',
 }
 
-export enum TxStatusEnum {
-  Confirmed = 1,
-  Pending = 0,
+export interface TxDetails {
+  height?: number;
+  hex?: string;
 }
 
-export interface Transfer {
-  asset: string;
-  // amount > 0 = received & amount < 0 = sent
-  amount: number;
+export interface UnblindedOutput {
+  txID: string;
+  vout: number;
+  blindingData?: UnblindingData;
 }
 
-export interface TxDisplayInterface {
-  type: TxType;
-  fee: number;
-  txId: string;
-  status: TxStatusEnum;
-  transfers: Transfer[];
-  webExplorersBlinders: string; // will be concat with webExplorerURL
-  blockTimeMs?: number;
+export interface CoinSelection {
+  utxos: UnblindedOutput[];
+  changeOutputs?: { asset: string; amount: number }[];
 }
 
-export function newEmptyUtxosAndTxsHistory(): UtxosAndTxsByNetwork {
-  return {
-    liquid: {
-      utxosMap: {},
-      transactions: {},
-    },
-    testnet: {
-      utxosMap: {},
-      transactions: {},
-    },
-    regtest: {
-      utxosMap: {},
-      transactions: {},
-    },
-  };
+export function computeBalances(utxos: UnblindedOutput[]): Record<string, number> {
+  const balances: Record<string, number> = {};
+  for (const utxo of utxos) {
+    if (!utxo.blindingData) continue;
+    const { asset, value } = utxo.blindingData;
+    balances[asset] = (balances[asset] || 0) + value;
+  }
+  return balances;
+}
+
+const reverseHex = (hex: string) => Buffer.from(hex, 'hex').reverse().toString('hex');
+
+export async function makeURLwithBlinders(
+  transaction: Transaction,
+  appRepository: AppRepository,
+  walletRepository: WalletRepository
+) {
+  const webExplorerURL = await appRepository.getWebExplorerURL();
+  if (!webExplorerURL) {
+    throw new Error('web explorer url not found');
+  }
+  const txID = transaction.getId();
+
+  const blinders: string[] = [];
+  for (let i = 0; i < transaction.outs.length; i++) {
+    const output = transaction.outs[i];
+    if (output.script.length === 0) continue;
+    const data = await walletRepository.getOutputBlindingData(txID, i);
+    if (!data || !data.blindingData) continue;
+
+    blinders.push(
+      `${data.blindingData.value},${data.blindingData.asset},${reverseHex(
+        data.blindingData.valueBlindingFactor
+      )},${reverseHex(data.blindingData.assetBlindingFactor)}`
+    );
+  }
+
+  const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}`;
+  return url;
+}
+
+export async function lockTransactionInputs(
+  walletRepository: WalletRepository,
+  txHex: string
+): Promise<void> {
+  const transaction = Transaction.fromHex(txHex);
+  return walletRepository.lockOutpoints(
+    transaction.ins.map((input) => ({
+      txID: Buffer.from(input.hash).reverse().toString('hex'),
+      vout: input.index,
+    }))
+  );
 }
