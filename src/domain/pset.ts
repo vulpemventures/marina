@@ -24,7 +24,14 @@ function estimateScriptSigSize(type: address.ScriptType): number {
   switch (type) {
     case address.ScriptType.P2Pkh:
       return 108;
-    case (address.ScriptType.P2Sh, address.ScriptType.P2Wsh):
+    case address.ScriptType.P2Pkh:
+      return 108;
+    case address.ScriptType.P2Sh:
+      return 35;
+    case address.ScriptType.P2Wsh:
+    case address.ScriptType.P2Tr:
+    case address.ScriptType.P2Wpkh:
+      return 1;
       return 35;
     case (address.ScriptType.P2Wsh, address.ScriptType.P2Tr, address.ScriptType.P2Wpkh):
       return 1;
