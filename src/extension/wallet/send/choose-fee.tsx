@@ -93,6 +93,12 @@ const ChooseFee: React.FC = () => {
             recipient.address,
             recipient.asset
           );
+          if (recipient.asset === networks[network].assetHash) {
+            await sendFlowRepository.setReceiverAddressAmount(
+              recipient.address,
+              recipient.value - feeAmount // subtract fee from amount if L-BTC
+            );
+          }
           setFeeAmount(fromSatoshiStr(feeAmount, 8) + ' L-BTC');
           setUnsignedPset(pset.toBase64());
         } else {
