@@ -1,5 +1,6 @@
 // @ts-ignore
 import coinselect from 'coinselect';
+// import coinselectSplit from 'coinselect/split';
 import type { NetworkString, ScriptDetails } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import type { TxOutput } from 'liquidjs-lib';
@@ -10,9 +11,11 @@ import type {
   UnblindedOutput,
   CoinSelection,
 } from '../../domain/transaction';
+import { computeBalances } from '../../domain/transaction';
 import type { AccountDetails, WalletRepository, Outpoint } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
 import type { Encrypted } from '../../domain/encryption';
+import { CoinSelectionError } from '../../domain/errors';
 
 type LockedOutpoint = Outpoint & {
   until: number; // timestamp in milliseconds, after which the outpoint should be unlocked
@@ -230,6 +233,7 @@ export class WalletStorageAPI implements WalletRepository {
     return allUtxos.filter((utxo) => !lockedOutpoints.has(`${utxo.txID}:${utxo.vout}`));
   }
 
+  // throws CoinSelectionError
   async selectUtxos(
     network: NetworkString,
     targets: { amount: number; asset: string }[],
@@ -241,6 +245,7 @@ export class WalletStorageAPI implements WalletRepository {
         utxo.blindingData &&
         !excludeOutpoints.find(({ txID, vout }) => utxo.txID === txID && utxo.vout === vout)
     );
+    const balances = computeBalances(utxos);
     // accumulate targets with same asset
     targets = targets.reduce((acc, target) => {
       const existingTarget = acc.find((t) => t.asset === target.asset);
@@ -258,13 +263,14 @@ export class WalletStorageAPI implements WalletRepository {
       const utxosFilteredByAsset = utxos.filter(
         (utxo) => utxo.blindingData?.asset === target.asset
       );
+      const isSendAll = target.amount === balances[target.asset];
       const { inputs, outputs } = coinselect(
         utxosFilteredByAsset.map((utxo) => ({
           txId: utxo.txID,
           vout: utxo.vout,
-          value: utxo.blindingData?.value,
+          value: utxo.blindingData?.value ?? 0,
         })),
-        [{ address: 'fake', value: target.amount }],
+        [{ address: 'fake', value: isSendAll ? undefined : target.amount }],
         0
       );
 
@@ -288,6 +294,19 @@ export class WalletStorageAPI implements WalletRepository {
               amount: output.value,
             }))
         );
+      }
+    }
+
+    // check if we have enough utxos for each target
+    // throw CoinSelectionError if not
+    for (const { amount, asset } of targets) {
+      const selectedAmount = selectedUtxos.reduce(
+        (acc, utxo) =>
+          utxo.blindingData?.asset === asset ? acc + utxo.blindingData?.value ?? 0 : acc,
+        0
+      );
+      if (selectedAmount < amount) {
+        throw new CoinSelectionError({ amount, asset }, selectedAmount);
       }
     }
 
@@ -466,6 +485,10 @@ export class WalletStorageAPI implements WalletRepository {
       }
     }
     return Browser.storage.local.set({ [WalletStorageKey.LOCKED_OUTPOINTS]: Array.from(set) });
+  }
+
+  async unlockUtxos(): Promise<void> {
+    return Browser.storage.local.remove(WalletStorageKey.LOCKED_OUTPOINTS);
   }
 
   private async getLockedOutpoints(): Promise<Set<string>> {

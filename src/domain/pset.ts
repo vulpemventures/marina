@@ -2,9 +2,14 @@ import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 import type { UpdaterInput, UpdaterOutput } from 'liquidjs-lib';
 import { Pset, payments, Creator, networks, address, Updater, Transaction } from 'liquidjs-lib';
-import { ScriptType, getScriptType } from 'liquidjs-lib/src/address';
-import { varuint, varSliceSize } from 'liquidjs-lib/src/bufferutils';
-import type { UnblindingData, AddressRecipient, DataRecipient, AccountID } from 'marina-provider';
+import { varSliceSize, varuint } from 'liquidjs-lib/src/bufferutils';
+import type {
+  UnblindingData,
+  AddressRecipient,
+  DataRecipient,
+  AccountID,
+  NetworkString,
+} from 'marina-provider';
 import {
   MainAccount,
   MainAccountLegacy,
@@ -13,17 +18,21 @@ import {
 } from '../application/account';
 import type { WalletRepository, AppRepository, TaxiRepository } from './repository';
 import type { CoinSelection } from './transaction';
+import { computeBalances } from './transaction';
 
-function estimateScriptSigSize(type: ScriptType): number {
+function estimateScriptSigSize(type: address.ScriptType): number {
   switch (type) {
-    case ScriptType.P2Pkh:
+    case address.ScriptType.P2Pkh:
       return 108;
-    case (ScriptType.P2Sh, ScriptType.P2Wsh):
+    case address.ScriptType.P2Sh:
+    case address.ScriptType.P2Wsh:
       return 35;
-    case (ScriptType.P2Wsh, ScriptType.P2Tr, ScriptType.P2Wpkh):
-      return 1;
+    case address.ScriptType.P2Tr:
+    case address.ScriptType.P2Wpkh:
+      return 1; // one byte for the variable len encoding (varlen(0) = 1 byte)
+    default:
+      return 0;
   }
-  return 0;
 }
 
 const INPUT_BASE_SIZE = 40; // 32 bytes for outpoint, 4 bytes for sequence, 4 for index
@@ -55,7 +64,7 @@ function estimateVirtualSize(pset: Pset, withFeeOutput: boolean): number {
   for (const input of pset.inputs) {
     const utxo = input.getUtxo();
     if (!utxo) throw new Error('missing input utxo, cannot estimate pset virtual size');
-    const type = getScriptType(utxo.script);
+    const type = address.getScriptType(utxo.script);
     const scriptSigSize = estimateScriptSigSize(type);
     let witnessSize = 1 + 1 + 1; // add no issuance proof + no token proof + no pegin
     if (input.redeemScript) {
@@ -172,16 +181,138 @@ export class PsetBuilder {
     private taxiRepository: TaxiRepository
   ) {}
 
-  async createRegularPset(
-    recipients: AddressRecipient[],
-    dataRecipients: DataRecipient[],
-    fromAccounts: AccountID[] = [MainAccount, MainAccountLegacy, MainAccountTest]
+  // send ALL transactions does not need any selection strategy
+  // it spends all the inputs to a single output
+  async createSendAllPset(
+    addr: string,
+    asset: string,
+    fromAccounts?: AccountID[]
   ): Promise<PsetWithFee> {
     const pset = Creator.newPset();
     const network = await this.appRepository.getNetwork();
     if (!network) {
       throw new Error('network not set');
     }
+    if (!fromAccounts) fromAccounts = getMainAccountsIDs(network);
+    const feeAssetHash = networks[network].assetHash;
+    const unlockedUtxos = (
+      await this.walletRepository.getUnlockedUtxos(network, ...fromAccounts)
+    ).filter((utxo) => utxo.blindingData?.asset === asset);
+
+    const balances = computeBalances(unlockedUtxos);
+
+    const ins: UpdaterInput[] = [];
+    const outs: UpdaterOutput[] = [
+      {
+        amount: balances[asset],
+        asset,
+        script: address.toOutputScript(addr),
+      },
+    ];
+
+    if (address.isConfidential(addr)) {
+      outs[0].blinderIndex = 0;
+      outs[0].blindingPublicKey = address.fromConfidential(addr).blindingKey;
+    }
+
+    // get the witness utxos from repository
+    const utxosWitnessUtxos = await Promise.all(
+      unlockedUtxos.map((utxo) => this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout))
+    );
+
+    ins.push(
+      ...unlockedUtxos.map((utxo, i) => ({
+        txid: utxo.txID,
+        txIndex: utxo.vout,
+        sighashType: Transaction.SIGHASH_ALL,
+        witnessUtxo: utxosWitnessUtxos[i],
+      }))
+    );
+
+    const updater = new Updater(pset);
+
+    updater.addInputs(ins).addOutputs(outs);
+    const chainSource = await this.appRepository.getChainSource(network);
+    if (!chainSource) throw new Error('chain source not set');
+    // we add 50% to the min relay fee in order to be sure that the transaction will be accepted by the network
+    // some inputs and outputs may be added later to pay the fees
+    const relayFee = (await chainSource.getRelayFee()) * 1.5;
+    await chainSource.close();
+    const sats1000Bytes = relayFee * 10 ** 8;
+    const estimatedSize = estimateVirtualSize(updater.pset, true);
+    const feeAmount = Math.ceil(estimatedSize * (sats1000Bytes / 1000));
+
+    if (feeAssetHash === asset) {
+      updater.addOutputs([
+        {
+          amount: feeAmount,
+          asset: feeAssetHash,
+        },
+      ]);
+      updater.pset.outputs[0].value -= feeAmount;
+    } else {
+      // coinselect some L-BTC to pay the fees
+      const coinSelection = await this.walletRepository.selectUtxos(network, [
+        { asset: feeAssetHash, amount: feeAmount },
+      ]);
+
+      const witnessUtxos = await Promise.all(
+        coinSelection.utxos.map((utxo) =>
+          this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout)
+        )
+      );
+
+      updater.addInputs(
+        coinSelection.utxos.map((utxo, i) => ({
+          txid: utxo.txID,
+          txIndex: utxo.vout,
+          sighashType: Transaction.SIGHASH_ALL,
+          witnessUtxo: witnessUtxos[i],
+        }))
+      );
+
+      if (coinSelection.changeOutputs && coinSelection.changeOutputs.length > 0) {
+        const accountFactory = await AccountFactory.create(this.walletRepository);
+        const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+        const mainAccount = await accountFactory.make(network, accountName);
+        const changeAddress = await mainAccount.getNextAddress(true);
+        updater.addOutputs(
+          coinSelection.changeOutputs.map((change) => ({
+            amount: change.amount,
+            asset: change.asset,
+            script: address.toOutputScript(changeAddress.confidentialAddress),
+            blinderIndex: 0,
+            blindingPublicKey: address.fromConfidential(changeAddress.confidentialAddress)
+              .blindingKey,
+          }))
+        );
+      }
+
+      updater.addOutputs([
+        {
+          amount: feeAmount,
+          asset: feeAssetHash,
+        },
+      ]);
+    }
+
+    return {
+      pset: updater.pset,
+      feeAmount,
+    };
+  }
+
+  async createRegularPset(
+    recipients: AddressRecipient[],
+    dataRecipients: DataRecipient[],
+    fromAccounts?: AccountID[]
+  ): Promise<PsetWithFee> {
+    const pset = Creator.newPset();
+    const network = await this.appRepository.getNetwork();
+    if (!network) {
+      throw new Error('network not set');
+    }
+    if (!fromAccounts) fromAccounts = getMainAccountsIDs(network);
     const feeAssetHash = networks[network].assetHash;
 
     const coinSelection = await this.walletRepository.selectUtxos(
@@ -493,5 +624,14 @@ export class PsetBuilder {
     }
 
     return { ins, outs };
+  }
+}
+
+function getMainAccountsIDs(network: NetworkString): AccountID[] {
+  const mainAccounts = [MainAccountLegacy];
+  if (network === 'liquid') {
+    return [...mainAccounts, MainAccount];
+  } else {
+    return [...mainAccounts, MainAccountTest];
   }
 }

@@ -1,5 +1,6 @@
-import type { BrowserContext } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
 import { test as basePlaywrightTest, chromium } from '@playwright/test';
+import { generateMnemonic } from 'bip39';
 import path from 'path';
 
 export const test = basePlaywrightTest.extend<{
@@ -33,5 +34,23 @@ export const test = basePlaywrightTest.extend<{
         await use(extensionID);
     },
 });
+
+export const PASSWORD = 'passwordsupersecretonlyfortesting';
+
+export const marinaURL = (extensionID: string, path: string) => `chrome-extension://${extensionID}/${path}`;
+
+export const makeOnboardingRestore = async (page: Page, extensionID: string) => {
+  await page.goto(marinaURL(extensionID, 'home.html#initialize/welcome'));
+  await page.getByRole('button', { name: 'Get Started' }).click();
+  await page.getByRole('button', { name: 'Restore' }).click();
+
+  const mnemonic = generateMnemonic();
+  await page.getByRole('textbox', { name: 'mnemonic' }).fill(mnemonic);
+  await page.getByPlaceholder('Enter your password').fill(PASSWORD);
+  await page.getByPlaceholder('Confirm your password').fill(PASSWORD);
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: 'Create' }).click();
+  await page.waitForSelector('text=Your wallet is ready');
+};
 
 export const expect = test.expect;
