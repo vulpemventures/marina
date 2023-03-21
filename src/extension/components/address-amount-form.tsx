@@ -94,7 +94,13 @@ const BaseForm = (props: FormProps & FormikProps<FormValues>) => {
   return (
     <form onSubmit={handleSubmit} className="mt-8">
       <p className="mb-2 text-base font-medium text-left">Address</p>
-      <Input {...props} name="address" placeholder="lq1..." type="text" value={values.address} />
+      <Input
+        {...props}
+        name="address"
+        placeholder={networks[props.network].blech32 + '1...'}
+        type="text"
+        value={values.address}
+      />
 
       <div className="flex content-center justify-between mb-2">
         <p className="text-base font-medium text-left">Amount</p>

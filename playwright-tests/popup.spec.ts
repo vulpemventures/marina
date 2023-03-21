@@ -60,7 +60,7 @@ pwTest(
     await page.waitForSelector('text=1 L-BTC');
     await page.getByRole('button', { name: 'Send' }).click(); // go to send
     await page.getByText('Liquid Bitcoin').click(); // select L-BTC
-    await page.getByPlaceholder('lq1...').fill(address as string); // fill the address
+    await page.getByPlaceholder('el1...').fill(address as string); // fill the address
     await page.getByPlaceholder('0').fill('0.9'); // fill the amount
     await page.getByRole('button', { name: 'Verify' }).click(); 
     await page.getByRole('button', { name: 'L-BTC' }).click(); 

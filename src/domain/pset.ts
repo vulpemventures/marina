@@ -24,19 +24,15 @@ function estimateScriptSigSize(type: address.ScriptType): number {
   switch (type) {
     case address.ScriptType.P2Pkh:
       return 108;
-    case address.ScriptType.P2Pkh:
-      return 108;
     case address.ScriptType.P2Sh:
-      return 35;
     case address.ScriptType.P2Wsh:
+      return 35;
     case address.ScriptType.P2Tr:
     case address.ScriptType.P2Wpkh:
-      return 1;
-      return 35;
-    case (address.ScriptType.P2Wsh, address.ScriptType.P2Tr, address.ScriptType.P2Wpkh):
-      return 1;
+      return 1; // one byte for the variable len encoding (varlen(0) = 1 byte)
+    default:
+      return 0;
   }
-  return 0;
 }
 
 const INPUT_BASE_SIZE = 40; // 32 bytes for outpoint, 4 bytes for sequence, 4 for index
