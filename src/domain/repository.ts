@@ -132,7 +132,6 @@ export interface WalletRepository {
   onNewUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
   onDeleteUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
   onNewScript: EventEmitter<[script: string, details: ScriptDetails]>;
-  onUnblinding: EventEmitter<[outpoint: Outpoint, data: UnblindingData]>;
 }
 
 // asset registry is a local cache of remote elements-registry

@@ -451,29 +451,6 @@ export class WalletStorageAPI implements WalletRepository {
     return () => Browser.storage.onChanged.removeListener(listener);
   }
 
-  onUnblinding(callback: (outpoint: Outpoint, data: UnblindingData) => Promise<void>) {
-    const listener = async (
-      changes: Record<string, Browser.Storage.StorageChange>,
-      areaName: string
-    ) => {
-      if (areaName !== 'local') return;
-      const unblindingKeys = Object.entries(changes)
-        .filter(
-          ([key, changes]) => OutpointBlindingDataKey.is(key) && changes.newValue !== undefined
-        )
-        .map(([key]) => key);
-
-      for (const unblindingKey of unblindingKeys) {
-        const [txID, vout] = OutpointBlindingDataKey.decode(unblindingKey);
-        const data = changes[unblindingKey].newValue as UnblindingData;
-        await callback({ txID, vout }, data);
-      }
-    };
-
-    Browser.storage.onChanged.addListener(listener);
-    return () => Browser.storage.onChanged.removeListener(listener);
-  }
-
   async getAccountScripts(
     network: NetworkString,
     ...names: string[]
