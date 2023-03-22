@@ -14,7 +14,6 @@ import ButtonTransaction from '../../components/button-transaction';
 import ShellPopUp from '../../components/shell-popup';
 import { fromSatoshiStr } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
-import { useSelectTransactions } from '../../../infrastructure/storage/common';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../../context/storage-context';
 
@@ -23,14 +22,12 @@ interface LocationState {
 }
 
 const Transactions: React.FC = () => {
-  const { assetRepository, appRepository, sendFlowRepository, walletRepository, cache } =
-    useStorageContext();
+  const { assetRepository, appRepository, sendFlowRepository, cache } = useStorageContext();
 
   const {
     state: { assetHash },
   } = useLocation<LocationState>();
   const history = useHistory();
-  const transactions = useSelectTransactions(appRepository, walletRepository)();
   const [asset, setAsset] = useState<Asset>();
 
   useEffect(() => {
@@ -87,9 +84,11 @@ const Transactions: React.FC = () => {
           <div className="h-60 rounded-xl mb-1">
             {asset && (
               <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-                {transactions.map((tx, index) => {
-                  return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
-                })}
+                {cache?.transactions
+                  .filter((tx) => tx.txFlow[asset.assetHash] !== undefined)
+                  .map((tx, index) => {
+                    return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
+                  })}
               </ButtonList>
             )}
           </div>

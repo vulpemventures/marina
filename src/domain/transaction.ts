@@ -1,5 +1,7 @@
-import { Transaction } from 'liquidjs-lib';
-import type { AppRepository, WalletRepository } from './repository';
+import { networks, Transaction } from 'liquidjs-lib';
+import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
+import type { BlockHeader } from './chainsource';
+import type { AppRepository, BlockheadersRepository, WalletRepository } from './repository';
 
 export type UnblindingData = {
   value: number;
@@ -16,9 +18,22 @@ export enum TxType {
   Unknow = 'Unknow',
 }
 
+// the raw tx data, as returned by the node & persisted in the db
+// we use that to compute the tx flow and build a TxDetailsExtended object used by the UI
 export interface TxDetails {
   height?: number;
   hex?: string;
+}
+
+// the "flow" of the transaction, relative to the wallet state
+// the key is the asset hash, the value is the amount, positive if the asset is received by the wallet, negative if the asset is sent
+export type TxFlow = Record<string, number>;
+
+export interface TxDetailsExtended extends TxDetails {
+  txID: string;
+  txFlow: TxFlow;
+  feeAmount: number;
+  blockHeader?: BlockHeader;
 }
 
 export interface UnblindedOutput {
@@ -84,4 +99,77 @@ export async function lockTransactionInputs(
       vout: input.index,
     }))
   );
+}
+
+export function computeTxDetailsExtended(
+  appRepository: AppRepository,
+  walletRepository: WalletRepository,
+  blockHeadersRepository: BlockheadersRepository
+) {
+  return async (details: TxDetails): Promise<TxDetailsExtended> => {
+    if (!details.hex) throw new Error('tx hex not found');
+    const transaction = Transaction.fromHex(details.hex);
+    const txID = transaction.getId();
+
+    let feeAmount = 0;
+    const txFlow: TxFlow = {};
+
+    // iterate the output
+    for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
+      const output = transaction.outs[outIndex];
+      // handle fee output
+      if (output.script.length === 0) {
+        feeAmount = confidentialValueToSatoshi(output.value);
+        continue;
+      }
+
+      const data = await walletRepository.getOutputBlindingData(txID, outIndex);
+      if (!data || !data.blindingData) continue;
+      txFlow[data.blindingData.asset] =
+        (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
+    }
+
+    for (let inIndex = 0; inIndex < transaction.ins.length; inIndex++) {
+      const input = transaction.ins[inIndex];
+      const data = await walletRepository.getOutputBlindingData(
+        Buffer.from(input.hash).reverse().toString('hex'),
+        input.index
+      );
+      if (!data || !data.blindingData) continue;
+      txFlow[data.blindingData.asset] =
+        (txFlow[data.blindingData.asset] || 0) - data.blindingData.value;
+    }
+
+    if (details.height === undefined || details.height === -1)
+      return { ...details, txID, txFlow, feeAmount };
+    const network = await appRepository.getNetwork();
+    if (!network) throw new Error('network not found');
+    let blockHeader = await blockHeadersRepository.getBlockHeader(network, details.height);
+
+    if (!blockHeader) {
+      const chainSource = await appRepository.getChainSource(network);
+      if (!chainSource) return { ...details, txID, txFlow, feeAmount };
+      blockHeader = await chainSource.fetchBlockHeader(details.height);
+      if (blockHeader) await blockHeadersRepository.setBlockHeader(network, blockHeader);
+      await chainSource.close();
+    }
+
+    // if the flow for L-BTC is -feeAmount, remove it
+    if (txFlow[networks[network].assetHash] + feeAmount === 0) {
+      if (Object.keys(txFlow).length === 1) {
+        // this prevent to remove the flow if there is only the L-BTC one (self transfer L-BTC case)
+        txFlow[networks[network].assetHash] = 0;
+      } else {
+        delete txFlow[networks[network].assetHash];
+      }
+    }
+
+    return {
+      ...details,
+      txID,
+      txFlow,
+      feeAmount,
+      blockHeader,
+    };
+  };
 }

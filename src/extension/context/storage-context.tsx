@@ -9,8 +9,8 @@ import type {
   TaxiRepository,
   WalletRepository,
 } from '../../domain/repository';
-import type { UnblindedOutput } from '../../domain/transaction';
-import { computeBalances } from '../../domain/transaction';
+import type { TxDetails, TxDetailsExtended, UnblindedOutput } from '../../domain/transaction';
+import { computeTxDetailsExtended, computeBalances } from '../../domain/transaction';
 import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { BlockHeadersAPI } from '../../infrastructure/storage/blockheaders-repository';
@@ -35,6 +35,7 @@ interface StorageContextCache {
   assets: Asset[];
   authenticated: boolean;
   loading: boolean;
+  transactions: TxDetailsExtended[];
 }
 
 interface StorageContextProps {
@@ -66,8 +67,10 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
   const [utxos, setUtxos] = useState<UnblindedOutput[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [sortedAssets, setSortedAssets] = useState<Asset[]>([]);
+  const [transactions, setTransactions] = useState<TxDetailsExtended[]>([]);
 
   const [closeUtxosListeners, setCloseUtxosListenersFunction] = useState<() => void>();
+  const [closeTxListener, setCloseTxListener] = useState<() => void>();
 
   // reset to initial state while mounting the context or when the network changes
   const setInitialState = async () => {
@@ -79,6 +82,28 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
       setBalances(computeBalances(fromRepo));
       setAssets(await assetRepository.getAllAssets(network));
       setUtxosListeners(network);
+
+      // transactions
+      const txIds = await walletRepository.getTransactions(network);
+      const details = await walletRepository.getTxDetails(...txIds);
+      const txDetails = Object.values(details).sort(sortTxDetails());
+      const txDetailsExtended = await Promise.all(
+        txDetails.map(
+          computeTxDetailsExtended(appRepository, walletRepository, blockHeadersRepository)
+        )
+      );
+      setTransactions(txDetailsExtended);
+      setTransactionsListener(network);
+      // check if we have the hex, if not fetch it
+      const chainSource = await appRepository.getChainSource();
+      if (chainSource) {
+        const txIDs = Object.entries(details)
+          .filter(([, details]) => !details.hex)
+          .map(([txID]) => txID);
+        const txs = await chainSource.fetchTransactions(txIDs);
+        await walletRepository.updateTxDetails(Object.fromEntries(txs.map((tx) => [tx.txID, tx])));
+        await chainSource.close();
+      }
     }
   };
 
@@ -104,6 +129,22 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
     });
   };
 
+  const setTransactionsListener = (network: NetworkString) => {
+    const closeOnNewTransactionListener = walletRepository.onNewTransaction(
+      async (_, details: TxDetails, net: NetworkString) => {
+        if (net !== network) return;
+        const txDetailsExtended = await computeTxDetailsExtended(
+          appRepository,
+          walletRepository,
+          blockHeadersRepository
+        )(details);
+        setTransactions((txs) => [...txs, txDetailsExtended].sort(sortTxDetails()));
+      }
+    );
+
+    setCloseTxListener(closeOnNewTransactionListener);
+  };
+
   useEffect(() => {
     setSortedAssets(sortAssets(assets));
   }, [assets]);
@@ -118,13 +159,14 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
       const closeNetworkListener = appRepository.onNetworkChanged(async (net) => {
         setNetwork(net);
         closeUtxosListeners?.();
+        closeTxListener?.();
         await setInitialState();
       });
 
       return () => {
         // close all while unmounting
         closeUtxosListeners?.();
-        closeNetworkListener();
+        closeTxListener?.();
         closeNetworkListener();
         closeAssetListener();
       };
@@ -173,6 +215,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
           assets: sortedAssets,
           authenticated: isAuthenticated,
           loading,
+          transactions,
         },
       }}
     >
@@ -180,5 +223,16 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
     </StorageContext.Provider>
   );
 };
+
+// sort function for txDetails, use the height member to sort
+// put unconfirmed txs first and then sort by height (desc)
+function sortTxDetails(): ((a: TxDetails, b: TxDetails) => number) | undefined {
+  return (a, b) => {
+    if (a.height === b.height) return 0;
+    if (!a.height || a.height === -1) return -1;
+    if (!b.height || b.height === -1) return 1;
+    return b.height - a.height;
+  };
+}
 
 export const useStorageContext = () => useContext(StorageContext);
