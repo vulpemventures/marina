@@ -13,6 +13,7 @@ const AddressAmountView: React.FC = () => {
   const { sendFlowRepository, assetRepository, cache } = useStorageContext();
   const [dataInCache, setDataInCache] = useState<{ amount?: number; address?: string }>();
   const [sendAsset, setSendAsset] = useState<Asset>();
+  const [isInitializingFormState, setIsInitializingFormState] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -24,7 +25,9 @@ const AddressAmountView: React.FC = () => {
       const amount = await sendFlowRepository.getAmount();
       const address = await sendFlowRepository.getReceiverAddress();
       setDataInCache({ amount, address });
-    })().catch(console.error);
+    })()
+      .catch(console.error)
+      .finally(() => setIsInitializingFormState(false));
   }, []);
 
   const handleBackBtn = async () => {
@@ -39,7 +42,7 @@ const AddressAmountView: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      {sendAsset && cache?.balances[sendAsset.assetHash] && (
+      {!isInitializingFormState && sendAsset && cache?.balances[sendAsset.assetHash] && (
         <>
           <Balance
             assetHash={sendAsset.assetHash}
