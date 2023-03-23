@@ -1,17 +1,18 @@
 import type { NetworkString } from 'marina-provider';
-import { AccountType } from 'marina-provider';
 import React, { useState } from 'react';
-import { AccountFactory } from '../../application/account';
 import { useStorageContext } from '../context/storage-context';
 import Select from '../components/select';
 import ShellPopUp from '../components/shell-popup';
 import { formatNetwork } from '../utility';
+import { restoreMessage } from '../../domain/message';
+import { useBackgroundPortContext } from '../context/background-port-context';
 
 const availableNetworks: NetworkString[] = ['liquid', 'testnet', 'regtest'];
 const formattedNetworks = availableNetworks.map((n) => formatNetwork(n));
 
 const SettingsNetworksView: React.FC = () => {
   const { appRepository, walletRepository, cache } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
   const [isLoading, setIsLoading] = useState(false);
 
   const setSelectedValue = async (net: string) => {
@@ -21,19 +22,11 @@ const SettingsNetworksView: React.FC = () => {
       if (newNetwork === cache?.network) throw new Error('Network already selected');
       // switch the selected network
       await appRepository.setNetwork(newNetwork);
-      const factory = await AccountFactory.create(walletRepository);
-      const allAccounts = await factory.makeAll(newNetwork);
-      const chainSource = await appRepository.getChainSource(newNetwork);
-      if (!chainSource) throw new Error('Chain source not found, cannot restore accounts');
-      for (const account of allAccounts) {
-        try {
-          if ((await account.getAccountType()) !== AccountType.P2WPKH) continue; // only sync P2WPKH accounts
-          await account.sync(chainSource, 20);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      await chainSource.close();
+      const allAccounts = await walletRepository.getAccountDetails();
+      const messages = Object.entries(allAccounts)
+        .filter(([, details]) => details.accountNetworks.includes(newNetwork))
+        .map(([account]) => restoreMessage(account, newNetwork, 20));
+      await Promise.all(messages.map((message) => backgroundPort.sendMessage(message)));
     } catch (e) {
       console.error(e);
     } finally {
