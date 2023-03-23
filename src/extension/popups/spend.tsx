@@ -36,6 +36,11 @@ const ConnectSpend: React.FC = () => {
     return assetInfo ? assetInfo.ticker : asset.slice(0, 4);
   };
 
+  const getPrecision = (asset: string) => {
+    const assetInfo = cache?.assets.find((a) => a.assetHash === asset);
+    return assetInfo ? assetInfo.precision : 8;
+  };
+
   const handleModalUnlockClose = () => showUnlockModal(false);
   const handleUnlockModalOpen = () => showUnlockModal(true);
 
@@ -103,7 +108,9 @@ const ConnectSpend: React.FC = () => {
             {spendParameters.addressRecipients.map((recipient, index) => (
               <div key={index}>
                 <div className="container flex justify-between mt-6">
-                  <span className="text-lg font-medium">{fromSatoshi(recipient.value)}</span>
+                  <span className="text-lg font-medium">
+                    {(fromSatoshi(recipient.value), getPrecision(recipient.asset))}
+                  </span>
                   <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
                 </div>
                 <div className="container flex items-baseline justify-between">
