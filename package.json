@@ -37,7 +37,7 @@
     "liquidjs-lib": "^6.0.2-liquid.23",
     "lodash.debounce": "^4.0.8",
     "lottie-web": "^5.7.8",
-    "marina-provider": "https://github.com/louisinger/marina-provider.git#new-provider",
+    "marina-provider": "^2.0.0",
     "moment": "^2.29.4",
     "path-browserify": "^1.0.1",
     "postcss": "^7.0.35",
