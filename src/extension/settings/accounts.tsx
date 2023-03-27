@@ -114,12 +114,16 @@ const SettingsAccounts: React.FC = () => {
             ))}
         </ButtonList>
       </div>
-      <div className="mt-1">
+      <div className="mt-1 mb-1">
         <Button textBase={true} onClick={downloadIonioRestorationFile}>
           Download restoration JSON
         </Button>
         {error && <div className="text-red h-5 m-2 font-medium">{error}</div>}
       </div>
+      <label htmlFor="file-upload" className="antialiased font-bold tracking-wider py-2 px-4 focus:outline-none focus:shadow-outline bg-primary text-white rounded-3xl">
+        Upload restoration JSON
+      </label>
+      <input id="file-upload" type="file" className='hidden'/>
     </ShellPopUp>
   );
 };
