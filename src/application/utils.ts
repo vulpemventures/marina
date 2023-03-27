@@ -8,7 +8,7 @@ export async function fetchAsset(webExplorerURL: string, asset: string) {
   return {
     name: name || 'Unknown',
     ticker: ticker || asset.substring(0, 4),
-    precision: precision || 8,
+    precision: precision ?? 8,
     assetHash: asset,
   };
 }

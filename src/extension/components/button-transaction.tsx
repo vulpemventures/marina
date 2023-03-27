@@ -59,7 +59,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
               {moment(txDetails.blockHeader.timestamp * 1000).format('DD MMM YYYY')}
             </span>
           ) : (
-            <span className="bg-red inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white rounded-full">
+            <span className="bg-red text-xxs inline-flex items-center justify-center px-1 py-1 font-semibold leading-none text-white rounded-full">
               unconfirmed
             </span>
           )}
@@ -68,11 +68,11 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           <div className="text-primary whitespace-nowrap text-sm font-medium">
             {transferAmountIsDefined() ? (transferAmount() > 0 ? '+' : '') : ''}
             {transferAmountIsDefined()
-              ? formatDecimalAmount(fromSatoshi(transferAmount(), assetSelected.precision))
+              ? formatDecimalAmount(fromSatoshi(transferAmount(), assetSelected.precision), false)
               : '??'}{' '}
             {assetSelected.ticker}
           </div>
-          <img className="ml-2" src="assets/images/chevron-right.svg" alt="chevron-right" />
+          <img src="assets/images/chevron-right.svg" alt="chevron-right" />
         </div>
       </button>
       <Modal
