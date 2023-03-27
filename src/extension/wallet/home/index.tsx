@@ -58,7 +58,7 @@ const Home: React.FC = () => {
           break;
       }
     })().catch(console.error);
-  }, []);
+  }, [cache?.authenticated]);
 
   return (
     <ShellPopUp
@@ -88,6 +88,11 @@ const Home: React.FC = () => {
         <div className="h-60">
           <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
             {cache?.assets
+              .filter(
+                (asset: Asset) =>
+                  cache?.transactions.find((tx) => tx.txFlow[asset.assetHash] !== undefined) !==
+                  undefined
+              )
               // put the assets with balance defined on top
               .sort((a, b) => {
                 const aBalance = cache?.balances[a.assetHash];

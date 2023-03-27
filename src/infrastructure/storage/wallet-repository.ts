@@ -359,7 +359,9 @@ export class WalletStorageAPI implements WalletRepository {
     return Browser.storage.local.set({ [WalletStorageKey.LOCKED_OUTPOINTS]: current });
   }
 
-  onNewTransaction(callback: (txID: string, tx: TxDetails) => Promise<void>) {
+  onNewTransaction(
+    callback: (txID: string, tx: TxDetails, network: NetworkString) => Promise<void>
+  ) {
     const listener = async (
       changes: Record<string, Browser.Storage.StorageChange>,
       areaName: string
@@ -375,10 +377,24 @@ export class WalletStorageAPI implements WalletRepository {
         )
         .map(([key]) => key);
 
+      const txIDsByNetwork = {
+        liquid: await this.getTransactions('liquid'),
+        testnet: await this.getTransactions('testnet'),
+        regtest: await this.getTransactions('regtest'),
+      };
+
       for (const txKey of txKeys) {
         const [txID] = TxDetailsKey.decode(txKey);
         const details = changes[txKey].newValue as TxDetails;
-        await callback(txID, details);
+        let network = undefined;
+        for (const net of Object.keys(txIDsByNetwork) as NetworkString[]) {
+          if (txIDsByNetwork[net].includes(txID)) {
+            network = net;
+            break;
+          }
+        }
+
+        await callback(txID, details, network || 'liquid');
       }
     };
     Browser.storage.onChanged.addListener(listener);

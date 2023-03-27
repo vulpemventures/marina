@@ -128,7 +128,7 @@ export interface WalletRepository {
     indexes: Partial<{ internal: number; external: number }>
   ): Promise<void>;
 
-  onNewTransaction: EventEmitter<[txID: string, details: TxDetails]>;
+  onNewTransaction: EventEmitter<[txID: string, details: TxDetails, network: NetworkString]>;
   onNewUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
   onDeleteUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
   onNewScript: EventEmitter<[script: string, details: ScriptDetails]>;
