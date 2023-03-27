@@ -1,5 +1,5 @@
 import Browser from 'webextension-polyfill';
-import { fetchAsset } from '../application/utils';
+import { assetIsUnknown, fetchAssetDetails } from '../application/utils';
 import type { AppRepository, AssetRepository, TaxiRepository } from '../domain/repository';
 
 // set up a Browser.alarms in order to fetch the taxi assets every minute
@@ -44,28 +44,11 @@ export class TaxiUpdater {
     const assets = await fetchAssetsFromTaxi(taxiURL);
     await this.taxiRepository.setTaxiAssets(network, assets);
 
-    const webExplorerURL = await this.appRepository.getWebExplorerURL();
-    if (!webExplorerURL) {
-      console.warn('Web explorer URL not set, cannot fetch taxi assets details');
-      return;
-    }
-
     for (const asset of assets) {
       const assetDetails = await this.assetRepository.getAsset(asset);
-      if (assetDetails && assetDetails.name !== 'Unknown') continue;
-      try {
-        const assetFromExplorer = await fetchAsset(webExplorerURL, asset);
-        await this.assetRepository.addAsset(asset, assetFromExplorer);
-      } catch (e) {
-        await this.assetRepository.addAsset(asset, {
-          name: 'Unknown',
-          ticker: asset.substring(0, 4),
-          precision: 8,
-          assetHash: asset,
-        });
-        console.warn(e);
-        continue;
-      }
+      if (assetDetails && !assetIsUnknown(assetDetails)) continue;
+      const newAssetDetails = await fetchAssetDetails(network, asset);
+      await this.assetRepository.addAsset(asset, newAssetDetails);
     }
   }
 }

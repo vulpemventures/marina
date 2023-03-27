@@ -1,5 +1,6 @@
 import type { Asset, NetworkString } from 'marina-provider';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { assetIsUnknown, fetchAssetDetails } from '../../application/utils';
 import type {
   AppRepository,
   AssetRepository,
@@ -77,11 +78,27 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
     const network = await appRepository.getNetwork();
     if (network) {
       setNetwork(network);
+      // utxos
       const fromRepo = await walletRepository.getUtxos(network);
       setUtxos(fromRepo);
       setBalances(computeBalances(fromRepo));
-      setAssets(await assetRepository.getAllAssets(network));
       setUtxosListeners(network);
+
+      // assets
+      const assetsFromRepo = await assetRepository.getAllAssets(network);
+      setAssets(assetsFromRepo);
+      try {
+        const assetsWithUnknownDetails = assetsFromRepo.filter(assetIsUnknown);
+        const newAssetDetails = await Promise.all(
+          assetsWithUnknownDetails.map(({ assetHash }) => fetchAssetDetails(network, assetHash))
+        );
+        await Promise.all(
+          newAssetDetails.map((asset) => assetRepository.addAsset(asset.assetHash, asset))
+        );
+        setAssets(await assetRepository.getAllAssets(network));
+      } catch (e) {
+        console.warn('failed to update asset details from registry', e);
+      }
 
       // transactions
       const txIds = await walletRepository.getTransactions(network);
