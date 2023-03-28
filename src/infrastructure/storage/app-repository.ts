@@ -134,11 +134,14 @@ export class AppStorageAPI implements AppRepository {
     return Browser.storage.local.set({ [storageKey]: url });
   }
 
-  async getChainSource(net?: NetworkString | undefined): Promise<ChainSource | null> {
+  async getChainSource(
+    net?: NetworkString | undefined,
+    reconnect = true
+  ): Promise<ChainSource | null> {
     const wsURL = await this.getWebsocketExplorerURL(net);
     if (!wsURL) return null;
     try {
-      const client = new ElectrumWS(wsURL);
+      const client = new ElectrumWS(wsURL, { reconnect });
       return new WsElectrumChainSource(client);
     } catch (e) {
       console.error('Error while creating chain source', e);

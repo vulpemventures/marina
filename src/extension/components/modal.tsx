@@ -2,13 +2,13 @@ import React, { useRef } from 'react';
 import ButtonIcon from './button-icon';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 
-interface Props {
+export interface ModalProps {
   children: React.ReactNode;
   isOpen: boolean;
   onClose: () => any;
 }
 
-const Modal: React.FC<Props> = ({ isOpen, onClose, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   const ref = useRef<HTMLDivElement | null>(null);
   useOnClickOutside(ref, onClose);
 

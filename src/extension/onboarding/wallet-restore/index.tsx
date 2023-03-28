@@ -7,7 +7,8 @@ import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
 import { init } from '../../../domain/repository';
 import { validateMnemonic } from 'bip39';
-import type { RestorationJSON, RestorationJSONDictionary } from '../../../application/account';
+import type { RestorationJSONDictionary } from '../../../application/account';
+import { checkRestorationDictionary } from '../../../application/account';
 import { extractErrorMessage } from '../../utility/error';
 import { useStorageContext } from '../../context/storage-context';
 
@@ -19,9 +20,10 @@ const WalletRestore: React.FC = () => {
   const [fileUploadError, setFileUploadError] = useState<string>();
 
   const onSubmit = async ({ password }: { password: string }) => {
-    if (mnemonic === '' || !validateMnemonic(mnemonic)) throw new Error('need a valid mnemonic');
+    if (mnemonic === '' || !validateMnemonic(mnemonic.trim()))
+      throw new Error('need a valid mnemonic');
     await init(appRepository, sendFlowRepository);
-    await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic);
+    await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic.trim());
     await appRepository.updateStatus({ isMnemonicVerified: true }); // set the mnemonic as verified cause we are in the restore mnemonic flow
     if (restoration) await onboardingRepository.setRestorationJSONDictionary(restoration);
     history.push(INITIALIZE_END_OF_FLOW_ROUTE);
@@ -60,26 +62,5 @@ const WalletRestore: React.FC = () => {
     </Shell>
   );
 };
-
-function checkRestorationDictionary(dictionary: any): dictionary is RestorationJSONDictionary {
-  try {
-    const possibleFields = ['liquid', 'testnet', 'regtest'];
-    for (const field of possibleFields) {
-      if (field in dictionary) {
-        if (!Array.isArray(dictionary[field])) return false;
-        for (const obj of dictionary[field]) {
-          if (!isRestoration(obj)) return false;
-        }
-      }
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isRestoration(obj: Record<string, unknown>): obj is RestorationJSON {
-  return 'accountName' in obj && 'artifacts' in obj && 'pathToArguments' in obj;
-}
 
 export default WalletRestore;

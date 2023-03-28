@@ -85,13 +85,12 @@ const EndOfFlowOnboarding: React.FC = () => {
       const restoration = await onboardingRepository.getRestorationJSONDictionary();
       if (restoration) {
         const accountsToRestore: Record<string, Array<NetworkString>> = {};
-        for (const [network, restorations] of Object.entries(restoration)) {
+        for (const restorations of Object.values(restoration)) {
           const accountNames = restorations.map((r) => r.accountName);
           for (const accountName of accountNames) {
             if (!accountsToRestore[accountName]) {
-              accountsToRestore[accountName] = [];
+              accountsToRestore[accountName] = ['liquid', 'regtest', 'regtest'];
             }
-            accountsToRestore[accountName].push(network as NetworkString);
           }
         }
 
