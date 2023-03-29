@@ -89,7 +89,7 @@ const EndOfFlowOnboarding: React.FC = () => {
           const accountNames = restorations.map((r) => r.accountName);
           for (const accountName of accountNames) {
             if (!accountsToRestore[accountName]) {
-              accountsToRestore[accountName] = ['liquid', 'regtest', 'regtest'];
+              accountsToRestore[accountName] = ['liquid', 'testnet', 'regtest'];
             }
           }
         }
