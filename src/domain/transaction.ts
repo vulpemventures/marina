@@ -1,5 +1,4 @@
-import { networks, Transaction } from 'liquidjs-lib';
-import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
+import { AssetHash, ElementsValue, networks, script, Transaction } from 'liquidjs-lib';
 import type { BlockHeader } from './chainsource';
 import type { AppRepository, BlockheadersRepository, WalletRepository } from './repository';
 
@@ -118,26 +117,43 @@ export function computeTxDetailsExtended(
     for (let outIndex = 0; outIndex < transaction.outs.length; outIndex++) {
       const output = transaction.outs[outIndex];
       // handle fee output
+      const elementsValue = ElementsValue.fromBytes(output.value);
       if (output.script.length === 0) {
-        feeAmount = confidentialValueToSatoshi(output.value);
+        feeAmount = elementsValue.number;
         continue;
       }
 
-      const data = await walletRepository.getOutputBlindingData(txID, outIndex);
-      if (!data || !data.blindingData) continue;
-      txFlow[data.blindingData.asset] =
-        (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
+      if (elementsValue.isConfidential) {
+        const data = await walletRepository.getOutputBlindingData(txID, outIndex);
+        if (!data || !data.blindingData) continue;
+        txFlow[data.blindingData.asset] =
+          (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
+        continue;
+      }
+
+      // skip burn outputs
+      if (script.decompile(output.script)?.includes(script.OPS.OP_RETURN)) continue;
+      const asset = AssetHash.fromBytes(output.asset).hex;
+      txFlow[asset] = (txFlow[asset] || 0) + elementsValue.number;
     }
 
     for (let inIndex = 0; inIndex < transaction.ins.length; inIndex++) {
       const input = transaction.ins[inIndex];
-      const data = await walletRepository.getOutputBlindingData(
-        Buffer.from(input.hash).reverse().toString('hex'),
-        input.index
-      );
-      if (!data || !data.blindingData) continue;
-      txFlow[data.blindingData.asset] =
-        (txFlow[data.blindingData.asset] || 0) - data.blindingData.value;
+      const inputTxID = Buffer.from(input.hash).reverse().toString('hex');
+      const output = await walletRepository.getWitnessUtxo(inputTxID, input.index);
+      if (!output) continue;
+      const elementsValue = ElementsValue.fromBytes(output.value);
+
+      if (elementsValue.isConfidential) {
+        const data = await walletRepository.getOutputBlindingData(inputTxID, input.index);
+        if (!data || !data.blindingData) continue;
+        txFlow[data.blindingData.asset] =
+          (txFlow[data.blindingData.asset] || 0) - data.blindingData.value;
+        continue;
+      }
+
+      const asset = AssetHash.fromBytes(output.asset).hex;
+      txFlow[asset] = (txFlow[asset] || 0) - elementsValue.number;
     }
 
     if (details.height === undefined || details.height === -1)
