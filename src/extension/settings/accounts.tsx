@@ -15,9 +15,12 @@ import { AccountType } from 'marina-provider';
 import Button from '../components/button';
 import { useHistory } from 'react-router';
 import { SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE } from '../routes/constants';
+import { useToastContext } from '../context/toast-context';
+import { extractErrorMessage } from '../utility/error';
 
 const SettingsAccounts: React.FC = () => {
   const { walletRepository } = useStorageContext();
+  const { showToast } = useToastContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [accounts, setAccounts] = useState<Record<string, AccountDetails>>({});
   const [accountsList, setAccountsList] = useState<string[]>([]);
@@ -94,7 +97,14 @@ const SettingsAccounts: React.FC = () => {
       <Button
         className="m-2"
         isOutline
-        onClick={() => downloadIonioRestorationFile(walletRepository, Object.values(accounts))}
+        onClick={async () => {
+          try {
+            await downloadIonioRestorationFile(walletRepository, Object.values(accounts));
+          } catch (e) {
+            console.error(e);
+            showToast(extractErrorMessage(e));
+          }
+        }}
       >
         Download
       </Button>
@@ -106,6 +116,7 @@ async function downloadIonioRestorationFile(
   walletRepository: WalletRepository,
   accounts: AccountDetails[]
 ) {
+  throw new Error('not implemented');
   const ionioAccounts = accounts.filter(({ type }) => type === AccountType.Ionio);
   if (ionioAccounts.length === 0) throw new Error('no Ionio accounts found');
   const factory = await AccountFactory.create(walletRepository);

@@ -18,7 +18,7 @@ const InputIcon: React.FC<Props> = ({
   type,
 }) => {
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`relative w-full z-10 ${className}`}>
       <span className="absolute inset-y-0 left-0 flex items-center pl-2">
         <img src={imgIconPath} alt={imgIconAlt} />
       </span>

@@ -11,7 +11,7 @@ interface InputProps<FormValues> extends FormikProps<FormValues> {
 }
 
 const MarinaInputClasses =
-  'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full sm:w-2/5 rounded-md';
+  'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full sm:w-2/5 rounded-md z-10';
 
 /**
  * Generic Formik Input
