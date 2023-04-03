@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { useHistory } from 'react-router';
-import { logOutMessage } from '../../domain/message';
+import { stopServicesMessage } from '../../domain/message';
 import useOnClickOutside from '../hooks/use-onclick-outside';
 import {
   DEFAULT_ROUTE,
@@ -28,7 +28,7 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
   const handleLogOut = async () => {
     await appRepository.updateStatus({ isAuthenticated: false });
-    await backgroundPort.sendMessage(logOutMessage());
+    await backgroundPort.sendMessage(stopServicesMessage());
     history.push(DEFAULT_ROUTE);
   };
 

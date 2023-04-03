@@ -56,8 +56,8 @@ export interface Message<T> {
 
 export type PopupResponseMessage<ResponseT> = Message<{ response?: ResponseT; error?: string }>;
 export type OpenPopupMessage = Message<{ name: PopupName }>;
-export type LogInMessage = Message<undefined>;
-export type LogOutMessage = Message<undefined>;
+export type StartServicesMessage = Message<undefined>;
+export type StopServicesMessage = Message<undefined>;
 export type RestoreMessage = Message<{
   accountID: AccountID;
   network: NetworkString;
@@ -93,19 +93,19 @@ export function isPopupResponseMessage(message: unknown): message is PopupRespon
   return message && (message as any).type === MessageType.PopupResponse && (message as any).data;
 }
 
-export function logInMessage(): LogInMessage {
+export function startServicesMessage(): StartServicesMessage {
   return { type: MessageType.Login, data: undefined };
 }
 
-export function isLogInMessage(message: unknown): message is LogInMessage {
+export function isStartServicesMessage(message: unknown): message is StartServicesMessage {
   return (message && (message as any).type === MessageType.Login) as boolean;
 }
 
-export function logOutMessage(): LogOutMessage {
+export function stopServicesMessage(): StopServicesMessage {
   return { type: MessageType.Logout, data: undefined };
 }
 
-export function isLogOutMessage(message: unknown): message is LogOutMessage {
+export function isStopSevicesMessage(message: unknown): message is StopServicesMessage {
   return (message && (message as any).type === MessageType.Logout) as boolean;
 }
 

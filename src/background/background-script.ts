@@ -4,8 +4,8 @@ import zkp from '@vulpemventures/secp256k1-zkp';
 import type { OpenPopupMessage, PopupName, RestoreMessage } from '../domain/message';
 import {
   isRestoreMessage,
-  isLogInMessage,
-  isLogOutMessage,
+  isStartServicesMessage,
+  isStopSevicesMessage,
   isOpenPopupMessage,
   isPopupResponseMessage,
 } from '../domain/message';
@@ -45,6 +45,8 @@ const updaterService = new UpdaterService(walletRepository, appRepository, asset
 const subscriberService = new SubscriberService(walletRepository, appRepository);
 const taxiService = new TaxiUpdater(taxiRepository, appRepository, assetRepository);
 
+let started = false;
+
 // at startup, check if the user is logged in
 // if so, start the services
 appRepository
@@ -57,15 +59,14 @@ appRepository
   .catch(console.error);
 
 async function startBackgroundServices() {
+  if (started) return;
+  started = true;
   await walletRepository.unlockUtxos(); // unlock all utxos at startup
-  const { isOnboardingCompleted } = await appRepository.getStatus();
-  if (isOnboardingCompleted) {
-    await Promise.allSettled([
-      updaterService.start(),
-      subscriberService.start(),
-      Promise.resolve(taxiService.start()),
-    ]);
-  }
+  await Promise.allSettled([
+    updaterService.start(),
+    subscriberService.start(),
+    Promise.resolve(taxiService.start()),
+  ]);
 }
 
 async function restoreTask(restoreMessage: RestoreMessage): Promise<void> {
@@ -84,6 +85,7 @@ async function restoreTask(restoreMessage: RestoreMessage): Promise<void> {
 }
 
 async function stopBackgroundServices() {
+  started = false;
   await Promise.allSettled([updaterService.stop(), subscriberService.stop(), taxiService.stop()]);
 }
 
@@ -169,13 +171,13 @@ backgroundPort.onMessage(async (message, sendResponse) => {
     return;
   }
 
-  if (isLogInMessage(message)) {
+  if (isStartServicesMessage(message)) {
     await startBackgroundServices();
     sendResponse({ data: undefined, error: undefined });
     return;
   }
 
-  if (isLogOutMessage(message)) {
+  if (isStopSevicesMessage(message)) {
     await stopBackgroundServices();
     sendResponse({ data: undefined, error: undefined });
     return;
