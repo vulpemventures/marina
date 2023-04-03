@@ -116,7 +116,6 @@ async function downloadIonioRestorationFile(
   walletRepository: WalletRepository,
   accounts: AccountDetails[]
 ) {
-  throw new Error('not implemented');
   const ionioAccounts = accounts.filter(({ type }) => type === AccountType.Ionio);
   if (ionioAccounts.length === 0) throw new Error('no Ionio accounts found');
   const factory = await AccountFactory.create(walletRepository);

@@ -35,7 +35,6 @@ const SettingsAccountsRestoreIonio: React.FC = () => {
 
       try {
         chainSource = await appRepository.getChainSource(network as NetworkString, false);
-        console.log('chainSource', chainSource);
         if (!chainSource) throw new Error(`not connected to ${network} network, cannot restore`);
       } catch (e) {
         console.warn(e);

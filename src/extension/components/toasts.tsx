@@ -1,27 +1,50 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Toast } from '../context/toast-context';
 import { useToastContext } from '../context/toast-context';
+import classNames from 'classnames';
 
 const ToastView: React.FC<Toast> = ({ id, message, duration }) => {
   const { deleteToast } = useToastContext();
+  const [show, setShow] = useState(false);
+  const [disapear, setDisapear] = useState(false);
+
+  const deleteToastWithAnimation = (id: number) => {
+    setDisapear(true);
+    setShow(false);
+    setTimeout(() => {
+      deleteToast(id);
+    }, 110); // delay must be greater than the transition duration
+  };
 
   useEffect(() => {
+    const timeoutShow = setTimeout(() => {
+      setShow(true);
+    }, 100);
+
     const timeout = setTimeout(() => {
-      deleteToast(id);
+      deleteToastWithAnimation(id);
     }, duration);
 
-    return () => clearTimeout(timeout);
-  });
+    return () => {
+      clearTimeout(timeout);
+      clearTimeout(timeoutShow);
+    };
+  }, []);
 
   return (
     <div
-      className="bg-red z-50 flex items-center w-full max-w-xs p-4 m-5 text-gray-500 rounded-lg shadow"
+      className={classNames(
+        'bg-red absolute z-50 flex items-center w-full max-w-xs p-4 m-5 text-gray-500 rounded-lg shadow',
+        { invisible: !show && !disapear },
+        { 'transition duration-300 ease-out transform translate-y-4': show && !disapear },
+        { 'transition duration-100 ease-in transform -translate-y-4': disapear }
+      )}
       role="alert"
     >
       <div className="m-1 text-sm font-normal text-white">{message}</div>
       <div className="flex items-center ml-auto">
         <button
-          onClick={() => deleteToast(id)}
+          onClick={() => deleteToastWithAnimation(id)}
           type="button"
           className="bg-red text-white hover:text-gray rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex h-8 w-8"
           data-dismiss-target="#toast-undo"
@@ -51,7 +74,7 @@ const Toasts: React.FC = () => {
   const { toasts } = useToastContext();
 
   return (
-    <div className="top-5 left-15 fixed w-full">
+    <div className="top-5 left-15 absolute w-full">
       {toasts.map((toast) => (
         <ToastView key={toast.id} {...toast} />
       ))}
