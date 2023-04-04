@@ -9,7 +9,7 @@ import Input from '../../components/input';
 import { INVALID_PASSWORD_ERROR } from '../../../domain/constants';
 import { useSelectEncryptedMnemonic } from '../../../infrastructure/storage/common';
 import Browser from 'webextension-polyfill';
-import { logInMessage } from '../../../domain/message';
+import { startServicesMessage } from '../../../domain/message';
 import type { Encrypted } from '../../../domain/encryption';
 import { decrypt } from '../../../domain/encryption';
 import { useStorageContext } from '../../context/storage-context';
@@ -92,7 +92,7 @@ const LogIn: React.FC = () => {
 
   const onSuccess = async () => {
     await appRepository.updateStatus({ isAuthenticated: true });
-    await backgroundPort.sendMessage(logInMessage());
+    await backgroundPort.sendMessage(startServicesMessage());
     history.push(DEFAULT_ROUTE);
   };
 

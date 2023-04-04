@@ -19,11 +19,14 @@ import { mnemonicToSeed } from 'bip39';
 import { initWalletRepository } from '../../../domain/repository';
 import type { ChainSource } from '../../../domain/chainsource';
 import { useStorageContext } from '../../context/storage-context';
+import { useBackgroundPortContext } from '../../context/background-port-context';
+import { startServicesMessage } from '../../../domain/message';
 
 const GAP_LIMIT = 30;
 
 const EndOfFlowOnboarding: React.FC = () => {
   const { appRepository, onboardingRepository, walletRepository } = useStorageContext();
+  const { backgroundPort } = useBackgroundPortContext();
   const isFromPopup = useSelectIsFromPopupFlow();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +49,8 @@ const EndOfFlowOnboarding: React.FC = () => {
       setIsLoading(true);
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
+      // start services in background
+      await backgroundPort.sendMessage(startServicesMessage());
 
       const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub } =
         await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
