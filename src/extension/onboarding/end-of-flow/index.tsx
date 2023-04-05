@@ -54,6 +54,8 @@ const EndOfFlowOnboarding: React.FC = () => {
       checkPassword(onboardingPassword);
 
       await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
+      await (Browser.browserAction ?? Browser.action).setPopup({ popup: 'popup.html' });
+      await appRepository.updateStatus({ isOnboardingCompleted: true });
 
       // restore main accounts on Liquid network (so only MainAccount & MainAccountLegacy)
       const liquidChainSource = await appRepository.getChainSource('liquid');
@@ -164,8 +166,6 @@ const EndOfFlowOnboarding: React.FC = () => {
       await updaterSvc.stop();
 
       // set the popup
-      await (Browser.browserAction ?? Browser.action).setPopup({ popup: 'popup.html' });
-      await appRepository.updateStatus({ isOnboardingCompleted: true });
       await onboardingRepository.flush();
     } catch (err: unknown) {
       console.error(err);

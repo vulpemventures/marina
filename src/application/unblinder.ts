@@ -6,7 +6,7 @@ import type { Output } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
 import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
 import type { UnblindingData } from '../domain/transaction';
-import { assetIsUnknown, fetchAssetDetails } from './utils';
+import { DefaultAssetRegistry } from '../port/asset-registry';
 
 const slip77 = SLIP77Factory(ecc);
 
@@ -70,6 +70,7 @@ export class WalletRepositoryUnblinder implements Unblinder {
     }
 
     const network = (await this.appRepository.getNetwork()) ?? 'liquid';
+    const assetRegistry = new DefaultAssetRegistry(network);
 
     const successfullyUnblinded = unblindingResults.filter(
       (r): r is UnblindingData => !(r instanceof Error)
@@ -77,8 +78,8 @@ export class WalletRepositoryUnblinder implements Unblinder {
     const assetSet = new Set<string>(successfullyUnblinded.map((u) => u.asset));
     for (const asset of assetSet) {
       const assetDetails = await this.assetRepository.getAsset(asset);
-      if (assetDetails && !assetIsUnknown(assetDetails)) continue;
-      const assetFromExplorer = await fetchAssetDetails(network, asset);
+      if (assetDetails && assetDetails.ticker !== assetDetails.assetHash.substring(0, 4)) continue;
+      const assetFromExplorer = await assetRegistry.getAsset(asset);
       await this.assetRepository.addAsset(asset, assetFromExplorer);
     }
 

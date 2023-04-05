@@ -1,6 +1,6 @@
 import Browser from 'webextension-polyfill';
-import { assetIsUnknown, fetchAssetDetails } from '../application/utils';
 import type { AppRepository, AssetRepository, TaxiRepository } from '../domain/repository';
+import { DefaultAssetRegistry } from '../port/asset-registry';
 
 // set up a Browser.alarms in order to fetch the taxi assets every minute
 export class TaxiUpdater {
@@ -44,10 +44,12 @@ export class TaxiUpdater {
     const assets = await fetchAssetsFromTaxi(taxiURL);
     await this.taxiRepository.setTaxiAssets(network, assets);
 
+    const assetRegistry = new DefaultAssetRegistry(network);
+
     for (const asset of assets) {
       const assetDetails = await this.assetRepository.getAsset(asset);
-      if (assetDetails && !assetIsUnknown(assetDetails)) continue;
-      const newAssetDetails = await fetchAssetDetails(network, asset);
+      if (assetDetails && assetDetails.ticker !== assetDetails.assetHash.substring(0, 4)) continue;
+      const newAssetDetails = await assetRegistry.getAsset(asset);
       await this.assetRepository.addAsset(asset, newAssetDetails);
     }
   }
