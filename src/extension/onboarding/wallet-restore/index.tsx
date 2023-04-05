@@ -18,10 +18,10 @@ const WalletRestore: React.FC = () => {
   const [restoration, setRestoration] = useState<RestorationJSONDictionary>();
   const [fileUploadError, setFileUploadError] = useState<string>();
 
-  const onSubmit = async ({ password }: { password: string }) => {
-    if (mnemonic === '' || !validateMnemonic(mnemonic)) throw new Error('need a valid mnemonic');
+  const onSubmit = async (password: string, mnemo: string) => {
+    if (mnemo === '' || !validateMnemonic(mnemo)) throw new Error('need a valid mnemonic');
     await init(appRepository, sendFlowRepository);
-    await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic);
+    await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemo);
     await appRepository.updateStatus({ isMnemonicVerified: true }); // set the mnemonic as verified cause we are in the restore mnemonic flow
     if (restoration) await onboardingRepository.setRestorationJSONDictionary(restoration);
     history.push(INITIALIZE_END_OF_FLOW_ROUTE);
@@ -45,7 +45,7 @@ const WalletRestore: React.FC = () => {
       <p className="mb-2 font-medium">
         Enter your secret twelve words of your mnemonic phrase to Restore your wallet
       </p>
-      <MnemonicField value={mnemonic} onChange={(mnemo) => setMnemonic(mnemo.trim())} />
+      <MnemonicField value={mnemonic} onChange={(mnemo) => setMnemonic(mnemo)} />
 
       <p className="mt-2 mb-2 font-medium">Ionio restoration file (optional)</p>
       <input
@@ -56,7 +56,7 @@ const WalletRestore: React.FC = () => {
       />
       {fileUploadError && <p className="text-red h-10 mt-2 text-xs">{fileUploadError}</p>}
 
-      <OnboardingForm onSubmit={onSubmit} />
+      <OnboardingForm onSubmit={({ password }) => onSubmit(password, mnemonic.trim())} />
     </Shell>
   );
 };
