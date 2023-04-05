@@ -285,7 +285,7 @@ export class Account {
             else indexes.external = newMaxIndex;
 
             // update the history set
-            console.log('history', history)
+            console.log('history', history);
             for (const { tx_hash, height } of history) {
               historyTxsId.add(tx_hash);
               txidHeight.set(tx_hash, height);

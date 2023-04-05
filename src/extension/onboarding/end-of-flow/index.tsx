@@ -6,7 +6,6 @@ import Shell from '../../components/shell';
 import { extractErrorMessage } from '../../utility/error';
 import Browser from 'webextension-polyfill';
 import {
-  Account,
   AccountFactory,
   MainAccount,
   MainAccountLegacy,
@@ -22,11 +21,13 @@ import { initWalletRepository } from '../../../domain/repository';
 import type { ChainSource } from '../../../domain/chainsource';
 import { useStorageContext } from '../../context/storage-context';
 import { UpdaterService } from '../../../application/updater';
+import { Spinner } from './spinner';
 
 const GAP_LIMIT = 30;
 
 const EndOfFlowOnboarding: React.FC = () => {
-  const { appRepository, onboardingRepository, walletRepository, assetRepository } = useStorageContext();
+  const { appRepository, onboardingRepository, walletRepository, assetRepository } =
+    useStorageContext();
   const isFromPopup = useSelectIsFromPopupFlow();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -52,8 +53,7 @@ const EndOfFlowOnboarding: React.FC = () => {
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
-      const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub, defaultMainAccountXPubTestnet } =
-        await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
+      await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
 
       // restore main accounts on Liquid network (so only MainAccount & MainAccountLegacy)
       const liquidChainSource = await appRepository.getChainSource('liquid');
@@ -75,29 +75,31 @@ const EndOfFlowOnboarding: React.FC = () => {
       ]);
 
       // start an Updater service (fetch & unblind & persist the transactions)
-      const updaterSvc = new UpdaterService(walletRepository, appRepository, assetRepository, await zkp());
+      const updaterSvc = new UpdaterService(
+        walletRepository,
+        appRepository,
+        assetRepository,
+        await zkp()
+      );
       await updaterSvc.start();
-      walletRepository.onNewTransaction(() => Promise.resolve(setNumberOfRestoredTransactions(
-        (n) => n + 1
-      )))
-
-      // restore on other networks will be triggered if the user switch to testnet/regtest in settings
-      const results = await Promise.allSettled(
-        accountsToRestore.map((account) =>
-          account.sync(
-            account.network.name === 'liquid' ? liquidChainSource : testnetChainSource, 
-            GAP_LIMIT, 
-            { internal: 0, external: 0 }
-          )
-        )
+      walletRepository.onNewTransaction(() =>
+        Promise.resolve(setNumberOfRestoredTransactions((n) => n + 1))
       );
 
-      for (const res of results) {
-        if (res.status === 'fulfilled') {
-          console.log('restored', res.value.txIDsFromChain.length)
-          setNumberOfTransactionsToRestore((n) => n + res.value.txIDsFromChain.length)
-        }
-      }
+      // restore on other networks will be triggered if the user switch to testnet/regtest in settings
+      await Promise.allSettled(
+        accountsToRestore.map((account) =>
+          account
+            .sync(
+              account.network.name === 'liquid' ? liquidChainSource : testnetChainSource,
+              GAP_LIMIT,
+              { internal: 0, external: 0 }
+            )
+            .then(({ txIDsFromChain }) =>
+              setNumberOfTransactionsToRestore((n) => n + txIDsFromChain.length)
+            )
+        )
+      );
 
       // restore the custom accounts if there is restoration file set
       const restoration = await onboardingRepository.getRestorationJSONDictionary();
@@ -178,16 +180,20 @@ const EndOfFlowOnboarding: React.FC = () => {
   }, [isFromPopup]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen p-24">
-      {numberOfTransactionsToRestore > 0 && <p className="mt-4">
-        We are restorign your wallet. This can take a while, please do not close this window.
-        <br />
-        <div className="w-full h-6 bg-gray-200 rounded-full">
-          <div style={{ width: `${Math.floor(100 * numberOfRestoredTransactions / numberOfTransactionsToRestore)}%` }} className="h-6 bg-primary rounded-full dark:bg-blue-500">{`Restoring... ${numberOfRestoredTransactions}/${numberOfTransactionsToRestore} txs`}</div>
-        </div>
-      </p>}
-      <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
-    </div>
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-24">
+        <MermaidLoader className="h-1/2 flex items-center justify-center" />
+        <p>We are restoring your wallet. This can take a while, please do not close this window.</p>
+        {numberOfTransactionsToRestore > 0 && (
+          <div className="flex flex-col items-center justify-center mt-4">
+            <Spinner />
+            <p className="text-primary mt-1 font-semibold">
+              {numberOfRestoredTransactions}/{numberOfTransactionsToRestore} Transactions
+            </p>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

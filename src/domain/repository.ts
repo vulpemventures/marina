@@ -268,5 +268,10 @@ export async function initWalletRepository(
     accountNetworks: ['liquid', 'regtest', 'testnet'],
     nextKeyIndexes: initialNextKeyIndexes,
   });
-  return { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub, defaultMainAccountXPubTestnet };
+  return {
+    masterBlindingKey,
+    defaultMainAccountXPub,
+    defaultLegacyMainAccountXPub,
+    defaultMainAccountXPubTestnet,
+  };
 }

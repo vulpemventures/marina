@@ -45,7 +45,7 @@ const WalletRestore: React.FC = () => {
       <p className="mb-2 font-medium">
         Enter your secret twelve words of your mnemonic phrase to Restore your wallet
       </p>
-      <MnemonicField value={mnemonic} onChange={(mnemo) => setMnemonic(mnemo)} />
+      <MnemonicField value={mnemonic} onChange={(mnemo) => setMnemonic(mnemo.trim())} />
 
       <p className="mt-2 mb-2 font-medium">Ionio restoration file (optional)</p>
       <input
