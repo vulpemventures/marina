@@ -62,7 +62,7 @@ export interface AppRepository {
   getWebsocketExplorerURL(net?: NetworkString): MaybeNull<string>;
   setWebsocketExplorerURLs(record: Partial<Record<NetworkString, string>>): Promise<void>;
   // returns the chainSource client for the given network, use the current selected network if undefined
-  getChainSource(net?: NetworkString): MaybeNull<ChainSource>;
+  getChainSource(net?: NetworkString, reconnect?: boolean): MaybeNull<ChainSource>;
   // returns the list of websites that are allowed to use the extension
   getEnabledSites(): Promise<string[]>;
   enableSite(url: string): Promise<void>;

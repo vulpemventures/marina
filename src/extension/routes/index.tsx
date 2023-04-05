@@ -39,6 +39,7 @@ import {
   SETTINGS_ACCOUNTS_ROUTE,
   CONNECT_CREATE_ACCOUNT,
   SETTINGS_EXPLORER_CUSTOM_ROUTE,
+  SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE,
 } from './constants';
 
 // Connect
@@ -84,6 +85,7 @@ import SettingsExplorerCustom from '../settings/explorer-custom';
 import SettingsNetworksView from '../settings/networks';
 import SettingsDeepRestorer from '../settings/deep-restorer';
 import SettingsAccounts from '../settings/accounts';
+import SettingsAccountsRestoreIonio from '../settings/accounts-restore-ionio';
 
 const Routes: React.FC = () => {
   return (
@@ -123,6 +125,11 @@ const Routes: React.FC = () => {
       <Route exact path={SETTINGS_CREDITS_ROUTE} component={SettingsCredits} />
       <Route exact path={SETTINGS_DEEP_RESTORER_ROUTE} component={SettingsDeepRestorer} />
       <Route exact path={SETTINGS_ACCOUNTS_ROUTE} component={SettingsAccounts} />
+      <Route
+        exact
+        path={SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE}
+        component={SettingsAccountsRestoreIonio}
+      />
       <Route exact path={SETTINGS_TERMS_ROUTE} component={SettingsTerms} />
       {/*Login*/}
       <Route exact path={LOGIN_ROUTE} component={LogIn} />

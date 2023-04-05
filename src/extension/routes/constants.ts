@@ -52,6 +52,7 @@ const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
 const SETTINGS_DEEP_RESTORER_ROUTE = '/settings/info/deep-restorer';
 const SETTINGS_ACCOUNTS_ROUTE = '/settings/accounts';
+const SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE = '/settings/accounts/restore-ionio';
 
 export {
   //Connect
@@ -96,4 +97,5 @@ export {
   SETTINGS_ACCOUNTS_ROUTE,
   CONNECT_CREATE_ACCOUNT,
   SETTINGS_EXPLORER_CUSTOM_ROUTE,
+  SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE,
 };

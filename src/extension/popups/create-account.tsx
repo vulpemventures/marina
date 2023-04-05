@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import * as ecc from 'tiny-secp256k1';
-import { BIP32Factory } from 'bip32';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import Button from '../components/button';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
@@ -11,11 +9,9 @@ import { popupResponseMessage } from '../../domain/message';
 import { decrypt } from '../../domain/encryption';
 import { mnemonicToSeedSync } from 'bip39';
 import type { CreateAccountParameters } from '../../domain/repository';
-import { SLIP13 } from '../../application/account';
+import { makeAccountXPub, SLIP13 } from '../../application/account';
 import { useStorageContext } from '../context/storage-context';
 import { useBackgroundPortContext } from '../context/background-port-context';
-
-const bip32 = BIP32Factory(ecc);
 
 export interface CreateAccountPopupResponse {
   accepted: boolean;
@@ -61,11 +57,7 @@ const ConnectCreateAccount: React.FC = () => {
       }
 
       const baseDerivationPath = SLIP13(params.name);
-      const masterPublicKey = bip32
-        .fromSeed(mnemonicToSeedSync(mnemonic))
-        .derivePath(baseDerivationPath)
-        .neutered()
-        .toBase58();
+      const masterPublicKey = makeAccountXPub(mnemonicToSeedSync(mnemonic), baseDerivationPath);
 
       await walletRepository.updateAccountDetails(params.name, {
         accountID: params.name,

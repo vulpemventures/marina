@@ -92,7 +92,7 @@ const ShellPopUp: React.FC<Props> = ({
       <span className="flex items-center justify-center w-full h-8">
         <button disabled={btnDisabled} className="focus:outline-none" onClick={handleBackBtn}>
           <img
-            className="top-13 absolute left-0 w-5 ml-4"
+            className="top-13 absolute left-0 z-10 w-5 ml-4"
             src="assets/images/chevron-left.svg"
             alt="chevron-left"
           />
