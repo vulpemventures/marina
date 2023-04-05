@@ -115,11 +115,11 @@ export class AccountFactory {
 
 // Account is a readonly way to interact with the account data (transactions, utxos, scripts, etc.)
 export class Account {
-  private network: networks.Network;
   private node: BIP32Interface;
   private blindingKeyNode: Slip77Interface;
   private walletRepository: WalletRepository;
   private _cacheAccountType: AccountType | undefined;
+  readonly network: networks.Network;
   readonly name: string;
 
   static BASE_DERIVATION_PATH = "m/84'/1776'/0'";
@@ -241,6 +241,7 @@ export class Account {
     gapLimit = GAP_LIMIT,
     start?: { internal: number; external: number }
   ): Promise<{
+    txIDsFromChain: string[];
     next: { internal: number; external: number };
   }> {
     const type = await this.getAccountType();
@@ -272,7 +273,6 @@ export class Account {
 
         const scripts = scriptsWithDetails.map(([script]) => h2b(script));
         const histories = await chainSource.fetchHistories(scripts);
-
         for (const [index, history] of histories.entries()) {
           tempRestoredScripts[scriptsWithDetails[index][0]] = scriptsWithDetails[index][1];
           if (history.length > 0) {
@@ -285,6 +285,7 @@ export class Account {
             else indexes.external = newMaxIndex;
 
             // update the history set
+            console.log('history', history)
             for (const { tx_hash, height } of history) {
               historyTxsId.add(tx_hash);
               txidHeight.set(tx_hash, height);
@@ -296,6 +297,8 @@ export class Account {
         batchCount += gapLimit;
       }
     }
+
+    console.log('historyTxsId', historyTxsId);
 
     await Promise.allSettled([
       this.walletRepository.addTransactions(this.network.name as NetworkString, ...historyTxsId),
@@ -313,6 +316,7 @@ export class Account {
     ]);
 
     return {
+      txIDsFromChain: Array.from(historyTxsId),
       next: {
         internal: indexes.internal,
         external: indexes.external,

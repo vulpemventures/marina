@@ -16,7 +16,7 @@ import { AssetStorageAPI } from '../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
 import { TaxiUpdater } from './taxi-updater';
-import { UpdaterService } from './updater';
+import { UpdaterService } from '../application/updater';
 import { tabIsOpen } from './utils';
 import { AccountFactory } from '../application/account';
 import { extractErrorMessage } from '../extension/utility/error';

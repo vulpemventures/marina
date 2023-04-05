@@ -1,7 +1,7 @@
 import { Transaction } from 'liquidjs-lib';
 import Browser from 'webextension-polyfill';
-import type { Unblinder } from '../application/unblinder';
-import { WalletRepositoryUnblinder } from '../application/unblinder';
+import type { Unblinder } from './unblinder';
+import { WalletRepositoryUnblinder } from './unblinder';
 import type { TxDetails, UnblindingData } from '../domain/transaction';
 import type { WalletRepository, AppRepository, AssetRepository } from '../domain/repository';
 import { TxIDsKey, TxDetailsKey } from '../infrastructure/storage/wallet-repository';

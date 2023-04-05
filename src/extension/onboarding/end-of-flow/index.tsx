@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import zkp from '@vulpemventures/secp256k1-zkp';
 import Button from '../../components/button';
 import MermaidLoader from '../../components/mermaid-loader';
 import Shell from '../../components/shell';
@@ -9,6 +10,7 @@ import {
   AccountFactory,
   MainAccount,
   MainAccountLegacy,
+  MainAccountTest,
   makeAccountXPub,
   SLIP13,
 } from '../../../application/account';
@@ -19,17 +21,17 @@ import { mnemonicToSeed } from 'bip39';
 import { initWalletRepository } from '../../../domain/repository';
 import type { ChainSource } from '../../../domain/chainsource';
 import { useStorageContext } from '../../context/storage-context';
-import { useBackgroundPortContext } from '../../context/background-port-context';
-import { startServicesMessage } from '../../../domain/message';
+import { UpdaterService } from '../../../application/updater';
 
 const GAP_LIMIT = 30;
 
 const EndOfFlowOnboarding: React.FC = () => {
-  const { appRepository, onboardingRepository, walletRepository } = useStorageContext();
-  const { backgroundPort } = useBackgroundPortContext();
+  const { appRepository, onboardingRepository, walletRepository, assetRepository } = useStorageContext();
   const isFromPopup = useSelectIsFromPopupFlow();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [numberOfTransactionsToRestore, setNumberOfTransactionsToRestore] = useState(0);
+  const [numberOfRestoredTransactions, setNumberOfRestoredTransactions] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string>();
 
   const tryToRestoreWallet = async () => {
@@ -49,10 +51,8 @@ const EndOfFlowOnboarding: React.FC = () => {
       setIsLoading(true);
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
-      // start services in background
-      await backgroundPort.sendMessage(startServicesMessage());
 
-      const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub } =
+      const { masterBlindingKey, defaultMainAccountXPub, defaultLegacyMainAccountXPub, defaultMainAccountXPubTestnet } =
         await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
 
       // restore main accounts on Liquid network (so only MainAccount & MainAccountLegacy)
@@ -60,31 +60,44 @@ const EndOfFlowOnboarding: React.FC = () => {
       if (!liquidChainSource) {
         throw new Error('Chain source not found for liquid network');
       }
+      const testnetChainSource = await appRepository.getChainSource('testnet');
+      if (!testnetChainSource) {
+        throw new Error('Chain source not found for testnet network');
+      }
 
-      const accountsToRestore = [
-        new Account({
-          name: MainAccount,
-          masterBlindingKey,
-          masterPublicKey: defaultMainAccountXPub,
-          walletRepository,
-          network: 'liquid',
-        }),
-        new Account({
-          name: MainAccountLegacy,
-          masterBlindingKey,
-          masterPublicKey: defaultLegacyMainAccountXPub,
-          walletRepository,
-          network: 'liquid',
-        }),
-      ];
+      const factory = await AccountFactory.create(walletRepository);
+      // restore liquid & testnet main accounts
+      const accountsToRestore = await Promise.all([
+        factory.make('liquid', MainAccount),
+        factory.make('liquid', MainAccountLegacy),
+        factory.make('testnet', MainAccountLegacy),
+        factory.make('testnet', MainAccountTest),
+      ]);
 
-      // restore the Main accounts on mainnet only
+      // start an Updater service (fetch & unblind & persist the transactions)
+      const updaterSvc = new UpdaterService(walletRepository, appRepository, assetRepository, await zkp());
+      await updaterSvc.start();
+      walletRepository.onNewTransaction(() => Promise.resolve(setNumberOfRestoredTransactions(
+        (n) => n + 1
+      )))
+
       // restore on other networks will be triggered if the user switch to testnet/regtest in settings
-      await Promise.allSettled(
+      const results = await Promise.allSettled(
         accountsToRestore.map((account) =>
-          account.sync(liquidChainSource, GAP_LIMIT, { internal: 0, external: 0 })
+          account.sync(
+            account.network.name === 'liquid' ? liquidChainSource : testnetChainSource, 
+            GAP_LIMIT, 
+            { internal: 0, external: 0 }
+          )
         )
       );
+
+      for (const res of results) {
+        if (res.status === 'fulfilled') {
+          console.log('restored', res.value.txIDsFromChain.length)
+          setNumberOfTransactionsToRestore((n) => n + res.value.txIDsFromChain.length)
+        }
+      }
 
       // restore the custom accounts if there is restoration file set
       const restoration = await onboardingRepository.getRestorationJSONDictionary();
@@ -115,21 +128,21 @@ const EndOfFlowOnboarding: React.FC = () => {
         }
 
         // we already opened the Liquid chain source
-        const chainSourcesTestnetRegtest: Record<string, ChainSource | undefined> = {
-          testnet: undefined,
-          regtest: undefined,
-        };
+        let chainSourceRegtest: ChainSource | null = null;
         // restore the accounts
         const factory = await AccountFactory.create(walletRepository);
         for (const [network, restorations] of Object.entries(restoration)) {
           let chainSource = undefined;
           if (network === 'liquid') chainSource = liquidChainSource;
-          else {
-            if (chainSourcesTestnetRegtest[network] === undefined) {
-              const chainSource = await appRepository.getChainSource(network as NetworkString);
-              chainSourcesTestnetRegtest[network] = chainSource ?? undefined;
+          else if (network === 'testnet') chainSource = testnetChainSource;
+          else if (network === 'regtest') {
+            if (!chainSourceRegtest) {
+              chainSourceRegtest = await appRepository.getChainSource('regtest');
+              if (!chainSourceRegtest) {
+                throw new Error('Chain source not found for regtest network');
+              }
             }
-            chainSource = chainSourcesTestnetRegtest[network];
+            chainSource = chainSourceRegtest;
           }
           if (!chainSource) throw new Error(`Chain source not found for ${network} network`);
 
@@ -139,16 +152,19 @@ const EndOfFlowOnboarding: React.FC = () => {
           }
         }
 
-        // close the chain sources
-        await chainSourcesTestnetRegtest.testnet?.close();
-        await chainSourcesTestnetRegtest.regtest?.close();
+        // close the chain source if opened
+        await chainSourceRegtest?.close();
       }
+      await liquidChainSource.close();
+
+      // after all task, wait for the updater if processing
+      await updaterSvc.waitForProcessing();
+      await updaterSvc.stop();
 
       // set the popup
       await (Browser.browserAction ?? Browser.action).setPopup({ popup: 'popup.html' });
       await appRepository.updateStatus({ isOnboardingCompleted: true });
       await onboardingRepository.flush();
-      await liquidChainSource.close();
     } catch (err: unknown) {
       console.error(err);
       setErrorMsg(extractErrorMessage(err));
@@ -162,7 +178,16 @@ const EndOfFlowOnboarding: React.FC = () => {
   }, [isFromPopup]);
 
   if (isLoading) {
-    return <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
+    return <div className="flex items-center justify-center h-screen p-24">
+      {numberOfTransactionsToRestore > 0 && <p className="mt-4">
+        We are restorign your wallet. This can take a while, please do not close this window.
+        <br />
+        <div className="w-full h-6 bg-gray-200 rounded-full">
+          <div style={{ width: `${Math.floor(100 * numberOfRestoredTransactions / numberOfTransactionsToRestore)}%` }} className="h-6 bg-primary rounded-full dark:bg-blue-500">{`Restoring... ${numberOfRestoredTransactions}/${numberOfTransactionsToRestore} txs`}</div>
+        </div>
+      </p>}
+      <MermaidLoader className="flex items-center justify-center h-screen p-24" />;
+    </div>
   }
 
   return (

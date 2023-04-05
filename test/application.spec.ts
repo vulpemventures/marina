@@ -14,7 +14,7 @@ import {
 } from '../src/application/account';
 import { BlinderService } from '../src/application/blinder';
 import { SignerService } from '../src/application/signer';
-import { UpdaterService } from '../src/background/updater';
+import { UpdaterService } from '../src/application/updater';
 import { SubscriberService } from '../src/background/subscriber';
 import {
   BlockstreamExplorerURLs,
