@@ -36,10 +36,13 @@ export class DefaultAssetRegistry implements AssetRegistry {
     const response = await fetch(`${this.endpoint}/${assetHash}`);
 
     if (!response.ok) {
-        // if 404, set a lock on that asset for 1 hour
-        if (response.status === 404) {
-            this.assetsLocker.set(assetHash, Date.now() + DefaultAssetRegistry.NOT_FOUND_ERROR_LOCKTIME);
-        }
+      // if 404, set a lock on that asset for 1 hour
+      if (response.status === 404) {
+        this.assetsLocker.set(
+          assetHash,
+          Date.now() + DefaultAssetRegistry.NOT_FOUND_ERROR_LOCKTIME
+        );
+      }
     }
 
     const { name, ticker, precision } = await response.json();
@@ -51,11 +54,11 @@ export class DefaultAssetRegistry implements AssetRegistry {
     };
   }
 
-   getAsset(assetHash: string): Promise<Asset> {
+  getAsset(assetHash: string): Promise<Asset> {
     try {
-        if (this.isLocked(assetHash)) throw new Error('Asset locked'); // fallback to catch block
-        this.assetsLocker.delete(assetHash);
-        return this.fetchAssetDetails(assetHash);
+      if (this.isLocked(assetHash)) throw new Error('Asset locked'); // fallback to catch block
+      this.assetsLocker.delete(assetHash);
+      return this.fetchAssetDetails(assetHash);
     } catch (e) {
       return Promise.resolve({
         name: 'Unknown',

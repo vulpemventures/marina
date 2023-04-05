@@ -1,6 +1,6 @@
 import type { Asset, NetworkString } from 'marina-provider';
+import type { SetStateAction } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { assetIsUnknown, fetchAssetDetails } from '../../application/utils';
 import type {
   AppRepository,
   AssetRepository,
@@ -20,6 +20,7 @@ import { SendFlowStorageAPI } from '../../infrastructure/storage/send-flow-repos
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository';
 import { sortAssets } from '../utility/sort';
+import { DefaultAssetRegistry } from '../../port/asset-registry';
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
@@ -29,14 +30,32 @@ const onboardingRepository = new OnboardingStorageAPI();
 const sendFlowRepository = new SendFlowStorageAPI();
 const blockHeadersRepository = new BlockHeadersAPI();
 
+interface AsyncValue<T> {
+  value: T;
+  loading: boolean;
+  setValue: (value: SetStateAction<T>) => void;
+  setLoading: (loading: boolean) => void;
+}
+
+function useAsyncValue<T>(initialValue: T): AsyncValue<T> {
+  const [value, setValue] = useState(initialValue);
+  const [loading, setLoading] = useState(false);
+
+  return {
+    value,
+    loading,
+    setValue,
+    setLoading,
+  };
+}
+
 interface StorageContextCache {
   network: NetworkString;
-  balances: Record<string, number>;
-  utxos: UnblindedOutput[];
-  assets: Asset[];
-  authenticated: boolean;
-  loading: boolean;
-  transactions: TxDetailsExtended[];
+  authenticated: AsyncValue<boolean>;
+  balances: AsyncValue<Record<string, number>>;
+  utxos: AsyncValue<UnblindedOutput[]>;
+  assets: AsyncValue<Asset[]>;
+  transactions: AsyncValue<TxDetailsExtended[]>;
 }
 
 interface StorageContextProps {
@@ -61,56 +80,90 @@ const StorageContext = createContext<StorageContextProps>({
 });
 
 export const StorageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [network, setNetwork] = useState<NetworkString>('liquid');
-  const [balances, setBalances] = useState<Record<string, number>>({});
-  const [utxos, setUtxos] = useState<UnblindedOutput[]>([]);
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [sortedAssets, setSortedAssets] = useState<Asset[]>([]);
-  const [transactions, setTransactions] = useState<TxDetailsExtended[]>([]);
+  const authenticated = useAsyncValue<boolean>(false);
+  const balances = useAsyncValue<Record<string, number>>({});
+  const utxos = useAsyncValue<UnblindedOutput[]>([]);
+  const assets = useAsyncValue<Asset[]>([]);
+  const transactions = useAsyncValue<TxDetailsExtended[]>([]);
 
   const [closeUtxosListeners, setCloseUtxosListenersFunction] = useState<() => void>();
   const [closeTxListener, setCloseTxListener] = useState<() => void>();
 
-  // reset to initial state while mounting the context or when the network changes
-  const setInitialState = async () => {
-    const network = await appRepository.getNetwork();
-    if (network) {
-      setNetwork(network);
-      // utxos
-      const fromRepo = await walletRepository.getUtxos(network);
-      setUtxos(fromRepo);
-      setBalances(computeBalances(fromRepo));
+  // utxos & balances update on network change
+  useEffect(() => {
+    const updateUtxosAndBalances = async () => {
       setUtxosListeners(network);
+      const fromRepo = await walletRepository.getUtxos(network);
+      utxos.setValue(fromRepo);
+      balances.setValue(computeBalances(fromRepo));
+    };
 
-      // assets
+    if (!network) return;
+    utxos.setLoading(true);
+    balances.setLoading(true);
+    updateUtxosAndBalances()
+      .catch(console.error)
+      .finally(() => {
+        utxos.setLoading(false);
+        balances.setLoading(false);
+      });
+  }, [network]);
+
+  // asset update on network change
+  useEffect(() => {
+    const updateAssets = async () => {
+      const assetRegistry = new DefaultAssetRegistry(network);
       const assetsFromRepo = await assetRepository.getAllAssets(network);
-      setAssets(assetsFromRepo);
+      assets.setValue(sortAssets(assetsFromRepo));
       try {
-        const assetsWithUnknownDetails = assetsFromRepo.filter(assetIsUnknown);
-        const newAssetDetails = await Promise.all(
-          assetsWithUnknownDetails.map(({ assetHash }) => fetchAssetDetails(network, assetHash))
+        const assetsWithUnknownDetails = assetsFromRepo.filter(
+          ({ ticker, assetHash }) => ticker === assetHash.substring(0, 4)
         );
-        await Promise.all(
+        const newAssetDetails = await Promise.all(
+          assetsWithUnknownDetails.map(({ assetHash }) => assetRegistry.getAsset(assetHash))
+        );
+        await Promise.allSettled(
           newAssetDetails.map((asset) => assetRepository.addAsset(asset.assetHash, asset))
         );
-        setAssets(await assetRepository.getAllAssets(network));
+        assets.setValue(sortAssets(await assetRepository.getAllAssets(network)));
       } catch (e) {
         console.warn('failed to update asset details from registry', e);
       }
+    };
+    if (!network) return;
+    assets.setLoading(true);
+    updateAssets()
+      .catch(console.error)
+      .finally(() => assets.setLoading(false));
+  }, [network]);
 
+  // transactions update on network change
+  useEffect(() => {
+    const updateTransactions = async () => {
+      setTransactionsListener(network);
       // transactions
       const txIds = await walletRepository.getTransactions(network);
       const details = await walletRepository.getTxDetails(...txIds);
       const txDetails = Object.values(details).sort(sortTxDetails());
-      const txDetailsExtended = await Promise.all(
-        txDetails.map(
-          computeTxDetailsExtended(appRepository, walletRepository, blockHeadersRepository)
-        )
+      await Promise.allSettled(
+        txDetails
+          .filter((tx) => tx.hex !== undefined)
+          .map(computeTxDetailsExtended(appRepository, walletRepository, blockHeadersRepository))
+          .map((p) =>
+            p
+              .then((tx) => {
+                transactions.setValue((txs) => [...txs, tx]);
+                return tx;
+              })
+              .catch(console.error)
+          )
       );
-      setTransactions(txDetailsExtended);
-      setTransactionsListener(network);
+    };
+
+    const fetchTransactionsHexes = async () => {
+      const txIds = await walletRepository.getTransactions(network);
+      const details = await walletRepository.getTxDetails(...txIds);
       // check if we have the hex, if not fetch it
       const chainSource = await appRepository.getChainSource();
       if (chainSource) {
@@ -121,21 +174,30 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         await walletRepository.updateTxDetails(Object.fromEntries(txs.map((tx) => [tx.txID, tx])));
         await chainSource.close();
       }
-    }
-  };
+    };
+
+    if (!network) return;
+    transactions.setLoading(true);
+    updateTransactions()
+      .catch(console.error)
+      .finally(() => transactions.setLoading(false));
+
+    fetchTransactionsHexes().catch(console.error);
+  }, [network]);
 
   // use the repositories listeners to update the state and the balances while the utxos change
   const setUtxosListeners = (network: NetworkString) => {
+    closeUtxosListeners?.();
     const closeOnNewUtxoListener = walletRepository.onNewUtxo(network)(async (_) => {
       const fromRepo = await walletRepository.getUtxos(network);
-      setUtxos(fromRepo);
-      setBalances(computeBalances(fromRepo));
+      utxos.setValue(fromRepo);
+      balances.setValue(computeBalances(fromRepo));
     });
 
     const closeOnDeleteUtxoListener = walletRepository.onDeleteUtxo(network)(async (_) => {
       const fromRepo = await walletRepository.getUtxos(network);
-      setUtxos(fromRepo);
-      setBalances(computeBalances(fromRepo));
+      utxos.setValue(fromRepo);
+      balances.setValue(computeBalances(fromRepo));
     });
 
     // set up the close function for the utxos listeners
@@ -147,6 +209,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const setTransactionsListener = (network: NetworkString) => {
+    closeTxListener?.();
     const closeOnNewTransactionListener = walletRepository.onNewTransaction(
       async (_, details: TxDetails, net: NetworkString) => {
         if (net !== network) return;
@@ -155,7 +218,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
           walletRepository,
           blockHeadersRepository
         )(details);
-        setTransactions((txs) => [...txs, txDetailsExtended].sort(sortTxDetails()));
+        transactions.setValue((txs) => [...txs, txDetailsExtended].sort(sortTxDetails()));
       }
     );
 
@@ -163,21 +226,23 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   useEffect(() => {
-    setSortedAssets(sortAssets(assets));
-  }, [assets]);
+    if (authenticated.value) {
+      appRepository
+        .getNetwork()
+        .then((network) => {
+          if (network) setNetwork(network);
+        })
+        .catch(console.error);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      setInitialState().catch(console.error);
       const closeAssetListener = assetRepository.onNewAsset((asset) =>
-        Promise.resolve(setAssets((assets) => [...assets, asset]))
+        Promise.resolve(assets.setValue((assets) => sortAssets([...assets, asset])))
       );
 
-      const closeNetworkListener = appRepository.onNetworkChanged(async (net) => {
+      const closeNetworkListener = appRepository.onNetworkChanged((net) => {
         setNetwork(net);
         closeUtxosListeners?.();
         closeTxListener?.();
-        await setInitialState();
+        return Promise.resolve();
       });
 
       return () => {
@@ -188,27 +253,27 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         closeAssetListener();
       };
     } else {
-      setBalances({});
-      setUtxos([]);
-      setAssets([]);
-      setSortedAssets([]);
+      balances.setValue({});
+      utxos.setValue([]);
+      assets.setValue([]);
       setNetwork('liquid');
     }
-  }, [isAuthenticated]);
+  }, [authenticated.value]);
 
   useEffect(() => {
+    authenticated.setLoading(true);
     appRepository
       .getStatus()
       .then((status) => {
         if (status) {
-          setIsAuthenticated(true);
+          authenticated.setValue(true);
         }
-        setLoading(false);
+        authenticated.setLoading(false);
       })
       .catch(console.error);
 
     const closeAuthListener = appRepository.onIsAuthenticatedChanged((auth) => {
-      setIsAuthenticated(auth);
+      authenticated.setValue(auth);
       return Promise.resolve();
     });
 
@@ -229,9 +294,8 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
           balances,
           network,
           utxos,
-          assets: sortedAssets,
-          authenticated: isAuthenticated,
-          loading,
+          assets,
+          authenticated,
           transactions,
         },
       }}

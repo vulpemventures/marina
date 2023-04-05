@@ -21,7 +21,7 @@ import { initWalletRepository } from '../../../domain/repository';
 import type { ChainSource } from '../../../domain/chainsource';
 import { useStorageContext } from '../../context/storage-context';
 import { UpdaterService } from '../../../application/updater';
-import { Spinner } from './spinner';
+import { Spinner } from '../../components/spinner';
 
 const GAP_LIMIT = 30;
 

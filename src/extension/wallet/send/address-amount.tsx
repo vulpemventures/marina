@@ -42,12 +42,12 @@ const AddressAmountView: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      {!isInitializingFormState && sendAsset && cache?.balances[sendAsset.assetHash] && (
+      {!isInitializingFormState && sendAsset && cache?.balances.value[sendAsset.assetHash] && (
         <>
           <Balance
             assetHash={sendAsset.assetHash}
             assetBalance={fromSatoshi(
-              cache?.balances[sendAsset.assetHash] ?? 0,
+              cache?.balances.value[sendAsset.assetHash] ?? 0,
               sendAsset.precision
             )}
             assetTicker={sendAsset.ticker}
@@ -57,7 +57,7 @@ const AddressAmountView: React.FC = () => {
           {cache?.network && (
             <AddressAmountForm
               history={history}
-              maxPossibleAmount={cache?.balances[sendAsset.assetHash] ?? 0}
+              maxPossibleAmount={cache?.balances.value[sendAsset.assetHash] ?? 0}
               network={cache.network}
               dataInCache={{
                 amount: 0,

@@ -10,6 +10,7 @@ interface Props {
   assetHash: string;
   bigBalanceText?: boolean;
   className?: string;
+  loading?: boolean;
 }
 
 const Balance: React.FC<Props> = ({
@@ -18,6 +19,7 @@ const Balance: React.FC<Props> = ({
   assetBalance,
   assetTicker,
   assetHash,
+  loading,
 }) => {
   const { appRepository } = useStorageContext();
 
@@ -39,11 +41,12 @@ const Balance: React.FC<Props> = ({
       <div>
         <p
           className={cx('text-grayDark font-medium max-h-10', {
-            'text-3xl': bigBalanceText,
-            'text-lg': !bigBalanceText,
+            'text-3xl': bigBalanceText && !loading,
+            'text-lg': !bigBalanceText && !loading,
+            'animate-pulse': loading,
           })}
         >
-          {assetBalance} {assetTicker}
+          {loading ? 'Loading...' : `${assetBalance} ${assetTicker}`}
         </p>
       </div>
     </div>

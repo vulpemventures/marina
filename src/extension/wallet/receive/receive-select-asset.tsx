@@ -17,7 +17,7 @@ const ReceiveSelectAsset: React.FC = () => {
     <AssetListScreen
       title="Receive Asset"
       onClick={handleSend}
-      assets={[UnknowAsset].concat(cache?.assets || [])}
+      assets={[UnknowAsset].concat(cache?.assets.value || [])}
     />
   );
 };
