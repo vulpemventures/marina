@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import cx from 'classnames';
+import { validateMnemonic } from 'bip39';
 
 interface Props {
   value: string;
@@ -22,6 +23,9 @@ export const MnemonicField: React.FC<Props> = ({ onChange, value }) => {
   const handleBlur = () => {
     if (!validSeed(value)) {
       setError('Mnemonic is not valid - should be 12 or 24 words separated by spaces');
+    }
+    if (!validateMnemonic(value.trim())) {
+      setError('Invalid mnemonic');
     }
   };
 

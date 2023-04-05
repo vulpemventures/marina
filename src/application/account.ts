@@ -529,3 +529,26 @@ export class Account {
     return address.toConfidential(address.fromOutputScript(script, this.network), blindkey);
   }
 }
+
+export function checkRestorationDictionary(
+  dictionary: any
+): dictionary is RestorationJSONDictionary {
+  try {
+    const possibleFields = ['liquid', 'testnet', 'regtest'];
+    for (const field of possibleFields) {
+      if (field in dictionary) {
+        if (!Array.isArray(dictionary[field])) return false;
+        for (const obj of dictionary[field]) {
+          if (!isRestoration(obj)) return false;
+        }
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isRestoration(obj: Record<string, unknown>): obj is RestorationJSON {
+  return 'accountName' in obj && 'artifacts' in obj && 'pathToArguments' in obj;
+}
