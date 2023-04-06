@@ -15,8 +15,13 @@ export class BlockHeadersAPI implements BlockheadersRepository {
     return blockHeader === null ? undefined : blockHeader;
   }
 
-  async setBlockHeader(network: NetworkString, blockHeader: BlockHeader): Promise<void> {
-    const key = BlockHeaderKey.make(network, blockHeader.height);
-    await Browser.storage.local.set({ [key]: blockHeader });
+  setBlockHeaders(network: NetworkString, ...blockHeaders: BlockHeader[]): Promise<void> {
+    return Browser.storage.local.set(
+      blockHeaders.reduce((acc, blockHeader) => {
+        const key = BlockHeaderKey.make(network, blockHeader.height);
+        acc[key] = blockHeader;
+        return acc;
+      }, {} as Record<string, BlockHeader>)
+    );
   }
 }

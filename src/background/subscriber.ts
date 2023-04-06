@@ -27,8 +27,12 @@ export class SubscriberService {
     await this.initSubscribtions();
 
     this.appRepository.onNetworkChanged(async (network: NetworkString) => {
-      await this.unsubscribe();
-      await this.chainSource?.close();
+      try {
+        await this.unsubscribe();
+        await this.chainSource?.close();
+      } catch (e) {
+        console.error('error while unsubscribing', e);
+      }
       this.network = network;
       this.chainSource = await this.appRepository.getChainSource(network);
       if (!this.chainSource) throw ChainSourceError(network);

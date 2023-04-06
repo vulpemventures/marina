@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { TxDetailsExtended } from '../../domain/transaction';
 import { makeURLwithBlinders, TxType } from '../../domain/transaction';
 import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../utility';
@@ -11,6 +11,8 @@ import Button from './button';
 import Browser from 'webextension-polyfill';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../context/storage-context';
+import { BlockHeader } from '../../domain/chainsource';
+import { useToastContext } from '../context/toast-context';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -25,8 +27,23 @@ interface Props {
 }
 
 const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
-  const { walletRepository, appRepository } = useStorageContext();
+  const { walletRepository, appRepository, blockHeadersRepository, cache } = useStorageContext();
+  const { showToast } = useToastContext();
+  const [blockHeader, setBlockHeader] = useState<BlockHeader>();
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!cache || !txDetails.height || txDetails.height < 0) return;
+    blockHeadersRepository
+      .getBlockHeader(cache.network, txDetails.height)
+      .then((blockHeader) => {
+        setBlockHeader(blockHeader);
+      })
+      .catch((e) => {
+        console.error(e);
+        showToast('Error: unable to get block header');
+      });
+  }, [txDetails.height, cache?.network]);
 
   const handleClick = () => {
     setModalOpen(true);
@@ -54,9 +71,9 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       >
         <div className="flex items-center">
           <TxIcon txType={txTypeFromTransfer(transferAmount())} />
-          {txDetails.blockHeader ? (
+          {blockHeader ? (
             <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
-              {moment(txDetails.blockHeader.timestamp * 1000).format('DD MMM YYYY')}
+              {moment(blockHeader.timestamp * 1000).format('DD MMM YYYY')}
             </span>
           ) : (
             <span className="bg-red text-xxs inline-flex items-center justify-center px-1 py-1 font-semibold leading-none text-white rounded-full">
@@ -87,9 +104,9 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
             className="w-8 h-8 mt-0.5 block mx-auto mb-2"
           />
           <p className="text-base font-medium">{txTypeFromTransfer(transferAmount())}</p>
-          {txDetails.blockHeader && (
+          {blockHeader && (
             <p className="text-xs font-light">
-              {moment(txDetails.blockHeader.timestamp * 1000).format('DD MMMM YYYY HH:mm')}
+              {moment(blockHeader.timestamp * 1000).format('DD MMMM YYYY HH:mm')}
             </p>
           )}
         </div>

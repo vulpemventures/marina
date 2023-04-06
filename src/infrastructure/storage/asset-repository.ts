@@ -57,19 +57,10 @@ export class AssetStorageAPI implements AssetRepository {
   async getAllAssets(network: NetworkString): Promise<Asset[]> {
     const assetList: Asset[] = [];
 
-    const txIDs = await this.walletRepository.getTransactions(network);
-    const allTxDetails = await this.walletRepository.getTxDetails(...txIDs);
-
-    for (const [ID, { hex }] of Object.entries(allTxDetails)) {
-      if (!hex) continue;
-      for (const [vout] of Transaction.fromHex(hex).outs.entries()) {
-        const data = await this.walletRepository.getOutputBlindingData(ID, vout);
-        if (!data || !data.blindingData) continue;
-        if (assetList.find((a) => a.assetHash === data.blindingData?.asset)) continue;
-        const asset = await this.getAsset(data.blindingData.asset);
-        if (asset) {
-          assetList.push(asset);
-        }
+    const allStorage = await Browser.storage.local.get(null);
+    for (const [key, value] of Object.entries(allStorage)) {
+      if (AssetKey.is(key) && value) {
+        assetList.push(value);
       }
     }
 

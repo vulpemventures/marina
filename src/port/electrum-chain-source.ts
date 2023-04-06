@@ -49,9 +49,12 @@ export class WsElectrumChainSource implements ChainSource {
     return responses;
   }
 
-  async fetchBlockHeader(height: number): Promise<BlockHeader> {
-    const hex = await this.ws.request<string>(GetBlockHeader, height);
-    return deserializeBlockHeader(hex);
+  async fetchBlockHeaders(heights: number[]): Promise<BlockHeader[]> {
+    const responses = await this.ws.batchRequest<string[]>(
+      ...heights.map((h) => ({ method: GetBlockHeader, params: [h] }))
+    );
+
+    return responses.map(deserializeBlockHeader);
   }
 
   async estimateFees(targetNumberBlocks: number): Promise<number> {

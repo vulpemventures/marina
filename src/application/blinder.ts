@@ -14,12 +14,14 @@ export class BlinderService {
 
   async blindPset(pset: Pset): Promise<Pset> {
     const ownedInputs: OwnedInput[] = [];
-    for (const [inputIndex, input] of pset.inputs.entries()) {
-      const unblindOutput = await this.walletRepository.getOutputBlindingData(
-        Buffer.from(input.previousTxid).reverse().toString('hex'),
-        input.previousTxIndex
-      );
-
+    const inputsBlindingData = await this.walletRepository.getOutputBlindingData(
+      ...pset.inputs.map(({ previousTxIndex, previousTxid }) => ({
+        txID: Buffer.from(previousTxid).reverse().toString('hex'),
+        vout: previousTxIndex,
+      }))
+    );
+    for (const inputIndex of pset.inputs.keys()) {
+      const unblindOutput = inputsBlindingData.at(inputIndex);
       if (!unblindOutput || !unblindOutput.blindingData) continue;
       ownedInputs.push({
         asset: AssetHash.fromHex(unblindOutput.blindingData.asset).bytesWithoutPrefix,

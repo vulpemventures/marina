@@ -26,8 +26,13 @@ import { Spinner } from '../../components/spinner';
 const GAP_LIMIT = 30;
 
 const EndOfFlowOnboarding: React.FC = () => {
-  const { appRepository, onboardingRepository, walletRepository, assetRepository } =
-    useStorageContext();
+  const {
+    appRepository,
+    onboardingRepository,
+    walletRepository,
+    assetRepository,
+    blockHeadersRepository,
+  } = useStorageContext();
   const isFromPopup = useSelectIsFromPopupFlow();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +41,8 @@ const EndOfFlowOnboarding: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string>();
 
   const tryToRestoreWallet = async () => {
+    setNumberOfRestoredTransactions(0);
+    setNumberOfTransactionsToRestore(0);
     if (isFromPopup) {
       // if the user is here to check its mnemonic, we just update the status of the wallet
       await appRepository.updateStatus({ isMnemonicVerified: true });
@@ -80,13 +87,13 @@ const EndOfFlowOnboarding: React.FC = () => {
       const updaterSvc = new UpdaterService(
         walletRepository,
         appRepository,
+        blockHeadersRepository,
         assetRepository,
         await zkp()
       );
-      await updaterSvc.start();
-      walletRepository.onNewTransaction(() =>
-        Promise.resolve(setNumberOfRestoredTransactions((n) => n + 1))
-      );
+      walletRepository.onNewTransaction(() => {
+        return Promise.resolve(setNumberOfRestoredTransactions((n) => n + 1));
+      });
 
       // restore on other networks will be triggered if the user switch to testnet/regtest in settings
       await Promise.allSettled(
@@ -158,11 +165,13 @@ const EndOfFlowOnboarding: React.FC = () => {
         // close the chain source if opened
         await chainSourceRegtest?.close();
       }
+      await testnetChainSource.close();
       await liquidChainSource.close();
 
       // after all task, wait for the updater if processing
+      await updaterSvc.checkAndFixMissingTransactionsData('liquid');
+      await updaterSvc.checkAndFixMissingTransactionsData('testnet');
       await updaterSvc.waitForProcessing();
-      await updaterSvc.stop();
 
       // set the popup
       await onboardingRepository.flush();

@@ -101,7 +101,7 @@ export interface WalletRepository {
   ): Promise<CoinSelection>;
   unlockUtxos(): Promise<void>;
   lockOutpoints(outpoints: Outpoint[]): Promise<void>;
-  getOutputBlindingData(txID: string, vout: number): Promise<UnblindedOutput>;
+  getOutputBlindingData(...outpoints: Outpoint[]): Promise<UnblindedOutput[]>;
   getWitnessUtxo(txID: string, vout: number): Promise<UpdaterInput['witnessUtxo']>;
   getScriptDetails(...scripts: string[]): Promise<Record<string, ScriptDetails>>;
   getTxDetails(...txIDs: string[]): Promise<Record<string, TxDetails>>;
@@ -132,6 +132,7 @@ export interface WalletRepository {
   onNewUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
   onDeleteUtxo: (network: NetworkString) => EventEmitter<[utxo: UnblindedOutput]>;
   onNewScript: EventEmitter<[script: string, details: ScriptDetails]>;
+  onUnblindingEvent: EventEmitter<[data: UnblindedOutput]>;
 }
 
 // asset registry is a local cache of remote elements-registry
@@ -208,7 +209,7 @@ export interface SendFlowRepository {
 // this repository aims to cache the block headers
 export interface BlockheadersRepository {
   getBlockHeader(network: NetworkString, height: number): Promise<BlockHeader | undefined>;
-  setBlockHeader(network: NetworkString, blockHeader: BlockHeader): Promise<void>;
+  setBlockHeaders(network: NetworkString, ...blockHeaders: BlockHeader[]): Promise<void>;
 }
 
 export async function init(appRepository: AppRepository, sendFlowRepository: SendFlowRepository) {

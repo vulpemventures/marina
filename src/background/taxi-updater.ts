@@ -63,6 +63,7 @@ interface TaxiAssetDetails {
 
 async function fetchAssetsFromTaxi(taxiUrl: string): Promise<string[]> {
   const response = await fetch(`${taxiUrl}/assets`);
+  if (!response.ok) throw new Error('Taxi /assets error' + response.status.toString());
   const data = await response.json();
   return (data.assets ?? []).map((asset: TaxiAssetDetails) => asset.assetHash);
 }

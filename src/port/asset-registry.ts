@@ -43,6 +43,7 @@ export class DefaultAssetRegistry implements AssetRegistry {
           Date.now() + DefaultAssetRegistry.NOT_FOUND_ERROR_LOCKTIME
         );
       }
+      throw new Error('Asset not found');
     }
 
     const { name, ticker, precision } = await response.json();

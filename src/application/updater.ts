@@ -1,11 +1,20 @@
-import { Transaction } from 'liquidjs-lib';
+import { Transaction, TxOutput } from 'liquidjs-lib';
 import Browser from 'webextension-polyfill';
 import type { Unblinder } from './unblinder';
 import { WalletRepositoryUnblinder } from './unblinder';
 import type { TxDetails, UnblindingData } from '../domain/transaction';
-import type { WalletRepository, AppRepository, AssetRepository } from '../domain/repository';
-import { TxIDsKey, TxDetailsKey } from '../infrastructure/storage/wallet-repository';
+import type {
+  WalletRepository,
+  AppRepository,
+  AssetRepository,
+  BlockheadersRepository,
+  Outpoint,
+} from '../domain/repository';
+import { TxIDsKey } from '../infrastructure/storage/wallet-repository';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
+import { NetworkString } from 'marina-provider';
+import { AppStorageKeys } from '../infrastructure/storage/app-repository';
+import { ChainSource } from '../domain/chainsource';
 
 /**
  * Updater is a class that listens to the chrome storage changes and triggers the right actions
@@ -22,6 +31,7 @@ export class UpdaterService {
   constructor(
     private walletRepository: WalletRepository,
     private appRepository: AppRepository,
+    private blockHeadersRepository: BlockheadersRepository,
     assetRepository: AssetRepository,
     zkpLib: ZKPInterface
   ) {
@@ -49,6 +59,104 @@ export class UpdaterService {
     }
   }
 
+  async checkAndFixMissingTransactionsData(network: NetworkString) {
+    this.processingCount += 1;
+    try {
+      const txs = await this.walletRepository.getTransactions(network);
+      if (txs.length === 0) return;
+      const txsDetailsRecord = await this.walletRepository.getTxDetails(...txs);
+      const chainSource = await this.appRepository.getChainSource(network);
+      if (!chainSource) throw new Error('Chain source not found for network ' + network);
+      await this.fixMissingHex(chainSource, txsDetailsRecord);
+
+      const txsDetails = Object.values(txsDetailsRecord);
+      await Promise.allSettled([
+        this.fixMissingBlockHeaders(network, chainSource, txsDetails).finally(async () => {
+          await chainSource.close();
+        }),
+        this.fixMissingUnblindingData(txsDetails),
+      ]);
+    } finally {
+      this.processingCount -= 1;
+    }
+  }
+
+  private async fixMissingBlockHeaders(
+    network: NetworkString,
+    chainSource: ChainSource,
+    txsDetails: TxDetails[]
+  ) {
+    const heightSet = new Set<number>();
+    for (const txDetails of txsDetails) {
+      if (txDetails.height && txDetails.height >= 0) {
+        if (
+          (await this.blockHeadersRepository.getBlockHeader(network, txDetails.height)) ===
+          undefined
+        ) {
+          heightSet.add(txDetails.height);
+        }
+      }
+    }
+
+    const blockHeaders = await chainSource.fetchBlockHeaders(Array.from(heightSet));
+    await this.blockHeadersRepository.setBlockHeaders(network, ...blockHeaders);
+  }
+
+  private async fixMissingHex(chainSource: ChainSource, txsDetails: Record<string, TxDetails>) {
+    const missingHexes = Object.entries(txsDetails).filter(
+      ([, txDetails]) => txDetails.hex === undefined
+    );
+    const txIDs = missingHexes.map(([txid]) => txid);
+    const transactions = await chainSource.fetchTransactions(txIDs);
+    await this.walletRepository.updateTxDetails(
+      transactions.reduce((acc, tx) => {
+        acc[tx.txID] = { hex: tx.hex };
+        return acc;
+      }, {} as Record<string, TxDetails>)
+    );
+  }
+
+  private async fixMissingUnblindingData(txDetails: TxDetails[]) {
+    const txs = txDetails
+      .filter(({ hex }) => hex !== undefined)
+      .map(({ hex }) => Transaction.fromHex(hex!));
+    const outpoints = txs.reduce<(TxOutput & Outpoint)[]>((acc, tx) => {
+      for (const [vout, output] of tx.outs.entries()) {
+        if (output.script && output.script) {
+          acc.push({
+            txID: tx.getId(),
+            vout,
+            ...output,
+          });
+        }
+      }
+      return acc;
+    }, []);
+
+    const unblindOutputsInRepo = await this.walletRepository.getOutputBlindingData(...outpoints);
+    const toUnblind = unblindOutputsInRepo.filter(({ blindingData }) => blindingData === undefined);
+
+    const outputsToUnblind = toUnblind.map(
+      ({ txID, vout }) =>
+        outpoints.find(({ txID: txID2, vout: vout2 }) => txID === txID2 && vout === vout2)!
+    );
+    const unblindedResults = await this.unblinder.unblind(...outputsToUnblind);
+
+    const updateArray: [Outpoint, UnblindingData][] = [];
+    for (const [i, unblinded] of unblindedResults.entries()) {
+      const { txID, vout } = toUnblind[i];
+      if (unblinded instanceof Error) {
+        if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
+        if (unblinded.message === 'Empty script: fee output') continue;
+        console.error('Error while unblinding', unblinded);
+        continue;
+      }
+      updateArray.push([{ txID, vout }, unblinded]);
+    }
+
+    await this.walletRepository.updateOutpointBlindingData(updateArray);
+  }
+
   // onChangesListener iterates over the storage changes to trigger the right actions
   private onChangesListener() {
     return async (changes: Record<string, Browser.Storage.StorageChange>) => {
@@ -56,7 +164,11 @@ export class UpdaterService {
         this.processingCount += 1;
         for (const key in changes) {
           try {
-            if (TxIDsKey.is(key)) {
+            if (key === AppStorageKeys.NETWORK) {
+              const newNetwork = changes[key].newValue as NetworkString | undefined;
+              if (!newNetwork) continue;
+              await this.checkAndFixMissingTransactionsData(newNetwork);
+            } else if (TxIDsKey.is(key)) {
               // for each new txID, fetch the tx hex
               const [network] = TxIDsKey.decode(key);
               const newTxIDs = changes[key].newValue as string[] | undefined;
@@ -75,25 +187,11 @@ export class UpdaterService {
                   continue;
                 }
                 const transactions = await chainSource.fetchTransactions(txIDsToFetch);
-                await chainSource.close();
 
-                // try to unblind the outputs
-                const unblindedOutpoints: Array<[{ txID: string; vout: number }, UnblindingData]> =
-                  [];
-                for (const { txID, hex } of transactions) {
-                  const unblindedResults = await this.unblinder.unblind(
-                    ...Transaction.fromHex(hex).outs
-                  );
-                  for (const [vout, unblinded] of unblindedResults.entries()) {
-                    if (unblinded instanceof Error) {
-                      if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
-                      if (unblinded.message === 'Empty script: fee output') continue;
-                      console.error('Error while unblinding', unblinded);
-                      continue;
-                    }
-                    unblindedOutpoints.push([{ txID, vout }, unblinded]);
-                  }
-                }
+                // try to unblind the transaction outputs
+                const unblindedOutpoints = await this.unblinder.unblindTxs(
+                  ...transactions.map(({ hex }) => Transaction.fromHex(hex))
+                );
 
                 await Promise.all([
                   this.walletRepository.updateOutpointBlindingData(unblindedOutpoints),
@@ -101,41 +199,25 @@ export class UpdaterService {
                     Object.fromEntries(transactions.map((tx, i) => [txIDsToFetch[i], tx]))
                   ),
                 ]);
-              } finally {
-                await this.appRepository.updaterLoader.decrement();
-              }
-            } else if (TxDetailsKey.is(key) && changes[key].newValue?.hex) {
-              // for all txs hex change in the store, we'll try unblind the outputs
-              if (changes[key].oldValue && changes[key].oldValue.hex) continue;
-              const [txID] = TxDetailsKey.decode(key);
-              const newTxDetails = changes[key].newValue as TxDetails | undefined;
-              if (!newTxDetails || !newTxDetails.hex) continue; // it means we just deleted the key
-              try {
-                await this.appRepository.updaterLoader.increment();
-                const tx = Transaction.fromHex(newTxDetails.hex);
-                const updateArray: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
-                for (const [vout, output] of tx.outs.entries()) {
-                  const { blindingData } = await this.walletRepository.getOutputBlindingData(
-                    txID,
-                    vout
-                  );
-                  if (blindingData) continue; // already unblinded
-                  const unblindResults = await this.unblinder.unblind(output);
-                  if (unblindResults[0] instanceof Error) {
-                    if (unblindResults[0].message === 'secp256k1_rangeproof_rewind') continue;
-                    if (unblindResults[0].message === 'Empty script: fee output') continue;
-                    console.error('Error while unblinding', unblindResults[0]);
-                    continue;
-                  }
-                  updateArray.push([{ txID, vout }, unblindResults[0]]);
+
+                // let's update the block headers
+                const txDetails = await this.walletRepository.getTxDetails(...txIDsToFetch);
+                const blockHeights = new Set<number>();
+                for (const { height } of Object.values(txDetails)) {
+                  if (height) blockHeights.add(height);
                 }
-                await this.walletRepository.updateOutpointBlindingData(updateArray);
+
+                const blockHeaders = await chainSource.fetchBlockHeaders(Array.from(blockHeights));
+
+                await this.blockHeadersRepository.setBlockHeaders(network, ...blockHeaders);
+                await chainSource.close();
               } finally {
                 await this.appRepository.updaterLoader.decrement();
               }
             }
           } catch (e) {
-            console.error('Updater silent error: ', e);
+            console.error('Updater silent error: ');
+            console.error(e);
             continue;
           }
         }
