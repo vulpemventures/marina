@@ -104,10 +104,6 @@ export class PresenterImpl implements Presenter {
     closeFns.push(
       this.walletRepository.onNewTransaction(async (_, details: TxDetails) => {
         if (!this.state.authenticated.value) return;
-        this.state = await this.updateUtxos();
-        emits(this.state);
-        this.state = await this.updateBalances();
-        emits(this.state);
         const extendedTxDetails = await computeTxDetailsExtended(
           this.appRepository,
           this.walletRepository
