@@ -103,7 +103,14 @@ export function computeTxDetailsExtended(
   walletRepository: WalletRepository
 ) {
   return async (details: TxDetails): Promise<TxDetailsExtended> => {
-    if (!details.hex) throw new Error('tx hex not found');
+    if (!details.hex) {
+      return {
+        ...details,
+        txID: '',
+        txFlow: {},
+        feeAmount: 0,
+      };
+    }
     const transaction = Transaction.fromHex(details.hex);
     const txID = transaction.getId();
 

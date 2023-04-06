@@ -48,7 +48,7 @@ export class DefaultAssetRegistry implements AssetRegistry {
         ticker: assetHash.substring(0, 4),
         precision: 8,
         assetHash,
-      }
+      };
     }
 
     const { name, ticker, precision } = await response.json();

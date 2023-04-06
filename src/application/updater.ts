@@ -125,9 +125,7 @@ export class UpdaterService {
 
   private async fixMissingAssets(network: NetworkString) {
     const assets = await this.assetRepository.getAllAssets(network);
-    const assetsToFetch = assets.filter(
-      (asset) => !asset || asset.name === 'Unknown'
-    )
+    const assetsToFetch = assets.filter((asset) => !asset || asset.name === 'Unknown');
     const registry = new DefaultAssetRegistry(network);
     for (const asset of assetsToFetch) {
       const assetInfo = await registry.getAsset(asset.assetHash);

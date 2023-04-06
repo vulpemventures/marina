@@ -22,7 +22,7 @@ import { AccountFactory } from '../application/account';
 import { extractErrorMessage } from '../extension/utility/error';
 import { getBackgroundPortImplementation } from '../port/background-port';
 import { BlockHeadersAPI } from '../infrastructure/storage/blockheaders-repository';
-import { ChainSource } from '../domain/chainsource';
+import type { ChainSource } from '../domain/chainsource';
 import { WalletRepositoryUnblinder } from '../application/unblinder';
 import { Transaction } from 'liquidjs-lib';
 

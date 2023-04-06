@@ -11,7 +11,7 @@ import Button from './button';
 import Browser from 'webextension-polyfill';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../context/storage-context';
-import { BlockHeader } from '../../domain/chainsource';
+import type { BlockHeader } from '../../domain/chainsource';
 import { useToastContext } from '../context/toast-context';
 
 function txTypeFromTransfer(transfer?: number): TxType {

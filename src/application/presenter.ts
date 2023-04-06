@@ -95,7 +95,7 @@ export class PresenterImpl implements Presenter {
         this.state = {
           ...this.state,
           authenticated: setValue(authenticated),
-        }
+        };
         emits(this.state);
         return Promise.resolve();
       })
@@ -126,7 +126,8 @@ export class PresenterImpl implements Presenter {
         if (!this.state.authenticated.value) return Promise.resolve();
         const existingState = this.state.assets.value.find((a) => a.assetHash === asset.assetHash);
         if (existingState) {
-          if (existingState.name === asset.name && existingState.ticker === asset.ticker) return Promise.resolve();
+          if (existingState.name === asset.name && existingState.ticker === asset.ticker)
+            return Promise.resolve();
           this.state = {
             ...this.state,
             assets: setValue(
@@ -151,21 +152,18 @@ export class PresenterImpl implements Presenter {
         .map((network) => [
           this.walletRepository.onNewUtxo(network as NetworkString)(
             async ({ txID, vout, blindingData }) => {
-        if (!this.state.authenticated.value) return;
+              if (!this.state.authenticated.value) return;
               if (network !== this.state.network) return;
               this.state = {
                 ...this.state,
-                utxos: setValue([
-                  ...this.state.utxos.value,
-                  { txID, vout, blindingData },
-                ]),
+                utxos: setValue([...this.state.utxos.value, { txID, vout, blindingData }]),
               };
               this.state = await this.updateBalances();
               emits(this.state);
             }
           ),
           this.walletRepository.onDeleteUtxo(network as NetworkString)(async ({ txID, vout }) => {
-        if (!this.state.authenticated.value) return;
+            if (!this.state.authenticated.value) return;
             if (network !== this.state.network) return;
             this.state = {
               ...this.state,
