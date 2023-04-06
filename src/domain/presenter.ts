@@ -1,5 +1,5 @@
-import { NetworkString, Asset } from 'marina-provider';
-import { TxDetailsExtended, UnblindedOutput } from './transaction';
+import type { NetworkString, Asset } from 'marina-provider';
+import type { TxDetailsExtended, UnblindedOutput } from './transaction';
 
 export interface LoadingValue<T> {
   value: T;
@@ -17,5 +17,6 @@ export interface PresentationCache {
 // present computes the frontend data from repositories
 // it emits PresentationCache to the frontend
 export interface Presenter {
-  present(onNewCache: (cache: PresentationCache) => void): Promise<() => void>; // returns a function to stop the presenter
+  present(onNewCache: (cache: PresentationCache) => void): Promise<void>; // returns a function to stop the presenter
+  stop(): void;
 }

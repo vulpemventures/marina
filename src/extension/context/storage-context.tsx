@@ -15,7 +15,7 @@ import { OnboardingStorageAPI } from '../../infrastructure/storage/onboarding-re
 import { SendFlowStorageAPI } from '../../infrastructure/storage/send-flow-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository';
-import { PresentationCache } from '../../domain/presenter';
+import type { PresentationCache } from '../../domain/presenter';
 import { PresenterImpl } from '../../application/presenter';
 import { useToastContext } from './toast-context';
 
@@ -57,7 +57,6 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
   useEffect(() => {
     presenter
       .present((newCache) => {
-        console.log('cache', newCache);
         setCache(newCache);
       })
       .catch((e) => {

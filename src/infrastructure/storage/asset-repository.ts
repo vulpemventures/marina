@@ -1,4 +1,4 @@
-import { networks, Transaction } from 'liquidjs-lib';
+import { networks } from 'liquidjs-lib';
 import type { Asset, NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import type { AssetRepository, WalletRepository } from '../../domain/repository';

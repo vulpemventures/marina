@@ -1,14 +1,16 @@
-import { NetworkString } from 'marina-provider';
-import { LoadingValue, PresentationCache, Presenter } from '../domain/presenter';
-import { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
-import { computeBalances, computeTxDetailsExtended, TxDetails } from '../domain/transaction';
+import type { Asset, NetworkString } from 'marina-provider';
+import type { LoadingValue, PresentationCache, Presenter } from '../domain/presenter';
+import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
+import type { TxDetails } from '../domain/transaction';
+import { computeBalances, computeTxDetailsExtended } from '../domain/transaction';
+import { FEATURED_ASSETS } from '../domain/constants';
 
 const createLoadingValue = <T>(value: T): LoadingValue<T> => ({
   value,
   loading: false,
 });
 
-const setValue = <T>(loadingValue: LoadingValue<T>, value: T): LoadingValue<T> => ({
+const setValue = <T>(value: T): LoadingValue<T> => ({
   loading: false,
   value,
 });
@@ -27,6 +29,7 @@ export class PresenterImpl implements Presenter {
     assets: createLoadingValue([]),
     transactions: createLoadingValue([]),
   };
+  private closeFunction: (() => void) | null = null;
 
   constructor(
     private appRepository: AppRepository,
@@ -34,7 +37,14 @@ export class PresenterImpl implements Presenter {
     private assetsRepository: AssetRepository
   ) {}
 
-  async present(emits: (cache: PresentationCache) => void): Promise<() => void> {
+  stop() {
+    if (this.closeFunction) {
+      this.closeFunction();
+      this.closeFunction = null;
+    }
+  }
+
+  async present(emits: (cache: PresentationCache) => void) {
     this.state = {
       ...this.state,
       authenticated: setLoading(this.state.authenticated),
@@ -46,11 +56,9 @@ export class PresenterImpl implements Presenter {
     emits(this.state);
 
     this.state = await this.updateNetwork();
-    emits(this.state);
     this.state = await this.updateAuthenticated();
     emits(this.state);
     this.state = await this.updateUtxos();
-    emits(this.state);
     this.state = await this.updateBalances();
     emits(this.state);
     this.state = await this.updateAssets();
@@ -83,14 +91,19 @@ export class PresenterImpl implements Presenter {
     );
 
     closeFns.push(
-      this.appRepository.onIsAuthenticatedChanged(async () => {
-        this.state = await this.updateAuthenticated();
+      this.appRepository.onIsAuthenticatedChanged(async (authenticated) => {
+        this.state = {
+          ...this.state,
+          authenticated: setValue(authenticated),
+        }
         emits(this.state);
+        return Promise.resolve();
       })
     );
 
     closeFns.push(
       this.walletRepository.onNewTransaction(async (_, details: TxDetails) => {
+        if (!this.state.authenticated.value) return;
         this.state = await this.updateUtxos();
         emits(this.state);
         this.state = await this.updateBalances();
@@ -102,10 +115,34 @@ export class PresenterImpl implements Presenter {
         this.state = {
           ...this.state,
           transactions: setValue(
-            this.state.transactions,
             [extendedTxDetails, ...this.state.transactions.value].sort(sortTxDetails)
           ),
         };
+      })
+    );
+
+    closeFns.push(
+      this.assetsRepository.onNewAsset((asset) => {
+        if (!this.state.authenticated.value) return Promise.resolve();
+        const existingState = this.state.assets.value.find((a) => a.assetHash === asset.assetHash);
+        if (existingState) {
+          if (existingState.name === asset.name && existingState.ticker === asset.ticker) return Promise.resolve();
+          this.state = {
+            ...this.state,
+            assets: setValue(
+              this.state.assets.value.map((a) => (a.assetHash === asset.assetHash ? asset : a))
+            ),
+          };
+          emits(this.state);
+          return Promise.resolve();
+        }
+
+        this.state = {
+          ...this.state,
+          assets: setValue([...this.state.assets.value, asset]),
+        };
+        emits(this.state);
+        return Promise.resolve();
       })
     );
 
@@ -114,10 +151,11 @@ export class PresenterImpl implements Presenter {
         .map((network) => [
           this.walletRepository.onNewUtxo(network as NetworkString)(
             async ({ txID, vout, blindingData }) => {
+        if (!this.state.authenticated.value) return;
               if (network !== this.state.network) return;
               this.state = {
                 ...this.state,
-                utxos: setValue(this.state.utxos, [
+                utxos: setValue([
                   ...this.state.utxos.value,
                   { txID, vout, blindingData },
                 ]),
@@ -127,11 +165,11 @@ export class PresenterImpl implements Presenter {
             }
           ),
           this.walletRepository.onDeleteUtxo(network as NetworkString)(async ({ txID, vout }) => {
+        if (!this.state.authenticated.value) return;
             if (network !== this.state.network) return;
             this.state = {
               ...this.state,
               utxos: setValue(
-                this.state.utxos,
                 this.state.utxos.value.filter((utxo) => utxo.txID !== txID || utxo.vout !== vout)
               ),
             };
@@ -144,11 +182,11 @@ export class PresenterImpl implements Presenter {
 
     closeFns.push(
       this.walletRepository.onUnblindingEvent(async ({ txID, vout, blindingData }) => {
+        if (!this.state.authenticated.value) return;
         if (this.state.utxos.value.find((utxo) => utxo.txID === txID && utxo.vout === vout)) {
           this.state = {
             ...this.state,
             utxos: setValue(
-              this.state.utxos,
               this.state.utxos.value.map((utxo) =>
                 utxo.txID === txID && utxo.vout === vout ? { txID, vout, blindingData } : utxo
               )
@@ -163,7 +201,7 @@ export class PresenterImpl implements Presenter {
       })
     );
 
-    return () => {
+    this.closeFunction = () => {
       closeFns.forEach((fn) => fn());
     };
   }
@@ -181,7 +219,7 @@ export class PresenterImpl implements Presenter {
     const { isAuthenticated } = await this.appRepository.getStatus();
     return {
       ...this.state,
-      authenticated: setValue(this.state.authenticated, isAuthenticated),
+      authenticated: setValue(isAuthenticated),
     };
   }
 
@@ -189,22 +227,22 @@ export class PresenterImpl implements Presenter {
     const utxos = await this.walletRepository.getUtxos(this.state.network);
     return {
       ...this.state,
-      utxos: setValue(this.state.utxos, utxos),
+      utxos: setValue(utxos),
     };
   }
 
   private async updateBalances(): Promise<PresentationCache> {
-    return {
+    return Promise.resolve({
       ...this.state,
-      balances: setValue(this.state.balances, computeBalances(this.state.utxos.value)),
-    };
+      balances: setValue(computeBalances(this.state.utxos.value)),
+    });
   }
 
   private async updateAssets(): Promise<PresentationCache> {
     const assets = await this.assetsRepository.getAllAssets(this.state.network);
     return {
       ...this.state,
-      assets: setValue(this.state.assets, assets),
+      assets: setValue(sortAssets(assets)),
     };
   }
 
@@ -218,7 +256,7 @@ export class PresenterImpl implements Presenter {
     );
     return {
       ...this.state,
-      transactions: setValue(this.state.transactions, extendedTxDetails),
+      transactions: setValue(extendedTxDetails.sort(sortTxDetails)),
     };
   }
 }
@@ -230,4 +268,33 @@ function sortTxDetails(a: TxDetails, b: TxDetails): number {
   if (!a.height || a.height === -1) return -1;
   if (!b.height || b.height === -1) return 1;
   return b.height - a.height;
+}
+
+/**
+ * Takes a list of assets, and sort it by the following criteria:
+ * - first, featured assets order by L-BTC, USDT and LCAD
+ * - all remaining assets in no particular order
+ * @param assets list of assets in no particular order
+ * @returns assets sorted by criteria defined above
+ */
+function sortAssets(assets: Asset[]): Asset[] {
+  let newAsset;
+  const newAssetTicker = 'Any';
+  const featuredAssets: Asset[] = [];
+  const remainingAssets = [];
+  for (const asset of assets) {
+    if (FEATURED_ASSETS.includes(asset.assetHash)) {
+      featuredAssets.push(asset);
+      continue;
+    }
+    if (asset.ticker === newAssetTicker) {
+      newAsset = asset;
+    } else {
+      remainingAssets.push(asset);
+    }
+  }
+  // join the two sets of assets and add 'Any' at the end of the list if it exists
+  const sortedAssets = [...featuredAssets, ...remainingAssets];
+  if (newAsset) sortedAssets.push(newAsset);
+  return sortedAssets;
 }

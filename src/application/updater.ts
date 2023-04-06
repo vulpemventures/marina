@@ -1,4 +1,5 @@
-import { Transaction, TxOutput } from 'liquidjs-lib';
+import type { TxOutput } from 'liquidjs-lib';
+import { Transaction } from 'liquidjs-lib';
 import Browser from 'webextension-polyfill';
 import type { Unblinder } from './unblinder';
 import { WalletRepositoryUnblinder } from './unblinder';
@@ -12,9 +13,10 @@ import type {
 } from '../domain/repository';
 import { TxIDsKey } from '../infrastructure/storage/wallet-repository';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
-import { NetworkString } from 'marina-provider';
+import type { NetworkString } from 'marina-provider';
 import { AppStorageKeys } from '../infrastructure/storage/app-repository';
-import { ChainSource } from '../domain/chainsource';
+import type { ChainSource } from '../domain/chainsource';
+import { DefaultAssetRegistry } from '../port/asset-registry';
 
 /**
  * Updater is a class that listens to the chrome storage changes and triggers the right actions
@@ -32,7 +34,7 @@ export class UpdaterService {
     private walletRepository: WalletRepository,
     private appRepository: AppRepository,
     private blockHeadersRepository: BlockheadersRepository,
-    assetRepository: AssetRepository,
+    private assetRepository: AssetRepository,
     zkpLib: ZKPInterface
   ) {
     this.unblinder = new WalletRepositoryUnblinder(
@@ -67,15 +69,16 @@ export class UpdaterService {
       const txsDetailsRecord = await this.walletRepository.getTxDetails(...txs);
       const chainSource = await this.appRepository.getChainSource(network);
       if (!chainSource) throw new Error('Chain source not found for network ' + network);
-      await this.fixMissingHex(chainSource, txsDetailsRecord);
+      const newDetails = await this.fixMissingHex(chainSource, txsDetailsRecord);
 
-      const txsDetails = Object.values(txsDetailsRecord);
-      await Promise.allSettled([
+      const txsDetails = [...Object.values(txsDetailsRecord), ...newDetails];
+      await Promise.all([
         this.fixMissingBlockHeaders(network, chainSource, txsDetails).finally(async () => {
           await chainSource.close();
         }),
         this.fixMissingUnblindingData(txsDetails),
       ]);
+      await this.fixMissingAssets(network);
     } finally {
       this.processingCount -= 1;
     }
@@ -102,7 +105,10 @@ export class UpdaterService {
     await this.blockHeadersRepository.setBlockHeaders(network, ...blockHeaders);
   }
 
-  private async fixMissingHex(chainSource: ChainSource, txsDetails: Record<string, TxDetails>) {
+  private async fixMissingHex(
+    chainSource: ChainSource,
+    txsDetails: Record<string, TxDetails>
+  ): Promise<TxDetails[]> {
     const missingHexes = Object.entries(txsDetails).filter(
       ([, txDetails]) => txDetails.hex === undefined
     );
@@ -114,6 +120,21 @@ export class UpdaterService {
         return acc;
       }, {} as Record<string, TxDetails>)
     );
+    return transactions.map((v, index) => ({ ...v, ...missingHexes[index][1] }));
+  }
+
+  private async fixMissingAssets(network: NetworkString) {
+    const assets = await this.assetRepository.getAllAssets(network);
+    const assetsToFetch = assets.filter(
+      (asset) => !asset || asset.name === 'Unknown'
+    )
+    const registry = new DefaultAssetRegistry(network);
+    for (const asset of assetsToFetch) {
+      const assetInfo = await registry.getAsset(asset.assetHash);
+      if (assetInfo) {
+        await this.assetRepository.addAsset(asset.assetHash, assetInfo);
+      }
+    }
   }
 
   private async fixMissingUnblindingData(txDetails: TxDetails[]) {
@@ -152,6 +173,30 @@ export class UpdaterService {
         continue;
       }
       updateArray.push([{ txID, vout }, unblinded]);
+    }
+
+    const assetsInArray = updateArray.map(([, { asset }]) => asset);
+    const toFetchAssets = [];
+    for (const asset of assetsInArray) {
+      const fromRepo = await this.assetRepository.getAsset(asset);
+      if (!fromRepo || fromRepo.ticker === fromRepo.assetHash.substring(0, 4)) {
+        toFetchAssets.push(asset);
+      }
+    }
+
+    try {
+      if (toFetchAssets.length > 0) {
+        const network = await this.appRepository.getNetwork();
+        if (network) {
+          const registry = new DefaultAssetRegistry(network);
+          const assets = await Promise.all(toFetchAssets.map((a) => registry.getAsset(a)));
+          await Promise.allSettled(
+            assets.map((asset) => this.assetRepository.addAsset(asset.assetHash, asset))
+          );
+        }
+      }
+    } catch (e) {
+      console.error('Error while fetching assets', e);
     }
 
     await this.walletRepository.updateOutpointBlindingData(updateArray);
