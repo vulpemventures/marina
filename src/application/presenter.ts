@@ -136,7 +136,7 @@ export class PresenterImpl implements Presenter {
 
         this.state = {
           ...this.state,
-          assets: setValue([...this.state.assets.value, asset]),
+          assets: setValue(sortAssets([...this.state.assets.value, asset])),
         };
         emits(this.state);
         return Promise.resolve();
