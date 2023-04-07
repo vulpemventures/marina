@@ -35,8 +35,8 @@ jobs:
 
       - name: Increment manifest version
         run: |
-          jq '.version = "${{ steps.next_version.outputs.version }}"' ./public/manifest.json  > ./public/manifest.tmp.json
-          mv ./public/manifest.tmp.json ./public/manifest.json
+          jq '.version = "${{ steps.next_version.outputs.version }}"' ./manifest/manifest.v3.json  > ./manifest/manifest.v3.tmp.json
+          mv ./manifest/manifest.v3.tmp.json ./manifest/manifest.v3.json
 
       - name: Increment package.json version
         run: |
@@ -47,8 +47,8 @@ jobs:
       - name: Install and build
         run: |
           yarn install
-          yarn run build
-          yarn run web-ext:build
+          yarn build:v3
+          yarn web-ext:build
 
       # Release to github
       - name: Create Release
