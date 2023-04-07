@@ -31,7 +31,7 @@ const ConnectSpend: React.FC = () => {
 
   const spendParameters = useSelectPopupSpendParameters();
 
-  const getAssetInfo = (asset: string) => cache?.assets.value.find((a) => a.assetHash === asset);
+  const getAssetInfo = (asset: string) => cache?.assetsDetails.value[asset];
 
   const getTicker = (asset: string) => {
     const assetInfo = getAssetInfo(asset);

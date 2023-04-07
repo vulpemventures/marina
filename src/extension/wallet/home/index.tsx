@@ -23,15 +23,19 @@ import { useStorageContext } from '../../context/storage-context';
 const Home: React.FC = () => {
   const history = useHistory();
   const { appRepository, sendFlowRepository, cache } = useStorageContext();
-  const [sortedAssets, setSortedAssets] = React.useState<Asset[]>(cache?.assets.value || []);
+  const [sortedAssets, setSortedAssets] = React.useState<Asset[]>([]);
 
   useEffect(() => {
     setSortedAssets(
-      [...(cache?.assets.value || [])]
-        .filter(
-          (asset: Asset) =>
-            cache?.transactions.value.find((tx) => tx.txFlow[asset.assetHash] !== undefined) !==
-            undefined
+      Array.from(cache?.walletAssets.value || [])
+        .map(
+          (assetHash) =>
+            cache?.assetsDetails.value[assetHash] || {
+              name: 'Unknown',
+              ticker: assetHash.substring(0, 4),
+              precision: 8,
+              assetHash,
+            }
         )
         .sort((a, b) => {
           if (a.ticker === 'L-BTC') return -Infinity;
@@ -42,7 +46,7 @@ const Home: React.FC = () => {
           return 0;
         })
     );
-  }, [cache?.assets, cache?.balances, cache?.transactions]);
+  }, [cache?.walletAssets, cache?.assetsDetails, cache?.balances, cache?.transactions]);
 
   const handleAssetBalanceButtonClick = (asset: Asset) => {
     history.push({
@@ -109,12 +113,16 @@ const Home: React.FC = () => {
         <div className="h-60">
           <ButtonList
             loadingText={(() => {
-              if (cache?.assets.loading) return 'Loading assets...';
+              if (cache?.assetsDetails.loading) return 'Loading assets...';
               if (cache?.balances.loading) return 'Loading balances...';
               if (cache?.transactions.loading) return 'Loading transactions...';
+              if (cache?.walletAssets.loading) return 'Loading wallet assets...';
             })()}
             loading={
-              cache?.transactions.loading || cache?.assets.loading || cache?.balances.loading
+              cache?.transactions.loading ||
+              cache?.assetsDetails.loading ||
+              cache?.balances.loading ||
+              cache?.walletAssets.loading
             }
             title="Assets"
             emptyText="Click receive to deposit asset..."

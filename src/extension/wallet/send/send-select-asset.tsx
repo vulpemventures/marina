@@ -15,13 +15,21 @@ const SendSelectAsset: React.FC = () => {
     history.push(SEND_ADDRESS_AMOUNT_ROUTE);
   };
 
-  if (cache?.assets.loading || cache?.balances.loading) return <Spinner />;
+  if (cache?.walletAssets.loading || cache?.balances.loading) return <Spinner />;
 
   return (
     <AssetListScreen
       title="Send Asset"
       onClick={handleSend}
-      assets={cache?.assets.value || []}
+      assets={Array.from(cache?.walletAssets.value || []).map(
+        (assetHash) =>
+          cache?.assetsDetails.value[assetHash] || {
+            name: 'Unknown',
+            ticker: assetHash.substring(0, 4),
+            precision: 8,
+            assetHash,
+          }
+      )}
       balances={cache?.balances.value || {}}
       emptyText="You don't have any assets to send."
     />

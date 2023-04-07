@@ -132,9 +132,6 @@ export function computeTxDetailsExtended(
 
       if (elementsValue.isConfidential) {
         const [data] = await walletRepository.getOutputBlindingData({ txID, vout: outIndex });
-        if (txID === '58a51da2f910e9a9905680470544a5ab04781cef1a491319126aa32e17286133') {
-          console.log(data.blindingData?.asset, data.blindingData?.value);
-        }
         if (!data || !data.blindingData) continue;
         txFlow[data.blindingData.asset] =
           (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
@@ -145,9 +142,6 @@ export function computeTxDetailsExtended(
       if (script.decompile(output.script)?.includes(script.OPS.OP_RETURN)) continue;
       const asset = AssetHash.fromBytes(output.asset).hex;
       txFlow[asset] = (txFlow[asset] || 0) + elementsValue.number;
-    }
-    if (txID === '58a51da2f910e9a9905680470544a5ab04781cef1a491319126aa32e17286133') {
-      console.log(txFlow);
     }
 
     for (let inIndex = 0; inIndex < transaction.ins.length; inIndex++) {

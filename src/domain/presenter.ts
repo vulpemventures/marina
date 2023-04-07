@@ -12,9 +12,10 @@ export interface PresentationCache {
   authenticated: LoadingValue<boolean>;
   balances: LoadingValue<Record<string, number>>;
   utxos: LoadingValue<UnblindedOutput[]>;
-  assets: LoadingValue<Asset[]>;
+  assetsDetails: LoadingValue<Record<string, Asset>>;
   transactions: LoadingValue<TxDetailsExtended[]>;
   blockHeaders: LoadingValue<Record<number, BlockHeader>>;
+  walletAssets: LoadingValue<Set<string>>;
 }
 // present computes the frontend data from repositories
 // it emits PresentationCache to the frontend
