@@ -133,9 +133,6 @@ export function computeTxDetailsExtended(
       if (elementsValue.isConfidential) {
         const [data] = await walletRepository.getOutputBlindingData({ txID, vout: outIndex });
         if (!data || !data.blindingData) continue;
-        if (txID === '1af39e52beff26934c60db2c938c79ba7479f726a25b78212cc556d668b4f936') {
-          console.log('adding', data.blindingData.value, 'to', data.blindingData.asset);
-        }
         txFlow[data.blindingData.asset] =
           (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
         continue;
@@ -153,7 +150,6 @@ export function computeTxDetailsExtended(
 
       const output = await walletRepository.getWitnessUtxo(inputTxID, inIndex);
       if (!output) continue;
-      if (!scriptsState[output.script.toString('hex')]) continue;
       const elementsValue = ElementsValue.fromBytes(output.value);
 
       if (elementsValue.isConfidential) {
@@ -162,10 +158,6 @@ export function computeTxDetailsExtended(
           vout: inIndex,
         });
         if (!data || !data.blindingData) continue;
-        if (txID === '1af39e52beff26934c60db2c938c79ba7479f726a25b78212cc556d668b4f936') {
-          console.log(inputTxID, inIndex, output.script.toString('hex'));
-          console.log('removing', data.blindingData.value, 'to', data.blindingData.asset);
-        }
         txFlow[data.blindingData.asset] =
           (txFlow[data.blindingData.asset] || 0) - data.blindingData.value;
         continue;
@@ -173,9 +165,6 @@ export function computeTxDetailsExtended(
 
       const asset = AssetHash.fromBytes(output.asset).hex;
       txFlow[asset] = (txFlow[asset] || 0) - elementsValue.number;
-    }
-    if (txID === '1af39e52beff26934c60db2c938c79ba7479f726a25b78212cc556d668b4f936') {
-      console.log('txFlow', txFlow);
     }
     const network = await appRepository.getNetwork();
     if (!network) throw new Error('network not found');
@@ -188,10 +177,6 @@ export function computeTxDetailsExtended(
       } else {
         delete txFlow[networks[network].assetHash];
       }
-    }
-
-    if (txID === '1af39e52beff26934c60db2c938c79ba7479f726a25b78212cc556d668b4f936') {
-      console.log('txFlow', txFlow);
     }
 
     return {
