@@ -17,6 +17,7 @@ import type { NetworkString } from 'marina-provider';
 import { AppStorageKeys } from '../infrastructure/storage/app-repository';
 import type { ChainSource } from '../domain/chainsource';
 import { DefaultAssetRegistry } from '../port/asset-registry';
+import { AccountFactory } from './account';
 
 /**
  * Updater is a class that listens to the chrome storage changes and triggers the right actions
@@ -64,6 +65,7 @@ export class UpdaterService {
   async checkAndFixMissingTransactionsData(network: NetworkString) {
     this.processingCount += 1;
     try {
+      await this.updateLastestHistory(network);
       const txs = await this.walletRepository.getTransactions(network);
       if (txs.length === 0) return;
       const txsDetailsRecord = await this.walletRepository.getTxDetails(...txs);
@@ -82,6 +84,48 @@ export class UpdaterService {
     } finally {
       this.processingCount -= 1;
     }
+  }
+
+  private async updateLastestHistory(network: NetworkString) {
+    const LAST_ADDRESSES_COUNT = 30;
+    const chainSource = await this.appRepository.getChainSource(network);
+    if (!chainSource) throw new Error('Chain source not found for network ' + network);
+    const accountFactory = await AccountFactory.create(this.walletRepository);
+    const accounts = await accountFactory.makeAll(network);
+    // get the last max 30 addresses for all accounts
+    const scripts = [];
+
+    for (const account of accounts) {
+      const nextIndexes = await account.getNextIndexes();
+      const scriptsAccounts = await this.walletRepository.getAccountScripts(network, account.name);
+      const lastScripts = Object.entries(scriptsAccounts)
+        .filter(([_, { derivationPath }]) => {
+          if (!derivationPath) return false;
+          const splittedPath = derivationPath.split('/');
+          const index = splittedPath.pop();
+          const isChange = splittedPath.pop();
+
+          if (!index) return false;
+          return (
+            parseInt(index) >=
+            (isChange ? nextIndexes.internal : nextIndexes.external) - LAST_ADDRESSES_COUNT
+          );
+        })
+        .map(([script]) => Buffer.from(script, 'hex'));
+
+      scripts.push(...lastScripts);
+    }
+
+    const histories = await chainSource.fetchHistories(scripts);
+    await Promise.all([
+      this.walletRepository.addTransactions(
+        network,
+        ...histories.flat().map(({ tx_hash }) => tx_hash)
+      ),
+      this.walletRepository.updateTxDetails(
+        Object.fromEntries(histories.flat().map(({ tx_hash, height }) => [tx_hash, { height }]))
+      ),
+    ]);
   }
 
   private async fixMissingBlockHeaders(

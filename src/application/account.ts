@@ -429,7 +429,7 @@ export class Account {
     return results;
   }
 
-  private async getNextIndexes(): Promise<{ internal: number; external: number }> {
+  async getNextIndexes(): Promise<{ internal: number; external: number }> {
     if (!this.walletRepository || !this.name) return { internal: 0, external: 0 };
     const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
       this.name

@@ -1,14 +1,22 @@
 import type { Asset, NetworkString } from 'marina-provider';
 import type { LoadingValue, PresentationCache, Presenter } from '../domain/presenter';
-import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
+import type {
+  AppRepository,
+  AssetRepository,
+  BlockheadersRepository,
+  WalletRepository,
+} from '../domain/repository';
 import type { TxDetails } from '../domain/transaction';
 import { computeBalances, computeTxDetailsExtended } from '../domain/transaction';
 import { FEATURED_ASSETS } from '../domain/constants';
+import type { BlockHeader } from '../domain/chainsource';
 
-const createLoadingValue = <T>(value: T): LoadingValue<T> => ({
-  value,
-  loading: false,
-});
+function createLoadingValue<T>(value: T): LoadingValue<T> {
+  return {
+    value,
+    loading: false,
+  };
+}
 
 const setValue = <T>(value: T): LoadingValue<T> => ({
   loading: false,
@@ -28,13 +36,15 @@ export class PresenterImpl implements Presenter {
     utxos: createLoadingValue([]),
     assets: createLoadingValue([]),
     transactions: createLoadingValue([]),
+    blockHeaders: createLoadingValue<Record<number, BlockHeader>>({}),
   };
   private closeFunction: (() => void) | null = null;
 
   constructor(
     private appRepository: AppRepository,
     private walletRepository: WalletRepository,
-    private assetsRepository: AssetRepository
+    private assetsRepository: AssetRepository,
+    private blockHeadersRepository: BlockheadersRepository
   ) {}
 
   stop() {
@@ -52,6 +62,7 @@ export class PresenterImpl implements Presenter {
       utxos: setLoading(this.state.utxos),
       assets: setLoading(this.state.assets),
       transactions: setLoading(this.state.transactions),
+      blockHeaders: setLoading(this.state.blockHeaders),
     };
     emits(this.state);
 
@@ -65,8 +76,25 @@ export class PresenterImpl implements Presenter {
     emits(this.state);
     this.state = await this.updateTransactions();
     emits(this.state);
+    this.state = await this.updateBlockHeaders();
+    emits(this.state);
 
     const closeFns: (() => void)[] = [];
+
+    closeFns.push(
+      this.blockHeadersRepository.onNewBlockHeader((network, blockHeader) => {
+        if (network !== this.state.network) return Promise.resolve();
+        this.state = {
+          ...this.state,
+          blockHeaders: setValue({
+            ...this.state.blockHeaders.value,
+            [blockHeader.height]: blockHeader,
+          }),
+        };
+        emits(this.state);
+        return Promise.resolve();
+      })
+    );
 
     closeFns.push(
       this.appRepository.onNetworkChanged(async () => {
@@ -104,9 +132,11 @@ export class PresenterImpl implements Presenter {
     closeFns.push(
       this.walletRepository.onNewTransaction(async (_, details: TxDetails) => {
         if (!this.state.authenticated.value) return;
+        const scripts = await this.walletRepository.getAccountScripts(this.state.network);
         const extendedTxDetails = await computeTxDetailsExtended(
           this.appRepository,
-          this.walletRepository
+          this.walletRepository,
+          scripts
         )(details);
         this.state = {
           ...this.state,
@@ -243,14 +273,24 @@ export class PresenterImpl implements Presenter {
   private async updateTransactions(): Promise<PresentationCache> {
     const transactions = await this.walletRepository.getTransactions(this.state.network);
     const details = await this.walletRepository.getTxDetails(...transactions);
+    const scripts = await this.walletRepository.getAccountScripts(this.state.network);
     const extendedTxDetails = await Promise.all(
       Object.values(details).map(
-        computeTxDetailsExtended(this.appRepository, this.walletRepository)
+        computeTxDetailsExtended(this.appRepository, this.walletRepository, scripts)
       )
     );
     return {
       ...this.state,
       transactions: setValue(extendedTxDetails.sort(sortTxDetails)),
+    };
+  }
+
+  private async updateBlockHeaders(): Promise<PresentationCache> {
+    const blockHeaders = await this.blockHeadersRepository.getAllBlockHeaders(this.state.network);
+
+    return {
+      ...this.state,
+      blockHeaders: setValue(blockHeaders),
     };
   }
 }

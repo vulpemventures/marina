@@ -251,7 +251,11 @@ describe('Application Layer', () => {
         assetRepository,
         zkpLib
       );
-      const subscriber = new SubscriberService(walletRepository, appRepository);
+      const subscriber = new SubscriberService(
+        walletRepository,
+        appRepository,
+        blockHeadersRepository
+      );
       const seed = await mnemonicToSeed(mnemonic);
       await updater.start();
       await subscriber.start();

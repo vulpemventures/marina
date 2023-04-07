@@ -488,7 +488,9 @@ export class WalletStorageAPI implements WalletRepository {
         .filter(
           ([key, value]) =>
             ScriptDetailsKey.is(key) &&
-            names.includes((value as ScriptDetails).accountName) &&
+            (names !== undefined && names.length > 0
+              ? names.includes((value as ScriptDetails).accountName)
+              : true) &&
             (value as ScriptDetails).networks.includes(network)
         )
         .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails])

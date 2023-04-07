@@ -60,7 +60,7 @@ const ShellPopUp: React.FC<Props> = ({
 
   const [updating, setUpdating] = useState(false);
 
-  const goToHome = async () => {
+  const goToHomeOrUpdate = async () => {
     if (history.location.pathname !== DEFAULT_ROUTE) {
       await sendFlowRepository.reset();
       history.push(DEFAULT_ROUTE);
@@ -141,7 +141,7 @@ const ShellPopUp: React.FC<Props> = ({
       <header>
         <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center content-center justify-between h-12 border-b-2">
           <div className="flex flex-row items-center">
-            <button onClick={goToHome}>
+            <button onClick={goToHomeOrUpdate}>
               <img
                 className={classNames('px-4', { 'animate-spin': updating })}
                 src="assets/images/marina-logo.svg"

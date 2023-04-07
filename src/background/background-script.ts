@@ -53,7 +53,11 @@ const updaterService = new UpdaterService(
   assetRepository,
   zkpLib
 );
-const subscriberService = new SubscriberService(walletRepository, appRepository);
+const subscriberService = new SubscriberService(
+  walletRepository,
+  appRepository,
+  blockHeadersRepository
+);
 const taxiService = new TaxiUpdater(taxiRepository, appRepository, assetRepository);
 
 let started = false;

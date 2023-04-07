@@ -48,7 +48,12 @@ const StorageContext = createContext<StorageContextProps>({
   blockHeadersRepository,
 });
 
-const presenter = new PresenterImpl(appRepository, walletRepository, assetRepository);
+const presenter = new PresenterImpl(
+  appRepository,
+  walletRepository,
+  assetRepository,
+  blockHeadersRepository
+);
 
 export const StorageProvider = ({ children }: { children: React.ReactNode }) => {
   const [cache, setCache] = useState<PresentationCache>();

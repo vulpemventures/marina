@@ -210,6 +210,8 @@ export interface SendFlowRepository {
 export interface BlockheadersRepository {
   getBlockHeader(network: NetworkString, height: number): Promise<BlockHeader | undefined>;
   setBlockHeaders(network: NetworkString, ...blockHeaders: BlockHeader[]): Promise<void>;
+  getAllBlockHeaders(network: NetworkString): Promise<Record<number, BlockHeader>>;
+  onNewBlockHeader: EventEmitter<[network: NetworkString, blockHeader: BlockHeader]>;
 }
 
 export async function init(appRepository: AppRepository, sendFlowRepository: SendFlowRepository) {
