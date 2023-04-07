@@ -11,7 +11,7 @@
     "storage",
     "unlimitedStorage",
     "idle",
-    "alarms"  
+    "alarms"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
@@ -49,9 +49,18 @@
     },
     "default_title": "Marina"
   },
-  "web_accessible_resources": [{
-    "resources": ["inject-script.js"],
-    "matches": ["https://*/*", "http://*/*"],
-    "extension_ids": ["*"]
-  }]
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "inject-script.js"
+      ],
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "extension_ids": [
+        "*"
+      ]
+    }
+  ]
 }
