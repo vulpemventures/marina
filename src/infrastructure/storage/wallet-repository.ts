@@ -1,7 +1,7 @@
 // @ts-ignore
 import coinselect from 'coinselect';
 // import coinselectSplit from 'coinselect/split';
-import type { AccountID, NetworkString, ScriptDetails } from 'marina-provider';
+import type { NetworkString, ScriptDetails } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import type { TxOutput } from 'liquidjs-lib';
 import { Transaction } from 'liquidjs-lib';
@@ -16,7 +16,6 @@ import type { AccountDetails, WalletRepository, Outpoint } from '../../domain/re
 import { DynamicStorageKey } from './dynamic-key';
 import type { Encrypted } from '../../domain/encryption';
 import { CoinSelectionError } from '../../domain/errors';
-import { MainAccountLegacy, MainAccount, MainAccountTest } from '../../application/account';
 
 type LockedOutpoint = Outpoint & {
   until: number; // timestamp in milliseconds, after which the outpoint should be unlocked
@@ -483,7 +482,6 @@ export class WalletStorageAPI implements WalletRepository {
     network: NetworkString,
     ...names: string[]
   ): Promise<Record<string, ScriptDetails>> {
-    if (!names || names.length === 0) names = getMainAccountsIDs(network);
     const wholeStorage = await Browser.storage.local.get(null);
     return Object.fromEntries(
       Object.entries(wholeStorage)
@@ -547,13 +545,5 @@ export class WalletStorageAPI implements WalletRepository {
 
     if (!lockedOutpoints) return new Set();
     return new Set(lockedOutpoints.map((o: any) => `${o.txID}:${o.vout}`));
-  }
-}
-
-function getMainAccountsIDs(network: NetworkString): AccountID[] {
-  if (network === 'liquid') {
-    return [MainAccountLegacy, MainAccount];
-  } else {
-    return [MainAccountLegacy, MainAccountTest];
   }
 }

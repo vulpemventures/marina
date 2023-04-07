@@ -10,6 +10,7 @@ import type { TxDetails } from '../domain/transaction';
 import { computeBalances, computeTxDetailsExtended } from '../domain/transaction';
 import { FEATURED_ASSETS } from '../domain/constants';
 import type { BlockHeader } from '../domain/chainsource';
+import { MainAccount, MainAccountLegacy, MainAccountTest } from './account';
 
 function createLoadingValue<T>(value: T): LoadingValue<T> {
   return {
@@ -132,7 +133,11 @@ export class PresenterImpl implements Presenter {
     closeFns.push(
       this.walletRepository.onNewTransaction(async (_, details: TxDetails) => {
         if (!this.state.authenticated.value) return;
-        const scripts = await this.walletRepository.getAccountScripts(this.state.network);
+        const scripts = await this.walletRepository.getAccountScripts(
+          this.state.network,
+          MainAccountLegacy,
+          this.state.network === 'liquid' ? MainAccount : MainAccountTest
+        );
         const extendedTxDetails = await computeTxDetailsExtended(
           this.appRepository,
           this.walletRepository,
@@ -273,7 +278,11 @@ export class PresenterImpl implements Presenter {
   private async updateTransactions(): Promise<PresentationCache> {
     const transactions = await this.walletRepository.getTransactions(this.state.network);
     const details = await this.walletRepository.getTxDetails(...transactions);
-    const scripts = await this.walletRepository.getAccountScripts(this.state.network);
+    const scripts = await this.walletRepository.getAccountScripts(
+      this.state.network,
+      MainAccountLegacy,
+      this.state.network === 'liquid' ? MainAccount : MainAccountTest
+    );
     const extendedTxDetails = await Promise.all(
       Object.values(details).map(
         computeTxDetailsExtended(this.appRepository, this.walletRepository, scripts)
