@@ -14,7 +14,7 @@ import {
 } from '../src/application/account';
 import { BlinderService } from '../src/application/blinder';
 import { SignerService } from '../src/application/signer';
-import { UpdaterService } from '../src/background/updater';
+import { UpdaterService } from '../src/application/updater';
 import { SubscriberService } from '../src/background/subscriber';
 import {
   BlockstreamExplorerURLs,
@@ -24,6 +24,7 @@ import {
 import { AppStorageAPI } from '../src/infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../src/infrastructure/storage/asset-repository';
 import { WalletStorageAPI } from '../src/infrastructure/storage/wallet-repository';
+import { BlockHeadersAPI } from '../src/infrastructure/storage/blockheaders-repository';
 import { PsetBuilder } from '../src/domain/pset';
 import { faucet, sleep } from './_regtest';
 import captchaArtifact from './fixtures/customscript/transfer_with_captcha.ionio.json';
@@ -47,6 +48,7 @@ const appRepository = new AppStorageAPI();
 const walletRepository = new WalletStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
+const blockHeadersRepository = new BlockHeadersAPI();
 const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
 
 let factory: AccountFactory;
@@ -155,6 +157,7 @@ describe('Application Layer', () => {
         const updater = new UpdaterService(
           walletRepository,
           appRepository,
+          blockHeadersRepository,
           assetRepository,
           zkpLib
         );
@@ -241,8 +244,18 @@ describe('Application Layer', () => {
 
     beforeAll(async () => {
       const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
-      const updater = new UpdaterService(walletRepository, appRepository, assetRepository, zkpLib);
-      const subscriber = new SubscriberService(walletRepository, appRepository);
+      const updater = new UpdaterService(
+        walletRepository,
+        appRepository,
+        blockHeadersRepository,
+        assetRepository,
+        zkpLib
+      );
+      const subscriber = new SubscriberService(
+        walletRepository,
+        appRepository,
+        blockHeadersRepository
+      );
       const seed = await mnemonicToSeed(mnemonic);
       await updater.start();
       await subscriber.start();

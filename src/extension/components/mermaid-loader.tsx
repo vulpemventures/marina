@@ -13,4 +13,4 @@ const MermaidLoader: React.FC<MermaidLoaderProps> = ({ className }) => {
   return <div className={className} ref={mermaidLoaderRef} />;
 };
 
-export default MermaidLoader;
+export default React.memo(MermaidLoader);

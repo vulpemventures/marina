@@ -115,11 +115,11 @@ export class AccountFactory {
 
 // Account is a readonly way to interact with the account data (transactions, utxos, scripts, etc.)
 export class Account {
-  private network: networks.Network;
   private node: BIP32Interface;
   private blindingKeyNode: Slip77Interface;
   private walletRepository: WalletRepository;
   private _cacheAccountType: AccountType | undefined;
+  readonly network: networks.Network;
   readonly name: string;
 
   static BASE_DERIVATION_PATH = "m/84'/1776'/0'";
@@ -241,6 +241,7 @@ export class Account {
     gapLimit = GAP_LIMIT,
     start?: { internal: number; external: number }
   ): Promise<{
+    txIDsFromChain: string[];
     next: { internal: number; external: number };
   }> {
     const type = await this.getAccountType();
@@ -272,7 +273,6 @@ export class Account {
 
         const scripts = scriptsWithDetails.map(([script]) => h2b(script));
         const histories = await chainSource.fetchHistories(scripts);
-
         for (const [index, history] of histories.entries()) {
           tempRestoredScripts[scriptsWithDetails[index][0]] = scriptsWithDetails[index][1];
           if (history.length > 0) {
@@ -313,6 +313,7 @@ export class Account {
     ]);
 
     return {
+      txIDsFromChain: Array.from(historyTxsId),
       next: {
         internal: indexes.internal,
         external: indexes.external,
@@ -428,7 +429,7 @@ export class Account {
     return results;
   }
 
-  private async getNextIndexes(): Promise<{ internal: number; external: number }> {
+  async getNextIndexes(): Promise<{ internal: number; external: number }> {
     if (!this.walletRepository || !this.name) return { internal: 0, external: 0 };
     const { [this.name]: accountDetails } = await this.walletRepository.getAccountDetails(
       this.name

@@ -4,6 +4,9 @@ import ModalMenu from './modal-menu';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import { useStorageContext } from '../context/storage-context';
 import { formatNetwork } from '../utility';
+import { UpdaterService } from '../../application/updater';
+import zkp from '@vulpemventures/secp256k1-zkp';
+import classNames from 'classnames';
 
 interface Props {
   btnDisabled?: boolean;
@@ -26,7 +29,14 @@ const ShellPopUp: React.FC<Props> = ({
   btnDisabled = false,
 }) => {
   const history = useHistory();
-  const { appRepository, sendFlowRepository, cache } = useStorageContext();
+  const {
+    walletRepository,
+    assetRepository,
+    blockHeadersRepository,
+    appRepository,
+    sendFlowRepository,
+    cache,
+  } = useStorageContext();
   const [isRestorerLoading, setIsRestorerLoading] = useState(false);
   const [isUpdaterLoading, setIsUpdaterLoading] = useState(false);
 
@@ -48,10 +58,30 @@ const ShellPopUp: React.FC<Props> = ({
   const openMenuModal = () => showMenuModal(true);
   const closeMenuModal = () => showMenuModal(false);
 
-  const goToHome = async () => {
+  const [updating, setUpdating] = useState(false);
+
+  const goToHomeOrUpdate = async () => {
     if (history.location.pathname !== DEFAULT_ROUTE) {
       await sendFlowRepository.reset();
       history.push(DEFAULT_ROUTE);
+    } else {
+      if (updating) return;
+      setUpdating(true);
+      try {
+        const updater = new UpdaterService(
+          walletRepository,
+          appRepository,
+          blockHeadersRepository,
+          assetRepository,
+          await zkp()
+        );
+        if (!cache?.network) throw new Error('Network not found');
+        await updater.checkAndFixMissingTransactionsData(cache.network);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setUpdating(false);
+      }
     }
   };
   const handleBackBtn = () => {
@@ -111,8 +141,12 @@ const ShellPopUp: React.FC<Props> = ({
       <header>
         <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center content-center justify-between h-12 border-b-2">
           <div className="flex flex-row items-center">
-            <button onClick={goToHome}>
-              <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
+            <button onClick={goToHomeOrUpdate}>
+              <img
+                className={classNames('px-4', { 'animate-spin': updating })}
+                src="assets/images/marina-logo.svg"
+                alt="marina logo"
+              />
             </button>
 
             {cache?.network !== 'liquid' && (

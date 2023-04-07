@@ -23,6 +23,30 @@ import { useStorageContext } from '../../context/storage-context';
 const Home: React.FC = () => {
   const history = useHistory();
   const { appRepository, sendFlowRepository, cache } = useStorageContext();
+  const [sortedAssets, setSortedAssets] = React.useState<Asset[]>([]);
+
+  useEffect(() => {
+    setSortedAssets(
+      Array.from(cache?.walletAssets.value || [])
+        .map(
+          (assetHash) =>
+            cache?.assetsDetails.value[assetHash] || {
+              name: 'Unknown',
+              ticker: assetHash.substring(0, 4),
+              precision: 8,
+              assetHash,
+            }
+        )
+        .sort((a, b) => {
+          if (a.ticker === 'L-BTC') return -Infinity;
+          const aBalance = cache?.balances.value[a.assetHash];
+          const bBalance = cache?.balances.value[b.assetHash];
+          if (aBalance && !bBalance) return -1;
+          if (!aBalance && bBalance) return 1;
+          return 0;
+        })
+    );
+  }, [cache?.walletAssets, cache?.assetsDetails, cache?.balances, cache?.transactions]);
 
   const handleAssetBalanceButtonClick = (asset: Asset) => {
     history.push({
@@ -70,9 +94,10 @@ const Home: React.FC = () => {
         <div>
           {cache?.network && (
             <Balance
+              loading={cache?.balances.loading}
               assetHash={networks[cache?.network].assetHash}
               assetBalance={fromSatoshiStr(
-                cache?.balances[networks[cache?.network].assetHash] ?? 0
+                cache?.balances.value[networks[cache?.network].assetHash] ?? 0
               )}
               assetTicker="L-BTC"
               bigBalanceText={true}
@@ -86,31 +111,36 @@ const Home: React.FC = () => {
         <div className="w-48 mx-auto border-b-0.5 border-white pt-1.5" />
 
         <div className="h-60">
-          <ButtonList title="Assets" emptyText="Click receive to deposit asset...">
-            {cache?.assets
-              .filter(
-                (asset: Asset) =>
-                  cache?.transactions.find((tx) => tx.txFlow[asset.assetHash] !== undefined) !==
-                  undefined
-              )
-              // put the assets with balance defined on top
-              .sort((a, b) => {
-                const aBalance = cache?.balances[a.assetHash];
-                const bBalance = cache?.balances[b.assetHash];
-                if (aBalance && !bBalance) return -1;
-                if (!aBalance && bBalance) return 1;
-                return 0;
-              })
-              .map((asset: Asset, index: React.Key) => {
-                return (
-                  <ButtonAsset
-                    asset={asset}
-                    quantity={cache?.balances[asset.assetHash] || 0}
-                    key={index}
-                    handleClick={handleAssetBalanceButtonClick}
-                  />
-                );
-              })}
+          <ButtonList
+            loadingText={(() => {
+              if (cache?.assetsDetails.loading) return 'Loading assets...';
+              if (cache?.balances.loading) return 'Loading balances...';
+              if (cache?.transactions.loading) return 'Loading transactions...';
+              if (cache?.walletAssets.loading) return 'Loading wallet assets...';
+            })()}
+            loading={
+              cache?.transactions.loading ||
+              cache?.assetsDetails.loading ||
+              cache?.balances.loading ||
+              cache?.walletAssets.loading
+            }
+            title="Assets"
+            emptyText="Click receive to deposit asset..."
+          >
+            {sortedAssets.map((asset: Asset, index: React.Key) => {
+              return (
+                <ButtonAsset
+                  asset={asset}
+                  quantity={
+                    cache?.balances && !cache.balances.loading
+                      ? cache.balances.value[asset.assetHash]
+                      : 0
+                  }
+                  key={index}
+                  handleClick={handleAssetBalanceButtonClick}
+                />
+              );
+            })}
           </ButtonList>
         </div>
       </div>

@@ -31,13 +31,15 @@ const ConnectSpend: React.FC = () => {
 
   const spendParameters = useSelectPopupSpendParameters();
 
+  const getAssetInfo = (asset: string) => cache?.assetsDetails.value[asset];
+
   const getTicker = (asset: string) => {
-    const assetInfo = cache?.assets.find((a) => a.assetHash === asset);
+    const assetInfo = getAssetInfo(asset);
     return assetInfo ? assetInfo.ticker : asset.slice(0, 4);
   };
 
   const getPrecision = (asset: string) => {
-    const assetInfo = cache?.assets.find((a) => a.assetHash === asset);
+    const assetInfo = getAssetInfo(asset);
     return assetInfo ? assetInfo.precision : 8;
   };
 

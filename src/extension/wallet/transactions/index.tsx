@@ -72,7 +72,7 @@ const Transactions: React.FC = () => {
         <>
           <Balance
             assetHash={assetHash}
-            assetBalance={fromSatoshiStr(cache?.balances[assetHash] ?? 0, asset?.precision)}
+            assetBalance={fromSatoshiStr(cache?.balances.value[assetHash] ?? 0, asset?.precision)}
             assetTicker={asset?.ticker ?? assetHash.slice(0, 4)}
             bigBalanceText={true}
           />
@@ -84,7 +84,7 @@ const Transactions: React.FC = () => {
           <div className="h-60 rounded-xl mb-1">
             {asset && (
               <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-                {cache?.transactions
+                {cache?.transactions.value
                   .filter((tx) => tx.txFlow[asset.assetHash] !== undefined)
                   .map((tx, index) => {
                     return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;

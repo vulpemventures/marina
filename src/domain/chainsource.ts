@@ -19,7 +19,7 @@ export interface ChainSource {
   unsubscribeScriptStatus(script: Buffer): Promise<void>;
   fetchHistories(scripts: Buffer[]): Promise<TransactionHistory[]>;
   fetchTransactions(txids: string[]): Promise<{ txID: string; hex: string }[]>;
-  fetchBlockHeader(height: number): Promise<BlockHeader>;
+  fetchBlockHeaders(heights: number[]): Promise<BlockHeader[]>;
   estimateFees(targetNumberBlocks: number): Promise<number>;
   broadcastTransaction(hex: string): Promise<string>;
   getRelayFee(): Promise<number>;

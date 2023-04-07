@@ -2,16 +2,17 @@ import * as ecc from 'tiny-secp256k1';
 import { AssetHash, confidential } from 'liquidjs-lib';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
-import type { Output } from 'liquidjs-lib/src/transaction';
+import type { Output, Transaction } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
 import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
 import type { UnblindingData } from '../domain/transaction';
-import { assetIsUnknown, fetchAssetDetails } from './utils';
+import { DefaultAssetRegistry } from '../port/asset-registry';
 
 const slip77 = SLIP77Factory(ecc);
 
 export interface Unblinder {
   unblind(...outputs: Output[]): Promise<(UnblindingData | Error)[]>;
+  unblindTxs(...txs: Transaction[]): Promise<[{ txID: string; vout: number }, UnblindingData][]>;
 }
 
 export class WalletRepositoryUnblinder implements Unblinder {
@@ -70,6 +71,7 @@ export class WalletRepositoryUnblinder implements Unblinder {
     }
 
     const network = (await this.appRepository.getNetwork()) ?? 'liquid';
+    const assetRegistry = new DefaultAssetRegistry(network);
 
     const successfullyUnblinded = unblindingResults.filter(
       (r): r is UnblindingData => !(r instanceof Error)
@@ -77,12 +79,34 @@ export class WalletRepositoryUnblinder implements Unblinder {
     const assetSet = new Set<string>(successfullyUnblinded.map((u) => u.asset));
     for (const asset of assetSet) {
       const assetDetails = await this.assetRepository.getAsset(asset);
-      if (assetDetails && !assetIsUnknown(assetDetails)) continue;
-      const assetFromExplorer = await fetchAssetDetails(network, asset);
+      if (assetDetails && assetDetails.ticker !== assetDetails.assetHash.substring(0, 4)) continue;
+      const assetFromExplorer = await assetRegistry.getAsset(asset);
       await this.assetRepository.addAsset(asset, assetFromExplorer);
     }
 
     return unblindingResults;
+  }
+
+  async unblindTxs(
+    ...txs: Transaction[]
+  ): Promise<[{ txID: string; vout: number }, UnblindingData][]> {
+    const unblindedOutpoints: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
+
+    for (const tx of txs) {
+      const unblindedResults = await this.unblind(...tx.outs);
+      const txID = tx.getId();
+      for (const [vout, unblinded] of unblindedResults.entries()) {
+        if (unblinded instanceof Error) {
+          if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
+          if (unblinded.message === 'Empty script: fee output') continue;
+          console.error('Error while unblinding', unblinded);
+          continue;
+        }
+        unblindedOutpoints.push([{ txID, vout }, unblinded]);
+      }
+    }
+
+    return unblindedOutpoints;
   }
 }
 

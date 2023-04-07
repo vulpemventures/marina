@@ -16,11 +16,15 @@ import { AssetStorageAPI } from '../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../infrastructure/storage/wallet-repository';
 import { TaxiUpdater } from './taxi-updater';
-import { UpdaterService } from './updater';
+import { UpdaterService } from '../application/updater';
 import { tabIsOpen } from './utils';
 import { AccountFactory } from '../application/account';
 import { extractErrorMessage } from '../extension/utility/error';
 import { getBackgroundPortImplementation } from '../port/background-port';
+import { BlockHeadersAPI } from '../infrastructure/storage/blockheaders-repository';
+import type { ChainSource } from '../domain/chainsource';
+import { WalletRepositoryUnblinder } from '../application/unblinder';
+import { Transaction } from 'liquidjs-lib';
 
 // manifest v2 needs BrowserAction, v3 needs action
 const action = Browser.browserAction ?? Browser.action;
@@ -40,9 +44,20 @@ const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
+const blockHeadersRepository = new BlockHeadersAPI();
 
-const updaterService = new UpdaterService(walletRepository, appRepository, assetRepository, zkpLib);
-const subscriberService = new SubscriberService(walletRepository, appRepository);
+const updaterService = new UpdaterService(
+  walletRepository,
+  appRepository,
+  blockHeadersRepository,
+  assetRepository,
+  zkpLib
+);
+const subscriberService = new SubscriberService(
+  walletRepository,
+  appRepository,
+  blockHeadersRepository
+);
 const taxiService = new TaxiUpdater(taxiRepository, appRepository, assetRepository);
 
 let started = false;
@@ -70,16 +85,31 @@ async function startBackgroundServices() {
 }
 
 async function restoreTask(restoreMessage: RestoreMessage): Promise<void> {
+  let chainSource: ChainSource | null = null;
   try {
     await appRepository.restorerLoader.increment();
     const factory = await AccountFactory.create(walletRepository);
     const network = await appRepository.getNetwork();
     if (!network) throw new Error('no network selected');
     const account = await factory.make(restoreMessage.data.network, restoreMessage.data.accountID);
-    const chainSource = await appRepository.getChainSource();
+    chainSource = await appRepository.getChainSource();
     if (!chainSource) throw new Error('no chain source selected');
-    await account.sync(chainSource, restoreMessage.data.gapLimit);
+    const { txIDsFromChain } = await account.sync(chainSource, restoreMessage.data.gapLimit);
+    const transactions = await chainSource.fetchTransactions(txIDsFromChain);
+    const unblinder = new WalletRepositoryUnblinder(
+      walletRepository,
+      appRepository,
+      assetRepository,
+      zkpLib
+    );
+    const unblindingResult = await unblinder.unblindTxs(
+      ...transactions.map(({ hex }) => Transaction.fromHex(hex))
+    );
+    await walletRepository.updateOutpointBlindingData(unblindingResult);
   } finally {
+    if (chainSource) {
+      await chainSource.close();
+    }
     await appRepository.restorerLoader.decrement();
   }
 }

@@ -88,7 +88,7 @@ const ChooseFee: React.FC = () => {
       const asset = await assetRepository.getAsset(assetHash);
       setAssetDetails(asset);
       if (assetHash === networks[network].assetHash) {
-        if (cache?.balances[recipient.asset] === recipient.value) {
+        if (cache?.balances.value[recipient.asset] === recipient.value) {
           const { pset, feeAmount } = await psetBuilder.createSendAllPset(
             recipient.address,
             recipient.asset
@@ -137,7 +137,7 @@ const ChooseFee: React.FC = () => {
     >
       <Balance
         assetBalance={formatDecimalAmount(
-          fromSatoshi(cache?.balances[selectedAssetHashWithLbtcFallback()] ?? 0)
+          fromSatoshi(cache?.balances.value[selectedAssetHashWithLbtcFallback()] ?? 0)
         )}
         assetHash={selectedAssetHashWithLbtcFallback()}
         assetTicker={assetDetails?.ticker ?? ''}

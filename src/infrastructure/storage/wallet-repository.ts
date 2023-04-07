@@ -165,10 +165,14 @@ export class WalletStorageAPI implements WalletRepository {
     );
   }
 
-  async getOutputBlindingData(txID: string, vout: number): Promise<UnblindedOutput> {
-    const keys = [OutpointBlindingDataKey.make(txID, vout)];
-    const { [keys[0]]: blindingData } = await Browser.storage.local.get(keys);
-    return { txID, vout, blindingData: (blindingData as UnblindingData) ?? undefined };
+  async getOutputBlindingData(...outpoints: Outpoint[]): Promise<UnblindedOutput[]> {
+    const keys = outpoints.map((o) => OutpointBlindingDataKey.make(o.txID, o.vout));
+    const values = await Browser.storage.local.get(keys);
+    return outpoints.map(({ txID, vout }) => {
+      const key = OutpointBlindingDataKey.make(txID, vout);
+      const blindingData = values[key] as UnblindingData | undefined;
+      return { txID, vout, blindingData };
+    });
   }
 
   private async getUtxosFromTransactions(
@@ -203,9 +207,7 @@ export class WalletStorageAPI implements WalletRepository {
         return { txID: txid, vout: Number(vout) };
       });
 
-    const utxos = await Promise.all(
-      utxosOutpoints.map((outpoint) => this.getOutputBlindingData(outpoint.txID, outpoint.vout))
-    );
+    const utxos = await this.getOutputBlindingData(...utxosOutpoints);
     return utxos;
   }
 
@@ -445,6 +447,31 @@ export class WalletStorageAPI implements WalletRepository {
         const [script] = ScriptDetailsKey.decode(scriptKey);
         const details = changes[scriptKey].newValue as ScriptDetails;
         await callback(script, details);
+      }
+    };
+    Browser.storage.onChanged.addListener(listener);
+    return () => Browser.storage.onChanged.removeListener(listener);
+  }
+
+  onUnblindingEvent(callback: (event: UnblindedOutput) => Promise<void>) {
+    const listener = async (
+      changes: Record<string, Browser.Storage.StorageChange>,
+      areaName: string
+    ) => {
+      if (areaName !== 'local') return;
+      const unblindingKeys = Object.entries(changes)
+        .filter(
+          ([key, changes]) =>
+            OutpointBlindingDataKey.is(key) &&
+            changes.newValue !== undefined &&
+            changes.oldValue === undefined
+        )
+        .map(([key]) => key);
+
+      for (const unblindingKey of unblindingKeys) {
+        const [txID, vout] = OutpointBlindingDataKey.decode(unblindingKey);
+        const data = changes[unblindingKey].newValue as UnblindingData;
+        await callback({ txID, vout, ...data });
       }
     };
     Browser.storage.onChanged.addListener(listener);

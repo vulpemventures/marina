@@ -25,7 +25,7 @@ interface Props {
 }
 
 const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
-  const { walletRepository, appRepository } = useStorageContext();
+  const { walletRepository, appRepository, cache } = useStorageContext();
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleClick = () => {
@@ -54,9 +54,13 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       >
         <div className="flex items-center">
           <TxIcon txType={txTypeFromTransfer(transferAmount())} />
-          {txDetails.blockHeader ? (
+          {txDetails.height &&
+          txDetails.height >= 0 &&
+          cache?.blockHeaders.value[txDetails.height] ? (
             <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
-              {moment(txDetails.blockHeader.timestamp * 1000).format('DD MMM YYYY')}
+              {moment(cache.blockHeaders.value[txDetails.height].timestamp * 1000).format(
+                'DD MMM YYYY'
+              )}
             </span>
           ) : (
             <span className="bg-red text-xxs inline-flex items-center justify-center px-1 py-1 font-semibold leading-none text-white rounded-full">
@@ -87,11 +91,15 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
             className="w-8 h-8 mt-0.5 block mx-auto mb-2"
           />
           <p className="text-base font-medium">{txTypeFromTransfer(transferAmount())}</p>
-          {txDetails.blockHeader && (
-            <p className="text-xs font-light">
-              {moment(txDetails.blockHeader.timestamp * 1000).format('DD MMMM YYYY HH:mm')}
-            </p>
-          )}
+          {txDetails.height &&
+            txDetails.height >= 0 &&
+            cache?.blockHeaders.value[txDetails.height] && (
+              <p className="text-xs font-light">
+                {moment(cache.blockHeaders.value[txDetails.height].timestamp * 1000).format(
+                  'DD MMMM YYYY HH:mm'
+                )}
+              </p>
+            )}
         </div>
         <div className="mt-6 mb-4 space-y-6 text-left">
           <div className="flex flex-row">

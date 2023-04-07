@@ -1,6 +1,6 @@
 import { AssetHash, ElementsValue, networks, script, Transaction } from 'liquidjs-lib';
-import type { BlockHeader } from './chainsource';
-import type { AppRepository, BlockheadersRepository, WalletRepository } from './repository';
+import type { AppRepository, WalletRepository } from './repository';
+import type { ScriptDetails } from 'marina-provider';
 
 export type UnblindingData = {
   value: number;
@@ -32,7 +32,6 @@ export interface TxDetailsExtended extends TxDetails {
   txID: string;
   txFlow: TxFlow;
   feeAmount: number;
-  blockHeader?: BlockHeader;
 }
 
 export interface UnblindedOutput {
@@ -70,10 +69,10 @@ export async function makeURLwithBlinders(
   const txID = transaction.getId();
 
   const blinders: string[] = [];
-  for (let i = 0; i < transaction.outs.length; i++) {
-    const output = transaction.outs[i];
+  for (let vout = 0; vout < transaction.outs.length; vout++) {
+    const output = transaction.outs[vout];
     if (output.script.length === 0) continue;
-    const data = await walletRepository.getOutputBlindingData(txID, i);
+    const [data] = await walletRepository.getOutputBlindingData({ txID, vout });
     if (!data || !data.blindingData) continue;
 
     blinders.push(
@@ -103,10 +102,17 @@ export async function lockTransactionInputs(
 export function computeTxDetailsExtended(
   appRepository: AppRepository,
   walletRepository: WalletRepository,
-  blockHeadersRepository: BlockheadersRepository
+  scriptsState: Record<string, ScriptDetails>
 ) {
   return async (details: TxDetails): Promise<TxDetailsExtended> => {
-    if (!details.hex) throw new Error('tx hex not found');
+    if (!details.hex) {
+      return {
+        ...details,
+        txID: '',
+        txFlow: {},
+        feeAmount: 0,
+      };
+    }
     const transaction = Transaction.fromHex(details.hex);
     const txID = transaction.getId();
 
@@ -122,9 +128,10 @@ export function computeTxDetailsExtended(
         feeAmount = elementsValue.number;
         continue;
       }
+      if (!scriptsState[output.script.toString('hex')]) continue;
 
       if (elementsValue.isConfidential) {
-        const data = await walletRepository.getOutputBlindingData(txID, outIndex);
+        const [data] = await walletRepository.getOutputBlindingData({ txID, vout: outIndex });
         if (!data || !data.blindingData) continue;
         txFlow[data.blindingData.asset] =
           (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
@@ -140,12 +147,18 @@ export function computeTxDetailsExtended(
     for (let inIndex = 0; inIndex < transaction.ins.length; inIndex++) {
       const input = transaction.ins[inIndex];
       const inputTxID = Buffer.from(input.hash).reverse().toString('hex');
-      const output = await walletRepository.getWitnessUtxo(inputTxID, input.index);
+      const inputPrevoutIndex = input.index;
+
+      const output = await walletRepository.getWitnessUtxo(inputTxID, inputPrevoutIndex);
       if (!output) continue;
+      if (!scriptsState[output.script.toString('hex')]) continue;
       const elementsValue = ElementsValue.fromBytes(output.value);
 
       if (elementsValue.isConfidential) {
-        const data = await walletRepository.getOutputBlindingData(inputTxID, input.index);
+        const [data] = await walletRepository.getOutputBlindingData({
+          txID: inputTxID,
+          vout: inputPrevoutIndex,
+        });
         if (!data || !data.blindingData) continue;
         txFlow[data.blindingData.asset] =
           (txFlow[data.blindingData.asset] || 0) - data.blindingData.value;
@@ -155,20 +168,8 @@ export function computeTxDetailsExtended(
       const asset = AssetHash.fromBytes(output.asset).hex;
       txFlow[asset] = (txFlow[asset] || 0) - elementsValue.number;
     }
-
-    if (details.height === undefined || details.height === -1)
-      return { ...details, txID, txFlow, feeAmount };
     const network = await appRepository.getNetwork();
     if (!network) throw new Error('network not found');
-    let blockHeader = await blockHeadersRepository.getBlockHeader(network, details.height);
-
-    if (!blockHeader) {
-      const chainSource = await appRepository.getChainSource(network);
-      if (!chainSource) return { ...details, txID, txFlow, feeAmount };
-      blockHeader = await chainSource.fetchBlockHeader(details.height);
-      if (blockHeader) await blockHeadersRepository.setBlockHeader(network, blockHeader);
-      await chainSource.close();
-    }
 
     // if the flow for L-BTC is -feeAmount, remove it
     if (txFlow[networks[network].assetHash] + feeAmount === 0) {
@@ -185,7 +186,6 @@ export function computeTxDetailsExtended(
       txID,
       txFlow,
       feeAmount,
-      blockHeader,
     };
   };
 }

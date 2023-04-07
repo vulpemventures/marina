@@ -1,5 +1,5 @@
 import type { NetworkString } from 'marina-provider';
-import type { WalletRepository, AppRepository } from '../domain/repository';
+import type { WalletRepository, AppRepository, BlockheadersRepository } from '../domain/repository';
 import type { ChainSource } from '../domain/chainsource';
 
 const ChainSourceError = (network: string) =>
@@ -11,7 +11,11 @@ export class SubscriberService {
   private subscribedScripts = new Set<string>();
   private network: NetworkString | null = null;
 
-  constructor(private walletRepository: WalletRepository, private appRepository: AppRepository) {}
+  constructor(
+    private walletRepository: WalletRepository,
+    private appRepository: AppRepository,
+    private blockHeadersRepository: BlockheadersRepository
+  ) {}
 
   async start() {
     const network = await this.appRepository.getNetwork();
@@ -27,8 +31,12 @@ export class SubscriberService {
     await this.initSubscribtions();
 
     this.appRepository.onNetworkChanged(async (network: NetworkString) => {
-      await this.unsubscribe();
-      await this.chainSource?.close();
+      try {
+        await this.unsubscribe();
+        await this.chainSource?.close();
+      } catch (e) {
+        console.error('error while unsubscribing', e);
+      }
       this.network = network;
       this.chainSource = await this.appRepository.getChainSource(network);
       if (!this.chainSource) throw ChainSourceError(network);
@@ -84,6 +92,16 @@ export class SubscriberService {
             Object.fromEntries(history[0].map(({ tx_hash, height }) => [tx_hash, { height }]))
           ),
         ]);
+
+        const heights = Array.from(new Set(history[0].map(({ height }) => height)));
+        const blockHeaders = await this.chainSource?.fetchBlockHeaders(heights);
+        if (!blockHeaders) return;
+        if (blockHeaders.length > 0) {
+          await this.blockHeadersRepository.setBlockHeaders(
+            this.network as NetworkString,
+            ...blockHeaders
+          );
+        }
       }
     );
   }
