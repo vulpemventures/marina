@@ -12,6 +12,7 @@ export const formatNetwork = (net: string): string => {
 // If digits are more than 10 then truncate to 2 decimals without rounding
 // Add ellipsis
 export const formatDecimalAmount = (amount: number, truncate = true): string => {
+  if (amount === 0) return '0';
   let formattedAmount = amount.toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 8,
