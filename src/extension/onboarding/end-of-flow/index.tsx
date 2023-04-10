@@ -52,7 +52,6 @@ const EndOfFlowOnboarding: React.FC = () => {
     try {
       const onboardingMnemonic = await onboardingRepository.getOnboardingMnemonic();
       const onboardingPassword = await onboardingRepository.getOnboardingPassword();
-
       if (!onboardingMnemonic || !onboardingPassword) {
         throw new Error('onboarding Mnemonic or password not found');
       }
@@ -60,6 +59,8 @@ const EndOfFlowOnboarding: React.FC = () => {
       setErrorMsg(undefined);
       checkPassword(onboardingPassword);
 
+      const backupServicesConfigs = await onboardingRepository.getBackupServicesConfiguration();
+      await appRepository.addBackupServiceConfig(...(backupServicesConfigs ?? []));
       await initWalletRepository(walletRepository, onboardingMnemonic, onboardingPassword);
       await (Browser.browserAction ?? Browser.action).setPopup({ popup: 'popup.html' });
       await appRepository.updateStatus({ isOnboardingCompleted: true });

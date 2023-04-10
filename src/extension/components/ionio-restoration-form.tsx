@@ -1,10 +1,10 @@
 import type { FormikProps } from 'formik';
 import { withFormik } from 'formik';
-import type { RestorationJSONDictionary } from '../../application/account';
 import { checkRestorationDictionary } from '../../application/account';
 import Button from './button';
 import Input from './input';
 import * as Yup from 'yup';
+import type { RestorationJSONDictionary } from '../../domain/backup';
 
 interface FormProps {
   onSubmit: (dict: RestorationJSONDictionary, password: string) => Promise<void>;

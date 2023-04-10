@@ -11,6 +11,7 @@ import type { MaybeNull } from './common';
 import { DynamicStorageKey } from './dynamic-key';
 import type { ChainSource } from '../../domain/chainsource';
 import { ElectrumWS } from 'ws-electrumx-client';
+import type { BackupConfig } from '../../domain/backup';
 
 export enum AppStorageKeys {
   ONBOARDING_COMPLETED = 'onboardingCompleted',
@@ -18,6 +19,7 @@ export enum AppStorageKeys {
   NETWORK = 'network',
   ENABLED_SITES = 'enabledSites',
   VERIFIED_MNEMONIC = 'verifiedMnemonic',
+  BACKUP_SERVICES = 'backupServices',
 }
 
 // Dynamic key
@@ -182,6 +184,27 @@ export class AppStorageAPI implements AppRepository {
 
   setNetwork(network: NetworkString): Promise<void> {
     return Browser.storage.local.set({ [AppStorageKeys.NETWORK]: network });
+  }
+
+  async addBackupServiceConfig(...configs: BackupConfig[]): Promise<void> {
+    const current = await this.getBackupServiceConfigs();
+    return Browser.storage.local.set({
+      [AppStorageKeys.BACKUP_SERVICES]: [...current, ...configs],
+    });
+  }
+
+  async removeBackupServiceConfig(ID: string): Promise<void> {
+    const current = await this.getBackupServiceConfigs();
+    return Browser.storage.local.set({
+      [AppStorageKeys.BACKUP_SERVICES]: current.filter((c) => c.ID !== ID),
+    });
+  }
+
+  async getBackupServiceConfigs(): Promise<BackupConfig[]> {
+    const { [AppStorageKeys.BACKUP_SERVICES]: current } = await Browser.storage.local.get([
+      AppStorageKeys.BACKUP_SERVICES,
+    ]);
+    return current ?? [];
   }
 
   onHostnameEnabled(callback: (websiteEnabled: string) => Promise<void>) {

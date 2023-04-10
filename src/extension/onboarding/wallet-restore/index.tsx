@@ -1,4 +1,3 @@
-import type { ChangeEvent } from 'react';
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Shell from '../../components/shell';
@@ -7,38 +6,29 @@ import { MnemonicField } from './mnemonic-field';
 import OnboardingForm from '../onboarding-form';
 import { init } from '../../../domain/repository';
 import { validateMnemonic } from 'bip39';
-import type { RestorationJSONDictionary } from '../../../application/account';
-import { checkRestorationDictionary } from '../../../application/account';
-import { extractErrorMessage } from '../../utility/error';
 import { useStorageContext } from '../../context/storage-context';
+import type { BackupFormValues} from '../../components/restoration-backup-form';
+import { RestorationBackupForm } from '../../components/restoration-backup-form';
 
 const WalletRestore: React.FC = () => {
   const { appRepository, sendFlowRepository, onboardingRepository } = useStorageContext();
   const history = useHistory();
   const [mnemonic, setMnemonic] = useState<string>('');
-  const [restoration, setRestoration] = useState<RestorationJSONDictionary>();
-  const [fileUploadError, setFileUploadError] = useState<string>();
+  const [backupValues, setBackupValues] = useState<BackupFormValues>();
 
   const onSubmit = async ({ password }: { password: string }) => {
     if (mnemonic === '' || !validateMnemonic(mnemonic.trim()))
       throw new Error('need a valid mnemonic');
+
     await init(appRepository, sendFlowRepository);
     await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic.trim());
     await appRepository.updateStatus({ isMnemonicVerified: true }); // set the mnemonic as verified cause we are in the restore mnemonic flow
-    if (restoration) await onboardingRepository.setRestorationJSONDictionary(restoration);
-    history.push(INITIALIZE_END_OF_FLOW_ROUTE);
-  };
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    try {
-      const strContent = await e.target.files![0].text();
-      const dictionary = JSON.parse(strContent);
-      if (!checkRestorationDictionary(dictionary)) throw new Error('invalid restoration file');
-      setRestoration(dictionary);
-    } catch (e) {
-      console.error(e);
-      setFileUploadError(extractErrorMessage(e));
-    }
+    if (backupValues?.restoration)
+      await onboardingRepository.setRestorationJSONDictionary(backupValues.restoration);
+    if (backupValues?.backupServicesConfigs && backupValues.backupServicesConfigs.length > 0)
+      await onboardingRepository.setBackupServicesConfiguration(backupValues.backupServicesConfigs);
+    history.push(INITIALIZE_END_OF_FLOW_ROUTE);
   };
 
   return (
@@ -49,14 +39,14 @@ const WalletRestore: React.FC = () => {
       </p>
       <MnemonicField value={mnemonic} onChange={(mnemo) => setMnemonic(mnemo)} />
 
-      <p className="mt-2 mb-2 font-medium">Ionio restoration file (optional)</p>
-      <input
-        className="border-grayLight focus:ring-primary focus:border-primary sm:text-sm placeholder-grayLight block w-3/5 border-2 rounded-md shadow-sm"
-        id="file_input"
-        type="file"
-        onChange={handleFileChange}
-      />
-      {fileUploadError && <p className="text-red h-10 mt-2 text-xs">{fileUploadError}</p>}
+      <p className="mt-2 mb-2 font-medium">Restore Ionio accounts</p>
+      <div className="w-1/2">
+        <RestorationBackupForm
+          onSubmit={(values) => {
+            setBackupValues(values);
+          }}
+        />
+      </div>
 
       <OnboardingForm onSubmit={onSubmit} />
     </Shell>

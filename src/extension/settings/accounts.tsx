@@ -3,7 +3,6 @@ import ButtonList from '../components/button-list';
 import InputIcon from '../components/input-icon';
 import { useEffect, useState } from 'react';
 import type { AccountDetails, WalletRepository } from '../../domain/repository';
-import type { RestorationJSONDictionary } from '../../application/account';
 import {
   AccountFactory,
   MainAccount,
@@ -17,6 +16,7 @@ import { useHistory } from 'react-router';
 import { SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE } from '../routes/constants';
 import { useToastContext } from '../context/toast-context';
 import { extractErrorMessage } from '../utility/error';
+import type { RestorationJSONDictionary } from '../../domain/backup';
 
 const SettingsAccounts: React.FC = () => {
   const { walletRepository } = useStorageContext();

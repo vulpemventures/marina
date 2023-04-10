@@ -19,6 +19,7 @@ import { Contract } from '@ionio-lang/ionio';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { h2b } from './utils';
 import type { ChainSource } from '../domain/chainsource';
+import type { RestorationJSON, RestorationJSONDictionary } from '../domain/backup';
 
 export const MainAccountLegacy = 'mainAccountLegacy';
 export const MainAccount = 'mainAccount';
@@ -43,16 +44,6 @@ type AccountOpts = {
 };
 
 type contractName = string;
-
-export type RestorationJSON = {
-  accountName: string;
-  artifacts: Record<contractName, Artifact>;
-  pathToArguments: Record<string, [contractName, Argument[]]>;
-};
-
-export type RestorationJSONDictionary = {
-  [network: string]: RestorationJSON[];
-};
 
 export function makeAccountXPub(seed: Buffer, basePath: string) {
   return bip32.fromSeed(seed).derivePath(basePath).neutered().toBase58();
