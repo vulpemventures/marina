@@ -46,7 +46,7 @@ const PASSWORD = 'PASSWORD';
 
 const appRepository = new AppStorageAPI();
 const walletRepository = new WalletStorageAPI();
-const assetRepository = new AssetStorageAPI(walletRepository);
+const assetRepository = new AssetStorageAPI();
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const blockHeadersRepository = new BlockHeadersAPI();
 const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);

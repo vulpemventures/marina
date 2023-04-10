@@ -43,7 +43,7 @@ const backgroundPort = getBackgroundPortImplementation();
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
-const assetRepository = new AssetStorageAPI(walletRepository);
+const assetRepository = new AssetStorageAPI();
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const blockHeadersRepository = new BlockHeadersAPI();
 
