@@ -1,6 +1,6 @@
 import type { AccountID } from 'marina-provider';
 import type { ChangeEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { checkRestorationDictionary } from '../../application/account';
 import type { BackupConfig, RestorationJSONDictionary } from '../../domain/backup';
 import { BackupServiceType } from '../../domain/backup';
@@ -34,9 +34,9 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
   // github config
   const [githubConfigModalOpen, setGithubConfigModalOpen] = useState(false);
 
-  const submitValues = () => {
+  useEffect(() => {
     onSubmit(values);
-  };
+  }, [values]);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     try {
@@ -51,7 +51,6 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
         restoration,
       };
       setValues(newValues);
-      submitValues();
     } catch (e) {
       console.error(e);
       setRestorationError(extractErrorMessage(e));
@@ -77,7 +76,6 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
           { ID: 'browser-sync', type: BackupServiceType.BROWSER_SYNC },
         ],
       });
-      submitValues();
     } catch (e) {
       console.error(e);
       setRestorationError(extractErrorMessage(e));
@@ -103,7 +101,6 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
           { ID: 'github', type: BackupServiceType.GITHUB },
         ],
       });
-      submitValues();
     } catch (e) {
       console.error(e);
       setRestorationError(extractErrorMessage(e));
