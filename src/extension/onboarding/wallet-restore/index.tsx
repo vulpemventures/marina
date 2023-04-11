@@ -7,7 +7,7 @@ import OnboardingForm from '../onboarding-form';
 import { init } from '../../../domain/repository';
 import { validateMnemonic } from 'bip39';
 import { useStorageContext } from '../../context/storage-context';
-import type { BackupFormValues} from '../../components/restoration-backup-form';
+import type { BackupFormValues } from '../../components/restoration-backup-form';
 import { RestorationBackupForm } from '../../components/restoration-backup-form';
 
 const WalletRestore: React.FC = () => {

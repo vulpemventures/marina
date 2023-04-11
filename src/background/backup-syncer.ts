@@ -1,4 +1,4 @@
-import { AccountType, isIonioScriptDetails, NetworkString } from 'marina-provider';
+import { AccountType, isIonioScriptDetails } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import { AccountFactory } from '../application/account';
 import { loadFromBackupServices, makeBackupService } from '../application/backup';

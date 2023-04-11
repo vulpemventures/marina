@@ -1,8 +1,8 @@
 import type { NetworkString } from 'marina-provider';
-import type { BackupConfig, BackupService} from '../domain/backup';
+import type { BackupConfig, BackupService } from '../domain/backup';
 import { BackupServiceType } from '../domain/backup';
 import type { AppRepository, WalletRepository } from '../domain/repository';
-import { BrowserSyncBackup } from '../port/browser-sync-backup';
+import { BrowserSyncBackup } from '../port/browser-sync-backup-service';
 import { AccountFactory } from './account';
 
 export function makeBackupService(config: BackupConfig): BackupService {

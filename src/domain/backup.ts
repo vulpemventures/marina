@@ -29,6 +29,7 @@ export interface BackupService {
 
 export enum BackupServiceType {
   BROWSER_SYNC = 'browser-sync',
+  GITHUB = 'github',
 }
 
 export interface BackupConfig {

@@ -1,13 +1,16 @@
 import type { AccountID } from 'marina-provider';
-import type { ChangeEvent} from 'react';
+import type { ChangeEvent } from 'react';
 import { useRef, useState } from 'react';
 import { checkRestorationDictionary } from '../../application/account';
 import type { BackupConfig, RestorationJSONDictionary } from '../../domain/backup';
 import { BackupServiceType } from '../../domain/backup';
-import { BrowserSyncBackup } from '../../port/browser-sync-backup';
+import { BrowserSyncBackup } from '../../port/browser-sync-backup-service';
 import { extractErrorMessage } from '../utility/error';
 import Button from './button';
 import { Spinner } from './spinner';
+import Modal from './modal';
+import { GithubBackupService } from '../../port/github-backup-service';
+import GithubBackupForm from './github-backup-form';
 
 export type BackupFormValues = {
   restoration: RestorationJSONDictionary;
@@ -27,6 +30,9 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
     backupServicesConfigs: [],
   });
   const [loadingText, setLoadingText] = useState<string>();
+
+  // github config
+  const [githubConfigModalOpen, setGithubConfigModalOpen] = useState(false);
 
   const submitValues = () => {
     onSubmit(values);
@@ -81,12 +87,49 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
     }
   };
 
+  const handleRestoreFromGithub = async (token: string) => {
+    setIsLoading(true);
+    setLoadingText('Restoring from Github...');
+    setRestorationError(undefined);
+    try {
+      const githubBackupService = new GithubBackupService({ githubAccessToken: token });
+      await githubBackupService.initialize();
+      const { ionioAccountsRestorationDictionary } = await githubBackupService.load();
+      setValues({
+        ...values,
+        restoration: ionioAccountsRestorationDictionary,
+        backupServicesConfigs: [
+          ...values.backupServicesConfigs,
+          { ID: 'github', type: BackupServiceType.GITHUB },
+        ],
+      });
+      submitValues();
+    } catch (e) {
+      console.error(e);
+      setRestorationError(extractErrorMessage(e));
+    } finally {
+      setIsLoading(false);
+      setLoadingText(undefined);
+    }
+  };
+
   return (
     <div>
       {Object.keys(values.restoration).length === 0 && values.backupServicesConfigs.length === 0 ? (
         <div>
           {!isLoading ? (
             <div className="flex space-x-4">
+              <Button
+                isTextSmall
+                isOutline
+                disabled={isLoading}
+                onClick={() => {
+                  setGithubConfigModalOpen(true);
+                }}
+              >
+                Github
+              </Button>
+
               <Button
                 isTextSmall
                 isOutline
@@ -171,6 +214,21 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
         onChange={handleFileChange}
       />
       {restorationError && <p className="text-red h-10 mt-2 text-xs">{restorationError}</p>}
+      <Modal
+        withoutMinHeight
+        isOpen={githubConfigModalOpen}
+        onClose={() => setGithubConfigModalOpen(false)}
+      >
+        <div className="flex">
+          <h4>Link Marina with Github</h4>
+        </div>
+        <GithubBackupForm
+          onSubmit={(token) => {
+            setGithubConfigModalOpen(false);
+            handleRestoreFromGithub(token).catch(console.error);
+          }}
+        />
+      </Modal>
     </div>
   );
 };
