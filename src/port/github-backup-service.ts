@@ -20,7 +20,6 @@ export class GithubBackupService implements BackupService {
 
   constructor({ githubAccessToken }: Pick<GithubBackupServiceConfig, 'githubAccessToken'>) {
     this.githubAccessToken = githubAccessToken;
-    console.log('GithubBackupService', this.githubAccessToken);
   }
 
   private async getOctokitClient(): Promise<Octokit> {

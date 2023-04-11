@@ -18,7 +18,6 @@ import type { NetworkString } from 'marina-provider';
 import { AccountType } from 'marina-provider';
 import { mnemonicToSeed } from 'bip39';
 import { initWalletRepository } from '../../../domain/repository';
-import type { ChainSource } from '../../../domain/chainsource';
 import { useStorageContext } from '../../context/storage-context';
 import { UpdaterService } from '../../../application/updater';
 import { Spinner } from '../../components/spinner';
@@ -138,33 +137,28 @@ const EndOfFlowOnboarding: React.FC = () => {
           });
         }
 
-        // we already opened the Liquid chain source
-        let chainSourceRegtest: ChainSource | null = null;
         // restore the accounts
         const factory = await AccountFactory.create(walletRepository);
         for (const [network, restorations] of Object.entries(restoration)) {
-          let chainSource = undefined;
-          if (network === 'liquid') chainSource = liquidChainSource;
-          else if (network === 'testnet') chainSource = testnetChainSource;
-          else if (network === 'regtest') {
-            if (!chainSourceRegtest) {
-              chainSourceRegtest = await appRepository.getChainSource('regtest');
-              if (!chainSourceRegtest) {
-                throw new Error('Chain source not found for regtest network');
-              }
+          if (restorations.length === 0) continue;
+          try {
+            let chainSource = undefined;
+            if (network === 'liquid') chainSource = liquidChainSource;
+            else if (network === 'testnet') chainSource = testnetChainSource;
+            else if (network === 'regtest') {
+              continue;
             }
-            chainSource = chainSourceRegtest;
-          }
-          if (!chainSource) throw new Error(`Chain source not found for ${network} network`);
+            if (!chainSource) throw new Error(`Chain source not found for ${network} network`);
 
-          for (const restoration of restorations) {
-            const account = await factory.make(network as NetworkString, restoration.accountName);
-            await account.restoreFromJSON(chainSource, restoration);
+            for (const restoration of restorations) {
+              const account = await factory.make(network as NetworkString, restoration.accountName);
+              await account.restoreFromJSON(chainSource, restoration);
+            }
+          } catch {
+            console.warn(`Failed to restore ${network} account(s) from JSON file(s)`);
+            continue;
           }
         }
-
-        // close the chain source if opened
-        await chainSourceRegtest?.close();
       }
       await testnetChainSource.close();
       await liquidChainSource.close();

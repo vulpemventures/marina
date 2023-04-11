@@ -188,7 +188,6 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
           {Object.keys(values.restoration).length > 0 ? (
             <>
               <p className="text-primary font-bold">Successfully restored</p>
-              <p>Networks: {Object.keys(values.restoration).join(', ') || 0}</p>
               <p>
                 Number of accounts:{' '}
                 {
@@ -204,7 +203,7 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
             <p className="text-primary font-bold">Successfully loaded, no backup found</p>
           )}
           {values.backupServicesConfigs.length > 0 && (
-            <p className="text-sm italic">Browser backup will be enabled</p>
+            <p className="text-sm italic">Backup service will be enabled</p>
           )}
         </div>
       )}
