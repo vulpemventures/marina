@@ -4,11 +4,16 @@ import { BackupServiceType } from '../domain/backup';
 import type { AppRepository, WalletRepository } from '../domain/repository';
 import { BrowserSyncBackup } from '../port/browser-sync-backup-service';
 import { AccountFactory } from './account';
+import { GithubBackupService, isBackupGithubServiceConfig } from '../port/github-backup-service';
 
 export function makeBackupService(config: BackupConfig): BackupService {
   switch (config.type) {
     case BackupServiceType.BROWSER_SYNC:
       return new BrowserSyncBackup();
+    case BackupServiceType.GITHUB:
+      if (!isBackupGithubServiceConfig(config))
+        throw new Error('Invalid backup service configuration for Github');
+      return new GithubBackupService(config);
     default:
       throw new Error('Invalid backup service configuration');
   }

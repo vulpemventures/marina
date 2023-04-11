@@ -9,6 +9,7 @@ import { extractErrorMessage } from '../utility/error';
 import Button from './button';
 import { Spinner } from './spinner';
 import Modal from './modal';
+import type { GithubBackupServiceConfig } from '../../port/github-backup-service';
 import { GithubBackupService } from '../../port/github-backup-service';
 import GithubBackupForm from './github-backup-form';
 
@@ -98,7 +99,11 @@ export const RestorationBackupForm: React.FC<RestorationBackupFormProps> = ({ on
         restoration: ionioAccountsRestorationDictionary,
         backupServicesConfigs: [
           ...values.backupServicesConfigs,
-          { ID: 'github', type: BackupServiceType.GITHUB },
+          {
+            ID: 'github',
+            type: BackupServiceType.GITHUB,
+            githubAccessToken: token,
+          } as GithubBackupServiceConfig,
         ],
       });
     } catch (e) {

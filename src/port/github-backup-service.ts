@@ -1,19 +1,32 @@
 import { Octokit } from 'octokit';
-import type { BackupConfig, BackupData, BackupService, BackupServiceType } from '../domain/backup';
-import path from 'path';
+import { createTokenAuth } from '@octokit/auth-token';
+import type { BackupConfig, BackupData, BackupService } from '../domain/backup';
+import { BackupServiceType } from '../domain/backup';
 
 export interface GithubBackupServiceConfig extends BackupConfig {
   type: BackupServiceType.GITHUB;
   githubAccessToken: string;
 }
 
+export function isBackupGithubServiceConfig(
+  config: BackupConfig
+): config is GithubBackupServiceConfig {
+  return config.type === BackupServiceType.GITHUB;
+}
+
 export class GithubBackupService implements BackupService {
   static REPOSITORY_NAME = 'marina-ionio-backup';
-  private client: Octokit;
+  private readonly githubAccessToken: string;
 
   constructor({ githubAccessToken }: Pick<GithubBackupServiceConfig, 'githubAccessToken'>) {
-    this.client = new Octokit({
-      auth: githubAccessToken,
+    this.githubAccessToken = githubAccessToken;
+    console.log('GithubBackupService', this.githubAccessToken);
+  }
+
+  private async getOctokitClient(): Promise<Octokit> {
+    const auth = await createTokenAuth(this.githubAccessToken)();
+    return new Octokit({
+      auth: auth.token,
     });
   }
 
@@ -24,8 +37,8 @@ export class GithubBackupService implements BackupService {
     } finally {
       await uploadToRepository(
         JSON.stringify({ ...current, ...data }),
-        './backup.json',
-        this.client,
+        'backup.json',
+        await this.getOctokitClient(),
         await this.getAuthenticatedGithubUser(),
         GithubBackupService.REPOSITORY_NAME
       );
@@ -34,7 +47,8 @@ export class GithubBackupService implements BackupService {
 
   async load(): Promise<BackupData> {
     try {
-      const response = (await this.client.rest.repos.getContent({
+      const client = await this.getOctokitClient();
+      const response = (await client.rest.repos.getContent({
         owner: await this.getAuthenticatedGithubUser(),
         path: 'backup.json',
         repo: GithubBackupService.REPOSITORY_NAME,
@@ -55,9 +69,10 @@ export class GithubBackupService implements BackupService {
   }
 
   async initialize(): Promise<void> {
+    const client = await this.getOctokitClient();
     const owner = await this.getAuthenticatedGithubUser();
     try {
-      await this.client.request('GET /repos/{owner}/{repo}', {
+      await client.request('GET /repos/{owner}/{repo}', {
         owner,
         repo: GithubBackupService.REPOSITORY_NAME,
         headers: {
@@ -65,7 +80,7 @@ export class GithubBackupService implements BackupService {
         },
       });
     } catch {
-      await this.client.request('POST /user/repos', {
+      await client.request('POST /user/repos', {
         name: GithubBackupService.REPOSITORY_NAME,
         description: 'Marina wallet Ionio backup repository',
         private: true,
@@ -82,7 +97,8 @@ export class GithubBackupService implements BackupService {
   }
 
   async getAuthenticatedGithubUser(): Promise<string> {
-    const { data } = await this.client.request('GET /user', {
+    const client = await this.getOctokitClient();
+    const { data } = await client.request('GET /user', {
       headers: {
         'X-GitHub-Api-Version': '2022-11-28',
       },
@@ -98,14 +114,14 @@ async function uploadToRepository(
   octo: Octokit,
   org: string,
   repo: string,
-  branch = 'master'
+  branch = 'main'
 ) {
   // gets commit's AND its tree's SHA
   const currentCommit = await getCurrentCommit(octo, org, repo, branch);
   const blob = await createGithubBlob(octo, org, repo)(content);
-  const blobPath = path.relative(pathInRepo, '');
+  const blobPath = pathInRepo;
   const newTree = await createNewTree(octo, org, repo, [blob], [blobPath], currentCommit.treeSha);
-  const commitMessage = `My commit message`;
+  const commitMessage = `Update ${pathInRepo} at ${new Date().toISOString()}`;
   const newCommit = await createNewCommit(
     octo,
     org,
@@ -127,7 +143,7 @@ const createGithubBlob = (octo: Octokit, org: string, repo: string) => async (co
   return blobData.data;
 };
 
-async function getCurrentCommit(octo: Octokit, org: string, repo: string, branch = 'master') {
+async function getCurrentCommit(octo: Octokit, org: string, repo: string, branch = 'main') {
   const { data: refData } = await octo.rest.git.getRef({
     owner: org,
     repo,
@@ -190,7 +206,7 @@ const setBranchToCommit = (
   octo: Octokit,
   org: string,
   repo: string,
-  branch = `master`,
+  branch = `main`,
   commitSha: string
 ) =>
   octo.rest.git.updateRef({
