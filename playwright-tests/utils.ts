@@ -3,9 +3,6 @@ import { test as basePlaywrightTest, chromium } from '@playwright/test';
 import { generateMnemonic } from 'bip39';
 import path from 'path';
 
-export const vulpemFaucetURL = 'https://faucet.vulpem.com/';
-export const fujiAppURL = 'https://app.fuji.money/'
-
 export const test = basePlaywrightTest.extend<{
     context: BrowserContext;
     extensionId: string;

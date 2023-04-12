@@ -1,7 +1,8 @@
 import type { MarinaProvider } from 'marina-provider';
 import Marina from '../src/inject/marina/provider';
-import { test as pwTest, expect as pwExpect, makeOnboardingRestore, vulpemFaucetURL } from './utils';
+import { test as pwTest, expect as pwExpect, makeOnboardingRestore } from './utils';
 
+const vulpemFaucetURL = 'https://faucet.vulpem.com/';
 
 pwTest('should set up a window.marina object', async ({ page }) => {
     await page.goto(vulpemFaucetURL);
