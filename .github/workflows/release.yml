@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
 
 name: Release
 
@@ -20,7 +20,7 @@ jobs:
       # setup nodejs
       - uses: actions/setup-node@v2
         with:
-          node-version: "16"
+          node-version: '16'
 
       # get current  tag
       - name: tag
@@ -43,30 +43,59 @@ jobs:
           jq '.version = "${{ steps.next_version.outputs.version }}"' package.json  > package.tmp.json
           mv package.tmp.json package.json
 
-      # Build extension
-      - name: Install and build
+      - name: Install the dependencies
+        run: yarn install
+
+      # Build extension v3
+      - name: Build extension manifest v3
         run: |
-          yarn install
           yarn build:v3
-          yarn web-ext:build
+          yarn web-ext:build:v3
 
       # Release to github
-      - name: Create Release
+      - name: Create Release (manifest v3)
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-      - name: Upload release
+          release_name: Release ${{ github.ref }} (manifest v3)
+
+      - name: Upload release (manifest v3)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./web-ext-artifacts/marina-${{ steps.next_version.outputs.version }}.zip
-          asset_name: marina-${{ steps.next_version.outputs.version }}.zip
+          asset_path: ./web-ext-artifacts/v3/marina-${{ steps.next_version.outputs.version }}.zip
+          asset_name: marina-v3-${{ steps.next_version.outputs.version }}.zip
+          asset_content_type: application/zip
+
+      # Build extension v2
+      - name: Build extension manifest v2
+        run: |
+          yarn build:v2
+          yarn web-ext:build:v2
+
+      # Release to github
+      - name: Create Release (manifest v2)
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }} (manifest v2)
+
+      - name: Upload release (manifest v2)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./web-ext-artifacts/v2/marina-${{ steps.next_version.outputs.version }}.zip
+          asset_name: marina-v2-${{ steps.next_version.outputs.version }}.zip
           asset_content_type: application/zip
 
       # Comit manifest and package.json to master
