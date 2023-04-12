@@ -17,10 +17,10 @@ interface FormValues {
 }
 
 interface FormProps {
-  dataInCache: {
+  dataInCache: Partial<{
     address: string;
     amount: number;
-  };
+  }>;
   asset: Asset;
   maxPossibleAmount: number;
   sendFlowRepository: SendFlowRepository;
@@ -118,7 +118,9 @@ const BaseForm = (props: FormProps & FormikProps<FormValues>) => {
         {...props}
         handleChange={(e: React.ChangeEvent<any>) => {
           const amount = e.target.value as string;
-          setFieldValue('amount', sanitizeInputAmount(amount, asset.precision), true);
+          if (amount !== '') {
+            setFieldValue('amount', sanitizeInputAmount(amount, asset.precision), true);
+          }
         }}
         value={values.amount}
         name="amount"
@@ -144,18 +146,19 @@ const BaseForm = (props: FormProps & FormikProps<FormValues>) => {
   );
 };
 
+function amountToValue(amount?: number, precision = 8): string {
+  if (amount === undefined) return '';
+  return amount <= 0
+    ? ''
+    : sanitizeInputAmount(fromSatoshi(amount ?? 0, precision).toString(), precision);
+}
+
 const AddressAmountForm = withFormik<FormProps, FormValues>({
   mapPropsToValues: (props: FormProps): FormValues => ({
     address: props.dataInCache.address ?? '',
     // Little hack to initialize empty value of type number
     // https://github.com/formium/formik/issues/321#issuecomment-478364302
-    amount:
-      props.dataInCache.amount <= 0
-        ? ''
-        : sanitizeInputAmount(
-            fromSatoshi(props.dataInCache.amount ?? 0, props.asset.precision).toString(),
-            props.asset.precision
-          ),
+    amount: amountToValue(props.dataInCache.amount, props.asset.precision),
   }),
 
   validationSchema: (props: FormProps): any =>

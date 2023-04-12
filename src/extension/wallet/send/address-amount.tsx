@@ -59,11 +59,7 @@ const AddressAmountView: React.FC = () => {
               history={history}
               maxPossibleAmount={cache?.balances.value[sendAsset.assetHash] ?? 0}
               network={cache.network}
-              dataInCache={{
-                amount: 0,
-                address: '',
-                ...dataInCache,
-              }}
+              dataInCache={{ ...dataInCache }}
               asset={sendAsset}
               sendFlowRepository={sendFlowRepository}
             />
