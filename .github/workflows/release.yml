@@ -52,15 +52,21 @@ jobs:
           yarn build:v3
           yarn web-ext:build:v3
 
+      # Build extension v2
+      - name: Build extension manifest v2
+        run: |
+          yarn build
+          yarn web-ext:build
+
       # Release to github
-      - name: Create Release (manifest v3)
+      - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }} (manifest v3)
+          release_name: Release ${{ github.ref }}
 
       - name: Upload release (manifest v3)
         uses: actions/upload-release-asset@v1
@@ -71,22 +77,6 @@ jobs:
           asset_path: ./web-ext-artifacts/v3/marina-${{ steps.next_version.outputs.version }}.zip
           asset_name: marina-v3-${{ steps.next_version.outputs.version }}.zip
           asset_content_type: application/zip
-
-      # Build extension v2
-      - name: Build extension manifest v2
-        run: |
-          yarn build
-          yarn web-ext:build
-
-      # Release to github
-      - name: Create Release (manifest v2)
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }} (manifest v2)
 
       - name: Upload release (manifest v2)
         uses: actions/upload-release-asset@v1
