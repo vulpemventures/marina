@@ -75,8 +75,8 @@ jobs:
       # Build extension v2
       - name: Build extension manifest v2
         run: |
-          yarn build:v2
-          yarn web-ext:build:v2
+          yarn build
+          yarn web-ext:build
 
       # Release to github
       - name: Create Release (manifest v2)
