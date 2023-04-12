@@ -12,7 +12,7 @@ const GetTransactionMethod = 'blockchain.transaction.get'; // returns hex string
 const SubscribeStatusMethod = 'blockchain.scripthash'; // ElectrumWS automatically adds '.subscribe'
 const GetRelayFeeMethod = 'blockchain.relayfee';
 
-const MISSING_TRANSACTION = 'missing transaction';
+const MISSING_TRANSACTION = 'missingtransaction';
 const MAX_FETCH_TRANSACTIONS_ATTEMPTS = 5;
 
 export class WsElectrumChainSource implements ChainSource {
