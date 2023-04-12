@@ -76,7 +76,6 @@ async function getPsetInformations(
       const value = ElementsValue.fromBytes(output.value);
       if (value.isConfidential) {
         const [unblinded] = await unblinder.unblind(output);
-        console.log('unblinded', unblinded);
         if (unblinded instanceof Error) continue;
         result.walletOutputs.push({
           ...scriptDetails,
@@ -131,11 +130,11 @@ const PsetView: React.FC<PsetInfos> = ({ txID, utxosInInputs, walletOutputs, fee
         ))}
       </div>
       <p className="mt-2 text-base font-medium">
-        and requests you to sign {utxosInInputs.filter(({ blindingData }) => !!blindingData).length}{' '}
+        Requests you to sign {utxosInInputs.filter(({ blindingData }) => !!blindingData).length}{' '}
         utxo(s)
       </p>
       <p className="mt-2 text-base font-medium">
-        fee output: {fromSatoshi(feeOutputAmount, 8)} L-BTC
+        Fee output: {fromSatoshi(feeOutputAmount, 8)} L-BTC
       </p>
     </div>
   );
