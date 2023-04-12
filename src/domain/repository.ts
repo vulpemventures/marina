@@ -7,9 +7,11 @@ import type {
   DataRecipient,
   NetworkString,
   ScriptDetails,
+  UnblindedOutput,
+  UnblindingData,
 } from 'marina-provider';
 import { AccountType } from 'marina-provider';
-import type { UnblindingData, CoinSelection, TxDetails, UnblindedOutput } from './transaction';
+import type { CoinSelection, TxDetails } from './transaction';
 import Browser from 'webextension-polyfill';
 import type { Encrypted } from './encryption';
 import { encrypt } from './encryption';
@@ -83,7 +85,7 @@ export interface AppRepository {
 
 type MaybeNull<T> = Promise<T | null>;
 
-export type Outpoint = { txID: string; vout: number };
+export type Outpoint = Pick<UnblindedOutput, 'txid' | 'vout'>;
 
 /**
  *  WalletRepository stores all the chain data (transactions, scripts, blinding data and accounts details)
@@ -108,7 +110,7 @@ export interface WalletRepository {
   updateScriptDetails(scriptToDetails: Record<string, ScriptDetails>): Promise<void>;
   updateTxDetails(txIDtoDetails: Record<string, TxDetails>): Promise<void>;
   updateOutpointBlindingData(
-    outpointToBlindingData: Array<[{ txID: string; vout: number }, UnblindingData]>
+    outpointToBlindingData: Array<[Outpoint, UnblindingData]>
   ): Promise<void>;
 
   getEncryptedMnemonic(): Promise<Encrypted | undefined>;

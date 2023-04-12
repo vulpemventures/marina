@@ -4,15 +4,15 @@ import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import type { Output, Transaction } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
-import type { AppRepository, AssetRepository, WalletRepository } from '../domain/repository';
-import type { UnblindingData } from '../domain/transaction';
+import type { AppRepository, AssetRepository, Outpoint, WalletRepository } from '../domain/repository';
 import { DefaultAssetRegistry } from '../port/asset-registry';
+import type { UnblindingData } from 'marina-provider';
 
 const slip77 = SLIP77Factory(ecc);
 
 export interface Unblinder {
   unblind(...outputs: Output[]): Promise<(UnblindingData | Error)[]>;
-  unblindTxs(...txs: Transaction[]): Promise<[{ txID: string; vout: number }, UnblindingData][]>;
+  unblindTxs(...txs: Transaction[]): Promise<[Outpoint, UnblindingData][]>;
 }
 
 export class WalletRepositoryUnblinder implements Unblinder {
@@ -89,12 +89,12 @@ export class WalletRepositoryUnblinder implements Unblinder {
 
   async unblindTxs(
     ...txs: Transaction[]
-  ): Promise<[{ txID: string; vout: number }, UnblindingData][]> {
-    const unblindedOutpoints: Array<[{ txID: string; vout: number }, UnblindingData]> = [];
+  ): Promise<[Outpoint, UnblindingData][]> {
+    const unblindedOutpoints: Array<[Outpoint, UnblindingData]> = [];
 
     for (const tx of txs) {
       const unblindedResults = await this.unblind(...tx.outs);
-      const txID = tx.getId();
+      const txid = tx.getId();
       for (const [vout, unblinded] of unblindedResults.entries()) {
         if (unblinded instanceof Error) {
           if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
@@ -102,7 +102,7 @@ export class WalletRepositoryUnblinder implements Unblinder {
           console.error('Error while unblinding', unblinded);
           continue;
         }
-        unblindedOutpoints.push([{ txID, vout }, unblinded]);
+        unblindedOutpoints.push([{ txid, vout }, unblinded]);
       }
     }
 

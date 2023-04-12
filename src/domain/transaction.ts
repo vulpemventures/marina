@@ -1,13 +1,6 @@
 import { AssetHash, ElementsValue, networks, script, Transaction } from 'liquidjs-lib';
 import type { AppRepository, WalletRepository } from './repository';
-import type { ScriptDetails } from 'marina-provider';
-
-export type UnblindingData = {
-  value: number;
-  asset: string;
-  assetBlindingFactor: string;
-  valueBlindingFactor: string;
-};
+import type { ScriptDetails, UnblindedOutput } from 'marina-provider';
 
 export enum TxType {
   SelfTransfer = 'SelfTransfer',
@@ -29,15 +22,9 @@ export interface TxDetails {
 export type TxFlow = Record<string, number>;
 
 export interface TxDetailsExtended extends TxDetails {
-  txID: string;
+  txid: string;
   txFlow: TxFlow;
   feeAmount: number;
-}
-
-export interface UnblindedOutput {
-  txID: string;
-  vout: number;
-  blindingData?: UnblindingData;
 }
 
 export interface CoinSelection {
@@ -66,13 +53,13 @@ export async function makeURLwithBlinders(
   if (!webExplorerURL) {
     throw new Error('web explorer url not found');
   }
-  const txID = transaction.getId();
+  const txid = transaction.getId();
 
   const blinders: string[] = [];
   for (let vout = 0; vout < transaction.outs.length; vout++) {
     const output = transaction.outs[vout];
     if (output.script.length === 0) continue;
-    const [data] = await walletRepository.getOutputBlindingData({ txID, vout });
+    const [data] = await walletRepository.getOutputBlindingData({ txid, vout });
     if (!data || !data.blindingData) continue;
 
     blinders.push(
@@ -82,7 +69,7 @@ export async function makeURLwithBlinders(
     );
   }
 
-  const url = `${webExplorerURL}/tx/${txID}#blinded=${blinders.join(',')}`;
+  const url = `${webExplorerURL}/tx/${txid}#blinded=${blinders.join(',')}`;
   return url;
 }
 
@@ -93,7 +80,7 @@ export async function lockTransactionInputs(
   const transaction = Transaction.fromHex(txHex);
   return walletRepository.lockOutpoints(
     transaction.ins.map((input) => ({
-      txID: Buffer.from(input.hash).reverse().toString('hex'),
+      txid: Buffer.from(input.hash).reverse().toString('hex'),
       vout: input.index,
     }))
   );
@@ -108,13 +95,13 @@ export function computeTxDetailsExtended(
     if (!details.hex) {
       return {
         ...details,
-        txID: '',
+        txid: '',
         txFlow: {},
         feeAmount: 0,
       };
     }
     const transaction = Transaction.fromHex(details.hex);
-    const txID = transaction.getId();
+    const txid = transaction.getId();
 
     let feeAmount = 0;
     const txFlow: TxFlow = {};
@@ -131,7 +118,7 @@ export function computeTxDetailsExtended(
       if (!scriptsState[output.script.toString('hex')]) continue;
 
       if (elementsValue.isConfidential) {
-        const [data] = await walletRepository.getOutputBlindingData({ txID, vout: outIndex });
+        const [data] = await walletRepository.getOutputBlindingData({ txid, vout: outIndex });
         if (!data || !data.blindingData) continue;
         txFlow[data.blindingData.asset] =
           (txFlow[data.blindingData.asset] || 0) + data.blindingData.value;
@@ -156,7 +143,7 @@ export function computeTxDetailsExtended(
 
       if (elementsValue.isConfidential) {
         const [data] = await walletRepository.getOutputBlindingData({
-          txID: inputTxID,
+          txid: inputTxID,
           vout: inputPrevoutIndex,
         });
         if (!data || !data.blindingData) continue;
@@ -183,7 +170,7 @@ export function computeTxDetailsExtended(
 
     return {
       ...details,
-      txID,
+      txid,
       txFlow,
       feeAmount,
     };

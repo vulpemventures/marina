@@ -217,12 +217,12 @@ export class PsetBuilder {
 
     // get the witness utxos from repository
     const utxosWitnessUtxos = await Promise.all(
-      unlockedUtxos.map((utxo) => this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout))
+      unlockedUtxos.map((utxo) => this.walletRepository.getWitnessUtxo(utxo.txid, utxo.vout))
     );
 
     ins.push(
       ...unlockedUtxos.map((utxo, i) => ({
-        txid: utxo.txID,
+        txid: utxo.txid,
         txIndex: utxo.vout,
         sighashType: Transaction.SIGHASH_ALL,
         witnessUtxo: utxosWitnessUtxos[i],
@@ -258,13 +258,13 @@ export class PsetBuilder {
 
       const witnessUtxos = await Promise.all(
         coinSelection.utxos.map((utxo) =>
-          this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout)
+          this.walletRepository.getWitnessUtxo(utxo.txid, utxo.vout)
         )
       );
 
       updater.addInputs(
         coinSelection.utxos.map((utxo, i) => ({
-          txid: utxo.txID,
+          txid: utxo.txid,
           txIndex: utxo.vout,
           sighashType: Transaction.SIGHASH_ALL,
           witnessUtxo: witnessUtxos[i],
@@ -392,7 +392,7 @@ export class PsetBuilder {
         [{ asset: networks[network].assetHash, amount: feeAmount }],
         // exclude the already selected utxos used in the pset inputs
         updater.pset.inputs.map((input) => ({
-          txID: Buffer.from(input.previousTxid).reverse().toString('hex'),
+          txid: Buffer.from(input.previousTxid).reverse().toString('hex'),
           vout: input.previousTxIndex,
         })),
         ...fromAccounts
@@ -400,13 +400,13 @@ export class PsetBuilder {
 
       const newWitnessUtxos = await Promise.all(
         newCoinSelection.utxos.map((utxo) => {
-          return this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+          return this.walletRepository.getWitnessUtxo(utxo.txid, utxo.vout);
         })
       );
 
       newIns.push(
         ...newCoinSelection.utxos.map((utxo, i) => ({
-          txid: utxo.txID,
+          txid: utxo.txid,
           txIndex: utxo.vout,
           sighashType: Transaction.SIGHASH_ALL,
           witnessUtxo: newWitnessUtxos[i],
@@ -517,7 +517,7 @@ export class PsetBuilder {
     // we'll need this to persist the taxi blinding data in wallet repository
     const outpointsToBlindingData: [
       {
-        txID: string;
+        txid: string;
         vout: number;
       },
       UnblindingData
@@ -525,7 +525,7 @@ export class PsetBuilder {
     for (const [index, input] of pset.inputs.entries()) {
       outpointsToBlindingData.push([
         {
-          txID: Buffer.from(input.previousTxid).reverse().toString('hex'),
+          txid: Buffer.from(input.previousTxid).reverse().toString('hex'),
           vout: input.previousTxIndex,
         },
         inBlindingData[index],
@@ -585,13 +585,13 @@ export class PsetBuilder {
     // get the witness utxos from repository
     const utxosWitnessUtxos = await Promise.all(
       coinSelection.utxos.map((utxo) => {
-        return this.walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+        return this.walletRepository.getWitnessUtxo(utxo.txid, utxo.vout);
       })
     );
 
     ins.push(
       ...coinSelection.utxos.map((utxo, i) => ({
-        txid: utxo.txID,
+        txid: utxo.txid,
         txIndex: utxo.vout,
         sighashType: Transaction.SIGHASH_ALL,
         witnessUtxo: utxosWitnessUtxos[i],

@@ -183,14 +183,14 @@ describe('Application Layer', () => {
         // generate and faucet addresses
         let account = await factory.make('regtest', randomAccountName);
         const address = await account.getNextAddress(false);
-        const txID0 = await faucet(address.confidentialAddress, 1);
-        const txID1 = await faucet(address.confidentialAddress, 1);
+        const txid0 = await faucet(address.confidentialAddress, 1);
+        const txid1 = await faucet(address.confidentialAddress, 1);
         const addressBis = await account.getNextAddress(false);
-        const txID2 = await faucet(addressBis.confidentialAddress, 1);
-        const txID3 = await faucet(addressBis.confidentialAddress, 1);
+        const txid2 = await faucet(addressBis.confidentialAddress, 1);
+        const txid3 = await faucet(addressBis.confidentialAddress, 1);
         const changeAddress = await account.getNextAddress(true);
-        const txID4 = await faucet(changeAddress.confidentialAddress, 1);
-        const txID5 = await faucet(changeAddress.confidentialAddress, 1);
+        const txid4 = await faucet(changeAddress.confidentialAddress, 1);
+        const txid5 = await faucet(changeAddress.confidentialAddress, 1);
         await sleep(5000); // wait for the txs to be confirmed
 
         // then let's simulate re-onboarding by erasing the indexes (we "forget" the generated addresses)
@@ -219,12 +219,12 @@ describe('Application Layer', () => {
 
         // check is the txs are here
         const txs = await walletRepository.getTransactions('regtest');
-        expect(txs).toContain(txID0);
-        expect(txs).toContain(txID1);
-        expect(txs).toContain(txID2);
-        expect(txs).toContain(txID3);
-        expect(txs).toContain(txID4);
-        expect(txs).toContain(txID5);
+        expect(txs).toContain(txid0);
+        expect(txs).toContain(txid1);
+        expect(txs).toContain(txid2);
+        expect(txs).toContain(txid3);
+        expect(txs).toContain(txid4);
+        expect(txs).toContain(txid5);
         // check the utxos
         const utxos = await walletRepository.getUtxos('regtest', randomAccountName);
         expect(utxos).toHaveLength(6);
@@ -339,10 +339,10 @@ describe('Application Layer', () => {
       const transaction = Transaction.fromHex(hex);
       expect(transaction.ins).toHaveLength(2);
       const chainSource = await appRepository.getChainSource('regtest');
-      const txID = await chainSource?.broadcastTransaction(hex);
+      const txid = await chainSource?.broadcastTransaction(hex);
       await lockTransactionInputs(walletRepository, hex);
       await chainSource?.close();
-      expect(txID).toEqual(transaction.getId());
+      expect(txid).toEqual(transaction.getId());
     }, 10_000);
 
     describe('Ionio contract account', () => {
@@ -359,11 +359,11 @@ describe('Application Layer', () => {
 
         const utxo = (await walletRepository.getUtxos('regtest', ionioAccountName))[0];
         expect(utxo.blindingData).toBeTruthy();
-        const witnessUtxo = await walletRepository.getWitnessUtxo(utxo.txID, utxo.vout);
+        const witnessUtxo = await walletRepository.getWitnessUtxo(utxo.txid, utxo.vout);
         expect(witnessUtxo).toBeTruthy();
 
         const tx = contract
-          .from(utxo.txID, utxo.vout, witnessUtxo!, {
+          .from(utxo.txid, utxo.vout, witnessUtxo!, {
             asset: AssetHash.fromHex(utxo.blindingData!.asset).bytesWithoutPrefix,
             value: utxo.blindingData!.value.toString(10),
             assetBlindingFactor: Buffer.from(utxo.blindingData!.assetBlindingFactor, 'hex'),
@@ -388,10 +388,10 @@ describe('Application Layer', () => {
         const transaction = Extractor.extract(signed.pset);
         const hex = transaction.toHex();
         const chainSource = await appRepository.getChainSource('regtest');
-        const txID = await chainSource?.broadcastTransaction(hex);
+        const txid = await chainSource?.broadcastTransaction(hex);
         await lockTransactionInputs(walletRepository, hex);
         await chainSource?.close();
-        expect(txID).toEqual(transaction.getId());
+        expect(txid).toEqual(transaction.getId());
       }, 12_000);
 
       it('should be able to restore using a restorationJSON', async () => {

@@ -13,7 +13,7 @@ import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository
 import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
 import type { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
 import type { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
-import type { TxDetails, UnblindedOutput } from '../../domain/transaction';
+import type { TxDetails } from '../../domain/transaction';
 import { lockTransactionInputs, computeBalances } from '../../domain/transaction';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
@@ -45,6 +45,7 @@ import type {
   NetworkString,
   Recipient,
   ScriptDetails,
+  UnblindedOutput,
   Utxo,
 } from 'marina-provider';
 import { AccountType, isAddressRecipient, isDataRecipient } from 'marina-provider';
@@ -96,7 +97,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   }
 
   private async unblindedOutputToUtxo(coin: UnblindedOutput): Promise<Utxo> {
-    const witnessUtxo = await this.walletRepository.getWitnessUtxo(coin.txID, coin.vout);
+    const witnessUtxo = await this.walletRepository.getWitnessUtxo(coin.txid, coin.vout);
     let scriptDetails: ScriptDetails | undefined;
 
     if (witnessUtxo) {
@@ -107,7 +108,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
       scriptDetails = details;
     }
     return {
-      txid: coin.txID,
+      txid: coin.txid,
       vout: coin.vout,
       blindingData: coin.blindingData,
       scriptDetails: scriptDetails,
@@ -430,7 +431,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               continue;
             }
             await this.walletRepository.updateOutpointBlindingData([
-              [{ txID: utxo.txid, vout: utxo.vout }, unblinded],
+              [{ txid: utxo.txid, vout: utxo.vout }, unblinded],
             ]);
             utxo.blindingData = unblinded;
             utxos.push(utxo);

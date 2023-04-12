@@ -3,7 +3,7 @@ import { Transaction } from 'liquidjs-lib';
 import Browser from 'webextension-polyfill';
 import type { Unblinder } from './unblinder';
 import { WalletRepositoryUnblinder } from './unblinder';
-import type { TxDetails, UnblindingData } from '../domain/transaction';
+import type { TxDetails } from '../domain/transaction';
 import type {
   WalletRepository,
   AppRepository,
@@ -13,7 +13,7 @@ import type {
 } from '../domain/repository';
 import { TxIDsKey } from '../infrastructure/storage/wallet-repository';
 import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
-import type { NetworkString } from 'marina-provider';
+import type { NetworkString, UnblindingData } from 'marina-provider';
 import { AppStorageKeys } from '../infrastructure/storage/app-repository';
 import type { ChainSource } from '../domain/chainsource';
 import { DefaultAssetRegistry } from '../port/asset-registry';
@@ -187,7 +187,7 @@ export class UpdaterService {
       for (const [vout, output] of tx.outs.entries()) {
         if (output.script && output.script) {
           acc.push({
-            txID: tx.getId(),
+            txid: tx.getId(),
             vout,
             ...output,
           });
@@ -200,21 +200,21 @@ export class UpdaterService {
     const toUnblind = unblindOutputsInRepo.filter(({ blindingData }) => blindingData === undefined);
 
     const outputsToUnblind = toUnblind.map(
-      ({ txID, vout }) =>
-        outpoints.find(({ txID: txID2, vout: vout2 }) => txID === txID2 && vout === vout2)!
+      ({ txid, vout }) =>
+        outpoints.find(({ txid: txID2, vout: vout2 }) => txid === txID2 && vout === vout2)!
     );
     const unblindedResults = await this.unblinder.unblind(...outputsToUnblind);
 
     const updateArray: [Outpoint, UnblindingData][] = [];
     for (const [i, unblinded] of unblindedResults.entries()) {
-      const { txID, vout } = toUnblind[i];
+      const { txid, vout } = toUnblind[i];
       if (unblinded instanceof Error) {
         if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
         if (unblinded.message === 'Empty script: fee output') continue;
         console.error('Error while unblinding', unblinded);
         continue;
       }
-      updateArray.push([{ txID, vout }, unblinded]);
+      updateArray.push([{ txid, vout }, unblinded]);
     }
 
     const assetsInArray = updateArray.map(([, { asset }]) => asset);

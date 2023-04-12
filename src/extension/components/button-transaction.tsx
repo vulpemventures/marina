@@ -129,7 +129,7 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
           </div>
           <div>
             <p className="text-base font-medium">ID transaction</p>
-            <p className="wrap text-xs font-light break-all">{txDetails.txID}</p>
+            <p className="wrap text-xs font-light break-all">{txDetails.txid}</p>
           </div>
         </div>
         <Button className="w-full" onClick={() => handleOpenExplorer()}>
