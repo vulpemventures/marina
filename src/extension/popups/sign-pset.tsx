@@ -39,37 +39,37 @@ const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
   return (
     <div className="flex flex-col">
       <p className="mt-4 text-base font-medium text-center">Requests you to send</p>
-      <div className="container flex flex-col">
+      <div className="container flex flex-col mt-6">
         {Object.entries(txFlow)
           .filter(([, value]) => value > 0)
           .map(([asset, value], index, array) => (
             <div key={index}>
-              <div className="container flex justify-between mt-6">
+              <div className="container flex justify-between">
                 <span className="text-lg font-medium">
                   {fromSatoshi(value, getPrecision(asset))}{' '}
                 </span>
                 <span className="text-lg font-medium">{getTicker(asset)}</span>
               </div>
               {index < array.length - 1 && (
-                <div className="w-48 mx-auto border-b-0.5 border-primary pt-1.5" />
+                <div className="w-64 mx-auto border-b-0.5 border-primary pt-1.5 mb-1.5" />
               )}
             </div>
           ))}
       </div>
       <p className="mt-4 text-base font-medium text-center">Requests you to spend</p>
-      <div className="container flex flex-col">
+      <div className="container flex flex-col mt-6">
         {Object.entries(txFlow)
           .filter(([, value]) => value < 0)
           .map(([asset, value], index, array) => (
             <div key={index}>
-              <div className="container flex justify-between mt-6">
+              <div className="container flex justify-between">
                 <span className="text-lg font-medium">
                   {fromSatoshi(Math.abs(value), getPrecision(asset))}{' '}
                 </span>
                 <span className="text-lg font-medium">{getTicker(asset)}</span>
               </div>
               {index < array.length - 1 && (
-                <div className="w-48 mx-auto border-b-0.5 border-primary pt-1.5" />
+                <div className="w-64 mx-auto border-b-0.5 border-primary pt-1.5 mb-1.5" />
               )}
             </div>
           ))}
