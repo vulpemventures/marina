@@ -9,7 +9,7 @@ export const test = basePlaywrightTest.extend<{
 }>({
     // eslint-disable-next-line no-empty-pattern
     context: async ({ }, use) => {
-        const pathToExtension = path.join(__dirname, '../dist');
+        const pathToExtension = path.join(__dirname, '../dist', 'v3');
         const context = await chromium.launchPersistentContext('', {
             headless: false,
             args: [
