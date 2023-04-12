@@ -21,7 +21,6 @@ export class WsElectrumChainSource implements ChainSource {
   async fetchTransactions(txids: string[]): Promise<{ txID: string; hex: string }[]> {
     const requests = txids.map((txid) => ({ method: GetTransactionMethod, params: [txid] }));
     for (let i = 0; i < MAX_FETCH_TRANSACTIONS_ATTEMPTS; i++) {
-      requests[i].params = [txids[i]];
       try {
         const responses = await this.ws.batchRequest<string[]>(...requests);
         return responses.map((hex, i) => ({ txID: txids[i], hex }));
@@ -31,7 +30,6 @@ export class WsElectrumChainSource implements ChainSource {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
-        console.log(e);
         throw e;
       }
     }
