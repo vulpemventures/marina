@@ -4,7 +4,12 @@ import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import type { Output, Transaction } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
-import type { AppRepository, AssetRepository, Outpoint, WalletRepository } from '../domain/repository';
+import type {
+  AppRepository,
+  AssetRepository,
+  Outpoint,
+  WalletRepository,
+} from '../domain/repository';
 import { DefaultAssetRegistry } from '../port/asset-registry';
 import type { UnblindingData } from 'marina-provider';
 
@@ -87,9 +92,7 @@ export class WalletRepositoryUnblinder implements Unblinder {
     return unblindingResults;
   }
 
-  async unblindTxs(
-    ...txs: Transaction[]
-  ): Promise<[Outpoint, UnblindingData][]> {
+  async unblindTxs(...txs: Transaction[]): Promise<[Outpoint, UnblindingData][]> {
     const unblindedOutpoints: Array<[Outpoint, UnblindingData]> = [];
 
     for (const tx of txs) {

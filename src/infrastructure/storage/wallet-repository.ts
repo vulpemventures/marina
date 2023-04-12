@@ -1,14 +1,16 @@
 // @ts-ignore
 import coinselect from 'coinselect';
 // import coinselectSplit from 'coinselect/split';
-import type { NetworkString, ScriptDetails, UnblindingData, UnblindedOutput } from 'marina-provider';
+import type {
+  NetworkString,
+  ScriptDetails,
+  UnblindingData,
+  UnblindedOutput,
+} from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import type { TxOutput } from 'liquidjs-lib';
 import { Transaction } from 'liquidjs-lib';
-import type {
-  TxDetails,
-  CoinSelection,
-} from '../../domain/transaction';
+import type { TxDetails, CoinSelection } from '../../domain/transaction';
 import { computeBalances } from '../../domain/transaction';
 import type { AccountDetails, WalletRepository, Outpoint } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
@@ -485,10 +487,11 @@ export class WalletStorageAPI implements WalletRepository {
       Object.entries(wholeStorage)
         .filter(
           ([key, value]) =>
-            ScriptDetailsKey.is(key) &&
-            (value as ScriptDetails).networks.includes(network)
+            ScriptDetailsKey.is(key) && (value as ScriptDetails).networks.includes(network)
         )
-        .filter(([_, value]) => (names && names.length > 0) ? names.includes((value as ScriptDetails).accountName) : true)
+        .filter(([_, value]) =>
+          names && names.length > 0 ? names.includes((value as ScriptDetails).accountName) : true
+        )
         .map(([key, value]) => [ScriptDetailsKey.decode(key)[0], value as ScriptDetails])
     );
   }
