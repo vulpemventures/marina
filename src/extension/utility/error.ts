@@ -8,7 +8,10 @@ const DEFAULT_ERROR_MSG = 'Unknown error';
  * @param defaultMsg optional default message
  * @returns a string
  */
-export function extractErrorMessage(error: unknown, defaultMsg: string = DEFAULT_ERROR_MSG) {
+export function extractErrorMessage(
+  error: unknown,
+  defaultMsg: string = DEFAULT_ERROR_MSG
+): string {
   // if is already a string, return it
   if (typeof error === 'string') return error;
 
