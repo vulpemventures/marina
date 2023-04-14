@@ -17,7 +17,7 @@ import type { TxDetails, UnblindedOutput } from '../../domain/transaction';
 import { lockTransactionInputs, computeBalances } from '../../domain/transaction';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
-import { networks } from 'liquidjs-lib';
+import { ElementsValue, networks } from 'liquidjs-lib';
 import { PopupsStorageAPI } from '../../infrastructure/storage/popups-repository';
 import type {
   DisabledMarinaEvent,
@@ -52,6 +52,7 @@ import type { SpendPopupResponse } from '../../extension/popups/spend';
 import type { CreateAccountPopupResponse } from '../../extension/popups/create-account';
 import { BlinderService } from '../../application/blinder';
 import zkpLib from '@vulpemventures/secp256k1-zkp';
+import type { Unblinder } from '../../application/unblinder';
 import { WalletRepositoryUnblinder } from '../../application/unblinder';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
@@ -64,6 +65,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
   private assetRepository: AssetRepository;
   private taxiRepository: TaxiRepository;
   private popupsRepository: PopupsRepository;
+  private unblinder: Unblinder | undefined;
 
   static async Start(hostname: string) {
     const broker = new MarinaBroker(hostname);
@@ -74,6 +76,12 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         broker.selectedAccount = MainAccountTest;
       }
     }
+    broker.unblinder = new WalletRepositoryUnblinder(
+      broker.walletRepository,
+      broker.appRepository,
+      broker.assetRepository,
+      await zkpLib()
+    );
     broker.start();
   }
 
@@ -101,9 +109,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
 
     if (witnessUtxo) {
       const script = witnessUtxo.script.toString('hex');
-      const { [script]: details } = await this.walletRepository.getScriptDetails(
-        witnessUtxo?.script.toString('hex')
-      );
+      const { [script]: details } = await this.walletRepository.getScriptDetails(script);
       scriptDetails = details;
     }
     return {
@@ -149,9 +155,29 @@ export default class MarinaBroker extends Broker<keyof Marina> {
       });
     });
     this.walletRepository.onNewUtxo(this.network)(async (utxo) => {
+      const unspent = await this.unblindedOutputToUtxo(utxo);
+      if (
+        unspent.witnessUtxo &&
+        ElementsValue.fromBytes(unspent.witnessUtxo.value).isConfidential &&
+        !utxo.blindingData &&
+        this.unblinder
+      ) {
+        const unblinded = (await this.unblinder.unblind(unspent.witnessUtxo)).at(0);
+        if (!(unblinded instanceof Error) && unblinded) {
+          unspent.blindingData = unblinded;
+          try {
+            await this.walletRepository.updateOutpointBlindingData([
+              [{ txID: unspent.txid, vout: unspent.vout }, unblinded],
+            ]);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
       return this.dispatchEventToProvider<NewUtxoMarinaEvent>({
         type: 'NEW_UTXO',
-        payload: { data: await this.unblindedOutputToUtxo(utxo) },
+        payload: { data: unspent },
       });
     });
     this.walletRepository.onNewTransaction((ID: string, details: TxDetails) => {
@@ -402,12 +428,6 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           if (!network) throw new Error('Network not set up');
           const coins = await this.walletRepository.getUtxos(network, ...accountsIDs);
           const utxos: Utxo[] = [];
-          const unblinder = new WalletRepositoryUnblinder(
-            this.walletRepository,
-            this.appRepository,
-            this.assetRepository,
-            await zkpLib()
-          );
           for (const coin of coins) {
             const utxo = await this.unblindedOutputToUtxo(coin);
             // add coins that are not blinded or that are already unblinded
@@ -422,17 +442,18 @@ export default class MarinaBroker extends Broker<keyof Marina> {
               utxos.push(utxo);
               continue;
             }
-
-            const unblinded = (await unblinder.unblind(utxo.witnessUtxo)).at(0);
-            if (unblinded instanceof Error || !unblinded) {
-              console.warn('unblinding failed', unblinded);
-              utxos.push(utxo); // add the utxo anyway
-              continue;
+            if (this.unblinder) {
+              const unblinded = (await this.unblinder.unblind(utxo.witnessUtxo)).at(0);
+              if (unblinded instanceof Error || !unblinded) {
+                console.warn('unblinding failed', unblinded);
+                utxos.push(utxo); // add the utxo anyway
+                continue;
+              }
+              await this.walletRepository.updateOutpointBlindingData([
+                [{ txID: utxo.txid, vout: utxo.vout }, unblinded],
+              ]);
+              utxo.blindingData = unblinded;
             }
-            await this.walletRepository.updateOutpointBlindingData([
-              [{ txID: utxo.txid, vout: utxo.vout }, unblinded],
-            ]);
-            utxo.blindingData = unblinded;
             utxos.push(utxo);
           }
 
