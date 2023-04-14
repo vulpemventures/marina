@@ -20,9 +20,10 @@ import { Spinner } from '../components/spinner';
 import type { TxDetailsExtended } from '../../domain/transaction';
 import { computeTxDetailsExtended } from '../../domain/transaction';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../application/account';
+import { DefaultAssetRegistry } from '../../port/asset-registry';
 
 const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
-  const { cache } = useStorageContext();
+  const { cache, assetRepository } = useStorageContext();
   const getPrecision = (asset: string) => {
     if (!cache || !cache.assetsDetails || !cache.assetsDetails.value[asset]) return 8;
     const assetInfo = cache.assetsDetails.value[asset];
@@ -35,6 +36,27 @@ const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
     const assetInfo = cache.assetsDetails.value[asset];
     return assetInfo.ticker;
   };
+
+  useEffect(() => {
+    const assetRegistry = new DefaultAssetRegistry(cache?.network || 'liquid');
+    const fetchUnknownAssets = async () => {
+      const unknownAssets = Object.keys(txFlow).filter(
+        (asset) => getTicker(asset) === asset.slice(0, 4)
+      );
+      if (unknownAssets.length === 0) return;
+      const assets = await Promise.allSettled(
+        unknownAssets.map((asset) => assetRegistry.getAsset(asset))
+      );
+
+      for (const asset of assets) {
+        if (asset.status === 'fulfilled') {
+          await assetRepository.addAsset(asset.value.assetHash, asset.value);
+        }
+      }
+    };
+
+    fetchUnknownAssets().catch(console.error);
+  }, []);
 
   return (
     <div className="flex flex-col">
