@@ -168,7 +168,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           unspent.blindingData = unblinded;
           try {
             await this.walletRepository.updateOutpointBlindingData([
-              [{ txID: unspent.txid, vout: unspent.vout }, unblinded],
+              [{ txid: unspent.txid, vout: unspent.vout }, unblinded],
             ]);
           } catch (e) {
             console.error(e);
