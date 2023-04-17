@@ -234,9 +234,9 @@ export class PsetBuilder {
     updater.addInputs(ins).addOutputs(outs);
     const chainSource = await this.appRepository.getChainSource(network);
     if (!chainSource) throw new Error('chain source not set');
-    // we add 50% to the min relay fee in order to be sure that the transaction will be accepted by the network
+    // we add 100% to the min relay fee in order to be sure that the transaction will be accepted by the network
     // some inputs and outputs may be added later to pay the fees
-    const relayFee = (await chainSource.getRelayFee()) * 1.5;
+    const relayFee = (await chainSource.getRelayFee()) * 2;
     await chainSource.close();
     const sats1000Bytes = relayFee * 10 ** 8;
     const estimatedSize = estimateVirtualSize(updater.pset, true);
@@ -358,9 +358,9 @@ export class PsetBuilder {
       throw new Error('chain source not found, cannot estimate fee');
     }
     const updater = new Updater(pset).addInputs(ins).addOutputs(outs);
-    // we add 50% to the min relay fee in order to be sure that the transaction will be accepted by the network
+    // we add 100% to the min relay fee in order to be sure that the transaction will be accepted by the network
     // some inputs and outputs may be added later to pay the fees
-    const relayFee = (await chainSource.getRelayFee()) * 1.5;
+    const relayFee = (await chainSource.getRelayFee()) * 2;
     await chainSource.close();
 
     const sats1000Bytes = relayFee * 10 ** 8;
