@@ -68,6 +68,9 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         console.error(e);
         showToast('Error while loading cache context');
       });
+    return () => {
+      presenter.stop();
+    };
   }, []);
 
   return (

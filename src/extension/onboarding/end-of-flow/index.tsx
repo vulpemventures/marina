@@ -191,7 +191,8 @@ const EndOfFlowOnboarding: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-24">
         <MermaidLoader className="h-1/2 flex items-center justify-center" />
-        <p>We are restoring your wallet. This can take a while, please do not close this window.</p>
+        <p>We are activating your wallet.</p>
+        <p>This can take a while, please do not close this window.</p>
         {numberOfTransactionsToRestore > 0 && (
           <div className="flex flex-col items-center justify-center mt-4">
             <Spinner />
