@@ -14,7 +14,8 @@
     "test:playwright": "playwright test",
     "prettier": "prettier --write src test",
     "prettier:check": "prettier --check src test",
-    "web-ext:build": "web-ext build --source-dir dist --overwrite-dest",
+    "web-ext:build": "web-ext build --source-dir dist/v2 --overwrite-dest --artifacts-dir web-ext-artifacts/v2/",
+    "web-ext:build:v3": "web-ext build --source-dir dist/v3 --overwrite-dest --artifacts-dir web-ext-artifacts/v3/",
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
