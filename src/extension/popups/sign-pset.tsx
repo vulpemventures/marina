@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import Button from '../components/button';
 import ShellConnectPopup from '../components/shell-connect-popup';
 import ModalUnlock from '../components/modal-unlock';
@@ -21,6 +22,7 @@ import type { TxDetailsExtended } from '../../domain/transaction';
 import { computeTxDetailsExtended } from '../../domain/transaction';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../application/account';
 import { DefaultAssetRegistry } from '../../port/asset-registry';
+import { BlinderService } from '../../application/blinder';
 
 const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
   const { cache, assetRepository } = useStorageContext();
@@ -147,8 +149,16 @@ const ConnectSignTransaction: React.FC = () => {
     try {
       if (!psetToSign) throw new Error('no pset to sign');
       if (!password || password.length === 0) throw new Error('Need password');
+      let pset = Pset.fromBase64(psetToSign);
+
+      // try to blind w/ marina inputs before passing to signer svc (will check and throw an error if it remains unblinded confidential outputs in the pset)
+      if (!pset.isFullyBlinded()) {
+        const blinderSvc = new BlinderService(walletRepository, await ZKPLib());
+        pset = await blinderSvc.blindPset(pset);
+      }
+
       const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
-      const signedPset = await signer.signPset(Pset.fromBase64(psetToSign));
+      const signedPset = await signer.signPset(pset);
       await sendResponseMessage(true, signedPset.toBase64());
       window.close();
     } catch (e: any) {
