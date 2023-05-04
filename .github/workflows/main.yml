@@ -38,10 +38,14 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Bundle app
-        run: yarn run build
+        run: |
+          yarn run build
+          yarn run build:v3
 
       - name: Package the extension
-        run: yarn run web-ext:build
+        run: |
+          yarn run web-ext:build
+          yarn run web-ext:build:v3
 
       - name: Lint
         run: |

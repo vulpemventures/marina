@@ -86,14 +86,16 @@ export class PresenterImpl implements Presenter {
     closeFns.push(
       this.blockHeadersRepository.onNewBlockHeader((network, blockHeader) => {
         if (network !== this.state.network) return Promise.resolve();
-        this.state = {
-          ...this.state,
-          blockHeaders: setValue({
-            ...this.state.blockHeaders.value,
-            [blockHeader.height]: blockHeader,
-          }),
-        };
-        emits(this.state);
+        if (blockHeader && blockHeader.height !== undefined) {
+          this.state = {
+            ...this.state,
+            blockHeaders: setValue({
+              ...this.state.blockHeaders.value,
+              [blockHeader.height]: blockHeader,
+            }),
+          };
+          emits(this.state);
+        }
         return Promise.resolve();
       })
     );
