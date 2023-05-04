@@ -23,6 +23,9 @@ import { computeTxDetailsExtended } from '../../domain/transaction';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../application/account';
 import { DefaultAssetRegistry } from '../../port/asset-registry';
 import { BlinderService } from '../../application/blinder';
+import { WalletRepositoryUnblinder } from '../../application/unblinder';
+import type { Outpoint } from '../../domain/repository';
+import type { UnblindingData } from 'marina-provider';
 
 const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
   const { cache, assetRepository } = useStorageContext();
@@ -90,7 +93,7 @@ export interface SignTransactionPopupResponse {
 }
 
 const ConnectSignTransaction: React.FC = () => {
-  const { walletRepository, appRepository } = useStorageContext();
+  const { walletRepository, appRepository, assetRepository } = useStorageContext();
   const { showToast } = useToastContext();
   const { backgroundPort } = useBackgroundPortContext();
 
@@ -117,11 +120,32 @@ const ConnectSignTransaction: React.FC = () => {
         network === 'liquid' ? MainAccount : MainAccountTest
       );
 
+      const unsignedTx = pset.unsignedTx();
+      const txid = unsignedTx.getId();
+      const unblinderSvc = new WalletRepositoryUnblinder(
+        walletRepository,
+        appRepository,
+        assetRepository,
+        await ZKPLib()
+      );
+      const unblindedResults = await unblinderSvc.unblind(...unsignedTx.outs);
+      const updateArray: [Outpoint, UnblindingData][] = [];
+      for (const [vout, unblinded] of unblindedResults.entries()) {
+        if (unblinded instanceof Error) {
+          if (unblinded.message === 'secp256k1_rangeproof_rewind') continue;
+          if (unblinded.message === 'Empty script: fee output') continue;
+          console.error('Error while unblinding', unblinded);
+          continue;
+        }
+        updateArray.push([{ txid, vout }, unblinded]);
+      }
+      await walletRepository.updateOutpointBlindingData(updateArray);
+
       const txDetailsExtended = await computeTxDetailsExtended(
         appRepository,
         walletRepository,
         mainAccountsScripts
-      )({ height: -1, hex: pset.unsignedTx().toHex() });
+      )({ height: -1, hex: unsignedTx.toHex() });
 
       setTxDetails(txDetailsExtended);
     };
