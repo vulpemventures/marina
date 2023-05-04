@@ -98,12 +98,12 @@ pwTest(
     const handleSignTransactionPopup = async () => {
       const popup = await context.waitForEvent('page');
       await popup.waitForSelector(`text=1 L-BTC`);
-      await popup.getByRole('button', { name: 'Accept' }).click();
-      // fill password
-      await popup.getByPlaceholder('Password').fill(PASSWORD);
-      await popup.getByRole('button', { name: 'Unlock' }).click();
+      await popup.getByRole('button', { name: 'Reject' }).click();
     };
 
-    await Promise.all([provider.signTransaction(psetBase64), handleSignTransactionPopup()]);
+    await Promise.all([
+      pwExpect(provider.signTransaction(psetBase64)).rejects.toThrow('User rejected the sign request'),
+      handleSignTransactionPopup(),
+    ]);
   }
 );

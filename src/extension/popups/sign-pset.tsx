@@ -22,7 +22,6 @@ import type { TxDetailsExtended } from '../../domain/transaction';
 import { computeTxDetailsExtended } from '../../domain/transaction';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../application/account';
 import { DefaultAssetRegistry } from '../../port/asset-registry';
-import { BlinderService } from '../../application/blinder';
 import { WalletRepositoryUnblinder } from '../../application/unblinder';
 import type { Outpoint } from '../../domain/repository';
 import type { UnblindingData } from 'marina-provider';
@@ -173,16 +172,8 @@ const ConnectSignTransaction: React.FC = () => {
     try {
       if (!psetToSign) throw new Error('no pset to sign');
       if (!password || password.length === 0) throw new Error('Need password');
-      let pset = Pset.fromBase64(psetToSign);
-
-      // try to blind w/ marina inputs before passing to signer svc (will check and throw an error if it remains unblinded confidential outputs in the pset)
-      if (!pset.isFullyBlinded()) {
-        const blinderSvc = new BlinderService(walletRepository, await ZKPLib());
-        pset = await blinderSvc.blindPset(pset);
-      }
-
       const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
-      const signedPset = await signer.signPset(pset);
+      const signedPset = await signer.signPset(Pset.fromBase64(psetToSign));
       await sendResponseMessage(true, signedPset.toBase64());
       window.close();
     } catch (e: any) {
