@@ -86,14 +86,16 @@ export class PresenterImpl implements Presenter {
     closeFns.push(
       this.blockHeadersRepository.onNewBlockHeader((network, blockHeader) => {
         if (network !== this.state.network) return Promise.resolve();
-        this.state = {
-          ...this.state,
-          blockHeaders: setValue({
-            ...this.state.blockHeaders.value,
-            [blockHeader.height]: blockHeader,
-          }),
-        };
-        emits(this.state);
+        if (blockHeader && blockHeader.height !== undefined) {
+          this.state = {
+            ...this.state,
+            blockHeaders: setValue({
+              ...this.state.blockHeaders.value,
+              [blockHeader.height]: blockHeader,
+            }),
+          };
+          emits(this.state);
+        }
         return Promise.resolve();
       })
     );
@@ -176,24 +178,24 @@ export class PresenterImpl implements Presenter {
       ...['liquid', 'testnet', 'regtest']
         .map((network) => [
           this.walletRepository.onNewUtxo(network as NetworkString)(
-            async ({ txID, vout, blindingData }) => {
+            async ({ txid, vout, blindingData }) => {
               if (!this.state.authenticated.value) return;
               if (network !== this.state.network) return;
               this.state = {
                 ...this.state,
-                utxos: setValue([...this.state.utxos.value, { txID, vout, blindingData }]),
+                utxos: setValue([...this.state.utxos.value, { txid, vout, blindingData }]),
               };
               this.state = await this.updateBalances();
               emits(this.state);
             }
           ),
-          this.walletRepository.onDeleteUtxo(network as NetworkString)(async ({ txID, vout }) => {
+          this.walletRepository.onDeleteUtxo(network as NetworkString)(async ({ txid, vout }) => {
             if (!this.state.authenticated.value) return;
             if (network !== this.state.network) return;
             this.state = {
               ...this.state,
               utxos: setValue(
-                this.state.utxos.value.filter((utxo) => utxo.txID !== txID || utxo.vout !== vout)
+                this.state.utxos.value.filter((utxo) => utxo.txid !== txid || utxo.vout !== vout)
               ),
             };
             this.state = await this.updateBalances();
@@ -204,14 +206,14 @@ export class PresenterImpl implements Presenter {
     );
 
     closeFns.push(
-      this.walletRepository.onUnblindingEvent(async ({ txID, vout, blindingData }) => {
+      this.walletRepository.onUnblindingEvent(async ({ txid, vout, blindingData }) => {
         if (!this.state.authenticated.value) return;
-        if (this.state.utxos.value.find((utxo) => utxo.txID === txID && utxo.vout === vout)) {
+        if (this.state.utxos.value.find((utxo) => utxo.txid === txid && utxo.vout === vout)) {
           this.state = {
             ...this.state,
             utxos: setValue(
               this.state.utxos.value.map((utxo) =>
-                utxo.txID === txID && utxo.vout === vout ? { txID, vout, blindingData } : utxo
+                utxo.txid === txid && utxo.vout === vout ? { txid, vout, blindingData } : utxo
               )
             ),
           };

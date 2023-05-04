@@ -16,7 +16,7 @@ export class BlinderService {
     const ownedInputs: OwnedInput[] = [];
     const inputsBlindingData = await this.walletRepository.getOutputBlindingData(
       ...pset.inputs.map(({ previousTxIndex, previousTxid }) => ({
-        txID: Buffer.from(previousTxid).reverse().toString('hex'),
+        txid: Buffer.from(previousTxid).reverse().toString('hex'),
         vout: previousTxIndex,
       }))
     );

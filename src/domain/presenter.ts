@@ -1,5 +1,5 @@
-import type { NetworkString, Asset } from 'marina-provider';
-import type { TxDetailsExtended, UnblindedOutput } from './transaction';
+import type { NetworkString, Asset, UnblindedOutput } from 'marina-provider';
+import type { TxDetailsExtended } from './transaction';
 import type { BlockHeader } from './chainsource';
 
 export interface LoadingValue<T> {
