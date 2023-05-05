@@ -1,6 +1,6 @@
 {
   "name": "marina",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "manifest_version": 2,
   "description": "Liquid Wallet Web Extension",
   "permissions": [
