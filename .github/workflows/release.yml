@@ -33,7 +33,12 @@ jobs:
           tag=${{ steps.next_tag.outputs.tag }}
           echo ::set-output name=version::${tag:1}
 
-      - name: Increment manifest version
+      - name: Increment manifest v2 version
+        run: |
+          jq '.version = "${{ steps.next_version.outputs.version }}"' ./manifest/manifest.v2.json  > ./manifest/manifest.v2.tmp.json
+          mv ./manifest/manifest.v2.tmp.json ./manifest/manifest.v2.json
+
+      - name: Increment manifest v3 version
         run: |
           jq '.version = "${{ steps.next_version.outputs.version }}"' ./manifest/manifest.v3.json  > ./manifest/manifest.v3.tmp.json
           mv ./manifest/manifest.v3.tmp.json ./manifest/manifest.v3.json
