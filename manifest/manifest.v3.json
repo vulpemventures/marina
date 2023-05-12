@@ -1,7 +1,7 @@
 {
   "name": "Marina",
   "description": "Liquid wallet web extension (v3)",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "manifest_version": 3,
   "background": {
     "service_worker": "background-script.js"
