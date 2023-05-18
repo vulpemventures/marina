@@ -215,7 +215,7 @@ export class Account {
     if (!confidentialAddress) throw new Error('unable to create address from script:' + script);
 
     // increment the account details last used index & persist the new script details
-    await Promise.allSettled([
+    await Promise.all([
       this.walletRepository.updateAccountKeyIndex(this.name, this.network.name as NetworkString, {
         [isInternal ? 'internal' : 'external']: next + 1,
       }),
