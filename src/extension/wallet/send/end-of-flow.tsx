@@ -25,8 +25,9 @@ const SendEndOfFlow: React.FC = () => {
     setUnlockModal(true);
   };
 
-  const handleUnlock = async (password: string) => {
+  const handleUnlock = async function (password: string) {
     let extractedTx = undefined;
+    console.log('signed pset');
     try {
       const unsignedPset = await sendFlowRepository.getUnsignedPset();
       if (!unsignedPset) throw new Error('unsigned pset not found');

@@ -1,4 +1,4 @@
-import type { TxOutput } from 'liquidjs-lib';
+import type { TxOutput, confidential } from 'liquidjs-lib';
 import { Transaction } from 'liquidjs-lib';
 import Browser from 'webextension-polyfill';
 import type { Unblinder } from './unblinder';
@@ -12,7 +12,6 @@ import type {
   Outpoint,
 } from '../domain/repository';
 import { TxIDsKey } from '../infrastructure/storage/wallet-repository';
-import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import type { NetworkString, UnblindingData } from 'marina-provider';
 import { AppStorageKeys } from '../infrastructure/storage/app-repository';
 import type { ChainSource } from '../domain/chainsource';
@@ -36,7 +35,7 @@ export class UpdaterService {
     private appRepository: AppRepository,
     private blockHeadersRepository: BlockheadersRepository,
     private assetRepository: AssetRepository,
-    zkpLib: ZKPInterface
+    zkpLib: confidential.Confidential['zkp']
   ) {
     this.unblinder = new WalletRepositoryUnblinder(
       walletRepository,

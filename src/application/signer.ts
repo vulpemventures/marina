@@ -1,4 +1,5 @@
 import * as ecc from 'tiny-secp256k1';
+import zkpLib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import { BIP32Factory } from 'bip32';
 import {
@@ -8,7 +9,7 @@ import {
   script as bscript,
   Finalizer,
   Extractor,
-  bip341 as bip341lib,
+  bip341,
   networks,
   Updater,
 } from 'liquidjs-lib';
@@ -21,7 +22,6 @@ import { AccountType, isIonioScriptDetails } from 'marina-provider';
 import { h2b } from './utils';
 
 const bip32 = BIP32Factory(ecc);
-const bip341 = bip341lib.BIP341Factory(ecc);
 
 export class SignerService {
   private constructor(
@@ -71,7 +71,7 @@ export class SignerService {
         case AccountType.P2WPKH: {
           const sighash = input.sighashType || Transaction.SIGHASH_ALL; // '||' lets to overwrite SIGHASH_DEFAULT (0x00)
           const signature = key.sign(pset.getInputPreimage(index, sighash));
-
+          const ecc = (await zkpLib()).ecc;
           signer.addSignature(
             index,
             {
@@ -91,11 +91,9 @@ export class SignerService {
           // if no path is specified, we search for a leaf with only marina sig needed
           // if we found it, update the tapLeafScript input field
           if (!isScriptPath) {
-            const contract = new Contract(artifact, params, networks[network], {
-              ecc,
-              zkp: await require('@vulpemventures/secp256k1-zkp')(),
-            });
-            const taprootTree = contract.getTaprootTree();
+            const zkp = await zkpLib();
+            const contract = new Contract(artifact, params, networks[network], zkp);
+            const taprootTree = contract.taprootTree;
             const needs = analyzeTapscriptTree(taprootTree);
             const autospendableLeafScripts = Object.entries(needs)
               .filter(([, scriptNeeds]) => {
@@ -109,23 +107,25 @@ export class SignerService {
 
             const updater = new Updater(pset);
             for (const leafScript of autospendableLeafScripts) {
-              const leafHash = bip341lib.tapLeafHash({ scriptHex: leafScript });
-              const controlBlock = bip341.taprootSignScriptStack(
-                H_POINT,
-                { scriptHex: leafScript },
-                taprootTree.hash,
-                bip341lib.findScriptPath(taprootTree, leafHash)
-              )[1];
+              const leafHash = bip341.tapLeafHash({ scriptHex: leafScript });
+              const controlBlock = bip341
+                .BIP341Factory(zkp.ecc)
+                .taprootSignScriptStack(
+                  H_POINT,
+                  { scriptHex: leafScript },
+                  taprootTree.hash,
+                  bip341.findScriptPath(taprootTree, leafHash)
+                )[1];
               updater.addInTapLeafScript(index, {
                 controlBlock,
-                leafVersion: bip341lib.LEAF_VERSION_TAPSCRIPT,
+                leafVersion: bip341.LEAF_VERSION_TAPSCRIPT,
                 script: Buffer.from(leafScript),
               });
             }
           }
 
           for (const leaf of input.tapLeafScript || []) {
-            const leafHash = bip341lib.tapLeafHash({
+            const leafHash = bip341.tapLeafHash({
               scriptHex: leaf.script.toString('hex'),
               version: leaf.leafVersion,
             });
@@ -152,7 +152,7 @@ export class SignerService {
                   },
                 ],
               },
-              Pset.SchnorrSigValidator(ecc)
+              Pset.SchnorrSigValidator((await zkpLib()).ecc)
             );
           }
 
