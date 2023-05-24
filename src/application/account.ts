@@ -16,7 +16,6 @@ import { SLIP77Factory } from 'slip77';
 import type { AccountDetails, WalletRepository } from '../domain/repository';
 import type { Argument, Artifact } from '@ionio-lang/ionio';
 import { Contract } from '@ionio-lang/ionio';
-import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { h2b } from './utils';
 import type { ChainSource } from '../domain/chainsource';
 
@@ -162,10 +161,7 @@ export class Account {
           confidentialAddress: this.createTaprootAddress(Buffer.from(script, 'hex')),
           ...details,
           contract: isIonioScriptDetails(details)
-            ? new Contract(details.artifact, details.params, this.network, {
-                ecc,
-                zkp,
-              })
+            ? new Contract(details.artifact, details.params, this.network, zkp)
             : undefined,
         }));
       }
@@ -228,10 +224,7 @@ export class Account {
       confidentialAddress,
       ...scriptDetails,
       contract: isIonioScriptDetails(scriptDetails)
-        ? new Contract(scriptDetails.artifact, scriptDetails.params, this.network, {
-            ecc,
-            zkp: await ZKPLib(),
-          })
+        ? new Contract(scriptDetails.artifact, scriptDetails.params, this.network, await ZKPLib())
         : undefined,
     };
   }
@@ -495,7 +488,7 @@ export class Account {
   private createTaprootScript(
     { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath,
     { artifact, args }: ArtifactWithConstructorArgs,
-    zkp: ZKPInterface
+    zkp: Contract['secp256k1ZKP']
   ): [string, ScriptDetails] {
     const constructorArgs: Argument[] = (artifact.constructorInputs || []).map(({ name }) => {
       // inject xOnlyPublicKey argument if one of the contructor args is named like the account name
@@ -511,7 +504,7 @@ export class Account {
       }
       return param;
     });
-    const contract = new Contract(artifact, constructorArgs, this.network, { ecc, zkp });
+    const contract = new Contract(artifact, constructorArgs, this.network, zkp);
     const scriptDetails: IonioScriptDetails = {
       accountName: this.name,
       networks: [this.network.name as NetworkString],

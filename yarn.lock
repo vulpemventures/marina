@@ -428,12 +428,12 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.3.0.tgz#dd6aa1e6fcbb90f88ce5b2938cbd47c7ca427a78"
-  integrity sha512-Uz24tOfPRDBoOtv+OjhZElbyeTo5DTHDuIOdDk415AiSK2eL1F+ILaj7G0SBTG2HwOxo8ooEL1xdo412qES0jQ==
+"@ionio-lang/ionio@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.4.1.tgz#97aa7195fdd9862e8c449db4bbbb8d26ece8340f"
+  integrity sha512-zBQ0eOZ5Tt3Ahf7XyjGGqyTDJRkupJBk1nOGU1yEna43glBDrhTU4V2knkg0PRd9u5hZkbqxukWiCox36E8evg==
   dependencies:
-    liquidjs-lib "^6.0.2-liquid.23"
+    liquidjs-lib "^6.0.2-liquid.27"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -1228,10 +1228,10 @@
     "@typescript-eslint/types" "4.33.0"
     eslint-visitor-keys "^2.0.0"
 
-"@vulpemventures/secp256k1-zkp@2.1.1":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@vulpemventures/secp256k1-zkp/-/secp256k1-zkp-2.1.1.tgz#723692d666df2294a691c1de38b12891e48e1e16"
-  integrity sha512-OIfvP0kRC38Ab8C2MMibKlPVY/PmT81uNGZrCxK24INLh5PPUqOcdK2VvK+xpCvh8TjAsZrwT3KdN6N9fqsTZQ==
+"@vulpemventures/secp256k1-zkp@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@vulpemventures/secp256k1-zkp/-/secp256k1-zkp-3.1.0.tgz#e54d0fae39d0e11c05df366a33fad7761d6111b3"
+  integrity sha512-64Ic62HK/JkjMzKPWcvlw7st/elRrozNqnN6oTaM+M7p1jsJRkCvPWskO5lYxtufKI0Zk2vDLfVBrTTVewBEwg==
   dependencies:
     "@types/node" "^13.9.2"
     long "^4.0.0"
@@ -5450,10 +5450,10 @@ lines-and-columns@^2.0.2:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-2.0.3.tgz#b2f0badedb556b747020ab8ea7f0373e22efac1b"
   integrity sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==
 
-liquidjs-lib@^6.0.2-liquid.23:
-  version "6.0.2-liquid.23"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.23.tgz#5bd8f132410e8bf1775726d78a2bde132ba405cd"
-  integrity sha512-LaHjE+n7va0CkQYCzp1OgKYTTrT4MH4wVGARBLm/oDHAWtZCGE65c9/wzkmUhqFUMd3xSnWqLHKlWD7NFMOjdg==
+liquidjs-lib@^6.0.2-liquid.27:
+  version "6.0.2-liquid.27"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.27.tgz#aa496757c0c579676f192343beb8afb359143230"
+  integrity sha512-cIrw6rhWU8g9mnyvCWuFrXtDSKapE0HAdGUAuFUfJrPAvI1OpZpYjJvVOaSeduvsfHC8ETZZB1h9FnUH5K2JKw==
   dependencies:
     "@types/randombytes" "^2.0.0"
     "@types/wif" "^2.0.2"

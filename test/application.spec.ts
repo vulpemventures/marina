@@ -1,5 +1,4 @@
 import { generateMnemonic, mnemonicToSeed } from 'bip39';
-import * as ecc from 'tiny-secp256k1';
 import { AssetHash, Extractor, networks, Pset, Transaction } from 'liquidjs-lib';
 import { toOutputScript } from 'liquidjs-lib/src/address';
 import type { AccountID, Address, IonioScriptDetails } from 'marina-provider';
@@ -354,7 +353,7 @@ describe('Application Layer', () => {
           (captchaAddress as unknown as IonioScriptDetails).artifact,
           (captchaAddress as unknown as IonioScriptDetails).params,
           networks.regtest,
-          { ecc, zkp: zkpLib }
+          zkpLib
         );
 
         const utxo = (await walletRepository.getUtxos('regtest', ionioAccountName))[0];

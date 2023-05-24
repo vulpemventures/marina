@@ -1,6 +1,5 @@
 import * as ecc from 'tiny-secp256k1';
 import { AssetHash, confidential } from 'liquidjs-lib';
-import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
 import { confidentialValueToSatoshi } from 'liquidjs-lib/src/confidential';
 import type { Output, Transaction } from 'liquidjs-lib/src/transaction';
 import { SLIP77Factory } from 'slip77';
@@ -27,7 +26,7 @@ export class WalletRepositoryUnblinder implements Unblinder {
     private walletRepository: WalletRepository,
     private appRepository: AppRepository,
     private assetRepository: AssetRepository,
-    zkpLib: ZKPInterface
+    zkpLib: confidential.Confidential['zkp']
   ) {
     this.lib = new confidential.Confidential(zkpLib);
   }

@@ -3,7 +3,6 @@ import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import { SOMETHING_WENT_WRONG_ERROR } from '../../domain/constants';
 import { BlinderService } from '../../application/blinder';
 import { popupResponseMessage } from '../../domain/message';
-import { SignerService } from '../../application/signer';
 import type { SpendParameters } from '../../domain/repository';
 import { useSelectPopupSpendParameters } from '../../infrastructure/storage/common';
 import Button from '../components/button';
@@ -17,6 +16,7 @@ import { networks } from 'liquidjs-lib';
 import { PsetBuilder } from '../../domain/pset';
 import { useStorageContext } from '../context/storage-context';
 import { useBackgroundPortContext } from '../context/background-port-context';
+import { SignerService } from '../../application/signer';
 
 export interface SpendPopupResponse {
   accepted: boolean;

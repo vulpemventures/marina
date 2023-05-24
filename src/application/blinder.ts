@@ -1,14 +1,12 @@
-import * as ecc from 'tiny-secp256k1';
 import type { OwnedInput } from 'liquidjs-lib';
-import { AssetHash, Blinder, Pset, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
+import { Pset, AssetHash, Blinder, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
 import type { WalletRepository } from '../domain/repository';
-import type { ZKPInterface } from 'liquidjs-lib/src/confidential';
+import type { Confidential } from 'liquidjs-lib/src/confidential';
 
-const keysGenerator = Pset.ECCKeysGenerator(ecc);
 export class BlinderService {
   private zkpValidator: ZKPValidator;
 
-  constructor(private walletRepository: WalletRepository, private zkpLib: ZKPInterface) {
+  constructor(private walletRepository: WalletRepository, private zkpLib: Confidential['zkp']) {
     this.zkpValidator = new ZKPValidator(zkpLib);
   }
 
@@ -42,7 +40,11 @@ export class BlinderService {
       }
     }
 
-    const outputBlindingArgs = zkpGenerator.blindOutputs(pset, keysGenerator, outputIndexes);
+    const outputBlindingArgs = zkpGenerator.blindOutputs(
+      pset,
+      Pset.ECCKeysGenerator(this.zkpLib.ecc),
+      outputIndexes
+    );
     const inputIndexes = ownedInputs.map((input) => input.index);
     let isLast = true;
     for (const out of pset.outputs) {
