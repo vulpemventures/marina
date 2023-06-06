@@ -276,14 +276,21 @@ export class PsetBuilder {
         const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
         const mainAccount = await accountFactory.make(network, accountName);
         const changeAddress = await mainAccount.getNextAddress(true);
+
+        let blindingPublicKey: Buffer | undefined = undefined;
+        if (changeAddress.confidentialAddress) {
+          blindingPublicKey = address.fromConfidential(
+            changeAddress.confidentialAddress
+          ).blindingKey;
+        }
+
         updater.addOutputs(
           coinSelection.changeOutputs.map((change) => ({
             amount: change.amount,
             asset: change.asset,
-            script: address.toOutputScript(changeAddress.confidentialAddress),
-            blinderIndex: 0,
-            blindingPublicKey: address.fromConfidential(changeAddress.confidentialAddress)
-              .blindingKey,
+            script: Buffer.from(changeAddress.script, 'hex'),
+            blinderIndex: blindingPublicKey ? 0 : undefined,
+            blindingPublicKey,
           }))
         );
       }

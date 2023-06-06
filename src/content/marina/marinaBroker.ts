@@ -574,6 +574,28 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg(Object.keys(allDetails));
         }
 
+        case 'importScript': {
+          await this.checkHostnameAuthorization();
+          const [accountName, script, blindingPrivateKey] = params as [
+            string,
+            string,
+            string | undefined
+          ];
+
+          if (!(await this.accountExists(accountName))) {
+            throw new Error(`Account ${accountName} not found`);
+          }
+
+          const details: ScriptDetails = {
+            accountName,
+            networks: [this.network],
+            blindingPrivateKey,
+          };
+
+          await this.walletRepository.updateScriptDetails({ [script]: details });
+          return successMsg();
+        }
+
         default:
           return newErrorResponseMessage(id, new Error('Method not implemented.'));
       }
