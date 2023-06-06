@@ -1,8 +1,9 @@
 import { generateMnemonic, mnemonicToSeed } from 'bip39';
 import { AssetHash, Extractor, networks, Pset, Transaction } from 'liquidjs-lib';
 import { toOutputScript } from 'liquidjs-lib/src/address';
-import type { AccountID, Address, IonioScriptDetails } from 'marina-provider';
+import type { AccountID, IonioScriptDetails } from 'marina-provider';
 import { AccountType } from 'marina-provider';
+import type { Account } from '../src/application/account';
 import {
   AccountFactory,
   MainAccount,
@@ -239,7 +240,7 @@ describe('Application Layer', () => {
   describe('BlinderService & SignerService', () => {
     let accountName: AccountID;
     let ionioAccountName: AccountID;
-    let captchaAddress: Address;
+    let captchaAddress: Awaited<ReturnType<Account['getNextAddress']>>;
 
     beforeAll(async () => {
       const zkpLib = await require('@vulpemventures/secp256k1-zkp')();

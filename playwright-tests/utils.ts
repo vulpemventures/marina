@@ -106,45 +106,77 @@ export class PlaywrightMarinaProvider implements MarinaProvider {
       Marina.PROVIDER_NAME
     );
   }
+
   disable(): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
   isEnabled(): Promise<boolean> {
     return this.page.evaluate(
       (name: string) => (window[name as any] as unknown as MarinaProvider).isEnabled(),
       Marina.PROVIDER_NAME
     );
   }
+
   isReady(): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
+
   on(type: MarinaEventType, callback: (payload: any) => void): string {
     throw new Error('Method not implemented.');
   }
+
   off(listenerId: string): void {
     throw new Error('Method not implemented.');
   }
+
   getNetwork(): Promise<NetworkString> {
     throw new Error('Method not implemented.');
   }
+
   getFeeAssets(): Promise<string[]> {
     throw new Error('Method not implemented.');
   }
+
   getSelectedAccount(): Promise<string> {
     throw new Error('Method not implemented.');
   }
+
   getAccountsIDs(): Promise<string[]> {
     throw new Error('Method not implemented.');
   }
+
   getAccountInfo(accountID: string): Promise<AccountInfo> {
     throw new Error('Method not implemented.');
   }
+
   createAccount(accountID: string, accountType: AccountType): Promise<void> {
-    throw new Error('Method not implemented.');
+      return this.page.evaluate<void, [string, string, AccountType]>(
+        ([name, accountID, accountType]) =>
+          (window[name as any] as unknown as MarinaProvider).createAccount(
+            accountID,
+            accountType
+          ),
+        [Marina.PROVIDER_NAME, accountID, accountType]
+      ); 
   }
+
   getBalances(accountIDs?: string[] | undefined): Promise<Balance[]> {
     throw new Error('Method not implemented.');
   }
+
+  importScript(accountName: string, scriptHex: string, blindingPrivateKey?: string | undefined): Promise<void> {
+    return this.page.evaluate<void, [string, string, string, string | undefined]>(
+      ([name, accountName, scriptHex, blindingPrivateKey]) =>
+        (window[name as any] as unknown as MarinaProvider).importScript(
+          accountName,
+          scriptHex,
+          blindingPrivateKey
+        ),
+      [Marina.PROVIDER_NAME, accountName, scriptHex, blindingPrivateKey]
+    );
+  }
+
   async getCoins(accountIDs?: string[] | undefined): Promise<Utxo[]> {
     const coins = await this.page.evaluate<Utxo[], string[]>(
       ([name, ...accountIDs]) =>
@@ -153,36 +185,44 @@ export class PlaywrightMarinaProvider implements MarinaProvider {
     );
     return coins.map(bufferCast);
   }
+
   getTransactions(accountIDs?: string[] | undefined): Promise<Transaction[]> {
     throw new Error('Method not implemented.');
   }
+
   getAddresses(accountIDs?: string[] | undefined): Promise<Address[]> {
     throw new Error('Method not implemented.');
   }
+
   sendTransaction(
     recipients: Recipient[],
     feeAsset?: string | undefined
   ): Promise<SentTransaction> {
     throw new Error('Method not implemented.');
   }
+
   signTransaction(pset: string): Promise<string> {
     return this.page.evaluate<string, [string, string]>(
       ([name, pset]) => (window[name as any] as unknown as MarinaProvider).signTransaction(pset),
       [Marina.PROVIDER_NAME, pset]
     );
   }
+
   broadcastTransaction(signedTxHex: string): Promise<SentTransaction> {
     throw new Error('Method not implemented.');
   }
+
   blindTransaction(pset: string): Promise<string> {
     return this.page.evaluate<string, [string, string]>(
       ([name, pset]) => (window[name as any] as unknown as MarinaProvider).blindTransaction(pset),
       [Marina.PROVIDER_NAME, pset]
     );
   }
+
   useAccount(accountID: string): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
+
   getNextAddress(ionioArtifact?: ArtifactWithConstructorArgs | undefined): Promise<Address> {
     return this.page.evaluate<Address, [string, ArtifactWithConstructorArgs | undefined]>(
       ([name, ionioArtifact]) =>
@@ -190,9 +230,11 @@ export class PlaywrightMarinaProvider implements MarinaProvider {
       [Marina.PROVIDER_NAME, ionioArtifact]
     );
   }
+
   getNextChangeAddress(ionioArtifact?: ArtifactWithConstructorArgs | undefined): Promise<Address> {
     throw new Error('Method not implemented.');
   }
+
   signMessage(message: string): Promise<SignedMessage> {
     throw new Error('Method not implemented.');
   }
