@@ -28,6 +28,7 @@ const ReceiveSelectAsset: React.FC = () => {
             }
         )
       )}
+      network={cache?.network || 'liquid'}
     />
   );
 };
