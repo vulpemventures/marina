@@ -4,6 +4,8 @@ import browser from 'webextension-polyfill';
 import {
   BACKUP_UNLOCK_ROUTE,
   DEFAULT_ROUTE,
+  LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_ENTER_INVOICE_ROUTE,
   RECEIVE_ADDRESS_ROUTE,
   SEND_ADDRESS_AMOUNT_ROUTE,
 } from '../../routes/constants';
@@ -16,6 +18,8 @@ import { fromSatoshiStr } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../../context/storage-context';
+import { networks } from 'liquidjs-lib';
+import ModalSelectNetwork from '../../components/modal-select-network';
 
 interface LocationState {
   assetHash: string;
@@ -37,6 +41,10 @@ const Transactions: React.FC = () => {
     })().catch(console.error);
   }, [assetHash]);
 
+  // submarine swap bottom sheet modal
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [action, setAction] = useState('');
+
   const [isSaveMnemonicModalOpen, showSaveMnemonicModal] = useState(false);
 
   const handleSaveMnemonicClose = () => showSaveMnemonicModal(false);
@@ -49,14 +57,34 @@ const Transactions: React.FC = () => {
     const { isMnemonicVerified } = await appRepository.getStatus();
     if (!isMnemonicVerified) {
       showSaveMnemonicModal(true);
+      return;
+    }
+    setAction('receive');
+    if (assetHash === networks[cache?.network ?? 'liquid'].assetHash || assetHash === 'new_asset') {
+      setShowBottomSheet(true);
     } else {
       history.push(`${RECEIVE_ADDRESS_ROUTE}/${assetHash}`);
     }
   };
 
   const handleSend = async () => {
+    setAction('send');
     await sendFlowRepository.setSelectedAsset(assetHash);
-    history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+    if (assetHash === networks[cache?.network ?? 'liquid'].assetHash || assetHash === 'new_asset') {
+      setShowBottomSheet(true);
+    } else {
+      history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+    }
+  };
+
+  const handleLightningSelection = () => {
+    if (action === 'send') history.push(LIGHTNING_ENTER_INVOICE_ROUTE);
+    if (action === 'receive') history.push(LIGHTNING_ENTER_AMOUNT_ROUTE);
+  };
+
+  const handleLiquidSelection = () => {
+    if (action === 'send') history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+    if (action === 'receive') history.push(`${RECEIVE_ADDRESS_ROUTE}/${assetHash}`);
   };
 
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
@@ -105,6 +133,13 @@ const Transactions: React.FC = () => {
           </div>
         </>
       )}
+
+      <ModalSelectNetwork
+        isOpen={showBottomSheet}
+        onClose={() => setShowBottomSheet(false)}
+        onLightning={() => handleLightningSelection()}
+        onLiquid={() => handleLiquidSelection()}
+      ></ModalSelectNetwork>
 
       <SaveMnemonicModal
         isOpen={isSaveMnemonicModalOpen}

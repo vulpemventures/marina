@@ -52,4 +52,6 @@ export function getAssetImagePath(assetHash: string): string {
   return getRemoteImagePath(assetHash);
 }
 
+export const UNKNOWN_ASSET_HASH = 'new_asset';
+
 export const defaultPrecision = 8;
