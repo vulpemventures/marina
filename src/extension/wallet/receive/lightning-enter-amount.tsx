@@ -123,8 +123,6 @@ const LightningAmount: React.FC = () => {
           toSatoshi(Number(swapValue.current))
         );
 
-      console.log('network', network);
-      console.log('invoice', invoice);
       // all good, update states
       setInvoice(invoice);
       setIsLookingForPayment(true);

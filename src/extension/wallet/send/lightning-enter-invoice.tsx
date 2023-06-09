@@ -4,7 +4,7 @@ import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import Button from '../../components/button';
 import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
-import type { NetworkString } from 'marina-provider';
+import { networks } from 'liquidjs-lib';
 import { fromSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
@@ -17,14 +17,9 @@ import Boltz from '../../../application/boltz';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 
-export interface LightningInvoiceProps {
-  lbtcBalance: number;
-  network: NetworkString;
-}
-
-const LightningInvoice: React.FC<LightningInvoiceProps> = ({ lbtcBalance, network }) => {
+const LightningInvoice: React.FC = () => {
   const history = useHistory();
-  const { sendFlowRepository, walletRepository } = useStorageContext();
+  const { cache, sendFlowRepository, walletRepository } = useStorageContext();
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,6 +27,7 @@ const LightningInvoice: React.FC<LightningInvoiceProps> = ({ lbtcBalance, networ
   const [touched, setTouched] = useState(false);
   const [value, setValue] = useState(0);
 
+  const network = cache?.network ?? 'liquid';
   const boltz = new Boltz(network);
 
   // get maximal and minimal amount for pair
@@ -74,7 +70,8 @@ const LightningInvoice: React.FC<LightningInvoiceProps> = ({ lbtcBalance, networ
       if (value <= 0) setError('Value must be positive');
       if (value < limits.minimal) setError(`Value must be higher then ${limits.minimal}`);
       if (value > limits.maximal) setError(`Value must be lower then ${limits.maximal}`);
-      if (value > fromSatoshi(lbtcBalance)) setError('Insufficient funds');
+      if (value > fromSatoshi(cache?.balances.value[networks[network].assetHash ?? ''] ?? 0))
+        setError('Insufficient funds');
       if (error) return;
 
       setInvoice(invoice);
@@ -93,13 +90,11 @@ const LightningInvoice: React.FC<LightningInvoiceProps> = ({ lbtcBalance, networ
 
     // get refund pub key and change address
     const refundAddress = await mainAccount.getNextAddress(false);
-    console.log('refundAddress', refundAddress);
     const accountDetails = Object.values(await walletRepository.getAccountDetails(accountName))[0];
     const refundPublicKey = BIP32Factory(ecc)
       .fromBase58(accountDetails.masterXPub)
       .derivePath(refundAddress.derivationPath?.replace('m/', '') ?? '')
       .publicKey.toString('hex');
-    // const changeAddress = await mainAccount.getNextAddress(true); // TODO: do we need that?
 
     try {
       // create submarine swap

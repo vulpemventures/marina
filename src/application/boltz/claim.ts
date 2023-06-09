@@ -49,18 +49,6 @@ export const constructClaimTransaction = async (
   const pset = Creator.newPset();
   const updater = new Updater(pset);
 
-  /*
-  const ins: UpdaterInput[] = [];
-  for (const [i, utxo] of utxos.entries()) {
-    ins.push({
-      txid: utxo.txid,
-      txIndex: utxo.vout,
-      sighashType: Transaction.SIGHASH_ALL,
-      witnessUtxo: witnessUtxo,
-    });
-  }
-  */
-
   let utxoValueSum = BigInt(0);
 
   for (const [i, utxo] of utxos.entries()) {
