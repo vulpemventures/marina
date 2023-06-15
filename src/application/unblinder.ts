@@ -11,6 +11,7 @@ import type {
 } from '../domain/repository';
 import { DefaultAssetRegistry } from '../port/asset-registry';
 import type { UnblindingData } from 'marina-provider';
+import { b2hReversed } from './utils';
 
 const slip77 = SLIP77Factory(ecc);
 
@@ -61,8 +62,8 @@ export class WalletRepositoryUnblinder implements Unblinder {
         unblindingResults.push({
           value: parseInt(unblinded.value, 10),
           asset: AssetHash.fromBytes(unblinded.asset).hex,
-          assetBlindingFactor: unblinded.assetBlindingFactor.toString('hex'),
-          valueBlindingFactor: unblinded.valueBlindingFactor.toString('hex'),
+          assetBlindingFactor: b2hReversed(unblinded.assetBlindingFactor),
+          valueBlindingFactor: b2hReversed(unblinded.valueBlindingFactor),
         });
       } catch (e: unknown) {
         if (e instanceof Error) {

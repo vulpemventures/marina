@@ -151,8 +151,8 @@ function castTopupData(raw: RawTopupWithAssetData): TopupWithAssetReply {
     inBlindingData: raw.inBlindingData.map((data) => ({
       asset: data.asset,
       value: parseInt(data.value, 10),
-      assetBlindingFactor: Buffer.from(data.assetBlinder, 'base64').reverse().toString('hex'),
-      valueBlindingFactor: Buffer.from(data.valueBlinder, 'base64').reverse().toString('hex'),
+      assetBlindingFactor: Buffer.from(data.assetBlinder, 'base64').toString('hex'),
+      valueBlindingFactor: Buffer.from(data.valueBlinder, 'base64').toString('hex'),
     })),
     topup: {
       topupId: raw.topup.topupId,
