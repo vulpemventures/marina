@@ -71,7 +71,7 @@ const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
           .map(([asset, value], index, array) => (
             <div key={index}>
               <div className="container flex justify-between">
-                <span className="text-lg font-medium">
+                <span data-testid={asset} className="text-lg font-medium">
                   {fromSatoshiStr(Math.abs(value), getPrecision(asset))}{' '}
                 </span>
                 <span className="text-lg font-medium">{getTicker(asset)}</span>
@@ -146,6 +146,7 @@ const ConnectSignTransaction: React.FC = () => {
         mainAccountsScripts
       )({ height: -1, hex: unsignedTx.toHex() });
 
+      console.log('txDetailsExtended', txDetailsExtended.txFlow);
       setTxDetails(txDetailsExtended);
     };
     init().catch((e) => {

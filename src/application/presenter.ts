@@ -154,7 +154,7 @@ export class PresenterImpl implements Presenter {
           this.walletRepository,
           scripts
         )(details);
-        
+
         this.state = {
           ...this.state,
           transactions: setValue(

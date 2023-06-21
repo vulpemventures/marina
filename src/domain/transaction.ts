@@ -173,7 +173,8 @@ export function computeTxDetailsExtended(
     const lbtcFlow = txFlow[networks[network].assetHash];
     if (!lbtcFlow) return txExtended;
 
-    if (lbtcFlow + feeAmount === 0) { // if the flow is exactly the fee amount, consider we are paying the fees
+    if (lbtcFlow + feeAmount === 0) {
+      // if the flow is exactly the fee amount, consider we are paying the fees
       txExtended.txFlow[networks[network].assetHash] = 0;
       return txExtended;
     }
@@ -183,7 +184,7 @@ export function computeTxDetailsExtended(
       txExtended.txFlow[networks[network].assetHash] = lbtcFlow + feeAmount;
       return txExtended;
     }
-  
+
     return txExtended;
   };
 }

@@ -62,14 +62,16 @@ const Transactions: React.FC = () => {
   const handleBackBtn = () => history.push(DEFAULT_ROUTE);
 
   const getFilteredTransactions = () => {
-    const seen = new Set();  
+    const seen = new Set();
 
-    return cache?.transactions.value.filter((tx) => {
-      if (tx.txFlow[assetHash] === undefined) return false
-      const duplicate = seen.has(tx.txid);
-      seen.add(tx.txid);
-      return !duplicate;
-    }) ?? [];
+    return (
+      cache?.transactions.value.filter((tx) => {
+        if (tx.txFlow[assetHash] === undefined) return false;
+        const duplicate = seen.has(tx.txid);
+        seen.add(tx.txid);
+        return !duplicate;
+      }) ?? []
+    );
   };
 
   return (
@@ -95,10 +97,9 @@ const Transactions: React.FC = () => {
           <div className="h-60 rounded-xl mb-1">
             {asset && (
               <ButtonList title="Transactions" emptyText="Your transactions will appear here">
-                {getFilteredTransactions()
-                  .map((tx, index) => {
-                    return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
-                  })}
+                {getFilteredTransactions().map((tx, index) => {
+                  return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
+                })}
               </ButtonList>
             )}
           </div>
