@@ -138,18 +138,23 @@ export class PresenterImpl implements Presenter {
     );
 
     closeFns.push(
-      this.walletRepository.onNewTransaction(async (_, details: TxDetails) => {
+      this.walletRepository.onNewTransaction(async (txID: string, details: TxDetails) => {
         if (!this.state.authenticated.value) return;
         const scripts = await this.walletRepository.getAccountScripts(
           this.state.network,
           MainAccountLegacy,
           this.state.network === 'liquid' ? MainAccount : MainAccountTest
         );
+
+        const found = this.state.transactions.value.findIndex((tx) => tx.txid === txID);
+        if (found > -1) return; // skip if tx already present
+
         const extendedTxDetails = await computeTxDetailsExtended(
           this.appRepository,
           this.walletRepository,
           scripts
         )(details);
+
         this.state = {
           ...this.state,
           transactions: setValue(
@@ -159,6 +164,8 @@ export class PresenterImpl implements Presenter {
             new Set([...this.state.walletAssets.value, ...Object.keys(extendedTxDetails.txFlow)])
           ),
         };
+
+        emits(this.state);
       })
     );
 

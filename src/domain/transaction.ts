@@ -131,14 +131,18 @@ export function computeTxDetailsExtended(
       txFlow[asset] = (txFlow[asset] || 0) + elementsValue.number;
     }
 
+    let walletOwnsAllInputs = true;
+
     for (let inIndex = 0; inIndex < transaction.ins.length; inIndex++) {
       const input = transaction.ins[inIndex];
       const inputTxID = Buffer.from(input.hash).reverse().toString('hex');
       const inputPrevoutIndex = input.index;
 
       const output = await walletRepository.getWitnessUtxo(inputTxID, inputPrevoutIndex);
-      if (!output) continue;
-      if (!scriptsState[output.script.toString('hex')]) continue;
+      if (!output || !scriptsState[output.script.toString('hex')]) {
+        walletOwnsAllInputs = false;
+        continue;
+      }
       const elementsValue = ElementsValue.fromBytes(output.value);
 
       if (elementsValue.isConfidential) {
@@ -158,21 +162,29 @@ export function computeTxDetailsExtended(
     const network = await appRepository.getNetwork();
     if (!network) throw new Error('network not found');
 
-    // if the flow for L-BTC is -feeAmount, remove it
-    if (txFlow[networks[network].assetHash] + feeAmount === 0) {
-      if (Object.keys(txFlow).length === 1) {
-        // this prevent to remove the flow if there is only the L-BTC one (self transfer L-BTC case)
-        txFlow[networks[network].assetHash] = 0;
-      } else {
-        delete txFlow[networks[network].assetHash];
-      }
-    }
-
-    return {
+    const txExtended: TxDetailsExtended = {
       ...details,
       txid,
       txFlow,
       feeAmount,
     };
+
+    // check if we are paying the fees or not
+    const lbtcFlow = txFlow[networks[network].assetHash];
+    if (!lbtcFlow) return txExtended;
+
+    if (lbtcFlow + feeAmount === 0) {
+      // if the flow is exactly the fee amount, consider we are paying the fees
+      txExtended.txFlow[networks[network].assetHash] = 0;
+      return txExtended;
+    }
+
+    if (walletOwnsAllInputs) {
+      // if we own all the inputs, it means we pay the fees
+      txExtended.txFlow[networks[network].assetHash] = lbtcFlow + feeAmount;
+      return txExtended;
+    }
+
+    return txExtended;
   };
 }
