@@ -31,7 +31,7 @@ import type { AppRepository, WalletRepository } from '../../domain/repository';
  * @param blindingKey blinding public key for the output; undefined if the output should not be blinded
  * @param timeoutBlockHeight locktime of the transaction; only needed if the transaction is a refund
  */
-export const constructClaimTransaction = async (
+export async function constructClaimTransaction(
   utxos: UnblindedOutput[],
   witnessUtxo: Output,
   preimage: Buffer,
@@ -45,14 +45,14 @@ export const constructClaimTransaction = async (
   isRbf = true,
   blindingKey?: Buffer,
   timeoutBlockHeight?: number
-): Promise<Transaction> => {
+): Promise<Transaction> {
   const pset = Creator.newPset();
   const updater = new Updater(pset);
 
-  let utxoValueSum = BigInt(0);
+  let utxoValueSum = 0;
 
   for (const [i, utxo] of utxos.entries()) {
-    utxoValueSum += BigInt(utxo.blindingData?.value ?? 0);
+    utxoValueSum += utxo.blindingData?.value ?? 0;
     pset.addInput(
       new CreatorInput(
         utxo.txid,
@@ -71,7 +71,7 @@ export const constructClaimTransaction = async (
       script: destinationScript,
       blindingPublicKey: blindingKey,
       asset: assetHash,
-      amount: Number(utxoValueSum - BigInt(fee)),
+      amount: utxoValueSum - fee,
       blinderIndex: blindingKey !== undefined ? 0 : undefined,
     },
     {
@@ -98,4 +98,4 @@ export const constructClaimTransaction = async (
     };
   });
   return Extractor.extract(signedPset);
-};
+}

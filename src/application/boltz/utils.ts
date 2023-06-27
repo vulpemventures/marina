@@ -9,8 +9,8 @@ import { fromSatoshi } from '../../extension/utility';
 import Boltz from './index';
 import type { SubmarineSwapResponse, CreateSwapCommonResponse } from './index';
 
-export const feeAmount = 500; // fee for regular liquid tx
-export const swapFeeAmount = 500; // fee for Boltz
+const feeAmount = 500; // fee for regular liquid tx
+const swapFeeAmount = 500; // fee for Boltz
 
 // lightning swap invoice amount limit (in satoshis)
 export const DEFAULT_LIGHTNING_LIMITS = { maximal: 4294967, minimal: 50000 };

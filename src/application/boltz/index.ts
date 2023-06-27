@@ -52,8 +52,8 @@ export const boltzUrl: Record<NetworkString, string> = {
 
 export default class Boltz {
   url: string;
-  constructor(network: NetworkString) {
-    this.url = boltzUrl[network];
+  constructor(network: NetworkString, url: string = boltzUrl[network]) {
+    this.url = url;
   }
 
   createSubmarineSwap = async (
