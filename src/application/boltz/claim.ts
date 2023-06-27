@@ -82,9 +82,11 @@ export async function constructClaimTransaction(
 
   const blinder = new BlinderService(walletRepository, await ZKPLib());
   const blindedPset = await blinder.blindPset(pset);
+  console.log('blindedPset', blindedPset);
 
   const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
   const signedPset = await signer.signPset(blindedPset);
+  console.log('signedPset', signedPset);
 
   const finalizer = new Finalizer(signedPset);
   finalizer.finalizeInput(0, () => {

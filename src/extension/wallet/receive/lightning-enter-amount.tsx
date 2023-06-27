@@ -20,6 +20,7 @@ import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { constructClaimTransaction } from '../../../application/boltz/claim';
 import Boltz from '../../../application/boltz';
+import { toBlindingData } from 'liquidjs-lib/src/psbt';
 
 const LightningAmount: React.FC = () => {
   const history = useHistory();
@@ -137,36 +138,53 @@ const LightningAmount: React.FC = () => {
         return;
       }, invoiceExpireDate - Date.now());
 
-      walletRepository.onNewUtxo(network)(async (utxo) => {
-        const witnessUtxo = await walletRepository.getWitnessUtxo(utxo.txid, utxo.vout);
-        if (
-          witnessUtxo?.script.toString('hex') ===
-          address.toOutputScript(lockupAddress).toString('hex')
-        ) {
-          clearTimeout(invoiceExpirationTimeout);
-          const claimTransaction = await constructClaimTransaction(
-            [utxo],
-            witnessUtxo,
-            preimage,
-            Buffer.from(redeemScript, 'hex'),
-            address.toOutputScript(nextAddress.confidentialAddress),
-            300,
-            networks[network].assetHash,
-            walletRepository,
-            appRepository,
-            password,
-            true,
-            Buffer.from(blindingKey, 'hex')
-          );
+      const chainSource = await appRepository.getChainSource(network);
+      if (!chainSource) throw new Error('chain source is not set up, cannot broadcast');
+      // wait for tx to be available (mempool or confirmed)
+      await chainSource.waitForAddressReceivesTx(lockupAddress);
 
-          const txid = await broadcastTx(claimTransaction.toHex());
+      // fetch utxos for address
+      const utxos = await chainSource.listUnspents(lockupAddress);
+      const utxo = utxos[0];
+      const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
+        Buffer.from(blindingKey, 'hex'),
+        utxo.witnessUtxo
+      );
+      utxo['blindingData'] = {
+        asset: asset.reverse().toString('hex'),
+        assetBlindingFactor: assetBlindingFactor.toString('hex'),
+        value: parseInt(value, 10),
+        valueBlindingFactor: valueBlindingFactor.toString('hex'),
+      };
 
-          history.push({
-            pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-            state: { txid, text: 'Invoice paid !' },
-          });
-        }
-      });
+      // Claim transaction
+      if (
+        utxo.witnessUtxo?.script.toString('hex') ===
+        address.toOutputScript(lockupAddress).toString('hex')
+      ) {
+        clearTimeout(invoiceExpirationTimeout);
+        const claimTransaction = await constructClaimTransaction(
+          [utxo],
+          utxo.witnessUtxo,
+          preimage,
+          Buffer.from(redeemScript, 'hex'),
+          address.toOutputScript(nextAddress.confidentialAddress),
+          300,
+          networks[network].assetHash,
+          walletRepository,
+          appRepository,
+          password,
+          true,
+          Buffer.from(blindingKey, 'hex')
+        );
+
+        const txid = await broadcastTx(claimTransaction.toHex());
+
+        history.push({
+          pathname: SEND_PAYMENT_SUCCESS_ROUTE,
+          state: { txid, text: 'Invoice paid !' },
+        });
+      }
     } catch (err: any) {
       setErrors({ submit: err.message, amount: '' });
       setIsSubmitting(false);
