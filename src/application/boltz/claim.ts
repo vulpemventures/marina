@@ -1,3 +1,4 @@
+import type { OwnedInput } from 'liquidjs-lib';
 import {
   Creator,
   Updater,
@@ -6,13 +7,17 @@ import {
   CreatorInput,
   Transaction,
   witnessStackToScriptWitness,
+  Pset,
+  ZKPValidator,
+  ZKPGenerator,
+  Blinder,
+  AssetHash,
 } from 'liquidjs-lib';
 import type { UnblindedOutput } from 'marina-provider';
 import type { Output } from 'liquidjs-lib/src/transaction';
-import { BlinderService } from '../blinder';
-import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import { SignerService } from '../signer';
 import type { AppRepository, WalletRepository } from '../../domain/repository';
+import zkp from '@vulpemventures/secp256k1-zkp';
 
 /**
  * Claim swaps
@@ -66,10 +71,20 @@ export async function constructClaimTransaction(
     updater.addInWitnessScript(i, witnessUtxo.script);
   }
 
+  /*
+  // Convert private blinding key to public blinding key
+  const masterBlindingKey = await walletRepository.getMasterBlindingKey();
+  if (!masterBlindingKey) throw new Error('Master blinding key not found');
+  const slip77 = SLIP77Factory(ecc);
+  const blindingKeyNode = slip77.fromMasterBlindingKey(blindingKey!);
+  const blindingPublicKey = blindingKeyNode.publicKey;
+  */
+
   updater.addOutputs([
     {
       script: destinationScript,
       blindingPublicKey: blindingKey,
+      // blindingPublicKey: blindingPublicKey,
       asset: assetHash,
       amount: utxoValueSum - fee,
       blinderIndex: blindingKey !== undefined ? 0 : undefined,
@@ -80,13 +95,16 @@ export async function constructClaimTransaction(
     },
   ]);
 
-  const blinder = new BlinderService(walletRepository, await ZKPLib());
-  const blindedPset = await blinder.blindPset(pset);
-  console.log('blindedPset', blindedPset);
+  const blindedPset = await blindPset(pset, {
+    index: 0,
+    value: utxos[0].blindingData!.value.toString(),
+    valueBlindingFactor: Buffer.from(utxos[0].blindingData!.valueBlindingFactor, 'hex'),
+    asset: AssetHash.fromHex(utxos[0].blindingData!.asset).bytesWithoutPrefix,
+    assetBlindingFactor: Buffer.from(utxos[0].blindingData!.assetBlindingFactor, 'hex'),
+  });
 
   const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
   const signedPset = await signer.signPset(blindedPset);
-  console.log('signedPset', signedPset);
 
   const finalizer = new Finalizer(signedPset);
   finalizer.finalizeInput(0, () => {
@@ -101,3 +119,33 @@ export async function constructClaimTransaction(
   });
   return Extractor.extract(signedPset);
 }
+
+const blindPset = async (pset: Pset, ownedInput: OwnedInput): Promise<Pset> => {
+  const zkpLib = await zkp();
+  const { ecc } = zkpLib;
+  const zkpValidator = new ZKPValidator(zkpLib);
+  const zkpGenerator = new ZKPGenerator(zkpLib, ZKPGenerator.WithOwnedInputs([ownedInput]));
+  const outputBlindingArgs = zkpGenerator.blindOutputs(pset, Pset.ECCKeysGenerator(ecc));
+  const blinder = new Blinder(pset, [ownedInput], zkpValidator, zkpGenerator);
+  blinder.blindLast({ outputBlindingArgs });
+  return blinder.pset;
+};
+
+/*
+const blindPset = async (pset: Pset): Promise<Pset> => {
+  const zkpLib = await zkp();
+  const { ecc } = zkpLib;
+  const zkpValidator = new ZKPValidator(zkpLib);
+  const blindingKeys = psetToBlindingPrivateKeys(pset);
+  const zkpGenerator = new ZKPGenerator(
+    zkpLib,
+    ZKPGenerator.WithBlindingKeysOfInputs(blindingKeys)
+  );
+  const ownedInputs = zkpGenerator.unblindInputs(pset);
+  const keysGenerator = Pset.ECCKeysGenerator(ecc);
+  const outputBlindingArgs = zkpGenerator.blindOutputs(pset, keysGenerator);
+  const blinder = new Blinder(pset, ownedInputs, zkpValidator, zkpGenerator);
+  blinder.blindLast({ outputBlindingArgs });
+  return blinder.pset;
+};
+*/
