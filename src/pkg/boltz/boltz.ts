@@ -2,8 +2,9 @@
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
-import type { NetworkString } from 'marina-provider';
 import { extractErrorMessage } from '../../extension/utility/error';
+
+export type NetworkString = 'liquid' | 'testnet' | 'regtest';
 
 interface CreateSwapCommonRequest {
   type: 'submarine' | 'reversesubmarine';
@@ -50,7 +51,8 @@ export const boltzUrl: Record<NetworkString, string> = {
   liquid: 'https://boltz.exchange/api',
 };
 
-export default class Boltz {
+//
+export class Boltz {
   url: string;
   constructor(network: NetworkString, url: string = boltzUrl[network]) {
     this.url = url;

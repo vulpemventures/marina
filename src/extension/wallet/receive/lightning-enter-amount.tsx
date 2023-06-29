@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
-import { address, networks, payments } from 'liquidjs-lib';
+import { address, payments } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import Button from '../../components/button';
@@ -10,21 +10,15 @@ import { SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { fromSatoshi, toSatoshi } from '../../utility';
 import { broadcastTx } from '../../../../test/_regtest';
 import { useStorageContext } from '../../context/storage-context';
-import {
-  createReverseSubmarineSwap,
-  DEFAULT_LIGHTNING_LIMITS,
-  getInvoiceExpireDate,
-} from '../../../application/boltz/utils';
 import * as ecc from 'tiny-secp256k1';
-import { constructClaimTransaction } from '../../../application/boltz/claim';
-import Boltz from '../../../application/boltz';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
 import { randomBytes } from 'crypto';
 import ECPairFactory from 'ecpair';
+import { BoltzService, DEFAULT_LIGHTNING_LIMITS } from '../../../pkg/boltz/boltzService';
 
 const LightningAmount: React.FC = () => {
   const history = useHistory();
-  const { appRepository, cache, walletRepository } = useStorageContext();
+  const { appRepository, cache } = useStorageContext();
   const [errors, setErrors] = useState({ amount: '', submit: '' });
   const [invoice, setInvoice] = useState('');
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -35,12 +29,12 @@ const LightningAmount: React.FC = () => {
 
   const swapValue = useRef('');
   const network = cache?.network ?? 'liquid';
-  const boltz = new Boltz(network);
+  const boltzService = new BoltzService(network);
 
   useEffect(() => {
     // get maximal and minimal amount for pair
     const fetchData = async () => {
-      const pair = await boltz.getPair('L-BTC/BTC');
+      const pair = await boltzService.getBoltzPair('L-BTC/BTC');
       if (pair?.limits) {
         setLimits({
           maximal: fromSatoshi(pair.limits.maximal),
@@ -111,8 +105,9 @@ const LightningAmount: React.FC = () => {
       const destinationScript = payments.p2wpkh({ pubkey: claimPublicKey }).output!;
 
       // create reverse submarine swap
+      const boltzService = new BoltzService(network);
       const { redeemScript, lockupAddress, invoice, preimage, blindingKey } =
-        await createReverseSubmarineSwap(
+        await boltzService.createReverseSubmarineSwap(
           claimPublicKey,
           network,
           toSatoshi(Number(swapValue.current))
@@ -123,7 +118,7 @@ const LightningAmount: React.FC = () => {
       setIsLookingForPayment(true);
 
       // prepare timeout handler
-      const invoiceExpireDate = Number(getInvoiceExpireDate(invoice));
+      const invoiceExpireDate = Number(boltzService.getInvoiceExpireDate(invoice));
 
       const invoiceExpirationTimeout = setTimeout(() => {
         setErrors({ submit: 'Invoice has expired', amount: '' });
@@ -157,21 +152,17 @@ const LightningAmount: React.FC = () => {
         address.toOutputScript(lockupAddress).toString('hex')
       ) {
         clearTimeout(invoiceExpirationTimeout);
-        const claimTransaction = await constructClaimTransaction(
+        const claimTransaction = await boltzService.makeClaimTransaction({
           utxo,
           claimPublicKey,
           claimKeyPair,
           preimage,
-          Buffer.from(redeemScript, 'hex'),
+          redeemScript: Buffer.from(redeemScript, 'hex'),
           destinationScript,
-          300,
-          networks[network].assetHash,
-          walletRepository,
-          appRepository,
+          fee: 300,
           password,
-          true,
-          Buffer.from(blindingKey, 'hex')
-        );
+          blindingKey: Buffer.from(blindingKey, 'hex'),
+        });
 
         const txid = await broadcastTx(claimTransaction.toHex());
 

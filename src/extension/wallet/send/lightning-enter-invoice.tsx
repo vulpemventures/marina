@@ -8,14 +8,9 @@ import { networks } from 'liquidjs-lib';
 import { fromSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
-import {
-  createSubmarineSwap,
-  DEFAULT_LIGHTNING_LIMITS,
-  getInvoiceValue,
-} from '../../../application/boltz/utils';
-import Boltz from '../../../application/boltz';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
+import { BoltzService, DEFAULT_LIGHTNING_LIMITS } from '../../../pkg/boltz/boltzService';
 
 const LightningInvoice: React.FC = () => {
   const history = useHistory();
@@ -28,12 +23,12 @@ const LightningInvoice: React.FC = () => {
   const [value, setValue] = useState(0);
 
   const network = cache?.network ?? 'liquid';
-  const boltz = new Boltz(network);
+  const boltzService = new BoltzService(network);
 
   // get maximal and minimal amount for pair
   useEffect(() => {
     const fetchData = async () => {
-      const pair = await boltz.getPair('L-BTC/BTC');
+      const pair = await boltzService.getBoltzPair('L-BTC/BTC');
       if (pair?.limits) {
         setLimits({
           maximal: fromSatoshi(pair.limits.maximal),
@@ -62,7 +57,7 @@ const LightningInvoice: React.FC = () => {
 
     try {
       // get value from invoice
-      const value = getInvoiceValue(invoice);
+      const value = boltzService.getInvoiceValue(invoice);
       setValue(value);
 
       // validate value
@@ -98,7 +93,7 @@ const LightningInvoice: React.FC = () => {
 
     try {
       // create submarine swap
-      const { address, expectedAmount } = await createSubmarineSwap(
+      const { address, expectedAmount } = await boltzService.createSubmarineSwap(
         invoice,
         network,
         refundPublicKey
