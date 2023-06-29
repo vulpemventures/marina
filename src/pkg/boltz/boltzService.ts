@@ -73,8 +73,8 @@ interface MakeClaimTransactionParams {
   destinationScript: Buffer;
   fee: number;
   password: string;
-  blindingPublicKey?: Buffer;
-  timeoutBlockHeight?: number;
+  blindingPublicKey: Buffer;
+  timeoutBlockHeight: number;
 }
 
 const feeAmount = 500; // fee for regular liquid tx
@@ -141,7 +141,7 @@ export class BoltzService implements BoltzServiceInterface {
         blindingPublicKey,
         asset: networks[this.network].assetHash,
         amount: (utxo.blindingData?.value ?? 0) - fee,
-        blinderIndex: blindingPublicKey !== undefined ? 0 : undefined,
+        blinderIndex: 0,
       },
       {
         amount: fee,

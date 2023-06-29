@@ -107,12 +107,18 @@ const LightningAmount: React.FC = () => {
 
       // create reverse submarine swap
       const boltzService = new BoltzService(network);
-      const { redeemScript, lockupAddress, invoice, preimage, blindingPrivateKey } =
-        await boltzService.createReverseSubmarineSwap(
-          claimPublicKey,
-          network,
-          toSatoshi(Number(swapValue.current))
-        );
+      const {
+        redeemScript,
+        lockupAddress,
+        invoice,
+        preimage,
+        blindingPrivateKey,
+        timeoutBlockHeight,
+      } = await boltzService.createReverseSubmarineSwap(
+        claimPublicKey,
+        network,
+        toSatoshi(Number(swapValue.current))
+      );
 
       // all good, update states
       setInvoice(invoice);
@@ -163,6 +169,7 @@ const LightningAmount: React.FC = () => {
           fee: 300,
           password,
           blindingPublicKey,
+          timeoutBlockHeight,
         });
 
         const txid = await broadcastTx(claimTransaction.toHex());
