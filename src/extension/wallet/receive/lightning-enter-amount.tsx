@@ -106,7 +106,7 @@ const LightningAmount: React.FC = () => {
 
       // create reverse submarine swap
       const boltzService = new BoltzService(network);
-      const { redeemScript, lockupAddress, invoice, preimage, blindingKey } =
+      const { redeemScript, lockupAddress, invoice, preimage, blindingPrivateKey } =
         await boltzService.createReverseSubmarineSwap(
           claimPublicKey,
           network,
@@ -136,7 +136,7 @@ const LightningAmount: React.FC = () => {
       const utxos = await chainSource.listUnspents(lockupAddress);
       const utxo = utxos[0];
       const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
-        Buffer.from(blindingKey, 'hex'),
+        Buffer.from(blindingPrivateKey, 'hex'),
         utxo.witnessUtxo
       );
       utxo['blindingData'] = {
@@ -161,7 +161,7 @@ const LightningAmount: React.FC = () => {
           destinationScript,
           fee: 300,
           password,
-          blindingKey: Buffer.from(blindingKey, 'hex'),
+          blindingPublicKey: Buffer.from('00', 'hex'),
         });
 
         const txid = await broadcastTx(claimTransaction.toHex());

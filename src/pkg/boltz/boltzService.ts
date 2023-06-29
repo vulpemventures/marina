@@ -54,7 +54,7 @@ export interface SubmarineSwap {
 }
 
 export interface ReverseSwap {
-  blindingKey: string;
+  blindingPrivateKey: string;
   claimPublicKey: string;
   id: string;
   invoice: string;
@@ -73,7 +73,7 @@ interface MakeClaimTransactionParams {
   destinationScript: Buffer;
   fee: number;
   password: string;
-  blindingKey?: Buffer;
+  blindingPublicKey?: Buffer;
   timeoutBlockHeight?: number;
 }
 
@@ -122,7 +122,7 @@ export class BoltzService implements BoltzServiceInterface {
     destinationScript,
     fee,
     password,
-    blindingKey,
+    blindingPublicKey,
     timeoutBlockHeight,
   }: MakeClaimTransactionParams): Promise<Transaction> {
     const pset = Creator.newPset();
@@ -138,10 +138,10 @@ export class BoltzService implements BoltzServiceInterface {
     updater.addOutputs([
       {
         script: destinationScript,
-        blindingPublicKey: blindingKey,
+        blindingPublicKey,
         asset: networks[this.network].assetHash,
         amount: (utxo.blindingData?.value ?? 0) - fee,
-        blinderIndex: blindingKey !== undefined ? 0 : undefined,
+        blinderIndex: blindingPublicKey !== undefined ? 0 : undefined,
       },
       {
         amount: fee,
@@ -197,7 +197,6 @@ export class BoltzService implements BoltzServiceInterface {
 
     const submarineSwap: SubmarineSwap = {
       address,
-      // blindingKey,
       expectedAmount,
       id,
       redeemScript,
@@ -225,7 +224,7 @@ export class BoltzService implements BoltzServiceInterface {
       });
 
     const reverseSwap: ReverseSwap = {
-      blindingKey,
+      blindingPrivateKey: blindingKey,
       claimPublicKey: claimPublicKey.toString('hex'),
       id,
       invoice,
