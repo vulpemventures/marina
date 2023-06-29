@@ -1,6 +1,6 @@
 import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
-import { address, crypto, script, payments } from 'liquidjs-lib';
+import { address, crypto, script } from 'liquidjs-lib';
 import { randomBytes } from 'crypto';
 import Decimal from 'decimal.js';
 import type { NetworkString } from 'marina-provider';
@@ -208,7 +208,7 @@ const validReverseSwapReedemScript = (preimage: Buffer, pubKey: string, redeemSc
 
 // create reverse submarine swap
 export const createReverseSubmarineSwap = async (
-  publicKey: Buffer,
+  claimPublicKey: Buffer,
   network: NetworkString,
   invoiceAmount: number
 ): Promise<ReverseSwap> => {
@@ -218,21 +218,17 @@ export const createReverseSubmarineSwap = async (
   const preimage = randomBytes(32);
   const preimageHash = crypto.sha256(preimage).toString('hex');
 
-  // claim public key
-  const p = payments.p2pkh({ pubkey: publicKey });
-  const claimPublicKey = p.pubkey!.toString('hex');
-
   // create reverse submarine swap
   const { id, blindingKey, invoice, lockupAddress, redeemScript, timeoutBlockHeight } =
     await boltz.createReverseSubmarineSwap({
-      claimPublicKey,
+      claimPublicKey: claimPublicKey.toString('hex'),
       invoiceAmount,
       preimageHash,
     });
 
   const reverseSwap: ReverseSwap = {
     blindingKey,
-    claimPublicKey,
+    claimPublicKey: claimPublicKey.toString('hex'),
     id,
     invoice,
     lockupAddress,

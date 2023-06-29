@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
-import { address, networks } from 'liquidjs-lib';
+import { address, networks, payments } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import Button from '../../components/button';
@@ -9,18 +9,18 @@ import ModalUnlock from '../../components/modal-unlock';
 import { SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { fromSatoshi, toSatoshi } from '../../utility';
 import { broadcastTx } from '../../../../test/_regtest';
-import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
 import {
   createReverseSubmarineSwap,
   DEFAULT_LIGHTNING_LIMITS,
   getInvoiceExpireDate,
 } from '../../../application/boltz/utils';
-import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { constructClaimTransaction } from '../../../application/boltz/claim';
 import Boltz from '../../../application/boltz';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
+import { randomBytes } from 'crypto';
+import ECPairFactory from 'ecpair';
 
 const LightningAmount: React.FC = () => {
   const history = useHistory();
@@ -102,19 +102,13 @@ const LightningAmount: React.FC = () => {
     showUnlockModal(false);
 
     try {
-      // get account
-      const accountFactory = await AccountFactory.create(walletRepository);
-      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-      const mainAccount = await accountFactory.make(network, accountName);
-
-      // claim pub key
-      const nextAddress = await mainAccount.getNextAddress(false);
-      const accountDetails = Object.values(
-        await walletRepository.getAccountDetails(accountName)
-      )[0];
-      const claimPublicKey = BIP32Factory(ecc)
-        .fromBase58(accountDetails.masterXPub)
-        .derivePath(nextAddress.derivationPath?.replace('m/', '') ?? '').publicKey;
+      // we will create an ephemeral key pair:
+      // - it will generate a public key to be used with the Boltz swap
+      // - later we will sign the claim transaction with the private key
+      const claimPrivateKey = randomBytes(32);
+      const claimKeyPair = ECPairFactory(ecc).fromPrivateKey(claimPrivateKey);
+      const claimPublicKey = claimKeyPair.publicKey;
+      const destinationScript = payments.p2wpkh({ pubkey: claimPublicKey }).output!;
 
       // create reverse submarine swap
       const { redeemScript, lockupAddress, invoice, preimage, blindingKey } =
@@ -164,11 +158,12 @@ const LightningAmount: React.FC = () => {
       ) {
         clearTimeout(invoiceExpirationTimeout);
         const claimTransaction = await constructClaimTransaction(
-          [utxo],
-          utxo.witnessUtxo,
+          utxo,
+          claimPublicKey,
+          claimKeyPair,
           preimage,
           Buffer.from(redeemScript, 'hex'),
-          address.toOutputScript(nextAddress.confidentialAddress),
+          destinationScript,
           300,
           networks[network].assetHash,
           walletRepository,

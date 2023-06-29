@@ -1,4 +1,4 @@
-import type { OwnedInput } from 'liquidjs-lib';
+import type { BIP174SigningData, OwnedInput } from 'liquidjs-lib';
 import {
   Creator,
   Updater,
@@ -12,18 +12,20 @@ import {
   ZKPGenerator,
   Blinder,
   AssetHash,
+  Signer,
+  script as bscript,
 } from 'liquidjs-lib';
-import type { UnblindedOutput } from 'marina-provider';
-import type { Output } from 'liquidjs-lib/src/transaction';
-import { SignerService } from '../signer';
 import type { AppRepository, WalletRepository } from '../../domain/repository';
 import zkp from '@vulpemventures/secp256k1-zkp';
+import type { Unspent } from '../../domain/chainsource';
+import type { ECPairInterface } from 'ecpair';
 
 /**
  * Claim swaps
  *
- * @param utxos UTXOs that should be claimed or refunded
- * @param witnessUtxo
+ * @param utxo
+ * @param claimPublicKey
+ * @param claimKeyPair
  * @param preimage
  * @param redeemScript
  * @param destinationScript the output script to which the funds should be sent
@@ -37,8 +39,9 @@ import zkp from '@vulpemventures/secp256k1-zkp';
  * @param timeoutBlockHeight locktime of the transaction; only needed if the transaction is a refund
  */
 export async function constructClaimTransaction(
-  utxos: UnblindedOutput[],
-  witnessUtxo: Output,
+  utxo: Unspent,
+  claimPublicKey: Buffer,
+  claimKeyPair: ECPairInterface,
   preimage: Buffer,
   redeemScript: Buffer,
   destinationScript: Buffer,
@@ -54,39 +57,24 @@ export async function constructClaimTransaction(
   const pset = Creator.newPset();
   const updater = new Updater(pset);
 
-  let utxoValueSum = 0;
-
-  for (const [i, utxo] of utxos.entries()) {
-    utxoValueSum += utxo.blindingData?.value ?? 0;
-    pset.addInput(
-      new CreatorInput(
-        utxo.txid,
-        utxo.vout,
-        isRbf ? 0xfffffffd : 0xffffffff,
-        i === 0 ? timeoutBlockHeight : undefined
-      ).toPartialInput()
-    );
-    updater.addInSighashType(i, Transaction.SIGHASH_ALL);
-    updater.addInWitnessUtxo(i, witnessUtxo);
-    updater.addInWitnessScript(i, witnessUtxo.script);
-  }
-
-  /*
-  // Convert private blinding key to public blinding key
-  const masterBlindingKey = await walletRepository.getMasterBlindingKey();
-  if (!masterBlindingKey) throw new Error('Master blinding key not found');
-  const slip77 = SLIP77Factory(ecc);
-  const blindingKeyNode = slip77.fromMasterBlindingKey(blindingKey!);
-  const blindingPublicKey = blindingKeyNode.publicKey;
-  */
+  pset.addInput(
+    new CreatorInput(
+      utxo.txid,
+      utxo.vout,
+      isRbf ? 0xfffffffd : 0xffffffff,
+      timeoutBlockHeight
+    ).toPartialInput()
+  );
+  updater.addInSighashType(0, Transaction.SIGHASH_ALL);
+  updater.addInWitnessUtxo(0, utxo.witnessUtxo!);
+  updater.addInWitnessScript(0, utxo.witnessUtxo!.script);
 
   updater.addOutputs([
     {
       script: destinationScript,
       blindingPublicKey: blindingKey,
-      // blindingPublicKey: blindingPublicKey,
       asset: assetHash,
-      amount: utxoValueSum - fee,
+      amount: (utxo.blindingData?.value ?? 0) - fee,
       blinderIndex: blindingKey !== undefined ? 0 : undefined,
     },
     {
@@ -95,16 +83,21 @@ export async function constructClaimTransaction(
     },
   ]);
 
+  console.log('pset', pset);
+
   const blindedPset = await blindPset(pset, {
     index: 0,
-    value: utxos[0].blindingData!.value.toString(),
-    valueBlindingFactor: Buffer.from(utxos[0].blindingData!.valueBlindingFactor, 'hex'),
-    asset: AssetHash.fromHex(utxos[0].blindingData!.asset).bytesWithoutPrefix,
-    assetBlindingFactor: Buffer.from(utxos[0].blindingData!.assetBlindingFactor, 'hex'),
+    value: utxo.blindingData!.value.toString(),
+    valueBlindingFactor: Buffer.from(utxo.blindingData!.valueBlindingFactor, 'hex'),
+    asset: AssetHash.fromHex(utxo.blindingData!.asset).bytesWithoutPrefix,
+    assetBlindingFactor: Buffer.from(utxo.blindingData!.assetBlindingFactor, 'hex'),
   });
 
-  const signer = await SignerService.fromPassword(walletRepository, appRepository, password);
-  const signedPset = await signer.signPset(blindedPset);
+  console.log('blindedPset', blindedPset);
+
+  const signedPset = await signPset(blindedPset, claimPublicKey, claimKeyPair, preimage);
+
+  console.log('signedPset', signedPset);
 
   const finalizer = new Finalizer(signedPset);
   finalizer.finalizeInput(0, () => {
@@ -131,21 +124,20 @@ const blindPset = async (pset: Pset, ownedInput: OwnedInput): Promise<Pset> => {
   return blinder.pset;
 };
 
-/*
-const blindPset = async (pset: Pset): Promise<Pset> => {
-  const zkpLib = await zkp();
-  const { ecc } = zkpLib;
-  const zkpValidator = new ZKPValidator(zkpLib);
-  const blindingKeys = psetToBlindingPrivateKeys(pset);
-  const zkpGenerator = new ZKPGenerator(
-    zkpLib,
-    ZKPGenerator.WithBlindingKeysOfInputs(blindingKeys)
-  );
-  const ownedInputs = zkpGenerator.unblindInputs(pset);
-  const keysGenerator = Pset.ECCKeysGenerator(ecc);
-  const outputBlindingArgs = zkpGenerator.blindOutputs(pset, keysGenerator);
-  const blinder = new Blinder(pset, ownedInputs, zkpValidator, zkpGenerator);
-  blinder.blindLast({ outputBlindingArgs });
-  return blinder.pset;
+const signPset = async (
+  pset: Pset,
+  claimPublicKey: Buffer,
+  claimKeyPair: ECPairInterface,
+  preimage: Buffer
+): Promise<Pset> => {
+  const signer = new Signer(pset);
+  const ecc = (await zkp()).ecc;
+  const sig: BIP174SigningData = {
+    partialSig: {
+      pubkey: claimPublicKey,
+      signature: bscript.signature.encode(claimKeyPair.sign(preimage), Transaction.SIGHASH_ALL),
+    },
+  };
+  signer.addSignature(0, sig, Pset.ECDSASigValidator(ecc));
+  return signer.pset;
 };
-*/
