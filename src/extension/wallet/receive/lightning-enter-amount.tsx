@@ -103,6 +103,7 @@ const LightningAmount: React.FC = () => {
       const claimKeyPair = ECPairFactory(ecc).fromPrivateKey(claimPrivateKey);
       const claimPublicKey = claimKeyPair.publicKey;
       const destinationScript = payments.p2wpkh({ pubkey: claimPublicKey }).output!;
+      const blindingPublicKey = payments.p2wpkh({ pubkey: claimPublicKey }).blindkey!;
 
       // create reverse submarine swap
       const boltzService = new BoltzService(network);
@@ -161,7 +162,7 @@ const LightningAmount: React.FC = () => {
           destinationScript,
           fee: 300,
           password,
-          blindingPublicKey: Buffer.from('00', 'hex'),
+          blindingPublicKey,
         });
 
         const txid = await broadcastTx(claimTransaction.toHex());
