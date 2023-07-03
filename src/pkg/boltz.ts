@@ -1,5 +1,5 @@
-import type { CreateSwapCommonResponse, NetworkString, SubmarineSwapResponse } from './boltz';
-import { Boltz } from './boltz';
+// docs: https://docs.boltz.exchange/en/latest/api/
+
 import { randomBytes } from 'crypto';
 import type { BIP174SigningData, OwnedInput } from 'liquidjs-lib';
 import {
@@ -11,7 +11,6 @@ import {
   crypto,
   Extractor,
   Finalizer,
-  networks,
   Pset,
   script as bscript,
   script,
@@ -24,12 +23,16 @@ import {
 } from 'liquidjs-lib';
 import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
-import type { Unspent } from '../../domain/chainsource';
+import type { Unspent } from '../domain/chainsource';
 import type { ECPairInterface } from 'ecpair';
-import zkp from '@vulpemventures/secp256k1-zkp';
-import { fromSatoshi } from '../../extension/utility';
+import type { ZKP } from '@vulpemventures/secp256k1-zkp';
+import { fromSatoshi } from '../extension/utility';
+import axios, { AxiosError } from 'axios';
+import { extractErrorMessage } from '../extension/utility/error';
 
-export interface BoltzServiceInterface {
+export type NetworkString = 'liquid' | 'testnet' | 'regtest';
+
+export interface BoltzInterface {
   getBoltzPair(pair: string): Promise<any>;
   createSubmarineSwap(
     invoice: string,
@@ -41,9 +44,48 @@ export interface BoltzServiceInterface {
     network: NetworkString,
     invoiceAmount: number
   ): Promise<ReverseSwap>;
-  makeClaimTransaction(p: MakeClaimTransactionParams): Promise<Transaction>;
+  makeClaimTransaction(p: MakeClaimTransactionParams): Transaction;
   getInvoiceExpireDate(invoice: string): number;
   getInvoiceValue(invoice: string): number;
+}
+
+interface CreateSwapCommonRequest {
+  type: 'submarine' | 'reversesubmarine';
+  pairId: 'L-BTC/BTC';
+  orderSide: 'buy' | 'sell';
+}
+
+interface CreateSwapCommonResponse {
+  id: string;
+  timeoutBlockHeight: number;
+}
+
+interface SubmarineSwapRequest {
+  invoice: string;
+  refundPublicKey: string;
+}
+
+interface SubmarineSwapResponse {
+  acceptZeroConf: boolean;
+  address: string;
+  bip21: string;
+  blindingKey: string; // private
+  expectedAmount: number;
+  redeemScript: string;
+}
+
+interface ReverseSubmarineSwapRequest {
+  preimageHash: string;
+  invoiceAmount: number;
+  claimPublicKey: string;
+}
+
+interface ReverseSubmarineSwapResponse {
+  blindingKey: string; // private
+  invoice: string;
+  lockupAddress: string;
+  onchainAmount: number;
+  redeemScript: string;
 }
 
 export interface SubmarineSwap {
@@ -66,13 +108,11 @@ export interface ReverseSwap {
 
 interface MakeClaimTransactionParams {
   utxo: Unspent;
-  claimPublicKey: Buffer;
   claimKeyPair: ECPairInterface;
   preimage: Buffer;
   redeemScript: Buffer;
   destinationScript: Buffer;
   fee: number;
-  password: string;
   blindingPublicKey: Buffer;
   timeoutBlockHeight: number;
 }
@@ -86,17 +126,27 @@ export const DEPOSIT_LIGHTNING_LIMITS = {
   minimal: DEFAULT_LIGHTNING_LIMITS.minimal - feeAmount - swapFeeAmount,
 };
 
-export class BoltzService implements BoltzServiceInterface {
-  private boltz: Boltz;
-  private network: NetworkString;
+export const boltzUrl: Record<NetworkString, string> = {
+  regtest: 'http://localhost:9090',
+  testnet: 'https://testnet.boltz.exchange/api',
+  liquid: 'https://boltz.exchange/api',
+};
 
-  constructor(network: NetworkString) {
-    this.network = network;
-    this.boltz = new Boltz(network);
+export class Boltz implements BoltzInterface {
+  private asset: string;
+  private url: string;
+  private zkp: ZKP;
+
+  constructor(url: string, asset: string, zkp: ZKP) {
+    this.asset = asset;
+    this.url = url;
+    this.zkp = zkp;
   }
 
   async getBoltzPair(pair: string): Promise<any> {
-    return this.boltz.getPair(pair);
+    const data = await this.getApi(`${this.url}/getpairs`);
+    if (!data?.pairs?.[pair]) return;
+    return data.pairs[pair];
   }
 
   // return invoice expire date
@@ -113,18 +163,17 @@ export class BoltzService implements BoltzServiceInterface {
     return 0;
   }
 
-  async makeClaimTransaction({
+  makeClaimTransaction({
     utxo,
-    claimPublicKey,
     claimKeyPair,
     preimage,
     redeemScript,
     destinationScript,
     fee,
-    password,
     blindingPublicKey,
     timeoutBlockHeight,
-  }: MakeClaimTransactionParams): Promise<Transaction> {
+  }: MakeClaimTransactionParams): Transaction {
+    if (!utxo.blindingData) throw new Error('utxo is not blinded');
     const pset = Creator.newPset();
     const updater = new Updater(pset);
 
@@ -133,35 +182,35 @@ export class BoltzService implements BoltzServiceInterface {
     );
     updater.addInSighashType(0, Transaction.SIGHASH_ALL);
     updater.addInWitnessUtxo(0, utxo.witnessUtxo!);
-    updater.addInWitnessScript(0, utxo.witnessUtxo!.script);
+    // updater.addInWitnessScript(0, utxo.witnessUtxo!.script);
 
     updater.addOutputs([
       {
         script: destinationScript,
         blindingPublicKey,
-        asset: networks[this.network].assetHash,
+        asset: this.asset,
         amount: (utxo.blindingData?.value ?? 0) - fee,
         blinderIndex: 0,
       },
       {
         amount: fee,
-        asset: networks[this.network].assetHash,
+        asset: this.asset,
       },
     ]);
 
     console.log('pset', pset);
 
-    const blindedPset = await this.blindPset(pset, {
+    const blindedPset = this.blindPset(pset, {
       index: 0,
-      value: utxo.blindingData!.value.toString(),
-      valueBlindingFactor: Buffer.from(utxo.blindingData!.valueBlindingFactor, 'hex'),
-      asset: AssetHash.fromHex(utxo.blindingData!.asset).bytesWithoutPrefix,
-      assetBlindingFactor: Buffer.from(utxo.blindingData!.assetBlindingFactor, 'hex'),
+      value: utxo.blindingData.value.toString(),
+      valueBlindingFactor: Buffer.from(utxo.blindingData.valueBlindingFactor, 'hex'),
+      asset: AssetHash.fromHex(utxo.blindingData.asset).bytesWithoutPrefix,
+      assetBlindingFactor: Buffer.from(utxo.blindingData.assetBlindingFactor, 'hex'),
     });
 
     console.log('blindedPset', blindedPset);
 
-    const signedPset = await this.signPset(blindedPset, claimPublicKey, claimKeyPair, preimage);
+    const signedPset = this.signPset(blindedPset, claimKeyPair, preimage);
 
     console.log('signedPset', signedPset);
 
@@ -185,15 +234,22 @@ export class BoltzService implements BoltzServiceInterface {
     refundPublicKey: string
   ): Promise<SubmarineSwap> {
     // create submarine swap
+    const base: CreateSwapCommonRequest = {
+      type: 'submarine',
+      pairId: 'L-BTC/BTC',
+      orderSide: 'sell',
+    };
+    const req: SubmarineSwapRequest = {
+      invoice,
+      refundPublicKey,
+    };
+    const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };
     const {
       address,
       expectedAmount,
       id,
       redeemScript,
-    }: CreateSwapCommonResponse & SubmarineSwapResponse = await this.boltz.createSubmarineSwap({
-      invoice,
-      refundPublicKey,
-    });
+    }: CreateSwapCommonResponse & SubmarineSwapResponse = await this.callCreateSwap(params);
 
     const submarineSwap: SubmarineSwap = {
       address,
@@ -216,12 +272,25 @@ export class BoltzService implements BoltzServiceInterface {
     const preimageHash = crypto.sha256(preimage).toString('hex');
 
     // create reverse submarine swap
-    const { id, blindingKey, invoice, lockupAddress, redeemScript, timeoutBlockHeight } =
-      await this.boltz.createReverseSubmarineSwap({
-        claimPublicKey: claimPublicKey.toString('hex'),
-        invoiceAmount,
-        preimageHash,
-      });
+    const base: CreateSwapCommonRequest = {
+      type: 'reversesubmarine',
+      pairId: 'L-BTC/BTC',
+      orderSide: 'buy',
+    };
+    const req: ReverseSubmarineSwapRequest = {
+      claimPublicKey: claimPublicKey.toString('hex'),
+      invoiceAmount,
+      preimageHash,
+    };
+    const params: CreateSwapCommonRequest & ReverseSubmarineSwapRequest = { ...base, ...req };
+    const {
+      id,
+      blindingKey,
+      invoice,
+      lockupAddress,
+      redeemScript,
+      timeoutBlockHeight,
+    }: CreateSwapCommonResponse & ReverseSubmarineSwapResponse = await this.callCreateSwap(params);
 
     const reverseSwap: ReverseSwap = {
       blindingPrivateKey: blindingKey,
@@ -341,32 +410,56 @@ export class BoltzService implements BoltzServiceInterface {
     return scriptAssembly.join() === expectedScript.join();
   }
 
-  private async blindPset(pset: Pset, ownedInput: OwnedInput): Promise<Pset> {
-    const zkpLib = await zkp();
-    const { ecc } = zkpLib;
-    const zkpValidator = new ZKPValidator(zkpLib);
-    const zkpGenerator = new ZKPGenerator(zkpLib, ZKPGenerator.WithOwnedInputs([ownedInput]));
+  private blindPset(pset: Pset, ownedInput: OwnedInput): Pset {
+    const { ecc } = this.zkp;
+    const zkpValidator = new ZKPValidator(this.zkp);
+    const zkpGenerator = new ZKPGenerator(this.zkp, ZKPGenerator.WithOwnedInputs([ownedInput]));
     const outputBlindingArgs = zkpGenerator.blindOutputs(pset, Pset.ECCKeysGenerator(ecc));
     const blinder = new Blinder(pset, [ownedInput], zkpValidator, zkpGenerator);
     blinder.blindLast({ outputBlindingArgs });
     return blinder.pset;
   }
 
-  private async signPset(
-    pset: Pset,
-    claimPublicKey: Buffer,
-    claimKeyPair: ECPairInterface,
-    preimage: Buffer
-  ): Promise<Pset> {
+  private signPset(pset: Pset, claimKeyPair: ECPairInterface, preimage: Buffer): Pset {
     const signer = new Signer(pset);
-    const ecc = (await zkp()).ecc;
+    const { ecc } = this.zkp;
     const sig: BIP174SigningData = {
       partialSig: {
-        pubkey: claimPublicKey,
+        pubkey: claimKeyPair.publicKey,
         signature: bscript.signature.encode(claimKeyPair.sign(preimage), Transaction.SIGHASH_ALL),
       },
     };
     signer.addSignature(0, sig, Pset.ECDSASigValidator(ecc));
     return signer.pset;
   }
+
+  private callCreateSwap = async (
+    params: CreateSwapCommonRequest
+  ): Promise<CreateSwapCommonResponse & any> => {
+    return this.postApi(`${this.url}/createswap`, params);
+  };
+
+  private getApi = async (url: string): Promise<any> => {
+    try {
+      const config = { headers: { 'Content-Type': 'application/json' } };
+      const { status, data } = await axios.get(url, config);
+      if (status !== 200) throw new Error(data);
+      return data;
+    } catch (error: unknown | AxiosError) {
+      const errorExtracted = extractErrorMessage(error);
+      throw new Error(errorExtracted);
+    }
+  };
+
+  private postApi = async (url: string, params: any = {}): Promise<any> => {
+    try {
+      const config = { headers: { 'Content-Type': 'application/json' } };
+      const { status, data } = await axios.post(url, params, config);
+      if (status !== 201) throw new Error(data);
+      return data;
+    } catch (error: unknown | AxiosError) {
+      const errorExtracted = extractErrorMessage(error);
+      throw new Error(errorExtracted);
+    }
+  };
 }

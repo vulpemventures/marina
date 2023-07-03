@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
-import { address, payments } from 'liquidjs-lib';
+import { address, networks, payments } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import Button from '../../components/button';
@@ -14,7 +14,10 @@ import * as ecc from 'tiny-secp256k1';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
 import { randomBytes } from 'crypto';
 import ECPairFactory from 'ecpair';
-import { BoltzService, DEFAULT_LIGHTNING_LIMITS } from '../../../pkg/boltz/boltzService';
+import { Boltz, DEFAULT_LIGHTNING_LIMITS, boltzUrl } from '../../../pkg/boltz';
+import zkp from '@vulpemventures/secp256k1-zkp';
+
+const zkpLib = await zkp();
 
 const LightningAmount: React.FC = () => {
   const history = useHistory();
@@ -29,12 +32,12 @@ const LightningAmount: React.FC = () => {
 
   const swapValue = useRef('');
   const network = cache?.network ?? 'liquid';
-  const boltzService = new BoltzService(network);
+  const boltz = new Boltz(boltzUrl[network], networks[network].assetHash, zkpLib);
 
   useEffect(() => {
     // get maximal and minimal amount for pair
     const fetchData = async () => {
-      const pair = await boltzService.getBoltzPair('L-BTC/BTC');
+      const pair = await boltz.getBoltzPair('L-BTC/BTC');
       if (pair?.limits) {
         setLimits({
           maximal: fromSatoshi(pair.limits.maximal),
@@ -106,7 +109,6 @@ const LightningAmount: React.FC = () => {
       const blindingPublicKey = payments.p2wpkh({ pubkey: claimPublicKey }).blindkey!;
 
       // create reverse submarine swap
-      const boltzService = new BoltzService(network);
       const {
         redeemScript,
         lockupAddress,
@@ -114,7 +116,7 @@ const LightningAmount: React.FC = () => {
         preimage,
         blindingPrivateKey,
         timeoutBlockHeight,
-      } = await boltzService.createReverseSubmarineSwap(
+      } = await boltz.createReverseSubmarineSwap(
         claimPublicKey,
         network,
         toSatoshi(Number(swapValue.current))
@@ -125,7 +127,7 @@ const LightningAmount: React.FC = () => {
       setIsLookingForPayment(true);
 
       // prepare timeout handler
-      const invoiceExpireDate = Number(boltzService.getInvoiceExpireDate(invoice));
+      const invoiceExpireDate = Number(boltz.getInvoiceExpireDate(invoice));
 
       const invoiceExpirationTimeout = setTimeout(() => {
         setErrors({ submit: 'Invoice has expired', amount: '' });
@@ -159,15 +161,13 @@ const LightningAmount: React.FC = () => {
         address.toOutputScript(lockupAddress).toString('hex')
       ) {
         clearTimeout(invoiceExpirationTimeout);
-        const claimTransaction = await boltzService.makeClaimTransaction({
+        const claimTransaction = boltz.makeClaimTransaction({
           utxo,
-          claimPublicKey,
           claimKeyPair,
           preimage,
           redeemScript: Buffer.from(redeemScript, 'hex'),
           destinationScript,
           fee: 300,
-          password,
           blindingPublicKey,
           timeoutBlockHeight,
         });
