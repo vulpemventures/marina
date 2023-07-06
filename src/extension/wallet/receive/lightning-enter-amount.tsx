@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
-import { address, networks, payments } from 'liquidjs-lib';
+import { address, networks } from 'liquidjs-lib';
 import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import Button from '../../components/button';
@@ -16,12 +16,14 @@ import { randomBytes } from 'crypto';
 import ECPairFactory from 'ecpair';
 import { Boltz, DEFAULT_LIGHTNING_LIMITS, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
+import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
+import { toOutputScript } from 'liquidjs-lib/src/address';
 
 const zkpLib = await zkp();
 
 const LightningAmount: React.FC = () => {
   const history = useHistory();
-  const { appRepository, cache } = useStorageContext();
+  const { appRepository, walletRepository, cache } = useStorageContext();
   const [errors, setErrors] = useState({ amount: '', submit: '' });
   const [invoice, setInvoice] = useState('');
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
@@ -105,8 +107,6 @@ const LightningAmount: React.FC = () => {
       const claimPrivateKey = randomBytes(32);
       const claimKeyPair = ECPairFactory(ecc).fromPrivateKey(claimPrivateKey);
       const claimPublicKey = claimKeyPair.publicKey;
-      const destinationScript = payments.p2wpkh({ pubkey: claimPublicKey }).output!;
-      const blindingPublicKey = payments.p2wpkh({ pubkey: claimPublicKey }).blindkey!;
 
       // create reverse submarine swap
       const {
@@ -142,8 +142,7 @@ const LightningAmount: React.FC = () => {
       await chainSource.waitForAddressReceivesTx(lockupAddress);
 
       // fetch utxos for address
-      const utxos = await chainSource.listUnspents(lockupAddress);
-      const utxo = utxos[0];
+      const [utxo] = await chainSource.listUnspents(lockupAddress);
       const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
         Buffer.from(blindingPrivateKey, 'hex'),
         utxo.witnessUtxo
@@ -161,12 +160,21 @@ const LightningAmount: React.FC = () => {
         address.toOutputScript(lockupAddress).toString('hex')
       ) {
         clearTimeout(invoiceExpirationTimeout);
+
+        // Receiving address
+        const accountFactory = await AccountFactory.create(walletRepository);
+        const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+        const mainAccount = await accountFactory.make(network, accountName);
+        const addr = await mainAccount.getNextAddress(false);
+        const blindingPublicKey = address.fromConfidential(addr.confidentialAddress).blindingKey;
+        const destinationScript = toOutputScript(addr.confidentialAddress).toString('hex');
+
         const claimTransaction = boltz.makeClaimTransaction({
           utxo,
           claimKeyPair,
           preimage,
           redeemScript: Buffer.from(redeemScript, 'hex'),
-          destinationScript,
+          destinationScript: Buffer.from(destinationScript, 'hex'),
           fee: 300,
           blindingPublicKey,
           timeoutBlockHeight,

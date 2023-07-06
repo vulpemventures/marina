@@ -27,6 +27,7 @@ import type { Unspent } from '../domain/chainsource';
 import type { ECPairInterface } from 'ecpair';
 import type { ZKP } from '@vulpemventures/secp256k1-zkp';
 import { fromSatoshi } from '../extension/utility';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
 import { extractErrorMessage } from '../extension/utility/error';
 
@@ -106,7 +107,7 @@ export interface ReverseSwap {
   timeoutBlockHeight: number;
 }
 
-interface MakeClaimTransactionParams {
+export interface MakeClaimTransactionParams {
   utxo: Unspent;
   claimKeyPair: ECPairInterface;
   preimage: Buffer;
@@ -174,6 +175,7 @@ export class Boltz implements BoltzInterface {
     timeoutBlockHeight,
   }: MakeClaimTransactionParams): Transaction {
     if (!utxo.blindingData) throw new Error('utxo is not blinded');
+    if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');
     const pset = Creator.newPset();
     const updater = new Updater(pset);
 
@@ -181,8 +183,8 @@ export class Boltz implements BoltzInterface {
       new CreatorInput(utxo.txid, utxo.vout, 0xfffffffd, timeoutBlockHeight).toPartialInput()
     );
     updater.addInSighashType(0, Transaction.SIGHASH_ALL);
-    updater.addInWitnessUtxo(0, utxo.witnessUtxo!);
-    // updater.addInWitnessScript(0, utxo.witnessUtxo!.script);
+    updater.addInWitnessUtxo(0, utxo.witnessUtxo);
+    updater.addInWitnessScript(0, utxo.witnessUtxo.script);
 
     updater.addOutputs([
       {
