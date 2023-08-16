@@ -1,4 +1,4 @@
-# Marina Wallet
+# 🧜‍♀️ Marina Wallet
 Liquid Network browser extension
 
 
@@ -6,9 +6,12 @@ Liquid Network browser extension
 
 
 
-## Install
+## ⬇️ Install
 
-Available on chrome store: https://chrome.google.com/webstore/detail/marina/nhanebedohgejbllffboeipobccgedhl
+Available on:
+
+- Chrome store https://chrome.google.com/webstore/detail/marina/nhanebedohgejbllffboeipobccgedhl
+- Firefox Add-on https://addons.mozilla.org/en-US/firefox/addon/marinawallet/
 
 ## Usage
 

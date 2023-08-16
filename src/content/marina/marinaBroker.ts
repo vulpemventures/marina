@@ -315,9 +315,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           const { accepted, signedPset } =
             await this.openAndWaitPopup<SignTransactionPopupResponse>('sign-pset');
 
+          await this.popupsRepository.clear();
           if (!accepted) throw new Error('User rejected the sign request');
           if (!signedPset) throw new Error('Something went wrong with tx signing');
-          await this.popupsRepository.clear();
 
           return successMsg(signedPset);
         }
@@ -374,7 +374,9 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             'spend'
           );
 
-          if (!accepted) throw new Error('the user rejected the create tx request');
+          await this.popupsRepository.clear();
+
+          if (!accepted) throw new Error('user rejected the sendTransaction request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
           // try to broadcast the tx

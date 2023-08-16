@@ -56,6 +56,21 @@ export const PASSWORD = 'passwordsupersecretonlyfortesting';
 export const marinaURL = (extensionID: string, path: string) =>
   `chrome-extension://${extensionID}/${path}`;
 
+export const switchToRegtestNetwork = async (page: Page, extensionID: string) => {
+// go to networks page and switch to regtest
+    await page.goto(marinaURL(extensionID, 'popup.html'));
+    await page.getByPlaceholder('Enter your password').fill(PASSWORD);
+    await page.getByRole('button', { name: 'Log in' }).click();
+    await page.waitForSelector('text=Assets');
+    await page.getByAltText('menu icon').click(); // hamburger menu
+    await page.getByText('Settings').click();
+    await page.getByRole('button', { name: 'Networks' }).click();
+    await page.getByRole('button', { name: 'Liquid' }).click(); // by default on Liquid, so the button contains the network name
+    await page.getByText('Regtest').click();
+    // wait some time for the network to switch
+    await page.waitForTimeout(2000);
+}
+
 export const makeOnboardingRestore = async (page: Page, extensionID: string) => {
   await page.goto(marinaURL(extensionID, 'home.html#initialize/welcome'));
   await page.getByRole('button', { name: 'Get Started' }).click();
@@ -196,11 +211,14 @@ export class PlaywrightMarinaProvider implements MarinaProvider {
 
   sendTransaction(
     recipients: Recipient[],
-    feeAsset?: string | undefined
+    feeAsset?: string
   ): Promise<SentTransaction> {
-    throw new Error('Method not implemented.');
+    return this.page.evaluate<SentTransaction, [string, Recipient[], string | undefined]>(
+      ([name, recipients, feeAsset]) => (window[name as any] as unknown as MarinaProvider).sendTransaction(recipients, feeAsset),
+      [Marina.PROVIDER_NAME, recipients, feeAsset]
+    );
   }
-
+  
   signTransaction(pset: string): Promise<string> {
     return this.page.evaluate<string, [string, string]>(
       ([name, pset]) => (window[name as any] as unknown as MarinaProvider).signTransaction(pset),
