@@ -86,6 +86,7 @@ describe('Application Layer', () => {
           .nextKeyIndexes['regtest'].external;
         const address = await account.getNextAddress(false);
         expect(address).toBeDefined();
+        if (!address.confidentialAddress) throw new Error('Address not generated');
         const scriptFromAddress = toOutputScript(address.confidentialAddress).toString('hex');
         const scripts = Object.keys(
           await walletRepository.getAccountScripts('regtest', MainAccountTest)
@@ -110,6 +111,7 @@ describe('Application Layer', () => {
           .nextKeyIndexes['regtest'].internal;
         const address = await account.getNextAddress(true);
         expect(address).toBeDefined();
+        if (!address.confidentialAddress) throw new Error('Address not generated');
         const scriptFromAddress = toOutputScript(address.confidentialAddress).toString('hex');
         const scripts = Object.keys(
           await walletRepository.getAccountScripts('regtest', MainAccountTest)
@@ -182,12 +184,15 @@ describe('Application Layer', () => {
         // generate and faucet addresses
         let account = await factory.make('regtest', randomAccountName);
         const address = await account.getNextAddress(false);
+        if (!address.confidentialAddress) throw new Error('Address not generated');
         const txid0 = await faucet(address.confidentialAddress, 1);
         const txid1 = await faucet(address.confidentialAddress, 1);
         const addressBis = await account.getNextAddress(false);
+        if (!addressBis.confidentialAddress) throw new Error('Address not generated');
         const txid2 = await faucet(addressBis.confidentialAddress, 1);
         const txid3 = await faucet(addressBis.confidentialAddress, 1);
         const changeAddress = await account.getNextAddress(true);
+        if (!changeAddress.confidentialAddress) throw new Error('Address not generated');
         const txid4 = await faucet(changeAddress.confidentialAddress, 1);
         const txid5 = await faucet(changeAddress.confidentialAddress, 1);
         await sleep(5000); // wait for the txs to be confirmed
@@ -293,6 +298,7 @@ describe('Application Layer', () => {
       // faucet it
       const account = await factory.make('regtest', accountName);
       const address = await account.getNextAddress(false);
+      if (!address.confidentialAddress) throw new Error('Address not generated');
       await faucet(address.confidentialAddress, 1);
       await faucet(address.confidentialAddress, 1);
 
@@ -305,6 +311,7 @@ describe('Application Layer', () => {
         ]),
         args: { sum: 10 },
       });
+      if (!captchaAddress.confidentialAddress) throw new Error('Address not generated');
       await faucet(captchaAddress.confidentialAddress, 1);
       await sleep(5000); // wait for the txs to be confirmed
       const chainSource = await appRepository.getChainSource('regtest');

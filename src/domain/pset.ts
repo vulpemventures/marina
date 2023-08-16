@@ -275,15 +275,18 @@ export class PsetBuilder {
         const accountFactory = await AccountFactory.create(this.walletRepository);
         const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
         const mainAccount = await accountFactory.make(network, accountName);
-        const changeAddress = await mainAccount.getNextAddress(true);
+        const changeAddress = (await mainAccount.getNextAddress(true)).confidentialAddress;
+        if (!changeAddress) {
+          throw new Error('change address not found');
+        }
+
         updater.addOutputs(
           coinSelection.changeOutputs.map((change) => ({
             amount: change.amount,
             asset: change.asset,
-            script: address.toOutputScript(changeAddress.confidentialAddress),
+            script: address.toOutputScript(changeAddress),
             blinderIndex: 0,
-            blindingPublicKey: address.fromConfidential(changeAddress.confidentialAddress)
-              .blindingKey,
+            blindingPublicKey: address.fromConfidential(changeAddress).blindingKey,
           }))
         );
       }
