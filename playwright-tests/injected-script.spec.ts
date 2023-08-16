@@ -8,6 +8,7 @@ import {
   PlaywrightMarinaProvider,
   marinaURL,
   switchToRegtestNetwork,
+  PASSWORD,
 } from './utils';
 import { faucet } from '../test/_regtest';
 import type { Artifact} from '@ionio-lang/ionio';
@@ -205,6 +206,7 @@ pwTest(
       await popup.getByRole('button', { name: 'Connect' }).click();
     }
     const toFaucet = await provider.getNextAddress();
+    if (!toFaucet.confidentialAddress) throw new Error('toFaucet.confidentialAddress is undefined');
     await faucet(toFaucet.confidentialAddress, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
     await page.waitForSelector('text=1 L-BTC');
