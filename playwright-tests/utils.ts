@@ -174,12 +174,17 @@ export class PlaywrightMarinaProvider implements MarinaProvider {
   getAddresses(accountIDs?: string[] | undefined): Promise<Address[]> {
     throw new Error('Method not implemented.');
   }
+
   sendTransaction(
     recipients: Recipient[],
-    feeAsset?: string | undefined
+    feeAsset?: string
   ): Promise<SentTransaction> {
-    throw new Error('Method not implemented.');
+    return this.page.evaluate<SentTransaction, [string, Recipient[], string | undefined]>(
+      ([name, recipients, feeAsset]) => (window[name as any] as unknown as MarinaProvider).sendTransaction(recipients, feeAsset),
+      [Marina.PROVIDER_NAME, recipients, feeAsset]
+    );
   }
+  
   signTransaction(pset: string): Promise<string> {
     return this.page.evaluate<string, [string, string]>(
       ([name, pset]) => (window[name as any] as unknown as MarinaProvider).signTransaction(pset),

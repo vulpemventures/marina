@@ -101,3 +101,51 @@ pwTest(
     ]);
   }
 );
+
+pwTest(
+  'marina.sendTransaction popup should display the correct amount of spent asset',
+  async ({ page, extensionId, context }) => {
+    await makeOnboardingRestore(page, extensionId);
+    await switchToRegtestNetwork(page, extensionId); 
+
+    await page.goto(vulpemFaucetURL);
+    let provider = new PlaywrightMarinaProvider(page);
+    if (!(await provider.isEnabled())) {
+      await page.getByRole('button', { name: 'Connect with Marina' }).click();
+      const popup = await context.waitForEvent('page');
+      await popup.getByRole('button', { name: 'Connect' }).click();
+    }
+    const toFaucet = await provider.getNextAddress();
+    await faucet(toFaucet.confidentialAddress, 1); // send 1 L-BTC to the address
+    await page.goto(marinaURL(extensionId, 'popup.html'));
+    await page.waitForSelector('text=1 L-BTC');
+
+    await page.goto(vulpemFaucetURL);
+    provider = new PlaywrightMarinaProvider(page);
+    // random regtest address
+    const receiver = 'el1qqdfjtdv5a7jez0qmj5g4u07pcg0qsm8jrwx0c6rza8kmquad2k62mwxw92f7vw0460wdx36m97er86rlkl3xsz774h2w3zpc9'
+    const recipients = [
+      { 
+        address: receiver,
+        asset: networks.regtest.assetHash,
+        value: 1_0000_0000 - 1500,
+      }
+    ];
+
+    const handleSendTransactionPopup = async () => {
+      const popup = await context.waitForEvent('page');
+      await popup.waitForSelector(`text= L-BTC`); // wait for loading to finish
+      const value = popup.getByTestId(networks.regtest.assetHash)
+      pwExpect(value).toBeTruthy();
+      pwExpect(await value.innerText()).toEqual('0.999985');
+      const btn = popup.getByRole('button', { name: 'Reject' })
+      pwExpect(btn).toBeTruthy();
+      await btn.click();
+    };
+
+    await Promise.all([
+      pwExpect(provider.sendTransaction(recipients)).rejects.toThrow('user rejected the sendTransaction request'),
+      handleSendTransactionPopup(),
+    ]);
+  }
+);
