@@ -114,6 +114,10 @@ function bufferCast<T extends Record<string, any>>(obj: T): T {
 // implements only the methods that are used in the tests
 export class PlaywrightMarinaProvider implements MarinaProvider {
   constructor(private page: Page) {}
+  
+  importScript(accountName: string, scriptHex: string, blindingPrivateKey?: string | undefined): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   enable(): Promise<void> {
     return this.page.evaluate(
