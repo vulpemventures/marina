@@ -27,6 +27,10 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     this.eventHandler = new MarinaEventHandler();
   }
 
+  importScript(_: string, __: string, ___?: string | undefined): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
   createAccount(accountID: string, accountType: AccountType): Promise<void> {
     return this.proxy('createAccount', [accountID, accountType]);
   }

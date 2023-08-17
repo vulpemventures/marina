@@ -30,6 +30,13 @@ pwTest(
     pwExpect(page.getByText('Wrong network, switch to the Testnet')).toBeTruthy();
     const provider = new PlaywrightMarinaProvider(page);
     pwExpect(await provider.isEnabled()).toBe(true);
+
+    const address = await provider.getNextAddress();
+    pwExpect(address).toBeTruthy();
+    pwExpect(address.confidentialAddress).toBeTruthy();
+    pwExpect(address.blindingPrivateKey).toBeTruthy();
+    pwExpect(address.publicKey).toBeTruthy();
+    pwExpect(address.script).toBeTruthy();
   }
 );
 
@@ -47,6 +54,7 @@ pwTest(
       await popup.getByRole('button', { name: 'Connect' }).click();
     }
     const toFaucet = await provider.getNextAddress();
+    if (!toFaucet.confidentialAddress) throw new Error('confidentialAddress is undefined');
     await faucet(toFaucet.confidentialAddress, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
     await page.waitForSelector('text=1 L-BTC');
@@ -116,6 +124,7 @@ pwTest(
       await popup.getByRole('button', { name: 'Connect' }).click();
     }
     const toFaucet = await provider.getNextAddress();
+    if (!toFaucet.confidentialAddress) throw new Error('confidentialAddress is undefined');
     await faucet(toFaucet.confidentialAddress, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
     await page.waitForSelector('text=1 L-BTC');

@@ -152,6 +152,12 @@ export class Account {
       case AccountType.P2WPKH: {
         return Object.entries(scripts).map(([script, details]) => ({
           confidentialAddress: this.createP2WPKHAddress(Buffer.from(script, 'hex')),
+          publicKey: details.derivationPath
+            ? this.node
+                .derivePath(details.derivationPath.replace('m/', ''))
+                .publicKey.toString('hex')
+            : '',
+          script,
           ...details,
         }));
       }
@@ -160,6 +166,12 @@ export class Account {
         return Object.entries(scripts).map(([script, details]) => ({
           confidentialAddress: this.createTaprootAddress(Buffer.from(script, 'hex')),
           ...details,
+          script,
+          publicKey: details.derivationPath
+            ? this.node
+                .derivePath(details.derivationPath.replace('m/', ''))
+                .publicKey.toString('hex')
+            : '',
           contract: isIonioScriptDetails(details)
             ? new Contract(details.artifact, details.params, this.network, zkp)
             : undefined,
@@ -181,7 +193,7 @@ export class Account {
 
     const nextIndexes = await this.getNextIndexes();
     const next = isInternal ? nextIndexes.internal : nextIndexes.external;
-    const publicKeys = this.deriveBatchPublicKeys(next, next + 1, isInternal);
+    const keyPair = this.deriveBatchPublicKeys(next, next + 1, isInternal)[0];
     const type = await this.getAccountType();
 
     let confidentialAddress = undefined;
@@ -190,14 +202,14 @@ export class Account {
 
     switch (type) {
       case AccountType.P2WPKH:
-        [script, scriptDetails] = this.createP2PWKHScript(publicKeys[0]);
+        [script, scriptDetails] = this.createP2PWKHScript(keyPair);
         confidentialAddress = this.createP2WPKHAddress(Buffer.from(script, 'hex'));
         break;
       case AccountType.Ionio:
         if (!artifactWithArgs)
           throw new Error('Artifact with args is required for Ionio account type');
         [script, scriptDetails] = this.createTaprootScript(
-          publicKeys[0],
+          keyPair,
           artifactWithArgs,
           await ZKPLib()
         );
@@ -221,6 +233,8 @@ export class Account {
     ]);
 
     return {
+      publicKey: keyPair.publicKey.toString('hex'),
+      script,
       confidentialAddress,
       ...scriptDetails,
       contract: isIonioScriptDetails(scriptDetails)

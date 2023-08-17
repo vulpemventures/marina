@@ -5609,10 +5609,10 @@ map-age-cleaner@^0.1.3:
   dependencies:
     p-defer "^1.0.0"
 
-marina-provider@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-2.0.0.tgz#f684998e2c64be88c8f4674d2ae4d9887ce566d0"
-  integrity sha512-C/TToZV5tYXsGeUe8ux6+gE+g+ihcdXfxj1VoDo3S4fhdvjwMKvNLzUEmpZJHyJ/rMcbGUHVagKR1MPsueE3Ig==
+marina-provider@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-3.0.1.tgz#a6d3b7ead8a2a06b9ea48ce75e9605f39a20a3a6"
+  integrity sha512-EWHn0sUDhf0/1gediCT+xByghfS7ISs5XVUNn1ZK1KN7iky+9jfl9SraMvbC/3A9BQNgNOhji3yFMBrv5k4tow==
 
 marky@^1.2.2:
   version "1.2.5"

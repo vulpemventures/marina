@@ -30,7 +30,8 @@ const ReceiveView: React.FC = () => {
       const accountFactory = await AccountFactory.create(walletRepository);
       const mainAccount = await accountFactory.make(network, accountName);
       const addr = await mainAccount.getNextAddress(false);
-      setConfidentialAddress(addr.confidentialAddress);
+      if (addr.confidentialAddress) setConfidentialAddress(addr.confidentialAddress);
+      else console.warn('something went wrong while generating address: ', JSON.stringify(addr));
     })().catch(console.error);
   }, []);
 
