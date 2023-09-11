@@ -151,8 +151,16 @@ export class Account {
       this.name
     );
 
-    return Object.entries(scripts).map(
-      scriptDetailsWithKeyToAddress(this.network, type, await ZKPLib())
+    const zkpLib = await ZKPLib();
+
+    return Object.entries(scripts).map(([script, details]) =>
+      scriptDetailsWithKeyToAddress(this.network, type, zkpLib)(
+        script,
+        details,
+        details.derivationPath
+          ? this.node.derivePath(details.derivationPath.replace('m/', '')).publicKey.toString('hex')
+          : ''
+      )
     );
   }
 
@@ -167,7 +175,7 @@ export class Account {
 
     const nextIndexes = await this.getNextIndexes();
     const next = isInternal ? nextIndexes.internal : nextIndexes.external;
-    const publicKeys = this.deriveBatchPublicKeys(next, next + 1, isInternal);
+    const keyPair = this.deriveBatchPublicKeys(next, next + 1, isInternal)[0];
     const type = await this.getAccountType();
 
     let script: string | undefined = undefined;
@@ -175,13 +183,13 @@ export class Account {
 
     switch (type) {
       case AccountType.P2WPKH:
-        [script, scriptDetails] = this.createP2PWKHScript(publicKeys[0]);
+        [script, scriptDetails] = this.createP2PWKHScript(keyPair);
         break;
       case AccountType.Ionio:
         if (!artifactWithArgs)
           throw new Error('Artifact with args is required for Ionio account type');
         [script, scriptDetails] = this.createTaprootScript(
-          publicKeys[0],
+          keyPair,
           artifactWithArgs,
           await ZKPLib()
         );
@@ -203,7 +211,11 @@ export class Account {
     ]);
 
     const zkpLib = await ZKPLib();
-    const addr = scriptDetailsWithKeyToAddress(this.network, type, zkpLib)([script, scriptDetails]);
+    const addr = scriptDetailsWithKeyToAddress(this.network, type, zkpLib)(
+      script,
+      scriptDetails,
+      keyPair.publicKey.toString('hex')
+    );
     if (!addr.confidentialAddress)
       throw new Error('unable to derive confidential address from script');
     return addr as Address & { confidentialAddress: string };
@@ -513,10 +525,11 @@ function scriptDetailsWithKeyToAddress(
   type: AccountType,
   zkpLib: Secp256k1Interface
 ) {
-  return function ([script, details]: [string, ScriptDetails]): Address {
+  return function (script: string, details: ScriptDetails, publicKey: string): Address {
     const addr: Address = {
       ...details,
       script,
+      publicKey,
     };
 
     try {

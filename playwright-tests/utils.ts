@@ -114,7 +114,7 @@ function bufferCast<T extends Record<string, any>>(obj: T): T {
 // implements only the methods that are used in the tests
 export class PlaywrightMarinaProvider implements MarinaProvider {
   constructor(private page: Page) {}
-
+  
   enable(): Promise<void> {
     return this.page.evaluate(
       (name: string) => (window[name as any] as unknown as MarinaProvider).enable(),
