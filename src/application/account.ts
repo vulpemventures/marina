@@ -2,6 +2,8 @@ import * as ecc from 'tiny-secp256k1';
 import ZKPLib from '@vulpemventures/secp256k1-zkp';
 import type { BIP32Interface } from 'bip32';
 import BIP32Factory from 'bip32';
+import { ECPairFactory } from 'ecpair';
+import type { Secp256k1Interface } from 'liquidjs-lib';
 import { address, crypto, networks, payments } from 'liquidjs-lib';
 import type {
   Address,
@@ -25,6 +27,7 @@ export const MainAccountTest = 'mainAccountTest';
 
 const bip32 = BIP32Factory(ecc);
 const slip77 = SLIP77Factory(ecc);
+const ecpair = ECPairFactory(ecc);
 
 const GAP_LIMIT = 20;
 
@@ -148,38 +151,17 @@ export class Account {
       this.name
     );
 
-    switch (type) {
-      case AccountType.P2WPKH: {
-        return Object.entries(scripts).map(([script, details]) => ({
-          confidentialAddress: this.createP2WPKHAddress(Buffer.from(script, 'hex')),
-          publicKey: details.derivationPath
-            ? this.node
-                .derivePath(details.derivationPath.replace('m/', ''))
-                .publicKey.toString('hex')
-            : '',
-          script,
-          ...details,
-        }));
-      }
-      case AccountType.Ionio: {
-        const zkp = await ZKPLib();
-        return Object.entries(scripts).map(([script, details]) => ({
-          confidentialAddress: this.createTaprootAddress(Buffer.from(script, 'hex')),
-          ...details,
-          script,
-          publicKey: details.derivationPath
-            ? this.node
-                .derivePath(details.derivationPath.replace('m/', ''))
-                .publicKey.toString('hex')
-            : '',
-          contract: isIonioScriptDetails(details)
-            ? new Contract(details.artifact, details.params, this.network, zkp)
-            : undefined,
-        }));
-      }
-      default:
-        throw new Error('Account type not supported');
-    }
+    const zkpLib = await ZKPLib();
+
+    return Object.entries(scripts).map(([script, details]) =>
+      scriptDetailsWithKeyToAddress(this.network, type, zkpLib)(
+        script,
+        details,
+        details.derivationPath
+          ? this.node.derivePath(details.derivationPath.replace('m/', '')).publicKey.toString('hex')
+          : ''
+      )
+    );
   }
 
   // get next address generate a new script and persist its details in cache
@@ -187,7 +169,7 @@ export class Account {
   async getNextAddress(
     isInternal: boolean,
     artifactWithArgs?: ArtifactWithConstructorArgs
-  ): Promise<Address> {
+  ): Promise<Address & { confidentialAddress: string }> {
     if (!this.walletRepository) throw new Error('No wallet repository, cannot get next address');
     if (!this.name) throw new Error('No name, cannot get next address');
 
@@ -196,14 +178,12 @@ export class Account {
     const keyPair = this.deriveBatchPublicKeys(next, next + 1, isInternal)[0];
     const type = await this.getAccountType();
 
-    let confidentialAddress = undefined;
     let script: string | undefined = undefined;
     let scriptDetails: ScriptDetails | undefined = undefined;
 
     switch (type) {
       case AccountType.P2WPKH:
         [script, scriptDetails] = this.createP2PWKHScript(keyPair);
-        confidentialAddress = this.createP2WPKHAddress(Buffer.from(script, 'hex'));
         break;
       case AccountType.Ionio:
         if (!artifactWithArgs)
@@ -213,14 +193,12 @@ export class Account {
           artifactWithArgs,
           await ZKPLib()
         );
-        confidentialAddress = this.createTaprootAddress(Buffer.from(script, 'hex'));
         break;
       default:
         throw new Error('Unsupported account type');
     }
 
     if (!script || !scriptDetails) throw new Error('unable to derive new script');
-    if (!confidentialAddress) throw new Error('unable to create address from script:' + script);
 
     // increment the account details last used index & persist the new script details
     await Promise.all([
@@ -232,15 +210,15 @@ export class Account {
       }),
     ]);
 
-    return {
-      publicKey: keyPair.publicKey.toString('hex'),
+    const zkpLib = await ZKPLib();
+    const addr = scriptDetailsWithKeyToAddress(this.network, type, zkpLib)(
       script,
-      confidentialAddress,
-      ...scriptDetails,
-      contract: isIonioScriptDetails(scriptDetails)
-        ? new Contract(scriptDetails.artifact, scriptDetails.params, this.network, await ZKPLib())
-        : undefined,
-    };
+      scriptDetails,
+      keyPair.publicKey.toString('hex')
+    );
+    if (!addr.confidentialAddress)
+      throw new Error('unable to derive confidential address from script');
+    return addr as Address & { confidentialAddress: string };
   }
 
   async sync(
@@ -486,18 +464,6 @@ export class Account {
     ];
   }
 
-  // segwit v0 confidential address
-  private createP2WPKHAddress(script: Buffer): string {
-    const { publicKey: blindkey } = this.deriveBlindingKey(script);
-    const address = payments.p2wpkh({
-      output: script,
-      network: this.network,
-      blindkey,
-    }).confidentialAddress;
-    if (!address) throw new Error('Could not derive address');
-    return address;
-  }
-
   // segwit v1 confidential address based on Ionio artifact
   private createTaprootScript(
     { publicKey, derivationPath }: PubKeyWithRelativeDerivationPath,
@@ -529,12 +495,6 @@ export class Account {
     };
     return [contract.scriptPubKey.toString('hex'), scriptDetails];
   }
-
-  // segwit v1 confidential address
-  private createTaprootAddress(script: Buffer): string {
-    const { publicKey: blindkey } = this.deriveBlindingKey(script);
-    return address.toConfidential(address.fromOutputScript(script, this.network), blindkey);
-  }
 }
 
 export function checkRestorationDictionary(
@@ -558,4 +518,35 @@ export function checkRestorationDictionary(
 
 function isRestoration(obj: Record<string, unknown>): obj is RestorationJSON {
   return 'accountName' in obj && 'artifacts' in obj && 'pathToArguments' in obj;
+}
+
+function scriptDetailsWithKeyToAddress(
+  network: networks.Network,
+  type: AccountType,
+  zkpLib: Secp256k1Interface
+) {
+  return function (script: string, details: ScriptDetails, publicKey: string): Address {
+    const addr: Address = {
+      ...details,
+      script,
+      publicKey,
+    };
+
+    try {
+      const unconfidentialAddress = address.fromOutputScript(Buffer.from(script, 'hex'), network);
+      addr.unconfidentialAddress = unconfidentialAddress;
+      if (details.blindingPrivateKey) {
+        const blindingPublicKey = ecpair.fromPrivateKey(
+          Buffer.from(details.blindingPrivateKey, 'hex')
+        ).publicKey;
+        addr.confidentialAddress = address.toConfidential(unconfidentialAddress, blindingPublicKey);
+      }
+      if (type === AccountType.Ionio && isIonioScriptDetails(details)) {
+        addr.contract = new Contract(details.artifact, details.params, network, zkpLib);
+      }
+      return addr;
+    } catch (e) {
+      return addr;
+    }
+  };
 }

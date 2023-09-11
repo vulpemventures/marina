@@ -428,10 +428,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.4.1":
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.4.1.tgz#97aa7195fdd9862e8c449db4bbbb8d26ece8340f"
-  integrity sha512-zBQ0eOZ5Tt3Ahf7XyjGGqyTDJRkupJBk1nOGU1yEna43glBDrhTU4V2knkg0PRd9u5hZkbqxukWiCox36E8evg==
+"@ionio-lang/ionio@^0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.4.2.tgz#da7563f85dcbe5ec7f7e529d67f44d8833886143"
+  integrity sha512-Z7+Lqf9cyjLQc0U/si+wF3dOwOWGuMVziVGmGigeBOD901ktQ6mLxPwQVqifKFjHm3C5sv3n0RguZotZ4Nb9Pw==
   dependencies:
     liquidjs-lib "^6.0.2-liquid.27"
 
@@ -3053,7 +3053,7 @@ ecdsa-sig-formatter@1.0.11:
   dependencies:
     safe-buffer "^5.0.1"
 
-ecpair@^2.0.1:
+ecpair@^2.0.1, ecpair@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/ecpair/-/ecpair-2.1.0.tgz#673f826b1d80d5eb091b8e2010c6b588e8d2cb45"
   integrity sha512-cL/mh3MtJutFOvFc27GPZE2pWL3a3k4YvzUWEOvilnfZVlH3Jwgx/7d6tlD7/75tNk8TG2m+7Kgtz0SI1tWcqw==
@@ -5450,7 +5450,7 @@ lines-and-columns@^2.0.2:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-2.0.3.tgz#b2f0badedb556b747020ab8ea7f0373e22efac1b"
   integrity sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==
 
-liquidjs-lib@^6.0.2-liquid.27:
+liquidjs-lib@6.0.2-liquid.27, liquidjs-lib@^6.0.2-liquid.27:
   version "6.0.2-liquid.27"
   resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.27.tgz#aa496757c0c579676f192343beb8afb359143230"
   integrity sha512-cIrw6rhWU8g9mnyvCWuFrXtDSKapE0HAdGUAuFUfJrPAvI1OpZpYjJvVOaSeduvsfHC8ETZZB1h9FnUH5K2JKw==
