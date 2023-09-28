@@ -15,7 +15,6 @@ import type { CoinSelection, TxDetails } from './transaction';
 import Browser from 'webextension-polyfill';
 import type { Encrypted } from './encryption';
 import { encrypt } from './encryption';
-import type { RestorationJSONDictionary } from '../application/account';
 import {
   Account,
   MainAccount,
@@ -26,6 +25,7 @@ import {
 import { mnemonicToSeed } from 'bip39';
 import { SLIP77Factory } from 'slip77';
 import type { BlockHeader, ChainSource } from './chainsource';
+import type { BackupConfig, RestorationJSONDictionary } from './backup';
 
 export interface AppStatus {
   isMnemonicVerified: boolean;
@@ -74,6 +74,10 @@ export interface AppRepository {
   onHostnameDisabled: EventEmitter<[hostname: string]>;
   onNetworkChanged: EventEmitter<[NetworkString]>;
   onIsAuthenticatedChanged: EventEmitter<[authenticated: boolean]>;
+
+  addBackupServiceConfig(...config: BackupConfig[]): Promise<void>;
+  removeBackupServiceConfig(ID: BackupConfig['ID']): Promise<void>;
+  getBackupServiceConfigs(): Promise<BackupConfig[]>;
 
   /** loaders **/
   restorerLoader: Loader;
@@ -184,6 +188,8 @@ export interface OnboardingRepository {
   setOnboardingPasswordAndMnemonic(password: string, mnemonic: string): Promise<void>;
   setRestorationJSONDictionary(json: RestorationJSONDictionary): Promise<void>;
   getRestorationJSONDictionary(): Promise<RestorationJSONDictionary | undefined>;
+  setBackupServicesConfiguration(configs: BackupConfig[]): Promise<void>;
+  getBackupServicesConfiguration(): Promise<BackupConfig[] | undefined>;
   setIsFromPopupFlow(mnemonicToBackup: string): Promise<void>;
   flush(): Promise<void>; // flush all data
 }

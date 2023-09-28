@@ -38,7 +38,7 @@ const OnboardingFormView = (props: FormikProps<OnboardingFormValues>) => {
   const { values, touched, errors, isSubmitting, handleChange, handleBlur, handleSubmit } = props;
 
   return (
-    <form onSubmit={handleSubmit} className="mt-10">
+    <form onSubmit={handleSubmit} className="mt-5">
       <div className={cx({ 'mb-12': !errors.password || !touched.password })}>
         <label className="block">
           <p className="mb-2 font-medium">Create password</p>

@@ -91,7 +91,7 @@ export default class MarinaBroker extends Broker<keyof Marina> {
     this.hostname = hostname;
     this.walletRepository = new WalletStorageAPI();
     this.appRepository = new AppStorageAPI();
-    this.assetRepository = new AssetStorageAPI(this.walletRepository);
+    this.assetRepository = new AssetStorageAPI();
     this.taxiRepository = new TaxiStorageAPI(this.assetRepository, this.appRepository);
     this.popupsRepository = new PopupsStorageAPI();
   }

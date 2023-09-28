@@ -25,6 +25,7 @@ import { BlockHeadersAPI } from '../infrastructure/storage/blockheaders-reposito
 import type { ChainSource } from '../domain/chainsource';
 import { WalletRepositoryUnblinder } from '../application/unblinder';
 import { Transaction } from 'liquidjs-lib';
+import { BackupSyncer } from './backup-syncer';
 
 // manifest v2 needs BrowserAction, v3 needs action
 const action = Browser.browserAction ?? Browser.action;
@@ -42,7 +43,7 @@ const backgroundPort = getBackgroundPortImplementation();
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
-const assetRepository = new AssetStorageAPI(walletRepository);
+const assetRepository = new AssetStorageAPI();
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const blockHeadersRepository = new BlockHeadersAPI();
 
@@ -59,6 +60,7 @@ const subscriberService = new SubscriberService(
   blockHeadersRepository
 );
 const taxiService = new TaxiUpdater(taxiRepository, appRepository, assetRepository);
+const backupSyncerService = new BackupSyncer(appRepository, walletRepository);
 
 let started = false;
 
@@ -77,11 +79,17 @@ async function startBackgroundServices() {
   if (started) return;
   started = true;
   await walletRepository.unlockUtxos(); // unlock all utxos at startup
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     updaterService.start(),
     subscriberService.start(),
     Promise.resolve(taxiService.start()),
+    backupSyncerService.start(),
   ]);
+  results.forEach((result) => {
+    if (result.status === 'rejected') {
+      console.error(result.reason);
+    }
+  });
 }
 
 async function restoreTask(restoreMessage: RestoreMessage): Promise<void> {
@@ -116,7 +124,17 @@ async function restoreTask(restoreMessage: RestoreMessage): Promise<void> {
 
 async function stopBackgroundServices() {
   started = false;
-  await Promise.allSettled([updaterService.stop(), subscriberService.stop(), taxiService.stop()]);
+  const results = await Promise.allSettled([
+    updaterService.stop(),
+    subscriberService.stop(),
+    taxiService.stop(),
+    backupSyncerService.stop(),
+  ]);
+  results.forEach((result) => {
+    if (result.status === 'rejected') {
+      console.error(result.reason);
+    }
+  });
 }
 
 /**

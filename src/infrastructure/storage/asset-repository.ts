@@ -1,7 +1,7 @@
 import { networks } from 'liquidjs-lib';
 import type { Asset, NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
-import type { AssetRepository, WalletRepository } from '../../domain/repository';
+import type { AssetRepository } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
 
 export const AssetKey = new DynamicStorageKey<[assethash: string]>('asset');
@@ -14,8 +14,6 @@ const LIQUID_BTC = (hash: string) => ({
 });
 
 export class AssetStorageAPI implements AssetRepository {
-  constructor(private walletRepository: WalletRepository) {}
-
   static HARDCODED_ASSETS: Record<NetworkString, Record<string, Asset>> = {
     liquid: {
       [networks.liquid.assetHash]: LIQUID_BTC(networks.liquid.assetHash),

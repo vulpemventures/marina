@@ -21,7 +21,7 @@ import { useToastContext } from './toast-context';
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
-const assetRepository = new AssetStorageAPI(walletRepository);
+const assetRepository = new AssetStorageAPI();
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const onboardingRepository = new OnboardingStorageAPI();
 const sendFlowRepository = new SendFlowStorageAPI();
