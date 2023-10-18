@@ -1,5 +1,5 @@
 import { generateMnemonic, mnemonicToSeed } from 'bip39';
-import { AssetHash, Extractor, networks, Pset, Transaction } from 'liquidjs-lib';
+import { AssetHash, Extractor, networks, Pset, Transaction, Updater } from 'liquidjs-lib';
 import { toOutputScript } from 'liquidjs-lib/src/address';
 import type { AccountID, IonioScriptDetails } from 'marina-provider';
 import { AccountType } from 'marina-provider';
@@ -302,6 +302,7 @@ describe('Application Layer', () => {
       if (!address.confidentialAddress) throw new Error('Address not generated');
       await faucet(address.confidentialAddress, 1);
       await faucet(address.confidentialAddress, 1);
+      await faucet(address.confidentialAddress, 1);
 
       // create the Ionio artifact address
       const ionioAccount = await factory.make('regtest', ionioAccountName);
@@ -321,6 +322,72 @@ describe('Application Layer', () => {
       await updater.stop();
       await subscriber.stop();
     }, 20_000);
+
+    it('should sign input with BIP32Derivation related to a marina public key', async () => {
+      const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
+      const blinder = new BlinderService(walletRepository, zkpLib);
+      const signer = await SignerService.fromPassword(walletRepository, appRepository, PASSWORD);
+      let { pset } = await psetBuilder.createRegularPset(
+        [
+          {
+            address:
+              'el1qqge8cmyqh0ttlmukx3vrfx6escuwn9fp6vukug85m67qx4grus5llwvmctt7nr9vyzafy4ntn7l6y74cvvgywsmnnzg25x77e',
+            asset: networks.regtest.assetHash,
+            value: 100_000_000 - 10_0000,
+          },
+        ],
+        [],
+        [accountName]
+      );
+      pset = await blinder.blindPset(pset);
+
+      const chainSource = await appRepository.getChainSource('regtest');
+      if (!chainSource) throw new Error('No chain source');
+
+      // for testing purpose: remove witnessUtxo from the pset, replace by BIP32Derivation
+      const inputsScriptsDetails = await walletRepository.getScriptDetails(
+        ...pset.inputs.map((input) => input.witnessUtxo!.script.toString('hex')!)
+      );
+      const updater = new Updater(pset);
+      for (const [index, input] of updater.pset.inputs.entries()) {
+        const script = input.witnessUtxo?.script;
+        delete pset.inputs[index].witnessUtxo;
+
+        // we still need the non-witnessUtxo to compute the input preimage
+        const [{ hex }] = await chainSource.fetchTransactions([
+          Buffer.from(input.previousTxid).reverse().toString('hex'),
+        ]);
+        updater.addInNonWitnessUtxo(index, Transaction.fromHex(hex));
+
+        if (!script) continue;
+        const scriptDetails = inputsScriptsDetails[script.toString('hex')];
+        if (!scriptDetails || !scriptDetails.derivationPath) continue;
+        const accounts = await walletRepository.getAccountDetails(scriptDetails.accountName);
+        if (!accounts[scriptDetails.accountName]) continue;
+        const keys = signer['masterNode']
+          .derivePath(accounts[scriptDetails.accountName].baseDerivationPath)
+          .derivePath(scriptDetails.derivationPath.replace('m/', '')!);
+
+        updater.addInBIP32Derivation(index, {
+          masterFingerprint: Buffer.alloc(0),
+          path: scriptDetails.derivationPath.replace('m/', '')!,
+          pubkey: keys.publicKey,
+        });
+      }
+
+      expect(updater.pset.inputs[0].witnessUtxo).toBeUndefined();
+      expect(updater.pset.inputs[0].bip32Derivation).toBeDefined();
+
+      const signedPset = await signer.signPset(pset);
+      const hex = signer.finalizeAndExtract(signedPset);
+      expect(hex).toBeTruthy();
+      const transaction = Transaction.fromHex(hex);
+      expect(transaction.ins).toHaveLength(1);
+      const txid = await chainSource?.broadcastTransaction(hex);
+      await lockTransactionInputs(walletRepository, hex);
+      await chainSource?.close();
+      expect(txid).toEqual(transaction.getId());
+    }, 10_000);
 
     it('should sign all the accounts inputs (and blind outputs)', async () => {
       const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
