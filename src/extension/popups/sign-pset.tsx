@@ -31,7 +31,8 @@ const NonStandardPsetWarning: React.FC = () => {
     <div className="bg-amberLight border-amber text-amberDark p-4 m-2" role="alert">
       <p className="font-bold">Warning</p>
       <p>
-        This PSET is not standard, it does not spend coins from any of your main accounts but asks for a signature.
+        This PSET is not standard, it does not spend coins from any of your main accounts but asks
+        for a signature.
       </p>
     </div>
   );
