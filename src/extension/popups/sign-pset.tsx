@@ -18,7 +18,7 @@ import { useToastContext } from '../context/toast-context';
 import { extractErrorMessage } from '../utility/error';
 import { fromSatoshiStr } from '../utility';
 import { Spinner } from '../components/spinner';
-import type { TxDetailsExtended } from '../../domain/transaction';
+import type { TxDetailsExtended, TxFlow } from '../../domain/transaction';
 import { computeTxDetailsExtended } from '../../domain/transaction';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from '../../application/account';
 import { DefaultAssetRegistry } from '../../port/asset-registry';
@@ -26,7 +26,19 @@ import { WalletRepositoryUnblinder } from '../../application/unblinder';
 import type { Outpoint } from '../../domain/repository';
 import type { UnblindingData } from 'marina-provider';
 
-const PsetView: React.FC<TxDetailsExtended> = ({ txFlow }) => {
+const NonStandardPsetWarning: React.FC = () => {
+  return (
+    <div className="bg-amberLight border-amber text-amberDark p-4 m-2" role="alert">
+      <p className="font-bold">Warning</p>
+      <p>
+        This PSET is not standard, it does not spend coins from any of your main accounts but asks
+        for a signature.
+      </p>
+    </div>
+  );
+};
+
+const PsetView: React.FC<Pick<TxDetailsExtended, 'txFlow'>> = ({ txFlow }) => {
   const { cache, assetRepository } = useStorageContext();
   const getPrecision = (asset: string) => {
     if (!cache || !cache.assetsDetails || !cache.assetsDetails.value[asset]) return 8;
@@ -96,9 +108,10 @@ const ConnectSignTransaction: React.FC = () => {
   const { showToast } = useToastContext();
   const { backgroundPort } = useBackgroundPortContext();
 
-  const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
+  const [isModalUnlockOpen, showUnlockModal] = useState(false);
   const [error, setError] = useState<string>();
-  const [txDetails, setTxDetails] = useState<TxDetailsExtended>();
+  const [txFlow, setTxFlow] = useState<TxFlow>();
+  const [isNonStandard, setIsNonStandard] = useState(false);
 
   const psetToSign = useSelectPopupPsetToSign();
   const hostname = useSelectPopupHostname();
@@ -146,8 +159,10 @@ const ConnectSignTransaction: React.FC = () => {
         mainAccountsScripts
       )({ height: -1, hex: unsignedTx.toHex() });
 
-      console.log('txDetailsExtended', txDetailsExtended.txFlow);
-      setTxDetails(txDetailsExtended);
+      const isNonStandard =
+        Object.values(txDetailsExtended.txFlow).filter((value) => value < 0).length === 0;
+      setTxFlow(txDetailsExtended.txFlow);
+      setIsNonStandard(isNonStandard);
     };
     init().catch((e) => {
       console.error(e);
@@ -196,13 +211,13 @@ const ConnectSignTransaction: React.FC = () => {
         <>
           <h1 className="mt-8 text-2xl font-medium text-center break-all">{hostname}</h1>
 
-          {!txDetails ? (
+          {!txFlow ? (
             <div className="flex flex-col items-center mt-8">
               <Spinner />
               <p className="font-medium">Loading PSET data...</p>
             </div>
           ) : (
-            <PsetView {...txDetails} />
+            <div>{isNonStandard ? <NonStandardPsetWarning /> : <PsetView txFlow={txFlow} />}</div>
           )}
 
           <ButtonsAtBottom>
