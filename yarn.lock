@@ -428,12 +428,12 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.4.2":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.4.2.tgz#da7563f85dcbe5ec7f7e529d67f44d8833886143"
-  integrity sha512-Z7+Lqf9cyjLQc0U/si+wF3dOwOWGuMVziVGmGigeBOD901ktQ6mLxPwQVqifKFjHm3C5sv3n0RguZotZ4Nb9Pw==
+"@ionio-lang/ionio@^0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.5.1.tgz#25ad74dc296dee59dd89ffe91b082d77f4dbd094"
+  integrity sha512-wfiWARLIaY2RAyEuvX+XVXGnJR1PV0dmkFGEtea11R5vAEd909sk3PTrgzQOzSKXLsXh/xZ2tQsAQfLd/z4F0w==
   dependencies:
-    liquidjs-lib "^6.0.2-liquid.27"
+    liquidjs-lib "^6.0.2-liquid.31"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -1120,13 +1120,6 @@
   resolved "https://registry.yarnpkg.com/@types/webextension-polyfill/-/webextension-polyfill-0.8.3.tgz#eb601b3fcf524f0ecf7d7579ccbd237928d0dda7"
   integrity sha512-GN+Hjzy9mXjWoXKmaicTegv3FJ0WFZ3aYz77Wk8TMp1IY3vEzvzj1vnsa0ggV7vMI1i+PUxe4qqnIJKCzf9aTg==
 
-"@types/wif@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@types/wif/-/wif-2.0.2.tgz#5bd845e29406bc7d49acca6d2a6c3230f3b53d3c"
-  integrity sha512-IiIuBeJzlh4LWJ7kVTrX0nwB60OG0vvGTaWC/SgSbVFw7uYUTF6gEuvDZ1goWkeirekJDD58Y8g7NljQh2fNkA==
-  dependencies:
-    "@types/node" "*"
-
 "@types/ws@^8.5.4":
   version "8.5.4"
   resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.4.tgz#bb10e36116d6e570dd943735f86c933c1587b8a5"
@@ -1777,7 +1770,7 @@ axe-core@^4.6.2:
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.6.3.tgz#fc0db6fdb65cc7a80ccf85286d91d64ababa3ece"
   integrity sha512-/BQzOX780JhsxDnPpH4ZiyrJAzcd8AfzFPkv+89veFSr1rcMjuq2JDCwypKaPeB6ljHp9KjXhPpjgCvQlWYuqg==
 
-axios@^0.21.1, axios@^0.21.2:
+axios@^0.21.2:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
@@ -1932,11 +1925,6 @@ bip66@^1.1.0, bip66@^1.1.5:
   integrity sha512-nemMHz95EmS38a26XbbdxIYj5csHd3RMP3H5bwQknX0WYHF01qhpufP42mLOwVICuH2JmhIhXiWs89MfUGL7Xw==
   dependencies:
     safe-buffer "^5.0.1"
-
-bitcoin-ops@^1.4.0:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/bitcoin-ops/-/bitcoin-ops-1.4.1.tgz#e45de620398e22fd4ca6023de43974ff42240278"
-  integrity sha512-pef6gxZFztEhaE9RY9HmWVmiIHqCb2OyS4HPKkpc6CIiiOa3Qmuoylxc5P2EkU3w+5eTSifI9SEZC88idAIGow==
 
 bitcoinjs-lib@^6.0.2:
   version "6.1.0"
@@ -3053,7 +3041,7 @@ ecdsa-sig-formatter@1.0.11:
   dependencies:
     safe-buffer "^5.0.1"
 
-ecpair@^2.0.1, ecpair@^2.1.0:
+ecpair@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/ecpair/-/ecpair-2.1.0.tgz#673f826b1d80d5eb091b8e2010c6b588e8d2cb45"
   integrity sha512-cL/mh3MtJutFOvFc27GPZE2pWL3a3k4YvzUWEOvilnfZVlH3Jwgx/7d6tlD7/75tNk8TG2m+7Kgtz0SI1tWcqw==
@@ -5450,28 +5438,24 @@ lines-and-columns@^2.0.2:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-2.0.3.tgz#b2f0badedb556b747020ab8ea7f0373e22efac1b"
   integrity sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==
 
-liquidjs-lib@6.0.2-liquid.27, liquidjs-lib@^6.0.2-liquid.27:
-  version "6.0.2-liquid.27"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.27.tgz#aa496757c0c579676f192343beb8afb359143230"
-  integrity sha512-cIrw6rhWU8g9mnyvCWuFrXtDSKapE0HAdGUAuFUfJrPAvI1OpZpYjJvVOaSeduvsfHC8ETZZB1h9FnUH5K2JKw==
+liquidjs-lib@^6.0.2-liquid.31:
+  version "6.0.2-liquid.31"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.31.tgz#bd4fc270753fc79fae26326c3f8d01db3b52f870"
+  integrity sha512-sRp2NoTtNnSnFSqpEKut9rsVBfryrpxD06buBg0stv0JR4dJRoBMNJc/oaX7N3aLGUkZtGAUBlCSV1+I4Y25/A==
   dependencies:
     "@types/randombytes" "^2.0.0"
-    "@types/wif" "^2.0.2"
-    axios "^0.21.1"
     bech32 "^2.0.0"
     bip174-liquid "^1.0.3"
     bip66 "^1.1.0"
-    bitcoin-ops "^1.4.0"
     bitcoinjs-lib "^6.0.2"
     bitset "^5.1.1"
     blech32 "^1.0.1"
     bs58check "^2.0.0"
     create-hash "^1.2.0"
-    ecpair "^2.0.1"
+    ecpair "^2.1.0"
     slip77 "^0.2.0"
     typeforce "^1.11.3"
     varuint-bitcoin "^1.1.2"
-    wif "^2.0.1"
 
 loader-runner@^4.2.0:
   version "4.3.0"
