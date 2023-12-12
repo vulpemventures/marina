@@ -2,6 +2,7 @@ import type { OwnedInput } from 'liquidjs-lib';
 import { Pset, AssetHash, Blinder, ZKPGenerator, ZKPValidator } from 'liquidjs-lib';
 import type { WalletRepository } from '../domain/repository';
 import type { Confidential } from 'liquidjs-lib/src/confidential';
+import { h2bReversed } from './utils';
 
 export class BlinderService {
   private zkpValidator: ZKPValidator;
@@ -23,8 +24,8 @@ export class BlinderService {
       if (!unblindOutput || !unblindOutput.blindingData) continue;
       ownedInputs.push({
         asset: AssetHash.fromHex(unblindOutput.blindingData.asset).bytesWithoutPrefix,
-        assetBlindingFactor: Buffer.from(unblindOutput.blindingData.assetBlindingFactor, 'hex'),
-        valueBlindingFactor: Buffer.from(unblindOutput.blindingData.valueBlindingFactor, 'hex'),
+        assetBlindingFactor: h2bReversed(unblindOutput.blindingData.assetBlindingFactor),
+        valueBlindingFactor: h2bReversed(unblindOutput.blindingData.valueBlindingFactor),
         value: unblindOutput.blindingData.value.toString(),
         index: inputIndex,
       });

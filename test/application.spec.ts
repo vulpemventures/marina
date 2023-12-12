@@ -37,6 +37,7 @@ import {
 import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
 import { initWalletRepository } from '../src/domain/repository';
 import { computeBalances, lockTransactionInputs } from '../src/domain/transaction';
+import { h2bReversed } from '../src/application/utils';
 
 // we need this to mock the browser.storage.local calls in repositories
 // replace webextension-polyfill with a mock defined in __mocks__ folder
@@ -440,8 +441,8 @@ describe('Application Layer', () => {
           .from(utxo.txid, utxo.vout, witnessUtxo!, {
             asset: AssetHash.fromHex(utxo.blindingData!.asset).bytesWithoutPrefix,
             value: utxo.blindingData!.value.toString(10),
-            assetBlindingFactor: Buffer.from(utxo.blindingData!.assetBlindingFactor, 'hex'),
-            valueBlindingFactor: Buffer.from(utxo.blindingData!.valueBlindingFactor, 'hex'),
+            assetBlindingFactor: h2bReversed(utxo.blindingData!.assetBlindingFactor),
+            valueBlindingFactor: h2bReversed(utxo.blindingData!.valueBlindingFactor),
           })
           .functions.transferWithSum(8, 2, {
             signTransaction: async (psetb64: string) => {

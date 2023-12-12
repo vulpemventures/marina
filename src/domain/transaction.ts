@@ -42,8 +42,6 @@ export function computeBalances(utxos: UnblindedOutput[]): Record<string, number
   return balances;
 }
 
-const reverseHex = (hex: string) => Buffer.from(hex, 'hex').reverse().toString('hex');
-
 export async function makeURLwithBlinders(
   transaction: Transaction,
   appRepository: AppRepository,
@@ -63,9 +61,7 @@ export async function makeURLwithBlinders(
     if (!data || !data.blindingData) continue;
 
     blinders.push(
-      `${data.blindingData.value},${data.blindingData.asset},${reverseHex(
-        data.blindingData.valueBlindingFactor
-      )},${reverseHex(data.blindingData.assetBlindingFactor)}`
+      `${data.blindingData.value},${data.blindingData.asset},${data.blindingData.valueBlindingFactor},${data.blindingData.assetBlindingFactor}`
     );
   }
 
