@@ -12,7 +12,7 @@ import './styles/fonts.css';
 
 if (process.env.NODE_ENV === 'production') {
   Sentry.init({
-    dsn: 'https://2b7688ea928a414d8619f11e998a0aa3@app.glitchtip.com/1844',
+    dsn: 'https://4a036f974898ba84cb62e04402fec31c@o227269.ingest.sentry.io/4506381926531072',
   });
 }
 
