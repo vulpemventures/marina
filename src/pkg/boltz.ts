@@ -222,6 +222,7 @@ export class Boltz implements BoltzInterface {
     console.log('signedPset', signedPset);
 
     const finalizer = new Finalizer(signedPset);
+
     finalizer.finalizeInput(0, () => {
       return {
         finalScriptSig: undefined,
@@ -232,6 +233,9 @@ export class Boltz implements BoltzInterface {
         ]),
       };
     });
+
+    finalizer.finalize();
+
     return Extractor.extract(signedPset);
   }
 
