@@ -1,7 +1,7 @@
 // docs: https://docs.boltz.exchange/en/latest/api/
 
 import { randomBytes } from 'crypto';
-import type { BIP174SigningData, OwnedInput } from 'liquidjs-lib';
+import type { OwnedInput } from 'liquidjs-lib';
 import {
   address,
   AssetHash,
@@ -217,7 +217,7 @@ export class Boltz implements BoltzInterface {
 
     console.log('blindedPset', blindedPset);
 
-    const signedPset = this.signPset(blindedPset, claimKeyPair, preimage);
+    const signedPset = this.signPset(blindedPset, claimKeyPair);
 
     console.log('signedPset', signedPset);
 
@@ -427,16 +427,20 @@ export class Boltz implements BoltzInterface {
     return blinder.pset;
   }
 
-  private signPset(pset: Pset, claimKeyPair: ECPairInterface, preimage: Buffer): Pset {
-    const signer = new Signer(pset);
+  private signPset(pset: Pset, claimKeyPair: ECPairInterface): Pset {
     const { ecc } = this.zkp;
-    const sig: BIP174SigningData = {
-      partialSig: {
-        pubkey: claimKeyPair.publicKey,
-        signature: bscript.signature.encode(claimKeyPair.sign(preimage), Transaction.SIGHASH_ALL),
+    const signer = new Signer(pset);
+    const toSign = signer.pset.getInputPreimage(0, Transaction.SIGHASH_ALL);
+    signer.addSignature(
+      0,
+      {
+        partialSig: {
+          pubkey: claimKeyPair.publicKey,
+          signature: bscript.signature.encode(claimKeyPair.sign(toSign), Transaction.SIGHASH_ALL),
+        },
       },
-    };
-    signer.addSignature(0, sig, Pset.ECDSASigValidator(ecc));
+      Pset.ECDSASigValidator(ecc)
+    );
     return signer.pset;
   }
 
