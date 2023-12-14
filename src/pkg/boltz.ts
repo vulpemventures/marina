@@ -152,8 +152,13 @@ export class Boltz implements BoltzInterface {
 
   // return invoice expire date
   getInvoiceExpireDate(invoice: string): number {
-    const { timeExpireDate } = bolt11.decode(invoice);
-    return timeExpireDate ? timeExpireDate * 1000 : 0; // milliseconds
+    const toMilliseconds = (num: number) => num * 1000;
+    const { timeExpireDate, timestamp } = bolt11.decode(invoice);
+    if (timeExpireDate) return toMilliseconds(timeExpireDate);
+    const { expire_time } = bolt11.decode(invoice).tagsObject;
+    const expireTime = toMilliseconds(expire_time ?? 3600);
+    const from = timestamp ? toMilliseconds(timestamp) : Date.now();
+    return from + expireTime;
   }
 
   // return value in given invoice
