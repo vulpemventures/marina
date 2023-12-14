@@ -29,6 +29,11 @@ Run webpack bundler in watch mode.
 yarn start
 ```
 
+For manifest v3.
+```
+yarn start:v3
+```
+
 You can install the unpacked extension in `dist` inside your browser. Chrome-based browsers support HMR.
 
 ## Build
@@ -38,7 +43,36 @@ yarn build
 yarn web-ext:build
 ```
 
+For manifest v3
+```
+yarn build:v3
+yarn web-ext:build:v3
+```
+
 The packaged extension will appear in `web-ext-artifacts` directory.
+
+## Tests
+
+Install and run [nigiri](https://github.com/vulpemventures/nigiri).
+```
+nigiri start --liquid
+```
+
+Run websocat.
+```
+websocat -b ws-l:127.0.0.1:1234 tcp:127.0.0.1:50001
+```
+
+Run tests.
+```
+yarn test
+```
+
+Run tests with playwright.
+```
+npx playwright install
+yarn test:playwright
+```
 
 ## Responsible disclosure
 
