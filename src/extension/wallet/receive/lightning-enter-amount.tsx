@@ -8,7 +8,6 @@ import LightningShowInvoice from './lightning-show-invoice';
 import ModalUnlock from '../../components/modal-unlock';
 import { SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { fromSatoshi, toSatoshi } from '../../utility';
-import { broadcastTx } from '../../../../test/_regtest';
 import { useStorageContext } from '../../context/storage-context';
 import * as ecc from 'tiny-secp256k1';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
@@ -180,7 +179,7 @@ const LightningAmount: React.FC = () => {
           timeoutBlockHeight,
         });
 
-        const txid = await broadcastTx(claimTransaction.toHex());
+        const txid = await chainSource.broadcastTransaction(claimTransaction.toHex());
 
         history.push({
           pathname: SEND_PAYMENT_SUCCESS_ROUTE,
