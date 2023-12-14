@@ -1,0 +1,66 @@
+{
+  "name": "Marina",
+  "description": "Liquid wallet web extension (v3)",
+  "version": "0.5.7",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background-script.js"
+  },
+  "permissions": [
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "idle",
+    "alarms"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "file://*/*",
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "icons": {
+    "16": "assets/images/logo/marina_logo_16x16.png",
+    "32": "assets/images/logo/marina_logo_32x32.png",
+    "48": "assets/images/logo/marina_logo_48x48.png",
+    "128": "assets/images/logo/marina_logo_128x128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/images/logo/marina_logo_16x16.png",
+      "32": "assets/images/logo/marina_logo_32x32.png",
+      "48": "assets/images/logo/marina_logo_48x48.png",
+      "128": "assets/images/logo/marina_logo_128x128.png"
+    },
+    "default_title": "Marina"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "inject-script.js"
+      ],
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "extension_ids": [
+        "*"
+      ]
+    }
+  ]
+}

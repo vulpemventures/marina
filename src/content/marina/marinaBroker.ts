@@ -1,304 +1,348 @@
-import { stringify } from '../../application/utils/browser-storage-converters';
-import type { StoreCache } from '../store-cache';
-import { compareCacheForEvents, newCacheFromState, newStoreCache } from '../store-cache';
-import type { BrokerOption } from '../broker';
 import Broker from '../broker';
-import type { MessageHandler } from '../../domain/message';
+import type { MessageHandler, ResponseMessage } from '../../domain/message';
 import { newErrorResponseMessage, newSuccessResponseMessage } from '../../domain/message';
 import Marina from '../../inject/marina/provider';
-import type { RootReducerState } from '../../domain/common';
-import {
-  disableWebsite,
-  flushMsg,
-  flushTx,
-  selectHostname,
-  setCreateAccountData,
-  setMsg,
-  setTx,
-  setTxData,
-} from '../../application/redux/actions/connect';
-import {
-  selectAccount,
-  selectAllAccounts,
-  selectAllAccountsIDs,
-  selectMainAccount,
-  selectTransactions,
-  selectUtxos,
-} from '../../application/redux/selectors/wallet.selector';
-import {
-  updateToNextAddress,
-  updateToNextChangeAddress,
-  setCustomScriptTemplate,
-  setIsSpendableByMarina,
-} from '../../application/redux/actions/wallet';
-import { selectBalances } from '../../application/redux/selectors/balance.selector';
-import { assetGetterFromIAssets } from '../../domain/assets';
 import type {
-  Balance,
-  Template,
-  RawHex,
+  AppRepository,
+  AssetRepository,
+  PopupsRepository,
+  TaxiRepository,
+  WalletRepository,
+} from '../../domain/repository';
+import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository';
+import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
+import type { SignTransactionPopupResponse } from '../../extension/popups/sign-pset';
+import type { SignMessagePopupResponse } from '../../extension/popups/sign-msg';
+import type { TxDetails } from '../../domain/transaction';
+import { lockTransactionInputs, computeBalances } from '../../domain/transaction';
+import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
+import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
+import { ElementsValue, networks } from 'liquidjs-lib';
+import { PopupsStorageAPI } from '../../infrastructure/storage/popups-repository';
+import type {
+  DisabledMarinaEvent,
+  EnabledMarinaEvent,
+  MarinaEvent,
+  NetworkMarinaEvent,
+  NewTxMarinaEvent,
+  NewUtxoMarinaEvent,
+  SpentUtxoMarinaEvent,
+} from '../marina-event';
+import { stringify } from '../../infrastructure/browser-storage-converters';
+import type { Account } from '../../application/account';
+import {
+  MainAccount,
+  MainAccountLegacy,
+  MainAccountTest,
+  AccountFactory,
+} from '../../application/account';
+import type {
+  AccountID,
+  Address,
+  AddressRecipient,
+  ArtifactWithConstructorArgs,
+  DataRecipient,
+  NetworkString,
   Recipient,
+  ScriptDetails,
+  UnblindedOutput,
   Utxo,
-  AddressInterface as ProviderAddressInterface,
 } from 'marina-provider';
-import type { SignTransactionPopupResponse } from '../../presentation/connect/sign-pset';
-import type { SpendPopupResponse } from '../../presentation/connect/spend';
-import type { SignMessagePopupResponse } from '../../presentation/connect/sign-msg';
-import type { AccountID } from '../../domain/account';
-import { AccountType, MainAccountID } from '../../domain/account';
-import type { AddressInterface, UnblindedOutput } from 'ldk';
-import { getAsset, getSats } from 'ldk';
-import { selectEsploraURL, selectNetwork } from '../../application/redux/selectors/app.selector';
-import { broadcastTx, lbtcAssetByNetwork } from '../../application/utils/network';
-import { sortRecipients } from '../../application/utils/transaction';
-import { selectTaxiAssets } from '../../application/redux/selectors/taxi.selector';
-import { sleep } from '../../application/utils/common';
-import type { BrokerProxyStore } from '../brokerProxyStore';
-import { updateTaskAction } from '../../application/redux/actions/task';
-import type { CreateAccountPopupResponse } from '../../presentation/connect/create-account';
-import { addUnconfirmedUtxos, lockUtxo } from '../../application/redux/actions/utxos';
-import { getUtxosFromTx } from '../../application/utils/utxos';
-import type { UnconfirmedOutput } from '../../domain/unconfirmed';
-import type { Artifact } from '@ionio-lang/ionio';
-import { PrimitiveType } from '@ionio-lang/ionio';
-import type { AnyAction } from 'redux';
-import { isTaprootAddressInterface } from '../../domain/customscript-identity';
+import { AccountType, isAddressRecipient, isDataRecipient } from 'marina-provider';
+import type { SpendPopupResponse } from '../../extension/popups/spend';
+import type { CreateAccountPopupResponse } from '../../extension/popups/create-account';
+import { BlinderService } from '../../application/blinder';
+import zkpLib from '@vulpemventures/secp256k1-zkp';
+import type { Unblinder } from '../../application/unblinder';
+import { WalletRepositoryUnblinder } from '../../application/unblinder';
 
 export default class MarinaBroker extends Broker<keyof Marina> {
   private static NotSetUpError = new Error('proxy store and/or cache are not set up');
-  private cache: StoreCache;
   private hostname: string;
-  private selectedAccount: AccountID = MainAccountID;
+  private network: NetworkString = 'liquid';
+  private selectedAccount: AccountID = MainAccount;
+  private walletRepository: WalletRepository;
+  private appRepository: AppRepository;
+  private assetRepository: AssetRepository;
+  private taxiRepository: TaxiRepository;
+  private popupsRepository: PopupsRepository;
+  private unblinder: Unblinder | undefined;
 
-  static async Start(hostname?: string) {
-    const broker = new MarinaBroker(hostname, [await MarinaBroker.WithProxyStore()]);
+  static async Start(hostname: string) {
+    const broker = new MarinaBroker(hostname);
+    const network = await broker.appRepository.getNetwork();
+    if (network) {
+      broker.network = network;
+      if (network !== 'liquid') {
+        broker.selectedAccount = MainAccountTest;
+      }
+    }
+    broker.unblinder = new WalletRepositoryUnblinder(
+      broker.walletRepository,
+      broker.appRepository,
+      broker.assetRepository,
+      await zkpLib()
+    );
     broker.start();
   }
 
-  private constructor(hostname = '', brokerOpts?: BrokerOption[]) {
-    super(Marina.PROVIDER_NAME, brokerOpts);
+  private constructor(hostname = '') {
+    super(Marina.PROVIDER_NAME);
     this.hostname = hostname;
-    this.cache = newStoreCache();
-    this.subscribeToStoreEvents();
+    this.walletRepository = new WalletStorageAPI();
+    this.appRepository = new AppStorageAPI();
+    this.assetRepository = new AssetStorageAPI(this.walletRepository);
+    this.taxiRepository = new TaxiStorageAPI(this.assetRepository, this.appRepository);
+    this.popupsRepository = new PopupsStorageAPI();
+  }
+
+  private dispatchEventToProvider<T extends MarinaEvent<any>>(event: T) {
+    window.dispatchEvent(
+      new CustomEvent(`marina_event_${event.type.toLowerCase()}`, {
+        detail: stringify(event.payload),
+      })
+    );
+  }
+
+  private async unblindedOutputToUtxo(coin: UnblindedOutput): Promise<Utxo> {
+    const witnessUtxo = await this.walletRepository.getWitnessUtxo(coin.txid, coin.vout);
+    let scriptDetails: ScriptDetails | undefined;
+
+    if (witnessUtxo) {
+      const script = witnessUtxo.script.toString('hex');
+      const { [script]: details } = await this.walletRepository.getScriptDetails(script);
+      scriptDetails = details;
+    }
+    return {
+      txid: coin.txid,
+      vout: coin.vout,
+      blindingData: coin.blindingData,
+      scriptDetails: scriptDetails,
+      witnessUtxo: witnessUtxo,
+    };
   }
 
   protected start() {
     super.start(this.marinaMessageHandler);
-  }
-
-  // start the store.subscribe function
-  // used in `Broker.WithProxyStore` option
-  private subscribeToStoreEvents() {
-    if (!this.store) throw MarinaBroker.NotSetUpError;
-
-    this.store.subscribe(() => {
-      if (!this.store) throw MarinaBroker.NotSetUpError;
-      const state = this.store.getState();
-      const allAccountsIDs = selectAllAccountsIDs(state);
-      const newCache = newCacheFromState(state, allAccountsIDs);
-      const events = compareCacheForEvents(newCache, this.cache, this.hostname, allAccountsIDs);
-
-      this.cache = newCache; // update the cache state
-
-      for (const ev of events) {
-        window.dispatchEvent(
-          new CustomEvent(`marina_event_${ev.type.toLowerCase()}`, {
-            detail: stringify(ev.payload),
-          })
-        );
+    // subscribe to repository events and map them to MarinaEvents
+    // providers will catch these events when on/off are called
+    this.appRepository.onHostnameEnabled(async (hostname) => {
+      const net = (await this.appRepository.getNetwork()) || 'liquid';
+      return this.dispatchEventToProvider<EnabledMarinaEvent>({
+        type: 'ENABLED',
+        payload: { data: { hostname: hostname, network: net } },
+      });
+    });
+    this.appRepository.onHostnameDisabled(async (hostname) => {
+      const net = (await this.appRepository.getNetwork()) || 'liquid';
+      return this.dispatchEventToProvider<DisabledMarinaEvent>({
+        type: 'DISABLED',
+        payload: { data: { hostname: hostname, network: net } },
+      });
+    });
+    this.appRepository.onNetworkChanged((network) => {
+      this.network = network;
+      return Promise.resolve(
+        this.dispatchEventToProvider<NetworkMarinaEvent>({
+          type: 'NETWORK',
+          payload: { data: network },
+        })
+      );
+    });
+    this.walletRepository.onDeleteUtxo(this.network)(async (utxo) => {
+      return this.dispatchEventToProvider<SpentUtxoMarinaEvent>({
+        type: 'SPENT_UTXO',
+        payload: { data: await this.unblindedOutputToUtxo(utxo) },
+      });
+    });
+    this.walletRepository.onNewUtxo(this.network)(async (utxo) => {
+      const unspent = await this.unblindedOutputToUtxo(utxo);
+      if (
+        unspent.witnessUtxo &&
+        ElementsValue.fromBytes(unspent.witnessUtxo.value).isConfidential &&
+        !utxo.blindingData &&
+        this.unblinder
+      ) {
+        const unblinded = (await this.unblinder.unblind(unspent.witnessUtxo)).at(0);
+        if (!(unblinded instanceof Error) && unblinded) {
+          unspent.blindingData = unblinded;
+          try {
+            await this.walletRepository.updateOutpointBlindingData([
+              [{ txid: unspent.txid, vout: unspent.vout }, unblinded],
+            ]);
+          } catch (e) {
+            console.error(e);
+          }
+        }
       }
+
+      return this.dispatchEventToProvider<NewUtxoMarinaEvent>({
+        type: 'NEW_UTXO',
+        payload: { data: unspent },
+      });
+    });
+    this.walletRepository.onNewTransaction((ID: string, details: TxDetails) => {
+      return Promise.resolve(
+        this.dispatchEventToProvider<NewTxMarinaEvent>({
+          type: 'NEW_TX',
+          payload: { data: { txID: ID, details } },
+        })
+      );
     });
   }
-
-  private get accountSelector() {
-    return selectAccount(this.selectedAccount);
-  }
-
-  private hostnameEnabled(state: RootReducerState): boolean {
-    const enabledSites = state.connect.enabledSites[state.app.network];
-    return enabledSites.includes(this.hostname);
-  }
-
-  private checkHostnameAuthorization() {
-    if (!this.hostnameEnabled(this.state))
+  // check if the current broker hostname is authorized
+  private async checkHostnameAuthorization() {
+    const enabledHostnames = await this.appRepository.getEnabledSites();
+    if (!enabledHostnames.includes(this.hostname))
       throw new Error('User must authorize the current website');
   }
 
-  get state() {
-    if (!this.store) throw MarinaBroker.NotSetUpError;
-    return this.store.getState();
+  // check if the account is already in the wallet
+  private async accountExists(name: string): Promise<boolean> {
+    const accountsDetails = await this.walletRepository.getAccountDetails();
+    return Object.keys(accountsDetails).some((account) => account === name);
   }
 
-  private async reloadCoins(ids: AccountID[]) {
-    const network = selectNetwork(this.state);
-    const makeUpdateTaskForId = (id: AccountID) => updateTaskAction(id, network);
-    if (ids.length === 0) return;
-    await Promise.all(ids.map(makeUpdateTaskForId).map((x: any) => this.store?.dispatchAsync(x)));
-    // wait for updates to finish, give it 1 second to start the update
-    // we need to sleep to free the event loop to take care of the update tasks
-    do {
-      await sleep(1000);
-    } while (this.store?.getState().wallet.updaterLoaders !== 0);
-  }
-
-  private accountExists(name: string): boolean {
-    if (!this.store) throw MarinaBroker.NotSetUpError;
-    return selectAllAccountsIDs(this.store.getState()).includes(name);
-  }
-
-  // locks utxos used on transaction
-  // credit change utxos to balance
-  private async lockAndLoadUtxos(
-    signedTxHex: RawHex,
-    selectedUtxos: UnblindedOutput[] | undefined,
-    changeUtxos: UnconfirmedOutput[] | undefined,
-    store: BrokerProxyStore
-  ) {
-    const state = store.getState();
-
-    // lock utxos used on transaction
-    if (selectedUtxos) {
-      for (const utxo of selectedUtxos) {
-        await store.dispatchAsync(lockUtxo(utxo));
-      }
+  // if ids is undefined, return the main account
+  // if ids is empty, return an empty array
+  private handleIdsParam(ids?: string[]): string[] {
+    if (!ids) {
+      const mainAccounts = [MainAccountLegacy];
+      if (this.network !== 'liquid') mainAccounts.push(MainAccountTest);
+      else mainAccounts.push(MainAccount);
+      return mainAccounts;
     }
-
-    // credit change utxos to balance
-    if (changeUtxos && changeUtxos.length > 0) {
-      store.dispatch(
-        await addUnconfirmedUtxos(signedTxHex, changeUtxos, MainAccountID, selectNetwork(state))
-      );
-    }
-  }
-
-  private handleIdsParam(ids?: AccountID[]): AccountID[] {
-    if (!ids) return [MainAccountID];
     if (ids.length === 0) return [];
     return ids;
   }
 
+  private async getSelectedAccount(): Promise<Account> {
+    const network = await this.appRepository.getNetwork();
+    if (!network) throw new Error('network is not set up');
+    const factory = await AccountFactory.create(this.walletRepository);
+    return factory.make(network, this.selectedAccount);
+  }
+
+  private async getNextAddress(isInternal: boolean, params: any[]): Promise<Address> {
+    const account = await this.getSelectedAccount();
+    let nextAddress = undefined;
+
+    switch (await account.getAccountType()) {
+      case AccountType.P2WPKH: {
+        nextAddress = await account.getNextAddress(isInternal);
+        break;
+      }
+      case AccountType.Ionio: {
+        if (!params || params.length < 1) {
+          throw new Error('missing Artifact parameter');
+        }
+        const [artifactWithArgs] = params as [ArtifactWithConstructorArgs];
+        nextAddress = await account.getNextAddress(isInternal, artifactWithArgs);
+        break;
+      }
+      default:
+        throw new Error('Unsupported account type');
+    }
+
+    return nextAddress;
+  }
+
   private marinaMessageHandler: MessageHandler<keyof Marina> = async ({ id, name, params }) => {
-    if (!this.store || !this.hostname) throw MarinaBroker.NotSetUpError;
-    const successMsg = <T = any>(data?: T) => newSuccessResponseMessage(id, data);
+    if (!this.hostname) throw MarinaBroker.NotSetUpError;
+    const successMsg: (data?: any) => ResponseMessage = <T = any>(data?: T) =>
+      newSuccessResponseMessage(id, data);
 
     try {
       switch (name) {
         case 'getNetwork': {
-          return successMsg(this.state.app.network);
+          const network = await this.appRepository.getNetwork();
+          return successMsg(network);
         }
 
         case 'isEnabled': {
-          return successMsg(this.hostnameEnabled(this.state));
+          try {
+            await this.checkHostnameAuthorization();
+            return successMsg(true);
+          } catch {
+            return successMsg(false);
+          }
         }
 
         case 'enable': {
-          if (!this.hostnameEnabled(this.state)) {
-            await this.store.dispatchAsync(selectHostname(this.hostname, this.state.app.network));
-            const accepted = await this.openAndWaitPopup<boolean>('enable');
-            if (!accepted) throw new Error(`user rejected to enable ${this.hostname}`);
-            return successMsg();
-          }
-          throw new Error('current site is already enabled');
+          await this.popupsRepository.setHostnameToEnable(this.hostname);
+          const accepted = await this.openAndWaitPopup<boolean>('enable');
+          if (!accepted) throw new Error(`user rejected to enable ${this.hostname}`);
+          return successMsg();
         }
 
         case 'disable': {
-          await this.store.dispatchAsync(disableWebsite(this.hostname, this.state.app.network));
+          await this.appRepository.disableSite(this.hostname);
           return successMsg();
         }
 
         case 'getAddresses': {
-          this.checkHostnameAuthorization();
-          const accountIds = this.handleIdsParam(params ? params[0] : undefined);
-          const net = selectNetwork(this.state);
-
-          const identities = await Promise.all(
-            accountIds.map(selectAccount).map((f) => f(this.state).getWatchIdentity(net))
+          await this.checkHostnameAuthorization();
+          const accountNames = this.handleIdsParam(params ? params[0] : undefined);
+          const network = await this.appRepository.getNetwork();
+          if (network === null) throw new Error('network is not set up');
+          const factory = await AccountFactory.create(this.walletRepository);
+          const accounts = await Promise.all(
+            accountNames.map((name) => factory.make(network, name))
           );
-          const addresses = await Promise.all(
-            identities.map((identity) => identity.getAddresses())
-          );
-
-          return successMsg(addresses.flat().map(toProviderAddress));
+          const addresses = await Promise.all(accounts.map((account) => account.getAllAddresses()));
+          return successMsg(addresses.flat());
         }
 
         case 'getNextAddress': {
-          this.checkHostnameAuthorization();
-          const account = this.accountSelector(this.state);
-          if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
-            throw new Error('Only custom script accounts can expect construct parameters');
-          }
-          const net = selectNetwork(this.state);
-          const watchOnlyIdentity = await account.getWatchIdentity(net);
-          let nextAddress: AddressInterface;
-          let constructorParams: Record<string, string | number> | undefined;
-          if (account.type === AccountType.MainAccount) {
-            nextAddress = await watchOnlyIdentity.getNextAddress();
-          } else {
-            if (params && params.length > 0) {
-              constructorParams = params[0];
-            }
-            nextAddress = await watchOnlyIdentity.getNextAddress(constructorParams);
-          }
-          await Promise.all(
-            updateToNextAddress(account.getInfo().accountID, net, constructorParams).map(
-              (action: AnyAction) => this.store?.dispatchAsync(action)
-            )
-          );
-          return successMsg(toProviderAddress(nextAddress));
+          await this.checkHostnameAuthorization();
+          const nextAddress = await this.getNextAddress(false, params || []);
+          return successMsg(nextAddress);
         }
 
         case 'getNextChangeAddress': {
-          this.checkHostnameAuthorization();
-          const account = this.accountSelector(this.state);
-          if (params && params.length > 0 && account.type !== AccountType.CustomScriptAccount) {
-            throw new Error('Only custom script accounts can expect construct parameters');
-          }
-          const net = selectNetwork(this.state);
-          const xpub = await account.getWatchIdentity(net);
-          let nextChangeAddress: AddressInterface;
-          let constructorParams: Record<string, string | number> | undefined;
-          if (account.type === AccountType.MainAccount) {
-            nextChangeAddress = await xpub.getNextChangeAddress();
-          } else {
-            if (params && params.length > 0) {
-              constructorParams = params[0];
-            }
-            nextChangeAddress = await xpub.getNextChangeAddress(constructorParams);
-          }
-          await Promise.all(
-            updateToNextChangeAddress(account.getInfo().accountID, net, constructorParams).map(
-              (action: AnyAction) => this.store?.dispatchAsync(action)
-            )
-          );
-
-          return successMsg(toProviderAddress(nextChangeAddress));
+          await this.checkHostnameAuthorization();
+          const nextAddress = await this.getNextAddress(true, params || []);
+          return successMsg(nextAddress);
         }
 
         case 'signTransaction': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           if (!params || params.length !== 1) {
             throw new Error('Missing params');
           }
           const [pset] = params;
-          await this.store.dispatchAsync(setTx(this.hostname, pset));
+          await this.popupsRepository.setPsetToSign(pset, this.hostname);
           const { accepted, signedPset } =
             await this.openAndWaitPopup<SignTransactionPopupResponse>('sign-pset');
 
-          await this.store.dispatchAsync(flushTx());
+          await this.popupsRepository.clear();
           if (!accepted) throw new Error('User rejected the sign request');
           if (!signedPset) throw new Error('Something went wrong with tx signing');
 
           return successMsg(signedPset);
         }
 
-        case 'sendTransaction': {
-          this.checkHostnameAuthorization();
-          const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
-          const lbtc = lbtcAssetByNetwork(selectNetwork(this.state));
-          const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
+        case 'blindTransaction': {
+          await this.checkHostnameAuthorization();
+          if (!params || params.length !== 1) {
+            throw new Error('Missing params');
+          }
+          const [pset] = params;
+          const blinder = new BlinderService(this.walletRepository, await zkpLib());
+          const blindedPset = await blinder.blindPset(pset);
+          return successMsg(blindedPset);
+        }
 
+        case 'sendTransaction': {
+          await this.checkHostnameAuthorization();
+          const [recipients, feeAssetHash] = params as [Recipient[], string | undefined];
+          const network = await this.appRepository.getNetwork();
+          if (network === null) throw new Error('network is not set up');
+          const lbtc = networks[network].assetHash;
+          const feeAsset = feeAssetHash ? feeAssetHash : lbtc;
+          const taxiAssets = await this.taxiRepository.getTaxiAssets(network);
           // validate if fee asset is valid
-          if (![lbtc, ...selectTaxiAssets(this.state)].includes(feeAsset)) {
+          if (![lbtc, ...taxiAssets].includes(feeAsset)) {
             throw new Error(`${feeAsset} not supported as fee asset.`);
           }
 
@@ -317,81 +361,130 @@ export default class MarinaBroker extends Broker<keyof Marina> {
             rcpt.value = parseInt(rcpt.value.toString(), 10);
           }
 
-          const { addressRecipients, data } = sortRecipients(recipients);
+          const { addressRecipients, dataRecipients } = sortRecipients(recipients);
 
-          await this.store.dispatchAsync(
-            setTxData(this.hostname, addressRecipients, feeAsset, selectNetwork(this.state), data)
+          await this.popupsRepository.setSpendParameters({
+            hostname: this.hostname,
+            addressRecipients,
+            dataRecipients,
+            feeAsset,
+          });
+
+          const { accepted, signedTxHex } = await this.openAndWaitPopup<SpendPopupResponse>(
+            'spend'
           );
 
-          const { accepted, signedTxHex, selectedUtxos, unconfirmedOutputs } =
-            await this.openAndWaitPopup<SpendPopupResponse>('spend');
+          await this.popupsRepository.clear();
 
-          if (!accepted) throw new Error('the user rejected the create tx request');
+          if (!accepted) throw new Error('user rejected the sendTransaction request');
           if (!signedTxHex) throw new Error('something went wrong with the tx crafting');
 
-          const txid = await broadcastTx(selectEsploraURL(this.state), signedTxHex);
-          if (!txid) throw new Error('something went wrong with the tx broadcasting');
-
-          // lock selected utxos and credit change utxos (aka unconfirmed outputs)
-          await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, unconfirmedOutputs, this.store);
-
-          return successMsg({ txid, hex: signedTxHex });
+          // try to broadcast the tx
+          try {
+            const chainSource = await this.appRepository.getChainSource();
+            if (!chainSource) throw new Error('chain source is not set up, cannot broadcast');
+            const txid = await chainSource.broadcastTransaction(signedTxHex);
+            await Promise.allSettled([
+              lockTransactionInputs(this.walletRepository, signedTxHex),
+              this.walletRepository.updateTxDetails({
+                [txid]: {
+                  hex: signedTxHex,
+                },
+              }),
+              this.walletRepository.addTransactions(network, txid),
+            ]);
+            return successMsg({ txid, hex: signedTxHex });
+          } catch (e) {
+            console.warn('broadcasting failed, returning the signed tx hex', e);
+            return successMsg({ txid: null, hex: signedTxHex });
+          } finally {
+            await this.popupsRepository.clear();
+          }
         }
 
         case 'signMessage': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           const [message] = params as [string];
-          await this.store.dispatchAsync(setMsg(this.hostname, message));
+          await this.popupsRepository.setMessageToSign(message, this.hostname);
           const { accepted, signedMessage } = await this.openAndWaitPopup<SignMessagePopupResponse>(
             'sign-msg'
           );
 
-          await this.store.dispatchAsync(flushMsg());
           if (!accepted) throw new Error('user rejected the signMessage request');
           if (!signedMessage) throw new Error('something went wrong with message signing');
-
+          await this.popupsRepository.clear();
           return successMsg(signedMessage);
         }
 
         case 'getTransactions': {
-          this.checkHostnameAuthorization();
-          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
-          const transactions = selectTransactions(...accountsIDs)(this.state);
+          await this.checkHostnameAuthorization();
+          const network = await this.appRepository.getNetwork();
+          if (!network) throw new Error('Network not set up');
+          const transactions = await this.walletRepository.getTransactions(network);
           return successMsg(transactions);
         }
 
         case 'getCoins': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
-          const coins = selectUtxos(...accountsIDs)(this.state);
-          const results: Utxo[] = coins.map((unblindedOutput) => ({
-            txid: unblindedOutput.txid,
-            vout: unblindedOutput.vout,
-            prevout: unblindedOutput.prevout,
-            unblindData: unblindedOutput.unblindData,
-            asset: getAsset(unblindedOutput),
-            value: getSats(unblindedOutput),
-          }));
-          return successMsg(results);
+          const network = await this.appRepository.getNetwork();
+          if (!network) throw new Error('Network not set up');
+          const coins = await this.walletRepository.getUtxos(network, ...accountsIDs);
+          const utxos: Utxo[] = [];
+          for (const coin of coins) {
+            const utxo = await this.unblindedOutputToUtxo(coin);
+            // add coins that are not blinded or that are already unblinded
+            if (
+              coin.blindingData ||
+              !utxo.witnessUtxo ||
+              !utxo.witnessUtxo.rangeProof ||
+              !utxo.witnessUtxo.surjectionProof ||
+              !(utxo.witnessUtxo.rangeProof.length > 0) ||
+              !(utxo.witnessUtxo.surjectionProof.length > 0)
+            ) {
+              utxos.push(utxo);
+              continue;
+            }
+            if (this.unblinder) {
+              const unblinded = (await this.unblinder.unblind(utxo.witnessUtxo)).at(0);
+              if (unblinded instanceof Error || !unblinded) {
+                console.warn('unblinding failed', unblinded);
+                utxos.push(utxo); // add the utxo anyway
+                continue;
+              }
+              await this.walletRepository.updateOutpointBlindingData([
+                [{ txid: utxo.txid, vout: utxo.vout }, unblinded],
+              ]);
+              utxo.blindingData = unblinded;
+            }
+            utxos.push(utxo);
+          }
+
+          return successMsg(utxos);
         }
 
         case 'getBalances': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
-          const balances = selectBalances(...accountsIDs)(this.state);
-          const assetGetter = assetGetterFromIAssets(this.state.assets);
-          const balancesResult: Balance[] = [];
+          const network = await this.appRepository.getNetwork();
+          if (!network) throw new Error('Network not set up');
+          const utxos = await this.walletRepository.getUtxos(network, ...accountsIDs);
+          const onlyUnblinded = utxos.filter((utxo) => utxo.blindingData);
+          const balances = computeBalances(onlyUnblinded);
+
+          const balancesResult = [];
           for (const [assetHash, amount] of Object.entries(balances)) {
-            balancesResult.push({ asset: assetGetter(assetHash), amount });
+            const asset = await this.assetRepository.getAsset(assetHash);
+            balancesResult.push({ asset: asset ? asset : assetHash, amount });
           }
           return successMsg(balancesResult);
         }
 
         case 'isReady': {
           try {
-            const net = selectNetwork(this.state);
-            await selectMainAccount(this.state).getWatchIdentity(net); // check if Xpub is valid
-            return successMsg(this.state.app.isOnboardingCompleted);
+            await this.appRepository.getNetwork();
+            const { isAuthenticated, isOnboardingCompleted } = await this.appRepository.getStatus();
+            return successMsg(isAuthenticated && isOnboardingCompleted);
           } catch {
             // catch error = not ready
             return successMsg(false);
@@ -399,28 +492,23 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'getFeeAssets': {
-          this.checkHostnameAuthorization();
-          const lbtcAsset = lbtcAssetByNetwork(selectNetwork(this.state));
-          return successMsg([lbtcAsset, ...selectTaxiAssets(this.state)]);
-        }
-
-        case 'reloadCoins': {
-          this.checkHostnameAuthorization();
-          const accountsIDs = this.handleIdsParam(params ? params[0] : undefined);
-
-          await this.reloadCoins(accountsIDs);
-          return successMsg();
+          await this.checkHostnameAuthorization();
+          const network = await this.appRepository.getNetwork();
+          if (!network) throw new Error('Network not set up');
+          const lbtcAsset = await this.assetRepository.getAsset(networks[network].assetHash);
+          const taxiAssets = await this.taxiRepository.getTaxiAssets(network);
+          return successMsg([lbtcAsset, ...taxiAssets]);
         }
 
         case 'getSelectedAccount': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           return successMsg(this.selectedAccount);
         }
 
         case 'useAccount': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           const [accountName] = params as [string];
-          if (!this.accountExists(accountName)) {
+          if (!(await this.accountExists(accountName))) {
             throw new Error(`Account ${accountName} not found`);
           }
 
@@ -428,54 +516,15 @@ export default class MarinaBroker extends Broker<keyof Marina> {
           return successMsg(true);
         }
 
-        case 'importTemplate': {
-          this.checkHostnameAuthorization();
-          const accountData = this.state.wallet.accounts[this.selectedAccount];
-          if (accountData.type !== AccountType.CustomScriptAccount) {
-            throw new Error('Only custom script accounts can import templates');
-          }
-
-          let contract: Template | undefined;
-          if (params && params.length > 0) {
-            if (!validateTemplate(params[0])) {
-              throw new Error('Invalid template');
-            }
-            contract = params[0];
-          }
-
-          await this.store.dispatchAsync(
-            setCustomScriptTemplate(this.selectedAccount, contract!.template)
-          );
-
-          const artifact: Artifact = JSON.parse(contract!.template);
-          const isSpendableByMarina = artifact.functions.every((fn) => {
-            return (
-              fn.functionInputs.length === 1 &&
-              fn.functionInputs[0].type === PrimitiveType.Signature &&
-              (!fn.require || fn.require.length === 0)
-            );
-          });
-
-          await this.store.dispatchAsync(
-            setIsSpendableByMarina(this.selectedAccount, isSpendableByMarina)
-          );
-
-          return successMsg(true);
-        }
-
         case 'createAccount': {
-          this.checkHostnameAuthorization();
-          const [accountName] = params as [string];
-          if (this.accountExists(accountName)) {
-            throw new Error(`Account ${accountName} already exists`);
-          }
+          await this.checkHostnameAuthorization();
+          const [name, accountType] = params as [string, AccountType];
 
-          await this.store.dispatchAsync(
-            setCreateAccountData({
-              namespace: accountName,
-              hostname: this.hostname,
-            })
-          );
+          await this.popupsRepository.setCreateAccountParameters({
+            hostname: this.hostname,
+            name,
+            accountType: accountType || AccountType.Ionio,
+          });
 
           const { accepted } = await this.openAndWaitPopup<CreateAccountPopupResponse>(
             'create-account'
@@ -486,91 +535,94 @@ export default class MarinaBroker extends Broker<keyof Marina> {
         }
 
         case 'broadcastTransaction': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           const [signedTxHex] = params as [string];
-          const network = selectNetwork(this.state);
+          const network = await this.appRepository.getNetwork();
+          if (!network) throw new Error('Network not set up');
+          const chainSource = await this.appRepository.getChainSource(network);
+          if (!chainSource) throw new Error('Chain source not set up');
 
           // broadcast tx
-          const txid = await broadcastTx(selectEsploraURL(this.state), signedTxHex);
+          const txid = await chainSource.broadcastTransaction(signedTxHex);
+          await Promise.allSettled([
+            lockTransactionInputs(this.walletRepository, signedTxHex),
+            this.walletRepository.updateTxDetails({
+              [txid]: {
+                hex: signedTxHex,
+              },
+            }),
+            this.walletRepository.addTransactions(network, txid),
+          ]);
           if (!txid) throw new Error('something went wrong with the tx broadcasting');
-
-          // get selected and change utxos from transaction
-          const accounts = selectAllAccounts(this.state);
-          const coins = selectUtxos(...selectAllAccountsIDs(this.state))(this.state);
-
-          const { selectedUtxos, changeUtxos } = await getUtxosFromTx(
-            accounts,
-            coins,
-            network,
-            signedTxHex
-          );
-
-          // lock selected utxos and credit change utxos
-          await this.lockAndLoadUtxos(signedTxHex, selectedUtxos, changeUtxos, this.store);
-
           return successMsg({ txid, hex: signedTxHex });
         }
 
         case 'getAccountInfo': {
-          this.checkHostnameAuthorization();
+          await this.checkHostnameAuthorization();
           let [accountName] = params as [string];
-          if (!accountName) accountName = MainAccountID;
+          if (!accountName) accountName = MainAccount;
 
-          if (!this.accountExists(accountName)) {
+          if (!(await this.accountExists(accountName))) {
             throw new Error(`Account ${accountName} not found`);
           }
 
-          const info = selectAccount(accountName)(this.state).getInfo();
-          return successMsg(info);
+          const details = await this.walletRepository.getAccountDetails(accountName);
+          return successMsg(details[accountName]);
         }
 
         case 'getAccountsIDs': {
-          this.checkHostnameAuthorization();
-          return successMsg(selectAllAccountsIDs(this.state));
+          await this.checkHostnameAuthorization();
+          const allDetails = await this.walletRepository.getAccountDetails();
+          return successMsg(Object.keys(allDetails));
+        }
+
+        case 'importScript': {
+          await this.checkHostnameAuthorization();
+          const [accountName, script, blindingPrivateKey] = params as [
+            string,
+            string,
+            string | undefined
+          ];
+
+          if (!(await this.accountExists(accountName))) {
+            throw new Error(`Account ${accountName} not found`);
+          }
+
+          const details: ScriptDetails = {
+            accountName,
+            networks: [this.network],
+            blindingPrivateKey,
+          };
+
+          await this.walletRepository.updateScriptDetails({ [script]: details });
+          return successMsg();
         }
 
         default:
           return newErrorResponseMessage(id, new Error('Method not implemented.'));
       }
     } catch (err) {
+      console.error(err);
       if (err instanceof Error) return newErrorResponseMessage(id, err);
       else throw err;
     }
   };
 }
 
-function validateTemplate(template: Template): Template<string> | undefined {
-  switch (template.type as string) {
-    case 'ionio-artifact': {
-      const artifact = JSON.parse(template.template);
-      const expectedProperties = ['contractName', 'functions', 'constructorInputs'];
-      if (!expectedProperties.every((property) => property in artifact)) {
-        throw new Error('Invalid template: incomplete artifact');
-      }
-      return template;
-    }
-    default: {
-      throw new Error(`Unknown template type ${template.type}`);
+function sortRecipients(recipients: Recipient[]): {
+  dataRecipients: DataRecipient[];
+  addressRecipients: AddressRecipient[];
+} {
+  const addressRecipients: AddressRecipient[] = [];
+  const dataRecipients: DataRecipient[] = [];
+
+  for (const recipient of recipients) {
+    if (isDataRecipient(recipient)) {
+      dataRecipients.push(recipient);
+    } else if (isAddressRecipient(recipient)) {
+      addressRecipients.push(recipient);
     }
   }
-}
 
-// converts an addressInterface to the marina-provider format
-function toProviderAddress(addr: AddressInterface): ProviderAddressInterface {
-  const result = {
-    blindingPrivateKey: addr.blindingPrivateKey,
-    confidentialAddress: addr.confidentialAddress,
-    derivationPath: addr.derivationPath,
-    publicKey: addr.publicKey,
-  };
-
-  if (isTaprootAddressInterface(addr)) {
-    return {
-      ...result,
-      constructorParams: addr.constructorParams,
-      descriptor: addr.descriptor,
-    };
-  }
-
-  return result;
+  return { dataRecipients, addressRecipients };
 }

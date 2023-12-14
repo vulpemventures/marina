@@ -1,0 +1,121 @@
+import React from 'react';
+import type { RouteComponentProps } from 'react-router';
+import { useHistory } from 'react-router';
+import type { FormikProps } from 'formik';
+import { withFormik } from 'formik';
+import * as Yup from 'yup';
+import ShellPopUp from '../components/shell-popup';
+import Button from '../components/button';
+import Input from '../components/input';
+import { DEFAULT_ROUTE } from '../routes/constants';
+import ButtonsAtBottom from '../components/buttons-at-bottom';
+
+interface SettingsChangePasswordFormValues {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+interface SettingsChangePasswordFormProps {
+  history: RouteComponentProps['history'];
+}
+
+const SettingsChangePasswordForm = (props: FormikProps<SettingsChangePasswordFormValues>) => {
+  const { handleSubmit, errors, isSubmitting, touched } = props;
+  const history = useHistory();
+  const handleCancel = () => history.goBack();
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-5">
+      <Input
+        name="currentPassword"
+        placeholder="Enter current password"
+        title="Current password"
+        type="password"
+        {...props}
+      />
+      <Input
+        name="newPassword"
+        placeholder="Enter new password"
+        title="New password"
+        type="password"
+        {...props}
+      />
+      <Input
+        name="confirmNewPassword"
+        placeholder="Confirm new password"
+        title="Confirm new password"
+        type="password"
+        {...props}
+      />
+      <ButtonsAtBottom>
+        <Button
+          isOutline={true}
+          onClick={handleCancel}
+          className="bg-secondary hover:bg-secondary-light"
+        >
+          Cancel
+        </Button>
+        <Button
+          disabled={
+            isSubmitting ||
+            !!(
+              (errors.currentPassword && touched.currentPassword) ||
+              (errors.newPassword && touched.newPassword) ||
+              (errors.confirmNewPassword && touched.confirmNewPassword)
+            )
+          }
+          type="submit"
+        >
+          Update
+        </Button>
+      </ButtonsAtBottom>
+    </form>
+  );
+};
+
+const SettingsChangePasswordEnhancedForm = withFormik<
+  SettingsChangePasswordFormProps,
+  SettingsChangePasswordFormValues
+>({
+  mapPropsToValues: (): SettingsChangePasswordFormValues => ({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  }),
+
+  validationSchema: Yup.object().shape({
+    currentPassword: Yup.string()
+      .required('Please input password')
+      .min(8, 'Password is too short, must be 8 chars or more'),
+    newPassword: Yup.string()
+      .required('Please input password')
+      .min(8, 'Password is too short, must be 8 chars or more'),
+    confirmNewPassword: Yup.string()
+      .required('Please confirm password')
+      .min(8, 'Password is too short, must be 8 chars or more')
+      .oneOf([Yup.ref('newPassword'), null], 'Passwords must match'),
+  }),
+
+  handleSubmit: (_, { props }) => {
+    props.history.push(DEFAULT_ROUTE);
+  },
+
+  displayName: 'SettingsChangePasswordForm',
+})(SettingsChangePasswordForm);
+
+const SettingsChangePassword: React.FC = () => {
+  const history = useHistory();
+
+  return (
+    <ShellPopUp
+      backgroundImagePath="/assets/images/popup/bg-sm.png"
+      className="h-popupContent container pb-20 mx-auto bg-bottom bg-no-repeat"
+      currentPage="Change password"
+    >
+      <SettingsChangePasswordEnhancedForm history={history} />
+    </ShellPopUp>
+  );
+};
+
+export default SettingsChangePassword;

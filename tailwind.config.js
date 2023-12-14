@@ -5,11 +5,7 @@ module.exports = {
   // TODO: PostCSS plugin postcss-purgecss requires PostCSS 8
   purge: {
     enabled: process.env.NODE_ENV === 'production',
-    content: [
-        './**/*.html',
-        './**/*.tsx',
-        './**/*.js'
-    ]
+    content: ['./**/*.html', './**/*.tsx', './**/*.js'],
   },
   darkMode: false, // or 'media' or 'class'
   theme: {
@@ -26,6 +22,9 @@ module.exports = {
       smokeLight: 'rgba(0, 0, 0, 0.3)',
       transparent: 'transparent',
       white: '#fefefe',
+      amberLight: colors.amber[100],
+      amber: colors.amber[500],
+      amberDark: colors.amber[700],
     },
     container: {
       padding: {
@@ -47,6 +46,9 @@ module.exports = {
       }),
       fontFamily: {
         sans: ['Poppins', ...defaultTheme.fontFamily.sans],
+      },
+      fontSize: {
+        xxs: ['0.5rem', '1rem'],
       },
       gridTemplateRows: {
         // https://web.dev/one-line-layouts/#04.-pancake-stack:-grid-template-rows:-auto-1fr-auto

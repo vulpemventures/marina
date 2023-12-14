@@ -1,8 +1,6 @@
 import type {
   AccountID,
-  AddressInterface,
   Balance,
-  Template,
   MarinaEventType,
   MarinaProvider,
   PsetBase64,
@@ -12,6 +10,9 @@ import type {
   Transaction,
   Utxo,
   AccountInfo,
+  Address,
+  ArtifactWithConstructorArgs,
+  AccountType,
 } from 'marina-provider';
 import MarinaEventHandler from './marinaEventHandler';
 import WindowProxy from '../proxy';
@@ -26,6 +27,10 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     this.eventHandler = new MarinaEventHandler();
   }
 
+  createAccount(accountID: string, accountType: AccountType): Promise<void> {
+    return this.proxy('createAccount', [accountID, accountType]);
+  }
+
   getAccountsIDs(): Promise<string[]> {
     return this.proxy('getAccountsIDs', []);
   }
@@ -36,14 +41,6 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
 
   getSelectedAccount(): Promise<string> {
     return this.proxy('getSelectedAccount', []);
-  }
-
-  createAccount(accountName: string): Promise<void> {
-    return this.proxy('createAccount', [accountName]);
-  }
-
-  importTemplate(template: Template, changeTemplate?: Template) {
-    return this.proxy('importTemplate', [template, changeTemplate]);
   }
 
   enable(): Promise<void> {
@@ -62,20 +59,20 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getNetwork', []);
   }
 
-  getAddresses(ids?: AccountID[]): Promise<AddressInterface[]> {
+  getAddresses(ids?: AccountID[]): Promise<Address[]> {
     return this.proxy('getAddresses', [ids]);
   }
 
-  getNextAddress(params?: any): Promise<AddressInterface> {
-    if (params) {
-      return this.proxy('getNextAddress', [params]);
+  getNextAddress(ionioData?: ArtifactWithConstructorArgs): Promise<Address> {
+    if (ionioData) {
+      return this.proxy('getNextAddress', [ionioData]);
     }
     return this.proxy('getNextAddress', []);
   }
 
-  getNextChangeAddress(params?: any): Promise<AddressInterface> {
-    if (params) {
-      return this.proxy('getNextChangeAddress', [params]);
+  getNextChangeAddress(ionioData?: ArtifactWithConstructorArgs): Promise<Address> {
+    if (ionioData) {
+      return this.proxy('getNextChangeAddress', [ionioData]);
     }
     return this.proxy('getNextChangeAddress', []);
   }
@@ -145,11 +142,15 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
     return this.proxy('getFeeAssets', []);
   }
 
-  reloadCoins(ids?: AccountID[]): Promise<void> {
-    return this.proxy('reloadCoins', [ids]);
-  }
-
   broadcastTransaction(signedTxHex: string): Promise<SentTransaction> {
     return this.proxy('broadcastTransaction', [signedTxHex]);
+  }
+
+  importScript(
+    accountName: AccountID,
+    scriptHex: string,
+    blindingPrivateKey?: string
+  ): Promise<void> {
+    return this.proxy('importScript', [accountName, scriptHex, blindingPrivateKey]);
   }
 }
