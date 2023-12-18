@@ -63,7 +63,7 @@ const AssetListScreen: React.FC<AssetListProps> = ({
   };
 
   const handleClick = async ({ assetHash }: any) => {
-    if (assetHash === networks[network].assetHash || assetHash === 'new_asset') {
+    if (assetHash === networks[network].assetHash) {
       setShowBottomSheet(true);
       setSelectedAsset(assetHash);
     } else {

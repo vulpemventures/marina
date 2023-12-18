@@ -67,7 +67,6 @@ describe('Boltz Atomic Swap', () => {
       ),
     };
     const claimTx = boltz.makeClaimTransaction(params);
-    console.log('claimTx', claimTx);
     expect(claimTx).toBeDefined();
   });
 });

@@ -60,7 +60,7 @@ const Transactions: React.FC = () => {
       return;
     }
     setAction('receive');
-    if (assetHash === networks[cache?.network ?? 'liquid'].assetHash || assetHash === 'new_asset') {
+    if (assetHash === networks[cache?.network ?? 'liquid'].assetHash) {
       setShowBottomSheet(true);
     } else {
       history.push(`${RECEIVE_ADDRESS_ROUTE}/${assetHash}`);

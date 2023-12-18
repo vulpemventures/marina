@@ -7,39 +7,54 @@ export const SOMETHING_WENT_WRONG_ERROR = 'Oops, something went wrong...';
 const getLocalImagePath = (asset: string) => `/assets/images/liquid-assets/${asset}`;
 
 // featured assets
-const featuredAssets = {
+export const featuredAssets = {
   lbtc: {
-    mainnet: networks.liquid.assetHash,
+    liquid: networks.liquid.assetHash,
     testnet: networks.testnet.assetHash,
     regtest: networks.regtest.assetHash,
   },
   lcad: {
-    mainnet: '0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a',
+    liquid: '0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a',
     testnet: 'ac3e0ff248c5051ffd61e00155b7122e5ebc04fd397a0ecbdd4f4e4a56232926',
+    regtest: '',
   },
   usdt: {
-    mainnet: 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2',
+    liquid: 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2',
     testnet: 'f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958',
+    regtest: '',
   },
   fusd: {
-    mainnet: '0dea022a8a25abb128b42b0f8e98532bc8bd74f8a77dc81251afcc13168acef7',
+    liquid: '0dea022a8a25abb128b42b0f8e98532bc8bd74f8a77dc81251afcc13168acef7',
     testnet: '0d86b2f6a8c3b02a8c7c8836b83a081e68b7e2b4bcdfc58981fc5486f59f7518',
+    regtest: '',
   },
+};
+
+export const alwaysPresentAssets = {
+  liquid: [
+    '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', // lbtc
+    '0dea022a8a25abb128b42b0f8e98532bc8bd74f8a77dc81251afcc13168acef7', // fusd
+    'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2', // usdt
+  ],
+  regtest: [],
+  testnet: [
+    '144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49', // lbtc
+    '0d86b2f6a8c3b02a8c7c8836b83a081e68b7e2b4bcdfc58981fc5486f59f7518', // fusd
+    'f3d1ec678811398cd2ae277cbe3849c6f6dbd72c74bc542f7c4b11ff0e820958', // usdt
+  ],
 };
 
 // featured assets map: from an asset hash, get local image path
 const featuredAssetsMap = new Map<string, string>();
-featuredAssetsMap.set(featuredAssets.lbtc.mainnet, getLocalImagePath('lbtc.png'));
+featuredAssetsMap.set(featuredAssets.lbtc.liquid, getLocalImagePath('lbtc.png'));
 featuredAssetsMap.set(featuredAssets.lbtc.testnet, getLocalImagePath('lbtc.png'));
 featuredAssetsMap.set(featuredAssets.lbtc.regtest, getLocalImagePath('lbtc.png'));
-featuredAssetsMap.set(featuredAssets.usdt.mainnet, getLocalImagePath('usdt.png'));
+featuredAssetsMap.set(featuredAssets.usdt.liquid, getLocalImagePath('usdt.png'));
 featuredAssetsMap.set(featuredAssets.usdt.testnet, getLocalImagePath('usdt.png'));
-featuredAssetsMap.set(featuredAssets.lcad.mainnet, getLocalImagePath('lcad.png'));
+featuredAssetsMap.set(featuredAssets.lcad.liquid, getLocalImagePath('lcad.png'));
 featuredAssetsMap.set(featuredAssets.lcad.testnet, getLocalImagePath('lcad.png'));
 featuredAssetsMap.set(featuredAssets.fusd.testnet, getLocalImagePath('fusd.png'));
-featuredAssetsMap.set(featuredAssets.fusd.mainnet, getLocalImagePath('fusd.png'));
-
-export const FEATURED_ASSETS = Array.from(featuredAssetsMap.keys());
+featuredAssetsMap.set(featuredAssets.fusd.liquid, getLocalImagePath('fusd.png'));
 
 // given an asset hash, return url for image path from mempool
 const getRemoteImagePath = (hash: string) => `https://liquid.network/api/v1/asset/${hash}/icon`;
