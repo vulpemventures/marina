@@ -65,7 +65,6 @@ describe('Boltz Atomic Swap', () => {
         '030bec8e57ac22abb4e2b717847346c3ce7b83969c256f9fadd5f9b6ab08f37850',
         'hex'
       ),
-      timeoutBlockHeight: 1175561,
     };
     const claimTx = boltz.makeClaimTransaction(params);
     console.log('claimTx', claimTx);

@@ -115,7 +115,6 @@ export interface MakeClaimTransactionParams {
   destinationScript: Buffer;
   fee: number;
   blindingPublicKey: Buffer;
-  timeoutBlockHeight: number;
 }
 
 export const boltzUrl: Record<NetworkString, string> = {
@@ -168,7 +167,6 @@ export class Boltz implements BoltzInterface {
     destinationScript,
     fee,
     blindingPublicKey,
-    timeoutBlockHeight,
   }: MakeClaimTransactionParams): Transaction {
     if (!utxo.blindingData) throw new Error('utxo is not blinded');
     if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');

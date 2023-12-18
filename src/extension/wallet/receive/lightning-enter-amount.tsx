@@ -110,18 +110,12 @@ const LightningAmount: React.FC = () => {
       const claimPublicKey = claimKeyPair.publicKey;
 
       // create reverse submarine swap
-      const {
-        redeemScript,
-        lockupAddress,
-        invoice,
-        preimage,
-        blindingPrivateKey,
-        timeoutBlockHeight,
-      } = await boltz.createReverseSubmarineSwap(
-        claimPublicKey,
-        network,
-        toSatoshi(Number(swapValue.current))
-      );
+      const { redeemScript, lockupAddress, invoice, preimage, blindingPrivateKey } =
+        await boltz.createReverseSubmarineSwap(
+          claimPublicKey,
+          network,
+          toSatoshi(Number(swapValue.current))
+        );
 
       // all good, update states
       setInvoice(invoice);
@@ -178,7 +172,6 @@ const LightningAmount: React.FC = () => {
           destinationScript: Buffer.from(destinationScript, 'hex'),
           fee: 300,
           blindingPublicKey,
-          timeoutBlockHeight,
         });
 
         const txid = await chainSource.broadcastTransaction(claimTransaction.toHex());
