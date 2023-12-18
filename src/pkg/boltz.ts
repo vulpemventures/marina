@@ -234,8 +234,6 @@ export class Boltz implements BoltzInterface {
       };
     });
 
-    finalizer.finalize();
-
     return Extractor.extract(signedPset);
   }
 
