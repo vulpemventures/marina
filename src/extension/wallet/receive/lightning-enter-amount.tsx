@@ -174,11 +174,11 @@ const LightningAmount: React.FC = () => {
           blindingPublicKey,
         });
 
-        const txid = await chainSource.broadcastTransaction(claimTransaction.toHex());
+        await chainSource.broadcastTransaction(claimTransaction.toHex());
 
         history.push({
           pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-          state: { txid, text: 'Invoice paid !' },
+          state: { txhex: claimTransaction.toHex(), text: 'Invoice paid !' },
         });
       }
     } catch (err: any) {
