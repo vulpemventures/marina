@@ -7,7 +7,6 @@ import {
   AssetHash,
   Blinder,
   Creator,
-  CreatorInput,
   crypto,
   Extractor,
   Finalizer,
@@ -173,26 +172,29 @@ export class Boltz implements BoltzInterface {
     const pset = Creator.newPset();
     const updater = new Updater(pset);
 
-    pset.addInput(new CreatorInput(utxo.txid, utxo.vout).toPartialInput());
-    updater.addInSighashType(0, Transaction.SIGHASH_ALL);
-    updater.addInWitnessUtxo(0, utxo.witnessUtxo);
-    updater.addInWitnessScript(0, utxo.witnessUtxo.script);
-
-    updater.addOutputs([
-      {
-        script: destinationScript,
-        blindingPublicKey,
-        asset: this.asset,
-        amount: (utxo.blindingData?.value ?? 0) - fee,
-        blinderIndex: 0,
-      },
-      {
-        amount: fee,
-        asset: this.asset,
-      },
-    ]);
-
-    console.log('pset', pset);
+    updater
+      .addInputs([
+        {
+          txid: utxo.txid,
+          txIndex: utxo.vout,
+          witnessUtxo: utxo.witnessUtxo,
+          sighashType: Transaction.SIGHASH_ALL,
+        },
+      ])
+      .addInWitnessScript(0, redeemScript)
+      .addOutputs([
+        {
+          script: destinationScript,
+          blindingPublicKey,
+          asset: this.asset,
+          amount: (utxo.blindingData?.value ?? 0) - fee,
+          blinderIndex: 0,
+        },
+        {
+          amount: fee,
+          asset: this.asset,
+        },
+      ]);
 
     const blindedPset = this.blindPset(pset, {
       index: 0,
@@ -202,26 +204,22 @@ export class Boltz implements BoltzInterface {
       assetBlindingFactor: Buffer.from(utxo.blindingData.assetBlindingFactor, 'hex'),
     });
 
-    console.log('blindedPset', blindedPset);
-
     const signedPset = this.signPset(blindedPset, claimKeyPair);
-
-    console.log('signedPset', signedPset);
 
     const finalizer = new Finalizer(signedPset);
 
-    finalizer.finalizeInput(0, () => {
+    finalizer.finalizeInput(0, (inputIndex, pset) => {
       return {
         finalScriptSig: undefined,
         finalScriptWitness: witnessStackToScriptWitness([
-          signedPset.inputs[0].partialSigs![0].signature,
+          pset.inputs[inputIndex].partialSigs![0].signature,
           preimage,
           redeemScript,
         ]),
       };
     });
 
-    return Extractor.extract(signedPset);
+    return Extractor.extract(finalizer.pset);
   }
 
   async createSubmarineSwap(
@@ -349,7 +347,7 @@ export class Boltz implements BoltzInterface {
     return addressScriptASM === expectedAddressScriptASM;
   }
 
-  // validates if we can redeem with this redeem script
+  // validates if redeem script from reverse swap is in expected template
   private validateReverseSwapReedemScript(
     preimage: Buffer,
     pubKey: string,
@@ -381,7 +379,7 @@ export class Boltz implements BoltzInterface {
     return scriptAssembly.join() === expectedScript.join();
   }
 
-  // validates redeem script is in expected template
+  // validates redeem script from submarine swap is in expected template
   private validateSwapReedemScript(redeemScript: string, refundPublicKey: string) {
     const scriptAssembly = script
       .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
