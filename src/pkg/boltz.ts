@@ -175,9 +175,7 @@ export class Boltz implements BoltzInterface {
     const pset = Creator.newPset();
     const updater = new Updater(pset);
 
-    pset.addInput(
-      new CreatorInput(utxo.txid, utxo.vout, 0xfffffffd, timeoutBlockHeight).toPartialInput()
-    );
+    pset.addInput(new CreatorInput(utxo.txid, utxo.vout).toPartialInput());
     updater.addInSighashType(0, Transaction.SIGHASH_ALL);
     updater.addInWitnessUtxo(0, utxo.witnessUtxo);
     updater.addInWitnessScript(0, utxo.witnessUtxo.script);
