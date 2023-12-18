@@ -21,7 +21,6 @@ pwTest(
     // go to receive page and generate a new address
     await page.getByRole('button', { name: 'Receive' }).click();
     await page.getByRole('button', { name: 'New Asset' }).click();
-    await page.getByText('Liquid Network').click();
     await page.getByRole('button', { name: 'Copy' }).click();
     await page.waitForSelector('text=Copied');
     // check clipboard value (should contain the confidential address)
@@ -56,7 +55,6 @@ pwTest(
     await page.goto(marinaURL(extensionId, 'popup.html'));
     await page.getByRole('button', { name: 'Receive' }).click();
     await page.getByRole('button', { name: 'New Asset' }).click();
-    await page.getByText('Liquid Network').click();
     await page.getByRole('button', { name: 'Copy' }).click();
     await page.waitForSelector('text=Copied');
     const address = await page.evaluate('navigator.clipboard.readText()');
