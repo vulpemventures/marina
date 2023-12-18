@@ -80,13 +80,13 @@ const LightningAmount: React.FC = () => {
     }
 
     if (Number(value) < limits.minimal) {
-      setErrors({ amount: `Number must be higher then ${limits.minimal}`, submit: '' });
+      setErrors({ amount: `Number must be equal or higher then ${limits.minimal}`, submit: '' });
       swapValue.current = '';
       return;
     }
 
     if (Number(value) > limits.maximal) {
-      setErrors({ amount: `Number must be lower then ${limits.maximal}`, submit: '' });
+      setErrors({ amount: `Number must be equal or lower then ${limits.maximal}`, submit: '' });
       swapValue.current = '';
       return;
     }
