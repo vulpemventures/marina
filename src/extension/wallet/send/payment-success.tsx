@@ -41,7 +41,7 @@ const PaymentSuccessView: React.FC = () => {
       currentPage="Success"
       hasBackBtn={false}
     >
-      <h1 className="mt-8 text-lg font-medium">{state.text ?? 'Payment successful !'}</h1>
+      <h1 className="mt-8 text-lg font-medium">{state.text ?? 'Payment successful!'}</h1>
       <div className="flex items-center justify-center px-20 mt-8" ref={checkmarkLoaderRef} />
       <Button className="w-44 container mx-auto mt-10" onClick={handleOpenExplorer} textBase={true}>
         See in Explorer

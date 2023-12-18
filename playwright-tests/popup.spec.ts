@@ -79,7 +79,7 @@ pwTest(
     await page.waitForSelector('text=Unlock');
     await page.getByPlaceholder('Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Unlock' }).click();
-    await page.waitForSelector('text=Payment successful !');
+    await page.waitForSelector('text=Payment successful!');
     await page.waitForTimeout(2000);
 
     await page.getByAltText('marina logo').click(); // go to home page
