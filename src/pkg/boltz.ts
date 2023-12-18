@@ -129,7 +129,7 @@ export const DEPOSIT_LIGHTNING_LIMITS = {
 
 export const boltzUrl: Record<NetworkString, string> = {
   regtest: 'http://localhost:9090',
-  testnet: 'https://testnet.boltz.exchange/api',
+  testnet: 'https://api.testnet.boltz.exchange/',
   liquid: 'https://api.boltz.exchange',
 };
 
