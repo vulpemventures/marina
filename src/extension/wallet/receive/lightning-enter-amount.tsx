@@ -5,7 +5,6 @@ import ShellPopUp from '../../components/shell-popup';
 import cx from 'classnames';
 import Button from '../../components/button';
 import LightningShowInvoice from './lightning-show-invoice';
-import ModalUnlock from '../../components/modal-unlock';
 import { SEND_PAYMENT_SUCCESS_ROUTE } from '../../routes/constants';
 import { fromSatoshi, toSatoshi } from '../../utility';
 import { useStorageContext } from '../../context/storage-context';
@@ -26,7 +25,6 @@ const LightningAmount: React.FC = () => {
   const { appRepository, walletRepository, cache } = useStorageContext();
   const [errors, setErrors] = useState({ amount: '', submit: '' });
   const [invoice, setInvoice] = useState('');
-  const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [limits, setLimits] = useState({ minimal: 0, maximal: 0 });
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
@@ -95,11 +93,9 @@ const LightningAmount: React.FC = () => {
     swapValue.current = value;
   };
 
-  const handleUnlock = async (password: string) => {
+  const handleUnlock = async () => {
     // disable Generate button
     setIsSubmitting(true);
-    // close Modal
-    showUnlockModal(false);
 
     try {
       // we will create an ephemeral key pair:
@@ -188,9 +184,6 @@ const LightningAmount: React.FC = () => {
     }
   };
 
-  const handleModalUnlockClose = () => showUnlockModal(false);
-  const handleUnlockModalOpen = () => showUnlockModal(true);
-
   return (
     <ShellPopUp
       backBtnCb={isSubmitting || lookingForPayment ? handleBackBtn : undefined}
@@ -239,7 +232,7 @@ const LightningAmount: React.FC = () => {
               <Button
                 className="w-3/5 mt-2 text-base"
                 disabled={isSubmitting || (errors.amount && touched) || !touched}
-                onClick={handleUnlockModalOpen}
+                onClick={handleUnlock}
               >
                 Generate
               </Button>
@@ -247,11 +240,6 @@ const LightningAmount: React.FC = () => {
           </form>
         </div>
       )}
-      <ModalUnlock
-        isModalUnlockOpen={isModalUnlockOpen}
-        handleModalUnlockClose={handleModalUnlockClose}
-        handleUnlock={handleUnlock}
-      />
     </ShellPopUp>
   );
 };
