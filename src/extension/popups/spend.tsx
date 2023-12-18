@@ -110,8 +110,8 @@ const ConnectSpend: React.FC = () => {
             {spendParameters.addressRecipients.map((recipient, index) => (
               <div key={index}>
                 <div className="container flex justify-between mt-6">
-                  <span className="text-lg font-medium">
-                    {(fromSatoshi(recipient.value), getPrecision(recipient.asset))}
+                  <span data-testid={recipient.asset} className="text-lg font-medium">
+                    {fromSatoshi(recipient.value, getPrecision(recipient.asset))}
                   </span>
                   <span className="text-lg font-medium">{getTicker(recipient.asset)}</span>
                 </div>

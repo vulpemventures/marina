@@ -145,4 +145,12 @@ export default class Marina extends WindowProxy<keyof MarinaProvider> implements
   broadcastTransaction(signedTxHex: string): Promise<SentTransaction> {
     return this.proxy('broadcastTransaction', [signedTxHex]);
   }
+
+  importScript(
+    accountName: AccountID,
+    scriptHex: string,
+    blindingPrivateKey?: string
+  ): Promise<void> {
+    return this.proxy('importScript', [accountName, scriptHex, blindingPrivateKey]);
+  }
 }

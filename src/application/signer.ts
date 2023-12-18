@@ -12,6 +12,7 @@ import {
   bip341,
   networks,
   Updater,
+  payments,
 } from 'liquidjs-lib';
 import { mnemonicToSeed } from 'bip39';
 import type { AppRepository, WalletRepository } from '../domain/repository';
@@ -43,9 +44,16 @@ export class SignerService {
   }
 
   async signPset(pset: Pset): Promise<Pset> {
+    const network = await this.appRepository.getNetwork();
+    if (!network) throw new Error('No network found');
+
     const inputsScripts = pset.inputs
-      .map((input) => input.witnessUtxo?.script)
+      .flatMap((input) => [
+        input.witnessUtxo?.script,
+        extractScriptFromBIP32Derivation(input, networks[network]),
+      ])
       .filter((script) => !!script);
+
     const scriptsDetails = await this.walletRepository.getScriptDetails(
       ...inputsScripts.map((script) => script!.toString('hex'))
     );
@@ -54,14 +62,14 @@ export class SignerService {
 
     const signer = new Signer(pset);
     for (const [index, input] of signer.pset.inputs.entries()) {
-      const script = input.witnessUtxo?.script;
-      if (!script) continue;
-      const scriptDetails = scriptsDetails[script.toString('hex')];
+      if (!input.witnessUtxo && !input.nonWitnessUtxo) continue;
+      const scriptFromDerivation = extractScriptFromBIP32Derivation(input, networks[network]);
+      if (!scriptFromDerivation && !input.witnessUtxo) continue;
+      const scriptDetails = scriptFromDerivation
+        ? scriptsDetails[scriptFromDerivation?.toString('hex')]
+        : scriptsDetails[input.witnessUtxo!.script.toString('hex')];
       if (!scriptDetails || !scriptDetails.derivationPath) continue;
       const inputAccount = accounts[scriptDetails.accountName]!;
-
-      const network = await this.appRepository.getNetwork();
-      if (!network) throw new Error('No network found');
 
       const key = this.masterNode
         .derivePath(inputAccount.baseDerivationPath)
@@ -170,4 +178,20 @@ export class SignerService {
     finalizer.finalize();
     return Extractor.extract(finalizer.pset).toHex();
   }
+}
+
+// extract p2wpkh scriptPubKey from the first derivation path found in the input
+function extractScriptFromBIP32Derivation(
+  input: Pset['inputs'][number],
+  network: networks.Network
+): Buffer | undefined {
+  const derivation = input.bip32Derivation?.at(0);
+  if (!derivation) return;
+  return createP2WKHScript(derivation.pubkey, network);
+}
+
+function createP2WKHScript(publicKey: Buffer, network: networks.Network): Buffer {
+  const buf = payments.p2wpkh({ pubkey: publicKey, network: network }).output;
+  if (!buf) throw new Error('Could not create p2wpkh script');
+  return buf;
 }

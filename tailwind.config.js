@@ -22,6 +22,9 @@ module.exports = {
       smokeLight: 'rgba(0, 0, 0, 0.3)',
       transparent: 'transparent',
       white: '#fefefe',
+      amberLight: colors.amber[100],
+      amber: colors.amber[500],
+      amberDark: colors.amber[700],
     },
     container: {
       padding: {
