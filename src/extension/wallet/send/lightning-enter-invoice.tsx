@@ -10,8 +10,9 @@ import { AccountFactory, MainAccount, MainAccountTest } from '../../../applicati
 import { useStorageContext } from '../../context/storage-context';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
-import { Boltz, boltzUrl, DEFAULT_LIGHTNING_LIMITS } from '../../../pkg/boltz';
+import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
+import { Spinner } from '../../components/spinner';
 
 const zkpLib = await zkp();
 
@@ -21,7 +22,7 @@ const LightningInvoice: React.FC = () => {
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
+  const [limits, setLimits] = useState({ minimal: 0, maximal: 0 });
   const [touched, setTouched] = useState(false);
   const [value, setValue] = useState(0);
 
@@ -123,49 +124,53 @@ const LightningInvoice: React.FC = () => {
       className="h-popupContent bg-primary flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Send⚡️"
     >
-      <div className="w-full h-full p-10 bg-white">
-        <form className="mt-10">
-          <div>
-            <label className="block">
-              <p className="mb-2 text-base font-medium text-left">Invoice</p>
-              <div
-                className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
-                  'text-grayDark': touched,
-                })}
+      {!limits.minimal ? (
+        <Spinner color="#fefefe" />
+      ) : (
+        <div className="w-full h-full p-10 bg-white">
+          <form className="mt-10">
+            <div>
+              <label className="block">
+                <p className="mb-2 text-base font-medium text-left">Invoice</p>
+                <div
+                  className={cx('focus-within:text-grayDark text-grayLight relative w-full', {
+                    'text-grayDark': touched,
+                  })}
+                >
+                  <input
+                    className={cx(
+                      'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
+                      {
+                        'border-red': error && touched,
+                        'border-grayLight': !error || touched,
+                      }
+                    )}
+                    id="invoice"
+                    name="invoice"
+                    onChange={handleChange}
+                    type="text"
+                  />
+                </div>
+              </label>
+            </div>
+            {error && touched && (
+              <p className="text-red mt-1 text-xs font-medium text-left">{error}</p>
+            )}
+            {value > 0 && touched && (
+              <p className="mt-1 text-xs font-medium text-left">Value {value} BTC</p>
+            )}
+            <div className="text-right">
+              <Button
+                className="w-3/5 mt-6 text-base"
+                disabled={isButtonDisabled()}
+                onClick={handleProceed}
               >
-                <input
-                  className={cx(
-                    'border-2 focus:ring-primary focus:border-primary placeholder-grayLight block w-full rounded-md',
-                    {
-                      'border-red': error && touched,
-                      'border-grayLight': !error || touched,
-                    }
-                  )}
-                  id="invoice"
-                  name="invoice"
-                  onChange={handleChange}
-                  type="text"
-                />
-              </div>
-            </label>
-          </div>
-          {error && touched && (
-            <p className="text-red mt-1 text-xs font-medium text-left">{error}</p>
-          )}
-          {value > 0 && touched && (
-            <p className="mt-1 text-xs font-medium text-left">Value {value} BTC</p>
-          )}
-          <div className="text-right">
-            <Button
-              className="w-3/5 mt-6 text-base"
-              disabled={isButtonDisabled()}
-              onClick={handleProceed}
-            >
-              Proceed
-            </Button>
-          </div>
-        </form>
-      </div>
+                Proceed
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </ShellPopUp>
   );
 };

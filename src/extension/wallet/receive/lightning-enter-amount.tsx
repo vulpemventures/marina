@@ -13,10 +13,11 @@ import * as ecc from 'tiny-secp256k1';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
 import { randomBytes } from 'crypto';
 import ECPairFactory from 'ecpair';
-import { Boltz, DEFAULT_LIGHTNING_LIMITS, boltzUrl } from '../../../pkg/boltz';
+import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { toOutputScript } from 'liquidjs-lib/src/address';
+import { Spinner } from '../../components/spinner';
 
 const zkpLib = await zkp();
 
@@ -27,7 +28,7 @@ const LightningAmount: React.FC = () => {
   const [invoice, setInvoice] = useState('');
   const [isModalUnlockOpen, showUnlockModal] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [limits, setLimits] = useState(DEFAULT_LIGHTNING_LIMITS);
+  const [limits, setLimits] = useState({ minimal: 0, maximal: 0 });
   const [lookingForPayment, setIsLookingForPayment] = useState(false);
   const [touched, setTouched] = useState(false);
 
@@ -53,6 +54,7 @@ const LightningAmount: React.FC = () => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
+    if (!limits.minimal) return;
 
     setTouched(true);
 
@@ -203,7 +205,9 @@ const LightningAmount: React.FC = () => {
       className="h-popupContent bg-primary flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Receive⚡️"
     >
-      {invoice ? (
+      {!limits.minimal ? (
+        <Spinner color="#fefefe" />
+      ) : invoice ? (
         <LightningShowInvoice errors={errors} invoice={invoice} />
       ) : (
         <div className="w-full h-full p-10 bg-white">

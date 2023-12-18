@@ -118,15 +118,6 @@ export interface MakeClaimTransactionParams {
   timeoutBlockHeight: number;
 }
 
-const feeAmount = 500; // fee for regular liquid tx
-const swapFeeAmount = 500; // fee for Boltz
-// lightning swap invoice amount limit (in satoshis)
-export const DEFAULT_LIGHTNING_LIMITS = { maximal: 4294967, minimal: 50000 };
-export const DEPOSIT_LIGHTNING_LIMITS = {
-  maximal: DEFAULT_LIGHTNING_LIMITS.maximal - feeAmount - swapFeeAmount,
-  minimal: DEFAULT_LIGHTNING_LIMITS.minimal - feeAmount - swapFeeAmount,
-};
-
 export const boltzUrl: Record<NetworkString, string> = {
   regtest: 'http://localhost:9090',
   testnet: 'https://api.testnet.boltz.exchange/',
