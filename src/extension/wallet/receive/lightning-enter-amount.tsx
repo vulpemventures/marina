@@ -178,7 +178,7 @@ const LightningAmount: React.FC = () => {
 
         history.push({
           pathname: SEND_PAYMENT_SUCCESS_ROUTE,
-          state: { txhex: claimTransaction.toHex(), text: 'Invoice paid !' },
+          state: { txhex: claimTransaction.toHex(), text: 'Payment received !' },
         });
       }
     } catch (err: any) {
