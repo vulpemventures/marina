@@ -388,7 +388,7 @@ export class Boltz implements BoltzInterface {
     const scriptAssembly = script
       .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
       .split(' ');
-    const boltzHash = scriptAssembly[4];
+    const boltzPubkey = scriptAssembly[4];
     const cltv = scriptAssembly[6];
     const preimageHash = scriptAssembly[1];
     const expectedScript = [
@@ -396,7 +396,7 @@ export class Boltz implements BoltzInterface {
       preimageHash,
       'OP_EQUAL',
       'OP_IF',
-      boltzHash,
+      boltzPubkey,
       'OP_ELSE',
       cltv,
       'OP_NOP2',
