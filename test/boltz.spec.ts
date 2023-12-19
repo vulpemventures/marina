@@ -60,7 +60,6 @@ describe('Boltz Atomic Swap', () => {
         'hex'
       ),
       destinationScript: Buffer.from('0014352e2b02775fe9e71890e379ce84191f2bf2081a', 'hex'),
-      fee: 300,
       blindingPublicKey: Buffer.from(
         '030bec8e57ac22abb4e2b717847346c3ce7b83969c256f9fadd5f9b6ab08f37850',
         'hex'
