@@ -5,11 +5,12 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
 import { networks } from 'liquidjs-lib';
-import { fromSatoshi } from '../../utility';
+import { fromSatoshi, toSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
+import type { BoltzPair } from '../../../pkg/boltz';
 import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import { Spinner } from '../../components/spinner';
@@ -22,7 +23,7 @@ const LightningInvoice: React.FC = () => {
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [limits, setLimits] = useState({ minimal: 0, maximal: 0 });
+  const [pair, setPair] = useState<BoltzPair>();
   const [touched, setTouched] = useState(false);
   const [value, setValue] = useState(0);
 
@@ -34,13 +35,8 @@ const LightningInvoice: React.FC = () => {
   // get maximal and minimal amount for pair
   useEffect(() => {
     const fetchData = async () => {
-      const pair = await boltz.getBoltzPair('L-BTC/BTC');
-      if (pair?.limits) {
-        setLimits({
-          maximal: fromSatoshi(pair.limits.maximal),
-          minimal: fromSatoshi(pair.limits.minimal),
-        });
-      }
+      const _pair = await boltz.getBoltzPair('L-BTC/BTC');
+      if (_pair) setPair(_pair);
     };
     fetchData().catch(console.error);
   }, []);
@@ -53,6 +49,8 @@ const LightningInvoice: React.FC = () => {
     setError('');
     setTouched(true);
 
+    if (!pair) return;
+
     const invoice = event.target.value;
 
     if (!invoice) {
@@ -61,19 +59,27 @@ const LightningInvoice: React.FC = () => {
       return;
     }
 
+    const lbtcBalance = fromSatoshi(cache?.balances.value[networks[network].assetHash] ?? 0);
+
     try {
       // get value from invoice
       const value = boltz.getInvoiceValue(invoice);
       setValue(value);
 
+      const { minimal, maximal } = pair.limits;
+      const boltzFees = boltz.calcBoltzFees(pair, toSatoshi(value));
+
       // validate value
       if (Number.isNaN(value)) setError('Invalid value');
       if (value <= 0) setError('Value must be positive');
-      if (value < limits.minimal) setError(`Value must be higher then ${limits.minimal}`);
-      if (value > limits.maximal) setError(`Value must be lower then ${limits.maximal}`);
-      if (value > fromSatoshi(cache?.balances.value[networks[network].assetHash ?? ''] ?? 0))
-        setError('Insufficient funds');
+      if (value < minimal) setError(`Value must be higher or equal then ${minimal}`);
+      if (value > maximal) setError(`Value must be lower or equal then ${maximal}`);
+      if (value + boltzFees > lbtcBalance) setError('Insufficient funds to pay swap fee');
+      if (value > lbtcBalance) setError('Insufficient funds');
       if (error) return;
+
+      if (value + boltzFees + 300 > lbtcBalance)
+        setError('You may not have enough funds to pay this swap');
 
       setInvoice(invoice);
     } catch (_) {
@@ -126,7 +132,7 @@ const LightningInvoice: React.FC = () => {
       className="h-popupContent bg-primary flex items-center justify-center bg-bottom bg-no-repeat"
       currentPage="Send⚡️"
     >
-      {!limits.minimal ? (
+      {!pair?.limits.minimal ? (
         <Spinner color="#fefefe" />
       ) : (
         <div className="w-full h-full p-10 bg-white">

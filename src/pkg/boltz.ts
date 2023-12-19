@@ -29,6 +29,7 @@ import { fromSatoshi } from '../extension/utility';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
 import { extractErrorMessage } from '../extension/utility/error';
+import Decimal from 'decimal.js';
 
 export type NetworkString = 'liquid' | 'testnet' | 'regtest';
 
@@ -120,6 +121,39 @@ export type GetClaimTransactionParams = MakeClaimTransactionParams & {
   fee: number;
 };
 
+export interface BoltzPair {
+  hash: string;
+  rate: number;
+  limits: {
+    maximal: number;
+    minimal: number;
+    maximalZeroConf: {
+      baseAsset: number;
+      quoteAsset: number;
+    };
+  };
+  fees: {
+    percentage: number;
+    percentageSwapIn: number;
+    minerFees: {
+      baseAsset: {
+        normal: number;
+        reverse: {
+          claim: number;
+          lockup: number;
+        };
+      };
+      quoteAsset: {
+        normal: number;
+        reverse: {
+          claim: number;
+          lockup: number;
+        };
+      };
+    };
+  };
+}
+
 export const boltzUrl: Record<NetworkString, string> = {
   regtest: 'http://localhost:9090',
   testnet: 'https://api.testnet.boltz.exchange/',
@@ -137,10 +171,18 @@ export class Boltz implements BoltzInterface {
     this.zkp = zkp;
   }
 
-  async getBoltzPair(pair: string): Promise<any> {
+  async getBoltzPair(pair: string): Promise<BoltzPair | undefined> {
     const data = await this.getApi(`${this.url}/getpairs`);
     if (!data?.pairs?.[pair]) return;
     return data.pairs[pair];
+  }
+
+  calcBoltzFees(pair: BoltzPair, amountInSats: number) {
+    const minersFees = pair.fees.minerFees.baseAsset.normal;
+    const percentage = pair.fees.percentageSwapIn;
+    return Decimal.ceil(
+      new Decimal(amountInSats).mul(percentage).div(100).add(minersFees)
+    ).toNumber();
   }
 
   // return invoice expire date
