@@ -52,6 +52,7 @@ const LightningAmount: React.FC = () => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
+
     if (!limits.minimal) return;
 
     setTouched(true);
@@ -166,7 +167,6 @@ const LightningAmount: React.FC = () => {
           preimage,
           redeemScript: Buffer.from(redeemScript, 'hex'),
           destinationScript: Buffer.from(destinationScript, 'hex'),
-          fee: 300,
           blindingPublicKey,
         });
 

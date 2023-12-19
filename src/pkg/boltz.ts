@@ -112,9 +112,13 @@ export interface MakeClaimTransactionParams {
   preimage: Buffer;
   redeemScript: Buffer;
   destinationScript: Buffer;
-  fee: number;
   blindingPublicKey: Buffer;
+  satsPerByte?: number;
 }
+
+export type GetClaimTransactionParams = MakeClaimTransactionParams & {
+  fee: number;
+};
 
 export const boltzUrl: Record<NetworkString, string> = {
   regtest: 'http://localhost:9090',
@@ -158,7 +162,19 @@ export class Boltz implements BoltzInterface {
     return 0;
   }
 
-  makeClaimTransaction({
+  makeClaimTransaction(params: MakeClaimTransactionParams): Transaction {
+    // In order to calculate fees for tx:
+    // 1. make tx with dummy fee
+    const getParams: GetClaimTransactionParams = { ...params, fee: 300 };
+    const tx = this.getClaimTransaction(getParams);
+    // 2. calculate fees for this tx
+    const satsPerByte = params.satsPerByte ?? 0.1;
+    getParams.fee = Math.ceil((tx.virtualSize() + tx.ins.length) * satsPerByte);
+    // 3 return tx with updated fees
+    return this.getClaimTransaction(getParams);
+  }
+
+  getClaimTransaction({
     utxo,
     claimKeyPair,
     preimage,
@@ -166,7 +182,7 @@ export class Boltz implements BoltzInterface {
     destinationScript,
     fee,
     blindingPublicKey,
-  }: MakeClaimTransactionParams): Transaction {
+  }: GetClaimTransactionParams): Transaction {
     if (!utxo.blindingData) throw new Error('utxo is not blinded');
     if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');
     const pset = Creator.newPset();
