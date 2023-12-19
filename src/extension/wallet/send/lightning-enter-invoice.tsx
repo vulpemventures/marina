@@ -29,6 +29,8 @@ const LightningInvoice: React.FC = () => {
   const network = cache?.network ?? 'liquid';
   const boltz = new Boltz(boltzUrl[network], networks[network].assetHash, zkpLib);
 
+  void sendFlowRepository.setLightning(true);
+
   // get maximal and minimal amount for pair
   useEffect(() => {
     const fetchData = async () => {

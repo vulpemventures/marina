@@ -8,6 +8,7 @@ import {
   SEND_CONFIRMATION_ROUTE,
   TRANSACTIONS_ROUTE,
   LOGIN_ROUTE,
+  LIGHTNING_ENTER_INVOICE_ROUTE,
 } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
@@ -79,6 +80,9 @@ const Home: React.FC = () => {
           break;
         case SendFlowStep.FeeFormDone:
           history.push(SEND_CONFIRMATION_ROUTE);
+          break;
+        case SendFlowStep.Lightning:
+          history.push(LIGHTNING_ENTER_INVOICE_ROUTE);
           break;
       }
     })().catch(console.error);
