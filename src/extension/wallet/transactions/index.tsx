@@ -70,7 +70,7 @@ const Transactions: React.FC = () => {
   const handleSend = async () => {
     setAction('send');
     await sendFlowRepository.setSelectedAsset(assetHash);
-    if (assetHash === networks[cache?.network ?? 'liquid'].assetHash || assetHash === 'new_asset') {
+    if (assetHash === networks[cache?.network ?? 'liquid'].assetHash) {
       setShowBottomSheet(true);
     } else {
       history.push(SEND_ADDRESS_AMOUNT_ROUTE);
