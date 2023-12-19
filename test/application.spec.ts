@@ -37,6 +37,7 @@ import {
 import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
 import { initWalletRepository } from '../src/domain/repository';
 import { computeBalances, lockTransactionInputs } from '../src/domain/transaction';
+import { fromSatoshiWithSpaces } from '../src/extension/utility/format';
 
 // we need this to mock the browser.storage.local calls in repositories
 // replace webextension-polyfill with a mock defined in __mocks__ folder
@@ -499,6 +500,38 @@ describe('Application Layer', () => {
         const addresses = await ionioAccount.getAllAddresses();
         expect(addresses[0].confidentialAddress).toEqual(captchaAddress.confidentialAddress);
       }, 10_000);
+    });
+  });
+
+  describe('Utils', () => {
+    describe('Balance is formated with spaces', () => {
+      test('1234567', () => {
+        const formated = fromSatoshiWithSpaces(1234567);
+        expect(formated).toBeDefined();
+        expect(formated).toEqual('0.01 234 567');
+      });
+      test('12345678', () => {
+        const formated = fromSatoshiWithSpaces(12345678);
+        expect(formated).toBeDefined();
+        expect(formated).toEqual('0.12 345 678');
+      });
+      test('123456789', () => {
+        const formated = fromSatoshiWithSpaces(123456789);
+        expect(formated).toBeDefined();
+        expect(formated).toEqual('1.23 456 789');
+      });
+
+      test('21000', () => {
+        const formated = fromSatoshiWithSpaces(21000);
+        expect(formated).toBeDefined();
+        expect(formated).toEqual('0.00 021 000');
+      });
+
+      test('0', () => {
+        const formated = fromSatoshiWithSpaces(0);
+        expect(formated).toBeDefined();
+        expect(formated).toEqual('0');
+      });
     });
   });
 });

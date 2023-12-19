@@ -4,7 +4,7 @@ import Balance from '../../components/balance';
 import Button from '../../components/button';
 import ShellPopUp from '../../components/shell-popup';
 import { SEND_ADDRESS_AMOUNT_ROUTE, SEND_CONFIRMATION_ROUTE } from '../../routes/constants';
-import { formatDecimalAmount, fromSatoshi, fromSatoshiStr } from '../../utility';
+import { fromSatoshiStr, fromSatoshiWithSpaces } from '../../utility';
 import useLottieLoader from '../../hooks/use-lottie-loader';
 import { extractErrorMessage } from '../../utility/error';
 import { networks } from 'liquidjs-lib';
@@ -136,8 +136,8 @@ const ChooseFee: React.FC = () => {
       currentPage="Send"
     >
       <Balance
-        assetBalance={formatDecimalAmount(
-          fromSatoshi(cache?.balances.value[selectedAssetHashWithLbtcFallback()] ?? 0)
+        assetBalance={fromSatoshiWithSpaces(
+          cache?.balances.value[selectedAssetHashWithLbtcFallback()] ?? 0
         )}
         assetHash={selectedAssetHashWithLbtcFallback()}
         assetTicker={assetDetails?.ticker ?? ''}
