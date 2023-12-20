@@ -167,7 +167,7 @@ const LightningInvoice: React.FC = () => {
               </label>
             </div>
             {value > 0 && touched && (
-              <p className="mt-1 text-xs font-medium text-left">Invoice value {value} L-BTC</p>
+              <p className="mt-1 text-xs font-medium text-left">Invoice value {value} BTC</p>
             )}
             {swapFees > 0 && touched && (
               <p className="mt-1 text-xs font-medium text-left">
