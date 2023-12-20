@@ -5,7 +5,7 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
 import { networks } from 'liquidjs-lib';
-import { fromSatoshi, toSatoshi } from '../../utility';
+import { toSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
 import { BIP32Factory } from 'bip32';
@@ -20,12 +20,14 @@ const zkpLib = await zkp();
 const LightningInvoice: React.FC = () => {
   const history = useHistory();
   const { cache, sendFlowRepository, walletRepository } = useStorageContext();
+  const [swapFees, setSwapFees] = useState(0);
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pair, setPair] = useState<BoltzPair>();
   const [touched, setTouched] = useState(false);
   const [value, setValue] = useState(0);
+  const [warning, setWarning] = useState('');
 
   const network = cache?.network ?? 'liquid';
   const boltz = new Boltz(boltzUrl[network], networks[network].assetHash, zkpLib);
@@ -47,6 +49,7 @@ const LightningInvoice: React.FC = () => {
     event.preventDefault();
 
     setError('');
+    setWarning('');
     setTouched(true);
 
     if (!pair) return;
@@ -59,27 +62,29 @@ const LightningInvoice: React.FC = () => {
       return;
     }
 
-    const lbtcBalance = fromSatoshi(cache?.balances.value[networks[network].assetHash] ?? 0);
+    const lbtcBalance = cache?.balances.value[networks[network].assetHash] ?? 0;
 
     try {
       // get value from invoice
       const value = boltz.getInvoiceValue(invoice);
+      const valueInSats = toSatoshi(value);
+      const fees = boltz.calcBoltzFees(pair, valueInSats);
+
+      setSwapFees(fees);
       setValue(value);
 
       const { minimal, maximal } = pair.limits;
-      const boltzFees = boltz.calcBoltzFees(pair, toSatoshi(value));
 
       // validate value
-      if (Number.isNaN(value)) setError('Invalid value');
-      if (value <= 0) setError('Value must be positive');
-      if (value < minimal) setError(`Value must be higher or equal then ${minimal}`);
-      if (value > maximal) setError(`Value must be lower or equal then ${maximal}`);
-      if (value + boltzFees > lbtcBalance) setError('Insufficient funds to pay swap fee');
-      if (value > lbtcBalance) setError('Insufficient funds');
-      if (error) return;
+      if (Number.isNaN(value)) return setError('Invalid value');
+      if (valueInSats <= 0) return setError('Value must be positive');
+      if (valueInSats < minimal) return setError(`Value must be higher or equal then ${minimal}`);
+      if (valueInSats > maximal) return setError(`Value must be lower or equal then ${maximal}`);
+      if (valueInSats + fees > lbtcBalance) return setError('Insufficient funds to pay swap fee');
+      if (valueInSats > lbtcBalance) return setError('Insufficient funds');
 
-      if (value + boltzFees + 300 > lbtcBalance)
-        setError('You may not have enough funds to pay this swap');
+      if (valueInSats + fees + 300 > lbtcBalance)
+        setWarning('You may not have enough funds to pay swap');
 
       setInvoice(invoice);
     } catch (_) {
@@ -161,11 +166,17 @@ const LightningInvoice: React.FC = () => {
                 </div>
               </label>
             </div>
+            {value > 0 && touched && (
+              <div className="flex flex-row justify-between">
+                <p className="mt-1 text-xs font-medium">Value {value} L-BTC</p>
+                <p className="mt-1 text-xs font-medium">Swap fees {swapFees} sats</p>
+              </div>
+            )}
             {error && touched && (
               <p className="text-red mt-1 text-xs font-medium text-left">{error}</p>
             )}
-            {value > 0 && touched && (
-              <p className="mt-1 text-xs font-medium text-left">Value {value} BTC</p>
+            {warning && touched && (
+              <p className="text-red mt-1 text-xs font-medium text-left">{warning}</p>
             )}
             <div className="text-right">
               <Button
