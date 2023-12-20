@@ -1,15 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { DEFAULT_ROUTE } from '../routes/constants';
 import ButtonAsset from './button-asset';
 import InputIcon from './input-icon';
 import ShellPopUp from './shell-popup';
 import ButtonList from './button-list';
-import type { Asset } from 'marina-provider';
+import type { Asset, NetworkString } from 'marina-provider';
+import ModalSelectNetwork from './modal-select-network';
+import { networks } from 'liquidjs-lib';
 
 export interface AssetListProps {
   assets: Array<Asset>; // the assets to display
-  onClick: (assetHash: string) => Promise<void>;
+  network: NetworkString;
+  onClick: (assetHash: string, isSubmarineSwap: boolean) => Promise<void>;
   balances?: Record<string, number>;
   title: string;
   emptyText?: string;
@@ -19,10 +22,15 @@ const AssetListScreen: React.FC<AssetListProps> = ({
   title,
   onClick,
   assets,
+  network,
   balances,
   emptyText,
 }) => {
   const history = useHistory();
+
+  // bottom sheet modal
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState('');
 
   useEffect(() => {
     setSearchResults(assets);
@@ -54,6 +62,15 @@ const AssetListScreen: React.FC<AssetListProps> = ({
     setSearchTerm(searchTerm);
   };
 
+  const handleClick = async ({ assetHash }: any) => {
+    if (assetHash === networks[network].assetHash) {
+      setShowBottomSheet(true);
+      setSelectedAsset(assetHash);
+    } else {
+      await onClick(assetHash as string, false);
+    }
+  };
+
   const handleBackBtn = () => {
     history.push(DEFAULT_ROUTE);
   };
@@ -80,11 +97,17 @@ const AssetListScreen: React.FC<AssetListProps> = ({
               asset={asset}
               quantity={balances ? balances[asset.assetHash] : undefined}
               key={index}
-              handleClick={({ assetHash }) => onClick(assetHash)}
+              handleClick={handleClick}
             />
           ))}
         </ButtonList>
       </div>
+      <ModalSelectNetwork
+        isOpen={showBottomSheet}
+        onClose={() => setShowBottomSheet(false)}
+        onLightning={() => onClick(selectedAsset, true)}
+        onLiquid={() => onClick(selectedAsset, false)}
+      ></ModalSelectNetwork>
     </ShellPopUp>
   );
 };

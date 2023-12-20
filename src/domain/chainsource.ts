@@ -1,3 +1,5 @@
+import type { Utxo } from 'marina-provider';
+
 export type TransactionHistory = Array<{
   tx_hash: string;
   height: number;
@@ -10,6 +12,8 @@ export interface BlockHeader {
   timestamp: number;
   height: number;
 }
+
+export type Unspent = Omit<Utxo, 'scriptDetails'>;
 
 export interface ChainSource {
   subscribeScriptStatus(
@@ -24,4 +28,6 @@ export interface ChainSource {
   broadcastTransaction(hex: string): Promise<string>;
   getRelayFee(): Promise<number>;
   close(): Promise<void>;
+  waitForAddressReceivesTx(addr: string): Promise<void>;
+  listUnspents(addr: string): Promise<Unspent[]>;
 }

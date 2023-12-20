@@ -3,6 +3,7 @@ import type { Asset, NetworkString } from 'marina-provider';
 import Browser from 'webextension-polyfill';
 import type { AssetRepository, WalletRepository } from '../../domain/repository';
 import { DynamicStorageKey } from './dynamic-key';
+import { featuredAssets } from '../../domain/constants';
 
 export const AssetKey = new DynamicStorageKey<[assethash: string]>('asset');
 
@@ -13,18 +14,36 @@ const LIQUID_BTC = (hash: string) => ({
   precision: 8,
 });
 
+const USDT = (hash: string) => ({
+  assetHash: hash,
+  name: 'Tether',
+  ticker: 'USDT',
+  precision: 8,
+});
+
+const FUSD = (hash: string, precision = 2) => ({
+  assetHash: hash,
+  name: 'Fuji',
+  ticker: 'FUSD',
+  precision,
+});
+
 export class AssetStorageAPI implements AssetRepository {
   constructor(private walletRepository: WalletRepository) {}
 
   static HARDCODED_ASSETS: Record<NetworkString, Record<string, Asset>> = {
     liquid: {
       [networks.liquid.assetHash]: LIQUID_BTC(networks.liquid.assetHash),
+      [featuredAssets.usdt.liquid]: USDT(featuredAssets.usdt.liquid),
+      [featuredAssets.fusd.liquid]: FUSD(featuredAssets.fusd.liquid),
     },
     regtest: {
       [networks.regtest.assetHash]: LIQUID_BTC(networks.regtest.assetHash),
     },
     testnet: {
       [networks.testnet.assetHash]: LIQUID_BTC(networks.testnet.assetHash),
+      [featuredAssets.usdt.testnet]: USDT(featuredAssets.usdt.testnet),
+      [featuredAssets.fusd.testnet]: FUSD(featuredAssets.fusd.testnet, 8),
     },
   };
 
@@ -72,7 +91,6 @@ export class AssetStorageAPI implements AssetRepository {
         assetList[index] = asset;
       }
     }
-
     return assetList;
   }
 

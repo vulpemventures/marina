@@ -107,7 +107,7 @@ const BaseForm = (props: FormProps & FormikProps<FormValues>) => {
         <div className="text-primary text-right">
           <button
             onClick={setMaxAmount}
-            className="background-transparent focus:outline-none px-3 py-1 mt-1 mb-1 mr-1 text-xs font-bold uppercase transition-all duration-150 ease-linear outline-none"
+            className="background-transparent focus:outline-none py-1 mt-1 mb-1 text-xs font-bold uppercase transition-all duration-150 ease-linear outline-none"
             type="button"
           >
             SEND ALL

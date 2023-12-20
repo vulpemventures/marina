@@ -7,6 +7,7 @@ type Data = {
   receiverAddress?: string;
   amount?: number;
   asset?: string;
+  lightning?: boolean;
 };
 
 enum SendFlowStorageKeys {
@@ -34,7 +35,8 @@ export class SendFlowStorageAPI implements SendFlowRepository {
     if (!data) return SendFlowStep.None;
     if (data.pset) return SendFlowStep.FeeFormDone;
     if (data.receiverAddress && data.amount) return SendFlowStep.AddressAmountFormDone;
-    if (data.asset) return SendFlowStep.AssetSelected;
+    if (data.asset && !data.lightning) return SendFlowStep.AssetSelected;
+    if (data.asset && data.lightning) return SendFlowStep.Lightning;
     return SendFlowStep.None;
   }
 
@@ -82,5 +84,9 @@ export class SendFlowStorageAPI implements SendFlowRepository {
 
   setUnsignedPset(pset: string): Promise<void> {
     return this.updateSendFlowData({ pset });
+  }
+
+  setLightning(lightning: boolean): Promise<void> {
+    return this.updateSendFlowData({ lightning });
   }
 }

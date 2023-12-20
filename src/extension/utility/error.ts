@@ -17,8 +17,8 @@ export function extractErrorMessage(
 
   // since AxiosError is an instance of Error, this should come first
   if (axios.isAxiosError(error)) {
-    if (error.response) return error.response.data;
-    if (error.request) return error.request.data;
+    if (error.response) return error.response.data.error;
+    if (error.request) return error.request.data.error;
   }
 
   // this should be last
