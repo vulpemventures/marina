@@ -85,7 +85,7 @@ export const fromSatoshiWithSpaces = (
       minimumFractionDigits: 8,
       maximumFractionDigits: 8,
     })
-  );
+  ).replace(/,/g, '');
 
   let start = 0;
   let formated = '';

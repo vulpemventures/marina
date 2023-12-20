@@ -3,7 +3,7 @@ import cx from 'classnames';
 import Browser from 'webextension-polyfill';
 import AssetIcon from './assetIcon';
 import { useStorageContext } from '../context/storage-context';
-import { fromSpacesToSatoshis } from '../utility';
+import { formatDecimalAmount, fromSpacesToSatoshis } from '../utility';
 import Decimal from 'decimal.js';
 
 interface Props {
@@ -53,7 +53,7 @@ const Balance: React.FC<Props> = ({
     }
     if (units === 'bits') {
       const sats = fromSpacesToSatoshis(assetBalance);
-      const bits = Decimal.floor(Decimal.div(sats, 100)).toNumber();
+      const bits = formatDecimalAmount(Decimal.div(sats, 100).toNumber()).replace(/,/g, ' ');
       return (
         <>
           <span className="font-light">{bits} </span>
@@ -62,7 +62,7 @@ const Balance: React.FC<Props> = ({
       );
     }
     if (units === 'sats') {
-      const sats = fromSpacesToSatoshis(assetBalance);
+      const sats = formatDecimalAmount(fromSpacesToSatoshis(assetBalance)).replace(/,/g, ' ');
       return (
         <>
           <span className="font-light">{sats} </span>
