@@ -65,12 +65,12 @@ const Home: React.FC = () => {
     });
   };
 
-  const handleReceive = () => {
-    history.push(RECEIVE_SELECT_ASSET_ROUTE);
-  };
+  const handleReceive = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
 
+  // update everytime the user comes back to home
+  // this also works when user re-opens the wallet
   useEffect(() => {
     (async () => {
       const updater = new UpdaterService(
