@@ -15,7 +15,7 @@ import ButtonAsset from '../../components/button-asset';
 import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
-import { fromSatoshiStr } from '../../utility';
+import { fromSatoshiWithSpaces } from '../../utility';
 import { SendFlowStep } from '../../../domain/repository';
 import type { Asset } from 'marina-provider';
 import { networks } from 'liquidjs-lib';
@@ -104,7 +104,7 @@ const Home: React.FC = () => {
             <Balance
               loading={cache?.balances.loading}
               assetHash={networks[cache?.network].assetHash}
-              assetBalance={fromSatoshiStr(
+              assetBalance={fromSatoshiWithSpaces(
                 cache?.balances.value[networks[cache?.network].assetHash] ?? 0
               )}
               assetTicker="L-BTC"

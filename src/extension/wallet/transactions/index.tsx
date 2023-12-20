@@ -14,7 +14,7 @@ import ButtonList from '../../components/button-list';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import ButtonTransaction from '../../components/button-transaction';
 import ShellPopUp from '../../components/shell-popup';
-import { fromSatoshiStr } from '../../utility';
+import { fromSatoshiWithSpaces } from '../../utility';
 import SaveMnemonicModal from '../../components/modal-save-mnemonic';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../../context/storage-context';
@@ -113,7 +113,10 @@ const Transactions: React.FC = () => {
         <>
           <Balance
             assetHash={assetHash}
-            assetBalance={fromSatoshiStr(cache?.balances.value[assetHash] ?? 0, asset?.precision)}
+            assetBalance={fromSatoshiWithSpaces(
+              cache?.balances.value[assetHash] ?? 0,
+              asset?.precision
+            )}
             assetTicker={asset?.ticker ?? assetHash.slice(0, 4)}
             bigBalanceText={true}
           />

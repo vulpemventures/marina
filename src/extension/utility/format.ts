@@ -67,3 +67,36 @@ export const formatAssetName = (name?: string): string => {
 export const getMinAmountFromPrecision = (precision: number) => {
   return 1 * Math.pow(10, -precision);
 };
+
+// Converting to string with spaces every 3 digits
+// 0.12345678 => 0.12 345 678
+export const fromSatoshiWithSpaces = (
+  sats: number,
+  precision: number = defaultPrecision
+): string => {
+  if (sats === 0) return '0';
+
+  const clusterSize = 3;
+
+  const reverseString = (str: string) => str.split('').reverse().join('');
+
+  const str = reverseString(
+    fromSatoshi(sats, precision).toLocaleString('en-US', {
+      minimumFractionDigits: 8,
+      maximumFractionDigits: 8,
+    })
+  );
+
+  let start = 0;
+  let formated = '';
+
+  while (start < str.length) {
+    let finish = start + clusterSize > str.length ? str.length : start + clusterSize;
+    if (/\./.exec(str.slice(start, finish))) finish += 1;
+    formated += str.slice(start, finish);
+    if (finish < str.length) formated += ' ';
+    start = finish;
+  }
+
+  return reverseString(formated);
+};

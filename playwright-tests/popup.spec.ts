@@ -33,14 +33,14 @@ pwTest(
     const txid = await faucet(clipboard as string, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
     // wait to receive the funds
-    await page.waitForSelector('text=1 L-BTC');
+    await page.waitForSelector('text=1.00 000 000 L-BTC');
 
     await page.getByRole('button', { name: 'Liquid Bitcoin' }).click(); // go to L-BTC page
     // wait some time
     await page.getByRole('button', { name: '+1 L-BTC' }).click(); // click on tx
     await page.waitForSelector(`text=${txid}`); // check txid is displayed
     await page.waitForSelector('text=Inbound');
-    await page.waitForSelector('text=1 L-BTC'); // check amount is displayed
+    await page.waitForSelector('text=1.00 000 000 L-BTC'); // check amount is displayed
     await page.waitForSelector('text=Fee');
   }
 );
@@ -61,7 +61,7 @@ pwTest(
     pwExpect(address as string).toContain('el1');
     await faucet(address as string, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
-    await page.waitForSelector('text=1 L-BTC');
+    await page.waitForSelector('text=1.00 000 000 L-BTC');
     await page.getByRole('button', { name: 'Send' }).click(); // go to send
     await page.getByText('Liquid Bitcoin').click(); // select L-BTC
     await page.getByText('Liquid Network').click();
