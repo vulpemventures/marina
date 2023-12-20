@@ -20,10 +20,19 @@ import { SendFlowStep } from '../../../domain/repository';
 import type { Asset } from 'marina-provider';
 import { networks } from 'liquidjs-lib';
 import { useStorageContext } from '../../context/storage-context';
+import { UpdaterService } from '../../../application/updater';
+import zkp from '@vulpemventures/secp256k1-zkp';
 
 const Home: React.FC = () => {
   const history = useHistory();
-  const { appRepository, sendFlowRepository, cache } = useStorageContext();
+  const {
+    walletRepository,
+    assetRepository,
+    blockHeadersRepository,
+    appRepository,
+    sendFlowRepository,
+    cache,
+  } = useStorageContext();
   const [sortedAssets, setSortedAssets] = React.useState<Asset[]>([]);
 
   useEffect(() => {
@@ -56,11 +65,25 @@ const Home: React.FC = () => {
     });
   };
 
-  const handleReceive = () => {
-    history.push(RECEIVE_SELECT_ASSET_ROUTE);
-  };
+  const handleReceive = () => history.push(RECEIVE_SELECT_ASSET_ROUTE);
 
   const handleSend = () => history.push(SEND_SELECT_ASSET_ROUTE);
+
+  // update everytime the user comes back to home
+  // this also works when user re-opens the wallet
+  useEffect(() => {
+    (async () => {
+      const updater = new UpdaterService(
+        walletRepository,
+        appRepository,
+        blockHeadersRepository,
+        assetRepository,
+        await zkp()
+      );
+      if (!cache?.network) throw new Error('Network not found');
+      await updater.checkAndFixMissingTransactionsData(cache.network);
+    })().catch(console.error);
+  }, [cache?.authenticated]);
 
   useEffect(() => {
     (async () => {
