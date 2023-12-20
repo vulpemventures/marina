@@ -10,6 +10,7 @@ import type { TxDetails } from '../domain/transaction';
 import { computeBalances, computeTxDetailsExtended } from '../domain/transaction';
 import type { BlockHeader } from '../domain/chainsource';
 import { MainAccount, MainAccountLegacy, MainAccountTest } from './account';
+import { alwaysPresentAssets } from '../domain/constants';
 
 function createLoadingValue<T>(value: T): LoadingValue<T> {
   return {
@@ -295,10 +296,13 @@ export class PresenterImpl implements Presenter {
       (acc, tx) => [...acc, ...Object.keys(tx.txFlow)],
       [] as string[]
     );
+
     return {
       ...this.state,
       transactions: setValue(extendedTxDetails.sort(sortTxDetails)),
-      walletAssets: setValue(new Set(assetsInTransactions)),
+      walletAssets: setValue(
+        new Set([...alwaysPresentAssets[this.state.network], ...assetsInTransactions])
+      ),
     };
   }
 

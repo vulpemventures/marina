@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHistory } from 'react-router';
-import { SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
+import { LIGHTNING_ENTER_INVOICE_ROUTE, SEND_ADDRESS_AMOUNT_ROUTE } from '../../routes/constants';
 import AssetListScreen from '../../components/asset-list-screen';
 import { useStorageContext } from '../../context/storage-context';
 import { Spinner } from '../../components/spinner';
@@ -9,10 +9,11 @@ const SendSelectAsset: React.FC = () => {
   const history = useHistory();
   const { sendFlowRepository, cache } = useStorageContext();
 
-  const handleSend = async (assetHash: string) => {
+  const handleSend = async (assetHash: string, isSubmarineSwap: boolean) => {
     // cache the assehash selected and go to address amount form
     await sendFlowRepository.setSelectedAsset(assetHash);
-    history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+    const route = isSubmarineSwap ? LIGHTNING_ENTER_INVOICE_ROUTE : SEND_ADDRESS_AMOUNT_ROUTE;
+    return Promise.resolve(history.push(route));
   };
 
   if (cache?.walletAssets.loading || cache?.balances.loading) return <Spinner />;
@@ -30,6 +31,7 @@ const SendSelectAsset: React.FC = () => {
             assetHash,
           }
       )}
+      network={cache?.network || 'liquid'}
       balances={cache?.balances.value || {}}
       emptyText="You don't have any assets to send."
     />
