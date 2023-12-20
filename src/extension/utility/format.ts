@@ -100,3 +100,5 @@ export const fromSatoshiWithSpaces = (
 
   return reverseString(formated);
 };
+
+export const fromSpacesToSatoshis = (str: string) => toSatoshi(Number(str.replace(/ /g, '')));

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import cx from 'classnames';
 import Browser from 'webextension-polyfill';
 import AssetIcon from './assetIcon';
 import { useStorageContext } from '../context/storage-context';
+import { fromSpacesToSatoshis } from '../utility';
+import Decimal from 'decimal.js';
 
 interface Props {
   assetBalance: string;
@@ -22,6 +24,13 @@ const Balance: React.FC<Props> = ({
   loading,
 }) => {
   const { appRepository } = useStorageContext();
+  const [units, setUnits] = useState('lbtc');
+
+  const rotateUnits = () => {
+    if (units === 'lbtc') setUnits('bits');
+    if (units === 'bits') setUnits('sats');
+    if (units === 'sats') setUnits('lbtc');
+  };
 
   const handleOpenExplorer = async () => {
     const webExplorerURL = await appRepository.getWebExplorerURL();
@@ -32,14 +41,36 @@ const Balance: React.FC<Props> = ({
   };
 
   const PrettyBalance = () => {
-    const [integer, decimals] = assetBalance.split('.');
-    return (
-      <>
-        <span className="font-medium">{integer}.</span>
-        <span className="font-light">{decimals} </span>
-        <span className="font-medium">{assetTicker}</span>
-      </>
-    );
+    if (units === 'lbtc') {
+      const [integer, decimals] = assetBalance.split('.');
+      return (
+        <>
+          <span className="font-medium">{integer}.</span>
+          <span className="font-light">{decimals} </span>
+          <span className="font-medium">{assetTicker}</span>
+        </>
+      );
+    }
+    if (units === 'bits') {
+      const sats = fromSpacesToSatoshis(assetBalance);
+      const bits = Decimal.floor(Decimal.div(sats, 100)).toNumber();
+      return (
+        <>
+          <span className="font-light">{bits} </span>
+          <span className="font-medium">Bits</span>
+        </>
+      );
+    }
+    if (units === 'sats') {
+      const sats = fromSpacesToSatoshis(assetBalance);
+      return (
+        <>
+          <span className="font-light">{sats} </span>
+          <span className="font-medium">Sats</span>
+        </>
+      );
+    }
+    return <></>;
   };
 
   return (
@@ -51,6 +82,7 @@ const Balance: React.FC<Props> = ({
       />
       <div>
         <p
+          onClick={rotateUnits}
           className={cx('text-grayDark max-h-10', {
             'text-3xl': bigBalanceText && !loading,
             'text-lg': !bigBalanceText && !loading,
