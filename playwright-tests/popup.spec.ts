@@ -29,18 +29,18 @@ pwTest(
     pwExpect(clipboard).toContain('el1');
     pwExpect(address.isConfidential(clipboard as string)).toBe(true);
 
-    // faucet 
+    // faucet
     const txid = await faucet(clipboard as string, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
     // wait to receive the funds
-    await page.waitForSelector('text=1 L-BTC');
+    await page.waitForSelector('text=1.00 000 000 L-BTC');
 
-    await page.getByRole('button', { name: 'Liquid Bitcoin'}).click(); // go to L-BTC page
+    await page.getByRole('button', { name: 'Liquid Bitcoin' }).click(); // go to L-BTC page
     // wait some time
     await page.getByRole('button', { name: '+1 L-BTC' }).click(); // click on tx
     await page.waitForSelector(`text=${txid}`); // check txid is displayed
     await page.waitForSelector('text=Inbound');
-    await page.waitForSelector('text=1 L-BTC'); // check amount is displayed
+    await page.waitForSelector('text=1.00 000 000 L-BTC'); // check amount is displayed
     await page.waitForSelector('text=Fee');
   }
 );
@@ -57,17 +57,21 @@ pwTest(
     await page.getByRole('button', { name: 'New Asset' }).click();
     await page.getByRole('button', { name: 'Copy' }).click();
     await page.waitForSelector('text=Copied');
-    const address = await page.evaluate("navigator.clipboard.readText()");
+    const address = await page.evaluate('navigator.clipboard.readText()');
     pwExpect(address as string).toContain('el1');
     await faucet(address as string, 1); // send 1 L-BTC to the address
     await page.goto(marinaURL(extensionId, 'popup.html'));
-    await page.waitForSelector('text=1 L-BTC');
+    await page.waitForSelector('text=1.00 000 000 L-BTC');
     await page.getByRole('button', { name: 'Send' }).click(); // go to send
     await page.getByText('Liquid Bitcoin').click(); // select L-BTC
-    await page.getByPlaceholder('el1...').fill('el1qq0vzd590j00zmmmnjajznkg52dw2st8drdnsxrh6gyd53g6yuf403fj26wlxtywylpxdx84vd67he6r059s0usrtlq73dyjpf'); // fill the address with a random regtest address
+    await page
+      .getByPlaceholder('el1...')
+      .fill(
+        'el1qq0vzd590j00zmmmnjajznkg52dw2st8drdnsxrh6gyd53g6yuf403fj26wlxtywylpxdx84vd67he6r059s0usrtlq73dyjpf'
+      ); // fill the address with a random regtest address
     await page.getByPlaceholder('0').fill('0.9'); // fill the amount
-    await page.getByRole('button', { name: 'Verify' }).click(); 
-    await page.getByRole('button', { name: 'L-BTC' }).click(); 
+    await page.getByRole('button', { name: 'Verify' }).click();
+    await page.getByRole('button', { name: 'L-BTC' }).click();
     await page.waitForSelector('text=Fee:');
     await page.getByRole('button', { name: 'Confirm' }).click(); // send
     await page.getByRole('button', { name: 'Send' }).click(); // confirm
