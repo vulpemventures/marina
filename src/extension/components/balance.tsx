@@ -5,7 +5,7 @@ import AssetIcon from './assetIcon';
 import { useStorageContext } from '../context/storage-context';
 
 interface Props {
-  assetBalance: string | number;
+  assetBalance: string;
   assetTicker: string;
   assetHash: string;
   bigBalanceText?: boolean;
@@ -31,6 +31,17 @@ const Balance: React.FC<Props> = ({
     });
   };
 
+  const PrettyBalance = () => {
+    const [integer, decimals] = assetBalance.split('.');
+    return (
+      <>
+        <span className="font-medium">{integer}.</span>
+        <span className="font-light">{decimals} </span>
+        <span className="font-medium">{assetTicker}</span>
+      </>
+    );
+  };
+
   return (
     <div className={className}>
       <AssetIcon
@@ -40,13 +51,13 @@ const Balance: React.FC<Props> = ({
       />
       <div>
         <p
-          className={cx('text-grayDark font-medium max-h-10', {
+          className={cx('text-grayDark max-h-10', {
             'text-3xl': bigBalanceText && !loading,
             'text-lg': !bigBalanceText && !loading,
             'animate-pulse': loading,
           })}
         >
-          {loading ? 'Loading...' : `${assetBalance} ${assetTicker}`}
+          {loading ? 'Loading...' : <PrettyBalance />}
         </p>
       </div>
     </div>

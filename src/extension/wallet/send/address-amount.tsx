@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import Balance from '../../components/balance';
 import ShellPopUp from '../../components/shell-popup';
-import { fromSatoshi } from '../../utility';
+import { fromSatoshiWithSpaces } from '../../utility';
 import { DEFAULT_ROUTE } from '../../routes/constants';
 import AddressAmountForm from '../../components/address-amount-form';
 import type { Asset } from 'marina-provider';
@@ -46,7 +46,7 @@ const AddressAmountView: React.FC = () => {
         <>
           <Balance
             assetHash={sendAsset.assetHash}
-            assetBalance={fromSatoshi(
+            assetBalance={fromSatoshiWithSpaces(
               cache?.balances.value[sendAsset.assetHash] ?? 0,
               sendAsset.precision
             )}
