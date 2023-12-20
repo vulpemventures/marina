@@ -5,7 +5,7 @@ import cx from 'classnames';
 import Button from '../../components/button';
 import { SEND_CHOOSE_FEE_ROUTE } from '../../routes/constants';
 import { networks } from 'liquidjs-lib';
-import { toSatoshi } from '../../utility';
+import { fromSatoshi, toSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
 import { BIP32Factory } from 'bip32';
@@ -167,10 +167,12 @@ const LightningInvoice: React.FC = () => {
               </label>
             </div>
             {value > 0 && touched && (
-              <div className="flex flex-row justify-between">
-                <p className="mt-1 text-xs font-medium">Value {value} L-BTC</p>
-                <p className="mt-1 text-xs font-medium">Swap fees {swapFees} sats</p>
-              </div>
+              <p className="mt-1 text-xs font-medium text-left">Value {value} L-BTC</p>
+            )}
+            {swapFees > 0 && touched && (
+              <p className="mt-1 text-xs font-medium text-left">
+                Swap fee {fromSatoshi(swapFees)} L-BTC
+              </p>
             )}
             {error && touched && (
               <p className="text-red mt-1 text-xs font-medium text-left">{error}</p>
