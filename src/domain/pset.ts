@@ -367,7 +367,7 @@ export class PsetBuilder {
     const updater = new Updater(pset).addInputs(ins).addOutputs(outs);
     // we add 100% to the min relay fee in order to be sure that the transaction will be accepted by the network
     // some inputs and outputs may be added later to pay the fees
-    const relayFee = (await chainSource.getRelayFee()) * 2;
+    const relayFee = (await chainSource.getRelayFee()) * 1.1;
     await chainSource.close();
 
     const sats1000Bytes = relayFee * 10 ** 8;
