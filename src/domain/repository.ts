@@ -193,6 +193,7 @@ export enum SendFlowStep {
   AssetSelected,
   AddressAmountFormDone,
   FeeFormDone,
+  Lightning,
 }
 
 // this repository is used to cache data during the UI send flow
@@ -206,6 +207,7 @@ export interface SendFlowRepository {
   setUnsignedPset(pset: string): Promise<void>;
   getUnsignedPset(): Promise<string | undefined>;
   getStep(): Promise<SendFlowStep>;
+  setLightning(bool: boolean): Promise<void>;
 }
 
 // this repository aims to cache the block headers

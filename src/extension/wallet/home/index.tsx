@@ -8,6 +8,7 @@ import {
   SEND_CONFIRMATION_ROUTE,
   TRANSACTIONS_ROUTE,
   LOGIN_ROUTE,
+  LIGHTNING_ENTER_INVOICE_ROUTE,
 } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
@@ -63,22 +64,29 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     (async () => {
+      const safeHistoryPush = (pathname: string) => {
+        if (history.location.pathname !== pathname) history.push(pathname);
+      };
+
       const { isAuthenticated } = await appRepository.getStatus();
       if (!isAuthenticated) {
-        history.push(LOGIN_ROUTE);
+        safeHistoryPush(LOGIN_ROUTE);
         return;
       }
 
       const step = await sendFlowRepository.getStep();
       switch (step) {
         case SendFlowStep.AssetSelected:
-          history.push(SEND_ADDRESS_AMOUNT_ROUTE);
+          safeHistoryPush(SEND_ADDRESS_AMOUNT_ROUTE);
           break;
         case SendFlowStep.AddressAmountFormDone:
-          history.push(SEND_CHOOSE_FEE_ROUTE);
+          safeHistoryPush(SEND_CHOOSE_FEE_ROUTE);
           break;
         case SendFlowStep.FeeFormDone:
-          history.push(SEND_CONFIRMATION_ROUTE);
+          safeHistoryPush(SEND_CONFIRMATION_ROUTE);
+          break;
+        case SendFlowStep.Lightning:
+          safeHistoryPush(LIGHTNING_ENTER_INVOICE_ROUTE);
           break;
       }
     })().catch(console.error);

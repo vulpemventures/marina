@@ -64,6 +64,7 @@ pwTest(
     await page.waitForSelector('text=1.00 000 000 L-BTC');
     await page.getByRole('button', { name: 'Send' }).click(); // go to send
     await page.getByText('Liquid Bitcoin').click(); // select L-BTC
+    await page.getByText('Liquid Network').click();
     await page
       .getByPlaceholder('el1...')
       .fill(
@@ -78,7 +79,7 @@ pwTest(
     await page.waitForSelector('text=Unlock');
     await page.getByPlaceholder('Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Unlock' }).click();
-    await page.waitForSelector('text=Payment successful !');
+    await page.waitForSelector('text=Payment successful!');
     await page.waitForTimeout(2000);
 
     await page.getByAltText('marina logo').click(); // go to home page

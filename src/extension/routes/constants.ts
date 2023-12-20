@@ -36,6 +36,10 @@ const SEND_END_OF_FLOW_ROUTE = '/send/end-of-flow';
 const SEND_PAYMENT_SUCCESS_ROUTE = '/send/payment-success';
 const SEND_PAYMENT_ERROR_ROUTE = '/send/payment-error';
 
+// Lightning Receive
+const LIGHTNING_ENTER_AMOUNT_ROUTE = '/lightning/invoice-amount';
+const LIGHTNING_ENTER_INVOICE_ROUTE = '/lightning/invoice';
+
 // Settings
 const SETTINGS_MENU_SECURITY_ROUTE = '/settings/security';
 const SETTINGS_SHOW_MNEMONIC_ROUTE = '/settings/security/show-mnemonic';
@@ -82,6 +86,9 @@ export {
   SEND_END_OF_FLOW_ROUTE,
   SEND_PAYMENT_SUCCESS_ROUTE,
   SEND_PAYMENT_ERROR_ROUTE,
+  // Lightning Receive
+  LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_ENTER_INVOICE_ROUTE,
   // Settings
   SETTINGS_MENU_SECURITY_ROUTE,
   SETTINGS_MENU_SETTINGS_ROUTE,

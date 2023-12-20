@@ -1,7 +1,7 @@
-import { crypto } from 'liquidjs-lib';
+import { address, crypto, Transaction } from 'liquidjs-lib';
 import type { ElectrumWS } from 'ws-electrumx-client';
 import { deserializeBlockHeader } from '../background/utils';
-import type { BlockHeader, ChainSource, TransactionHistory } from '../domain/chainsource';
+import type { BlockHeader, ChainSource, TransactionHistory, Unspent } from '../domain/chainsource';
 import { extractErrorMessage } from '../extension/utility/error';
 
 const BroadcastTransaction = 'blockchain.transaction.broadcast'; // returns txid
@@ -11,9 +11,16 @@ const GetHistoryMethod = 'blockchain.scripthash.get_history';
 const GetTransactionMethod = 'blockchain.transaction.get'; // returns hex string
 const SubscribeStatusMethod = 'blockchain.scripthash'; // ElectrumWS automatically adds '.subscribe'
 const GetRelayFeeMethod = 'blockchain.relayfee';
+const ListUnspentMethod = 'blockchain.scripthash.listunspent';
 
 const MISSING_TRANSACTION = 'missingtransaction';
 const MAX_FETCH_TRANSACTIONS_ATTEMPTS = 5;
+
+type UnspentElectrum = {
+  height: number;
+  tx_pos: number;
+  tx_hash: string;
+};
 
 export class WsElectrumChainSource implements ChainSource {
   constructor(private ws: ElectrumWS) {}
@@ -91,6 +98,33 @@ export class WsElectrumChainSource implements ChainSource {
     } catch (e) {
       console.debug('error closing ws:', e);
     }
+  }
+
+  waitForAddressReceivesTx(addr: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.subscribeScriptStatus(address.toOutputScript(addr), (_, status) => {
+        if (status !== null) {
+          resolve();
+        }
+      }).catch(reject);
+    });
+  }
+
+  async listUnspents(addr: string): Promise<Unspent[]> {
+    const scriptHash = toScriptHash(address.toOutputScript(addr));
+    const unspentsFromElectrum = await this.ws.request<UnspentElectrum[]>(
+      ListUnspentMethod,
+      scriptHash
+    );
+    const txs = await this.fetchTransactions(unspentsFromElectrum.map((u) => u.tx_hash));
+
+    return unspentsFromElectrum.map((u, index) => {
+      return {
+        txid: u.tx_hash,
+        vout: u.tx_pos,
+        witnessUtxo: Transaction.fromHex(txs[index].hex).outs[u.tx_pos],
+      };
+    });
   }
 }
 
