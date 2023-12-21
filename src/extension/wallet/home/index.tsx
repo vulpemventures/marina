@@ -9,6 +9,8 @@ import {
   TRANSACTIONS_ROUTE,
   LOGIN_ROUTE,
   LIGHTNING_ENTER_INVOICE_ROUTE,
+  LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_SHOW_INVOICE_ROUTE,
 } from '../../routes/constants';
 import Balance from '../../components/balance';
 import ButtonAsset from '../../components/button-asset';
@@ -16,7 +18,7 @@ import ButtonList from '../../components/button-list';
 import ShellPopUp from '../../components/shell-popup';
 import ButtonsSendReceive from '../../components/buttons-send-receive';
 import { fromSatoshiWithSpaces } from '../../utility';
-import { SendFlowStep } from '../../../domain/repository';
+import { ReceiveFlowStep, SendFlowStep } from '../../../domain/repository';
 import type { Asset } from 'marina-provider';
 import { networks } from 'liquidjs-lib';
 import { useStorageContext } from '../../context/storage-context';
@@ -30,6 +32,7 @@ const Home: React.FC = () => {
     assetRepository,
     blockHeadersRepository,
     appRepository,
+    receiveFlowRepository,
     sendFlowRepository,
     cache,
   } = useStorageContext();
@@ -72,6 +75,7 @@ const Home: React.FC = () => {
   // update everytime the user comes back to home
   // this also works when user re-opens the wallet
   useEffect(() => {
+    if (!cache?.network) return;
     (async () => {
       const updater = new UpdaterService(
         walletRepository,
@@ -80,10 +84,9 @@ const Home: React.FC = () => {
         assetRepository,
         await zkp()
       );
-      if (!cache?.network) throw new Error('Network not found');
       await updater.checkAndFixMissingTransactionsData(cache.network);
     })().catch(console.error);
-  }, [cache?.authenticated]);
+  }, [cache?.authenticated, cache?.network]);
 
   useEffect(() => {
     (async () => {
@@ -97,8 +100,18 @@ const Home: React.FC = () => {
         return;
       }
 
-      const step = await sendFlowRepository.getStep();
-      switch (step) {
+      const receiveStep = await receiveFlowRepository.getStep();
+      switch (receiveStep) {
+        case ReceiveFlowStep.SwapRunning:
+          safeHistoryPush(LIGHTNING_SHOW_INVOICE_ROUTE);
+          break;
+        case ReceiveFlowStep.AmountInserted:
+          safeHistoryPush(LIGHTNING_ENTER_AMOUNT_ROUTE);
+          break;
+      }
+
+      const sendStep = await sendFlowRepository.getStep();
+      switch (sendStep) {
         case SendFlowStep.AssetSelected:
           safeHistoryPush(SEND_ADDRESS_AMOUNT_ROUTE);
           break;

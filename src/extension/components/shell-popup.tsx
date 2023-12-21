@@ -34,6 +34,7 @@ const ShellPopUp: React.FC<Props> = ({
     assetRepository,
     blockHeadersRepository,
     appRepository,
+    receiveFlowRepository,
     sendFlowRepository,
     cache,
   } = useStorageContext();
@@ -62,6 +63,7 @@ const ShellPopUp: React.FC<Props> = ({
 
   const goToHomeOrUpdate = async () => {
     if (history.location.pathname !== DEFAULT_ROUTE) {
+      await receiveFlowRepository.reset();
       await sendFlowRepository.reset();
       history.push(DEFAULT_ROUTE);
     } else {

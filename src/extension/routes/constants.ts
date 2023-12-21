@@ -38,6 +38,7 @@ const SEND_PAYMENT_ERROR_ROUTE = '/send/payment-error';
 
 // Lightning Receive
 const LIGHTNING_ENTER_AMOUNT_ROUTE = '/lightning/invoice-amount';
+const LIGHTNING_SHOW_INVOICE_ROUTE = '/lightning/invoice-show';
 const LIGHTNING_ENTER_INVOICE_ROUTE = '/lightning/invoice';
 
 // Settings
@@ -88,6 +89,7 @@ export {
   SEND_PAYMENT_ERROR_ROUTE,
   // Lightning Receive
   LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_SHOW_INVOICE_ROUTE,
   LIGHTNING_ENTER_INVOICE_ROUTE,
   // Settings
   SETTINGS_MENU_SECURITY_ROUTE,

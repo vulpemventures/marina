@@ -7,7 +7,7 @@ import { useStorageContext } from '../../context/storage-context';
 import { UNKNOWN_ASSET_HASH } from '../../../domain/constants';
 
 const ReceiveSelectAsset: React.FC = () => {
-  const { cache } = useStorageContext();
+  const { cache, receiveFlowRepository } = useStorageContext();
   const history = useHistory();
 
   const handleReceive = async (asset: string, isSubmarineSwap: boolean) => {

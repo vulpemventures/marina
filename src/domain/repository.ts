@@ -26,6 +26,7 @@ import {
 import { mnemonicToSeed } from 'bip39';
 import { SLIP77Factory } from 'slip77';
 import type { BlockHeader, ChainSource } from './chainsource';
+import type { SwapData } from '../infrastructure/storage/receive-flow-repository';
 
 export interface AppStatus {
   isMnemonicVerified: boolean;
@@ -188,6 +189,22 @@ export interface OnboardingRepository {
   flush(): Promise<void>; // flush all data
 }
 
+export enum ReceiveFlowStep {
+  None,
+  AmountInserted,
+  SwapRunning,
+}
+
+// this repository is used to cache data during the UI send flow
+export interface ReceiveFlowRepository {
+  reset(): Promise<void>; // reset all data in the send flow repository
+  getAmount(): Promise<number | undefined>;
+  setAmount(amount: number): Promise<void>;
+  getStep(): Promise<ReceiveFlowStep>;
+  getSwapData(): Promise<SwapData | undefined>;
+  setSwapData(data: any): Promise<any>;
+}
+
 export enum SendFlowStep {
   None,
   AssetSelected,
@@ -218,8 +235,13 @@ export interface BlockheadersRepository {
   onNewBlockHeader: EventEmitter<[network: NetworkString, blockHeader: BlockHeader]>;
 }
 
-export async function init(appRepository: AppRepository, sendFlowRepository: SendFlowRepository) {
+export async function init(
+  appRepository: AppRepository,
+  receiveFlowRepository: ReceiveFlowRepository,
+  sendFlowRepository: SendFlowRepository
+) {
   await Browser.storage.local.clear();
+  await receiveFlowRepository.reset();
   await sendFlowRepository.reset();
   await appRepository.setNetwork('liquid');
 }

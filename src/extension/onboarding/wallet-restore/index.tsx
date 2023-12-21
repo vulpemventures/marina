@@ -13,7 +13,8 @@ import { extractErrorMessage } from '../../utility/error';
 import { useStorageContext } from '../../context/storage-context';
 
 const WalletRestore: React.FC = () => {
-  const { appRepository, sendFlowRepository, onboardingRepository } = useStorageContext();
+  const { appRepository, receiveFlowRepository, sendFlowRepository, onboardingRepository } =
+    useStorageContext();
   const history = useHistory();
   const [mnemonic, setMnemonic] = useState<string>('');
   const [restoration, setRestoration] = useState<RestorationJSONDictionary>();
@@ -22,7 +23,7 @@ const WalletRestore: React.FC = () => {
   const onSubmit = async ({ password }: { password: string }) => {
     if (mnemonic === '' || !validateMnemonic(mnemonic.trim()))
       throw new Error('need a valid mnemonic');
-    await init(appRepository, sendFlowRepository);
+    await init(appRepository, receiveFlowRepository, sendFlowRepository);
     await onboardingRepository.setOnboardingPasswordAndMnemonic(password, mnemonic.trim());
     await appRepository.updateStatus({ isMnemonicVerified: true }); // set the mnemonic as verified cause we are in the restore mnemonic flow
     if (restoration) await onboardingRepository.setRestorationJSONDictionary(restoration);

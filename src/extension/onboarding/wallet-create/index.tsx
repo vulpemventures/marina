@@ -8,11 +8,12 @@ import { INITIALIZE_SEED_PHRASE_ROUTE } from '../../routes/constants';
 import OnboardingForm from '../onboarding-form';
 
 const WalletCreate: React.FC = () => {
-  const { appRepository, sendFlowRepository, onboardingRepository } = useStorageContext();
+  const { appRepository, receiveFlowRepository, sendFlowRepository, onboardingRepository } =
+    useStorageContext();
   const history = useHistory();
 
   const onSubmit = async ({ password }: { password: string }) => {
-    await init(appRepository, sendFlowRepository);
+    await init(appRepository, receiveFlowRepository, sendFlowRepository);
     await onboardingRepository.setOnboardingPasswordAndMnemonic(password, generateMnemonic());
     history.push(INITIALIZE_SEED_PHRASE_ROUTE);
   };
