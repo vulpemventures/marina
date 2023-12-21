@@ -54,6 +54,7 @@ interface CreateSwapCommonRequest {
   type: 'submarine' | 'reversesubmarine';
   pairId: 'L-BTC/BTC';
   orderSide: 'buy' | 'sell';
+  referralId?: 'marina';
 }
 
 interface CreateSwapCommonResponse {
@@ -492,7 +493,8 @@ export class Boltz implements BoltzInterface {
   private callCreateSwap = async (
     params: CreateSwapCommonRequest
   ): Promise<CreateSwapCommonResponse & any> => {
-    return this.postApi(`${this.url}/createswap`, params);
+    const paramsWithReferralId: CreateSwapCommonRequest = { ...params, referralId: 'marina' };
+    return this.postApi(`${this.url}/createswap`, paramsWithReferralId);
   };
 
   private getApi = async (url: string): Promise<any> => {
