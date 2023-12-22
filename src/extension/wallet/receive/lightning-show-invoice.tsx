@@ -155,7 +155,8 @@ const LightningShowInvoice: React.FC = () => {
       currentPage="Receive⚡️"
     >
       <div className="w-80 h-96 rounded-4xl flex flex-col items-center justify-between px-10 py-4 mx-auto bg-white">
-        <p className="mb-4 text-xs font-medium whitespace-pre">⏳ Waiting for payment...</p>
+        <p className="mb-2 text-xs font-medium whitespace-pre">⏳ Waiting for payment...</p>
+        <p className="mb-4 text-xs font-medium whitespace-pre">Don't close this window</p>
         {isInvoiceExpanded ? (
           <>
             <p className="text-xs font-medium break-all">{invoice}</p>
