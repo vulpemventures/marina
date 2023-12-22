@@ -14,6 +14,7 @@ import { toOutputScript } from 'liquidjs-lib/src/address';
 import QRCode from 'qrcode.react';
 import ECPairFactory from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
+import LightningError from './lightning-error';
 
 const zkpLib = await zkp();
 
@@ -50,7 +51,8 @@ const LightningShowInvoice: React.FC = () => {
     const claim = async () => {
       try {
         const swapData = await receiveFlowRepository.getSwapData();
-        if (!swapData) return; // TODO
+        if (!swapData) return <LightningError />;
+
         const {
           redeemScript,
           lockupAddress,
