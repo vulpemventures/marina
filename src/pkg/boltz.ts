@@ -94,6 +94,7 @@ export interface SubmarineSwap {
   expectedAmount: number;
   id: string;
   redeemScript: string;
+  refundPublicKey: string;
 }
 
 export interface ReverseSwap {
@@ -308,9 +309,9 @@ export class Boltz implements BoltzInterface {
       expectedAmount,
       id,
       redeemScript,
+      refundPublicKey,
     };
-    if (!this.validateSwapReedemScript(redeemScript, refundPublicKey))
-      throw new Error('Invalid submarine swap');
+    if (!this.isValidSubmarineSwap(submarineSwap)) throw new Error('Invalid submarine swap');
     return submarineSwap;
   }
 
@@ -360,6 +361,17 @@ export class Boltz implements BoltzInterface {
   }
 
   // check that everything is correct with data received from Boltz:
+  // - address
+  // - redeemScript
+  // - refundPublicKey
+  private isValidSubmarineSwap({ address, redeemScript, refundPublicKey }: SubmarineSwap): boolean {
+    return (
+      this.validateSwapReedemScript(redeemScript, refundPublicKey) &&
+      this.validateSwapAddressDerivesFromScript(address, redeemScript)
+    );
+  }
+
+  // check that everything is correct with data received from Boltz:
   // - invoice
   // - lockup address
   // - redeem script
@@ -372,7 +384,7 @@ export class Boltz implements BoltzInterface {
   }: ReverseSwap): boolean {
     return (
       this.correctPaymentHashInInvoice(invoice, preimage) &&
-      this.reverseSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
+      this.validateSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
       this.validateReverseSwapReedemScript(preimage, claimPublicKey, redeemScript)
     );
   }
@@ -394,11 +406,11 @@ export class Boltz implements BoltzInterface {
   }
 
   // validates if reverse swap address derives from redeem script
-  private reverseSwapAddressDerivesFromScript(
-    lockupAddress: string,
+  private validateSwapAddressDerivesFromScript(
+    receivedAddress: string,
     redeemScript: string
   ): boolean {
-    const addressScript = address.toOutputScript(lockupAddress);
+    const addressScript = address.toOutputScript(receivedAddress);
     const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
     const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
     const expectedAddressScriptASM = `OP_0 ${sha256}`; // P2SH
@@ -453,7 +465,7 @@ export class Boltz implements BoltzInterface {
       boltzPubkey,
       'OP_ELSE',
       cltv,
-      'OP_NOP2',
+      'OP_NOP2', // OP_CHECKLOCKTIMEVERIFY
       'OP_DROP',
       refundPublicKey,
       'OP_ENDIF',
