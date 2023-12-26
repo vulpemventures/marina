@@ -119,7 +119,20 @@ export interface MakeClaimTransactionParams {
   satsPerByte?: number;
 }
 
+export interface MakeRefundTransactionParams {
+  utxo: Unspent;
+  refundKeyPair: ECPairInterface;
+  redeemScript: Buffer;
+  timeoutBlockHeight?: number,
+  destinationScript: Buffer;
+  blindingPublicKey: Buffer;
+  satsPerByte?: number;
+}
+
 export type GetClaimTransactionParams = MakeClaimTransactionParams & {
+  fee: number;
+};
+export type GetRefundTransactionParams = MakeRefundTransactionParams & {
   fee: number;
 };
 
@@ -206,6 +219,18 @@ export class Boltz implements BoltzInterface {
     return 0;
   }
 
+  makeRefundTransaction(params: MakeRefundTransactionParams): Transaction {
+    // In order to calculate fees for tx:
+    // 1. make tx with dummy fee
+    const getParams: GetRefundTransactionParams = { ...params, fee: 300 };
+    const tx = this.getRefundTransaction(getParams);
+    // 2. calculate fees for this tx
+    const satsPerByte = params.satsPerByte ?? 0.1;
+    getParams.fee = Math.ceil((tx.virtualSize() + tx.ins.length) * satsPerByte);
+    // 3 return tx with updated fees
+    return this.getRefundTransaction(getParams);
+  }
+
   makeClaimTransaction(params: MakeClaimTransactionParams): Transaction {
     // In order to calculate fees for tx:
     // 1. make tx with dummy fee
@@ -282,6 +307,70 @@ export class Boltz implements BoltzInterface {
     return Extractor.extract(finalizer.pset);
   }
 
+  getRefundTransaction({
+    utxo,
+    refundKeyPair,
+    redeemScript,
+    destinationScript,
+    timeoutBlockHeight,
+    fee,
+    blindingPublicKey,
+  }: GetRefundTransactionParams): Transaction {
+    if (!utxo.blindingData) throw new Error('utxo is not blinded');
+    if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');
+    const pset = Creator.newPset();
+    const updater = new Updater(pset);
+
+    updater
+      .addInputs([
+        {
+          txid: utxo.txid,
+          txIndex: utxo.vout,
+          witnessUtxo: utxo.witnessUtxo,
+          sighashType: Transaction.SIGHASH_ALL,
+          heightLocktime: timeoutBlockHeight
+        },
+      ])
+      .addInWitnessScript(0, redeemScript)
+      .addOutputs([
+        {
+          script: destinationScript,
+          blindingPublicKey,
+          asset: this.asset,
+          amount: (utxo.blindingData?.value ?? 0) - fee,
+          blinderIndex: 0,
+        },
+        {
+          amount: fee,
+          asset: this.asset,
+        },
+      ]);
+
+    const blindedPset = this.blindPset(pset, {
+      index: 0,
+      value: utxo.blindingData.value.toString(),
+      valueBlindingFactor: Buffer.from(utxo.blindingData.valueBlindingFactor, 'hex'),
+      asset: AssetHash.fromHex(utxo.blindingData.asset).bytesWithoutPrefix,
+      assetBlindingFactor: Buffer.from(utxo.blindingData.assetBlindingFactor, 'hex'),
+    });
+
+    const signedPset = this.signPset(blindedPset, refundKeyPair);
+
+    const finalizer = new Finalizer(signedPset);
+
+    finalizer.finalizeInput(0, (inputIndex, pset) => {
+      return {
+        finalScriptSig: undefined,
+        finalScriptWitness: witnessStackToScriptWitness([
+          pset.inputs[inputIndex].partialSigs![0].signature,
+          Buffer.of(), //dummy preimage
+          redeemScript,
+        ]),
+      };
+    });
+
+    return Extractor.extract(finalizer.pset);
+  }
   async createSubmarineSwap(
     invoice: string,
     network: NetworkString,
