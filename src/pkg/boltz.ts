@@ -122,7 +122,7 @@ export interface MakeRefundTransactionParams {
   utxo: Unspent;
   refundKeyPair: ECPairInterface;
   redeemScript: Buffer;
-  timeoutBlockHeight?: number,
+  timeoutBlockHeight?: number;
   destinationScript: Buffer;
   blindingPublicKey: Buffer;
   satsPerByte?: number;
@@ -327,7 +327,7 @@ export class Boltz implements BoltzInterface {
           txIndex: utxo.vout,
           witnessUtxo: utxo.witnessUtxo,
           sighashType: Transaction.SIGHASH_ALL,
-          heightLocktime: timeoutBlockHeight
+          heightLocktime: timeoutBlockHeight,
         },
       ])
       .addInWitnessScript(0, redeemScript)
