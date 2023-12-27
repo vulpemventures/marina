@@ -285,8 +285,12 @@ export async function initWalletRepository(
 
 export interface SwapParams {
   blindingKey: string;
-  redeemScript: string;
+  derivationPath?: string;
+  fundingAddress?: string;
   network?: NetworkString;
+  redeemScript: string;
+  refundPublicKey?: string;
+  timeoutBlockHeight?: number;
 }
 
 export interface SwapsRepository {

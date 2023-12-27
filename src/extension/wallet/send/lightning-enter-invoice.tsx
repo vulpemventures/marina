@@ -8,8 +8,6 @@ import { networks } from 'liquidjs-lib';
 import { fromSatoshi, toSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
-import { BIP32Factory } from 'bip32';
-import * as ecc from 'tiny-secp256k1';
 import type { BoltzPair } from '../../../pkg/boltz';
 import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
@@ -102,11 +100,7 @@ const LightningInvoice: React.FC = () => {
 
     // get refund pub key and change address
     const refundAddress = await mainAccount.getNextAddress(false);
-    const accountDetails = Object.values(await walletRepository.getAccountDetails(accountName))[0];
-    const refundPublicKey = BIP32Factory(ecc)
-      .fromBase58(accountDetails.masterXPub)
-      .derivePath(refundAddress.derivationPath?.replace('m/', '') ?? '')
-      .publicKey.toString('hex');
+    const refundPublicKey = refundAddress.publicKey;
 
     try {
       // create submarine swap

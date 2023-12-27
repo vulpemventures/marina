@@ -485,9 +485,7 @@ export class Boltz implements BoltzInterface {
     });
 
     return {
-      boltzPubkey: scriptAssembly[4],
-      blindingPubKey,
-      blindingPrivKey: blindingKey,
+      blindingKey,
       fundingAddress,
       redeemScript,
       refundPublicKey: scriptAssembly[9],
