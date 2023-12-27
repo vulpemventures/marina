@@ -19,7 +19,7 @@ const zkpLib = await zkp();
 
 const LightningInvoice: React.FC = () => {
   const history = useHistory();
-  const { cache, sendFlowRepository, walletRepository } = useStorageContext();
+  const { cache, sendFlowRepository, swapsRepository, walletRepository } = useStorageContext();
   const [swapFees, setSwapFees] = useState(0);
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
@@ -110,14 +110,14 @@ const LightningInvoice: React.FC = () => {
 
     try {
       // create submarine swap
-      const { address, expectedAmount } = await boltz.createSubmarineSwap(
-        invoice,
-        network,
-        refundPublicKey
-      );
+      const { address, blindingKey, expectedAmount, redeemScript } =
+        await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
 
-      // push to store payment to be made
+      // push to storage payment to be made
       await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
+
+      // save swap params to storage
+      await swapsRepository.addSwap({ blindingKey, redeemScript, network });
 
       // go to choose fee route
       history.push(SEND_CHOOSE_FEE_ROUTE);

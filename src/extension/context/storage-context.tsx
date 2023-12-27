@@ -5,6 +5,7 @@ import type {
   BlockheadersRepository,
   OnboardingRepository,
   SendFlowRepository,
+  SwapsRepository,
   TaxiRepository,
   WalletRepository,
 } from '../../domain/repository';
@@ -18,6 +19,7 @@ import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository
 import type { PresentationCache } from '../../domain/presenter';
 import { PresenterImpl } from '../../application/presenter';
 import { useToastContext } from './toast-context';
+import { SwapsStorageAPI } from '../../infrastructure/storage/swaps-repository';
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
@@ -26,6 +28,7 @@ const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const onboardingRepository = new OnboardingStorageAPI();
 const sendFlowRepository = new SendFlowStorageAPI();
 const blockHeadersRepository = new BlockHeadersAPI();
+const swapsRepository = new SwapsStorageAPI();
 
 interface StorageContextProps {
   walletRepository: WalletRepository;
@@ -36,6 +39,7 @@ interface StorageContextProps {
   sendFlowRepository: SendFlowRepository;
   blockHeadersRepository: BlockheadersRepository;
   cache?: PresentationCache;
+  swapsRepository: SwapsRepository;
 }
 
 const StorageContext = createContext<StorageContextProps>({
@@ -46,6 +50,7 @@ const StorageContext = createContext<StorageContextProps>({
   onboardingRepository,
   sendFlowRepository,
   blockHeadersRepository,
+  swapsRepository,
 });
 
 const presenter = new PresenterImpl(
@@ -84,6 +89,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         sendFlowRepository,
         blockHeadersRepository,
         cache,
+        swapsRepository,
       }}
     >
       {children}

@@ -31,6 +31,7 @@ const Home: React.FC = () => {
     blockHeadersRepository,
     appRepository,
     sendFlowRepository,
+    swapsRepository,
     cache,
   } = useStorageContext();
   const [sortedAssets, setSortedAssets] = React.useState<Asset[]>([]);
@@ -73,6 +74,7 @@ const Home: React.FC = () => {
   // this also works when user re-opens the wallet
   useEffect(() => {
     (async () => {
+      console.log(await swapsRepository.getSwaps());
       const updater = new UpdaterService(
         walletRepository,
         appRepository,
@@ -80,7 +82,7 @@ const Home: React.FC = () => {
         assetRepository,
         await zkp()
       );
-      if (!cache?.network) throw new Error('Network not found');
+      if (!cache?.network) return;
       await updater.checkAndFixMissingTransactionsData(cache.network);
     })().catch(console.error);
   }, [cache?.authenticated]);

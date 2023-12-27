@@ -19,19 +19,22 @@ import {
   witnessStackToScriptWitness,
   ZKPGenerator,
   ZKPValidator,
+  networks,
 } from 'liquidjs-lib';
 import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
 import type { Unspent } from '../domain/chainsource';
 import type { ECPairInterface } from 'ecpair';
+import ECPairFactory from 'ecpair';
 import type { ZKP } from '@vulpemventures/secp256k1-zkp';
 import { fromSatoshi } from '../extension/utility';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import axios, { AxiosError } from 'axios';
 import { extractErrorMessage } from '../extension/utility/error';
 import Decimal from 'decimal.js';
-
-export type NetworkString = 'liquid' | 'testnet' | 'regtest';
+import type { SwapParams } from '../domain/repository';
+import * as ecc from 'tiny-secp256k1';
+import type { NetworkString } from 'marina-provider';
 
 export interface BoltzInterface {
   getBoltzPair(pair: string): Promise<any>;
@@ -92,6 +95,7 @@ interface ReverseSubmarineSwapResponse {
 
 export interface SubmarineSwap {
   address: string;
+  blindingKey: string;
   expectedAmount: number;
   id: string;
   redeemScript: string;
@@ -371,6 +375,7 @@ export class Boltz implements BoltzInterface {
 
     return Extractor.extract(finalizer.pset);
   }
+
   async createSubmarineSwap(
     invoice: string,
     network: NetworkString,
@@ -389,6 +394,7 @@ export class Boltz implements BoltzInterface {
     const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };
     const {
       address,
+      blindingKey,
       expectedAmount,
       id,
       redeemScript,
@@ -396,6 +402,7 @@ export class Boltz implements BoltzInterface {
 
     const submarineSwap: SubmarineSwap = {
       address,
+      blindingKey,
       expectedAmount,
       id,
       redeemScript,
@@ -448,6 +455,44 @@ export class Boltz implements BoltzInterface {
     if (!this.isValidReverseSubmarineSwap(reverseSwap))
       throw new Error('Invalid invoice received, please try again');
     return reverseSwap;
+  }
+
+  extractInfoFromSwapParams(params: SwapParams) {
+    const { blindingKey, redeemScript } = params;
+    const network = params.network ?? 'liquid';
+
+    const blindingPubKey = ECPairFactory(ecc).fromPrivateKey(
+      Buffer.from(blindingKey, 'hex')
+    ).publicKey;
+
+    const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
+    const addressASM = `OP_0 ${sha256}`;
+    const fundingAddress = address.fromOutputScript(script.fromASM(addressASM), networks[network]);
+
+    const scriptAssembly = script
+      .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
+      .split(' ');
+
+    console.log('params', params);
+    console.log('response', {
+      boltzPubkey: scriptAssembly[4],
+      blindingPubKey,
+      blindingPrivKey: blindingKey,
+      fundingAddress,
+      redeemScript,
+      refundPublicKey: scriptAssembly[9],
+      timeoutBlockHeight: Number(scriptAssembly[6]),
+    });
+
+    return {
+      boltzPubkey: scriptAssembly[4],
+      blindingPubKey,
+      blindingPrivKey: blindingKey,
+      fundingAddress,
+      redeemScript,
+      refundPublicKey: scriptAssembly[9],
+      timeoutBlockHeight: Number(scriptAssembly[6]),
+    };
   }
 
   // check that everything is correct with data received from Boltz:

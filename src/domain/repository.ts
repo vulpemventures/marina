@@ -282,3 +282,15 @@ export async function initWalletRepository(
     defaultMainAccountXPubTestnet,
   };
 }
+
+export interface SwapParams {
+  blindingKey: string;
+  redeemScript: string;
+  network?: NetworkString;
+}
+
+export interface SwapsRepository {
+  addSwap(swap: SwapParams): Promise<void>;
+  getSwaps(): Promise<SwapParams[]>;
+  removeSwap(swap: SwapParams): Promise<void>;
+}
