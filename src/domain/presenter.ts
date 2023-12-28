@@ -1,6 +1,7 @@
 import type { NetworkString, Asset, UnblindedOutput } from 'marina-provider';
 import type { TxDetailsExtended } from './transaction';
 import type { BlockHeader } from './chainsource';
+import type { SwapParams } from './repository';
 
 export interface LoadingValue<T> {
   value: T;
@@ -16,6 +17,7 @@ export interface PresentationCache {
   transactions: LoadingValue<TxDetailsExtended[]>;
   blockHeaders: LoadingValue<Record<number, BlockHeader>>;
   walletAssets: LoadingValue<Set<string>>;
+  swaps: LoadingValue<SwapParams[]>;
 }
 // present computes the frontend data from repositories
 // it emits PresentationCache to the frontend

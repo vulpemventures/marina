@@ -108,10 +108,15 @@ const LightningInvoice: React.FC = () => {
         await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
 
       // push to storage payment to be made
-      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
+      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount - 21); // TODO
 
       // save swap params to storage
-      await swapsRepository.addSwap({ blindingKey, redeemScript, network });
+      await swapsRepository.addSwap({
+        blindingKey,
+        fundingAddress: address,
+        redeemScript,
+        network,
+      });
 
       // go to choose fee route
       history.push(SEND_CHOOSE_FEE_ROUTE);

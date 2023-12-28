@@ -4,6 +4,7 @@ import type {
   AppRepository,
   AssetRepository,
   BlockheadersRepository,
+  SwapsRepository,
   WalletRepository,
 } from '../domain/repository';
 import type { TxDetails } from '../domain/transaction';
@@ -39,6 +40,7 @@ export class PresenterImpl implements Presenter {
     transactions: createLoadingValue([]),
     blockHeaders: createLoadingValue<Record<number, BlockHeader>>({}),
     walletAssets: createLoadingValue(new Set()),
+    swaps: createLoadingValue([]),
   };
   private closeFunction: (() => void) | null = null;
 
@@ -46,7 +48,8 @@ export class PresenterImpl implements Presenter {
     private appRepository: AppRepository,
     private walletRepository: WalletRepository,
     private assetsRepository: AssetRepository,
-    private blockHeadersRepository: BlockheadersRepository
+    private blockHeadersRepository: BlockheadersRepository,
+    private swapsRepository: SwapsRepository
   ) {}
 
   stop() {
@@ -66,6 +69,7 @@ export class PresenterImpl implements Presenter {
       transactions: setLoading(this.state.transactions),
       walletAssets: setLoading(this.state.walletAssets),
       blockHeaders: setLoading(this.state.blockHeaders),
+      swaps: setLoading(this.state.swaps),
     };
     emits(this.state);
 
@@ -80,6 +84,8 @@ export class PresenterImpl implements Presenter {
     this.state = await this.updateTransactions();
     emits(this.state);
     this.state = await this.updateBlockHeaders();
+    emits(this.state);
+    this.state = await this.updateSwaps();
     emits(this.state);
 
     const closeFns: (() => void)[] = [];
@@ -312,6 +318,15 @@ export class PresenterImpl implements Presenter {
     return {
       ...this.state,
       blockHeaders: setValue(blockHeaders),
+    };
+  }
+
+  private async updateSwaps(): Promise<PresentationCache> {
+    const swaps = await this.swapsRepository.getSwaps();
+
+    return {
+      ...this.state,
+      swaps: setValue(swaps),
     };
   }
 }

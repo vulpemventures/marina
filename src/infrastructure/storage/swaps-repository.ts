@@ -19,14 +19,26 @@ export class SwapsStorageAPI implements SwapsRepository {
     });
   }
 
+  private async getSwapDataWithoutSwap(swap: SwapParams): Promise<SwapParams[]> {
+    const currentData = await this.getSwapData();
+    return currentData.filter((x) => x.redeemScript !== swap.redeemScript);
+  }
+
   async reset(): Promise<void> {
     return Browser.storage.local.remove(SwapsStorageKeys.SWAPS_DATA);
   }
 
   async addSwap(swap: SwapParams): Promise<void> {
     const currentData = await this.getSwapData();
-    currentData.push(swap);
-    return await this.setSwapData(currentData);
+    return await this.setSwapData([...currentData, swap]);
+  }
+
+  async findSwapWithAddress(address: string): Promise<SwapParams | undefined> {
+    return (await this.getSwapData()).find((s) => s.fundingAddress === address);
+  }
+
+  async findSwapWithTxid(txid: string): Promise<SwapParams | undefined> {
+    return (await this.getSwapData()).find((s) => s.txid === txid);
   }
 
   async getSwaps(): Promise<SwapParams[]> {
@@ -34,8 +46,12 @@ export class SwapsStorageAPI implements SwapsRepository {
   }
 
   async removeSwap(swap: SwapParams): Promise<void> {
-    const currentData = await this.getSwapData();
-    const data = currentData.filter((x) => x.redeemScript !== swap.redeemScript);
-    return await this.setSwapData(data);
+    const dataWithoutSwap = await this.getSwapDataWithoutSwap(swap);
+    return await this.setSwapData(dataWithoutSwap);
+  }
+
+  async updateSwap(swap: SwapParams): Promise<void> {
+    const dataWithoutSwap = await this.getSwapDataWithoutSwap(swap);
+    return await this.setSwapData([...dataWithoutSwap, swap]);
   }
 }

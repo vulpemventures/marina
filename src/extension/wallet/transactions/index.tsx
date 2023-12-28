@@ -26,7 +26,8 @@ interface LocationState {
 }
 
 const Transactions: React.FC = () => {
-  const { assetRepository, appRepository, sendFlowRepository, cache } = useStorageContext();
+  const { assetRepository, appRepository, sendFlowRepository, cache, swapsRepository } =
+    useStorageContext();
 
   const {
     state: { assetHash },
@@ -102,6 +103,8 @@ const Transactions: React.FC = () => {
     );
   };
 
+  console.log('getFilteredTransactions', getFilteredTransactions());
+
   return (
     <ShellPopUp
       backBtnCb={handleBackBtn}
@@ -129,7 +132,15 @@ const Transactions: React.FC = () => {
             {asset && (
               <ButtonList title="Transactions" emptyText="Your transactions will appear here">
                 {getFilteredTransactions().map((tx, index) => {
-                  return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
+                  const swap = cache?.swaps?.value.find((s) => s.txid === tx.txid);
+                  return (
+                    <ButtonTransaction
+                      assetSelected={asset}
+                      key={index}
+                      swap={swap}
+                      txDetails={tx}
+                    />
+                  );
                 })}
               </ButtonList>
             )}

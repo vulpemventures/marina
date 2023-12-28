@@ -291,10 +291,14 @@ export interface SwapParams {
   redeemScript: string;
   refundPublicKey?: string;
   timeoutBlockHeight?: number;
+  txid?: string;
 }
 
 export interface SwapsRepository {
   addSwap(swap: SwapParams): Promise<void>;
+  findSwapWithAddress(address: string): Promise<SwapParams | undefined>;
+  findSwapWithTxid(txid: string): Promise<SwapParams | undefined>;
   getSwaps(): Promise<SwapParams[]>;
+  updateSwap(swap: SwapParams): Promise<void>;
   removeSwap(swap: SwapParams): Promise<void>;
 }

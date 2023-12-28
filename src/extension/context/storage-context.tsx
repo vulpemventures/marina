@@ -57,7 +57,8 @@ const presenter = new PresenterImpl(
   appRepository,
   walletRepository,
   assetRepository,
-  blockHeadersRepository
+  blockHeadersRepository,
+  swapsRepository
 );
 
 export const StorageProvider = ({ children }: { children: React.ReactNode }) => {
