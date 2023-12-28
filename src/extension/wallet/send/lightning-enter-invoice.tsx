@@ -108,7 +108,7 @@ const LightningInvoice: React.FC = () => {
         await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
 
       // push to storage payment to be made
-      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount - 21); // TODO
+      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
 
       // save swap params to storage
       await swapsRepository.addSwap({
