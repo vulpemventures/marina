@@ -473,7 +473,13 @@ export class Boltz implements BoltzInterface {
       .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
       .split(' ');
 
+    const timeoutBlockHeight = parseInt(
+      Buffer.from(scriptAssembly[6], 'hex').reverse().toString('hex'),
+      16
+    );
+
     console.log('params', params);
+    console.log('scriptAssembly', scriptAssembly);
     console.log('response', {
       boltzPubkey: scriptAssembly[4],
       blindingPubKey,
@@ -481,7 +487,7 @@ export class Boltz implements BoltzInterface {
       fundingAddress,
       redeemScript,
       refundPublicKey: scriptAssembly[9],
-      timeoutBlockHeight: Number(scriptAssembly[6]),
+      timeoutBlockHeight,
     });
 
     return {
@@ -489,7 +495,7 @@ export class Boltz implements BoltzInterface {
       fundingAddress,
       redeemScript,
       refundPublicKey: scriptAssembly[9],
-      timeoutBlockHeight: Number(scriptAssembly[6]),
+      timeoutBlockHeight,
     };
   }
 

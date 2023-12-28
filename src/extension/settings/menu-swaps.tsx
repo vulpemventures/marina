@@ -7,7 +7,7 @@ import * as ecc from 'tiny-secp256k1';
 import { extractErrorMessage } from '../utility/error';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import { Boltz, boltzUrl } from '../../pkg/boltz';
-import { networks } from 'liquidjs-lib';
+import { address, networks } from 'liquidjs-lib';
 import { useStorageContext } from '../context/storage-context';
 import { SEND_PAYMENT_SUCCESS_ROUTE } from '../routes/constants';
 import type { ECPairInterface } from 'ecpair';
@@ -19,6 +19,7 @@ import { toBlindingData } from 'liquidjs-lib/src/psbt';
 import { decrypt } from '../../domain/encryption';
 import { mnemonicToSeed } from 'bip39';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
+import { toOutputScript } from 'liquidjs-lib/src/address';
 
 const zkpLib = await zkp();
 const bip32 = BIP32Factory(ecc);
@@ -146,13 +147,20 @@ const SettingsMenuSwaps: React.FC = () => {
         valueBlindingFactor: valueBlindingFactor.toString('hex'),
       };
 
+      const accountFactory = await AccountFactory.create(walletRepository);
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const mainAccount = await accountFactory.make(network, accountName);
+      const addr = await mainAccount.getNextAddress(false);
+      const blindingPublicKey = address.fromConfidential(addr.confidentialAddress).blindingKey;
+      const destinationScript = toOutputScript(addr.confidentialAddress).toString('hex');
+
       const refundTransaction = boltz.makeRefundTransaction({
         utxo,
         refundKeyPair,
         redeemScript: Buffer.from(redeemScript, 'hex'),
         timeoutBlockHeight,
-        destinationScript: Buffer.from('0'),
-        blindingPublicKey: Buffer.from('0'),
+        destinationScript: Buffer.from(destinationScript, 'hex'),
+        blindingPublicKey,
       });
 
       await chainSource.broadcastTransaction(refundTransaction.toHex());
