@@ -25,7 +25,6 @@ import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
 import type { Unspent } from '../domain/chainsource';
 import type { ECPairInterface } from 'ecpair';
-import ECPairFactory from 'ecpair';
 import type { ZKP } from '@vulpemventures/secp256k1-zkp';
 import { fromSatoshi } from '../extension/utility';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -33,8 +32,8 @@ import axios, { AxiosError } from 'axios';
 import { extractErrorMessage } from '../extension/utility/error';
 import Decimal from 'decimal.js';
 import type { SwapParams } from '../domain/repository';
-import * as ecc from 'tiny-secp256k1';
 import type { NetworkString } from 'marina-provider';
+import { swapEndian } from '../application/utils';
 
 export interface BoltzInterface {
   getBoltzPair(pair: string): Promise<any>;
@@ -461,10 +460,6 @@ export class Boltz implements BoltzInterface {
     const { blindingKey, redeemScript } = params;
     const network = params.network ?? 'liquid';
 
-    const blindingPubKey = ECPairFactory(ecc).fromPrivateKey(
-      Buffer.from(blindingKey, 'hex')
-    ).publicKey;
-
     const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
     const addressASM = `OP_0 ${sha256}`;
     const fundingAddress = address.fromOutputScript(script.fromASM(addressASM), networks[network]);
@@ -473,17 +468,12 @@ export class Boltz implements BoltzInterface {
       .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
       .split(' ');
 
-    const timeoutBlockHeight = parseInt(
-      Buffer.from(scriptAssembly[6], 'hex').reverse().toString('hex'),
-      16
-    );
+    const timeoutBlockHeight = parseInt(swapEndian(scriptAssembly[6]), 16);
 
     console.log('params', params);
     console.log('scriptAssembly', scriptAssembly);
     console.log('response', {
-      boltzPubkey: scriptAssembly[4],
-      blindingPubKey,
-      blindingPrivKey: blindingKey,
+      blindingKey,
       fundingAddress,
       redeemScript,
       refundPublicKey: scriptAssembly[9],
