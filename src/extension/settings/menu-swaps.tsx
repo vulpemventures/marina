@@ -20,6 +20,7 @@ import { decrypt } from '../../domain/encryption';
 import { mnemonicToSeed } from 'bip39';
 import ButtonsAtBottom from '../components/buttons-at-bottom';
 import { toOutputScript } from 'liquidjs-lib/src/address';
+import axios from 'axios';
 
 const zkpLib = await zkp();
 const bip32 = BIP32Factory(ecc);
@@ -71,6 +72,12 @@ const SettingsMenuSwaps: React.FC = () => {
     return ECPairFactory(ecc).fromPrivateKey(key.privateKey!);
   };
 
+  const getBlockTip = async (): Promise<number> => {
+    const webExplorerURL = await appRepository.getWebExplorerURL();
+    const { data } = await axios.get(`${webExplorerURL}/api/blocks/tip/height`);
+    return data;
+  };
+
   const handleJsonChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setError('');
     setTouched(true);
@@ -85,6 +92,10 @@ const SettingsMenuSwaps: React.FC = () => {
         boltz.extractInfoFromSwapParams(json);
 
       const derivationPath = await findDerivationPath(refundPublicKey);
+
+      const blockTip = await getBlockTip();
+      if (blockTip && blockTip < timeoutBlockHeight)
+        throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
 
       setSwapParams({
         blindingKey,
