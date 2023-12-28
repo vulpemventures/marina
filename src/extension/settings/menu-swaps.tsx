@@ -133,19 +133,22 @@ const SettingsMenuSwaps: React.FC = () => {
 
       // fetch utxos for address
       const [utxo] = await chainSource.listUnspents(fundingAddress);
-      if (!utxo) return setError('Unable to find UTXO (already spent?)');
+      if (!utxo) return setError('Unable to find UTXO');
+      console.log('utxo', utxo);
 
       // unblind utxo
-      const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
-        Buffer.from(blindingKey, 'hex'),
-        utxo.witnessUtxo
-      );
-      utxo['blindingData'] = {
-        asset: asset.reverse().toString('hex'),
-        assetBlindingFactor: assetBlindingFactor.toString('hex'),
-        value: parseInt(value, 10),
-        valueBlindingFactor: valueBlindingFactor.toString('hex'),
-      };
+      if (!utxo.blindingData) {
+        const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
+          Buffer.from(blindingKey, 'hex'),
+          utxo.witnessUtxo
+        );
+        utxo['blindingData'] = {
+          asset: asset.reverse().toString('hex'),
+          assetBlindingFactor: assetBlindingFactor.toString('hex'),
+          value: parseInt(value, 10),
+          valueBlindingFactor: valueBlindingFactor.toString('hex'),
+        };
+      }
 
       const accountFactory = await AccountFactory.create(walletRepository);
       const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
