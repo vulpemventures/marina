@@ -17,7 +17,8 @@ const zkpLib = await zkp();
 
 const LightningInvoice: React.FC = () => {
   const history = useHistory();
-  const { cache, sendFlowRepository, swapsRepository, walletRepository } = useStorageContext();
+  const { cache, sendFlowRepository, refundableSwapsRepository, walletRepository } =
+    useStorageContext();
   const [swapFees, setSwapFees] = useState(0);
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
@@ -111,7 +112,7 @@ const LightningInvoice: React.FC = () => {
       await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
 
       // save swap params to storage
-      await swapsRepository.addSwap({
+      await refundableSwapsRepository.addSwap({
         blindingKey,
         fundingAddress: address,
         redeemScript,

@@ -31,7 +31,7 @@ const Home: React.FC = () => {
     blockHeadersRepository,
     appRepository,
     sendFlowRepository,
-    swapsRepository,
+    refundableSwapsRepository,
     cache,
   } = useStorageContext();
   const [sortedAssets, setSortedAssets] = React.useState<Asset[]>([]);
@@ -74,7 +74,7 @@ const Home: React.FC = () => {
   // this also works when user re-opens the wallet
   useEffect(() => {
     (async () => {
-      console.log(await swapsRepository.getSwaps());
+      console.log(await refundableSwapsRepository.getSwaps());
       const updater = new UpdaterService(
         walletRepository,
         appRepository,

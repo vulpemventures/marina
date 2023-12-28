@@ -1,11 +1,11 @@
 import Browser from 'webextension-polyfill';
-import type { SwapParams, SwapsRepository } from '../../domain/repository';
+import type { SwapParams, RefundableSwapsRepository } from '../../domain/repository';
 
 enum SwapsStorageKeys {
   SWAPS_DATA = 'swapsData',
 }
 
-export class SwapsStorageAPI implements SwapsRepository {
+export class SwapsStorageAPI implements RefundableSwapsRepository {
   private async getSwapData(): Promise<SwapParams[]> {
     const data = await Browser.storage.local.get(SwapsStorageKeys.SWAPS_DATA);
     if (!data[SwapsStorageKeys.SWAPS_DATA]) return [];

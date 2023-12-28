@@ -14,7 +14,7 @@ import { lockTransactionInputs } from '../../../domain/transaction';
 import { useStorageContext } from '../../context/storage-context';
 
 const SendEndOfFlow: React.FC = () => {
-  const { appRepository, walletRepository, sendFlowRepository, swapsRepository } =
+  const { appRepository, walletRepository, sendFlowRepository, refundableSwapsRepository } =
     useStorageContext();
   const history = useHistory();
   const [invalidPasswordError, setInvalidPasswordError] = useState(false);
@@ -58,8 +58,8 @@ const SendEndOfFlow: React.FC = () => {
 
       // if it was a swap, add txid to swap saved on storage
       if (receiverAddress) {
-        const swap = await swapsRepository.findSwapWithAddress(receiverAddress);
-        if (swap) await swapsRepository.updateSwap({ ...swap, txid });
+        const swap = await refundableSwapsRepository.findSwapWithAddress(receiverAddress);
+        if (swap) await refundableSwapsRepository.updateSwap({ ...swap, txid });
       }
 
       // push to success page

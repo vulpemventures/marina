@@ -5,7 +5,7 @@ import type {
   BlockheadersRepository,
   OnboardingRepository,
   SendFlowRepository,
-  SwapsRepository,
+  RefundableSwapsRepository,
   TaxiRepository,
   WalletRepository,
 } from '../../domain/repository';
@@ -28,7 +28,7 @@ const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const onboardingRepository = new OnboardingStorageAPI();
 const sendFlowRepository = new SendFlowStorageAPI();
 const blockHeadersRepository = new BlockHeadersAPI();
-const swapsRepository = new SwapsStorageAPI();
+const refundableSwapsRepository = new SwapsStorageAPI();
 
 interface StorageContextProps {
   walletRepository: WalletRepository;
@@ -39,7 +39,7 @@ interface StorageContextProps {
   sendFlowRepository: SendFlowRepository;
   blockHeadersRepository: BlockheadersRepository;
   cache?: PresentationCache;
-  swapsRepository: SwapsRepository;
+  refundableSwapsRepository: RefundableSwapsRepository;
 }
 
 const StorageContext = createContext<StorageContextProps>({
@@ -50,7 +50,7 @@ const StorageContext = createContext<StorageContextProps>({
   onboardingRepository,
   sendFlowRepository,
   blockHeadersRepository,
-  swapsRepository,
+  refundableSwapsRepository,
 });
 
 const presenter = new PresenterImpl(
@@ -58,7 +58,7 @@ const presenter = new PresenterImpl(
   walletRepository,
   assetRepository,
   blockHeadersRepository,
-  swapsRepository
+  refundableSwapsRepository
 );
 
 export const StorageProvider = ({ children }: { children: React.ReactNode }) => {
@@ -90,7 +90,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         sendFlowRepository,
         blockHeadersRepository,
         cache,
-        swapsRepository,
+        refundableSwapsRepository,
       }}
     >
       {children}

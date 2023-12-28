@@ -4,7 +4,7 @@ import type {
   AppRepository,
   AssetRepository,
   BlockheadersRepository,
-  SwapsRepository,
+  RefundableSwapsRepository,
   WalletRepository,
 } from '../domain/repository';
 import type { TxDetails } from '../domain/transaction';
@@ -49,7 +49,7 @@ export class PresenterImpl implements Presenter {
     private walletRepository: WalletRepository,
     private assetsRepository: AssetRepository,
     private blockHeadersRepository: BlockheadersRepository,
-    private swapsRepository: SwapsRepository
+    private refundableSwapsRepository: RefundableSwapsRepository
   ) {}
 
   stop() {
@@ -322,7 +322,7 @@ export class PresenterImpl implements Presenter {
   }
 
   private async updateSwaps(): Promise<PresentationCache> {
-    const swaps = await this.swapsRepository.getSwaps();
+    const swaps = await this.refundableSwapsRepository.getSwaps();
 
     return {
       ...this.state,

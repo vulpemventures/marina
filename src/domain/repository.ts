@@ -294,7 +294,7 @@ export interface SwapParams {
   txid?: string;
 }
 
-export interface SwapsRepository {
+export interface RefundableSwapsRepository {
   addSwap(swap: SwapParams): Promise<void>;
   findSwapWithAddress(address: string): Promise<SwapParams | undefined>;
   findSwapWithTxid(txid: string): Promise<SwapParams | undefined>;
