@@ -11,7 +11,7 @@ import Button from './button';
 import Browser from 'webextension-polyfill';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../context/storage-context';
-import type { SwapParams } from '../../domain/repository';
+import type { RefundableSwapParams } from '../../domain/repository';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -22,7 +22,7 @@ function txTypeFromTransfer(transfer?: number): TxType {
 
 interface Props {
   assetSelected: Asset;
-  swap: SwapParams | undefined;
+  swap: RefundableSwapParams | undefined;
   txDetails: TxDetailsExtended;
 }
 

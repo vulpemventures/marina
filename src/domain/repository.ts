@@ -283,7 +283,7 @@ export async function initWalletRepository(
   };
 }
 
-export interface SwapParams {
+export interface RefundableSwapParams {
   blindingKey: string;
   derivationPath?: string;
   fundingAddress?: string;
@@ -295,10 +295,10 @@ export interface SwapParams {
 }
 
 export interface RefundableSwapsRepository {
-  addSwap(swap: SwapParams): Promise<void>;
-  findSwapWithAddress(address: string): Promise<SwapParams | undefined>;
-  findSwapWithTxid(txid: string): Promise<SwapParams | undefined>;
-  getSwaps(): Promise<SwapParams[]>;
-  updateSwap(swap: SwapParams): Promise<void>;
-  removeSwap(swap: SwapParams): Promise<void>;
+  addSwap(swap: RefundableSwapParams): Promise<void>;
+  findSwapWithAddress(address: string): Promise<RefundableSwapParams | undefined>;
+  findSwapWithTxid(txid: string): Promise<RefundableSwapParams | undefined>;
+  getSwaps(): Promise<RefundableSwapParams[]>;
+  updateSwap(swap: RefundableSwapParams): Promise<void>;
+  removeSwap(swap: RefundableSwapParams): Promise<void>;
 }

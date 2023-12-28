@@ -31,7 +31,7 @@ import { fromSatoshi } from '../extension/utility';
 import axios, { AxiosError } from 'axios';
 import { extractErrorMessage } from '../extension/utility/error';
 import Decimal from 'decimal.js';
-import type { SwapParams } from '../domain/repository';
+import type { RefundableSwapParams } from '../domain/repository';
 import type { NetworkString } from 'marina-provider';
 import { swapEndian } from '../application/utils';
 
@@ -456,7 +456,7 @@ export class Boltz implements BoltzInterface {
     return reverseSwap;
   }
 
-  extractInfoFromSwapParams(params: SwapParams) {
+  extractInfoFromRefundableSwapParams(params: RefundableSwapParams) {
     const { blindingKey, redeemScript } = params;
     const network = params.network ?? 'liquid';
 

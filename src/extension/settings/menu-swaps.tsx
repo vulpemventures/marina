@@ -12,7 +12,7 @@ import { useStorageContext } from '../context/storage-context';
 import { SEND_PAYMENT_SUCCESS_ROUTE } from '../routes/constants';
 import type { ECPairInterface } from 'ecpair';
 import ECPairFactory from 'ecpair';
-import type { SwapParams } from '../../domain/repository';
+import type { RefundableSwapParams } from '../../domain/repository';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../application/account';
 import BIP32Factory from 'bip32';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
@@ -33,7 +33,7 @@ const SettingsMenuSwaps: React.FC = () => {
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [swapParams, setSwapParams] = useState<SwapParams>();
+  const [refundableSwapParams, setRefundableSwapParams] = useState<RefundableSwapParams>();
   const [touched, setTouched] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -89,7 +89,7 @@ const SettingsMenuSwaps: React.FC = () => {
       if (!json.network) json.network = network;
 
       const { blindingKey, fundingAddress, redeemScript, refundPublicKey, timeoutBlockHeight } =
-        boltz.extractInfoFromSwapParams(json);
+        boltz.extractInfoFromRefundableSwapParams(json);
 
       const derivationPath = await findDerivationPath(refundPublicKey);
 
@@ -97,7 +97,7 @@ const SettingsMenuSwaps: React.FC = () => {
       if (blockTip && blockTip < timeoutBlockHeight)
         throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
 
-      setSwapParams({
+      setRefundableSwapParams({
         blindingKey,
         derivationPath,
         fundingAddress,
@@ -120,7 +120,7 @@ const SettingsMenuSwaps: React.FC = () => {
   const handleProceed = async () => {
     setIsSubmitting(true);
     try {
-      if (!swapParams) throw new Error('No swapParams');
+      if (!refundableSwapParams) throw new Error('No refundableSwapParams');
 
       const chainSource = await appRepository.getChainSource(network);
       if (!chainSource) throw new Error('Chain source not found for network ' + network);
@@ -132,7 +132,7 @@ const SettingsMenuSwaps: React.FC = () => {
         redeemScript,
         refundPublicKey,
         timeoutBlockHeight,
-      } = swapParams;
+      } = refundableSwapParams;
 
       if (!derivationPath) return setError('Unable to find derivation path');
       if (!fundingAddress) return setError('Unable to find funding address');
