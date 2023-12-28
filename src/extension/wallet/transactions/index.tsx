@@ -26,8 +26,7 @@ interface LocationState {
 }
 
 const Transactions: React.FC = () => {
-  const { assetRepository, appRepository, sendFlowRepository, cache, swapsRepository } =
-    useStorageContext();
+  const { assetRepository, appRepository, sendFlowRepository, cache } = useStorageContext();
 
   const {
     state: { assetHash },
