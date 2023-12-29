@@ -82,36 +82,13 @@ const SettingsMenuSwaps: React.FC = () => {
     baseDerivationPath: string,
     password: string
   ): Promise<ECPairInterface> => {
-    console.log('baseDerivationPath', baseDerivationPath);
     const encrypted = await walletRepository.getEncryptedMnemonic();
     if (!encrypted) throw new Error('No mnemonic found in wallet');
     const decryptedMnemonic = await decrypt(encrypted, password);
     const masterNode = bip32.fromSeed(await mnemonicToSeed(decryptedMnemonic));
-    try {
-      for (let i = 0; i < 100; i++) {
-        const k = masterNode.derivePath(`m/0/${i}`);
-        if (
-          k.publicKey.toString('hex') ===
-            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99' ||
-          k.publicKey.reverse().toString('hex') ===
-            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99'
-        ) {
-          console.log('found it k1', i);
-        }
-        const k2 = masterNode.derivePath(baseDerivationPath).derivePath(`0/${i}`);
-        if (
-          k2.publicKey.toString('hex') ===
-            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99' ||
-          k2.publicKey.reverse().toString('hex') ===
-            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99'
-        ) {
-          console.log('found it k2', i);
-        }
-      }
-    } catch (ee) {
-      console.log('ee', ee);
-    }
-    const key = masterNode.derivePath(derivationPath);
+    const key = masterNode
+      .derivePath(baseDerivationPath)
+      .derivePath(derivationPath.replace('m/', ''));
     return ECPairFactory(ecc).fromPrivateKey(key.privateKey!);
   };
 
@@ -208,7 +185,10 @@ const SettingsMenuSwaps: React.FC = () => {
       const addr = await mainAccount.getNextAddress(false);
       const blindingPublicKey = address.fromConfidential(addr.confidentialAddress).blindingKey;
       const destinationScript = toOutputScript(addr.confidentialAddress).toString('hex');
-      const baseDerivationPath = SLIP13(accountName);
+
+      const accountDetails = await walletRepository.getAccountDetails(accountName);
+      const baseDerivationPath = accountDetails[accountName].baseDerivationPath;
+      console.log('baseDerivationPath', baseDerivationPath);
 
       // get key pair
       const refundKeyPair = await getKeyPairFromDerivationPath(
