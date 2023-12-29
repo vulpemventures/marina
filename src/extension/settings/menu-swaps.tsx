@@ -96,7 +96,6 @@ const SettingsMenuSwaps: React.FC = () => {
       'liquid.network/testnet',
       'liquid.network/liquidtestnet'
     )}/api/blocks/tip/height`;
-    console.log('url', url);
     const { data } = await axios.get(url);
     return data;
   };
@@ -182,7 +181,6 @@ const SettingsMenuSwaps: React.FC = () => {
       // fetch utxos for funding address
       const [utxo] = await chainSource.listUnspents(fundingAddress);
       if (!utxo) return setError('Unable to find UTXO');
-      console.log('utxo', utxo);
 
       // unblind utxo if not unblinded
       if (!utxo.blindingData) {

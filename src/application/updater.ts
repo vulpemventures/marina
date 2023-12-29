@@ -92,7 +92,6 @@ export class UpdaterService {
     this.processingCount += 1;
     try {
       const swaps = await this.refundableSwapsRepository.getSwaps();
-      console.log('swaps.length', swaps.length);
       if (swaps.length === 0) return;
       const chainSource = await this.appRepository.getChainSource(network);
       if (!chainSource) throw new Error('Chain source not found for network ' + network);
@@ -100,7 +99,6 @@ export class UpdaterService {
         if (!swap.redeemScript || swap.network !== network) return;
         const fundingAddress = addressFromScript(swap.redeemScript);
         const [utxo] = await chainSource.listUnspents(fundingAddress);
-        console.log('utxo', utxo);
         if (!utxo) await this.refundableSwapsRepository.removeSwap(swap);
       }
     } finally {

@@ -13,7 +13,6 @@ export class RefundableSwapsStorageAPI implements RefundableSwapsRepository {
   }
 
   private async setSwapData(data: RefundableSwapParams[]): Promise<void> {
-    console.log('setting swap storage', data); // TODO remove this
     return Browser.storage.local.set({
       [SwapsStorageKeys.SWAPS_DATA]: data,
     });
