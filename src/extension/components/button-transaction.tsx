@@ -55,6 +55,9 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
   const transferAmount = () => txDetails.txFlow[assetSelected.assetHash];
   const transferAmountIsDefined = () => transferAmount() !== undefined;
 
+  const confirmed =
+    txDetails.height && txDetails.height >= 0 && cache?.blockHeaders.value[txDetails.height];
+
   return (
     <>
       <button
@@ -64,9 +67,7 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
       >
         <div className="flex items-center">
           <TxIcon txType={txTypeFromTransfer(transferAmount())} />
-          {txDetails.height &&
-          txDetails.height >= 0 &&
-          cache?.blockHeaders.value[txDetails.height] ? (
+          {txDetails.height && confirmed ? (
             <span className="text-grayDark items-center text-xs font-medium text-left">
               {moment(cache.blockHeaders.value[txDetails.height].timestamp * 1000).format(
                 'DD MMM YYYY'
@@ -87,7 +88,7 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
                 : '??'}{' '}
               {assetSelected.ticker}
             </span>
-            {swap && (
+            {swap && confirmed && (
               <span className="bg-smokeLight text-xxs px-1 py-0 font-semibold text-white rounded-full">
                 Refundable
               </span>

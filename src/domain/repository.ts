@@ -285,6 +285,7 @@ export async function initWalletRepository(
 
 export interface RefundableSwapParams {
   blindingKey: string;
+  confidentialAddress?: string;
   derivationPath?: string;
   fundingAddress?: string;
   id?: string;

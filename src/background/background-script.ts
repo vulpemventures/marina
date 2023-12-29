@@ -25,6 +25,7 @@ import { BlockHeadersAPI } from '../infrastructure/storage/blockheaders-reposito
 import type { ChainSource } from '../domain/chainsource';
 import { WalletRepositoryUnblinder } from '../application/unblinder';
 import { Transaction } from 'liquidjs-lib';
+import { RefundableSwapsStorageAPI } from '../infrastructure/storage/refundable-swaps-repository';
 
 // manifest v2 needs BrowserAction, v3 needs action
 const action = Browser.browserAction ?? Browser.action;
@@ -43,6 +44,7 @@ const backgroundPort = getBackgroundPortImplementation();
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
+const refundableSwapsRepository = new RefundableSwapsStorageAPI();
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const blockHeadersRepository = new BlockHeadersAPI();
 
@@ -51,6 +53,7 @@ const updaterService = new UpdaterService(
   appRepository,
   blockHeadersRepository,
   assetRepository,
+  refundableSwapsRepository,
   zkpLib
 );
 const subscriberService = new SubscriberService(

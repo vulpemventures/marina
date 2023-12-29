@@ -36,7 +36,9 @@ export class RefundableSwapsStorageAPI implements RefundableSwapsRepository {
   }
 
   async findSwapWithAddress(address: string): Promise<RefundableSwapParams | undefined> {
-    return (await this.getSwapData()).find((s) => s.fundingAddress === address);
+    return (await this.getSwapData()).find(
+      (s) => s.fundingAddress === address || s.confidentialAddress === address
+    );
   }
 
   async findSwapWithTxid(txid: string): Promise<RefundableSwapParams | undefined> {

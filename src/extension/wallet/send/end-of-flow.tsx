@@ -57,6 +57,7 @@ const SendEndOfFlow: React.FC = () => {
       await chainSource.close();
 
       // if it was a swap, add txid to swap saved on storage
+      console.log('receiverAddress', receiverAddress);
       if (receiverAddress) {
         const swap = await refundableSwapsRepository.findSwapWithAddress(receiverAddress);
         if (swap) {

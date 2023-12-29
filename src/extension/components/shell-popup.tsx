@@ -79,6 +79,7 @@ const ShellPopUp: React.FC<Props> = ({
         );
         if (!cache?.network) throw new Error('Network not found');
         await updater.checkAndFixMissingTransactionsData(cache.network);
+        await updater.checkRefundableSwaps(cache.network);
       } catch (e) {
         console.error(e);
       } finally {
