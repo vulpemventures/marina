@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import ShellPopUp from '../components/shell-popup';
 import Button from '../components/button';
@@ -25,11 +25,15 @@ import axios from 'axios';
 const zkpLib = await zkp();
 const bip32 = BIP32Factory(ecc);
 
-// TODO
-
 const SettingsMenuSwaps: React.FC = () => {
   const history = useHistory();
-  const { cache, appRepository, walletRepository } = useStorageContext();
+  const {
+    cache,
+    appRepository,
+    walletRepository,
+    refundableSwapsRepository,
+    refundSwapFlowRepository,
+  } = useStorageContext();
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +44,19 @@ const SettingsMenuSwaps: React.FC = () => {
 
   const network = cache?.network ?? 'liquid';
   const boltz = new Boltz(boltzUrl[network], networks[network].assetHash, zkpLib);
+
+  useEffect(() => {
+    (async () => {
+      const params = await refundSwapFlowRepository.getParams();
+      if (params) {
+        setTouched(true);
+        setRefundableSwapParams(params);
+        await refundSwapFlowRepository.reset();
+        document.getElementById('json')!.innerText = JSON.stringify(params);
+        void validateParams(JSON.stringify(params));
+      }
+    })().catch(console.error);
+  }, []);
 
   // 1. find the derivation path
   // TODO: maybe have cache
@@ -74,16 +91,19 @@ const SettingsMenuSwaps: React.FC = () => {
 
   const getBlockTip = async (): Promise<number> => {
     const webExplorerURL = await appRepository.getWebExplorerURL();
-    const { data } = await axios.get(`${webExplorerURL}/api/blocks/tip/height`);
+    const url = `${webExplorerURL?.replace(
+      // stupid bug from mempool
+      'liquid.network/testnet',
+      'liquid.network/liquidtestnet'
+    )}/api/blocks/tip/height`;
+    console.log('url', url);
+    const { data } = await axios.get(url);
     return data;
   };
 
-  const handleJsonChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setError('');
-    setTouched(true);
-
+  const validateParams = async (params: string) => {
     try {
-      const json = JSON.parse(event.target.value);
+      const json = JSON.parse(params);
       if (!json.blindingKey) throw new Error('Invalid JSON: missing blindingKey');
       if (!json.redeemScript) throw new Error('Invalid JSON: missing redeemScript');
       if (!json.network) json.network = network;
@@ -91,7 +111,7 @@ const SettingsMenuSwaps: React.FC = () => {
       const { blindingKey, fundingAddress, redeemScript, refundPublicKey, timeoutBlockHeight } =
         boltz.extractInfoFromRefundableSwapParams(json);
 
-      const derivationPath = await findDerivationPath(refundPublicKey);
+      const derivationPath = json.derivationPath ?? (await findDerivationPath(refundPublicKey));
 
       const blockTip = await getBlockTip();
       if (blockTip && blockTip < timeoutBlockHeight)
@@ -106,9 +126,26 @@ const SettingsMenuSwaps: React.FC = () => {
         refundPublicKey,
         timeoutBlockHeight,
       });
+
+      // TODO: maybe we don't need this after all
+      // void refundSwapFlowRepository.setParams({
+      //   blindingKey,
+      //   derivationPath,
+      //   fundingAddress,
+      //   network: json.network,
+      //   redeemScript,
+      //   refundPublicKey,
+      //   timeoutBlockHeight,
+      // });
     } catch (err) {
       setError(extractErrorMessage(err));
     }
+  };
+
+  const handleJsonChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setError('');
+    setTouched(true);
+    await validateParams(event.target.value);
   };
 
   const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,12 +179,12 @@ const SettingsMenuSwaps: React.FC = () => {
       const refundKeyPair = await getKeyPairFromDerivationPath(derivationPath, password);
       if (!refundKeyPair) return setError('Unable to get key pair');
 
-      // fetch utxos for address
+      // fetch utxos for funding address
       const [utxo] = await chainSource.listUnspents(fundingAddress);
       if (!utxo) return setError('Unable to find UTXO');
       console.log('utxo', utxo);
 
-      // unblind utxo
+      // unblind utxo if not unblinded
       if (!utxo.blindingData) {
         const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
           Buffer.from(blindingKey, 'hex'),
@@ -161,6 +198,7 @@ const SettingsMenuSwaps: React.FC = () => {
         };
       }
 
+      // generate blindingPublicKey and destinationScript
       const accountFactory = await AccountFactory.create(walletRepository);
       const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
       const mainAccount = await accountFactory.make(network, accountName);
@@ -168,6 +206,7 @@ const SettingsMenuSwaps: React.FC = () => {
       const blindingPublicKey = address.fromConfidential(addr.confidentialAddress).blindingKey;
       const destinationScript = toOutputScript(addr.confidentialAddress).toString('hex');
 
+      // make refund transaction
       const refundTransaction = boltz.makeRefundTransaction({
         utxo,
         refundKeyPair,
@@ -177,8 +216,14 @@ const SettingsMenuSwaps: React.FC = () => {
         blindingPublicKey,
       });
 
-      await chainSource.broadcastTransaction(refundTransaction.toHex());
+      // broadcast refund transaction
+      const txid = await chainSource.broadcastTransaction(refundTransaction.toHex());
+      if (!txid) return setError('Error broadcasting refund transaction');
 
+      // remove swap from refundable swaps repository
+      await refundableSwapsRepository.removeSwap(refundableSwapParams);
+
+      // jump to success page
       history.push({
         pathname: SEND_PAYMENT_SUCCESS_ROUTE,
         state: { txhex: refundTransaction.toHex(), text: 'Payment received!' },

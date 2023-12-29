@@ -59,7 +59,10 @@ const SendEndOfFlow: React.FC = () => {
       // if it was a swap, add txid to swap saved on storage
       if (receiverAddress) {
         const swap = await refundableSwapsRepository.findSwapWithAddress(receiverAddress);
-        if (swap) await refundableSwapsRepository.updateSwap({ ...swap, txid });
+        if (swap) {
+          const timestamp = Date.now();
+          await refundableSwapsRepository.updateSwap({ ...swap, timestamp, txid });
+        }
       }
 
       // push to success page

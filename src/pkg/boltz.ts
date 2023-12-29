@@ -19,7 +19,6 @@ import {
   witnessStackToScriptWitness,
   ZKPGenerator,
   ZKPValidator,
-  networks,
 } from 'liquidjs-lib';
 import type { TagData } from 'bolt11';
 import bolt11 from 'bolt11';
@@ -34,6 +33,7 @@ import Decimal from 'decimal.js';
 import type { RefundableSwapParams } from '../domain/repository';
 import type { NetworkString } from 'marina-provider';
 import { swapEndian } from '../application/utils';
+import { addressFromScript } from '../extension/utility/address';
 
 export interface BoltzInterface {
   getBoltzPair(pair: string): Promise<any>;
@@ -460,9 +460,7 @@ export class Boltz implements BoltzInterface {
     const { blindingKey, redeemScript } = params;
     const network = params.network ?? 'liquid';
 
-    const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
-    const addressASM = `OP_0 ${sha256}`;
-    const fundingAddress = address.fromOutputScript(script.fromASM(addressASM), networks[network]);
+    const fundingAddress = addressFromScript(redeemScript, network);
 
     const scriptAssembly = script
       .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])

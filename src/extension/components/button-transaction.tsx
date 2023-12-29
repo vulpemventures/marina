@@ -12,6 +12,8 @@ import Browser from 'webextension-polyfill';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../context/storage-context';
 import type { RefundableSwapParams } from '../../domain/repository';
+import { useHistory } from 'react-router';
+import { SETTINGS_MENU_SWAPS_ROUTE } from '../routes/constants';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -27,7 +29,8 @@ interface Props {
 }
 
 const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: Props) => {
-  const { walletRepository, appRepository, cache } = useStorageContext();
+  const history = useHistory();
+  const { appRepository, cache, refundSwapFlowRepository, walletRepository } = useStorageContext();
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleClick = () => {
@@ -42,6 +45,11 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
     const transaction = Transaction.fromHex(txDetails.hex);
     const url = await makeURLwithBlinders(transaction, appRepository, walletRepository);
     await Browser.tabs.create({ url, active: false });
+  };
+
+  const handleRefund = async () => {
+    await refundSwapFlowRepository.setParams(swap);
+    history.push(SETTINGS_MENU_SWAPS_ROUTE);
   };
 
   const transferAmount = () => txDetails.txFlow[assetSelected.assetHash];
@@ -146,14 +154,14 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
             <Button
               isOutline={true}
               className="bg-secondary hover:bg-secondary-light"
-              onClick={() => handleOpenExplorer()}
+              onClick={handleRefund}
             >
               Refund
             </Button>
-            <Button onClick={() => handleOpenExplorer()}>Explorer</Button>
+            <Button onClick={handleOpenExplorer}>Explorer</Button>
           </div>
         ) : (
-          <Button onClick={() => handleOpenExplorer()}>See in Explorer</Button>
+          <Button onClick={handleOpenExplorer}>See in Explorer</Button>
         )}
       </Modal>
     </>

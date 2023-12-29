@@ -287,10 +287,12 @@ export interface RefundableSwapParams {
   blindingKey: string;
   derivationPath?: string;
   fundingAddress?: string;
+  id?: string;
   network?: NetworkString;
   redeemScript: string;
   refundPublicKey?: string;
   timeoutBlockHeight?: number;
+  timestamp?: number;
   txid?: string;
 }
 
@@ -301,4 +303,18 @@ export interface RefundableSwapsRepository {
   getSwaps(): Promise<RefundableSwapParams[]>;
   updateSwap(swap: RefundableSwapParams): Promise<void>;
   removeSwap(swap: RefundableSwapParams): Promise<void>;
+}
+
+export enum RefundSwapFlowStep {
+  None,
+  ParamsEntered,
+  Confirm,
+}
+
+// this repository is used to cache data during the UI refund swap flow
+export interface RefundSwapFlowRepository {
+  reset(): Promise<void>;
+  getParams(): Promise<RefundableSwapParams | undefined>;
+  setParams(params: RefundableSwapParams | undefined): Promise<void>;
+  getStep(): Promise<RefundSwapFlowStep>;
 }

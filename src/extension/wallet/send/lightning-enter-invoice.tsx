@@ -12,6 +12,7 @@ import type { BoltzPair } from '../../../pkg/boltz';
 import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import { Spinner } from '../../components/spinner';
+import { addressFromScript } from '../../utility/address';
 
 const zkpLib = await zkp();
 
@@ -105,8 +106,10 @@ const LightningInvoice: React.FC = () => {
 
     try {
       // create submarine swap
-      const { address, blindingKey, expectedAmount, redeemScript } =
+      const { address, blindingKey, expectedAmount, id, redeemScript } =
         await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
+
+      const fundingAddress = addressFromScript(redeemScript, network);
 
       // push to storage payment to be made
       await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
@@ -114,7 +117,8 @@ const LightningInvoice: React.FC = () => {
       // save swap params to storage
       await refundableSwapsRepository.addSwap({
         blindingKey,
-        fundingAddress: address,
+        id,
+        fundingAddress,
         redeemScript,
         network,
       });
