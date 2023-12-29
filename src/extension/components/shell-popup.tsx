@@ -35,6 +35,7 @@ const ShellPopUp: React.FC<Props> = ({
     blockHeadersRepository,
     appRepository,
     sendFlowRepository,
+    refundableSwapsRepository,
     cache,
   } = useStorageContext();
   const [isRestorerLoading, setIsRestorerLoading] = useState(false);
@@ -73,6 +74,7 @@ const ShellPopUp: React.FC<Props> = ({
           appRepository,
           blockHeadersRepository,
           assetRepository,
+          refundableSwapsRepository,
           await zkp()
         );
         if (!cache?.network) throw new Error('Network not found');
