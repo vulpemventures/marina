@@ -1,12 +1,93 @@
 import type { MakeClaimTransactionParams, MakeRefundTransactionParams } from '../src/pkg/boltz';
 import { Boltz, boltzUrl } from '../src/pkg/boltz';
-import type { Transaction } from 'liquidjs-lib';
-import { networks } from 'liquidjs-lib';
+import {
+  Creator,
+  Transaction,
+  Updater,
+  address,
+  crypto,
+  networks,
+  payments,
+  script,
+} from 'liquidjs-lib';
 import ECPairFactory from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
+import type { RefundableSwapParams } from '../src/domain/repository';
+import { initWalletRepository } from '../src/domain/repository';
+import { swapEndian } from '../src/application/utils';
+import { faucet, getBlockTip, sleep } from './_regtest';
+import { AccountFactory, MainAccountTest } from '../src/application/account';
+import { WalletStorageAPI } from '../src/infrastructure/storage/wallet-repository';
+import { generateMnemonic } from 'bip39';
+import {
+  BlockstreamExplorerURLs,
+  NigiriDefaultExplorerURLs,
+  BlockstreamTestnetExplorerURLs,
+} from '../src/domain/explorer';
+import { AppStorageAPI } from '../src/infrastructure/storage/app-repository';
+import { BlinderService } from '../src/application/blinder';
+import { SignerService } from '../src/application/signer';
+import { PsetBuilder } from '../src/domain/pset';
+import { AssetStorageAPI } from '../src/infrastructure/storage/asset-repository';
+import { BlockHeadersAPI } from '../src/infrastructure/storage/blockheaders-repository';
+import { RefundableSwapsStorageAPI } from '../src/infrastructure/storage/refundable-swaps-repository';
+import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
+
+const PASSWORD = 'PASSWORD';
+
+const appRepository = new AppStorageAPI();
+const walletRepository = new WalletStorageAPI();
+const assetRepository = new AssetStorageAPI(walletRepository);
+const refundableSwapsRepository = new RefundableSwapsStorageAPI();
+const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
+const blockHeadersRepository = new BlockHeadersAPI();
+const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
+
+let factory: AccountFactory;
+let mnemonic: string;
+
+const getAddressFromSwapScript = (
+  refundPubKey = '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99',
+  timelockBlockHeight = 1197064
+) => {
+  const timelock = swapEndian(timelockBlockHeight.toString(16));
+  const preimageHash = 'a10c47b65595b8d960e6d292ddcb85d647e62fda';
+  const boltzPubkey = '03c952bf8e7cc0ceda01164c216575aef72a5ccc7a7d29a0f16feab60890e933e8';
+  const swapScript = [
+    'OP_HASH160',
+    preimageHash,
+    'OP_EQUAL',
+    'OP_IF',
+    boltzPubkey,
+    'OP_ELSE',
+    timelock,
+    'OP_NOP2',
+    'OP_DROP',
+    refundPubKey,
+    'OP_ENDIF',
+    'OP_CHECKSIG',
+  ].join(' ');
+  const scriptBuf = script.fromASM(swapScript);
+  const scriptHash = crypto.sha256(scriptBuf);
+  const output = script.fromASM(`OP_0 ${scriptHash.toString('hex')}`);
+  return payments.p2wsh({ output, network: networks['testnet'] }).address;
+};
 
 describe('Boltz Atomic Swap', () => {
-  it('should construct claim transaction', async () => {
+  beforeAll(async () => {
+    mnemonic = generateMnemonic();
+    // set up a random wallet in repository
+    // also set up default main Marina accounts
+    await initWalletRepository(walletRepository, mnemonic, PASSWORD);
+    await appRepository.setNetwork('regtest'); // switch to regtest
+    await appRepository.setWebsocketExplorerURLs({
+      liquid: BlockstreamExplorerURLs.websocketExplorerURL,
+      regtest: NigiriDefaultExplorerURLs.websocketExplorerURL,
+      testnet: BlockstreamTestnetExplorerURLs.websocketExplorerURL,
+    });
+    factory = await AccountFactory.create(walletRepository);
+  });
+  it('should construct a claim transaction', async () => {
     const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
     const boltz = new Boltz(boltzUrl['testnet'], networks['testnet'].assetHash, zkpLib);
     const claimPrivateKey = Buffer.from(
@@ -133,5 +214,80 @@ describe('Boltz Atomic Swap', () => {
     // Assert that the refund transaction is created successfully
     expect(refundTransaction).toBeDefined();
     // Add more assertions here if needed
+  });
+  it('should extract correct information from redeem script', async () => {
+    const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
+    const boltz = new Boltz(boltzUrl['testnet'], networks['testnet'].assetHash, zkpLib);
+    const params: RefundableSwapParams = {
+      blindingKey: 'b7a2f354fa12f31b3705443fb0c52374dc56768fdd407e70d525008ce0b6f4e2',
+      network: 'testnet',
+      redeemScript:
+        'a914a10c47b65595b8d960e6d292ddcb85d647e62fda87632103c952bf8e7cc0ceda01164c216575aef72a5ccc7a7d29a0f16feab60890e933e86703084412b1752103853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada9968ac',
+    };
+    const info = boltz.extractInfoFromRefundableSwapParams(params);
+    expect(info.fundingAddress).toEqual(
+      'tex1q39gha6fdwu3pfw647cg6yq3eergjd02pnm7x30xgufq8kdnh0s4snsr7zh'
+    );
+    expect(info.timeoutBlockHeight).toEqual(1197064);
+  });
+  it('should generate a valid address from a swap script', () => {
+    const address = getAddressFromSwapScript();
+    expect(address).toEqual('tex1q39gha6fdwu3pfw647cg6yq3eergjd02pnm7x30xgufq8kdnh0s4snsr7zh');
+  });
+  it('should broadcast a submarine swap transaction', async () => {
+    // get block tip
+    const blockTip = await getBlockTip();
+    expect(blockTip).toBeDefined();
+    // create account
+    factory = await AccountFactory.create(walletRepository);
+    const account = await factory.make('regtest', MainAccountTest);
+    // get next public key
+    const nextAddress = await account.getNextAddress(false);
+    expect(nextAddress).toBeDefined();
+    expect(nextAddress.publicKey).toBeDefined();
+    expect(nextAddress.confidentialAddress).toBeDefined();
+    // faucet 1 BTC
+    await faucet(nextAddress.confidentialAddress, 1);
+    await sleep(3000);
+    const [coin] = await walletRepository.getUtxos('regtest');
+
+    const witnessUtxo = await walletRepository.getWitnessUtxo(coin.txid, coin.vout);
+
+    // get address for this swap script
+    const swapAddress = getAddressFromSwapScript(nextAddress.publicKey, blockTip);
+    if (!swapAddress) throw new Error('No address to send to');
+
+    const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
+    const blinder = new BlinderService(walletRepository, zkpLib);
+    const signer = await SignerService.fromPassword(walletRepository, appRepository, PASSWORD);
+    const pset = Creator.newPset();
+    const updater = new Updater(pset);
+
+    updater.addInputs([
+      {
+        txid: coin.txid,
+        txIndex: coin.vout,
+        witnessUtxo,
+        sighashType: Transaction.SIGHASH_ALL,
+      },
+    ]);
+    updater.addOutputs([
+      {
+        amount: coin.blindingData!.value - 1500,
+        asset: networks.regtest.assetHash,
+        script: address.toOutputScript(swapAddress),
+        blinderIndex: 0,
+        blindingPublicKey: address.fromConfidential(swapAddress).blindingKey,
+      },
+      {
+        amount: 1500,
+        asset: networks.regtest.assetHash,
+      },
+    ]);
+
+    await blinder.blindPset(pset);
+    const signedPset = await signer.signPset(pset);
+    const hex = signer.finalizeAndExtract(signedPset);
+    expect(hex).toBeTruthy();
   });
 });

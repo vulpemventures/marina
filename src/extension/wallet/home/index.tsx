@@ -22,6 +22,7 @@ import { networks } from 'liquidjs-lib';
 import { useStorageContext } from '../../context/storage-context';
 import { UpdaterService } from '../../../application/updater';
 import zkp from '@vulpemventures/secp256k1-zkp';
+import { swapEndian } from '../../../application/utils';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -74,6 +75,7 @@ const Home: React.FC = () => {
   // this also works when user re-opens the wallet
   useEffect(() => {
     (async () => {
+      console.log('swaps', await refundableSwapsRepository.getSwaps());
       const updater = new UpdaterService(
         walletRepository,
         appRepository,

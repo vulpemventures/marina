@@ -323,6 +323,7 @@ export class Boltz implements BoltzInterface {
     if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');
     const pset = Creator.newPset();
     const updater = new Updater(pset);
+    console.log('timeoutBlockHeight', timeoutBlockHeight);
 
     updater
       .addInputs([

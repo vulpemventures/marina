@@ -13,7 +13,7 @@ import { SEND_PAYMENT_SUCCESS_ROUTE } from '../routes/constants';
 import type { ECPairInterface } from 'ecpair';
 import ECPairFactory from 'ecpair';
 import type { RefundableSwapParams } from '../../domain/repository';
-import { AccountFactory, MainAccount, MainAccountTest } from '../../application/account';
+import { AccountFactory, MainAccount, MainAccountTest, SLIP13 } from '../../application/account';
 import BIP32Factory from 'bip32';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
 import { decrypt } from '../../domain/encryption';
@@ -79,13 +79,39 @@ const SettingsMenuSwaps: React.FC = () => {
 
   const getKeyPairFromDerivationPath = async (
     derivationPath: string,
+    baseDerivationPath: string,
     password: string
   ): Promise<ECPairInterface> => {
+    console.log('baseDerivationPath', baseDerivationPath);
     const encrypted = await walletRepository.getEncryptedMnemonic();
     if (!encrypted) throw new Error('No mnemonic found in wallet');
     const decryptedMnemonic = await decrypt(encrypted, password);
     const masterNode = bip32.fromSeed(await mnemonicToSeed(decryptedMnemonic));
-    const key = masterNode.derivePath(derivationPath.replace('m/', '')!);
+    try {
+      for (let i = 0; i < 100; i++) {
+        const k = masterNode.derivePath(`m/0/${i}`);
+        if (
+          k.publicKey.toString('hex') ===
+            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99' ||
+          k.publicKey.reverse().toString('hex') ===
+            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99'
+        ) {
+          console.log('found it k1', i);
+        }
+        const k2 = masterNode.derivePath(baseDerivationPath).derivePath(`0/${i}`);
+        if (
+          k2.publicKey.toString('hex') ===
+            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99' ||
+          k2.publicKey.reverse().toString('hex') ===
+            '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99'
+        ) {
+          console.log('found it k2', i);
+        }
+      }
+    } catch (ee) {
+      console.log('ee', ee);
+    }
+    const key = masterNode.derivePath(derivationPath);
     return ECPairFactory(ecc).fromPrivateKey(key.privateKey!);
   };
 
@@ -110,11 +136,12 @@ const SettingsMenuSwaps: React.FC = () => {
       const { blindingKey, fundingAddress, redeemScript, refundPublicKey, timeoutBlockHeight } =
         boltz.extractInfoFromRefundableSwapParams(json);
 
-      const derivationPath = json.derivationPath ?? (await findDerivationPath(refundPublicKey));
+      const derivationPath = await findDerivationPath(refundPublicKey);
 
       const blockTip = await getBlockTip();
-      if (blockTip && blockTip < timeoutBlockHeight)
-        throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
+      console.log('blocktip', blockTip);
+      // if (blockTip && blockTip < timeoutBlockHeight)
+      //   throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
 
       setRefundableSwapParams({
         blindingKey,
@@ -174,9 +201,25 @@ const SettingsMenuSwaps: React.FC = () => {
       if (!fundingAddress) return setError('Unable to find funding address');
       if (!refundPublicKey) return setError('Unable to find refund public key');
 
+      // generate blindingPublicKey and destinationScript
+      const accountFactory = await AccountFactory.create(walletRepository);
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const mainAccount = await accountFactory.make(network, accountName);
+      const addr = await mainAccount.getNextAddress(false);
+      const blindingPublicKey = address.fromConfidential(addr.confidentialAddress).blindingKey;
+      const destinationScript = toOutputScript(addr.confidentialAddress).toString('hex');
+      const baseDerivationPath = SLIP13(accountName);
+
       // get key pair
-      const refundKeyPair = await getKeyPairFromDerivationPath(derivationPath, password);
+      const refundKeyPair = await getKeyPairFromDerivationPath(
+        derivationPath,
+        baseDerivationPath,
+        password
+      );
       if (!refundKeyPair) return setError('Unable to get key pair');
+      console.log('privateKey', refundKeyPair.privateKey!.toString('hex'));
+      console.log('publicKey', refundKeyPair.publicKey.toString('hex'));
+      console.log('refundPublicKey', refundPublicKey);
 
       // fetch utxos for funding address
       const [utxo] = await chainSource.listUnspents(fundingAddress);
@@ -196,14 +239,6 @@ const SettingsMenuSwaps: React.FC = () => {
         };
       }
 
-      // generate blindingPublicKey and destinationScript
-      const accountFactory = await AccountFactory.create(walletRepository);
-      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-      const mainAccount = await accountFactory.make(network, accountName);
-      const addr = await mainAccount.getNextAddress(false);
-      const blindingPublicKey = address.fromConfidential(addr.confidentialAddress).blindingKey;
-      const destinationScript = toOutputScript(addr.confidentialAddress).toString('hex');
-
       // make refund transaction
       const refundTransaction = boltz.makeRefundTransaction({
         utxo,
@@ -215,6 +250,7 @@ const SettingsMenuSwaps: React.FC = () => {
       });
 
       // broadcast refund transaction
+      console.log('refund tx hex', refundTransaction.toHex());
       const txid = await chainSource.broadcastTransaction(refundTransaction.toHex());
       if (!txid) return setError('Error broadcasting refund transaction');
 

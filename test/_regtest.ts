@@ -66,3 +66,7 @@ export async function broadcastTx(hex: string): Promise<string> {
     throw err;
   }
 }
+
+export async function getBlockTip(): Promise<number> {
+  return (await axios.get(`${APIURL}/blocks/tip/height`)).data;
+}
