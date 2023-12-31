@@ -333,6 +333,7 @@ export class Boltz implements BoltzInterface {
           witnessUtxo: utxo.witnessUtxo,
           sighashType: Transaction.SIGHASH_ALL,
           heightLocktime: timeoutBlockHeight,
+          sequence: 21,
         },
       ])
       .addInWitnessScript(0, redeemScript)
@@ -367,7 +368,7 @@ export class Boltz implements BoltzInterface {
         finalScriptSig: undefined,
         finalScriptWitness: witnessStackToScriptWitness([
           pset.inputs[inputIndex].partialSigs![0].signature,
-          Buffer.of(), //dummy preimage
+          Buffer.of(1), //dummy preimage
           redeemScript,
         ]),
       };

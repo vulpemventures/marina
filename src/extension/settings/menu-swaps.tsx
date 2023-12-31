@@ -13,7 +13,7 @@ import { SEND_PAYMENT_SUCCESS_ROUTE } from '../routes/constants';
 import type { ECPairInterface } from 'ecpair';
 import ECPairFactory from 'ecpair';
 import type { RefundableSwapParams } from '../../domain/repository';
-import { AccountFactory, MainAccount, MainAccountTest, SLIP13 } from '../../application/account';
+import { AccountFactory, MainAccount, MainAccountTest } from '../../application/account';
 import BIP32Factory from 'bip32';
 import { toBlindingData } from 'liquidjs-lib/src/psbt';
 import { decrypt } from '../../domain/encryption';
@@ -117,8 +117,8 @@ const SettingsMenuSwaps: React.FC = () => {
 
       const blockTip = await getBlockTip();
       console.log('blocktip', blockTip);
-      // if (blockTip && blockTip < timeoutBlockHeight)
-      //   throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
+      if (blockTip && blockTip < timeoutBlockHeight)
+        throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
 
       setRefundableSwapParams({
         blindingKey,
