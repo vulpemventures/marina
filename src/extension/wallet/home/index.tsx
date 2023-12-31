@@ -22,7 +22,6 @@ import { networks } from 'liquidjs-lib';
 import { useStorageContext } from '../../context/storage-context';
 import { UpdaterService } from '../../../application/updater';
 import zkp from '@vulpemventures/secp256k1-zkp';
-import { swapEndian } from '../../../application/utils';
 
 const Home: React.FC = () => {
   const history = useHistory();

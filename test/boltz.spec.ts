@@ -1,14 +1,19 @@
 import type { MakeClaimTransactionParams, MakeRefundTransactionParams } from '../src/pkg/boltz';
 import { Boltz, boltzUrl } from '../src/pkg/boltz';
+import type { OwnedInput } from 'liquidjs-lib';
 import {
   Creator,
   Transaction,
   Updater,
-  address,
   crypto,
   networks,
   payments,
   script,
+  ZKPValidator,
+  AssetHash,
+  Blinder,
+  Pset,
+  ZKPGenerator,
 } from 'liquidjs-lib';
 import ECPairFactory from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
@@ -16,6 +21,7 @@ import type { RefundableSwapParams } from '../src/domain/repository';
 import { initWalletRepository } from '../src/domain/repository';
 import { swapEndian } from '../src/application/utils';
 import { faucet, getBlockTip, sleep } from './_regtest';
+import type { Account } from '../src/application/account';
 import { AccountFactory, MainAccountTest } from '../src/application/account';
 import { WalletStorageAPI } from '../src/infrastructure/storage/wallet-repository';
 import { generateMnemonic } from 'bip39';
@@ -25,35 +31,41 @@ import {
   BlockstreamTestnetExplorerURLs,
 } from '../src/domain/explorer';
 import { AppStorageAPI } from '../src/infrastructure/storage/app-repository';
-import { BlinderService } from '../src/application/blinder';
 import { SignerService } from '../src/application/signer';
-import { PsetBuilder } from '../src/domain/pset';
-import { AssetStorageAPI } from '../src/infrastructure/storage/asset-repository';
-import { BlockHeadersAPI } from '../src/infrastructure/storage/blockheaders-repository';
-import { RefundableSwapsStorageAPI } from '../src/infrastructure/storage/refundable-swaps-repository';
-import { TaxiStorageAPI } from '../src/infrastructure/storage/taxi-repository';
+import zkp from '@vulpemventures/secp256k1-zkp';
+import { toBlindingData } from 'liquidjs-lib/src/psbt';
+import type { Payment } from 'liquidjs-lib/src/payments';
+import type { ChainSource, Unspent } from '../src/domain/chainsource';
 
 const PASSWORD = 'PASSWORD';
 
 const appRepository = new AppStorageAPI();
 const walletRepository = new WalletStorageAPI();
-const assetRepository = new AssetStorageAPI(walletRepository);
-const refundableSwapsRepository = new RefundableSwapsStorageAPI();
-const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
-const blockHeadersRepository = new BlockHeadersAPI();
-const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
-
 let factory: AccountFactory;
-let mnemonic: string;
+let zkpLib: any;
 
-const getAddressFromSwapScript = (
+const blindPset = (pset: Pset, ownedInput: OwnedInput): Pset => {
+  const { ecc } = zkpLib;
+  const zkpValidator = new ZKPValidator(zkpLib);
+  const zkpGenerator = new ZKPGenerator(zkpLib, ZKPGenerator.WithOwnedInputs([ownedInput]));
+  const outputBlindingArgs = zkpGenerator.blindOutputs(pset, Pset.ECCKeysGenerator(ecc));
+  const blinder = new Blinder(pset, [ownedInput], zkpValidator, zkpGenerator);
+  blinder.blindLast({ outputBlindingArgs });
+  return blinder.pset;
+};
+
+const getAddressForSwapScript = (
   refundPubKey = '03853d78bd2e188d3abb21f6e02ff38d899b79b020bdb6709b358421f0b8dada99',
   timelockBlockHeight = 1197064
-) => {
+): Payment => {
+  const blindkey = Buffer.from(
+    '026477115981fe981a6918a6297d9803c4dc04f328f22041bedff886bbc2962e01',
+    'hex'
+  );
   const timelock = swapEndian(timelockBlockHeight.toString(16));
   const preimageHash = 'a10c47b65595b8d960e6d292ddcb85d647e62fda';
   const boltzPubkey = '03c952bf8e7cc0ceda01164c216575aef72a5ccc7a7d29a0f16feab60890e933e8';
-  const swapScript = [
+  const swapASM = [
     'OP_HASH160',
     preimageHash,
     'OP_EQUAL',
@@ -67,15 +79,110 @@ const getAddressFromSwapScript = (
     'OP_ENDIF',
     'OP_CHECKSIG',
   ].join(' ');
-  const scriptBuf = script.fromASM(swapScript);
+  const network = networks['regtest'];
+  const scriptBuf = script.fromASM(swapASM);
   const scriptHash = crypto.sha256(scriptBuf);
   const output = script.fromASM(`OP_0 ${scriptHash.toString('hex')}`);
-  return payments.p2wsh({ output, network: networks['testnet'] }).address;
+  const { address } = payments.p2wsh({ output, network });
+  return payments.p2wsh({ address, blindkey, network });
+};
+
+const getAccount = async (): Promise<Account> => {
+  return await factory.make('regtest', MainAccountTest);
+};
+
+const getNextAddress = async (account: Account) => {
+  const nextAddress = await account.getNextAddress(false);
+  expect(nextAddress).toBeDefined();
+  expect(nextAddress.publicKey).toBeDefined();
+  expect(nextAddress.confidentialAddress).toBeDefined();
+  return nextAddress;
+};
+
+const getChainSource = async (): Promise<ChainSource> => {
+  const chainSource = await appRepository.getChainSource('regtest');
+  if (!chainSource) throw new Error('undefined chainsource');
+  return chainSource;
+};
+
+const getUnblindedUtxo = async (nextAddress: any): Promise<Unspent> => {
+  const chainSource = await getChainSource();
+  const [utxo] = await chainSource.listUnspents(nextAddress.confidentialAddress);
+  const { asset, assetBlindingFactor, value, valueBlindingFactor } = await toBlindingData(
+    Buffer.from(nextAddress.blindingPrivateKey!, 'hex'),
+    utxo.witnessUtxo
+  );
+  utxo['blindingData'] = {
+    asset: asset.reverse().toString('hex'),
+    assetBlindingFactor: assetBlindingFactor.toString('hex'),
+    value: parseInt(value, 10),
+    valueBlindingFactor: valueBlindingFactor.toString('hex'),
+  };
+  return utxo;
+};
+
+const broadcastSwapTx = async (): Promise<string> => {
+  const account = await getAccount();
+  const blockTip = await getBlockTip();
+  const chainSource = await getChainSource();
+  const nextAddress = await getNextAddress(account);
+  const swapAddress = getAddressForSwapScript(nextAddress.publicKey, blockTip);
+
+  // faucet 1 BTC
+  await faucet(nextAddress.confidentialAddress, 1);
+  await sleep(5000);
+
+  const utxo = await getUnblindedUtxo(nextAddress);
+  if (!utxo.blindingData) throw new Error('missing blinding data');
+
+  const pset = Creator.newPset();
+  const updater = new Updater(pset);
+
+  updater
+    .addInputs([
+      {
+        txid: utxo.txid,
+        txIndex: utxo.vout,
+        witnessUtxo: utxo.witnessUtxo,
+        sighashType: Transaction.SIGHASH_ALL,
+      },
+    ])
+    .addOutputs([
+      {
+        amount: utxo.blindingData.value - 1500,
+        asset: networks.regtest.assetHash,
+        script: swapAddress.output,
+        blinderIndex: 0,
+        blindingPublicKey: swapAddress.blindkey,
+      },
+      {
+        amount: 1500,
+        asset: networks.regtest.assetHash,
+      },
+    ]);
+
+  const blindedPset = blindPset(pset, {
+    index: 0,
+    value: utxo.blindingData.value.toString(),
+    valueBlindingFactor: Buffer.from(utxo.blindingData.valueBlindingFactor, 'hex'),
+    asset: AssetHash.fromHex(utxo.blindingData.asset).bytesWithoutPrefix,
+    assetBlindingFactor: Buffer.from(utxo.blindingData.assetBlindingFactor, 'hex'),
+  });
+
+  const signer = await SignerService.fromPassword(walletRepository, appRepository, PASSWORD);
+  const signedPset = await signer.signPset(blindedPset);
+  const hex = signer.finalizeAndExtract(signedPset);
+  expect(hex).toBeTruthy();
+
+  const txid = chainSource.broadcastTransaction(hex);
+  expect(txid).toBeDefined();
+  return txid;
 };
 
 describe('Boltz Atomic Swap', () => {
   beforeAll(async () => {
-    mnemonic = generateMnemonic();
+    zkpLib = await zkp();
+    const mnemonic = generateMnemonic();
     // set up a random wallet in repository
     // also set up default main Marina accounts
     await initWalletRepository(walletRepository, mnemonic, PASSWORD);
@@ -231,63 +338,11 @@ describe('Boltz Atomic Swap', () => {
     expect(info.timeoutBlockHeight).toEqual(1197064);
   });
   it('should generate a valid address from a swap script', () => {
-    const address = getAddressFromSwapScript();
-    expect(address).toEqual('tex1q39gha6fdwu3pfw647cg6yq3eergjd02pnm7x30xgufq8kdnh0s4snsr7zh');
+    const address = getAddressForSwapScript().address;
+    expect(address).toEqual('ert1q39gha6fdwu3pfw647cg6yq3eergjd02pnm7x30xgufq8kdnh0s4s9ywm40');
   });
   it('should broadcast a submarine swap transaction', async () => {
-    // get block tip
-    const blockTip = await getBlockTip();
-    expect(blockTip).toBeDefined();
-    // create account
-    factory = await AccountFactory.create(walletRepository);
-    const account = await factory.make('regtest', MainAccountTest);
-    // get next public key
-    const nextAddress = await account.getNextAddress(false);
-    expect(nextAddress).toBeDefined();
-    expect(nextAddress.publicKey).toBeDefined();
-    expect(nextAddress.confidentialAddress).toBeDefined();
-    // faucet 1 BTC
-    await faucet(nextAddress.confidentialAddress, 1);
-    await sleep(3000);
-    const [coin] = await walletRepository.getUtxos('regtest');
-
-    const witnessUtxo = await walletRepository.getWitnessUtxo(coin.txid, coin.vout);
-
-    // get address for this swap script
-    const swapAddress = getAddressFromSwapScript(nextAddress.publicKey, blockTip);
-    if (!swapAddress) throw new Error('No address to send to');
-
-    const zkpLib = await require('@vulpemventures/secp256k1-zkp')();
-    const blinder = new BlinderService(walletRepository, zkpLib);
-    const signer = await SignerService.fromPassword(walletRepository, appRepository, PASSWORD);
-    const pset = Creator.newPset();
-    const updater = new Updater(pset);
-
-    updater.addInputs([
-      {
-        txid: coin.txid,
-        txIndex: coin.vout,
-        witnessUtxo,
-        sighashType: Transaction.SIGHASH_ALL,
-      },
-    ]);
-    updater.addOutputs([
-      {
-        amount: coin.blindingData!.value - 1500,
-        asset: networks.regtest.assetHash,
-        script: address.toOutputScript(swapAddress),
-        blinderIndex: 0,
-        blindingPublicKey: address.fromConfidential(swapAddress).blindingKey,
-      },
-      {
-        amount: 1500,
-        asset: networks.regtest.assetHash,
-      },
-    ]);
-
-    await blinder.blindPset(pset);
-    const signedPset = await signer.signPset(pset);
-    const hex = signer.finalizeAndExtract(signedPset);
-    expect(hex).toBeTruthy();
-  });
+    const txid = await broadcastSwapTx();
+    expect(txid).toBeDefined();
+  }, 10_000);
 });
