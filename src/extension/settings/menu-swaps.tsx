@@ -58,23 +58,22 @@ const SettingsMenuSwaps: React.FC = () => {
     })().catch(console.error);
   }, []);
 
-  // 1. find the derivation path
-  // TODO: maybe have cache
-  // 2. Ask user for password to fetch the private key
-  // 3. Decrypt the unspent to blinding data
-
   const findDerivationPath = async (refundPublicKey: string): Promise<string> => {
     // get account
     const accountFactory = await AccountFactory.create(walletRepository);
     const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
     const mainAccount = await accountFactory.make(network, accountName);
+    const addresses = await mainAccount.getAllAddresses();
     // find address
-    const [usedAddress] = (await mainAccount.getAllAddresses()).filter(
-      (a) => a.publicKey === refundPublicKey
-    );
-    if (!usedAddress.derivationPath)
-      throw new Error('derivation path not found for pubkey ' + refundPublicKey);
-    return usedAddress.derivationPath;
+    const [usedAddress] = addresses.filter((a) => a.publicKey === refundPublicKey);
+    if (usedAddress?.derivationPath) return usedAddress.derivationPath;
+    // check if by any chance the address used is missing on marina cache
+    // by iterating through the next 10 addresses
+    for (let i = 0; i < 20; i++) {
+      const nextAddress = await mainAccount.getNextAddress(false);
+      if (nextAddress.derivationPath) return nextAddress.derivationPath;
+    }
+    throw new Error('derivation path not found');
   };
 
   const getKeyPairFromDerivationPath = async (
