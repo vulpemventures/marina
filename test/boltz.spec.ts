@@ -130,8 +130,8 @@ const broadcastSwapTx = async (): Promise<string> => {
   await faucet(nextAddress.confidentialAddress, 1);
   await sleep(5000);
 
-  const blockTip = await getBlockTip();
-  const swapAddress = getAddressForSwapScript(nextAddress.publicKey, blockTip);
+  // const blockTip = await getBlockTip();
+  const swapAddress = getAddressForSwapScript(nextAddress.publicKey);
 
   const utxo = await getUnblindedUtxo(nextAddress);
   if (!utxo.blindingData) throw new Error('missing blinding data');
