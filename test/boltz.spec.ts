@@ -19,7 +19,7 @@ import ECPairFactory from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
 import type { RefundableSwapParams } from '../src/domain/repository';
 import { initWalletRepository } from '../src/domain/repository';
-import { swapEndian } from '../src/application/utils';
+import { num2hex, swapEndian } from '../src/application/utils';
 import { faucet, getBlockTip, sleep } from './_regtest';
 import type { Account } from '../src/application/account';
 import { AccountFactory, MainAccountTest } from '../src/application/account';
@@ -62,7 +62,7 @@ const getAddressForSwapScript = (
     '026477115981fe981a6918a6297d9803c4dc04f328f22041bedff886bbc2962e01',
     'hex'
   );
-  const timelock = swapEndian(timelockBlockHeight.toString(16));
+  const timelock = swapEndian(num2hex(timelockBlockHeight));
   const preimageHash = 'a10c47b65595b8d960e6d292ddcb85d647e62fda';
   const boltzPubkey = '03c952bf8e7cc0ceda01164c216575aef72a5ccc7a7d29a0f16feab60890e933e8';
   const swapASM = [
@@ -123,16 +123,14 @@ const getUnblindedUtxo = async (nextAddress: any): Promise<Unspent> => {
 
 const broadcastSwapTx = async (): Promise<string> => {
   const account = await getAccount();
+  const blockTip = await getBlockTip();
   const chainSource = await getChainSource();
   const nextAddress = await getNextAddress(account);
+  const swapAddress = getAddressForSwapScript(nextAddress.publicKey, blockTip);
 
   // faucet 1 BTC
   await faucet(nextAddress.confidentialAddress, 1);
   await sleep(5000);
-
-  const blockTip = await getBlockTip();
-  expect(blockTip).toEqual(1);
-  const swapAddress = getAddressForSwapScript(nextAddress.publicKey);
 
   const utxo = await getUnblindedUtxo(nextAddress);
   if (!utxo.blindingData) throw new Error('missing blinding data');
