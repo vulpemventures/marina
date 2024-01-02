@@ -7,6 +7,7 @@ import {
   SETTINGS_MENU_INFO_ROUTE,
   SETTINGS_MENU_SECURITY_ROUTE,
   SETTINGS_MENU_SETTINGS_ROUTE,
+  SETTINGS_MENU_SWAPS_ROUTE,
 } from '../routes/constants';
 import { useBackgroundPortContext } from '../context/background-port-context';
 import { useStorageContext } from '../context/storage-context';
@@ -25,6 +26,7 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   useOnClickOutside(ref, useCallback(handleClose, [ref, handleClose]));
   const handleSecurity = () => history.push(SETTINGS_MENU_SECURITY_ROUTE);
   const handleSettings = () => history.push(SETTINGS_MENU_SETTINGS_ROUTE);
+  const handleSwaps = () => history.push(SETTINGS_MENU_SWAPS_ROUTE);
   const handleInfo = () => history.push(SETTINGS_MENU_INFO_ROUTE);
   const handleLogOut = async () => {
     await appRepository.updateStatus({ isAuthenticated: false });
@@ -39,7 +41,7 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
   return (
     <div className="bg-smokeLight fixed inset-0 z-50 flex pr-2">
       <div
-        className="rounded-xl w-36 h-44 top-10 relative flex flex-col px-6 py-4 ml-auto bg-white"
+        className="rounded-xl w-36 top-10 relative flex flex-col h-48 px-6 py-4 ml-auto bg-white"
         ref={ref}
       >
         <ul className="flex flex-col justify-between h-full">
@@ -54,6 +56,17 @@ const ModalMenu: React.FC<Props> = ({ isOpen, handleClose }) => {
             <li className="flex flex-row items-center gap-2">
               <img className="w-6 h-6" src="assets/images/cog.svg" alt="settings" />
               <span className="font-regular text-sm">Settings</span>
+            </li>
+          </button>
+
+          <button onClick={handleSwaps}>
+            <li className="flex flex-row items-center gap-2">
+              <img
+                className="w-6 h-6"
+                src="assets/images/lightning-circle.svg"
+                alt="lightning swaps"
+              />
+              <span className="font-regular text-sm">Swaps</span>
             </li>
           </button>
 

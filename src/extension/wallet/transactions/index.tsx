@@ -20,24 +20,27 @@ import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../../context/storage-context';
 import { networks } from 'liquidjs-lib';
 import ModalSelectNetwork from '../../components/modal-select-network';
+import type { RefundableSwapParams } from '../../../domain/repository';
 
 interface LocationState {
   assetHash: string;
 }
 
 const Transactions: React.FC = () => {
-  const { assetRepository, appRepository, sendFlowRepository, cache } = useStorageContext();
+  const { assetRepository, appRepository, sendFlowRepository, refundableSwapsRepository, cache } =
+    useStorageContext();
 
   const {
     state: { assetHash },
   } = useLocation<LocationState>();
   const history = useHistory();
   const [asset, setAsset] = useState<Asset>();
+  const [refundableSwaps, setRefundableSwaps] = useState<RefundableSwapParams[]>();
 
   useEffect(() => {
     (async () => {
-      const asset = await assetRepository.getAsset(assetHash);
-      setAsset(asset);
+      setAsset(await assetRepository.getAsset(assetHash));
+      setRefundableSwaps(await refundableSwapsRepository.getSwaps());
     })().catch(console.error);
   }, [assetHash]);
 
@@ -129,7 +132,15 @@ const Transactions: React.FC = () => {
             {asset && (
               <ButtonList title="Transactions" emptyText="Your transactions will appear here">
                 {getFilteredTransactions().map((tx, index) => {
-                  return <ButtonTransaction txDetails={tx} assetSelected={asset} key={index} />;
+                  const swap = refundableSwaps?.find((s) => s.txid === tx.txid);
+                  return (
+                    <ButtonTransaction
+                      assetSelected={asset}
+                      key={index}
+                      swap={swap}
+                      txDetails={tx}
+                    />
+                  );
                 })}
               </ButtonList>
             )}

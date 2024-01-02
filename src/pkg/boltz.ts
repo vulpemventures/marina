@@ -30,8 +30,10 @@ import { fromSatoshi } from '../extension/utility';
 import axios, { AxiosError } from 'axios';
 import { extractErrorMessage } from '../extension/utility/error';
 import Decimal from 'decimal.js';
-
-export type NetworkString = 'liquid' | 'testnet' | 'regtest';
+import type { RefundableSwapParams } from '../domain/repository';
+import type { NetworkString } from 'marina-provider';
+import { swapEndian } from '../application/utils';
+import { addressFromScript } from '../extension/utility/address';
 
 export interface BoltzInterface {
   getBoltzPair(pair: string): Promise<any>;
@@ -92,9 +94,11 @@ interface ReverseSubmarineSwapResponse {
 
 export interface SubmarineSwap {
   address: string;
+  blindingKey: string;
   expectedAmount: number;
   id: string;
   redeemScript: string;
+  refundPublicKey: string;
 }
 
 export interface ReverseSwap {
@@ -118,7 +122,20 @@ export interface MakeClaimTransactionParams {
   satsPerByte?: number;
 }
 
+export interface MakeRefundTransactionParams {
+  utxo: Unspent;
+  refundKeyPair: ECPairInterface;
+  redeemScript: Buffer;
+  timeoutBlockHeight?: number;
+  destinationScript: Buffer;
+  blindingPublicKey: Buffer;
+  satsPerByte?: number;
+}
+
 export type GetClaimTransactionParams = MakeClaimTransactionParams & {
+  fee: number;
+};
+export type GetRefundTransactionParams = MakeRefundTransactionParams & {
   fee: number;
 };
 
@@ -205,6 +222,18 @@ export class Boltz implements BoltzInterface {
     return 0;
   }
 
+  makeRefundTransaction(params: MakeRefundTransactionParams): Transaction {
+    // In order to calculate fees for tx:
+    // 1. make tx with dummy fee
+    const getParams: GetRefundTransactionParams = { ...params, fee: 300 };
+    const tx = this.getRefundTransaction(getParams);
+    // 2. calculate fees for this tx
+    const satsPerByte = params.satsPerByte ?? 0.1;
+    getParams.fee = Math.ceil((tx.virtualSize() + tx.ins.length) * satsPerByte);
+    // 3 return tx with updated fees
+    return this.getRefundTransaction(getParams);
+  }
+
   makeClaimTransaction(params: MakeClaimTransactionParams): Transaction {
     // In order to calculate fees for tx:
     // 1. make tx with dummy fee
@@ -281,6 +310,72 @@ export class Boltz implements BoltzInterface {
     return Extractor.extract(finalizer.pset);
   }
 
+  getRefundTransaction({
+    utxo,
+    refundKeyPair,
+    redeemScript,
+    destinationScript,
+    timeoutBlockHeight,
+    fee,
+    blindingPublicKey,
+  }: GetRefundTransactionParams): Transaction {
+    if (!utxo.blindingData) throw new Error('utxo is not blinded');
+    if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');
+    const pset = Creator.newPset();
+    const updater = new Updater(pset);
+
+    updater
+      .addInputs([
+        {
+          txid: utxo.txid,
+          txIndex: utxo.vout,
+          witnessUtxo: utxo.witnessUtxo,
+          sighashType: Transaction.SIGHASH_ALL,
+          heightLocktime: timeoutBlockHeight,
+          sequence: 21,
+        },
+      ])
+      .addInWitnessScript(0, redeemScript)
+      .addOutputs([
+        {
+          script: destinationScript,
+          blindingPublicKey,
+          asset: this.asset,
+          amount: (utxo.blindingData?.value ?? 0) - fee,
+          blinderIndex: 0,
+        },
+        {
+          amount: fee,
+          asset: this.asset,
+        },
+      ]);
+
+    const blindedPset = this.blindPset(pset, {
+      index: 0,
+      value: utxo.blindingData.value.toString(),
+      valueBlindingFactor: Buffer.from(utxo.blindingData.valueBlindingFactor, 'hex'),
+      asset: AssetHash.fromHex(utxo.blindingData.asset).bytesWithoutPrefix,
+      assetBlindingFactor: Buffer.from(utxo.blindingData.assetBlindingFactor, 'hex'),
+    });
+
+    const signedPset = this.signPset(blindedPset, refundKeyPair);
+
+    const finalizer = new Finalizer(signedPset);
+
+    finalizer.finalizeInput(0, (inputIndex, pset) => {
+      return {
+        finalScriptSig: undefined,
+        finalScriptWitness: witnessStackToScriptWitness([
+          pset.inputs[inputIndex].partialSigs![0].signature,
+          Buffer.of(), //dummy preimage
+          redeemScript,
+        ]),
+      };
+    });
+
+    return Extractor.extract(finalizer.pset);
+  }
+
   async createSubmarineSwap(
     invoice: string,
     network: NetworkString,
@@ -299,6 +394,7 @@ export class Boltz implements BoltzInterface {
     const params: CreateSwapCommonRequest & SubmarineSwapRequest = { ...base, ...req };
     const {
       address,
+      blindingKey,
       expectedAmount,
       id,
       redeemScript,
@@ -306,12 +402,13 @@ export class Boltz implements BoltzInterface {
 
     const submarineSwap: SubmarineSwap = {
       address,
+      blindingKey,
       expectedAmount,
       id,
       redeemScript,
+      refundPublicKey,
     };
-    if (!this.validateSwapReedemScript(redeemScript, refundPublicKey))
-      throw new Error('Invalid submarine swap');
+    if (!this.isValidSubmarineSwap(submarineSwap)) throw new Error('Invalid submarine swap');
     return submarineSwap;
   }
 
@@ -360,6 +457,38 @@ export class Boltz implements BoltzInterface {
     return reverseSwap;
   }
 
+  extractInfoFromRefundableSwapParams(params: RefundableSwapParams) {
+    const { blindingKey, redeemScript } = params;
+    const network = params.network ?? 'liquid';
+
+    const fundingAddress = addressFromScript(redeemScript, network);
+
+    const scriptAssembly = script
+      .toASM(script.decompile(Buffer.from(redeemScript, 'hex')) || [])
+      .split(' ');
+
+    const timeoutBlockHeight = parseInt(swapEndian(scriptAssembly[6]), 16);
+
+    return {
+      blindingKey,
+      fundingAddress,
+      redeemScript,
+      refundPublicKey: scriptAssembly[9],
+      timeoutBlockHeight,
+    };
+  }
+
+  // check that everything is correct with data received from Boltz:
+  // - address
+  // - redeemScript
+  // - refundPublicKey
+  private isValidSubmarineSwap({ address, redeemScript, refundPublicKey }: SubmarineSwap): boolean {
+    return (
+      this.validateSwapReedemScript(redeemScript, refundPublicKey) &&
+      this.validateSwapAddressDerivesFromScript(address, redeemScript)
+    );
+  }
+
   // check that everything is correct with data received from Boltz:
   // - invoice
   // - lockup address
@@ -373,7 +502,7 @@ export class Boltz implements BoltzInterface {
   }: ReverseSwap): boolean {
     return (
       this.correctPaymentHashInInvoice(invoice, preimage) &&
-      this.reverseSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
+      this.validateSwapAddressDerivesFromScript(lockupAddress, redeemScript) &&
       this.validateReverseSwapReedemScript(preimage, claimPublicKey, redeemScript)
     );
   }
@@ -395,11 +524,11 @@ export class Boltz implements BoltzInterface {
   }
 
   // validates if reverse swap address derives from redeem script
-  private reverseSwapAddressDerivesFromScript(
-    lockupAddress: string,
+  private validateSwapAddressDerivesFromScript(
+    receivedAddress: string,
     redeemScript: string
   ): boolean {
-    const addressScript = address.toOutputScript(lockupAddress);
+    const addressScript = address.toOutputScript(receivedAddress);
     const addressScriptASM = script.toASM(script.decompile(addressScript) || []);
     const sha256 = crypto.sha256(Buffer.from(redeemScript, 'hex')).toString('hex');
     const expectedAddressScriptASM = `OP_0 ${sha256}`; // P2SH
@@ -454,7 +583,7 @@ export class Boltz implements BoltzInterface {
       boltzPubkey,
       'OP_ELSE',
       cltv,
-      'OP_NOP2',
+      'OP_NOP2', // OP_CHECKLOCKTIMEVERIFY
       'OP_DROP',
       refundPublicKey,
       'OP_ENDIF',

@@ -23,6 +23,7 @@ import {
 } from '../src/domain/explorer';
 import { AppStorageAPI } from '../src/infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../src/infrastructure/storage/asset-repository';
+import { RefundableSwapsStorageAPI } from '../src/infrastructure/storage/refundable-swaps-repository';
 import { WalletStorageAPI } from '../src/infrastructure/storage/wallet-repository';
 import { BlockHeadersAPI } from '../src/infrastructure/storage/blockheaders-repository';
 import { PsetBuilder } from '../src/domain/pset';
@@ -48,6 +49,7 @@ const PASSWORD = 'PASSWORD';
 const appRepository = new AppStorageAPI();
 const walletRepository = new WalletStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
+const refundableSwapsRepository = new RefundableSwapsStorageAPI();
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const blockHeadersRepository = new BlockHeadersAPI();
 const psetBuilder = new PsetBuilder(walletRepository, appRepository, taxiRepository);
@@ -162,6 +164,7 @@ describe('Application Layer', () => {
           appRepository,
           blockHeadersRepository,
           assetRepository,
+          refundableSwapsRepository,
           zkpLib
         );
         await updater.start();
@@ -255,6 +258,7 @@ describe('Application Layer', () => {
         appRepository,
         blockHeadersRepository,
         assetRepository,
+        refundableSwapsRepository,
         zkpLib
       );
       const subscriber = new SubscriberService(
