@@ -68,10 +68,11 @@ const SettingsMenuSwaps: React.FC = () => {
     const [usedAddress] = addresses.filter((a) => a.publicKey === refundPublicKey);
     if (usedAddress?.derivationPath) return usedAddress.derivationPath;
     // check if by any chance the address used is missing on marina cache
-    // by iterating through the next 10 addresses
+    // by iterating through the next 20 addresses
     for (let i = 0; i < 20; i++) {
       const nextAddress = await mainAccount.getNextAddress(false);
-      if (nextAddress.derivationPath) return nextAddress.derivationPath;
+      if (nextAddress.publicKey === refundPublicKey && nextAddress.derivationPath)
+        return nextAddress.derivationPath;
     }
     throw new Error('derivation path not found');
   };
