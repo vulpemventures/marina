@@ -367,7 +367,7 @@ export class Boltz implements BoltzInterface {
         finalScriptSig: undefined,
         finalScriptWitness: witnessStackToScriptWitness([
           pset.inputs[inputIndex].partialSigs![0].signature,
-          Buffer.of(1), //dummy preimage
+          Buffer.of(), //dummy preimage
           redeemScript,
         ]),
       };
