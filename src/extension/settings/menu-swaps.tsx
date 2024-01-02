@@ -116,7 +116,6 @@ const SettingsMenuSwaps: React.FC = () => {
       const derivationPath = await findDerivationPath(refundPublicKey);
 
       const blockTip = await getBlockTip();
-      console.log('blocktip', blockTip);
       if (blockTip && blockTip < timeoutBlockHeight)
         throw new Error(`Still locked, unlocks in ${timeoutBlockHeight - blockTip} blocks`);
 
@@ -129,17 +128,6 @@ const SettingsMenuSwaps: React.FC = () => {
         refundPublicKey,
         timeoutBlockHeight,
       });
-
-      // TODO: maybe we don't need this after all
-      // void refundSwapFlowRepository.setParams({
-      //   blindingKey,
-      //   derivationPath,
-      //   fundingAddress,
-      //   network: json.network,
-      //   redeemScript,
-      //   refundPublicKey,
-      //   timeoutBlockHeight,
-      // });
     } catch (err) {
       setError(extractErrorMessage(err));
     }
@@ -188,7 +176,6 @@ const SettingsMenuSwaps: React.FC = () => {
 
       const accountDetails = await walletRepository.getAccountDetails(accountName);
       const baseDerivationPath = accountDetails[accountName].baseDerivationPath;
-      console.log('baseDerivationPath', baseDerivationPath);
 
       // get key pair
       const refundKeyPair = await getKeyPairFromDerivationPath(
@@ -197,9 +184,6 @@ const SettingsMenuSwaps: React.FC = () => {
         password
       );
       if (!refundKeyPair) return setError('Unable to get key pair');
-      console.log('privateKey', refundKeyPair.privateKey!.toString('hex'));
-      console.log('publicKey', refundKeyPair.publicKey.toString('hex'));
-      console.log('refundPublicKey', refundPublicKey);
 
       // fetch utxos for funding address
       const [utxo] = await chainSource.listUnspents(fundingAddress);

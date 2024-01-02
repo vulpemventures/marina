@@ -74,7 +74,6 @@ const Home: React.FC = () => {
   // this also works when user re-opens the wallet
   useEffect(() => {
     (async () => {
-      console.log('swaps', await refundableSwapsRepository.getSwaps());
       const updater = new UpdaterService(
         walletRepository,
         appRepository,

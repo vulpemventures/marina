@@ -323,7 +323,6 @@ export class Boltz implements BoltzInterface {
     if (!utxo.witnessUtxo) throw new Error('utxo missing witnessUtxo');
     const pset = Creator.newPset();
     const updater = new Updater(pset);
-    console.log('timeoutBlockHeight', timeoutBlockHeight);
 
     updater
       .addInputs([
@@ -469,16 +468,6 @@ export class Boltz implements BoltzInterface {
       .split(' ');
 
     const timeoutBlockHeight = parseInt(swapEndian(scriptAssembly[6]), 16);
-
-    console.log('params', params);
-    console.log('scriptAssembly', scriptAssembly);
-    console.log('response', {
-      blindingKey,
-      fundingAddress,
-      redeemScript,
-      refundPublicKey: scriptAssembly[9],
-      timeoutBlockHeight,
-    });
 
     return {
       blindingKey,

@@ -112,7 +112,7 @@ const LightningInvoice: React.FC = () => {
       const fundingAddress = addressFromScript(redeemScript, network);
 
       // push to storage payment to be made
-      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount); // TODO - 21
+      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount); // TODO -21
 
       // save swap params to storage
       await refundableSwapsRepository.addSwap({
