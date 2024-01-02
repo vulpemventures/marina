@@ -100,7 +100,7 @@ const SettingsMenuSwaps: React.FC = () => {
       'liquid.network/liquidtestnet'
     )}/api/blocks/tip/height`;
     const { data } = await axios.get(url);
-    return data;
+    return Number(data);
   };
 
   const validateParams = async (params: string) => {
