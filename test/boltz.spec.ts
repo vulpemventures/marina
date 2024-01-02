@@ -130,7 +130,8 @@ const broadcastSwapTx = async (): Promise<string> => {
   await faucet(nextAddress.confidentialAddress, 1);
   await sleep(5000);
 
-  // const blockTip = await getBlockTip();
+  const blockTip = await getBlockTip();
+  expect(blockTip).toEqual(1);
   const swapAddress = getAddressForSwapScript(nextAddress.publicKey);
 
   const utxo = await getUnblindedUtxo(nextAddress);
