@@ -123,14 +123,15 @@ const getUnblindedUtxo = async (nextAddress: any): Promise<Unspent> => {
 
 const broadcastSwapTx = async (): Promise<string> => {
   const account = await getAccount();
-  const blockTip = await getBlockTip();
   const chainSource = await getChainSource();
   const nextAddress = await getNextAddress(account);
-  const swapAddress = getAddressForSwapScript(nextAddress.publicKey, blockTip);
 
   // faucet 1 BTC
   await faucet(nextAddress.confidentialAddress, 1);
   await sleep(5000);
+
+  const blockTip = await getBlockTip();
+  const swapAddress = getAddressForSwapScript(nextAddress.publicKey, blockTip);
 
   const utxo = await getUnblindedUtxo(nextAddress);
   if (!utxo.blindingData) throw new Error('missing blinding data');
