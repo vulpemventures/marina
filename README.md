@@ -10,8 +10,8 @@ Liquid Network browser extension
 
 Available on:
 
-- Chrome store https://chrome.google.com/webstore/detail/marina/nhanebedohgejbllffboeipobccgedhl
-- Firefox Add-on https://addons.mozilla.org/en-US/firefox/addon/marinawallet/
+- Chrome Store https://chrome.google.com/webstore/detail/marina/nhanebedohgejbllffboeipobccgedhl
+- Firefox Add-on - Coming soon
 
 ## Usage
 
@@ -34,7 +34,7 @@ For manifest v3.
 yarn start:v3
 ```
 
-You can install the unpacked extension in `dist` inside your browser. Chrome-based browsers support HMR.
+You can install the unpacked extension in `dist/v3` inside your browser. Chrome-based browsers support HMR.
 
 ## Build
 
