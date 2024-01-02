@@ -80,6 +80,7 @@ const getAddressForSwapScript = (
     'OP_CHECKSIG',
   ].join(' ');
   const network = networks['regtest'];
+  expect(swapASM).toEqual('xxx');
   const scriptBuf = script.fromASM(swapASM);
   const scriptHash = crypto.sha256(scriptBuf);
   const output = script.fromASM(`OP_0 ${scriptHash.toString('hex')}`);
