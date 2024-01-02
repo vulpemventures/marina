@@ -163,7 +163,7 @@ const ShellPopUp: React.FC<Props> = ({
               <img
                 className={classNames('px-4', { 'animate-spin': updating })}
                 src="assets/images/popup/reload.svg"
-                alt="menu icon"
+                alt="reload icon"
               />
             </button>
             <button disabled={btnDisabled} onClick={openMenuModal}>
