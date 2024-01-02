@@ -68,9 +68,5 @@ export async function broadcastTx(hex: string): Promise<string> {
 }
 
 export async function getBlockTip(): Promise<number> {
-  try {
-    return (await axios.get(`${APIURL}/blocks/tip/height`)).data;
-  } catch (_) {
-    return 100; // running inside Github CI we don't have net access
-  }
+  return (await axios.get(`${APIURL}/blocks/tip/height`)).data;
 }

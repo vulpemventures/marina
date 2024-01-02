@@ -123,7 +123,7 @@ const getUnblindedUtxo = async (nextAddress: any): Promise<Unspent> => {
 
 const broadcastSwapTx = async (): Promise<string> => {
   const account = await getAccount();
-  const blockTip = (await getBlockTip()) ?? 100;
+  const blockTip = await getBlockTip();
   const chainSource = await getChainSource();
   const nextAddress = await getNextAddress(account);
   const swapAddress = getAddressForSwapScript(nextAddress.publicKey, blockTip);
