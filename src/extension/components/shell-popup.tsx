@@ -60,30 +60,32 @@ const ShellPopUp: React.FC<Props> = ({
 
   const [updating, setUpdating] = useState(false);
 
-  const goToHomeOrUpdate = async () => {
-    if (history.location.pathname !== DEFAULT_ROUTE) {
-      await sendFlowRepository.reset();
-      history.push(DEFAULT_ROUTE);
-    } else {
-      if (updating) return;
-      setUpdating(true);
-      try {
-        const updater = new UpdaterService(
-          walletRepository,
-          appRepository,
-          blockHeadersRepository,
-          assetRepository,
-          await zkp()
-        );
-        if (!cache?.network) throw new Error('Network not found');
-        await updater.checkAndFixMissingTransactionsData(cache.network);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setUpdating(false);
-      }
+  const goToHome = async () => {
+    if (history.location.pathname === DEFAULT_ROUTE) return;
+    await sendFlowRepository.reset();
+    history.push(DEFAULT_ROUTE);
+  };
+
+  const update = async () => {
+    if (updating) return;
+    setUpdating(true);
+    try {
+      const updater = new UpdaterService(
+        walletRepository,
+        appRepository,
+        blockHeadersRepository,
+        assetRepository,
+        await zkp()
+      );
+      if (!cache?.network) throw new Error('Network not found');
+      await updater.checkAndFixMissingTransactionsData(cache.network);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUpdating(false);
     }
   };
+
   const handleBackBtn = () => {
     if (backBtnCb) {
       backBtnCb();
@@ -141,12 +143,8 @@ const ShellPopUp: React.FC<Props> = ({
       <header>
         <div className="bg-grayNavBar border-graySuperLight flex flex-row items-center content-center justify-between h-12 border-b-2">
           <div className="flex flex-row items-center">
-            <button onClick={goToHomeOrUpdate}>
-              <img
-                className={classNames('px-4', { 'animate-spin': updating })}
-                src="assets/images/marina-logo.svg"
-                alt="marina logo"
-              />
+            <button onClick={goToHome}>
+              <img className="px-4" src="assets/images/marina-logo.svg" alt="marina logo" />
             </button>
 
             {cache?.network !== 'liquid' && (
@@ -160,9 +158,18 @@ const ShellPopUp: React.FC<Props> = ({
             )}
           </div>
           {(isUpdaterLoading || isRestorerLoading) && loader()}
-          <button disabled={btnDisabled} onClick={openMenuModal}>
-            <img className="px-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
-          </button>
+          <div className="flex flex-row items-center">
+            <button disabled={btnDisabled} onClick={update}>
+              <img
+                className={classNames('px-4', { 'animate-spin': updating })}
+                src="assets/images/popup/reload.svg"
+                alt="menu icon"
+              />
+            </button>
+            <button disabled={btnDisabled} onClick={openMenuModal}>
+              <img className="pr-4" src="assets/images/popup/dots-vertical.svg" alt="menu icon" />
+            </button>
+          </div>
         </div>
         {nav}
       </header>
