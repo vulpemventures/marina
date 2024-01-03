@@ -88,7 +88,7 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
                 : '??'}{' '}
               {assetSelected.ticker}
             </span>
-            {swap && confirmed && (
+            {swap && Boolean(confirmed) && (
               <span className="bg-smokeLight text-xxs px-1 py-0 font-semibold text-white rounded-full">
                 Refundable
               </span>
@@ -150,7 +150,7 @@ const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: 
             <p className="wrap text-xs font-light break-all">{txDetails.txid}</p>
           </div>
         </div>
-        {swap ? (
+        {swap && confirmed ? (
           <div className="flex justify-between">
             <Button
               isOutline={true}
