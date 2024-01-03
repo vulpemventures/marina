@@ -52,6 +52,8 @@ const SETTINGS_EXPLORER_ROUTE = '/settings/settings/explorer';
 const SETTINGS_EXPLORER_CUSTOM_ROUTE = '/settings/settings/explorer/custom';
 const SETTINGS_NETWORKS_ROUTE = '/settings/settings/networks';
 
+const SETTINGS_MENU_SWAPS_ROUTE = '/settings/swaps';
+
 const SETTINGS_MENU_INFO_ROUTE = '/settings/info';
 const SETTINGS_CREDITS_ROUTE = '/settings/info/credits';
 const SETTINGS_TERMS_ROUTE = '/settings/info/terms-of-service';
@@ -107,4 +109,5 @@ export {
   CONNECT_CREATE_ACCOUNT,
   SETTINGS_EXPLORER_CUSTOM_ROUTE,
   SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE,
+  SETTINGS_MENU_SWAPS_ROUTE,
 };

@@ -34,6 +34,7 @@ const Home: React.FC = () => {
     appRepository,
     receiveFlowRepository,
     sendFlowRepository,
+    refundableSwapsRepository,
     cache,
   } = useStorageContext();
   const [sortedAssets, setSortedAssets] = React.useState<Asset[]>([]);
@@ -82,9 +83,12 @@ const Home: React.FC = () => {
         appRepository,
         blockHeadersRepository,
         assetRepository,
+        refundableSwapsRepository,
         await zkp()
       );
+      if (!cache?.network) return;
       await updater.checkAndFixMissingTransactionsData(cache.network);
+      await updater.checkRefundableSwaps(cache.network);
     })().catch(console.error);
   }, [cache?.authenticated, cache?.network]);
 

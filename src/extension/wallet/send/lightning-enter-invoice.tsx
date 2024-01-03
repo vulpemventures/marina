@@ -8,18 +8,18 @@ import { networks } from 'liquidjs-lib';
 import { fromSatoshi, toSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
-import { BIP32Factory } from 'bip32';
-import * as ecc from 'tiny-secp256k1';
 import type { BoltzPair } from '../../../pkg/boltz';
 import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import { Spinner } from '../../components/spinner';
+import { addressFromScript } from '../../utility/address';
 
 const zkpLib = await zkp();
 
 const LightningInvoice: React.FC = () => {
   const history = useHistory();
-  const { cache, sendFlowRepository, walletRepository } = useStorageContext();
+  const { cache, sendFlowRepository, refundableSwapsRepository, walletRepository } =
+    useStorageContext();
   const [swapFees, setSwapFees] = useState(0);
   const [error, setError] = useState('');
   const [invoice, setInvoice] = useState('');
@@ -102,22 +102,27 @@ const LightningInvoice: React.FC = () => {
 
     // get refund pub key and change address
     const refundAddress = await mainAccount.getNextAddress(false);
-    const accountDetails = Object.values(await walletRepository.getAccountDetails(accountName))[0];
-    const refundPublicKey = BIP32Factory(ecc)
-      .fromBase58(accountDetails.masterXPub)
-      .derivePath(refundAddress.derivationPath?.replace('m/', '') ?? '')
-      .publicKey.toString('hex');
+    const refundPublicKey = refundAddress.publicKey;
 
     try {
       // create submarine swap
-      const { address, expectedAmount } = await boltz.createSubmarineSwap(
-        invoice,
-        network,
-        refundPublicKey
-      );
+      const { address, blindingKey, expectedAmount, id, redeemScript } =
+        await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
 
-      // push to store payment to be made
-      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
+      const fundingAddress = addressFromScript(redeemScript, network);
+
+      // push to storage payment to be made
+      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount); // TODO -21
+
+      // save swap params to storage
+      await refundableSwapsRepository.addSwap({
+        blindingKey,
+        confidentialAddress: address,
+        id,
+        fundingAddress,
+        redeemScript,
+        network,
+      });
 
       // go to choose fee route
       history.push(SEND_CHOOSE_FEE_ROUTE);

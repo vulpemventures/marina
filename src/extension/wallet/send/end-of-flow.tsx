@@ -14,7 +14,8 @@ import { lockTransactionInputs } from '../../../domain/transaction';
 import { useStorageContext } from '../../context/storage-context';
 
 const SendEndOfFlow: React.FC = () => {
-  const { appRepository, walletRepository, sendFlowRepository } = useStorageContext();
+  const { appRepository, walletRepository, sendFlowRepository, refundableSwapsRepository } =
+    useStorageContext();
   const history = useHistory();
   const [invalidPasswordError, setInvalidPasswordError] = useState(false);
   const [unlockModal, setUnlockModal] = useState(true);
@@ -27,6 +28,7 @@ const SendEndOfFlow: React.FC = () => {
 
   const handleUnlock = async function (password: string) {
     let extractedTx = undefined;
+    const receiverAddress = await sendFlowRepository.getReceiverAddress();
     try {
       const unsignedPset = await sendFlowRepository.getUnsignedPset();
       if (!unsignedPset) throw new Error('unsigned pset not found');
@@ -53,6 +55,15 @@ const SendEndOfFlow: React.FC = () => {
         },
       });
       await chainSource.close();
+
+      // if it was a swap, add txid to swap saved on storage
+      if (receiverAddress) {
+        const swap = await refundableSwapsRepository.findSwapWithAddress(receiverAddress);
+        if (swap) {
+          const timestamp = Date.now();
+          await refundableSwapsRepository.updateSwap({ ...swap, timestamp, txid });
+        }
+      }
 
       // push to success page
       history.push({

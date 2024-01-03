@@ -11,6 +11,9 @@ import Button from './button';
 import Browser from 'webextension-polyfill';
 import type { Asset } from 'marina-provider';
 import { useStorageContext } from '../context/storage-context';
+import type { RefundableSwapParams } from '../../domain/repository';
+import { useHistory } from 'react-router';
+import { SETTINGS_MENU_SWAPS_ROUTE } from '../routes/constants';
 
 function txTypeFromTransfer(transfer?: number): TxType {
   if (transfer === undefined) return TxType.Unknow;
@@ -20,12 +23,14 @@ function txTypeFromTransfer(transfer?: number): TxType {
 }
 
 interface Props {
-  txDetails: TxDetailsExtended;
   assetSelected: Asset;
+  swap: RefundableSwapParams | undefined;
+  txDetails: TxDetailsExtended;
 }
 
-const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
-  const { walletRepository, appRepository, cache } = useStorageContext();
+const ButtonTransaction: React.FC<Props> = ({ assetSelected, swap, txDetails }: Props) => {
+  const history = useHistory();
+  const { appRepository, cache, refundSwapFlowRepository, walletRepository } = useStorageContext();
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleClick = () => {
@@ -42,8 +47,16 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
     await Browser.tabs.create({ url, active: false });
   };
 
+  const handleRefund = async () => {
+    await refundSwapFlowRepository.setParams(swap);
+    history.push(SETTINGS_MENU_SWAPS_ROUTE);
+  };
+
   const transferAmount = () => txDetails.txFlow[assetSelected.assetHash];
   const transferAmountIsDefined = () => transferAmount() !== undefined;
+
+  const confirmed =
+    txDetails.height && txDetails.height >= 0 && cache?.blockHeaders.value[txDetails.height];
 
   return (
     <>
@@ -54,27 +67,32 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
       >
         <div className="flex items-center">
           <TxIcon txType={txTypeFromTransfer(transferAmount())} />
-          {txDetails.height &&
-          txDetails.height >= 0 &&
-          cache?.blockHeaders.value[txDetails.height] ? (
-            <span className="text-grayDark items-center mr-2 text-xs font-medium text-left">
+          {txDetails.height && confirmed ? (
+            <span className="text-grayDark items-center text-xs font-medium text-left">
               {moment(cache.blockHeaders.value[txDetails.height].timestamp * 1000).format(
                 'DD MMM YYYY'
               )}
             </span>
           ) : (
-            <span className="bg-red text-xxs inline-flex items-center justify-center px-1 py-1 font-semibold leading-none text-white rounded-full">
+            <span className="bg-red text-xxs inline-flex px-1 py-1 font-semibold leading-none text-white rounded-full">
               unconfirmed
             </span>
           )}
         </div>
-        <div className="flex">
-          <div className="text-primary whitespace-nowrap text-sm font-medium">
-            {transferAmountIsDefined() ? (transferAmount() > 0 ? '+' : '') : ''}
-            {transferAmountIsDefined()
-              ? formatDecimalAmount(fromSatoshi(transferAmount(), assetSelected.precision), false)
-              : '??'}{' '}
-            {assetSelected.ticker}
+        <div className="flex items-center">
+          <div className="flex flex-col">
+            <span className="text-primary whitespace-nowrap text-sm font-medium">
+              {transferAmountIsDefined() ? (transferAmount() > 0 ? '+' : '') : ''}
+              {transferAmountIsDefined()
+                ? formatDecimalAmount(fromSatoshi(transferAmount(), assetSelected.precision), false)
+                : '??'}{' '}
+              {assetSelected.ticker}
+            </span>
+            {swap && confirmed && (
+              <span className="bg-smokeLight text-xxs px-1 py-0 font-semibold text-white rounded-full">
+                Refundable
+              </span>
+            )}
           </div>
           <img src="assets/images/chevron-right.svg" alt="chevron-right" />
         </div>
@@ -132,9 +150,20 @@ const ButtonTransaction: React.FC<Props> = ({ txDetails, assetSelected }) => {
             <p className="wrap text-xs font-light break-all">{txDetails.txid}</p>
           </div>
         </div>
-        <Button className="w-full" onClick={() => handleOpenExplorer()}>
-          See in Explorer
-        </Button>
+        {swap ? (
+          <div className="flex justify-between">
+            <Button
+              isOutline={true}
+              className="bg-secondary hover:bg-secondary-light"
+              onClick={handleRefund}
+            >
+              Refund
+            </Button>
+            <Button onClick={handleOpenExplorer}>Explorer</Button>
+          </div>
+        ) : (
+          <Button onClick={handleOpenExplorer}>See in Explorer</Button>
+        )}
       </Modal>
     </>
   );

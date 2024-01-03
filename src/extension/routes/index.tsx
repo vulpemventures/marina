@@ -43,6 +43,7 @@ import {
   LIGHTNING_ENTER_AMOUNT_ROUTE,
   LIGHTNING_SHOW_INVOICE_ROUTE,
   LIGHTNING_ENTER_INVOICE_ROUTE,
+  SETTINGS_MENU_SWAPS_ROUTE,
 } from './constants';
 
 // Connect
@@ -92,6 +93,7 @@ import SettingsNetworksView from '../settings/networks';
 import SettingsDeepRestorer from '../settings/deep-restorer';
 import SettingsAccounts from '../settings/accounts';
 import SettingsAccountsRestoreIonio from '../settings/accounts-restore-ionio';
+import SettingsMenuSwaps from '../settings/menu-swaps';
 
 const Routes: React.FC = () => {
   return (
@@ -125,6 +127,7 @@ const Routes: React.FC = () => {
       {/*Settings*/}
       <Route exact path={SETTINGS_MENU_SECURITY_ROUTE} component={SettingsMenuSecurity} />
       <Route exact path={SETTINGS_MENU_SETTINGS_ROUTE} component={SettingsMenuSettings} />
+      <Route exact path={SETTINGS_MENU_SWAPS_ROUTE} component={SettingsMenuSwaps} />
       <Route exact path={SETTINGS_MENU_INFO_ROUTE} component={SettingsMenuInfo} />
       <Route exact path={SETTINGS_SHOW_MNEMONIC_ROUTE} component={SettingsShowMnemonic} />
       <Route exact path={SETTINGS_CHANGE_PASSWORD_ROUTE} component={SettingsChangePassword} />

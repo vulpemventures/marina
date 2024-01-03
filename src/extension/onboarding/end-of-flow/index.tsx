@@ -32,6 +32,7 @@ const EndOfFlowOnboarding: React.FC = () => {
     walletRepository,
     assetRepository,
     blockHeadersRepository,
+    refundableSwapsRepository,
   } = useStorageContext();
   const isFromPopup = useSelectIsFromPopupFlow();
 
@@ -89,6 +90,7 @@ const EndOfFlowOnboarding: React.FC = () => {
         appRepository,
         blockHeadersRepository,
         assetRepository,
+        refundableSwapsRepository,
         await zkp()
       );
       walletRepository.onNewTransaction(() => {

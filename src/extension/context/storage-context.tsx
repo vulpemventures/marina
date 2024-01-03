@@ -6,6 +6,8 @@ import type {
   OnboardingRepository,
   ReceiveFlowRepository,
   SendFlowRepository,
+  RefundSwapFlowRepository,
+  RefundableSwapsRepository,
   TaxiRepository,
   WalletRepository,
 } from '../../domain/repository';
@@ -20,6 +22,8 @@ import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository
 import type { PresentationCache } from '../../domain/presenter';
 import { PresenterImpl } from '../../application/presenter';
 import { useToastContext } from './toast-context';
+import { RefundableSwapsStorageAPI } from '../../infrastructure/storage/refundable-swaps-repository';
+import { RefundSwapFlowStorageAPI } from '../../infrastructure/storage/refund-swap-flow-repository';
 
 const walletRepository = new WalletStorageAPI();
 const appRepository = new AppStorageAPI();
@@ -29,6 +33,8 @@ const onboardingRepository = new OnboardingStorageAPI();
 const receiveFlowRepository = new ReceiveFlowStorageAPI();
 const sendFlowRepository = new SendFlowStorageAPI();
 const blockHeadersRepository = new BlockHeadersAPI();
+const refundableSwapsRepository = new RefundableSwapsStorageAPI();
+const refundSwapFlowRepository = new RefundSwapFlowStorageAPI();
 
 interface StorageContextProps {
   walletRepository: WalletRepository;
@@ -40,6 +46,8 @@ interface StorageContextProps {
   sendFlowRepository: SendFlowRepository;
   blockHeadersRepository: BlockheadersRepository;
   cache?: PresentationCache;
+  refundableSwapsRepository: RefundableSwapsRepository;
+  refundSwapFlowRepository: RefundSwapFlowRepository;
 }
 
 const StorageContext = createContext<StorageContextProps>({
@@ -51,6 +59,8 @@ const StorageContext = createContext<StorageContextProps>({
   receiveFlowRepository,
   sendFlowRepository,
   blockHeadersRepository,
+  refundableSwapsRepository,
+  refundSwapFlowRepository,
 });
 
 const presenter = new PresenterImpl(
@@ -90,6 +100,8 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         sendFlowRepository,
         blockHeadersRepository,
         cache,
+        refundableSwapsRepository,
+        refundSwapFlowRepository,
       }}
     >
       {children}

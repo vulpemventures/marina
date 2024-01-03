@@ -10,6 +10,7 @@ import type {
   AssetRepository,
   BlockheadersRepository,
   Outpoint,
+  RefundableSwapsRepository,
 } from '../domain/repository';
 import { TxIDsKey } from '../infrastructure/storage/wallet-repository';
 import type { NetworkString, UnblindingData } from 'marina-provider';
@@ -17,6 +18,7 @@ import { AppStorageKeys } from '../infrastructure/storage/app-repository';
 import type { ChainSource } from '../domain/chainsource';
 import { DefaultAssetRegistry } from '../port/asset-registry';
 import { AccountFactory } from './account';
+import { addressFromScript } from '../extension/utility/address';
 
 /**
  * Updater is a class that listens to the chrome storage changes and triggers the right actions
@@ -35,6 +37,7 @@ export class UpdaterService {
     private appRepository: AppRepository,
     private blockHeadersRepository: BlockheadersRepository,
     private assetRepository: AssetRepository,
+    private refundableSwapsRepository: RefundableSwapsRepository,
     zkpLib: confidential.Confidential['zkp']
   ) {
     this.unblinder = new WalletRepositoryUnblinder(
@@ -80,6 +83,24 @@ export class UpdaterService {
         this.fixMissingUnblindingData(txsDetails),
       ]);
       await this.fixMissingAssets(network);
+    } finally {
+      this.processingCount -= 1;
+    }
+  }
+
+  async checkRefundableSwaps(network: NetworkString) {
+    this.processingCount += 1;
+    try {
+      const swaps = await this.refundableSwapsRepository.getSwaps();
+      if (swaps.length === 0) return;
+      const chainSource = await this.appRepository.getChainSource(network);
+      if (!chainSource) throw new Error('Chain source not found for network ' + network);
+      for (const swap of swaps) {
+        if (!swap.redeemScript || swap.network !== network) return;
+        const fundingAddress = addressFromScript(swap.redeemScript);
+        const [utxo] = await chainSource.listUnspents(fundingAddress);
+        if (!utxo) await this.refundableSwapsRepository.removeSwap(swap);
+      }
     } finally {
       this.processingCount -= 1;
     }
