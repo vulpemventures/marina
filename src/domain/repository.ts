@@ -289,12 +289,12 @@ export interface RefundableSwapParams {
   derivationPath?: string;
   expectedAmount?: number;
   expirationDate?: number;
-  fundingAddress: string;
+  fundingAddress?: string;
   id?: string;
   invoice?: string;
   network: NetworkString;
   redeemScript: string;
-  refundPublicKey: string;
+  refundPublicKey?: string;
   timeoutBlockHeight?: number;
   timestamp?: number;
   txid?: string;
