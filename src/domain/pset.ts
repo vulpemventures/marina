@@ -195,6 +195,20 @@ export class PsetBuilder {
     }
     if (!fromAccounts) fromAccounts = getMainAccountsIDs(network);
     const feeAssetHash = networks[network].assetHash;
+
+    let feeAmount = 0;
+
+    // lets make a dummy pset to pay fees, and start with that fee amount
+    if (asset !== feeAssetHash) {
+      const recipient: AddressRecipient = {
+        address: addr,
+        asset: feeAssetHash,
+        value: 300,
+      };
+      const dummyPset = await this.createRegularPset([recipient], [], fromAccounts);
+      feeAmount += dummyPset.feeAmount;
+    }
+
     const unlockedUtxos = (
       await this.walletRepository.getUnlockedUtxos(network, ...fromAccounts)
     ).filter((utxo) => utxo.blindingData?.asset === asset);
@@ -240,7 +254,7 @@ export class PsetBuilder {
     await chainSource.close();
     const sats1000Bytes = relayFee * 10 ** 8;
     const estimatedSize = estimateVirtualSize(updater.pset, true);
-    const feeAmount = Math.ceil(estimatedSize * (sats1000Bytes / 1000));
+    feeAmount += Math.ceil(estimatedSize * (sats1000Bytes / 1000));
 
     if (feeAssetHash === asset) {
       updater.addOutputs([
@@ -365,7 +379,7 @@ export class PsetBuilder {
       throw new Error('chain source not found, cannot estimate fee');
     }
     const updater = new Updater(pset).addInputs(ins).addOutputs(outs);
-    // we add 100% to the min relay fee in order to be sure that the transaction will be accepted by the network
+    // we add 10% to the min relay fee in order to be sure that the transaction will be accepted by the network
     // some inputs and outputs may be added later to pay the fees
     const relayFee = (await chainSource.getRelayFee()) * 1.1;
     await chainSource.close();
@@ -467,7 +481,6 @@ export class PsetBuilder {
         ]);
       }
     }
-
     return {
       pset: updater.pset,
       feeAmount,
