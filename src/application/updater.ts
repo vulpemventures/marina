@@ -88,6 +88,14 @@ export class UpdaterService {
     }
   }
 
+  // check if something changed on submarine swaps made in the past
+  // these swaps can be in 2 different scenarios:
+  // - were broadcasted (have a txid)
+  //   - remove them if they were swepts by Boltz (spent, not refundable)
+  // - user didn't went through and didn't broadcasted the tx
+  //   - kept in cache cause we can't ask Boltz for another swap with
+  //     the same invoice, so we will use this values if that happens
+  //   - after invoice expiration date these swaps are removed from storage
   async checkRefundableSwaps(network: NetworkString) {
     this.processingCount += 1;
     try {
@@ -97,9 +105,14 @@ export class UpdaterService {
       if (!chainSource) throw new Error('Chain source not found for network ' + network);
       for (const swap of swaps) {
         if (!swap.redeemScript || swap.network !== network) return;
-        const fundingAddress = addressFromScript(swap.redeemScript);
-        const [utxo] = await chainSource.listUnspents(fundingAddress);
-        if (!utxo) await this.refundableSwapsRepository.removeSwap(swap);
+        if (swap.txid) {
+          const fundingAddress = addressFromScript(swap.redeemScript);
+          const [utxo] = await chainSource.listUnspents(fundingAddress);
+          if (!utxo) await this.refundableSwapsRepository.removeSwap(swap);
+        } else if (swap.expirationDate) {
+          const now = Date.now();
+          if (now > swap.expirationDate) await this.refundableSwapsRepository.removeSwap(swap);
+        }
       }
     } finally {
       this.processingCount -= 1;
