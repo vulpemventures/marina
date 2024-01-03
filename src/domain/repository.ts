@@ -287,9 +287,12 @@ export interface RefundableSwapParams {
   blindingKey: string;
   confidentialAddress?: string;
   derivationPath?: string;
+  expectedAmount?: number;
+  expirationDate?: number;
   fundingAddress?: string;
   id?: string;
-  network?: NetworkString;
+  invoice?: string;
+  network: NetworkString;
   redeemScript: string;
   refundPublicKey?: string;
   timeoutBlockHeight?: number;
@@ -300,6 +303,7 @@ export interface RefundableSwapParams {
 export interface RefundableSwapsRepository {
   addSwap(swap: RefundableSwapParams): Promise<void>;
   findSwapWithAddress(address: string): Promise<RefundableSwapParams | undefined>;
+  findSwapWithInvoice(invoice: string): Promise<RefundableSwapParams | undefined>;
   findSwapWithTxid(txid: string): Promise<RefundableSwapParams | undefined>;
   getSwaps(): Promise<RefundableSwapParams[]>;
   updateSwap(swap: RefundableSwapParams): Promise<void>;
