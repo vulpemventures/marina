@@ -8,7 +8,7 @@ import { networks } from 'liquidjs-lib';
 import { fromSatoshi, toSatoshi } from '../../utility';
 import { AccountFactory, MainAccount, MainAccountTest } from '../../../application/account';
 import { useStorageContext } from '../../context/storage-context';
-import type { BoltzPair } from '../../../pkg/boltz';
+import type { BoltzPair, SubmarineSwap } from '../../../pkg/boltz';
 import { Boltz, boltzUrl } from '../../../pkg/boltz';
 import zkp from '@vulpemventures/secp256k1-zkp';
 import { Spinner } from '../../components/spinner';
@@ -43,6 +43,47 @@ const LightningInvoice: React.FC = () => {
     fetchData().catch(console.error);
   }, []);
 
+  const makeSwap = async (): Promise<SubmarineSwap | undefined> => {
+    try {
+      // get account
+      const accountFactory = await AccountFactory.create(walletRepository);
+      const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
+      const mainAccount = await accountFactory.make(network, accountName);
+
+      // get refund pub key and change address
+      const refundAddress = await mainAccount.getNextAddress(false);
+      const refundPublicKey = refundAddress.publicKey;
+
+      // create submarine swap
+      const swap = await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
+      const { address, blindingKey, expectedAmount, id, redeemScript } = swap;
+
+      // calculate funding address (used for refunding case the swap fails)
+      const fundingAddress = addressFromScript(redeemScript, network);
+
+      const expirationDate = boltz.getInvoiceExpireDate(invoice);
+
+      // save swap params to storage
+      await refundableSwapsRepository.addSwap({
+        blindingKey,
+        confidentialAddress: address,
+        expectedAmount,
+        expirationDate,
+        id,
+        invoice,
+        fundingAddress,
+        redeemScript,
+        refundPublicKey,
+        network,
+      });
+
+      return swap;
+    } catch (err: any) {
+      setError(err.message);
+      setIsSubmitting(false);
+    }
+  };
+
   const handleBackBtn = () => history.goBack();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,11 +110,15 @@ const LightningInvoice: React.FC = () => {
       const value = boltz.getInvoiceValue(invoice);
       const valueInSats = toSatoshi(value);
       const fees = boltz.calcBoltzFees(pair, valueInSats);
+      const expirationDate = boltz.getInvoiceExpireDate(invoice);
 
       setSwapFees(fees);
       setValue(value);
 
       const { minimal, maximal } = pair.limits;
+
+      // validate date
+      if (Date.now() > expirationDate) return setError('Expired invoice');
 
       // validate value
       if (Number.isNaN(value)) return setError('Invalid value');
@@ -95,42 +140,23 @@ const LightningInvoice: React.FC = () => {
   const handleProceed = async () => {
     setIsSubmitting(true);
 
-    // get account
-    const accountFactory = await AccountFactory.create(walletRepository);
-    const accountName = network === 'liquid' ? MainAccount : MainAccountTest;
-    const mainAccount = await accountFactory.make(network, accountName);
+    // check if we have a swap already made for this invoice
+    const swapOnCache = await refundableSwapsRepository.findSwapWithInvoice(invoice);
 
-    // get refund pub key and change address
-    const refundAddress = await mainAccount.getNextAddress(false);
-    const refundPublicKey = refundAddress.publicKey;
-
-    try {
-      // create submarine swap
-      const { address, blindingKey, expectedAmount, id, redeemScript } =
-        await boltz.createSubmarineSwap(invoice, network, refundPublicKey);
-
-      const fundingAddress = addressFromScript(redeemScript, network);
-
-      // push to storage payment to be made
-      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount); // TODO -21
-
-      // save swap params to storage
-      await refundableSwapsRepository.addSwap({
-        blindingKey,
-        confidentialAddress: address,
-        id,
-        fundingAddress,
-        redeemScript,
-        network,
-      });
-
-      // go to choose fee route
-      history.push(SEND_CHOOSE_FEE_ROUTE);
-    } catch (err: any) {
-      setError(err.message);
-      setIsSubmitting(false);
-      return;
+    if (swapOnCache?.confidentialAddress && swapOnCache.expectedAmount) {
+      await sendFlowRepository.setReceiverAddressAmount(
+        swapOnCache?.confidentialAddress,
+        swapOnCache.expectedAmount
+      );
+    } else {
+      const swap = await makeSwap();
+      if (!swap) return;
+      const { address, expectedAmount } = swap;
+      await sendFlowRepository.setReceiverAddressAmount(address, expectedAmount);
     }
+
+    // go to choose fee route
+    history.push(SEND_CHOOSE_FEE_ROUTE);
   };
 
   const isButtonDisabled = () => Boolean(!invoice || error || isSubmitting);
