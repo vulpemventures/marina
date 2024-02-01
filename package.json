@@ -19,7 +19,7 @@
     "web-ext:lint": "web-ext lint --source-dir dist"
   },
   "dependencies": {
-    "@ionio-lang/ionio": "^0.5.2",
+    "@ionio-lang/ionio": "^0.5.3",
     "@metamask/safe-event-emitter": "^2.0.0",
     "@sentry/browser": "^7.13.0",
     "@tailwindcss/postcss7-compat": "^2.1.2",
