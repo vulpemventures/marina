@@ -558,7 +558,7 @@ export class Boltz implements BoltzInterface {
       'OP_ELSE',
       'OP_DROP',
       cltv,
-      'OP_NOP2',
+      'OP_CHECKLOCKTIMEVERIFY',
       'OP_DROP',
       refundPubKey,
       'OP_ENDIF',
@@ -583,7 +583,7 @@ export class Boltz implements BoltzInterface {
       boltzPubkey,
       'OP_ELSE',
       cltv,
-      'OP_NOP2', // OP_CHECKLOCKTIMEVERIFY
+      'OP_CHECKLOCKTIMEVERIFY',
       'OP_DROP',
       refundPublicKey,
       'OP_ENDIF',
