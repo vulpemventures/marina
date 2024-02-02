@@ -428,12 +428,12 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@ionio-lang/ionio@^0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.5.2.tgz#4384e319f6f28b4c7cb40d94e268ba3dbd60de28"
-  integrity sha512-6P9H9FMPlmlN/DujwC8eeU6D0OHYW73GaHlucyHWIazSufifKF+mcQzV3hMNsaxAi7UQOkQ5UMCRKuOZpeK//A==
+"@ionio-lang/ionio@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@ionio-lang/ionio/-/ionio-0.5.3.tgz#847c967df0f231bc48e2cc8c22455032fdb8c5b8"
+  integrity sha512-VOizIv8/ugBeoMI3K03qdzc6Fm9L9klEyuwD12qEurLjXLDsF/HR3+BG7R4lgfLPEtHfFsrahEyN7KmoNSXGLQ==
   dependencies:
-    liquidjs-lib "^6.0.2-liquid.32"
+    liquidjs-lib "^6.0.2-liquid.34"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -5555,25 +5555,6 @@ lines-and-columns@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-2.0.3.tgz#b2f0badedb556b747020ab8ea7f0373e22efac1b"
   integrity sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==
-
-liquidjs-lib@^6.0.2-liquid.32:
-  version "6.0.2-liquid.32"
-  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-6.0.2-liquid.32.tgz#23f13a23eb49dcda7708bb1542b75db97acc8adc"
-  integrity sha512-EHKulPNptqGyPZKbWCygdvRP6FIjHLoLRJ0YTAp58Ikm9/t9UjFgeWEwrAwORwKyc4BnWTVwJqNZEBBzjX+cAA==
-  dependencies:
-    "@types/randombytes" "^2.0.0"
-    bech32 "^2.0.0"
-    bip174-liquid "^1.0.3"
-    bip66 "^1.1.0"
-    bitcoinjs-lib "^6.0.2"
-    bitset "^5.1.1"
-    blech32 "^1.0.1"
-    bs58check "^2.0.0"
-    create-hash "^1.2.0"
-    ecpair "^2.1.0"
-    slip77 "^0.2.0"
-    typeforce "^1.11.3"
-    varuint-bitcoin "^1.1.2"
 
 liquidjs-lib@^6.0.2-liquid.34:
   version "6.0.2-liquid.34"
