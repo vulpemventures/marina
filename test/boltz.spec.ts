@@ -73,7 +73,7 @@ const getAddressForSwapScript = (
     boltzPubkey,
     'OP_ELSE',
     timelock,
-    'OP_NOP2',
+    'OP_CHECKLOCKTIMEVERIFY',
     'OP_DROP',
     refundPubKey,
     'OP_ENDIF',
