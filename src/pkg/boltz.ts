@@ -174,7 +174,7 @@ export interface BoltzPair {
 
 export const boltzUrl: Record<NetworkString, string> = {
   regtest: 'http://localhost:9090',
-  testnet: 'https://api.testnet.boltz.exchange/',
+  testnet: 'https://testnet.boltz.exchange/api',
   liquid: 'https://api.boltz.exchange',
 };
 
