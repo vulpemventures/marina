@@ -42,7 +42,7 @@ const AddressAmountView: React.FC = () => {
       className="h-popupContent container pb-20 mx-auto text-center bg-bottom bg-no-repeat"
       currentPage="Send"
     >
-      {!isInitializingFormState && sendAsset && cache?.balances.value[sendAsset.assetHash] && (
+      {!isInitializingFormState && sendAsset && (
         <>
           <Balance
             assetHash={sendAsset.assetHash}
