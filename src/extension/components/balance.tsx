@@ -45,9 +45,9 @@ const Balance: React.FC<Props> = ({
       const [integer, decimals] = assetBalance.split('.');
       return (
         <>
-          <span className="font-medium">{integer}.</span>
-          <span className="font-light">{decimals} </span>
-          <span className="font-medium">{assetTicker}</span>
+          <span className="font-medium">{integer}</span>
+          {decimals ? <span className="font-light">.{decimals}</span> : null}
+          <span className="font-medium"> {assetTicker}</span>
         </>
       );
     }
