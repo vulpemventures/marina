@@ -4,6 +4,7 @@ import type {
   AssetRepository,
   BlockheadersRepository,
   OnboardingRepository,
+  ReceiveFlowRepository,
   SendFlowRepository,
   RefundSwapFlowRepository,
   RefundableSwapsRepository,
@@ -14,6 +15,7 @@ import { AppStorageAPI } from '../../infrastructure/storage/app-repository';
 import { AssetStorageAPI } from '../../infrastructure/storage/asset-repository';
 import { BlockHeadersAPI } from '../../infrastructure/storage/blockheaders-repository';
 import { OnboardingStorageAPI } from '../../infrastructure/storage/onboarding-repository';
+import { ReceiveFlowStorageAPI } from '../../infrastructure/storage/receive-flow-repository';
 import { SendFlowStorageAPI } from '../../infrastructure/storage/send-flow-repository';
 import { TaxiStorageAPI } from '../../infrastructure/storage/taxi-repository';
 import { WalletStorageAPI } from '../../infrastructure/storage/wallet-repository';
@@ -28,6 +30,7 @@ const appRepository = new AppStorageAPI();
 const assetRepository = new AssetStorageAPI(walletRepository);
 const taxiRepository = new TaxiStorageAPI(assetRepository, appRepository);
 const onboardingRepository = new OnboardingStorageAPI();
+const receiveFlowRepository = new ReceiveFlowStorageAPI();
 const sendFlowRepository = new SendFlowStorageAPI();
 const blockHeadersRepository = new BlockHeadersAPI();
 const refundableSwapsRepository = new RefundableSwapsStorageAPI();
@@ -39,6 +42,7 @@ interface StorageContextProps {
   assetRepository: AssetRepository;
   taxiRepository: TaxiRepository;
   onboardingRepository: OnboardingRepository;
+  receiveFlowRepository: ReceiveFlowRepository;
   sendFlowRepository: SendFlowRepository;
   blockHeadersRepository: BlockheadersRepository;
   cache?: PresentationCache;
@@ -52,6 +56,7 @@ const StorageContext = createContext<StorageContextProps>({
   assetRepository,
   taxiRepository,
   onboardingRepository,
+  receiveFlowRepository,
   sendFlowRepository,
   blockHeadersRepository,
   refundableSwapsRepository,
@@ -91,6 +96,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         assetRepository,
         taxiRepository,
         onboardingRepository,
+        receiveFlowRepository,
         sendFlowRepository,
         blockHeadersRepository,
         cache,

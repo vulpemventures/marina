@@ -41,6 +41,7 @@ import {
   SETTINGS_EXPLORER_CUSTOM_ROUTE,
   SETTINGS_ACCOUNTS_RESTORE_IONIO_ROUTE,
   LIGHTNING_ENTER_AMOUNT_ROUTE,
+  LIGHTNING_SHOW_INVOICE_ROUTE,
   LIGHTNING_ENTER_INVOICE_ROUTE,
   SETTINGS_MENU_SWAPS_ROUTE,
 } from './constants';
@@ -62,6 +63,8 @@ import BackUpUnlock from '../onboarding/backup-unlock';
 import LogIn from '../wallet/log-in';
 import PaymentError from '../wallet/send/payment-error';
 import LightningAmount from '../wallet/receive/lightning-enter-amount';
+import LightningShowInvoice from '../wallet/receive/lightning-show-invoice';
+import LightningInvoice from '../wallet/send/lightning-enter-invoice';
 // Settings
 import SettingsMenuSecurity from '../settings/menu-security';
 import SettingsMenuSettings from '../settings/menu-settings';
@@ -90,7 +93,6 @@ import SettingsNetworksView from '../settings/networks';
 import SettingsDeepRestorer from '../settings/deep-restorer';
 import SettingsAccounts from '../settings/accounts';
 import SettingsAccountsRestoreIonio from '../settings/accounts-restore-ionio';
-import LightningInvoice from '../wallet/send/lightning-enter-invoice';
 import SettingsMenuSwaps from '../settings/menu-swaps';
 
 const Routes: React.FC = () => {
@@ -120,6 +122,7 @@ const Routes: React.FC = () => {
       <Route exact path={SEND_PAYMENT_ERROR_ROUTE} component={PaymentError} />
       {/*Lightning*/}
       <Route exact path={LIGHTNING_ENTER_AMOUNT_ROUTE} component={LightningAmount} />
+      <Route exact path={LIGHTNING_SHOW_INVOICE_ROUTE} component={LightningShowInvoice} />
       <Route exact path={LIGHTNING_ENTER_INVOICE_ROUTE} component={LightningInvoice} />
       {/*Settings*/}
       <Route exact path={SETTINGS_MENU_SECURITY_ROUTE} component={SettingsMenuSecurity} />
