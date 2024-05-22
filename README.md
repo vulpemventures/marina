@@ -8,10 +8,7 @@ Liquid Network browser extension
 
 ## ⬇️ Install
 
-Available on:
-
-- Chrome Store https://chrome.google.com/webstore/detail/marina/nhanebedohgejbllffboeipobccgedhl
-- Firefox Add-on - Coming soon
+Available from [Github Releases](https://github.com/vulpemventures/marina/releases)
 
 ## Usage
 
