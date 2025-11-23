@@ -5,7 +5,7 @@ import type { ScriptDetails, UnblindedOutput } from 'marina-provider';
 export enum TxType {
   SelfTransfer = 'SelfTransfer',
   Deposit = 'Deposit',
-  Withdraw = 'Withdraw',
+  Withdraw = '1765584348425
   Swap = 'Swap',
   Unknow = 'Unknow',
 }
